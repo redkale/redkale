@@ -35,6 +35,8 @@ import static org.redkale.asm.Opcodes.*;
  * <blockquote><pre>
  *  Attribute&lt;Record, String&gt; nameAction = new Attribute&lt;Record, String&gt;() {
  *
+ *      private java.lang.reflect.Type _gtype = String.class;
+ *
  *      &#64;Override
  *      public String field() {
  *          return "name";
@@ -53,6 +55,11 @@ import static org.redkale.asm.Opcodes.*;
  *      &#64;Override
  *      public Class type() {
  *          return String.class;
+ *      }
+ *
+ *      &#64;Override
+ *      public java.lang.reflect.Type genericType() {
+ *          return _gtype;
  *      }
  *
  *      &#64;Override
@@ -83,6 +90,15 @@ public interface Attribute<T, F> {
      * @return 字段的数据类型
      */
     public Class<? extends F> type();
+
+    /**
+     * 返回字段的数据泛型
+     *
+     * @return 字段的数据泛型
+     */
+    default java.lang.reflect.Type genericType() {
+        return type();
+    }
 
     /**
      * 返回字段依附的类名
@@ -348,7 +364,7 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final Class<F> fieldtype) {
-        return create(clazz, fieldalias, fieldtype, null, null, null);
+        return create(clazz, fieldalias, fieldtype, null, (Function) null, null);
     }
 
     /**
@@ -415,12 +431,16 @@ public interface Attribute<T, F> {
         }
         final String fieldname = fieldalias;
         Class column = fieldtype;
+        java.lang.reflect.Type generictype = fieldtype;
         if (tfield != null) { // public tfield
             column = tfield.getType();
+            generictype = tfield.getGenericType();
         } else if (tgetter != null) {
             column = tgetter.getReturnType();
+            generictype = tgetter.getGenericReturnType();
         } else if (tsetter != null) {
             column = tsetter.getParameterTypes()[0];
+            generictype = tsetter.getGenericParameterTypes()[0];
         } else if (fieldtype == null) {
             throw new RuntimeException("[" + clazz + "]have no public field or setter or getter");
         }
@@ -441,7 +461,11 @@ public interface Attribute<T, F> {
                 + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         }
         try {
-            return (Attribute) loader.loadClass(newDynName.replace('/', '.')).getDeclaredConstructor().newInstance();
+            Attribute rs = (Attribute) loader.loadClass(newDynName.replace('/', '.')).getDeclaredConstructor().newInstance();
+            java.lang.reflect.Field _gtype = rs.getClass().getDeclaredField("_gtype");
+            _gtype.setAccessible(true);
+            _gtype.set(rs, generictype);
+            return rs;
         } catch (Throwable ex) {
         }
         //---------------------------------------------------
@@ -449,7 +473,10 @@ public interface Attribute<T, F> {
         MethodVisitor mv;
 
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + columnDesc + ">;", "java/lang/Object", new String[]{supDynName});
-
+        { //_gtype
+            FieldVisitor fv = cw.visitField(ACC_PRIVATE, "_gtype", "Ljava/lang/reflect/Type;", null, null);
+            fv.visitEnd();
+        }
         { //构造方法
             mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             mv.visitVarInsn(ALOAD, 0);
@@ -487,6 +514,14 @@ public interface Attribute<T, F> {
             } else {
                 mv.visitLdcInsn(Type.getType(pcolumn));
             }
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        { //genericType
+            mv = cw.visitMethod(ACC_PUBLIC, "genericType", "()Ljava/lang/reflect/Type;", null, null);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, "_gtype", "Ljava/lang/reflect/Type;");
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -593,7 +628,11 @@ public interface Attribute<T, F> {
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
-            return creatorClazz.getDeclaredConstructor().newInstance();
+            Attribute rs = creatorClazz.getDeclaredConstructor().newInstance();
+            java.lang.reflect.Field _gtype = rs.getClass().getDeclaredField("_gtype");
+            _gtype.setAccessible(true);
+            _gtype.set(rs, generictype);
+            return rs;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -613,6 +652,25 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldname, final Class<F> fieldtype, final Function<T, F> getter, final BiConsumer<T, F> setter) {
+        return create(clazz, fieldname, fieldtype, fieldtype, getter, setter);
+    }
+
+    /**
+     * 根据Class、字段名、字段类型、getter和setter方法生成 Attribute 对象。 clazz、fieldname、fieldtype都不能为null
+     *
+     * @param <T>              依附类的类型
+     * @param <F>              字段类型
+     * @param clazz            指定依附的类
+     * @param fieldname        字段名
+     * @param fieldtype        字段类型
+     * @param fieldGenericType 字段泛型
+     * @param getter           getter方法
+     * @param setter           setter方法
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldname, final Class<F> fieldtype,
+        final java.lang.reflect.Type fieldGenericType, final Function<T, F> getter, final BiConsumer<T, F> setter) {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(fieldname);
         Objects.requireNonNull(fieldtype);
@@ -620,6 +678,11 @@ public interface Attribute<T, F> {
             @Override
             public Class<F> type() {
                 return fieldtype;
+            }
+
+            @Override
+            public java.lang.reflect.Type genericType() {
+                return fieldGenericType;
             }
 
             @Override
