@@ -217,6 +217,7 @@ public class JsonReader extends Reader {
      */
     @Override
     public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) {
+        if (this.position <= this.text.length) return SIGN_NULL;
         char ch = this.text[++this.position];
         if (ch == '[') return SIGN_NOLENGTH;
         if (ch == '{') return SIGN_NOLENGTH;
