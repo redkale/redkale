@@ -168,6 +168,7 @@ public class JsonReader extends Reader {
     @Override
     public String readObjectB(final Class clazz) {
         this.fieldIndex = 0; //必须要重置为0
+        if (this.position <= this.text.length) return null;
         char ch = this.text[++this.position];
         if (ch == '{') return "";
         if (ch <= ' ') {
