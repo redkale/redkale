@@ -307,7 +307,7 @@ public final class SncpClient {
                         byte i;
                         while ((i = reader.readByte()) != 0) {
                             final Attribute attr = action.paramAttrs[i];
-                            attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
+                            attr.set(params[i - 1], bsonConvert.convertFrom(attr.genericType(), reader));
                         }
                         Object rs = bsonConvert.convertFrom(Object.class, reader);
 
@@ -327,7 +327,7 @@ public final class SncpClient {
             byte i;
             while ((i = reader.readByte()) != 0) {
                 final Attribute attr = action.paramAttrs[i];
-                attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
+                attr.set(params[i - 1], bsonConvert.convertFrom(attr.genericType(), reader));
             }
             return bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
         } catch (RpcRemoteException re) {
@@ -471,7 +471,7 @@ public final class SncpClient {
                                     int i;
                                     while ((i = (reader.readByte() & 0xff)) != 0) {
                                         final Attribute attr = action.paramAttrs[i];
-                                        attr.set(params[i - 1], bsonConvert.convertFrom(attr.type(), reader));
+                                        attr.set(params[i - 1], bsonConvert.convertFrom(attr.genericType(), reader));
                                     }
                                     Object rs = bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
                                     handler.completed(rs, handlerAttach);

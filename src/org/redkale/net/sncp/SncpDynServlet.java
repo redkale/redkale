@@ -196,7 +196,7 @@ public final class SncpDynServlet extends SncpServlet {
                     org.redkale.util.Attribute attr = paramAttrs[i];
                     if (attr == null) continue;
                     out.writeByte((byte) i);
-                    convert.convertTo(out, attr.type(), attr.get(params[i - 1]));
+                    convert.convertTo(out, attr.genericType(), attr.get(params[i - 1]));
                 }
             }
             out.writeByte((byte) 0);
