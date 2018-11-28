@@ -57,54 +57,14 @@ public final class DataSources {
     }
 
     public static DataSource createDataSource(final String unitName, Properties prop) throws IOException {
-        return new DataJdbcSource(unitName, null, prop, prop);
+        return createDataSource(unitName, prop, prop);
     }
 
     public static DataSource createDataSource(final String unitName, Properties readprop, Properties writeprop) throws IOException {
-        return new DataJdbcSource(unitName, null, readprop, writeprop);
+        return createDataSource(unitName, null, readprop, writeprop);
     }
 
-    public static DataSource createDataSource(final String unitName) throws IOException {
-        return createDataSource(unitName, System.getProperty(DATASOURCE_CONFPATH) == null
-            ? DataJdbcSource.class.getResource("/META-INF/persistence.xml")
-            : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL());
-    }
-
-    public static DataSource createDataSource(final String unitName, URL persistxml) throws IOException {
-        if (persistxml == null) persistxml = DataSources.class.getResource("/persistence.xml");
-        InputStream in = persistxml == null ? null : persistxml.openStream();
-        if (in == null) return null;
-        Map<String, Properties> map = loadPersistenceXml(in);
-        Properties readprop = null;
-        Properties writeprop = null;
-        if (unitName != null) {
-            readprop = map.get(unitName);
-            writeprop = readprop;
-            if (readprop == null) {
-                readprop = map.get(unitName + ".read");
-                writeprop = map.get(unitName + ".write");
-            }
-        }
-        if ((unitName == null || unitName.isEmpty()) || readprop == null) {
-            String key = null;
-            for (Map.Entry<String, Properties> en : map.entrySet()) {
-                key = en.getKey();
-                readprop = en.getValue();
-                writeprop = readprop;
-                break;
-            }
-            if (key != null && (key.endsWith(".read") || key.endsWith(".write"))) {
-                if (key.endsWith(".read")) {
-                    writeprop = map.get(key.substring(0, key.lastIndexOf('.')) + ".write");
-                } else {
-                    readprop = map.get(key.substring(0, key.lastIndexOf('.')) + ".read");
-                }
-            }
-        }
-        if (readprop == null) throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
-        if (writeprop == null) writeprop = readprop;
-        if (readprop.getProperty(JDBC_URL, "").startsWith("memory:source")) return new DataMemorySource(unitName, persistxml, readprop, writeprop);
-
+    public static DataSource createDataSource(final String unitName, URL persistxml, Properties readprop, Properties writeprop) throws IOException {
         String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
         if (DataJdbcSource.class.getName().equals(impl)) {
             try {
@@ -160,6 +120,50 @@ public final class DataSources {
         } catch (Exception e) {
             throw new IOException(e);
         }
+    }
+
+    public static DataSource createDataSource(final String unitName) throws IOException {
+        return createDataSource(unitName, System.getProperty(DATASOURCE_CONFPATH) == null
+            ? DataJdbcSource.class.getResource("/META-INF/persistence.xml")
+            : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL());
+    }
+
+    public static DataSource createDataSource(final String unitName, URL persistxml) throws IOException {
+        if (persistxml == null) persistxml = DataSources.class.getResource("/persistence.xml");
+        InputStream in = persistxml == null ? null : persistxml.openStream();
+        if (in == null) return null;
+        Map<String, Properties> map = loadPersistenceXml(in);
+        Properties readprop = null;
+        Properties writeprop = null;
+        if (unitName != null) {
+            readprop = map.get(unitName);
+            writeprop = readprop;
+            if (readprop == null) {
+                readprop = map.get(unitName + ".read");
+                writeprop = map.get(unitName + ".write");
+            }
+        }
+        if ((unitName == null || unitName.isEmpty()) || readprop == null) {
+            String key = null;
+            for (Map.Entry<String, Properties> en : map.entrySet()) {
+                key = en.getKey();
+                readprop = en.getValue();
+                writeprop = readprop;
+                break;
+            }
+            if (key != null && (key.endsWith(".read") || key.endsWith(".write"))) {
+                if (key.endsWith(".read")) {
+                    writeprop = map.get(key.substring(0, key.lastIndexOf('.')) + ".write");
+                } else {
+                    readprop = map.get(key.substring(0, key.lastIndexOf('.')) + ".read");
+                }
+            }
+        }
+        if (readprop == null) throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
+        if (writeprop == null) writeprop = readprop;
+        if (readprop.getProperty(JDBC_URL, "").startsWith("memory:source")) return new DataMemorySource(unitName, persistxml, readprop, writeprop);
+
+        return createDataSource(unitName, readprop, writeprop);
     }
 
     public static Map<String, Properties> loadPersistenceXml(final InputStream in0) {
