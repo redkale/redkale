@@ -170,25 +170,29 @@ public class ServiceWatchService extends AbstractWatchService {
     }
 
     @RestMapping(name = "load", auth = false, comment = "动态增加Service")
-    public RetResult loadService(String type, @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameReg = "\\.jar$") byte[] jar) {
+    public RetResult loadService(@RestParam(name = "type", comment = "Service的类名") String type,
+        @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameReg = "\\.jar$") byte[] jar) {
         //待开发
         return RetResult.success();
     }
 
     @RestMapping(name = "reload", auth = false, comment = "重新加载Service")
-    public RetResult reloadService(String name, String type) {
+    public RetResult reloadService(@RestParam(name = "name", comment = "Service的资源名") String name,
+        @RestParam(name = "type", comment = "Service的类名") String type) {
         //待开发
         return RetResult.success();
     }
 
     @RestMapping(name = "stop", auth = false, comment = "动态停止Service")
-    public RetResult stopService(String name, String type) {
+    public RetResult stopService(@RestParam(name = "name", comment = "Service的资源名") String name,
+        @RestParam(name = "type", comment = "Service的类名") String type) {
         //待开发
         return RetResult.success();
     }
 
     @RestMapping(name = "find", auth = false, comment = "查找Service")
-    public RetResult find(String name, String type) {
+    public RetResult find(@RestParam(name = "name", comment = "Service的资源名") String name,
+        @RestParam(name = "type", comment = "Service的类名") String type) {
         //待开发
         return RetResult.success();
     }

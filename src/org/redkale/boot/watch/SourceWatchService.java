@@ -5,9 +5,9 @@
  */
 package org.redkale.boot.watch;
 
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Method;
-import java.util.Properties;
+import java.util.*;
 import javax.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.http.*;
@@ -16,6 +16,7 @@ import org.redkale.source.*;
 import org.redkale.util.*;
 
 /**
+ * WATCH服务, 操作DataSource源
  *
  * @author zhangjx
  */
@@ -31,13 +32,25 @@ public class SourceWatchService extends AbstractWatchService {
     @Comment("PoolSource调用change方法失败")
     public static final int RET_SOURCE_METHOD_INVOKE_NOT_EXISTS = 1605_0003;
 
+    @Resource(name = "APP_HOME")
+    protected File home;
+
     @Resource
     protected Application application;
 
     @RestMapping(name = "change", auth = false, comment = "动态更改DataSource的配置")
     public RetResult addNode(@RestParam(name = "name", comment = "DataSource的标识") final String name,
-        @RestParam(name = "properties", comment = "配置") final Properties properties) throws IOException {
+        @RestParam(name = "properties", comment = "配置") Properties properties,
+        @RestParam(name = "xmlpath", comment = "配置文件路径") String xmlpath) throws IOException {
         if (name == null) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param (name)");
+        if (properties == null && xmlpath != null) {
+            File f = new File(xmlpath);
+            if (!f.isFile()) f = new File(home, xmlpath);
+            if (!f.isFile()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found file (" + xmlpath + ")");
+            FileInputStream in = new FileInputStream(f);
+            Map<String, Properties> map = DataSources.loadPersistenceXml(in);
+            properties = map.get(name);
+        }
         if (properties == null) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param (properties)");
         DataSource source = null;
         for (DataSource s : application.getDataSources()) {
