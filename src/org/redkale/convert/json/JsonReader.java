@@ -168,7 +168,7 @@ public class JsonReader extends Reader {
     @Override
     public String readObjectB(final Class clazz) {
         this.fieldIndex = 0; //必须要重置为0
-        if (this.position <= this.text.length) return null;
+        if (this.text.length == 0) return null;
         char ch = this.text[++this.position];
         if (ch == '{') return "";
         if (ch <= ' ') {
@@ -217,7 +217,7 @@ public class JsonReader extends Reader {
      */
     @Override
     public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) {
-        if (this.position <= this.text.length) return SIGN_NULL;
+        if (this.text.length == 0) return SIGN_NULL;
         char ch = this.text[++this.position];
         if (ch == '[') return SIGN_NOLENGTH;
         if (ch == '{') return SIGN_NOLENGTH;
