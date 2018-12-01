@@ -558,26 +558,26 @@ public abstract class WebSocket<G extends Serializable, T> {
     /**
      * 获取当前WebSocket下的属性，非线程安全
      *
-     * @param <T>  属性值的类型
+     * @param <V>  属性值的类型
      * @param name 属性名
      *
      * @return 属性值
      */
     @SuppressWarnings("unchecked")
-    public final <T> T getAttribute(String name) {
-        return attributes == null ? null : (T) attributes.get(name);
+    public final <V> V getAttribute(String name) {
+        return attributes == null ? null : (V) attributes.get(name);
     }
 
     /**
      * 移出当前WebSocket下的属性，非线程安全
      *
-     * @param <T>  属性值的类型
+     * @param <V>  属性值的类型
      * @param name 属性名
      *
      * @return 属性值
      */
-    public final <T> T removeAttribute(String name) {
-        return attributes == null ? null : (T) attributes.remove(name);
+    public final <V> V removeAttribute(String name) {
+        return attributes == null ? null : (V) attributes.remove(name);
     }
 
     /**
