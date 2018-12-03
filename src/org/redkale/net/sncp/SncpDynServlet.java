@@ -14,6 +14,7 @@ import java.nio.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
@@ -36,9 +37,9 @@ import org.redkale.service.RpcCall;
  */
 public final class SncpDynServlet extends SncpServlet {
 
-    private static volatile int maxClassNameLength = 0;
+    private final AtomicInteger maxClassNameLength;
 
-    private static volatile int maxNameLength = 0;
+    private final AtomicInteger maxNameLength;
 
     private static final Logger logger = Logger.getLogger(SncpDynServlet.class.getSimpleName());
 
@@ -48,8 +49,11 @@ public final class SncpDynServlet extends SncpServlet {
 
     private Supplier<ByteBuffer> bufferSupplier;
 
-    public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class serviceOrSourceType, final Service service) {
+    public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class serviceOrSourceType, final Service service,
+        final AtomicInteger maxClassNameLength, AtomicInteger maxNameLength) {
         super(serviceName, serviceOrSourceType, service);
+        this.maxClassNameLength = maxClassNameLength;
+        this.maxNameLength = maxNameLength;
         this.serviceid = Sncp.hash(type.getName() + ':' + serviceName);
         Set<DLong> actionids = new HashSet<>();
         for (java.lang.reflect.Method method : service.getClass().getMethods()) {
@@ -70,20 +74,20 @@ public final class SncpDynServlet extends SncpServlet {
             actions.put(actionid, action);
             actionids.add(actionid);
         }
-        maxNameLength = Math.max(maxNameLength, serviceName.length() + 1);
-        maxClassNameLength = Math.max(maxClassNameLength, type.getName().length());
+        maxNameLength.set(Math.max(maxNameLength.get(), serviceName.length() + 1));
+        maxClassNameLength.set(Math.max(maxClassNameLength.get(), type.getName().length()));
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getClass().getSimpleName()).append(" (type=").append(type.getName());
-        int len = maxClassNameLength - type.getName().length();
+        int len = this.maxClassNameLength.get() - type.getName().length();
         for (int i = 0; i < len; i++) {
             sb.append(' ');
         }
         sb.append(", serviceid=").append(serviceid).append(", name='").append(serviceName).append("'");
-        for (int i = 0; i < maxNameLength - serviceName.length(); i++) {
+        for (int i = 0; i < this.maxNameLength.get() - serviceName.length(); i++) {
             sb.append(' ');
         }
         sb.append(", actions.size=").append(actions.size() > 9 ? "" : " ").append(actions.size()).append(")");

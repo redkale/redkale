@@ -25,6 +25,10 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
+    private final AtomicInteger maxClassNameLength = new AtomicInteger();
+
+    private final AtomicInteger maxNameLength = new AtomicInteger();
+
     public SncpServer() {
         this(System.currentTimeMillis(), ResourceFactory.root());
     }
@@ -87,7 +91,8 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     public void addSncpServlet(Service sncpService) {
-        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
+        SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService),
+            Sncp.getResourceType(sncpService), sncpService, maxClassNameLength, maxNameLength);
         this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
     }
 
