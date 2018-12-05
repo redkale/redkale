@@ -106,6 +106,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Resource(name = "$")
     protected WebSocketNode node;
 
+    @Resource(name = "SERVER_RESFACTORY")
+    protected ResourceFactory resourceFactory;
+
     protected WebSocketServlet() {
         Type msgtype = String.class;
         try {
@@ -145,6 +148,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 if (cryptorClass != null && !cryptorClass.isEmpty()) {
                     try {
                         this.cryptor = (Cryptor) Thread.currentThread().getContextClassLoader().loadClass(cryptorClass).getDeclaredConstructor().newInstance();
+                        if (resourceFactory != null && this.cryptor != null) resourceFactory.inject(this.cryptor);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
