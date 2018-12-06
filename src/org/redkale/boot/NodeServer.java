@@ -284,6 +284,7 @@ public abstract class NodeServer {
             public void load(ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) {
                 try {
                     if (field.getAnnotation(Resource.class) == null) return;
+                    if (!(src instanceof Service)) throw new RuntimeException("CacheSource must be inject in Service, cannot " + src);
                     if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 CacheSource 
                     final Service srcService = (Service) src;
                     SncpClient client = Sncp.getSncpClient(srcService);
