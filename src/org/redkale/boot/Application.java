@@ -467,7 +467,7 @@ public final class Application {
                 try {
                     Resource res = field.getAnnotation(Resource.class);
                     if (res == null) return;
-                    if (Sncp.isRemote((Service) src)) return; //远程模式不得注入 
+                    if (src instanceof Service && Sncp.isRemote((Service) src)) return; //远程模式不得注入 
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(src, application);
