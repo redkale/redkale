@@ -10,6 +10,7 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.*;
 import javax.xml.stream.*;
+import org.redkale.util.AnyValue;
 
 /**
  *
@@ -54,6 +55,19 @@ public final class DataSources {
     public static final String JDBC_SOURCE = "javax.persistence.jdbc.source";
 
     private DataSources() {
+    }
+
+    public static DataSource createDataSource(final String unitName, final AnyValue conf) throws IOException {
+        Properties prop = new Properties();
+        AnyValue[] confs = conf.getAnyValues("property");
+        if (confs != null) {
+            for (AnyValue itemConf : confs) {
+                String name = itemConf.getValue("name");
+                String value = itemConf.getValue("value");
+                if (name != null && value != null) prop.put(name, value);
+            }
+        }
+        return createDataSource(unitName, prop, prop);
     }
 
     public static DataSource createDataSource(final String unitName, Properties prop) throws IOException {

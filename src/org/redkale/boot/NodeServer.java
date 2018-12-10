@@ -242,13 +242,7 @@ public abstract class NodeServer {
                 if (sourceConf != null) {
                     final Class sourceType = resEntry.getKey();
                     if (sourceType == DataJdbcSource.class) {
-                        Properties prop = new Properties();
-                        for (AnyValue itemConf : sourceConf.getAnyValues("property")) {
-                            String name = itemConf.getValue("name");
-                            String value = itemConf.getValue("value");
-                            if (name != null && value != null) prop.put(name, value);
-                        }
-                        source = DataSources.createDataSource(resourceName, prop);
+                        source = DataSources.createDataSource(resourceName, sourceConf);
                     } else {
                         boolean can = false;
                         for (Constructor cr : sourceType.getConstructors()) {
