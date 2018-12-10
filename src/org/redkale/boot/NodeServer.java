@@ -12,6 +12,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
@@ -177,19 +178,27 @@ public abstract class NodeServer {
         final ResourceFactory appResFactory = application.getResourceFactory();
         final TransportFactory appSncpTranFactory = application.getSncpTransportFactory();
         final AnyValue resources = application.config.getAnyValue("resources");
-        final Map<String, AnyValue> cacheResource = new HashMap<>();
-        final Map<String, AnyValue> dataResources = new HashMap<>();
+        final Map<String, SimpleEntry<Class, AnyValue>> cacheResource = new HashMap<>();
+        final Map<String, SimpleEntry<Class, AnyValue>> dataResources = new HashMap<>();
         if (resources != null) {
             for (AnyValue sourceConf : resources.getAnyValues("source")) {
                 try {
                     Class type = serverClassLoader.loadClass(sourceConf.getValue("value"));
-                    if (type == DataSource.class) type = DataJdbcSource.class;
+                    if (type == DataSource.class) {
+                        type = DataMemorySource.class;
+                        for (AnyValue itemConf : sourceConf.getAnyValues("property")) {
+                            if (itemConf.getValue("name", "").contains(DataSources.JDBC_URL)) {
+                                type = DataJdbcSource.class;
+                                break;
+                            }
+                        }
+                    }
                     if (!Service.class.isAssignableFrom(type)) {
                         logger.log(Level.SEVERE, "load application source resource, but not Service error: " + sourceConf);
                     } else if (CacheSource.class.isAssignableFrom(type)) {
-                        cacheResource.put(sourceConf.getValue("name", ""), sourceConf);
+                        cacheResource.put(sourceConf.getValue("name", ""), new SimpleEntry(type, sourceConf));
                     } else if (DataSource.class.isAssignableFrom(type)) {
-                        dataResources.put(sourceConf.getValue("name", ""), sourceConf);
+                        dataResources.put(sourceConf.getValue("name", ""), new SimpleEntry(type, sourceConf));
                     } else {
                         logger.log(Level.SEVERE, "load application source resource, but not CacheSource error: " + sourceConf);
                     }
@@ -226,26 +235,37 @@ public abstract class NodeServer {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
                 if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
-                AnyValue sourceConf = dataResources.get(resourceName);
+                SimpleEntry<Class, AnyValue> resEntry = dataResources.get(resourceName);
+                AnyValue sourceConf = resEntry == null ? null : resEntry.getValue();
                 DataSource source = null;
                 boolean needinit = true;
                 if (sourceConf != null) {
-                    final Class sourceType = serverClassLoader.loadClass(sourceConf.getValue("value"));
-                    boolean can = false;
-                    for (Constructor cr : sourceType.getConstructors()) {
-                        if (cr.getParameterCount() == 0) {
-                            can = true;
-                            break;
+                    final Class sourceType = resEntry.getKey();
+                    if (sourceType == DataJdbcSource.class) {
+                        Properties prop = new Properties();
+                        for (AnyValue itemConf : sourceConf.getAnyValues("property")) {
+                            String name = itemConf.getValue("name");
+                            String value = itemConf.getValue("value");
+                            if (name != null && value != null) prop.put(name, value);
                         }
-                    }
-                    if (DataSource.class.isAssignableFrom(sourceType) && can) { // 必须有空构造函数
-                        final Service srcService = (Service) src;
-                        SncpClient client = Sncp.getSncpClient(srcService);
-                        final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                        final Set<String> groups = new HashSet<>();
-                        if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
-                        if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
-                        source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                        source = DataSources.createDataSource(resourceName, prop);
+                    } else {
+                        boolean can = false;
+                        for (Constructor cr : sourceType.getConstructors()) {
+                            if (cr.getParameterCount() == 0) {
+                                can = true;
+                                break;
+                            }
+                        }
+                        if (DataSource.class.isAssignableFrom(sourceType) && can) { // 必须有空构造函数
+                            final Service srcService = (Service) src;
+                            SncpClient client = Sncp.getSncpClient(srcService);
+                            final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
+                            final Set<String> groups = new HashSet<>();
+                            if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
+                            if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
+                            source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                        }
                     }
                 }
                 if (source == null) {
@@ -293,8 +313,12 @@ public abstract class NodeServer {
                     if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
                     if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
 
-                    AnyValue sourceConf = cacheResource.get(resourceName);
-                    if (sourceConf == null) sourceConf = dataResources.get(resourceName);
+                    SimpleEntry<Class, AnyValue> resEntry = cacheResource.get(resourceName);
+                    AnyValue sourceConf = resEntry == null ? null : resEntry.getValue();
+                    if (sourceConf == null) {
+                        SimpleEntry<Class, AnyValue> resEntry2 = dataResources.get(resourceName);
+                        sourceConf = resEntry2 == null ? null : resEntry2.getValue();
+                    }
                     final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("value"));
                     Object source = null;
                     if (CacheSource.class.isAssignableFrom(sourceType)) { // CacheSource
