@@ -9,7 +9,7 @@
             -->
             <property name="javax.persistence.datasource" value="org.redkale.source.DataJdbcSource"/>
             <!-- 
-                是否开启缓存(标记为@Cacheable的Entity类)，值目前只支持两种： ALL: 所有开启缓存。 NONE: 关闭所有缓存
+                是否开启缓存(标记为@Cacheable的Entity类)，值目前只支持两种： ALL: 所有开启缓存。 NONE: 关闭所有缓存， 非NONE字样统一视为ALL
             -->
             <property name="javax.persistence.cachemode" value="ALL"/>
             
