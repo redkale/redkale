@@ -87,6 +87,12 @@ public interface WebSocketDesc<G, T> {
     //给符合条件的人群广播消息, 返回结果0表示成功，非0表示错误码
     public CompletableFuture<Integer> broadcastMessage(WebSocketRange wsrange, Convert convert, final Object message, boolean last);
 
+    //给指定userid的WebSocket节点发送操作
+    public CompletableFuture<Integer> sendAction(final WebSocketAction action, Serializable... userids);
+
+    //广播操作， 给所有人发操作指令
+    public CompletableFuture<Integer> broadcastAction(final WebSocketAction action);
+
     //获取用户在线的SNCP节点地址列表，不是分布式则返回元素数量为1，且元素值为null的列表
     public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid);
 
@@ -120,8 +126,10 @@ public interface WebSocketDesc<G, T> {
     //获取当前进程节点所有在线的WebSocket
     /* protected */ Collection<WebSocket> getLocalWebSockets();
 
+
     //获取ByteBuffer资源池
     /* protected */ Supplier<ByteBuffer> getByteBufferSupplier();
+
 
     //返回sessionid, null表示连接不合法或异常,默认实现是request.sessionid(true)，通常需要重写该方法
     /* protected */ CompletableFuture<String> onOpen(final HttpRequest request);
@@ -129,7 +137,8 @@ public interface WebSocketDesc<G, T> {
 
     //创建userid， null表示异常， 必须实现该方法
     /* protected abstract */    CompletableFuture<G> createUserid();
-    
+
+
     //WebSocket.broadcastMessage时的过滤条件
     /* protected */ boolean predicate(WebSocketRange wsrange);
 
