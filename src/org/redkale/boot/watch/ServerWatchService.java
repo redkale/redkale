@@ -6,6 +6,7 @@
 package org.redkale.boot.watch;
 
 import java.util.*;
+import java.util.stream.Stream;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
 import org.redkale.net.Server;
@@ -27,14 +28,9 @@ public class ServerWatchService extends AbstractWatchService {
     protected Application application;
 
     @RestMapping(name = "info", comment = "单个Server信息查询")
-    public RetResult info(@RestParam(name = "#port:") int port) {
-        NodeServer node = null;
-        for (NodeServer ns : application.getNodeServers()) {
-            if (ns.getServer().getSocketAddress().getPort() == port) {
-                node = ns;
-                break;
-            }
-        }
+    public RetResult info(@RestParam(name = "#port:") final int port) {
+        Stream<NodeServer> stream = application.getNodeServers().stream();
+        NodeServer node = stream.filter(ns -> ns.getServer().getSocketAddress().getPort() == port).findFirst().orElse(null);
         if (node == null) return new RetResult(RET_SERVER_NOT_EXISTS, "Server(port=" + port + ") not found");
         return new RetResult(formatToMap(node));
     }
