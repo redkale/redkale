@@ -5,6 +5,8 @@
  */
 package org.redkale.boot.watch;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Stream;
 import javax.annotation.Resource;
@@ -23,6 +25,9 @@ public class ServerWatchService extends AbstractWatchService {
 
     @Comment("不存在的Server节点")
     public static final int RET_SERVER_NOT_EXISTS = 1602_0001;
+
+    @Comment("更改Server监听地址端口失败")
+    public static final int RET_SERVER_CHANGEPORT_ERROR = 1602_0002;
 
     @Resource
     protected Application application;
@@ -43,6 +48,25 @@ public class ServerWatchService extends AbstractWatchService {
             rs.put("" + server.getSocketAddress().getPort(), formatToMap(ns));
         }
         return new RetResult(rs);
+    }
+
+    @RestMapping(name = "changeaddress", comment = "更改Server的监听地址和端口")
+    public RetResult changeAddress(@RestParam(name = "#port:") final int oldport,
+        @RestParam(name = "#newhost:") final String newhost, @RestParam(name = "#newport:") final int newport) {
+        if (oldport < 1) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `oldport`");
+        if (newport < 1) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `newport`");
+        Stream<NodeServer> stream = application.getNodeServers().stream();
+        NodeServer node = stream.filter(ns -> ns.getServer().getSocketAddress().getPort() == oldport).findFirst().orElse(null);
+        if (node == null) return new RetResult(RET_SERVER_NOT_EXISTS, "Server(port=" + oldport + ") not found");
+        final Server server = node.getServer();
+        InetSocketAddress newAddr = new InetSocketAddress(newhost == null || newhost.isEmpty() ? server.getSocketAddress().getHostString() : newhost, newport);
+        try {
+            server.changeAddress(newAddr);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new RetResult(RET_SERVER_CHANGEPORT_ERROR, "changeaddress error");
+        }
+        return RetResult.success();
     }
 
     private Map<String, Object> formatToMap(NodeServer node) {

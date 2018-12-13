@@ -47,27 +47,6 @@ public class Context {
     //服务的根Servlet
     protected final PrepareServlet prepare;
 
-    //服务的监听地址
-    private final InetSocketAddress address;
-
-    //字符集
-    protected final Charset charset;
-
-    //最大连接数, 为0表示没限制
-    protected final int maxconns;
-
-    //请求内容的大小上限, 默认64K
-    protected final int maxbody;
-
-    //keep alive IO读取的超时时间
-    protected final int aliveTimeoutSeconds;
-
-    //IO读取的超时时间
-    protected final int readTimeoutSeconds;
-
-    //IO写入的超时时间
-    protected final int writeTimeoutSeconds;
-
     //日志Logger
     protected final Logger logger;
 
@@ -79,6 +58,27 @@ public class Context {
 
     //依赖注入工厂类
     protected final ResourceFactory resourceFactory;
+
+    //最大连接数, 为0表示没限制
+    protected int maxconns;
+
+    //请求内容的大小上限, 默认64K
+    protected int maxbody;
+
+    //keep alive IO读取的超时时间
+    protected int aliveTimeoutSeconds;
+
+    //IO读取的超时时间
+    protected int readTimeoutSeconds;
+
+    //IO写入的超时时间
+    protected int writeTimeoutSeconds;
+
+    //服务的监听地址
+    protected InetSocketAddress address;
+
+    //字符集
+    protected Charset charset;
 
     public Context(ContextConfig config) {
         this(config.serverStartTime, config.logger, config.executor, config.sslContext,

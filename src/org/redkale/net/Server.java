@@ -12,8 +12,9 @@ import java.text.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
+import java.util.logging.*;
 import javax.net.ssl.SSLContext;
+import org.redkale.net.Filter;
 import org.redkale.util.*;
 
 /**
@@ -285,6 +286,74 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
             + ", threads: " + threads + ", maxbody: " + formatLenth(context.maxbody) + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
+    }
+
+    public void changeAddress(final InetSocketAddress addr) throws IOException {
+        long s = System.currentTimeMillis();
+        Objects.requireNonNull(addr);
+        final InetSocketAddress oldAddress = context.address;
+        final ProtocolServer oldServerChannel = this.serverChannel;
+        context.address = addr;
+        ProtocolServer newServerChannel = null;
+        try {
+            newServerChannel = ProtocolServer.create(this.protocol, context, this.serverClassLoader, config == null ? null : config.getValue("netimpl"));
+            newServerChannel.open(config);
+            newServerChannel.bind(addr, backlog);
+            newServerChannel.accept();
+        } catch (IOException e) {
+            context.address = oldAddress;
+            throw e;
+        }
+        this.address = context.address;
+        this.serverChannel = newServerChannel;
+        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol))
+            + " change address listen: " + address + ", started in " + (System.currentTimeMillis() - s) + " ms");
+        if (oldServerChannel != null) {
+            new Thread() {
+
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(10_000);
+                        oldServerChannel.close();
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Server.changeInetSocketAddress(addr=" + addr + ") error", e);
+                    }
+                }
+            }.start();
+        }
+    }
+
+    public void changeMaxconns(final int newmaxconns) {
+        this.maxconns = newmaxconns;
+        if (this.context != null) this.context.maxconns = newmaxconns;
+        if (this.serverChannel != null) this.serverChannel.maxconns = newmaxconns;
+    }
+
+    public void changeCharset(final Charset newcharset) {
+        this.charset = newcharset;
+        if (this.context != null) this.context.charset = newcharset;
+    }
+
+    public void changeMaxbody(final int newmaxbody) {
+        this.maxbody = newmaxbody;
+        if (this.context != null) this.context.maxbody = newmaxbody;
+    }
+
+    public void changeReadTimeoutSeconds(final int newReadTimeoutSeconds) {
+        this.readTimeoutSeconds = newReadTimeoutSeconds;
+        if (this.context != null) this.context.readTimeoutSeconds = newReadTimeoutSeconds;
+    }
+
+    public void changeWriteTimeoutSeconds(final int newWriteTimeoutSeconds) {
+        this.writeTimeoutSeconds = newWriteTimeoutSeconds;
+        if (this.context != null) this.context.writeTimeoutSeconds = newWriteTimeoutSeconds;
+    }
+
+    public void changeAliveTimeoutSeconds(final int newAliveTimeoutSeconds) {
+        this.aliveTimeoutSeconds = newAliveTimeoutSeconds;
+        if (this.context != null) this.context.aliveTimeoutSeconds = newAliveTimeoutSeconds;
     }
 
     protected abstract C createContext();
