@@ -155,7 +155,7 @@ public class Context {
         return bufferPool;
     }
 
-    protected Consumer<ByteBuffer> getBufferConsumer() {
+    public Consumer<ByteBuffer> getBufferConsumer() {
         return bufferPool;
     }
 
