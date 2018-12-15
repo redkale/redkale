@@ -10,7 +10,6 @@ import org.redkale.asm.MethodDebugVisitor;
 import java.nio.channels.CompletionHandler;
 import java.security.*;
 import java.util.concurrent.*;
-import java.util.function.*;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.net.*;
@@ -47,11 +46,6 @@ public class HttpContext extends Context {
 
     protected ObjectPool<Response> getResponsePool() {
         return responsePool;
-    }
-
-    @Override
-    protected Consumer<ByteBuffer> getBufferConsumer() {
-        return super.getBufferConsumer();
     }
 
     @Override
