@@ -164,18 +164,18 @@ public class Context {
         return bufferPool.get();
     }
 
-    protected void offerBuffer(ByteBuffer buffer) {
+    public void offerBuffer(ByteBuffer buffer) {
         bufferPool.accept(buffer);
     }
 
-    protected void offerBuffer(ByteBuffer... buffers) {
+    public void offerBuffer(ByteBuffer... buffers) {
         if (buffers == null) return;
         for (ByteBuffer buffer : buffers) {
             bufferPool.accept(buffer);
         }
     }
 
-    protected void offerBuffer(Collection<ByteBuffer> buffers) {
+    public void offerBuffer(Collection<ByteBuffer> buffers) {
         if (buffers == null) return;
         for (ByteBuffer buffer : buffers) {
             bufferPool.accept(buffer);
