@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import org.redkale.asm.MethodDebugVisitor;
 import java.nio.channels.CompletionHandler;
 import java.security.*;
+import java.util.Collection;
 import java.util.concurrent.*;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -55,6 +56,11 @@ public class HttpContext extends Context {
 
     @Override
     protected void offerBuffer(ByteBuffer... buffers) {
+        super.offerBuffer(buffers);
+    }
+
+    @Override
+    protected void offerBuffer(Collection<ByteBuffer> buffers) {
         super.offerBuffer(buffers);
     }
 

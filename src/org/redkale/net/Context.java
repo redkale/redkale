@@ -8,6 +8,7 @@ package org.redkale.net;
 import java.net.*;
 import java.nio.*;
 import java.nio.charset.*;
+import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
@@ -168,6 +169,13 @@ public class Context {
     }
 
     protected void offerBuffer(ByteBuffer... buffers) {
+        if (buffers == null) return;
+        for (ByteBuffer buffer : buffers) {
+            bufferPool.accept(buffer);
+        }
+    }
+
+    protected void offerBuffer(Collection<ByteBuffer> buffers) {
         if (buffers == null) return;
         for (ByteBuffer buffer : buffers) {
             bufferPool.accept(buffer);
