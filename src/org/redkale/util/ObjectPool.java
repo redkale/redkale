@@ -75,6 +75,10 @@ public final class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         this.creator = creator;
     }
 
+    public Creator<T> getCreator() {
+        return this.creator;
+    }
+
     public Predicate<T> getRecyclerPredicate() {
         return recycler;
     }
