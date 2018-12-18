@@ -118,7 +118,7 @@ public abstract class AsyncConnection2 implements ReadableByteChannel, WritableB
     public abstract <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
     public void setReadBuffer(ByteBuffer buffer) {
-        if (this.readBuffer != null) throw new RuntimeException("repeat AsyncConnection.currentReadBuffer");
+        if (this.readBuffer != null) throw new RuntimeException("repeat AsyncConnection.setReadBuffer");
         this.readBuffer = buffer;
     }
 
