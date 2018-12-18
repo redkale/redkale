@@ -213,15 +213,16 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
     public void prepare(final ByteBuffer buffer, final R request, final P response) throws IOException {
         executeCounter.incrementAndGet();
         final int rs = request.readHeader(buffer);
-        if (rs < 0) {
-            request.offerReadBuffer(buffer);
+        final AsyncConnection channel = request.channel;
+        if (rs < 0) {  //表示数据格式不正确
+            channel.offerBuffer(buffer);
             if (rs != Integer.MIN_VALUE) illRequestCounter.incrementAndGet();
             response.finish(true);
         } else if (rs == 0) {
             if (buffer.hasRemaining()) {
                 request.setMoredata(buffer);
             } else {
-                request.offerReadBuffer(buffer);
+                channel.offerBuffer(buffer);
             }
             request.prepare();
             response.filter = this.headFilter;
@@ -229,21 +230,23 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
             response.nextEvent();
         } else {
             buffer.clear();
+            channel.setReadBuffer(buffer);
             final AtomicInteger ai = new AtomicInteger(rs);
-            request.channel.read(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
+            channel.read(new CompletionHandler<Integer, ByteBuffer>() {
 
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {
-                    buffer.flip();
-                    ai.addAndGet(-request.readBody(buffer));
+                    attachment.flip();
+                    ai.addAndGet(-request.readBody(attachment));
                     if (ai.get() > 0) {
-                        buffer.clear();
-                        request.channel.read(buffer, buffer, this);
+                        attachment.clear();
+                        channel.setReadBuffer(attachment);
+                        channel.read(this);
                     } else {
-                        if (buffer.hasRemaining()) {
-                            request.setMoredata(buffer);
+                        if (attachment.hasRemaining()) {
+                            request.setMoredata(attachment);
                         } else {
-                            request.offerReadBuffer(buffer);
+                            channel.offerBuffer(attachment);
                         }
                         request.prepare();
                         try {
@@ -261,7 +264,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
                     illRequestCounter.incrementAndGet();
-                    request.offerReadBuffer(buffer);
+                    channel.offerBuffer(attachment);
                     response.finish(true);
                     if (exc != null) request.context.logger.log(Level.FINER, "Servlet read channel erroneous, forece to close channel ", exc);
                 }

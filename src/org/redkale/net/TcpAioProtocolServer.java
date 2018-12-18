@@ -33,7 +33,7 @@ public class TcpAioProtocolServer extends ProtocolServer {
     @Override
     public void open(AnyValue config) throws IOException {
         //group = AsynchronousChannelGroup.withThreadPool(context.executor);
-        group = AsynchronousChannelGroup.withFixedThreadPool(context.executor.getCorePoolSize(), context.executor.getThreadFactory()); 
+        group = AsynchronousChannelGroup.withFixedThreadPool(context.executor.getCorePoolSize(), context.executor.getThreadFactory());
         this.serverChannel = AsynchronousServerSocketChannel.open(group);
 
         final Set<SocketOption<?>> options = this.serverChannel.supportedOptions();
@@ -95,9 +95,8 @@ public class TcpAioProtocolServer extends ProtocolServer {
                 } catch (IOException e) {
                     context.logger.log(Level.INFO, channel + " setOption error", e);
                 }
-                AsyncConnection conn = new TcpAioAsyncConnection(channel, context.sslContext, null, context.readTimeoutSeconds, context.writeTimeoutSeconds, null, null);
-                conn.livingCounter = livingCounter;
-                conn.closedCounter = closedCounter;
+                AsyncConnection conn = new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), channel,
+                    context.getSSLContext(), null, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
                 context.runAsync(new PrepareRunner(context, conn, null, null));
             }
 

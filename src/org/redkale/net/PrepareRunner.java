@@ -55,14 +55,13 @@ public class PrepareRunner implements Runnable {
             return;
         }
         if (response == null) response = responsePool.get();
-        final ByteBuffer buffer = response.request.pollReadBuffer();
         try {
-            channel.read(buffer, keepalive ? context.getAliveTimeoutSeconds() : 0, TimeUnit.SECONDS, null,
-                new CompletionHandler<Integer, Void>() {
+            channel.read(keepalive ? context.getAliveTimeoutSeconds() : 0, TimeUnit.SECONDS,
+                new CompletionHandler<Integer, ByteBuffer>() {
                 @Override
-                public void completed(Integer count, Void attachment1) {
+                public void completed(Integer count, ByteBuffer buffer) {
                     if (count < 1) {
-                        response.request.offerReadBuffer(buffer);
+                        channel.offerBuffer(buffer);
                         channel.dispose();// response.init(channel); 在调用之前异常
                         response.removeChannel();
                         response.finish(true);
@@ -85,8 +84,8 @@ public class PrepareRunner implements Runnable {
                 }
 
                 @Override
-                public void failed(Throwable exc, Void attachment2) {
-                    response.request.offerReadBuffer(buffer);
+                public void failed(Throwable exc, ByteBuffer buffer) {
+                    channel.offerBuffer(buffer);
                     channel.dispose();// response.init(channel); 在调用之前异常
                     response.removeChannel();
                     response.finish(true);
@@ -96,7 +95,6 @@ public class PrepareRunner implements Runnable {
                 }
             });
         } catch (Exception te) {
-            response.request.offerReadBuffer(buffer);
             channel.dispose();// response.init(channel); 在调用之前异常
             response.removeChannel();
             response.finish(true);
@@ -126,19 +124,4 @@ public class PrepareRunner implements Runnable {
         return response.removeChannel();
     }
 
-    protected ByteBuffer pollReadBuffer(Request request) {
-        return request.pollReadBuffer();
-    }
-
-    protected ByteBuffer pollReadBuffer(Response response) {
-        return response.request.pollReadBuffer();
-    }
-
-    protected void offerReadBuffer(Request request, ByteBuffer buffer) {
-        request.offerReadBuffer(buffer);
-    }
-
-    protected void offerReadBuffer(Response response, ByteBuffer buffer) {
-        response.request.offerReadBuffer(buffer);
-    }
 }

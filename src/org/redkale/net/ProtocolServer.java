@@ -73,13 +73,13 @@ public abstract class ProtocolServer {
             } else if ("aio".equalsIgnoreCase(netimpl)) {
                 return new TcpAioProtocolServer(context);
             } else if ("nio".equalsIgnoreCase(netimpl)) {
-                return new TcpNioProtocolServer(context);
+                return null;//  return new TcpNioProtocolServer(context);
             }
         } else if ("UDP".equalsIgnoreCase(protocol)) {
             if (netimpl == null || netimpl.isEmpty()) {
-                return new UdpBioProtocolServer(context);
+                return null;// return new UdpBioProtocolServer(context);
             } else if ("bio".equalsIgnoreCase(netimpl)) {
-                return new UdpBioProtocolServer(context);
+                return null;// return new UdpBioProtocolServer(context);
             }
         } else if (netimpl == null || netimpl.isEmpty()) {
             throw new RuntimeException("ProtocolServer not support protocol " + protocol);

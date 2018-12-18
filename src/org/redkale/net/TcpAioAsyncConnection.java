@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.*;
 import javax.net.ssl.SSLContext;
 
 /**
@@ -35,11 +36,12 @@ public class TcpAioAsyncConnection extends AsyncConnection {
 
     private BlockingQueue<WriteEntry> writeQueue;
 
-    public TcpAioAsyncConnection(final AsynchronousSocketChannel ch, SSLContext sslContext,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds,
+    public TcpAioAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+        final AsynchronousSocketChannel ch, final SSLContext sslContext, final SocketAddress addr0,
+        final int readTimeoutSeconds, final int writeTimeoutSeconds,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
+        super(bufferSupplier, bufferConsumer, sslContext);
         this.channel = ch;
-        this.sslContext = sslContext;
         this.readTimeoutSeconds = readTimeoutSeconds;
         this.writeTimeoutSeconds = writeTimeoutSeconds;
         SocketAddress addr = addr0;
@@ -91,19 +93,21 @@ public class TcpAioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    public void read(CompletionHandler<Integer, ByteBuffer> handler) {
         this.readtime = System.currentTimeMillis();
+        ByteBuffer dst = pollReadBuffer();
         if (readTimeoutSeconds > 0) {
-            channel.read(dst, readTimeoutSeconds, TimeUnit.SECONDS, attachment, handler);
+            channel.read(dst, readTimeoutSeconds, TimeUnit.SECONDS, dst, handler);
         } else {
-            channel.read(dst, attachment, handler);
+            channel.read(dst, dst, handler);
         }
     }
 
     @Override
-    public <A> void read(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    public void read(long timeout, TimeUnit unit, CompletionHandler<Integer, ByteBuffer> handler) {
         this.readtime = System.currentTimeMillis();
-        channel.read(dst, timeout < 0 ? 0 : timeout, unit, attachment, handler);
+        ByteBuffer dst = pollReadBuffer();
+        channel.read(dst, timeout < 0 ? 0 : timeout, unit, dst, handler);
     }
 
     private <A> void nextWrite(A attachment) {
@@ -223,13 +227,21 @@ public class TcpAioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public final Future<Integer> read(ByteBuffer dst) {
-        return channel.read(dst);
+    public final int read(ByteBuffer dst) throws IOException {
+        try {
+            return channel.read(dst).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
-    public final Future<Integer> write(ByteBuffer src) {
-        return channel.write(src);
+    public final int write(ByteBuffer src) throws IOException {
+        try {
+            return channel.write(src).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override

@@ -34,8 +34,6 @@ class WebSocketRunner implements Runnable {
 
     protected final HttpContext context;
 
-    private ByteBuffer readBuffer;
-
     volatile boolean closed = false;
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
@@ -50,7 +48,6 @@ class WebSocketRunner implements Runnable {
         this.webSocket = webSocket;
         this.restMessageConsumer = messageConsumer;
         this.channel = channel;
-        this.readBuffer = context.pollBuffer();
     }
 
     @Override
@@ -61,7 +58,7 @@ class WebSocketRunner implements Runnable {
             channel.setReadTimeoutSeconds(300); //读取超时5分钟
             if (channel.isOpen()) {
                 final int wsmaxbody = webSocket._engine.wsmaxbody;
-                channel.read(readBuffer, null, new CompletionHandler<Integer, Void>() {
+                channel.read(new CompletionHandler<Integer, ByteBuffer>() {
 
                     //尚未解析完的数据包
                     private WebSocketPacket unfinishPacket;
@@ -72,31 +69,27 @@ class WebSocketRunner implements Runnable {
                     private final SimpleEntry<String, byte[]> halfBytes = new SimpleEntry("", null);
 
                     @Override
-                    public void completed(Integer count, Void attachment1) {
+                    public void completed(Integer count, ByteBuffer readBuffer) {
                         if (count < 1) {
                             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner(userid=" + webSocket.getUserid() + ") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
                             closeRunner(CLOSECODE_ILLPACKET, "read buffer count is " + count);
                             return;
                         }
                         try {
-                            ByteBuffer readBuf = readBuffer;
-                            if (readBuf == null) return; //关闭后readBuffer为null
                             lastReadTime = System.currentTimeMillis();
-                            readBuf.flip();
+                            readBuffer.flip();
 
                             WebSocketPacket onePacket = null;
                             if (unfinishPacket != null) {
-                                if (unfinishPacket.receiveBody(webSocket, readBuf)) { //已经接收完毕
+                                if (unfinishPacket.receiveBody(webSocket, readBuffer)) { //已经接收完毕
                                     onePacket = unfinishPacket;
                                     unfinishPacket = null;
                                     for (ByteBuffer b : exBuffers) {
                                         context.offerBuffer(b);
                                     }
                                     exBuffers.clear();
-                                } else { //需要继续接收
-                                    readBuf = context.pollBuffer();
-                                    readBuffer = readBuf;
-                                    channel.read(readBuf, null, this);
+                                } else { //需要继续接收,  此处不能回收readBuffer
+                                    channel.read(this);
                                     return;
                                 }
                             }
@@ -105,37 +98,36 @@ class WebSocketRunner implements Runnable {
                             if (onePacket != null) packets.add(onePacket);
                             try {
                                 while (true) {
-                                    WebSocketPacket packet = new WebSocketPacket().decode(context.getLogger(), webSocket, wsmaxbody, halfBytes, readBuf);
+                                    WebSocketPacket packet = new WebSocketPacket().decode(context.getLogger(), webSocket, wsmaxbody, halfBytes, readBuffer);
                                     if (packet == WebSocketPacket.NONE) break; //解析完毕但是buffer有多余字节
                                     if (packet != null && !packet.isReceiveFinished()) {
                                         unfinishPacket = packet;
-                                        if (readBuf.hasRemaining()) {
-                                            exBuffers.add(readBuf);
-                                            readBuf = context.pollBuffer();
-                                            readBuffer = readBuf;
+                                        if (readBuffer.hasRemaining()) {
+                                            exBuffers.add(readBuffer);
                                         }
                                         break;
                                     }
                                     packets.add(packet);
-                                    if (packet == null || !readBuf.hasRemaining()) break;
+                                    if (packet == null || !readBuffer.hasRemaining()) break;
                                 }
                             } catch (Exception e) {
                                 context.getLogger().log(Level.SEVERE, "WebSocket parse message error", e);
                                 webSocket.onOccurException(e, null);
                             }
                             //继续监听消息
-                            readBuf.clear();
+                            readBuffer.clear();
                             if (halfBytes.getValue() != null) {
-                                readBuf.put(halfBytes.getValue());
+                                readBuffer.put(halfBytes.getValue());
                                 halfBytes.setValue(null);
                             }
-                            channel.read(readBuf, null, this);
+                            channel.setReadBuffer(readBuffer);
+                            channel.read(this);
 
                             //消息处理
                             for (final WebSocketPacket packet : packets) {
                                 if (packet == null) {
                                     if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner abort on decode WebSocketPacket, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
-                                    failed(null, attachment1);
+                                    failed(null, readBuffer);
                                     return;
                                 }
 
@@ -197,7 +189,7 @@ class WebSocketRunner implements Runnable {
                     }
 
                     @Override
-                    public void failed(Throwable exc, Void attachment2) {
+                    public void failed(Throwable exc, ByteBuffer attachment2) {
                         if (exc != null) {
                             if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
                             closeRunner(CLOSECODE_WSEXCEPTION, "read websocket-packet failed");
@@ -302,8 +294,6 @@ class WebSocketRunner implements Runnable {
             if (closed) return null;
             closed = true;
             channel.dispose();
-            context.offerBuffer(readBuffer);
-            readBuffer = null;
             CompletableFuture<Void> future = engine.removeThenClose(webSocket);
             webSocket.onClose(code, reason);
             return future;

@@ -133,7 +133,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             });
         }
 
-        return AsyncConnection.createTCP(group, this.servaddr, this.readTimeoutSeconds, this.writeTimeoutSeconds).thenCompose(conn -> {
+        return AsyncConnection.createTCP(bufferPool, group, this.servaddr, this.readTimeoutSeconds, this.writeTimeoutSeconds).thenCompose(conn -> {
             conn.beforeCloseListener((c) -> {
                 semaphore.release();
                 closeCounter.incrementAndGet();
@@ -143,12 +143,11 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             final ByteBuffer buffer = reqConnectBuffer(conn);
 
             if (buffer == null) {
-                final ByteBuffer rbuffer = bufferPool.get();
-                conn.read(rbuffer, null, new CompletionHandler<Integer, Void>() {
+                conn.read(new CompletionHandler<Integer, ByteBuffer>() {
                     @Override
-                    public void completed(Integer result, Void attachment2) {
+                    public void completed(Integer result, ByteBuffer rbuffer) {
                         if (result < 0) {
-                            failed(new SQLException("Read Buffer Error"), attachment2);
+                            failed(new SQLException("Read Buffer Error"), rbuffer);
                             return;
                         }
                         rbuffer.flip();
@@ -156,8 +155,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                     }
 
                     @Override
-                    public void failed(Throwable exc, Void attachment2) {
-                        bufferPool.accept(rbuffer);
+                    public void failed(Throwable exc, ByteBuffer rbuffer) {
+                        conn.offerBuffer(rbuffer);
                         future.completeExceptionally(exc);
                         conn.dispose();
                     }
@@ -175,11 +174,12 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                             return;
                         }
                         buffer.clear();
-                        conn.read(buffer, null, new CompletionHandler<Integer, Void>() {
+                        conn.setReadBuffer(buffer);
+                        conn.read(new CompletionHandler<Integer, ByteBuffer>() {
                             @Override
-                            public void completed(Integer result, Void attachment2) {
+                            public void completed(Integer result, ByteBuffer rbuffer) {
                                 if (result < 0) {
-                                    failed(new SQLException("Read Buffer Error"), attachment2);
+                                    failed(new SQLException("Read Buffer Error"), rbuffer);
                                     return;
                                 }
                                 buffer.flip();
@@ -187,8 +187,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                             }
 
                             @Override
-                            public void failed(Throwable exc, Void attachment2) {
-                                bufferPool.accept(buffer);
+                            public void failed(Throwable exc, ByteBuffer rbuffer) {
+                                conn.offerBuffer(rbuffer);
                                 future.completeExceptionally(exc);
                                 conn.dispose();
                             }

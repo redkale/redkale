@@ -12,6 +12,8 @@ import java.nio.channels.*;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.*;
+import javax.net.ssl.SSLContext;
 
 /**
  *
@@ -32,9 +34,11 @@ public class UdpBioAsyncConnection extends AsyncConnection {
 
     private final boolean client;
 
-    public UdpBioAsyncConnection(final DatagramChannel ch, SocketAddress addr0,
-        final boolean client0, final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
+    public UdpBioAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+        final DatagramChannel ch, final SSLContext sslContext, SocketAddress addr0, final boolean client0,
+        final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
+        super(bufferSupplier, bufferConsumer, sslContext);
         this.channel = ch;
         this.client = client0;
         this.readTimeoutSeconds = readTimeoutSeconds0;
@@ -127,30 +131,27 @@ public class UdpBioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    public void read(CompletionHandler<Integer, ByteBuffer> handler) {
+        ByteBuffer dst = pollReadBuffer();
         try {
             int rs = channel.read(dst);
             this.readtime = System.currentTimeMillis();
-            if (handler != null) handler.completed(rs, attachment);
+            if (handler != null) handler.completed(rs, dst);
         } catch (IOException e) {
-            if (handler != null) handler.failed(e, attachment);
+            if (handler != null) handler.failed(e, dst);
         }
     }
 
     @Override
-    public <A> void read(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer, ? super A> handler) {
-        read(dst, attachment, handler);
+    public void read(long timeout, TimeUnit unit, CompletionHandler<Integer, ByteBuffer> handler) {
+        read(handler);
     }
 
     @Override
-    public Future<Integer> read(ByteBuffer dst) {
-        try {
-            int rs = channel.read(dst);
-            this.readtime = System.currentTimeMillis();
-            return CompletableFuture.completedFuture(rs);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public int read(ByteBuffer dst) throws IOException {
+        int rs = channel.read(dst);
+        this.readtime = System.currentTimeMillis();
+        return rs;
     }
 
     @Override
@@ -165,14 +166,10 @@ public class UdpBioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public Future<Integer> write(ByteBuffer src) {
-        try {
-            int rs = channel.send(src, remoteAddress);
-            this.writetime = System.currentTimeMillis();
-            return CompletableFuture.completedFuture(rs);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public int write(ByteBuffer src) throws IOException {
+        int rs = channel.send(src, remoteAddress);
+        this.writetime = System.currentTimeMillis();
+        return rs;
     }
 
     @Override

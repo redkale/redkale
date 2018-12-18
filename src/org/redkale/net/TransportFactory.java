@@ -393,33 +393,34 @@ public class TransportFactory {
                         final BlockingQueue<AsyncConnection> localqueue = queue;
                         localconn.write(sendBuffer, sendBuffer, new CompletionHandler<Integer, ByteBuffer>() {
                             @Override
-                            public void completed(Integer result, ByteBuffer buffer) {
-                                if (buffer.hasRemaining()) {
-                                    localconn.write(buffer, buffer, this);
+                            public void completed(Integer result, ByteBuffer wbuffer) {
+                                if (wbuffer.hasRemaining()) {
+                                    localconn.write(wbuffer, wbuffer, this);
                                     return;
                                 }
-                                ByteBuffer pongBuffer = bufferPool.get();
-                                localconn.read(pongBuffer, pongBuffer, new CompletionHandler<Integer, ByteBuffer>() {
+                                localconn.read(new CompletionHandler<Integer, ByteBuffer>() {
                                     int counter = 0;
 
                                     @Override
-                                    public void completed(Integer result, ByteBuffer attachment) {
+                                    public void completed(Integer result, ByteBuffer pongBuffer) {
                                         if (counter > 3) {
-                                            bufferPool.accept(attachment);
+                                            localconn.offerBuffer(pongBuffer);
                                             localconn.dispose();
                                             return;
                                         }
-                                        if (pongLength > 0 && attachment.position() < pongLength) {
+                                        if (pongLength > 0 && pongBuffer.position() < pongLength) {
                                             counter++;
-                                            localconn.read(pongBuffer, pongBuffer, this);
+                                            localconn.setReadBuffer(pongBuffer);
+                                            localconn.read(this);
                                             return;
                                         }
-                                        bufferPool.accept(attachment);
+                                        localconn.offerBuffer(pongBuffer);
                                         localqueue.offer(localconn);
                                     }
 
                                     @Override
-                                    public void failed(Throwable exc, ByteBuffer attachment) {
+                                    public void failed(Throwable exc, ByteBuffer pongBuffer) {
+                                        localconn.offerBuffer(pongBuffer);
                                         localconn.dispose();
                                     }
                                 });

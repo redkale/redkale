@@ -85,7 +85,8 @@ public class UdpBioProtocolServer extends ProtocolServer {
                     try {
                         SocketAddress address = serchannel.receive(buffer);
                         buffer.flip();
-                        AsyncConnection conn = new UdpBioAsyncConnection(serchannel, address, false, readTimeoutSeconds, writeTimeoutSeconds, null, null);
+                        AsyncConnection conn = new UdpBioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), serchannel,
+                            context.getSSLContext(), address, false, readTimeoutSeconds, writeTimeoutSeconds, null, null);
                         context.runAsync(new PrepareRunner(context, conn, buffer, null));
                     } catch (Exception e) {
                         context.offerBuffer(buffer);

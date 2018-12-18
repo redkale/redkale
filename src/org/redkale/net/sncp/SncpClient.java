@@ -370,7 +370,6 @@ public final class SncpClient {
             final ByteBuffer[] sendBuffers = writer.toBuffers();
             fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
 
-            final ByteBuffer buffer = transport.pollBuffer();
             conn.write(sendBuffers, sendBuffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
                 @Override
@@ -393,25 +392,25 @@ public final class SncpClient {
                         conn.write(newattachs, newattachs, this);
                         return;
                     }
-                    //----------------------- 读取返回结果 -------------------------------------
-                    buffer.clear();
-                    conn.read(buffer, null, new CompletionHandler<Integer, Void>() {
+                    //----------------------- 读取返回结果 -------------------------------------     
+                    conn.read(new CompletionHandler<Integer, ByteBuffer>() {
 
                         private byte[] body;
 
                         private int received;
 
                         @Override
-                        public void completed(Integer count, Void attachment2) {
+                        public void completed(Integer count, ByteBuffer buffer) {
                             try {
                                 if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
                                     future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
-                                    transport.offerBuffer(buffer);
+                                    conn.offerBuffer(buffer);
                                     transport.offerConnection(true, conn);
                                     return;
                                 }
                                 if (received < 1 && buffer.limit() < buffer.remaining() + HEADER_SIZE) { //header都没读全
-                                    conn.read(buffer, attachment2, this);
+                                    conn.setReadBuffer(buffer);
+                                    conn.read(this);
                                     return;
                                 }
                                 buffer.flip();
@@ -421,8 +420,10 @@ public final class SncpClient {
                                     buffer.get(body, offset, Math.min(buffer.remaining(), this.body.length - offset));
                                     if (this.received < this.body.length) {// 数据仍然不全，需要继续读取          
                                         buffer.clear();
-                                        conn.read(buffer, attachment2, this);
+                                        conn.setReadBuffer(buffer);
+                                        conn.read(this);
                                     } else {
+                                        conn.offerBuffer(buffer);
                                         success();
                                     }
                                     return;
@@ -441,10 +442,12 @@ public final class SncpClient {
                                     this.received = buffer.remaining();
                                     buffer.get(body, 0, this.received);
                                     buffer.clear();
-                                    conn.read(buffer, attachment2, this);
+                                    conn.setReadBuffer(buffer);
+                                    conn.read(this);
                                 } else {
                                     this.body = new byte[respBodyLength];
                                     buffer.get(body, 0, respBodyLength);
+                                    conn.offerBuffer(buffer);
                                     success();
                                 }
                             } catch (Throwable e) {
@@ -461,7 +464,6 @@ public final class SncpClient {
                         @SuppressWarnings("unchecked")
                         public void success() {
                             future.complete(this.body);
-                            transport.offerBuffer(buffer);
                             transport.offerConnection(false, conn);
                             if (handler != null) {
                                 final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
@@ -484,9 +486,9 @@ public final class SncpClient {
                         }
 
                         @Override
-                        public void failed(Throwable exc, Void attachment2) {
+                        public void failed(Throwable exc, ByteBuffer attachment2) {
                             future.completeExceptionally(new RuntimeException(action.method + " sncp remote exec failed"));
-                            transport.offerBuffer(buffer);
+                            conn.offerBuffer(attachment2);
                             transport.offerConnection(true, conn);
                             if (handler != null) {
                                 final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
@@ -500,7 +502,6 @@ public final class SncpClient {
                 @Override
                 public void failed(Throwable exc, ByteBuffer[] attachment) {
                     future.completeExceptionally(new RuntimeException(action.method + " sncp remote exec failed"));
-                    transport.offerBuffer(buffer);
                     transport.offerConnection(true, conn);
                     if (handler != null) {
                         final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
