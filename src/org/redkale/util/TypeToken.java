@@ -132,6 +132,8 @@ public abstract class TypeToken<T> {
                         if (asts[i] == type) return atas[i];
                     }
                 }
+                Type moreType = ((ParameterizedType) superType).getRawType();
+                if (moreType != Object.class) return getGenericType(type, moreType);
             }
             TypeVariable tv = (TypeVariable) type;
             if (tv.getBounds().length == 1) return tv.getBounds()[0];
