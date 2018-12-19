@@ -7,7 +7,7 @@ package org.redkale.net;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -127,9 +127,9 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
 
     public abstract <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
-    public void setReadBuffer(ByteBuffer buffer) {
+    public void setReadBuffer(Buffer buffer) {
         if (this.readBuffer != null) throw new RuntimeException("repeat AsyncConnection.setReadBuffer");
-        this.readBuffer = buffer;
+        this.readBuffer = (ByteBuffer) buffer;
     }
 
     public ByteBuffer pollReadBuffer() {
@@ -141,15 +141,15 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
         return bufferSupplier.get();
     }
 
-    public void offerBuffer(ByteBuffer buffer) {
+    public void offerBuffer(Buffer buffer) {
         if (buffer == null) return;
-        bufferConsumer.accept(buffer);
+        bufferConsumer.accept((ByteBuffer) buffer);
     }
 
-    public void offerBuffer(ByteBuffer... buffers) {
+    public void offerBuffer(Buffer... buffers) {
         if (buffers == null) return;
-        for (ByteBuffer buffer : buffers) {
-            bufferConsumer.accept(buffer);
+        for (Buffer buffer : buffers) {
+            bufferConsumer.accept((ByteBuffer) buffer);
         }
     }
 
