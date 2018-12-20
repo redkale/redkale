@@ -32,7 +32,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
 
     protected ConvertFactory factory;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 

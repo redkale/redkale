@@ -30,7 +30,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
 
     protected final Decodeable<Reader, T> componentDecoder;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 

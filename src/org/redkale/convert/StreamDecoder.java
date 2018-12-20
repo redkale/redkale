@@ -32,7 +32,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
 
     protected final Decodeable<Reader, T> componentDecoder;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 

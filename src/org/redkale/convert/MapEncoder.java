@@ -28,7 +28,7 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
     protected final Encodeable<Writer, V> valueEncoder;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 

@@ -31,7 +31,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
 
     protected final Decodeable<Reader, T> componentDecoder;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 

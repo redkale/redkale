@@ -35,7 +35,7 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
     protected final Decodeable<Reader, V> valueDecoder;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 

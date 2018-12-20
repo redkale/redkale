@@ -25,7 +25,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
 
     protected final Encodeable<Writer, Object> componentEncoder;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 

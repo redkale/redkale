@@ -35,7 +35,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected ConvertFactory factory;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 

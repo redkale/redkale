@@ -34,7 +34,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected ByteBuffer writeBodyBuffer;
 
-    private boolean inited = true;
+    private volatile boolean inited = true;
 
     protected Object output; //输出的结果对象
 

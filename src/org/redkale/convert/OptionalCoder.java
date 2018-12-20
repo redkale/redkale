@@ -30,7 +30,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
 
     protected final Encodeable<Writer, T> encoder;
 
-    private boolean inited = false;
+    protected volatile boolean inited = false;
 
     private final Object lock = new Object();
 

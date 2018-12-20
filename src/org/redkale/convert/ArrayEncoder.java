@@ -29,7 +29,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     protected final Encodeable<Writer, Object> componentEncoder;
 
-    protected boolean inited = false;
+    protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
 
