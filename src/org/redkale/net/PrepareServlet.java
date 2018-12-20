@@ -6,12 +6,9 @@
 package org.redkale.net;
 
 import java.io.*;
-import java.nio.*;
-import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.Predicate;
-import java.util.logging.*;
 import org.redkale.util.*;
 
 /**
@@ -210,66 +207,11 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
     @SuppressWarnings("unchecked")
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
 
-    public void prepare(final ByteBuffer buffer, final R request, final P response) throws IOException {
-        executeCounter.incrementAndGet();
-        final int rs = request.readHeader(buffer);
-        final AsyncConnection channel = request.channel;
-        if (rs < 0) {  //表示数据格式不正确
-            channel.offerBuffer(buffer);
-            if (rs != Integer.MIN_VALUE) illRequestCounter.incrementAndGet();
-            response.finish(true);
-        } else if (rs == 0) {
-            if (buffer.hasRemaining()) {
-                request.setMoredata(buffer);
-            } else {
-                channel.offerBuffer(buffer);
-            }
-            request.prepare();
-            response.filter = this.headFilter;
-            response.servlet = this;
-            response.nextEvent();
-        } else {
-            buffer.clear();
-            channel.setReadBuffer(buffer);
-            final AtomicInteger ai = new AtomicInteger(rs);
-            channel.read(new CompletionHandler<Integer, ByteBuffer>() {
-
-                @Override
-                public void completed(Integer result, ByteBuffer attachment) {
-                    attachment.flip();
-                    ai.addAndGet(-request.readBody(attachment));
-                    if (ai.get() > 0) {
-                        attachment.clear();
-                        channel.setReadBuffer(attachment);
-                        channel.read(this);
-                    } else {
-                        if (attachment.hasRemaining()) {
-                            request.setMoredata(attachment);
-                        } else {
-                            channel.offerBuffer(attachment);
-                        }
-                        request.prepare();
-                        try {
-                            response.filter = PrepareServlet.this.headFilter;
-                            response.servlet = PrepareServlet.this;
-                            response.nextEvent();
-                        } catch (Exception e) {
-                            illRequestCounter.incrementAndGet();
-                            response.finish(true);
-                            request.context.logger.log(Level.WARNING, "prepare servlet abort, forece to close channel ", e);
-                        }
-                    }
-                }
-
-                @Override
-                public void failed(Throwable exc, ByteBuffer attachment) {
-                    illRequestCounter.incrementAndGet();
-                    channel.offerBuffer(attachment);
-                    response.finish(true);
-                    if (exc != null) request.context.logger.log(Level.FINER, "Servlet read channel erroneous, forece to close channel ", exc);
-                }
-            });
-        }
+    public final void prepare(final R request, final P response) throws IOException {
+        request.prepare();
+        response.filter = this.headFilter;
+        response.servlet = this;
+        response.nextEvent();
     }
 
     protected AnyValue getServletConf(Servlet servlet) {

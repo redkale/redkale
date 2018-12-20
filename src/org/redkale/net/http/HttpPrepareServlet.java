@@ -311,7 +311,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             }
             servlet.execute(request, response);
         } catch (Exception e) {
-            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request, e);
+            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request, e);
             response.finish(500, null);
         }
     }

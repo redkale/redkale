@@ -259,7 +259,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return Utility.createAsyncHandler((v, a) -> {
             finish(v);
         }, (t, a) -> {
-            context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletionHandler", (Throwable) t);
+            context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletionHandler", (Throwable) t);
             finish(500, null);
         });
     }
@@ -471,7 +471,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         } else if (obj instanceof CompletableFuture) {
             ((CompletableFuture) obj).whenComplete((v, e) -> {
                 if (e != null) {
-                    context.getLogger().log(Level.WARNING, "Servlet occur, forece to close channel. request = " + request + ", result is CompletableFuture", (Throwable) e);
+                    context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletableFuture", (Throwable) e);
                     finish(500, null);
                     return;
                 }
@@ -489,7 +489,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             try {
                 finish((File) obj);
             } catch (IOException e) {
-                context.getLogger().log(Level.WARNING, "HttpServlet finish File occur, forece to close channel. request = " + getRequest(), e);
+                context.getLogger().log(Level.WARNING, "HttpServlet finish File occur, force to close channel. request = " + getRequest(), e);
                 finish(500, null);
             }
         } else if (obj instanceof HttpResult) {
