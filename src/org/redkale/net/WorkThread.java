@@ -17,6 +17,8 @@ import java.util.concurrent.*;
  */
 public class WorkThread extends Thread {
 
+    protected Thread localThread;
+
     private final ExecutorService executor;
 
     public WorkThread(ExecutorService executor, Runnable runner) {
@@ -32,4 +34,19 @@ public class WorkThread extends Thread {
     public ExecutorService getExecutor() {
         return executor;
     }
+
+    @Override
+    public void run() {
+        this.localThread = Thread.currentThread();
+        super.run();
+    }
+
+    public boolean inSameThread() {
+        return this.localThread == Thread.currentThread();
+    }
+
+    public boolean inSameThread(Thread thread) {
+        return this.localThread == thread;
+    }
+
 }
