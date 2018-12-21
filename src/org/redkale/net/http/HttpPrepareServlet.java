@@ -152,7 +152,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
             if (forbidURIMaps != null && forbidURIMaps.containsKey(urlreg)) return false;
             if (forbidURIMaps == null) forbidURIMaps = new HashMap<>();
             String mapping = urlreg;
-            if (Utility.contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+            if (Utility.contains(mapping, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                 if (mapping.endsWith("/*")) {
                     mapping = mapping.substring(0, mapping.length() - 1) + ".*";
                 } else {
