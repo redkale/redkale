@@ -47,7 +47,7 @@ public class PrepareRunner implements Runnable {
             if (response == null) response = responsePool.get();
             try {
                 response.init(channel);
-                prepare(data, response.request, response);
+                codec(data, response);
             } catch (Throwable t) {
                 context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
                 response.finish(true);
@@ -56,7 +56,7 @@ public class PrepareRunner implements Runnable {
         }
         if (response == null) response = responsePool.get();
         try {
-            channel.read(keepalive ? context.getAliveTimeoutSeconds() : 0, TimeUnit.SECONDS,
+            channel.read(keepalive ? context.getAliveTimeoutSeconds() : context.getReadTimeoutSeconds(), TimeUnit.SECONDS,
                 new CompletionHandler<Integer, ByteBuffer>() {
                 @Override
                 public void completed(Integer count, ByteBuffer buffer) {
@@ -74,9 +74,9 @@ public class PrepareRunner implements Runnable {
 //                        System.println(new String(bs));
 //                    }
                     buffer.flip();
-                    response.init(channel);
                     try {
-                        prepare(buffer, response.request, response);
+                        response.init(channel);
+                        codec(buffer, response);
                     } catch (Throwable t) {  //此处不可  context.offerBuffer(buffer); 以免prepare.prepare内部异常导致重复 offerBuffer
                         context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
                         response.finish(true);
@@ -104,7 +104,8 @@ public class PrepareRunner implements Runnable {
         }
     }
 
-    protected void prepare(final ByteBuffer buffer, final Request request, final Response response) throws IOException {
+    protected void codec(final ByteBuffer buffer, final Response response) throws IOException {
+        final Request request = response.request;
         final PrepareServlet preparer = context.prepare;
         preparer.executeCounter.incrementAndGet();
         final int rs = request.readHeader(buffer);

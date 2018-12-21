@@ -92,12 +92,13 @@ public class TcpAioProtocolServer extends ProtocolServer {
                     channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
                     channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
                     channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
-                } catch (IOException e) {
-                    context.logger.log(Level.INFO, channel + " setOption error", e);
+
+                    AsyncConnection conn = new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), channel,
+                        context.getSSLContext(), null, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
+                    context.runAsync(new PrepareRunner(context, conn, null, null));
+                } catch (Throwable e) {
+                    context.logger.log(Level.INFO, channel + " accept error", e);
                 }
-                AsyncConnection conn = new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), channel,
-                    context.getSSLContext(), null, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
-                context.runAsync(new PrepareRunner(context, conn, null, null));
             }
 
             @Override
