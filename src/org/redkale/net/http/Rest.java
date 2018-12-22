@@ -728,7 +728,13 @@ public final class Rest {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) throw new RuntimeException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
-        String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + serviceType.getSimpleName().replaceAll("Service.*$", "") + "RestServlet";
+        String stname = serviceType.getSimpleName();
+        if (stname.startsWith("Service")) { //类似ServiceWatchService这样的类保留第一个Service字样 
+            stname = "Service" + stname.substring("Service".length()).replaceAll("Service.*$", "");
+        } else {
+            stname = stname.replaceAll("Service.*$", "");
+        }
+        String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + stname + "RestServlet";
 
         //------------------------------------------------------------------------------
         final String defmodulename = getWebModuleNameLowerCase(serviceType);
