@@ -945,7 +945,7 @@ public final class Utility {
      *
      * @return 151231格式的int值
      */
-    public static int todaySimple() {
+    public static int todayYYMMDD() {
         java.time.LocalDate today = java.time.LocalDate.now();
         return today.getYear() % 100 * 10000 + today.getMonthValue() * 100 + today.getDayOfMonth();
     }
@@ -966,7 +966,7 @@ public final class Utility {
      *
      * @return 151230格式的int值
      */
-    public static int yesterdaySimple() {
+    public static int yesterdayYYMMDD() {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -1);
         return cal.get(Calendar.YEAR) % 100 * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
@@ -983,6 +983,19 @@ public final class Utility {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(time);
         return cal.get(Calendar.YEAR) * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+    }
+
+    /**
+     * 获取指定时间的160202格式的int值
+     *
+     * @param time 指定时间
+     *
+     * @return 毫秒数
+     */
+    public static int yyMMdd(long time) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(time);
+        return cal.get(Calendar.YEAR) % 100 * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
     }
 
     /**
