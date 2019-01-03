@@ -79,7 +79,7 @@ public abstract class WebSocketNode {
     }
 
     @Local
-    public final void postDestroy(AnyValue conf) {
+    protected void postDestroy(AnyValue conf) {
         if (this.localEngine == null) return;
         //关掉所有本地本地WebSocket
         this.localEngine.getLocalWebSockets().forEach(g -> g.close());
