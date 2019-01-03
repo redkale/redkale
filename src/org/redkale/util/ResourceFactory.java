@@ -570,7 +570,8 @@ public final class ResourceFactory {
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     field.setAccessible(true);
                     final Class classtype = field.getType();
-                    final Type genctype = field.getGenericType();
+                    final Type genctype = TypeToken.containsUnknownType(field.getGenericType())
+                        ? TypeToken.getGenericType(field.getGenericType(), src.getClass()) : field.getGenericType();
                     Resource rc = field.getAnnotation(Resource.class);
                     if (rc == null) {  //深度注入
                         boolean flag = true; //是否没有重复

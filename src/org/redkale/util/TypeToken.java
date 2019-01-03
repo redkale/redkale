@@ -56,6 +56,27 @@ public abstract class TypeToken<T> {
         return true;
     }
 
+    public final static boolean containsUnknownType(final Type type) {
+        if (type == null) return false;
+        if (type instanceof Class) return false;
+        if (type instanceof WildcardType) return true;
+        if (type instanceof TypeVariable) return true;
+        if (type instanceof GenericArrayType) return containsUnknownType(((GenericArrayType) type).getGenericComponentType());
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
+            if (containsUnknownType(pt.getRawType())) return true;
+            if (containsUnknownType(pt.getOwnerType())) return true;
+            Type[] ts = pt.getActualTypeArguments();
+            if (ts != null) {
+                for (Type t : ts) {
+                    if (containsUnknownType(t)) return true;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
     public final static Class typeToClass(final Type type) {
         if (type instanceof Class) return (Class) type;
         if (type instanceof WildcardType) return null;
