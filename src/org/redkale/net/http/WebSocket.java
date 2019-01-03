@@ -540,7 +540,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public CompletableFuture<Void> changeUserid(final G newuserid) {
         if (newuserid == null) throw new NullPointerException("newuserid is null");
-        return _engine.changeUserid(this, newuserid);
+        return _engine.changeLocalUserid(this, newuserid);
     }
 
     /**

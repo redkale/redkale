@@ -127,7 +127,7 @@ public class WebSocketEngine {
     }
 
     @Comment("添加WebSocket")
-    void add(WebSocket socket) {
+    void addLocal(WebSocket socket) {
         if (single) {
             currconns.incrementAndGet();
             websockets.put(socket._userid, socket);
@@ -144,7 +144,7 @@ public class WebSocketEngine {
     }
 
     @Comment("从WebSocketEngine删除指定WebSocket")
-    CompletableFuture<Void> removeThenClose(WebSocket socket) {
+    CompletableFuture<Void> removeLocalThenClose(WebSocket socket) {
         Serializable userid = socket._userid;
         if (single) {
             currconns.decrementAndGet();
@@ -165,7 +165,7 @@ public class WebSocketEngine {
     }
 
     @Comment("更改WebSocket的userid")
-    CompletableFuture<Void> changeUserid(WebSocket socket, final Serializable newuserid) {
+    CompletableFuture<Void> changeLocalUserid(WebSocket socket, final Serializable newuserid) {
         if (newuserid == null) throw new NullPointerException("newuserid is null");
         final Serializable olduserid = socket._userid;
         socket._userid = newuserid;
@@ -207,20 +207,20 @@ public class WebSocketEngine {
     }
 
     @Comment("给所有连接用户发送消息")
-    public CompletableFuture<Integer> broadcastMessage(final Object message, final boolean last) {
-        return broadcastMessage((Predicate) null, message, last);
+    public CompletableFuture<Integer> broadcastLocalMessage(final Object message, final boolean last) {
+        return WebSocketEngine.this.broadcastLocalMessage((Predicate) null, message, last);
     }
 
     @Comment("给指定WebSocket连接用户发送消息")
-    public CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Object message, final boolean last) {
+    public CompletableFuture<Integer> broadcastLocalMessage(final WebSocketRange wsrange, final Object message, final boolean last) {
         Predicate<WebSocket> predicate = wsrange == null ? null : (ws) -> ws.predicate(wsrange);
-        return broadcastMessage(predicate, message, last);
+        return WebSocketEngine.this.broadcastLocalMessage(predicate, message, last);
     }
 
     @Comment("给指定WebSocket连接用户发送消息")
-    public CompletableFuture<Integer> broadcastMessage(final Predicate<WebSocket> predicate, final Object message, final boolean last) {
+    public CompletableFuture<Integer> broadcastLocalMessage(final Predicate<WebSocket> predicate, final Object message, final boolean last) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> broadcastMessage(predicate, json, last));
+            return ((CompletableFuture) message).thenCompose((json) -> WebSocketEngine.this.broadcastLocalMessage(predicate, json, last));
         }
         final boolean more = (!(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null);
         if (more) {
@@ -265,19 +265,19 @@ public class WebSocketEngine {
     }
 
     @Comment("给指定用户组发送消息")
-    public CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Stream<? extends Serializable> userids) {
+    public CompletableFuture<Integer> sendLocalMessage(final Object message, final boolean last, final Stream<? extends Serializable> userids) {
         Object[] array = userids.toArray();
         Serializable[] ss = new Serializable[array.length];
         for (int i = 0; i < array.length; i++) {
             ss[i] = (Serializable) array[i];
         }
-        return sendMessage(message, last, ss);
+        return WebSocketEngine.this.sendLocalMessage(message, last, ss);
     }
 
     @Comment("给指定用户组发送消息")
-    public CompletableFuture<Integer> sendMessage(final Object message, final boolean last, final Serializable... userids) {
+    public CompletableFuture<Integer> sendLocalMessage(final Object message, final boolean last, final Serializable... userids) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> sendMessage(json, last, userids));
+            return ((CompletableFuture) message).thenCompose((json) -> WebSocketEngine.this.sendLocalMessage(json, last, userids));
         }
         final boolean more = (!(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null) && userids.length > 1;
         if (more) {
@@ -326,7 +326,7 @@ public class WebSocketEngine {
     }
 
     @Comment("给指定WebSocket连接用户发起操作指令")
-    public CompletableFuture<Integer> broadcastAction(final WebSocketAction action) {
+    public CompletableFuture<Integer> broadcastLocalAction(final WebSocketAction action) {
         CompletableFuture<Integer> future = null;
         if (single) {
             for (WebSocket websocket : websockets.values()) {
@@ -343,17 +343,17 @@ public class WebSocketEngine {
     }
 
     @Comment("给指定用户组发送操作")
-    public CompletableFuture<Integer> sendAction(final WebSocketAction action, final Stream<? extends Serializable> userids) {
+    public CompletableFuture<Integer> sendLocalAction(final WebSocketAction action, final Stream<? extends Serializable> userids) {
         Object[] array = userids.toArray();
         Serializable[] ss = new Serializable[array.length];
         for (int i = 0; i < array.length; i++) {
             ss[i] = (Serializable) array[i];
         }
-        return sendAction(action, ss);
+        return WebSocketEngine.this.sendLocalAction(action, ss);
     }
 
     @Comment("给指定用户组发送操作")
-    public CompletableFuture<Integer> sendAction(final WebSocketAction action, final Serializable... userids) {
+    public CompletableFuture<Integer> sendLocalAction(final WebSocketAction action, final Serializable... userids) {
         CompletableFuture<Integer> future = null;
         if (single) {
             for (Serializable userid : userids) {

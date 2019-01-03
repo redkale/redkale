@@ -56,27 +56,27 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last, Serializable userid) {
+    public CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last, Serializable... userids) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        return this.localEngine.sendMessage(message, last, userid);
+        return this.localEngine.sendLocalMessage(message, last, userids);
     }
 
     @Override
     public CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, final WebSocketRange wsrange, Object message, boolean last) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        return this.localEngine.broadcastMessage(wsrange, message, last);
+        return this.localEngine.broadcastLocalMessage(wsrange, message, last);
     }
 
     @Override
-    public CompletableFuture<Integer> sendAction(@RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action, Serializable userid) {
+    public CompletableFuture<Integer> sendAction(@RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action, Serializable... userids) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        return this.localEngine.sendAction(action, userid);
+        return this.localEngine.sendLocalAction(action, userids);
     }
 
     @Override
     public CompletableFuture<Integer> broadcastAction(@RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action) {
         if (this.localEngine == null) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        return this.localEngine.broadcastAction(action);
+        return this.localEngine.broadcastLocalAction(action);
     }
 
     /**

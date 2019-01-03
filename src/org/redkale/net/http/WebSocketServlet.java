@@ -255,7 +255,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                             CompletableFuture<Boolean> rcFuture = webSocket.onSingleRepeatConnect();
                                             Consumer<Boolean> task = (oldkilled) -> {
                                                 if (oldkilled) {
-                                                    WebSocketServlet.this.node.localEngine.add(webSocket);
+                                                    WebSocketServlet.this.node.localEngine.addLocal(webSocket);
                                                     WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
                                                     webSocket._runner = runner;
                                                     context.runAsync(runner);
@@ -276,7 +276,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                                 });
                                             }
                                         } else {
-                                            WebSocketServlet.this.node.localEngine.add(webSocket);
+                                            WebSocketServlet.this.node.localEngine.addLocal(webSocket);
                                             WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
                                             webSocket._runner = runner;
                                             context.runAsync(runner);
@@ -284,7 +284,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                         }
                                     });
                                 } else {
-                                    WebSocketServlet.this.node.localEngine.add(webSocket);
+                                    WebSocketServlet.this.node.localEngine.addLocal(webSocket);
                                     WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
                                     webSocket._runner = runner;
                                     context.runAsync(runner);

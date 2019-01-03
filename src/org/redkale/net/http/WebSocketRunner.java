@@ -294,7 +294,7 @@ class WebSocketRunner implements Runnable {
             if (closed) return null;
             closed = true;
             channel.dispose();
-            CompletableFuture<Void> future = engine.removeThenClose(webSocket);
+            CompletableFuture<Void> future = engine.removeLocalThenClose(webSocket);
             webSocket.onClose(code, reason);
             return future;
         }

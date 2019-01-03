@@ -148,6 +148,14 @@ public class Context {
         executor.execute(r);
     }
 
+    public int getCorePoolSize() {
+        return executor.getCorePoolSize();
+    }
+
+    public ThreadFactory getThreadFactory() {
+        return executor.getThreadFactory();
+    }
+
     public int getBufferCapacity() {
         return bufferCapacity;
     }

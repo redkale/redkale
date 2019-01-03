@@ -90,11 +90,11 @@ public abstract class WebSocketNode {
 
     protected abstract CompletableFuture<List<String>> getWebSocketAddresses(@RpcTargetAddress InetSocketAddress targetAddress, Serializable userid);
 
-    protected abstract CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last, Serializable userid);
+    protected abstract CompletableFuture<Integer> sendMessage(@RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last, Serializable... userids);
 
     protected abstract CompletableFuture<Integer> broadcastMessage(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketRange wsrange, Object message, boolean last);
 
-    protected abstract CompletableFuture<Integer> sendAction(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketAction action, Serializable userid);
+    protected abstract CompletableFuture<Integer> sendAction(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketAction action, Serializable... userids);
 
     protected abstract CompletableFuture<Integer> broadcastAction(@RpcTargetAddress InetSocketAddress targetAddress, WebSocketAction action);
 
@@ -200,25 +200,6 @@ public abstract class WebSocketNode {
         }
         tryAcquireSemaphore();
         CompletableFuture<Integer> rs = this.sncpNodeAddresses.queryKeysStartsWithAsync(SOURCE_SNCP_USERID_PREFIX).thenApply(v -> v.size());
-        if (semaphore != null) rs.whenComplete((r, e) -> releaseSemaphore());
-        return rs;
-    }
-
-    /**
-     * @deprecated
-     *
-     * 判断指定用户是否WebSocket在线
-     *
-     * @param userid Serializable
-     *
-     * @return boolean
-     */
-    private CompletableFuture<Boolean> existsWebSocket2(final Serializable userid) {
-        if (this.localEngine != null && this.sncpNodeAddresses == null) {
-            return CompletableFuture.completedFuture(this.localEngine.existsLocalWebSocket(userid));
-        }
-        tryAcquireSemaphore();
-        CompletableFuture<Boolean> rs = this.sncpNodeAddresses.existsAsync(SOURCE_SNCP_USERID_PREFIX + userid);
         if (semaphore != null) rs.whenComplete((r, e) -> releaseSemaphore());
         return rs;
     }
@@ -429,15 +410,97 @@ public abstract class WebSocketNode {
         if (message0 instanceof CompletableFuture) return ((CompletableFuture) message0).thenApply(msg -> sendMessage(convert, msg, last, userids));
         final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
-            return this.localEngine.sendMessage(message, last, userids);
+            return this.localEngine.sendLocalMessage(message, last, userids);
         }
         final Object remoteMessage = formatRemoteMessage(message);
-        CompletableFuture<Integer> future = null;
-        for (Serializable userid : userids) {
-            future = future == null ? sendOneMessage(remoteMessage, last, userid)
-                : future.thenCombine(sendOneMessage(remoteMessage, last, userid), (a, b) -> a | b);
+        CompletableFuture<Integer> rsfuture;
+        if (userids.length == 1) {
+            rsfuture = sendOneUserMessage(remoteMessage, last, userids[0]);
+        } else {
+            String[] keys = new String[userids.length];
+            final Map<String, Serializable> keyuser = new HashMap<>();
+            for (int i = 0; i < userids.length; i++) {
+                keys[i] = SOURCE_SNCP_USERID_PREFIX + userids[i];
+                keyuser.put(keys[i], userids[i]);
+            }
+            tryAcquireSemaphore();
+            CompletableFuture<Map<String, Collection<InetSocketAddress>>> addrsFuture = sncpNodeAddresses.getCollectionMapAsync(InetSocketAddress.class, keys);
+            if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
+            rsfuture = addrsFuture.thenCompose((Map<String, Collection<InetSocketAddress>> addrs) -> {
+                if (addrs == null || addrs.isEmpty()) {
+                    if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userids:" + JsonConvert.root().convertTo(userids) + " on any node ");
+                    return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+                }
+                Map<InetSocketAddress, List<Serializable>> addrUsers = new HashMap<>();
+                addrs.forEach((key, as) -> {
+                    for (InetSocketAddress a : as) {
+                        addrUsers.computeIfAbsent(a, k -> new ArrayList<>()).add(keyuser.get(key));
+                    }
+                });
+                if (logger.isLoggable(Level.FINEST)) {
+                    logger.finest("websocket(localaddr=" + localSncpAddress + ", userids=" + JsonConvert.root().convertTo(userids) + ") found message-addr-userids: " + addrUsers);
+                }
+                CompletableFuture<Integer> future = null;
+                for (Map.Entry<InetSocketAddress, List<Serializable>> en : addrUsers.entrySet()) {
+                    Serializable[] us = en.getValue().toArray(new Serializable[en.getValue().size()]);
+                    future = future == null ? sendOneAddrMessage(en.getKey(), remoteMessage, last, us)
+                        : future.thenCombine(sendOneAddrMessage(en.getKey(), remoteMessage, last, us), (a, b) -> a | b);
+                }
+                return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+            });
         }
-        return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+        return rsfuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : rsfuture;
+    }
+
+    protected CompletableFuture<Integer> sendOneUserMessage(final Object message, final boolean last, final Serializable userid) {
+        if (message instanceof CompletableFuture) return ((CompletableFuture) message).thenApply(msg -> sendOneUserMessage(msg, last, userid));
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.finest("websocket want send message {userid:" + userid + ", content:'" + (message instanceof WebSocketPacket ? ((WebSocketPacket) message).toSimpleString() : JsonConvert.root().convertTo(message)) + "'} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
+        }
+        CompletableFuture<Integer> localFuture = null;
+        if (this.localEngine != null) localFuture = localEngine.sendLocalMessage(message, last, userid);
+        if (this.sncpNodeAddresses == null || this.remoteNode == null) {
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            //没有CacheSource就不会有分布式节点
+            return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
+        }
+        //远程节点发送消息
+        final Object remoteMessage = formatRemoteMessage(message);
+        tryAcquireSemaphore();
+        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid, InetSocketAddress.class);
+        if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
+        CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
+            if (addrs == null || addrs.isEmpty()) {
+                if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userid:" + userid + " on any node ");
+                return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+            }
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket(localaddr=" + localSncpAddress + ") found userid:" + userid + " on " + addrs);
+            CompletableFuture<Integer> future = null;
+            for (InetSocketAddress addr : addrs) {
+                if (addr == null || addr.equals(localSncpAddress)) continue;
+                future = future == null ? remoteNode.sendMessage(addr, remoteMessage, last, userid)
+                    : future.thenCombine(remoteNode.sendMessage(addr, remoteMessage, last, userid), (a, b) -> a | b);
+            }
+            return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+        });
+        return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
+    }
+
+    protected CompletableFuture<Integer> sendOneAddrMessage(final InetSocketAddress sncpAddr, final Object message, final boolean last, final Serializable... userids) {
+        if (message instanceof CompletableFuture) return ((CompletableFuture) message).thenApply(msg -> sendOneAddrMessage(sncpAddr, msg, last, userids));
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.finest("websocket want send message {userids:" + JsonConvert.root().convertTo(userids) + ", sncpaddr:" + sncpAddr + ", content:'" + (message instanceof WebSocketPacket ? ((WebSocketPacket) message).toSimpleString() : JsonConvert.root().convertTo(message)) + "'} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
+        }
+        if (Objects.equals(sncpAddr, this.localSncpAddress)) {
+            return this.localEngine == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localEngine.sendLocalMessage(message, last, userids);
+        }
+        if (this.sncpNodeAddresses == null || this.remoteNode == null) {
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            //没有CacheSource就不会有分布式节点
+            return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        }
+        final Object remoteMessage = formatRemoteMessage(message);
+        return remoteNode.sendMessage(sncpAddr, remoteMessage, last, userids);
     }
 
     /**
@@ -548,10 +611,10 @@ public abstract class WebSocketNode {
         if (message0 instanceof CompletableFuture) return ((CompletableFuture) message0).thenApply(msg -> broadcastMessage(wsrange, convert, msg, last));
         final Object message = (convert == null || message0 instanceof WebSocketPacket) ? message0 : ((convert instanceof TextConvert) ? new WebSocketPacket(((TextConvert) convert).convertTo(message0), last) : new WebSocketPacket(((BinaryConvert) convert).convertTo(message0), last));
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
-            return this.localEngine.broadcastMessage(wsrange, message, last);
+            return this.localEngine.broadcastLocalMessage(wsrange, message, last);
         }
         final Object remoteMessage = formatRemoteMessage(message);
-        CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastMessage(wsrange, message, last);
+        CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastLocalMessage(wsrange, message, last);
         tryAcquireSemaphore();
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_ADDRS_KEY, InetSocketAddress.class);
         if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
@@ -569,40 +632,6 @@ public abstract class WebSocketNode {
         return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
     }
 
-    protected CompletableFuture<Integer> sendOneMessage(final Object message, final boolean last, final Serializable userid) {
-        if (message instanceof CompletableFuture) return ((CompletableFuture) message).thenApply(msg -> sendOneMessage(msg, last, userid));
-        if (logger.isLoggable(Level.FINEST)) {
-            logger.finest("websocket want send message {userid:" + userid + ", content:'" + (message instanceof WebSocketPacket ? ((WebSocketPacket) message).toSimpleString() : JsonConvert.root().convertTo(message)) + "'} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
-        }
-        CompletableFuture<Integer> localFuture = null;
-        if (this.localEngine != null) localFuture = localEngine.sendMessage(message, last, userid);
-        if (this.sncpNodeAddresses == null || this.remoteNode == null) {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
-            //没有CacheSource就不会有分布式节点
-            return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
-        }
-        //远程节点发送消息
-        final Object remoteMessage = formatRemoteMessage(message);
-        tryAcquireSemaphore();
-        CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_USERID_PREFIX + userid, InetSocketAddress.class);
-        if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
-        CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
-            if (addrs == null || addrs.isEmpty()) {
-                if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userid:" + userid + " on any node ");
-                return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-            }
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket(localaddr=" + localSncpAddress + ") found userid:" + userid + " on " + addrs);
-            CompletableFuture<Integer> future = null;
-            for (InetSocketAddress addr : addrs) {
-                if (addr == null || addr.equals(localSncpAddress)) continue;
-                future = future == null ? remoteNode.sendMessage(addr, remoteMessage, last, userid)
-                    : future.thenCombine(remoteNode.sendMessage(addr, remoteMessage, last, userid), (a, b) -> a | b);
-            }
-            return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
-        });
-        return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
-    }
-
     /**
      * 广播操作， 给所有人发操作
      *
@@ -613,9 +642,9 @@ public abstract class WebSocketNode {
     @Local
     public CompletableFuture<Integer> broadcastAction(final WebSocketAction action) {
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
-            return this.localEngine.broadcastAction(action);
+            return this.localEngine.broadcastLocalAction(action);
         }
-        CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastAction(action);
+        CompletableFuture<Integer> localFuture = this.localEngine == null ? null : this.localEngine.broadcastLocalAction(action);
         tryAcquireSemaphore();
         CompletableFuture<Collection<InetSocketAddress>> addrsFuture = sncpNodeAddresses.getCollectionAsync(SOURCE_SNCP_ADDRS_KEY, InetSocketAddress.class);
         if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
@@ -646,21 +675,53 @@ public abstract class WebSocketNode {
     public CompletableFuture<Integer> sendAction(final WebSocketAction action, final Serializable... userids) {
         if (userids == null || userids.length < 1) return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         if (this.localEngine != null && this.sncpNodeAddresses == null) { //本地模式且没有分布式
-            return this.localEngine.sendAction(action, userids);
+            return this.localEngine.sendLocalAction(action, userids);
         }
-        CompletableFuture<Integer> future = null;
-        for (Serializable userid : userids) {
-            future = future == null ? sendOneAction(action, userid) : future.thenCombine(sendOneAction(action, userid), (a, b) -> a | b);
+        CompletableFuture<Integer> rsfuture;
+        if (userids.length == 1) {
+            rsfuture = sendOneUserAction(action, userids[0]);
+        } else {
+            String[] keys = new String[userids.length];
+            final Map<String, Serializable> keyuser = new HashMap<>();
+            for (int i = 0; i < userids.length; i++) {
+                keys[i] = SOURCE_SNCP_USERID_PREFIX + userids[i];
+                keyuser.put(keys[i], userids[i]);
+            }
+            tryAcquireSemaphore();
+            CompletableFuture<Map<String, Collection<InetSocketAddress>>> addrsFuture = sncpNodeAddresses.getCollectionMapAsync(InetSocketAddress.class, keys);
+            if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
+            rsfuture = addrsFuture.thenCompose((Map<String, Collection<InetSocketAddress>> addrs) -> {
+                if (addrs == null || addrs.isEmpty()) {
+                    if (logger.isLoggable(Level.FINER)) logger.finer("websocket not found userids:" + JsonConvert.root().convertTo(userids) + " on any node ");
+                    return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+                }
+                Map<InetSocketAddress, List<Serializable>> addrUsers = new HashMap<>();
+                addrs.forEach((key, as) -> {
+                    for (InetSocketAddress a : as) {
+                        addrUsers.computeIfAbsent(a, k -> new ArrayList<>()).add(keyuser.get(key));
+                    }
+                });
+                if (logger.isLoggable(Level.FINEST)) {
+                    logger.finest("websocket(localaddr=" + localSncpAddress + ", userids=" + JsonConvert.root().convertTo(userids) + ") found action-userid-addrs: " + addrUsers);
+                }
+                CompletableFuture<Integer> future = null;
+                for (Map.Entry<InetSocketAddress, List<Serializable>> en : addrUsers.entrySet()) {
+                    Serializable[] us = en.getValue().toArray(new Serializable[en.getValue().size()]);
+                    future = future == null ? sendOneAddrAction(en.getKey(), action, us)
+                        : future.thenCombine(sendOneAddrAction(en.getKey(), action, us), (a, b) -> a | b);
+                }
+                return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+            });
         }
-        return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
+        return rsfuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : rsfuture;
     }
 
-    protected CompletableFuture<Integer> sendOneAction(final WebSocketAction action, final Serializable userid) {
+    protected CompletableFuture<Integer> sendOneUserAction(final WebSocketAction action, final Serializable userid) {
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest("websocket want send action {userid:" + userid + ", action:" + action + "} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
         }
         CompletableFuture<Integer> localFuture = null;
-        if (this.localEngine != null) localFuture = localEngine.sendAction(action, userid);
+        if (this.localEngine != null) localFuture = localEngine.sendLocalAction(action, userid);
         if (this.sncpNodeAddresses == null || this.remoteNode == null) {
             if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
             //没有CacheSource就不会有分布式节点
@@ -685,6 +746,21 @@ public abstract class WebSocketNode {
             return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         });
         return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
+    }
+
+    protected CompletableFuture<Integer> sendOneAddrAction(final InetSocketAddress sncpAddr, final WebSocketAction action, final Serializable... userids) {
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.finest("websocket want send action {userids:" + JsonConvert.root().convertTo(userids) + ", sncpaddr:" + sncpAddr + ", action:" + action + " from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
+        }
+        if (Objects.equals(sncpAddr, this.localSncpAddress)) {
+            return this.localEngine == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localEngine.sendLocalAction(action, userids);
+        }
+        if (this.sncpNodeAddresses == null || this.remoteNode == null) {
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            //没有CacheSource就不会有分布式节点
+            return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
+        }
+        return remoteNode.sendAction(sncpAddr, action, userids);
     }
 
     protected Object formatRemoteMessage(Object message) {
