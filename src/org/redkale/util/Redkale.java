@@ -5,7 +5,7 @@
  */
 package org.redkale.util;
 
-/** 
+/**
  * <p>
  * 详情见: https://redkale.org
  *
@@ -17,14 +17,14 @@ public final class Redkale {
     }
 
     public static String getDotedVersion() {
-        return "1.9.9";
+        return "2.0.0";
     }
 
     public static int getMajorVersion() {
-        return 1;
+        return 2;
     }
 
     public static int getMinorVersion() {
-        return 9;
+        return 0;
     }
 }
