@@ -161,7 +161,7 @@ public class HttpResourceServlet extends HttpServlet {
         }
     }
 
-    public void serRoot(String rootstr) {
+    public void setRoot(String rootstr) {
         if (rootstr == null) return;
         try {
             this.root = new File(rootstr).getCanonicalFile();
@@ -170,7 +170,7 @@ public class HttpResourceServlet extends HttpServlet {
         }
     }
 
-    public void serRoot(File file) {
+    public void setRoot(File file) {
         if (file == null) return;
         try {
             this.root = file.getCanonicalFile();
