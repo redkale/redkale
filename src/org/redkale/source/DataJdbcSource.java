@@ -219,6 +219,46 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
+    protected <T> CompletableFuture<Integer> clearDB(EntityInfo<T> info, String sql) {
+        Connection conn = null;
+        try {
+            conn = writePool.poll();
+            conn.setReadOnly(false);
+            conn.setAutoCommit(true);
+            final Statement stmt = conn.createStatement();
+            int c = stmt.executeUpdate(sql);
+            stmt.close();
+            return CompletableFuture.completedFuture(c);
+        } catch (SQLException e) {
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;
+        } finally {
+            if (conn != null) writePool.offerConnection(conn);
+        }
+    }
+
+    @Override
+    protected <T> CompletableFuture<Integer> dropDB(EntityInfo<T> info, String sql) {
+        Connection conn = null;
+        try {
+            conn = writePool.poll();
+            conn.setReadOnly(false);
+            conn.setAutoCommit(true);
+            final Statement stmt = conn.createStatement();
+            int c = stmt.executeUpdate(sql);
+            stmt.close();
+            return CompletableFuture.completedFuture(c);
+        } catch (SQLException e) {
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;
+        } finally {
+            if (conn != null) writePool.offerConnection(conn);
+        }
+    }
+
+    @Override
     protected <T> CompletableFuture<Integer> updateDB(EntityInfo<T> info, T... values) {
         Connection conn = null;
         try {

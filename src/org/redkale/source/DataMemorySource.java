@@ -94,6 +94,16 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
+    protected <T> CompletableFuture<Integer> clearDB(EntityInfo<T> info, String sql) {
+        return CompletableFuture.completedFuture(0);
+    }
+
+    @Override
+    protected <T> CompletableFuture<Integer> dropDB(EntityInfo<T> info, String sql) {
+        return CompletableFuture.completedFuture(0);
+    }
+
+    @Override
     protected <T> CompletableFuture<Integer> updateDB(EntityInfo<T> info, T... values) {
         return CompletableFuture.completedFuture(0);
     }

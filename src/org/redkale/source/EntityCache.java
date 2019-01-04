@@ -144,7 +144,7 @@ public final class EntityCache<T> {
         return type;
     }
 
-    public void clear() {
+    public int clear() {
         this.fullloaded = false;
         this.list = new ConcurrentLinkedQueue();
         this.map = new ConcurrentHashMap();
@@ -152,6 +152,7 @@ public final class EntityCache<T> {
             this.scheduler.shutdownNow();
             this.scheduler = null;
         }
+        return 1;
     }
 
     public boolean isFullLoaded() {
@@ -477,6 +478,10 @@ public final class EntityCache<T> {
             this.list.remove(t);
         }
         return ids;
+    }
+
+    public int drop() {
+        return clear();
     }
 
     public int update(final T value) {

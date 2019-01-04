@@ -37,7 +37,7 @@ public interface DataSource {
      *
      * @param <T>    泛型
      * @param values Entity对象
-     * 
+     *
      * @return 影响的记录条数
      */
     public <T> int insert(final T... values);
@@ -150,6 +150,100 @@ public interface DataSource {
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+
+    //------------------------clearAsync---------------------------
+    /**
+     * 清空表  <br>
+     * 等价SQL: TRUNCATE TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     *
+     * @return 影响的记录条数
+     */
+    public <T> int clear(final Class<T> clazz);
+
+    /**
+     * 清空表  <br>
+     * 等价SQL: TRUNCATE TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    public <T> CompletableFuture<Integer> clearAsync(final Class<T> clazz);
+
+    /**
+     * 清空表  <br>
+     * 等价SQL: TRUNCATE TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  过滤条件
+     *
+     * @return 影响的记录条数
+     */
+    public <T> int clear(final Class<T> clazz, final FilterNode node);
+
+    /**
+     * 清空表  <br>
+     * 等价SQL: TRUNCATE TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  过滤条件
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    public <T> CompletableFuture<Integer> clearAsync(final Class<T> clazz, final FilterNode node);
+
+    //------------------------dropAsync---------------------------
+    /**
+     * 删除表  <br>
+     * 等价SQL: DROP TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     *
+     * @return 影响的记录条数
+     */
+    public <T> int drop(final Class<T> clazz);
+
+    /**
+     * 删除表  <br>
+     * 等价SQL: DROP TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    public <T> CompletableFuture<Integer> dropAsync(final Class<T> clazz);
+
+    /**
+     * 删除表  <br>
+     * 等价SQL: DROP TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  过滤条件
+     *
+     * @return 影响的记录条数
+     */
+    public <T> int drop(final Class<T> clazz, final FilterNode node);
+
+    /**
+     * 删除表  <br>
+     * 等价SQL: DROP TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  过滤条件
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    public <T> CompletableFuture<Integer> dropAsync(final Class<T> clazz, final FilterNode node);
 
     //------------------------updateAsync---------------------------
     /**
