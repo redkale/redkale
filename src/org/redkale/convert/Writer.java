@@ -129,9 +129,9 @@ public abstract class Writer {
     /**
      * 输出一个数组前的操作
      *
-     * @param size    数组长度
+     * @param size             数组长度
      * @param componentEncoder Encodeable
-     * @param obj     对象
+     * @param obj              对象, 不一定是数组、Collection对象，也可能是伪Collection对象
      *
      * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
@@ -155,7 +155,7 @@ public abstract class Writer {
      * @param size         map大小
      * @param keyEncoder   Encodeable
      * @param valueEncoder Encodeable
-     * @param obj          对象
+     * @param obj          对象, 不一定是Map对象，也可能是伪Map对象
      *
      * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
