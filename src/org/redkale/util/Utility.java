@@ -1833,7 +1833,7 @@ public final class Utility {
                     conn.setRequestProperty(en.getKey(), en.getValue());
                 }
             }
-            {
+            if (body != null && !body.isEmpty()) { //conn.getOutputStream()会将GET强制变成POST
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
                 conn.getOutputStream().write(body == null ? new byte[0] : body.getBytes(UTF_8));
