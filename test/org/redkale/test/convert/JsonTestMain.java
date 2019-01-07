@@ -69,5 +69,7 @@ public class JsonTestMain {
         SimpleChildEntity entry2 = convert.convertFrom(SimpleChildEntity.class, in);
         System.out.println(entry);
         System.out.println(entry2);
+        Map rs = (Map) convert.convertFrom(entry2.toString());
+        System.out.println(convert.convertTo(rs));
     }
 }

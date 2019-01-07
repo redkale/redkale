@@ -128,6 +128,45 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return rs;
     }
 
+    public Object convertFrom(final String text) {
+        if (text == null) return null;
+        return convertFrom(Utility.charArray(text));
+    }
+
+    public Object convertFrom(final char[] text) {
+        if (text == null) return null;
+        return convertFrom(text, 0, text.length);
+    }
+
+    public Object convertFrom(final char[] text, final int start, final int len) {
+        if (text == null) return null;
+        final JsonReader in = readerPool.get();
+        in.setText(text, start, len);
+        Object rs = new JsonAnyDecoder(factory).convertFrom(in);
+        readerPool.accept(in);
+        return rs;
+    }
+
+    public Object convertFrom(final InputStream in) {
+        if (in == null) return null;
+        return new JsonAnyDecoder(factory).convertFrom(new JsonStreamReader(in));
+    }
+
+    public Object convertFrom(final ByteBuffer... buffers) {
+        if (buffers == null || buffers.length == 0) return null;
+        return new JsonAnyDecoder(factory).convertFrom(new JsonByteBufferReader((ConvertMask) null, buffers));
+    }
+
+    public Object convertFrom(final ConvertMask mask, final ByteBuffer... buffers) {
+        if (buffers == null || buffers.length == 0) return null;
+        return new JsonAnyDecoder(factory).convertFrom(new JsonByteBufferReader(mask, buffers));
+    }
+
+    public Object convertFrom(final JsonReader reader) {
+        if (reader == null) return null;
+        return new JsonAnyDecoder(factory).convertFrom(reader);
+    }
+
     //------------------------------ convertTo -----------------------------------------------------------
     @Override
     public String convertTo(final Object value) {

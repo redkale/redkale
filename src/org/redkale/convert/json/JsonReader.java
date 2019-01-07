@@ -19,6 +19,10 @@ import org.redkale.util.*;
  */
 public class JsonReader extends Reader {
 
+    static enum ValueType {
+        STRING, COLLECTION, JSONOBJECT;
+    }
+
     protected int position = -1;
 
     private char[] text;
@@ -156,6 +160,20 @@ public class JsonReader extends Reader {
      */
     protected void backChar(char ch) {
         this.position--;
+    }
+
+    final ValueType readType() {
+        char ch = nextGoodChar();
+        if (ch == '{') {
+            backChar(ch);
+            return ValueType.JSONOBJECT;
+        }
+        if (ch == '[') {
+            backChar(ch);
+            return ValueType.COLLECTION;
+        }
+        backChar(ch);
+        return ValueType.STRING;
     }
 
     /**

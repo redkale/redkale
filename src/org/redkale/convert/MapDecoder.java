@@ -8,7 +8,7 @@ package org.redkale.convert;
 import org.redkale.util.Creator;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Map的反序列化操作类 <br>
@@ -72,6 +72,20 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
                 lock.notifyAll();
             }
         }
+    }
+
+    //仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
+    public MapDecoder(final ConvertFactory factory, Type type, Type keyType, Type valueType,
+        Creator<Map<K, V>> creator, final Decodeable<Reader, K> keyDecoder, Decodeable<Reader, V> valueDecoder) {
+        Objects.requireNonNull(keyDecoder);
+        Objects.requireNonNull(valueDecoder);
+        this.type = type;
+        this.keyType = keyType;
+        this.valueType = valueType;
+        this.creator = creator;
+        this.keyDecoder = keyDecoder;
+        this.valueDecoder = valueDecoder;
+        this.inited = true;
     }
 
     @Override

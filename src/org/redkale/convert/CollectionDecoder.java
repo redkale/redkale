@@ -8,7 +8,7 @@ package org.redkale.convert;
 import org.redkale.util.Creator;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
+import java.util.*;
 
 /**
  * Collection的反序列化操作类  <br>
@@ -58,6 +58,17 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
                 lock.notifyAll();
             }
         }
+    }
+
+    //仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
+    public CollectionDecoder(final ConvertFactory factory, Type type, Type componentType,
+        Creator<Collection<T>> creator, final Decodeable<Reader, T> componentDecoder) {
+        Objects.requireNonNull(componentDecoder);
+        this.type = type;
+        this.componentType = componentType;
+        this.creator = creator;
+        this.componentDecoder = componentDecoder;
+        this.inited = true;
     }
 
     @Override
