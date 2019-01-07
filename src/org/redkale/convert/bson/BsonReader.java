@@ -346,4 +346,9 @@ public class BsonReader extends Reader {
         return value;
     }
 
+    @Override
+    public ValueType readType() {
+        throw new UnsupportedOperationException("Not supported yet."); 
+    }
+
 }

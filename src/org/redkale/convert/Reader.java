@@ -15,6 +15,10 @@ package org.redkale.convert;
  */
 public abstract class Reader {
 
+    public static enum ValueType {
+        STRING, ARRAY, MAP;
+    }
+
     //当前对象字段名的游标
     protected int fieldIndex;
 
@@ -72,6 +76,13 @@ public abstract class Reader {
      * /跳过字段与值之间的多余内容， json就是跳过:符, map跳过:
      */
     public abstract void readBlank();
+
+    /**
+     * 读取下个值的类型
+     *
+     * @return ValueType
+     */
+    public abstract ValueType readType();
 
     /**
      * 读取对象的类名， 返回 null 表示对象为null， 返回空字符串表示当前class与返回的class一致，返回非空字符串表示class是当前class的子类。

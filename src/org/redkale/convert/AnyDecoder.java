@@ -3,23 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.convert.json;
+package org.redkale.convert;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Type;
 import java.util.*;
-import org.redkale.convert.*;
-import org.redkale.convert.json.JsonReader.ValueType;
 import org.redkale.util.*;
+import org.redkale.convert.Reader.ValueType;
+import static org.redkale.convert.Reader.ValueType.MAP;
 
 /**
- * 对不明类型的对象进行JSON反序列化。
- * <p>
- * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
-@SuppressWarnings("unchecked")
-public final class JsonAnyDecoder implements Decodeable<JsonReader, Object> {
+public class AnyDecoder implements Decodeable<Reader, Object> {
 
     private static final Type collectionObjectType = new TypeToken<Collection<Object>>() {
     }.getType();
@@ -31,26 +27,26 @@ public final class JsonAnyDecoder implements Decodeable<JsonReader, Object> {
 
     private static final Creator<HashMap> mapCreator = Creator.create(HashMap.class);
 
-    protected final Decodeable<JsonReader, String> stringDecoder;
+    protected final Decodeable<Reader, String> stringDecoder;
 
     protected final CollectionDecoder collectionDecoder;
 
     protected final MapDecoder mapDecoder;
 
-    public JsonAnyDecoder(final ConvertFactory factory) {
+    public AnyDecoder(final ConvertFactory factory) {
         this.stringDecoder = factory.loadDecoder(String.class);
         this.collectionDecoder = new CollectionDecoder(factory, collectionObjectType, Object.class, collectionCreator, this);
         this.mapDecoder = new MapDecoder(factory, mapObjectType, String.class, Object.class, mapCreator, stringDecoder, this);
     }
 
     @Override
-    public Object convertFrom(JsonReader in) {
+    public Object convertFrom(Reader in) {
         ValueType vt = in.readType();
         if (vt == null) return null;
         switch (vt) {
-            case COLLECTION:
+            case ARRAY:
                 return this.collectionDecoder.convertFrom(in);
-            case JSONOBJECT:
+            case MAP:
                 return this.mapDecoder.convertFrom(in);
         }
         return this.stringDecoder.convertFrom(in);
