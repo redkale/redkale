@@ -134,10 +134,10 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract <T> CompletableFuture<Integer> deleteDB(final EntityInfo<T> info, Flipper flipper, final String sql);
 
     //清空表
-    protected abstract <T> CompletableFuture<Integer> clearDB(final EntityInfo<T> info, final String sql);
+    protected abstract <T> CompletableFuture<Integer> clearTableDB(final EntityInfo<T> info, final String sql);
 
     //删除表
-    protected abstract <T> CompletableFuture<Integer> dropDB(final EntityInfo<T> info, final String sql);
+    protected abstract <T> CompletableFuture<Integer> dropTableDB(final EntityInfo<T> info, final String sql);
 
     //更新纪录
     protected abstract <T> CompletableFuture<Integer> updateDB(final EntityInfo<T> info, T... values);
@@ -516,117 +516,117 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return deleteDB(info, flipper, sql);
     }
 
-    //----------------------------- clearCompose -----------------------------
+    //----------------------------- clearTableCompose -----------------------------
     @Override
-    public <T> int clear(Class<T> clazz) {
-        return clear(clazz, (FilterNode) null);
+    public <T> int clearTable(Class<T> clazz) {
+        return clearTable(clazz, (FilterNode) null);
     }
 
     @Override
-    public <T> int clear(Class<T> clazz, FilterNode node) {
+    public <T> int clearTable(Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return clearCache(info, node);
-        return DataSqlSource.this.clearCompose(info, node).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return clearTableCache(info, node);
+        return DataSqlSource.this.clearTableCompose(info, node).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                clearCache(info, node);
+                clearTableCache(info, node);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> clearAsync(final Class<T> clazz) {
-        return clearAsync(clazz, (FilterNode) null);
+    public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz) {
+        return clearTableAsync(clazz, (FilterNode) null);
     }
 
     @Override
-    public <T> CompletableFuture<Integer> clearAsync(final Class<T> clazz, FilterNode node) {
+    public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> clearCache(info, node), getExecutor());
+            return CompletableFuture.supplyAsync(() -> clearTableCache(info, node), getExecutor());
         }
-        if (isAsync()) return DataSqlSource.this.clearCompose(info, node).whenComplete((rs, t) -> {
+        if (isAsync()) return DataSqlSource.this.clearTableCompose(info, node).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    clearCache(info, node);
+                    clearTableCache(info, node);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.clearCompose(info, node).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.clearTableCompose(info, node).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                clearCache(info, node);
+                clearTableCache(info, node);
             }
         });
     }
 
-    protected <T> CompletableFuture<Integer> clearCompose(final EntityInfo<T> info, final FilterNode node) {
+    protected <T> CompletableFuture<Integer> clearTableCompose(final EntityInfo<T> info, final FilterNode node) {
         String sql = "TRUNCATE TABLE " + info.getTable(node);
-        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " clear sql=" + sql);
-        return clearDB(info, sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " clearTable sql=" + sql);
+        return clearTableDB(info, sql);
     }
 
-    //----------------------------- dropCompose -----------------------------
+    //----------------------------- dropTableCompose -----------------------------
     @Override
-    public <T> int drop(Class<T> clazz) {
-        return drop(clazz, (FilterNode) null);
+    public <T> int dropTable(Class<T> clazz) {
+        return dropTable(clazz, (FilterNode) null);
     }
 
     @Override
-    public <T> int drop(Class<T> clazz, FilterNode node) {
+    public <T> int dropTable(Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return dropCache(info, node);
-        return DataSqlSource.this.dropCompose(info, node).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return dropTableCache(info, node);
+        return DataSqlSource.this.dropTableCompose(info, node).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                dropCache(info, node);
+                dropTableCache(info, node);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> dropAsync(final Class<T> clazz) {
-        return dropAsync(clazz, (FilterNode) null);
+    public <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz) {
+        return dropTableAsync(clazz, (FilterNode) null);
     }
 
     @Override
-    public <T> CompletableFuture<Integer> dropAsync(final Class<T> clazz, FilterNode node) {
+    public <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> dropCache(info, node), getExecutor());
+            return CompletableFuture.supplyAsync(() -> dropTableCache(info, node), getExecutor());
         }
-        if (isAsync()) return DataSqlSource.this.dropCompose(info, node).whenComplete((rs, t) -> {
+        if (isAsync()) return DataSqlSource.this.dropTableCompose(info, node).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    dropCache(info, node);
+                    dropTableCache(info, node);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.dropCompose(info, node).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.dropTableCompose(info, node).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                dropCache(info, node);
+                dropTableCache(info, node);
             }
         });
     }
 
-    protected <T> CompletableFuture<Integer> dropCompose(final EntityInfo<T> info, final FilterNode node) {
+    protected <T> CompletableFuture<Integer> dropTableCompose(final EntityInfo<T> info, final FilterNode node) {
         String sql = "DROP TABLE " + info.getTable(node);
-        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " drop sql=" + sql);
-        return dropDB(info, sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " dropTable sql=" + sql);
+        return dropTableDB(info, sql);
     }
 
-    protected <T> int clearCache(final EntityInfo<T> info, FilterNode node) {
+    protected <T> int clearTableCache(final EntityInfo<T> info, FilterNode node) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         return cache.clear();
     }
 
-    protected <T> int dropCache(final EntityInfo<T> info, FilterNode node) {
+    protected <T> int dropTableCache(final EntityInfo<T> info, FilterNode node) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         return cache.drop();

@@ -161,7 +161,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int clear(final Class<T> clazz);
+    public <T> int clearTable(final Class<T> clazz);
 
     /**
      * 清空表  <br>
@@ -172,7 +172,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> clearAsync(final Class<T> clazz);
+    public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz);
 
     /**
      * 清空表  <br>
@@ -184,7 +184,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int clear(final Class<T> clazz, final FilterNode node);
+    public <T> int clearTable(final Class<T> clazz, final FilterNode node);
 
     /**
      * 清空表  <br>
@@ -196,7 +196,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> clearAsync(final Class<T> clazz, final FilterNode node);
+    public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz, final FilterNode node);
 
     //------------------------dropAsync---------------------------
     /**
@@ -208,7 +208,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int drop(final Class<T> clazz);
+    public <T> int dropTable(final Class<T> clazz);
 
     /**
      * 删除表  <br>
@@ -219,7 +219,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> dropAsync(final Class<T> clazz);
+    public <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz);
 
     /**
      * 删除表  <br>
@@ -231,7 +231,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int drop(final Class<T> clazz, final FilterNode node);
+    public <T> int dropTable(final Class<T> clazz, final FilterNode node);
 
     /**
      * 删除表  <br>
@@ -243,7 +243,7 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> dropAsync(final Class<T> clazz, final FilterNode node);
+    public <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz, final FilterNode node);
 
     //------------------------updateAsync---------------------------
     /**

@@ -219,7 +219,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> clearDB(EntityInfo<T> info, String sql) {
+    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, String sql) {
         Connection conn = null;
         try {
             conn = writePool.poll();
@@ -239,7 +239,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> dropDB(EntityInfo<T> info, String sql) {
+    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, String sql) {
         Connection conn = null;
         try {
             conn = writePool.poll();
