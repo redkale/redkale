@@ -12,6 +12,10 @@ import org.redkale.convert.Reader.ValueType;
 import static org.redkale.convert.Reader.ValueType.MAP;
 
 /**
+ * 对不明类型的对象进行反序列化。 <br>
+ * <b>注意: 目前只支持文本格式</b> <br>
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
