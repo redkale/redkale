@@ -19,8 +19,6 @@
 </p>
 
 
-&nbsp;&nbsp;&nbsp;编译RedKale 1.8.x版本需要在源码工程中的编译器选项中加入： <b>-XDignore.symbol.file=true</b>
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<h5>详情请访问:&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://redkale.org' target='_blank'>https://redkale.org</a></h5>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<h5>基本文档:&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://redkale.org/articles.html' target='_blank'>https://redkale.org/articles.html</a></h5>
