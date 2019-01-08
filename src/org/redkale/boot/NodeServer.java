@@ -154,24 +154,19 @@ public abstract class NodeServer {
         }
 
         ClassFilter<Service> serviceFilter = createServiceClassFilter();
-        if (application.singletonrun) {
+        if (application.singletonrun) { //singleton模式下只加载指定的Service
             final String ssc = config == null ? null : config.getValue("red" + "kale-singleton-serviceclass");
             if (ssc != null) serviceFilter.setExpectPredicate(c -> !ssc.equals(c));
         }
         ClassFilter<Filter> filterFilter = createFilterClassFilter();
         ClassFilter<Servlet> servletFilter = createServletClassFilter();
         ClassFilter otherFilter = createOtherClassFilter();
-        if (application.singletonrun) {
-            if (filterFilter != null) filterFilter.setRefused(true);
-            if (servletFilter != null) servletFilter.setRefused(true);
-            if (otherFilter != null) otherFilter.setRefused(true);
-        }
         long s = System.currentTimeMillis();
         ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter, otherFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter, otherFilter); //必须在servlet之前
-        if (!application.singletonrun) {
+        if (!application.singletonrun) { //非singleton模式下才加载Filter、Servlet
             loadFilter(filterFilter, otherFilter);
             loadServlet(servletFilter, otherFilter);
         }
