@@ -164,7 +164,7 @@ public abstract class NodeServer {
         long s = System.currentTimeMillis();
         ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter, otherFilter);
         long e = System.currentTimeMillis() - s;
-        if (!application.singletonrun) logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
+        logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter, otherFilter); //必须在servlet之前
         if (!application.singletonrun) { //非singleton模式下才加载Filter、Servlet
             loadFilter(filterFilter, otherFilter);
@@ -515,9 +515,7 @@ public abstract class NodeServer {
             }
             sb.append(threadName).append("All Services load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
         }
-        if (!application.singletonrun) {
-            if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
-        }
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 
     private void calcMaxLength(Service y) { //计算toString中的长度
