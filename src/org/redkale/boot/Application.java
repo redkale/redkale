@@ -135,7 +135,7 @@ public final class Application {
 
     //--------------------------------------------------------------------------------------------    
     //是否用于main方法运行
-    private final boolean singletonrun;
+    final boolean singletonrun;
 
     //根WatchFactory
     //private final WatchFactory watchFactory = WatchFactory.root();
@@ -672,6 +672,7 @@ public final class Application {
         final List<AnyValue> others = new ArrayList<>();
         final List<AnyValue> watchs = new ArrayList<>();
         for (final AnyValue entry : entrys) {
+            if (singletonrun) ((DefaultAnyValue) entry).setValue("red" + "kale-singleton-serviceclass", config.getValue("red" + "kale-singleton-serviceclass"));
             if (entry.getValue("protocol", "").toUpperCase().startsWith("SNCP")) {
                 sncps.add(entry);
             } else if (entry.getValue("protocol", "").toUpperCase().startsWith("WATCH")) {
@@ -819,6 +820,7 @@ public final class Application {
     public static <T extends Service> T singleton(String name, Class<T> serviceClass) throws Exception {
         if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
         final Application application = Application.create(true);
+        ((DefaultAnyValue) application.config).setValue("red" + "kale-singleton-serviceclass", serviceClass.getName());
         application.init();
         application.start();
         for (NodeServer server : application.servers) {

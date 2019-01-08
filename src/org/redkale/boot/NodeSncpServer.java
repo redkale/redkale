@@ -32,7 +32,7 @@ public class NodeSncpServer extends NodeServer {
     private NodeSncpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
-        this.consumer = sncpServer == null ? null : x -> sncpServer.addSncpServlet(x);
+        this.consumer = sncpServer == null || application.singletonrun ? null : x -> sncpServer.addSncpServlet(x); //singleton模式下不生成SncpServlet
     }
 
     public static NodeServer createNodeServer(Application application, AnyValue serconf) {

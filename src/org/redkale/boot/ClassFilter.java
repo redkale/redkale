@@ -11,6 +11,7 @@ import java.lang.reflect.Modifier;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Predicate;
 import java.util.jar.*;
 import java.util.logging.*;
 import java.util.regex.*;
@@ -35,6 +36,8 @@ public final class ClassFilter<T> {
     private final Set<FilterEntry<T>> entrys = new HashSet<>(); //符合条件的结果
 
     private final Set<FilterEntry<T>> expectEntrys = new HashSet<>(); //准备符合条件的结果
+
+    private Predicate<String> expectPredicate;
 
     private boolean refused; //是否拒绝所有数据,设置true，则其他规则失效,都是拒绝.
 
@@ -196,7 +199,7 @@ public final class ClassFilter<T> {
             }
 
             AutoLoad auto = (AutoLoad) clazz.getAnnotation(AutoLoad.class);
-            if (autoscan && auto != null && !auto.value()) { //自动扫描且被标记为@AutoLoad(false)的
+            if ((expectPredicate != null && expectPredicate.test(clazzname)) || (autoscan && auto != null && !auto.value())) { //自动扫描且被标记为@AutoLoad(false)的
                 expectEntrys.add(new FilterEntry(clazz, autoscan, true, property));
             } else {
                 entrys.add(new FilterEntry(clazz, autoscan, false, property));
@@ -345,6 +348,14 @@ public final class ClassFilter<T> {
 
     public void setRefused(boolean refused) {
         this.refused = refused;
+    }
+
+    public Predicate<String> getExpectPredicate() {
+        return expectPredicate;
+    }
+
+    public void setExpectPredicate(Predicate<String> predicate) {
+        this.expectPredicate = predicate;
     }
 
     public Set<String> getPrivilegeIncludes() {
