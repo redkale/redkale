@@ -140,7 +140,11 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
         return (this.rows == null) ? new ArrayList<T>().toArray() : this.rows.toArray();
     }
 
-    public T[] toArray(T[] a) {
-        return (this.rows == null) ? new ArrayList<T>().toArray(a) : this.rows.toArray(a);
+    public <E> E[] toArray(E[] a) {
+        return (this.rows == null) ? new ArrayList<E>().toArray(a) : this.rows.toArray(a);
+    }
+
+    public <E> E[] toArray(IntFunction<E[]> generator) {
+        return (this.rows == null) ? new ArrayList<E>().toArray(generator.apply(0)) : this.rows.toArray(generator.apply(0));
     }
 }
