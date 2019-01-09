@@ -145,6 +145,6 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
     }
 
     public <E> E[] toArray(IntFunction<E[]> generator) {
-        return (this.rows == null) ? new ArrayList<E>().toArray(generator.apply(0)) : this.rows.toArray(generator.apply(0));
+        return (this.rows == null) ? new ArrayList<E>().toArray(generator.apply(0)) : this.rows.toArray(generator.apply(this.rows.size()));
     }
 }
