@@ -58,6 +58,10 @@ public class RetResult<T> {
         return new RetResult();
     }
 
+    public static <V> RetResult success(V result) {
+        return new RetResult().result(result);
+    }
+
     public static <T> CompletableFuture<RetResult<T>> successFuture() {
         return CompletableFuture.completedFuture(new RetResult());
     }
