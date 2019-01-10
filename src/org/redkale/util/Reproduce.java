@@ -41,12 +41,12 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<Class<S>, String> srcColumnPredicate) {
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate) {
         return create(destClass, srcClass, srcColumnPredicate, (Map<String, String>) null);
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<Class<S>, String> srcColumnPredicate, final Map<String, String> names) {
+    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> names) {
         // ------------------------------------------------------------------------------
         final String supDynName = Reproduce.class.getName().replace('.', '/');
         final String destClassName = destClass.getName().replace('.', '/');
@@ -89,7 +89,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 if (Modifier.isFinal(field.getModifiers())) continue;
                 if (!Modifier.isPublic(field.getModifiers())) continue;
                 final String sfname = field.getName();
-                if (srcColumnPredicate != null && !srcColumnPredicate.test(srcClass, sfname)) continue;
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) continue;
 
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
                 java.lang.reflect.Method setter = null;
@@ -128,7 +128,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                     cs[0] = Character.toLowerCase(cs[0]);
                     sfname = new String(cs);
                 }
-                if (srcColumnPredicate != null && !srcColumnPredicate.test(srcClass, sfname)) continue;
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(getter, sfname)) continue;
 
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
                 java.lang.reflect.Method setter = null;
