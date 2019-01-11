@@ -75,6 +75,10 @@ public final class EntityInfo<T> {
     //只有field.name 与 Column.name不同才存放在aliasmap里.
     private final Map<String, String> aliasmap;
 
+    //key是field的name， value是CryptHandler
+    //字段都不存在CryptHandler时值因为为null，减少判断
+    private final Map<String, CryptHandler> cryptmap;
+
     //所有可更新字段，即排除了主键字段和标记为&#064;Column(updatable=false)的字段
     private final Map<String, Attribute<T, Serializable>> updateAttributeMap = new HashMap<>();
 
@@ -274,6 +278,7 @@ public final class EntityInfo<T> {
         }
         this.constructorParameters = (cp == null || cp.value().length < 1) ? null : cp.value();
         Attribute idAttr0 = null;
+        Map<String, CryptHandler> cryptmap0 = null;
         Map<String, String> aliasmap0 = null;
         Class cltmp = type;
         Set<String> fields = new HashSet<>();
@@ -284,7 +289,7 @@ public final class EntityInfo<T> {
         List<Attribute<T, Serializable>> updateattrs = new ArrayList<>();
         boolean auto = false;
         boolean uuid = false;
-
+        Map<Class, Creator<CryptHandler>> cryptCreatorMap = new HashMap<>();
         do {
             for (Field field : cltmp.getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers())) continue;
@@ -298,9 +303,16 @@ public final class EntityInfo<T> {
                     if (aliasmap0 == null) aliasmap0 = new HashMap<>();
                     aliasmap0.put(fieldname, sqlfield);
                 }
+                final CryptColumn cpt = field.getAnnotation(CryptColumn.class);
+                CryptHandler cryptHandler = null;
+                if (cpt != null) {
+                    if (cryptmap0 == null) cryptmap0 = new HashMap<>();
+                    cryptHandler = cryptCreatorMap.computeIfAbsent(cpt.handler(), c -> (Creator<CryptHandler>) Creator.create(cpt.handler())).create();
+                    cryptmap0.put(fieldname, cryptHandler);
+                }
                 Attribute attr;
                 try {
-                    attr = Attribute.create(cltmp, field);
+                    attr = Attribute.create(cltmp, field, cryptHandler);
                 } catch (RuntimeException e) {
                     continue;
                 }
@@ -357,6 +369,7 @@ public final class EntityInfo<T> {
 
         this.primary = idAttr0;
         this.aliasmap = aliasmap0;
+        this.cryptmap = cryptmap0;
         this.attributes = attributeMap.values().toArray(new Attribute[attributeMap.size()]);
         this.queryAttributes = queryattrs.toArray(new Attribute[queryattrs.size()]);
         this.insertAttributes = insertattrs.toArray(new Attribute[insertattrs.size()]);
@@ -858,6 +871,51 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 字段值转换成数据库的值
+     *
+     * @param fieldname  字段名
+     * @param fieldvalue 字段值
+     *
+     * @return Object
+     */
+    public Object getSQLValue(String fieldname, Object fieldvalue) {
+        if (this.cryptmap == null) return fieldvalue;
+        CryptHandler handler = this.cryptmap.get(fieldname);
+        if (handler == null) return fieldvalue;
+        return handler.encrypt(fieldvalue);
+    }
+
+    /**
+     * 字段值转换成数据库的值
+     *
+     * @param attr   Attribute
+     * @param entity 记录对象
+     *
+     * @return Object
+     */
+    public Serializable getSQLValue(Attribute<T, Serializable> attr, T entity) {
+        Serializable val = attr.get(entity);
+        CryptHandler cryptHandler = attr.attach();
+        if (cryptHandler != null) val = (Serializable) cryptHandler.encrypt(val);
+        return val;
+    }
+
+    /**
+     * 数据库的值转换成数字段值
+     *
+     * @param attr   Attribute
+     * @param entity 记录对象
+     *
+     * @return Object
+     */
+    public Serializable getFieldValue(Attribute<T, Serializable> attr, T entity) {
+        Serializable val = attr.get(entity);
+        CryptHandler cryptHandler = attr.attach();
+        if (cryptHandler != null) val = (Serializable) cryptHandler.decrypt(val);
+        return val;
+    }
+
+    /**
      * 获取主键字段的表字段名
      *
      * @return String
@@ -880,26 +938,30 @@ public final class EntityInfo<T> {
     /**
      * 拼接UPDATE给字段赋值的SQL片段
      *
-     * @param col 表字段名
-     * @param cv  ColumnValue
+     * @param col  表字段名
+     * @param attr Attribute
+     * @param cv   ColumnValue
      *
      * @return CharSequence
      */
-    protected CharSequence formatSQLValue(String col, final ColumnValue cv) {
+    protected CharSequence formatSQLValue(String col, Attribute<T, Serializable> attr, final ColumnValue cv) {
         if (cv == null) return null;
+        Object val = cv.getValue();
+        CryptHandler handler = attr.attach();
+        if (handler != null) val = handler.encrypt(val);
         switch (cv.getExpress()) {
             case INC:
-                return new StringBuilder().append(col).append(" + ").append(cv.getValue());
+                return new StringBuilder().append(col).append(" + ").append(val);
             case MUL:
-                return new StringBuilder().append(col).append(" * ").append(cv.getValue());
+                return new StringBuilder().append(col).append(" * ").append(val);
             case AND:
-                return new StringBuilder().append(col).append(" & ").append(cv.getValue());
+                return new StringBuilder().append(col).append(" & ").append(val);
             case ORR:
-                return new StringBuilder().append(col).append(" | ").append(cv.getValue());
+                return new StringBuilder().append(col).append(" | ").append(val);
             case MOV:
-                return formatToString(cv.getValue());
+                return formatToString(val);
         }
-        return formatToString(cv.getValue());
+        return formatToString(val);
     }
 
     /**
@@ -1003,9 +1065,13 @@ public final class EntityInfo<T> {
                 o = null;
             } else { //不支持超过2G的数据
                 o = blob.getBytes(1, (int) blob.length());
+                CryptHandler cryptHandler = attr.attach();
+                if (cryptHandler != null) o = (Serializable) cryptHandler.decrypt(o);
             }
         } else {
             o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
+            CryptHandler cryptHandler = attr.attach();
+            if (cryptHandler != null) o = (Serializable) cryptHandler.decrypt(o);
             if (t.isPrimitive()) {
                 if (o != null) {
                     if (t == int.class) {

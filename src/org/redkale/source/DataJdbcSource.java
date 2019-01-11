@@ -137,7 +137,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                     int i = 0;
                     for (char ch : sqlchars) {
                         if (ch == '?') {
-                            Object obj = attrs[i++].get(value);
+                            Object obj = info.getSQLValue(attrs[i++], value);
                             if (obj != null && obj.getClass().isArray()) {
                                 sb.append("'[length=").append(java.lang.reflect.Array.getLength(obj)).append("]'");
                             } else {
@@ -174,10 +174,10 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         return prestmt;
     }
 
-    protected <T> int batchStatementParameters(Connection conn, PreparedStatement prestmt, EntityInfo<T> info, Attribute<T, Serializable>[] attrs, T value) throws SQLException {
+    protected <T> int batchStatementParameters(Connection conn, PreparedStatement prestmt, EntityInfo<T> info, Attribute<T, Serializable>[] attrs, T entity) throws SQLException {
         int i = 0;
         for (Attribute<T, Serializable> attr : attrs) {
-            Serializable val = attr.get(value);
+            Serializable val = info.getSQLValue(attr, entity);
             if (val instanceof byte[]) {
                 Blob blob = conn.createBlob();
                 blob.setBytes(1, (byte[]) val);
@@ -186,7 +186,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 prestmt.setObject(++i, ((AtomicInteger) val).get());
             } else if (val instanceof AtomicLong) {
                 prestmt.setObject(++i, ((AtomicLong) val).get());
-            } else if (val != null && !(val instanceof Number) && !(val instanceof CharSequence) && !(value instanceof java.util.Date)
+            } else if (val != null && !(val instanceof Number) && !(val instanceof CharSequence) && !(entity instanceof java.util.Date)
                 && !val.getClass().getName().startsWith("java.sql.") && !val.getClass().getName().startsWith("java.time.")) {
                 prestmt.setObject(++i, info.jsonConvert.convertTo(attr.genericType(), val));
             } else {
@@ -281,7 +281,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                     StringBuilder sb = new StringBuilder(128);
                     for (char ch : sqlchars) {
                         if (ch == '?') {
-                            Object obj = i == attrs.length ? primary.get(value) : attrs[i++].get(value);
+                            Object obj = i == attrs.length ? info.getSQLValue(primary, value) : info.getSQLValue(attrs[i++], value);
                             if (obj != null && obj.getClass().isArray()) {
                                 sb.append("'[length=").append(java.lang.reflect.Array.getLength(obj)).append("]'");
                             } else {
@@ -292,7 +292,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                         }
                     }
                     String debugsql = sb.toString();
-                    if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " update sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                    if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " updates sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
                 } //打印结束
             }
             int[] pc = prestmt.executeBatch();
