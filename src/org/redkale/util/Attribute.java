@@ -132,6 +132,17 @@ public interface Attribute<T, F> {
     public void set(T obj, F value);
 
     /**
+     * 附加对象
+     *
+     * @param <E> 泛型
+     *
+     * @return 附加对象
+     */
+    default <E> E attach() {
+        return null;
+    }
+
+    /**
      * 根据一个Field生成 Attribute 对象。
      *
      * @param <T>   依附类的类型
@@ -142,7 +153,22 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Field field) {
-        return create((Class<T>) field.getDeclaringClass(), field.getName(), field, null, null);
+        return create((Class<T>) field.getDeclaringClass(), field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+    }
+
+    /**
+     * 根据一个Field生成 Attribute 对象。
+     *
+     * @param <T>    依附类的类型
+     * @param <F>    字段类型
+     * @param field  字段，如果该字段不存在则抛异常
+     * @param attach 附加对象
+     *
+     * @return Attribute对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, F> Attribute<T, F> create(final java.lang.reflect.Field field, Object attach) {
+        return create((Class<T>) field.getDeclaringClass(), field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -157,7 +183,23 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(String fieldalias, final java.lang.reflect.Field field) {
-        return create((Class<T>) field.getDeclaringClass(), fieldalias, field, null, null);
+        return create((Class<T>) field.getDeclaringClass(), fieldalias, (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+    }
+
+    /**
+     * 根据一个Field和field的别名生成 Attribute 对象。
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param fieldalias 别名
+     * @param field      字段，如果该字段不存在则抛异常
+     * @param attach     附加对象
+     *
+     * @return Attribute对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, F> Attribute<T, F> create(String fieldalias, final java.lang.reflect.Field field, Object attach) {
+        return create((Class<T>) field.getDeclaringClass(), fieldalias, (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -172,7 +214,26 @@ public interface Attribute<T, F> {
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldname) {
         try {
-            return create(clazz, fieldname, clazz.getDeclaredField(fieldname), null, null);
+            return create(clazz, fieldname, (Class) null, clazz.getDeclaredField(fieldname), (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+        } catch (NoSuchFieldException | SecurityException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * 根据一个Class和field真实名称生成 Attribute 对象。
+     *
+     * @param <T>       依附类的类型
+     * @param <F>       字段类型
+     * @param clazz     指定依附的类
+     * @param fieldname 字段名，如果该字段不存在则抛异常
+     * @param attach    附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldname, Object attach) {
+        try {
+            return create(clazz, fieldname, (Class) null, clazz.getDeclaredField(fieldname), (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
         } catch (NoSuchFieldException | SecurityException ex) {
             throw new RuntimeException(ex);
         }
@@ -189,7 +250,22 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Field field) {
-        return create(clazz, field.getName(), field);
+        return create(clazz, field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+    }
+
+    /**
+     * 根据一个Class和Field生成 Attribute 对象。
+     *
+     * @param <T>    依附类的类型
+     * @param <F>    字段类型
+     * @param clazz  指定依附的类
+     * @param field  字段，如果该字段不存在则抛异常
+     * @param attach 附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Field field, Object attach) {
+        return create(clazz, field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -204,7 +280,23 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Field field) {
-        return create(clazz, fieldalias, field, null, null);
+        return create(clazz, fieldalias, (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+    }
+
+    /**
+     * 根据一个Class、field别名和Field生成 Attribute 对象。
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param field      字段，如果该字段不存在则抛异常
+     * @param attach     附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Field field, Object attach) {
+        return create(clazz, fieldalias, (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -219,7 +311,23 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
-        return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), null, null, getter, setter);
+        return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, null);
+    }
+
+    /**
+     * 根据一个getter和setter方法生成 Attribute 对象。 tgetter、setter不能同时为null
+     *
+     * @param <T>    依附类的类型
+     * @param <F>    字段类型
+     * @param getter getter方法
+     * @param setter setter方法
+     * @param attach 附加对象
+     *
+     * @return Attribute对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, F> Attribute<T, F> create(final java.lang.reflect.Method getter, final java.lang.reflect.Method setter, Object attach) {
+        return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, attach);
     }
 
     /**
@@ -234,7 +342,23 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
-        return create(clazz, null, null, getter, setter);
+        return create(clazz, (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, null);
+    }
+
+    /**
+     * 根据Class、getter和setter方法生成 Attribute 对象。 tgetter、setter不能同时为null
+     *
+     * @param <T>    依附类的类型
+     * @param <F>    字段类型
+     * @param clazz  指定依附的类
+     * @param getter getter方法
+     * @param setter setter方法
+     * @param attach 附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter, Object attach) {
+        return create(clazz, (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, attach);
     }
 
     /**
@@ -314,7 +438,7 @@ public interface Attribute<T, F> {
             if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
             if (!method.getName().startsWith("set")) continue;
             if (method.getParameterCount() != 1) continue;
-            list.add(create(clazz, null, method));
+            list.add(create(clazz, (java.lang.reflect.Method) null, method));
         }
         return list.toArray(new Attribute[list.size()]);
     }
@@ -332,7 +456,24 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
-        return create(clazz, fieldalias, null, getter, setter);
+        return create(clazz, fieldalias, (Class) null, (java.lang.reflect.Field) null, getter, setter, null);
+    }
+
+    /**
+     * 根据Class、字段别名、getter和setter方法生成 Attribute 对象。 tgetter、setter不能同时为null
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param getter     getter方法
+     * @param setter     setter方法
+     * @param attach     附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldalias, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter, Object attach) {
+        return create(clazz, fieldalias, (Class) null, (java.lang.reflect.Field) null, getter, setter, attach);
     }
 
     /**
@@ -349,7 +490,25 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter) {
-        return create(clazz, fieldalias, null, field, getter, setter);
+        return create(clazz, fieldalias, (Class) null, field, getter, setter, null);
+    }
+
+    /**
+     * 根据Class、字段别名、Field、getter和setter方法生成 Attribute 对象。 Field、tgetter、setter不能同时为null
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param field      字段
+     * @param getter     getter方法
+     * @param setter     setter方法
+     * @param attach     附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
+        return create(clazz, fieldalias, (Class) null, field, getter, setter, attach);
     }
 
     /**
@@ -364,7 +523,23 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final Class<F> fieldtype) {
-        return create(clazz, fieldalias, fieldtype, null, (Function) null, null);
+        return create(clazz, fieldalias, fieldtype, (java.lang.reflect.Type) null, (Function) null, (BiConsumer) null, null);
+    }
+
+    /**
+     * 根据Class、字段别名、字段类型生成虚构的 Attribute 对象,get、set方法为空方法。
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param fieldtype  字段的类
+     * @param attach     附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final Class<F> fieldtype, Object attach) {
+        return create(clazz, fieldalias, fieldtype, (java.lang.reflect.Type) null, (Function) null, (BiConsumer) null, attach);
     }
 
     /**
@@ -383,6 +558,26 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final Class<F> fieldtype, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter) {
+        return create(clazz, fieldalias, fieldtype, field, getter, setter, null);
+    }
+
+    /**
+     * 根据Class、字段别名、字段类型、Field、getter和setter方法生成 Attribute 对象。 fieldalias/fieldtype、Field、tgetter、setter不能同时为null.
+     *
+     * @param <T>        依附类的类型
+     * @param <F>        字段类型
+     * @param clazz      指定依附的类
+     * @param fieldalias 字段别名
+     * @param fieldtype  字段类型
+     * @param field      字段
+     * @param getter     getter方法
+     * @param setter     setter方法
+     * @param attach     附加对象
+     *
+     * @return Attribute对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldalias, final Class<F> fieldtype, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
         if (fieldalias != null && fieldalias.isEmpty()) fieldalias = null;
         int mod = field == null ? java.lang.reflect.Modifier.STATIC : field.getModifiers();
         if (field != null && !java.lang.reflect.Modifier.isStatic(mod) && !java.lang.reflect.Modifier.isPublic(mod)) {
@@ -477,6 +672,10 @@ public interface Attribute<T, F> {
             FieldVisitor fv = cw.visitField(ACC_PRIVATE, "_gtype", "Ljava/lang/reflect/Type;", null, null);
             fv.visitEnd();
         }
+        { //_attach
+            FieldVisitor fv = cw.visitField(ACC_PRIVATE, "_attach", "Ljava/lang/Object;", null, null);
+            fv.visitEnd();
+        }
         { //构造方法
             mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             mv.visitVarInsn(ALOAD, 0);
@@ -522,6 +721,14 @@ public interface Attribute<T, F> {
             mv = cw.visitMethod(ACC_PUBLIC, "genericType", "()Ljava/lang/reflect/Type;", null, null);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, "_gtype", "Ljava/lang/reflect/Type;");
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        { //attach
+            mv = cw.visitMethod(ACC_PUBLIC, "attach", "()Ljava/lang/Object;", "<E:Ljava/lang/Object;>()TE;", null);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, "_attach", "Ljava/lang/Object;");
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -632,6 +839,9 @@ public interface Attribute<T, F> {
             java.lang.reflect.Field _gtype = rs.getClass().getDeclaredField("_gtype");
             _gtype.setAccessible(true);
             _gtype.set(rs, generictype);
+            java.lang.reflect.Field _attach = rs.getClass().getDeclaredField("_attach");
+            _attach.setAccessible(true);
+            _attach.set(rs, attach);
             return rs;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -658,6 +868,24 @@ public interface Attribute<T, F> {
     /**
      * 根据Class、字段名、字段类型、getter和setter方法生成 Attribute 对象。 clazz、fieldname、fieldtype都不能为null
      *
+     * @param <T>       依附类的类型
+     * @param <F>       字段类型
+     * @param clazz     指定依附的类
+     * @param fieldname 字段名
+     * @param fieldtype 字段类型
+     * @param getter    getter方法
+     * @param setter    setter方法
+     * @param attach    附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldname, final Class<F> fieldtype, final Function<T, F> getter, final BiConsumer<T, F> setter, Object attach) {
+        return create(clazz, fieldname, fieldtype, fieldtype, getter, setter, attach);
+    }
+
+    /**
+     * 根据Class、字段名、字段类型、getter和setter方法生成 Attribute 对象。 clazz、fieldname、fieldtype都不能为null
+     *
      * @param <T>              依附类的类型
      * @param <F>              字段类型
      * @param clazz            指定依附的类
@@ -671,6 +899,26 @@ public interface Attribute<T, F> {
      */
     public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldname, final Class<F> fieldtype,
         final java.lang.reflect.Type fieldGenericType, final Function<T, F> getter, final BiConsumer<T, F> setter) {
+        return create(clazz, fieldname, fieldtype, fieldGenericType, getter, setter, null);
+    }
+
+    /**
+     * 根据Class、字段名、字段类型、getter和setter方法生成 Attribute 对象。 clazz、fieldname、fieldtype都不能为null
+     *
+     * @param <T>              依附类的类型
+     * @param <F>              字段类型
+     * @param clazz            指定依附的类
+     * @param fieldname        字段名
+     * @param fieldtype        字段类型
+     * @param fieldGenericType 字段泛型
+     * @param getter           getter方法
+     * @param setter           setter方法
+     * @param attach           附加对象
+     *
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldname, final Class<F> fieldtype,
+        final java.lang.reflect.Type fieldGenericType, final Function<T, F> getter, final BiConsumer<T, F> setter, final Object attach) {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(fieldname);
         Objects.requireNonNull(fieldtype);
@@ -683,6 +931,11 @@ public interface Attribute<T, F> {
             @Override
             public java.lang.reflect.Type genericType() {
                 return fieldGenericType;
+            }
+
+            @Override
+            public <E> E attach() {
+                return (E) attach;
             }
 
             @Override
