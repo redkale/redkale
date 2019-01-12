@@ -20,5 +20,5 @@ public interface DataCacheListener {
 
     public <T> int updateCache(Class<T> clazz, T... entitys);
 
-    public <T> int deleteCache(Class<T> clazz, Serializable... ids);
+    public <T> int deleteCache(Class<T> clazz, Serializable... pks);
 }

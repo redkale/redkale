@@ -84,7 +84,7 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> insertDB(EntityInfo<T> info, T... values) {
+    protected <T> CompletableFuture<Integer> insertDB(EntityInfo<T> info, T... entitys) {
         return CompletableFuture.completedFuture(0);
     }
 
@@ -104,7 +104,7 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateDB(EntityInfo<T> info, T... values) {
+    protected <T> CompletableFuture<Integer> updateDB(EntityInfo<T> info, T... entitys) {
         return CompletableFuture.completedFuture(0);
     }
 

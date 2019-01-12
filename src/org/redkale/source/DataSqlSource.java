@@ -128,7 +128,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop);
 
     //插入纪录
-    protected abstract <T> CompletableFuture<Integer> insertDB(final EntityInfo<T> info, T... values);
+    protected abstract <T> CompletableFuture<Integer> insertDB(final EntityInfo<T> info, T... entitys);
 
     //删除记录
     protected abstract <T> CompletableFuture<Integer> deleteDB(final EntityInfo<T> info, Flipper flipper, final String sql);
@@ -140,7 +140,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract <T> CompletableFuture<Integer> dropTableDB(final EntityInfo<T> info, final String sql);
 
     //更新纪录
-    protected abstract <T> CompletableFuture<Integer> updateDB(final EntityInfo<T> info, T... values);
+    protected abstract <T> CompletableFuture<Integer> updateDB(final EntityInfo<T> info, T... entitys);
 
     //更新纪录
     protected abstract <T> CompletableFuture<Integer> updateDB(final EntityInfo<T> info, Flipper flipper, final String sql, final boolean prepared, Object... params);
@@ -256,10 +256,10 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
     ////检查对象是否都是同一个Entity类
 
-    protected <T> CompletableFuture checkEntity(String action, boolean async, T... values) {
-        if (values.length < 1) return null;
+    protected <T> CompletableFuture checkEntity(String action, boolean async, T... entitys) {
+        if (entitys.length < 1) return null;
         Class clazz = null;
-        for (T val : values) {
+        for (T val : entitys) {
             if (clazz == null) {
                 clazz = val.getClass();
                 continue;
@@ -280,80 +280,80 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     /**
      * 新增对象， 必须是Entity对象
      *
-     * @param <T>    Entity类泛型
-     * @param values Entity对象
+     * @param <T>     Entity类泛型
+     * @param entitys Entity对象
      *
      * @return 影响的记录条数
      */
     @Override
-    public <T> int insert(@RpcCall(DataCallArrayAttribute.class) T... values) {
-        if (values.length == 0) return 0;
-        checkEntity("insert", false, values);
-        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+    public <T> int insert(@RpcCall(DataCallArrayAttribute.class) T... entitys) {
+        if (entitys.length == 0) return 0;
+        checkEntity("insert", false, entitys);
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) entitys[0].getClass());
         if (info.autouuid) {
-            for (T value : values) {
+            for (T value : entitys) {
                 info.createPrimaryValue(value);
             }
         }
-        if (isOnlyCache(info)) return insertCache(info, values);
-        return insertDB(info, values).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return insertCache(info, entitys);
+        return insertDB(info, entitys).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                insertCache(info, values);
+                insertCache(info, entitys);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> insertAsync(@RpcCall(DataCallArrayAttribute.class) T... values) {
-        if (values.length == 0) return CompletableFuture.completedFuture(0);
-        CompletableFuture future = checkEntity("insert", true, values);
+    public <T> CompletableFuture<Integer> insertAsync(@RpcCall(DataCallArrayAttribute.class) T... entitys) {
+        if (entitys.length == 0) return CompletableFuture.completedFuture(0);
+        CompletableFuture future = checkEntity("insert", true, entitys);
         if (future != null) return future;
-        final EntityInfo<T> info = loadEntityInfo((Class<T>) values[0].getClass());
+        final EntityInfo<T> info = loadEntityInfo((Class<T>) entitys[0].getClass());
         if (info.autouuid) {
-            for (T value : values) {
+            for (T value : entitys) {
                 info.createPrimaryValue(value);
             }
         }
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> insertCache(info, values), getExecutor());
+            return CompletableFuture.supplyAsync(() -> insertCache(info, entitys), getExecutor());
         }
-        if (isAsync()) return insertDB(info, values).whenComplete((rs, t) -> {
+        if (isAsync()) return insertDB(info, entitys).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    insertCache(info, values);
+                    insertCache(info, entitys);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> insertDB(info, values).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> insertDB(info, entitys).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                insertCache(info, values);
+                insertCache(info, entitys);
             }
         });
     }
 
-    protected <T> int insertCache(final EntityInfo<T> info, T... values) {
+    protected <T> int insertCache(final EntityInfo<T> info, T... entitys) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return 0;
         int c = 0;
-        for (final T value : values) {
+        for (final T value : entitys) {
             c += cache.insert(value);
         }
-        if (cacheListener != null) cacheListener.insertCache(info.getType(), values);
+        if (cacheListener != null) cacheListener.insertCache(info.getType(), entitys);
         return c;
     }
 
     @Override
-    public <T> int insertCache(Class<T> clazz, T... values) {
-        if (values.length == 0) return 0;
+    public <T> int insertCache(Class<T> clazz, T... entitys) {
+        if (entitys.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         int c = 0;
-        for (T value : values) {
+        for (T value : entitys) {
             c += cache.insert(value);
         }
         return c;
@@ -363,75 +363,75 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     /**
      * 删除对象， 必须是Entity对象
      *
-     * @param <T>    Entity类泛型
-     * @param values Entity对象
+     * @param <T>     Entity类泛型
+     * @param entitys Entity对象
      *
      * @return 删除的数据条数
      */
     @Override
-    public <T> int delete(T... values) {
-        if (values.length == 0) return -1;
-        checkEntity("delete", false, values);
-        final Class<T> clazz = (Class<T>) values[0].getClass();
+    public <T> int delete(T... entitys) {
+        if (entitys.length == 0) return -1;
+        checkEntity("delete", false, entitys);
+        final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final Attribute primary = info.getPrimary();
-        Serializable[] ids = new Serializable[values.length];
+        Serializable[] ids = new Serializable[entitys.length];
         int i = 0;
-        for (final T value : values) {
+        for (final T value : entitys) {
             ids[i++] = (Serializable) primary.get(value);
         }
         return delete(clazz, ids);
     }
 
     @Override
-    public <T> CompletableFuture<Integer> deleteAsync(final T... values) {
-        if (values.length == 0) return CompletableFuture.completedFuture(-1);
-        CompletableFuture future = checkEntity("delete", true, values);
+    public <T> CompletableFuture<Integer> deleteAsync(final T... entitys) {
+        if (entitys.length == 0) return CompletableFuture.completedFuture(-1);
+        CompletableFuture future = checkEntity("delete", true, entitys);
         if (future != null) return future;
-        final Class<T> clazz = (Class<T>) values[0].getClass();
+        final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final Attribute primary = info.getPrimary();
-        Serializable[] ids = new Serializable[values.length];
+        Serializable[] ids = new Serializable[entitys.length];
         int i = 0;
-        for (final T value : values) {
+        for (final T value : entitys) {
             ids[i++] = (Serializable) primary.get(value);
         }
         return deleteAsync(clazz, ids);
     }
 
     @Override
-    public <T> int delete(Class<T> clazz, Serializable... ids) {
-        if (ids.length == 0) return -1;
+    public <T> int delete(Class<T> clazz, Serializable... pks) {
+        if (pks.length == 0) return -1;
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return deleteCache(info, -1, ids);
-        return deleteCompose(info, ids).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return deleteCache(info, -1, pks);
+        return deleteCompose(info, pks).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                deleteCache(info, rs, ids);
+                deleteCache(info, rs, pks);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Serializable... ids) {
-        if (ids.length == 0) return CompletableFuture.completedFuture(-1);
+    public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Serializable... pks) {
+        if (pks.length == 0) return CompletableFuture.completedFuture(-1);
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> deleteCache(info, -1, ids), getExecutor());
+            return CompletableFuture.supplyAsync(() -> deleteCache(info, -1, pks), getExecutor());
         }
-        if (isAsync()) return deleteCompose(info, ids).whenComplete((rs, t) -> {
+        if (isAsync()) return deleteCompose(info, pks).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    deleteCache(info, rs, ids);
+                    deleteCache(info, rs, pks);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> deleteCompose(info, ids).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> deleteCompose(info, pks).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                deleteCache(info, rs, ids);
+                deleteCache(info, rs, pks);
             }
         });
     }
@@ -481,15 +481,15 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         });
     }
 
-    protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Serializable... ids) {
-        if (ids.length == 1) {
-            String sql = "DELETE FROM " + info.getTable(ids[0]) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), ids[0]));
+    protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Serializable... pks) {
+        if (pks.length == 1) {
+            String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), pks[0]));
             return deleteDB(info, null, sql);
         }
-        String sql = "DELETE FROM " + info.getTable(ids[0]) + " WHERE " + info.getPrimarySQLColumn() + " IN (";
-        for (int i = 0; i < ids.length; i++) {
+        String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + " IN (";
+        for (int i = 0; i < pks.length; i++) {
             if (i > 0) sql += ',';
-            sql += FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), ids[i]));
+            sql += FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), pks[i]));
         }
         sql += ")";
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
@@ -640,25 +640,25 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return count >= 0 ? count : (ids == null ? 0 : ids.length);
     }
 
-    protected <T> int deleteCache(final EntityInfo<T> info, int count, Serializable... keys) {
+    protected <T> int deleteCache(final EntityInfo<T> info, int count, Serializable... pks) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         int c = 0;
-        for (Serializable key : keys) {
+        for (Serializable key : pks) {
             c += cache.delete(key);
         }
-        if (cacheListener != null) cacheListener.deleteCache(info.getType(), keys);
+        if (cacheListener != null) cacheListener.deleteCache(info.getType(), pks);
         return count >= 0 ? count : c;
     }
 
     @Override
-    public <T> int deleteCache(Class<T> clazz, Serializable... ids) {
-        if (ids.length == 0) return 0;
+    public <T> int deleteCache(Class<T> clazz, Serializable... pks) {
+        if (pks.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         int c = 0;
-        for (Serializable id : ids) {
+        for (Serializable id : pks) {
             c += cache.delete(id);
         }
         return c;
@@ -679,47 +679,47 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     /**
      * 更新对象， 必须是Entity对象
      *
-     * @param <T>    Entity类泛型
-     * @param values Entity对象
+     * @param <T>     Entity类泛型
+     * @param entitys Entity对象
      *
      * @return 更新的数据条数
      */
     @Override
-    public <T> int update(T... values) {
-        if (values.length == 0) return -1;
-        checkEntity("update", false, values);
-        final Class<T> clazz = (Class<T>) values[0].getClass();
+    public <T> int update(T... entitys) {
+        if (entitys.length == 0) return -1;
+        checkEntity("update", false, entitys);
+        final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return updateCache(info, -1, values);
-        return updateDB(info, values).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return updateCache(info, -1, entitys);
+        return updateDB(info, entitys).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, values);
+                updateCache(info, rs, entitys);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateAsync(final T... values) {
-        if (values.length == 0) return CompletableFuture.completedFuture(-1);
-        CompletableFuture future = checkEntity("update", true, values);
+    public <T> CompletableFuture<Integer> updateAsync(final T... entitys) {
+        if (entitys.length == 0) return CompletableFuture.completedFuture(-1);
+        CompletableFuture future = checkEntity("update", true, entitys);
         if (future != null) return future;
-        final Class<T> clazz = (Class<T>) values[0].getClass();
+        final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return CompletableFuture.supplyAsync(() -> updateCache(info, -1, values), getExecutor());
-        if (isAsync()) return updateDB(info, values).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return CompletableFuture.supplyAsync(() -> updateCache(info, -1, entitys), getExecutor());
+        if (isAsync()) return updateDB(info, entitys).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    updateCache(info, rs, values);
+                    updateCache(info, rs, entitys);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> updateDB(info, values).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> updateDB(info, entitys).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, values);
+                updateCache(info, rs, entitys);
             }
         });
     }
@@ -729,54 +729,54 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
      *
      * @param <T>    Entity类的泛型
      * @param clazz  Entity类
-     * @param id     主键值
+     * @param pk     主键值
      * @param column 过滤字段名
-     * @param value  过滤字段值
+     * @param colval 过滤字段值
      *
      * @return 更新的数据条数
      */
     @Override
-    public <T> int updateColumn(Class<T> clazz, Serializable id, String column, Serializable value) {
+    public <T> int updateColumn(Class<T> clazz, Serializable pk, String column, Serializable colval) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return updateCache(info, -1, id, column, value);
-        return updateColumnCompose(info, id, column, value).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return updateCache(info, -1, pk, column, colval);
+        return updateColumnCompose(info, pk, column, colval).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, id, column, value);
+                updateCache(info, rs, pk, column, colval);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable id, final String column, final Serializable value) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, final String column, final Serializable colval) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, id, column, value), getExecutor());
+            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, pk, column, colval), getExecutor());
         }
-        if (isAsync()) return updateColumnCompose(info, id, column, value).whenComplete((rs, t) -> {
+        if (isAsync()) return updateColumnCompose(info, pk, column, colval).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    updateCache(info, rs, id, column, value);
+                    updateCache(info, rs, pk, column, colval);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> updateColumnCompose(info, id, column, value).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> updateColumnCompose(info, pk, column, colval).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, id, column, value);
+                updateCache(info, rs, pk, column, colval);
             }
         });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, Serializable id, String column, final Serializable value) {
-        if (value instanceof byte[]) {
-            String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = " + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), id));
-            return updateDB(info, null, sql, true, value);
+    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
+        if (colval instanceof byte[]) {
+            String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + " = " + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), pk));
+            return updateDB(info, null, sql, true, colval);
         } else {
-            String sql = "UPDATE " + info.getTable(id) + " SET " + info.getSQLColumn(null, column) + " = "
-                + info.formatToString(info.getSQLValue(column, value)) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), id));
+            String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + " = "
+                + info.formatToString(info.getSQLValue(column, colval)) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), pk));
             return updateDB(info, null, sql, false);
         }
     }
@@ -787,47 +787,47 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
      * @param <T>    Entity类的泛型
      * @param clazz  Entity类
      * @param column 过滤字段名
-     * @param value  过滤字段值
+     * @param colval 过滤字段值
      * @param node   过滤node 不能为null
      *
      * @return 更新的数据条数
      */
     @Override
-    public <T> int updateColumn(Class<T> clazz, String column, Serializable value, FilterNode node) {
+    public <T> int updateColumn(Class<T> clazz, String column, Serializable colval, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return updateCache(info, -1, column, value, node);
-        return DataSqlSource.this.updateColumnCompose(info, column, value, node).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return updateCache(info, -1, column, colval, node);
+        return DataSqlSource.this.updateColumnCompose(info, column, colval, node).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, column, value, node);
+                updateCache(info, rs, column, colval, node);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final String column, final Serializable value, final FilterNode node) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final String column, final Serializable colval, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, column, value, node), getExecutor());
+            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, column, colval, node), getExecutor());
         }
-        if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, column, value, node).whenComplete((rs, t) -> {
+        if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, column, colval, node).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    updateCache(info, rs, column, value, node);
+                    updateCache(info, rs, column, colval, node);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.updateColumnCompose(info, column, value, node).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.updateColumnCompose(info, column, colval, node).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, column, value, node);
+                updateCache(info, rs, column, colval, node);
             }
         });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final String column, final Serializable value, final FilterNode node) {
+    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final String column, final Serializable colval, final FilterNode node) {
         Map<Class, String> joinTabalis = node.getJoinTabalis();
         CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
         CharSequence where = node.createSQLExpress(info, joinTabalis);
@@ -840,15 +840,15 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
         }
         String alias = "postgresql".equals(writePool.dbtype) ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
-        if (value instanceof byte[]) {
+        if (colval instanceof byte[]) {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                 + " SET " + info.getSQLColumn(alias, column) + " = " + prepareParamSign(1)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            return updateDB(info, null, sql, true, value);
+            return updateDB(info, null, sql, true, colval);
         } else {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                + " SET " + info.getSQLColumn(alias, column) + " = " + info.formatToString(value)
+                + " SET " + info.getSQLColumn(alias, column) + " = " + info.formatToString(colval)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             return updateDB(info, null, sql, false);
@@ -860,49 +860,49 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
      *
      * @param <T>    Entity类的泛型
      * @param clazz  Entity类
-     * @param id     主键值
+     * @param pk     主键值
      * @param values 字段值
      *
      * @return 更新的数据条数
      */
     @Override
-    public <T> int updateColumn(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+    public <T> int updateColumn(final Class<T> clazz, final Serializable pk, final ColumnValue... values) {
         if (values == null || values.length < 1) return -1;
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return updateCache(info, -1, id, values);
-        return DataSqlSource.this.updateColumnCompose(info, id, values).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return updateCache(info, -1, pk, values);
+        return DataSqlSource.this.updateColumnCompose(info, pk, values).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, id, values);
+                updateCache(info, rs, pk, values);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable id, final ColumnValue... values) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, final ColumnValue... values) {
         if (values == null || values.length < 1) return CompletableFuture.completedFuture(-1);
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, id, values), getExecutor());
+            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, pk, values), getExecutor());
         }
-        if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, id, values).whenComplete((rs, t) -> {
+        if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, pk, values).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    updateCache(info, rs, id, values);
+                    updateCache(info, rs, pk, values);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.updateColumnCompose(info, id, values).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.updateColumnCompose(info, pk, values).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, id, values);
+                updateCache(info, rs, pk, values);
             }
         });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final Serializable id, final ColumnValue... values) {
+    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final Serializable pk, final ColumnValue... values) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -921,7 +921,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             }
         }
         if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
-        String sql = "UPDATE " + info.getTable(id) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), id));
+        String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), pk));
         if (blobs == null) return updateDB(info, null, sql, false);
         return updateDB(info, null, sql, true, blobs.toArray());
     }
@@ -1022,104 +1022,104 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
-    public <T> int updateColumn(final T bean, final String... columns) {
-        return updateColumn(bean, SelectColumn.includes(columns));
+    public <T> int updateColumn(final T entity, final String... columns) {
+        return updateColumn(entity, SelectColumn.includes(columns));
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final String... columns) {
-        return updateColumnAsync(bean, SelectColumn.includes(columns));
+    public <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final String... columns) {
+        return updateColumnAsync(entity, SelectColumn.includes(columns));
     }
 
     @Override
-    public <T> int updateColumn(final T bean, final FilterNode node, final String... columns) {
-        return updateColumn(bean, node, SelectColumn.includes(columns));
+    public <T> int updateColumn(final T entity, final FilterNode node, final String... columns) {
+        return updateColumn(entity, node, SelectColumn.includes(columns));
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final FilterNode node, final String... columns) {
-        return updateColumnAsync(bean, node, SelectColumn.includes(columns));
+    public <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final FilterNode node, final String... columns) {
+        return updateColumnAsync(entity, node, SelectColumn.includes(columns));
     }
 
     @Override
-    public <T> int updateColumn(final T bean, final SelectColumn selects) {
-        if (bean == null || selects == null) return -1;
-        Class<T> clazz = (Class) bean.getClass();
+    public <T> int updateColumn(final T entity, final SelectColumn selects) {
+        if (entity == null || selects == null) return -1;
+        Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return updateCache(info, -1, false, bean, null, selects);
-        return DataSqlSource.this.updateColumnCompose(info, false, bean, null, selects).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return updateCache(info, -1, false, entity, null, selects);
+        return DataSqlSource.this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, false, bean, null, selects);
+                updateCache(info, rs, false, entity, null, selects);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final SelectColumn selects) {
-        if (bean == null || selects == null) return CompletableFuture.completedFuture(-1);
-        Class<T> clazz = (Class) bean.getClass();
+    public <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final SelectColumn selects) {
+        if (entity == null || selects == null) return CompletableFuture.completedFuture(-1);
+        Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, false, bean, null, selects), getExecutor());
+            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, false, entity, null, selects), getExecutor());
         }
-        if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, false, bean, null, selects).whenComplete((rs, t) -> {
+        if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    updateCache(info, rs, false, bean, null, selects);
+                    updateCache(info, rs, false, entity, null, selects);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.updateColumnCompose(info, false, bean, null, selects).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.updateColumnCompose(info, false, entity, null, selects).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, false, bean, null, selects);
+                updateCache(info, rs, false, entity, null, selects);
             }
         });
     }
 
     @Override
-    public <T> int updateColumn(final T bean, final FilterNode node, final SelectColumn selects) {
-        if (bean == null || node == null || selects == null) return -1;
-        Class<T> clazz = (Class) bean.getClass();
+    public <T> int updateColumn(final T entity, final FilterNode node, final SelectColumn selects) {
+        if (entity == null || node == null || selects == null) return -1;
+        Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return updateCache(info, -1, true, bean, node, selects);
-        return DataSqlSource.this.updateColumnCompose(info, true, bean, node, selects).whenComplete((rs, t) -> {
+        if (isOnlyCache(info)) return updateCache(info, -1, true, entity, node, selects);
+        return DataSqlSource.this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, true, bean, node, selects);
+                updateCache(info, rs, true, entity, node, selects);
             }
         }).join();
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final T bean, final FilterNode node, final SelectColumn selects) {
-        if (bean == null || node == null || selects == null) return CompletableFuture.completedFuture(-1);
-        Class<T> clazz = (Class) bean.getClass();
+    public <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final FilterNode node, final SelectColumn selects) {
+        if (entity == null || node == null || selects == null) return CompletableFuture.completedFuture(-1);
+        Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, true, bean, node, selects), getExecutor());
+            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, true, entity, node, selects), getExecutor());
         }
-        if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, true, bean, node, selects).whenComplete((rs, t) -> {
+        if (isAsync()) return DataSqlSource.this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
-                    updateCache(info, rs, true, bean, node, selects);
+                    updateCache(info, rs, true, entity, node, selects);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.updateColumnCompose(info, true, bean, node, selects).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> DataSqlSource.this.updateColumnCompose(info, true, entity, node, selects).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
-                updateCache(info, rs, true, bean, node, selects);
+                updateCache(info, rs, true, entity, node, selects);
             }
         });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final boolean neednode, final T bean, final FilterNode node, final SelectColumn selects) {
+    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final boolean neednode, final T entity, final FilterNode node, final SelectColumn selects) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1128,7 +1128,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (!selects.test(attr.field())) continue;
             if (setsql.length() > 0) setsql.append(", ");
             setsql.append(info.getSQLColumn(alias, attr.field()));
-            Serializable val = info.getFieldValue(attr, bean);
+            Serializable val = info.getFieldValue(attr, entity);
             if (val instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) val);
@@ -1154,14 +1154,14 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (blobs == null) return updateDB(info, null, sql, false);
             return updateDB(info, null, sql, true, blobs.toArray());
         } else {
-            final Serializable id = info.getSQLValue(info.getPrimary(), bean);
+            final Serializable id = info.getSQLValue(info.getPrimary(), entity);
             String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
             if (blobs == null) return updateDB(info, null, sql, false);
             return updateDB(info, null, sql, true, blobs.toArray());
         }
     }
 
-    protected <T> int updateCache(final EntityInfo<T> info, int count, final boolean neednode, final T bean, final FilterNode node, final SelectColumn selects) {
+    protected <T> int updateCache(final EntityInfo<T> info, int count, final boolean neednode, final T entity, final FilterNode node, final SelectColumn selects) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return count;
         final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
@@ -1170,11 +1170,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             attrs.add(attr);
         }
         if (neednode) {
-            T[] rs = cache.update(bean, attrs, node);
+            T[] rs = cache.update(entity, attrs, node);
             if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
             return count >= 0 ? count : (rs == null ? 0 : rs.length);
         } else {
-            T rs = cache.update(bean, attrs);
+            T rs = cache.update(entity, attrs);
             if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
             return count >= 0 ? count : (rs == null ? 0 : 1);
         }
@@ -1197,7 +1197,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return count >= 0 ? count : (rs == null ? 0 : 1);
     }
 
-    protected <T> int updateCache(final EntityInfo<T> info, int count, final Serializable id, final ColumnValue... values) {
+    protected <T> int updateCache(final EntityInfo<T> info, int count, final Serializable pk, final ColumnValue... values) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return count;
         final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
@@ -1209,58 +1209,58 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             attrs.add(attr);
             cols.add(col);
         }
-        T rs = cache.updateColumn(id, attrs, cols);
+        T rs = cache.updateColumn(pk, attrs, cols);
         if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
         return count >= 0 ? count : (rs == null ? 0 : 1);
     }
 
-    protected <T> int updateCache(final EntityInfo<T> info, int count, String column, final Serializable value, FilterNode node) {
+    protected <T> int updateCache(final EntityInfo<T> info, int count, String column, final Serializable colval, FilterNode node) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return count;
-        T[] rs = cache.update(info.getAttribute(column), value, node);
+        T[] rs = cache.update(info.getAttribute(column), colval, node);
         if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
         return count >= 0 ? count : (rs == null ? 0 : 1);
     }
 
-    protected <T> int updateCache(final EntityInfo<T> info, int count, final Serializable id, final String column, final Serializable value) {
+    protected <T> int updateCache(final EntityInfo<T> info, int count, final Serializable pk, final String column, final Serializable colval) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return count;
-        T rs = cache.update(id, info.getAttribute(column), value);
+        T rs = cache.update(pk, info.getAttribute(column), colval);
         if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
         return count >= 0 ? count : (rs == null ? 0 : 1);
     }
 
-    protected <T> int updateCache(final EntityInfo<T> info, int count, T... values) {
+    protected <T> int updateCache(final EntityInfo<T> info, int count, T... entitys) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         int c2 = 0;
-        for (final T value : values) {
+        for (final T value : entitys) {
             c2 += cache.update(value);
         }
-        if (cacheListener != null) cacheListener.updateCache(info.getType(), values);
+        if (cacheListener != null) cacheListener.updateCache(info.getType(), entitys);
         return count >= 0 ? count : c2;
     }
 
     @Override
-    public <T> int updateCache(Class<T> clazz, T... values) {
-        if (values.length == 0) return 0;
+    public <T> int updateCache(Class<T> clazz, T... entitys) {
+        if (entitys.length == 0) return 0;
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         int c = 0;
-        for (T value : values) {
+        for (T value : entitys) {
             c += cache.update(value);
         }
         return c;
     }
 
-    public <T> int reloadCache(Class<T> clazz, Serializable... ids) {
+    public <T> int reloadCache(Class<T> clazz, Serializable... pks) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         String column = info.getPrimary().field();
         int c = 0;
-        for (Serializable id : ids) {
+        for (Serializable id : pks) {
             Sheet<T> sheet = querySheetCompose(false, true, clazz, null, FLIPPER_ONE, FilterNode.create(column, id)).join();
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
             if (value != null) c += cache.update(value);
@@ -1540,13 +1540,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
-    public <T> T find(final Class<T> clazz, final String column, final Serializable key) {
-        return find(clazz, null, FilterNode.create(column, key));
+    public <T> T find(final Class<T> clazz, final String column, final Serializable colval) {
+        return find(clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
-    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final String column, final Serializable key) {
-        return findAsync(clazz, null, FilterNode.create(column, key));
+    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final String column, final Serializable colval) {
+        return findAsync(clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
@@ -1782,13 +1782,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     //-----------------------list set----------------------------
     @Override
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, Class<T> clazz, String column, Serializable key) {
-        return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, null, FilterNode.create(column, key)));
+    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, Class<T> clazz, String column, Serializable colval) {
+        return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, null, FilterNode.create(column, colval)));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, Class<T> clazz, String column, Serializable key) {
-        return queryColumnListAsync(selectedColumn, clazz, null, FilterNode.create(column, key)).thenApply((list) -> new LinkedHashSet(list));
+    public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, Class<T> clazz, String column, Serializable colval) {
+        return queryColumnListAsync(selectedColumn, clazz, null, FilterNode.create(column, colval)).thenApply((list) -> new LinkedHashSet(list));
     }
 
     @Override
@@ -1812,13 +1812,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
-        return queryColumnList(selectedColumn, clazz, null, FilterNode.create(column, key));
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
+        return queryColumnList(selectedColumn, clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable key) {
-        return queryColumnListAsync(selectedColumn, clazz, null, FilterNode.create(column, key));
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
+        return queryColumnListAsync(selectedColumn, clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
@@ -2028,10 +2028,10 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final Stream<K> keyStream) {
         if (keyStream == null) return CompletableFuture.completedFuture(new LinkedHashMap<>());
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        final ArrayList<K> ids = new ArrayList<>();
-        keyStream.forEach(k -> ids.add(k));
+        final ArrayList<K> pks = new ArrayList<>();
+        keyStream.forEach(k -> pks.add(k));
         final Attribute<T, Serializable> primary = info.primary;
-        return queryListAsync(clazz, FilterNode.create(primary.field(), ids)).thenApply((List<T> rs) -> {
+        return queryListAsync(clazz, FilterNode.create(primary.field(), pks)).thenApply((List<T> rs) -> {
             Map<K, T> map = new LinkedHashMap<>();
             if (rs.isEmpty()) return new LinkedHashMap<>();
             for (T item : rs) {
@@ -2108,18 +2108,18 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
      * @param <T>    Entity类的泛型
      * @param clazz  Entity类
      * @param column 过滤字段名
-     * @param key    过滤字段值
+     * @param colval 过滤字段值
      *
      * @return Entity对象的集合
      */
     @Override
-    public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable key) {
-        return queryList(clazz, (SelectColumn) null, null, FilterNode.create(column, key));
+    public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable colval) {
+        return queryList(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final String column, final Serializable key) {
-        return queryListAsync(clazz, (SelectColumn) null, null, FilterNode.create(column, key));
+    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final String column, final Serializable colval) {
+        return queryListAsync(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
     }
 
     @Override
@@ -2192,13 +2192,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
-    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final String column, final Serializable key) {
-        return queryList(clazz, null, flipper, FilterNode.create(column, key));
+    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
+        return queryList(clazz, null, flipper, FilterNode.create(column, colval));
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable key) {
-        return queryListAsync(clazz, null, flipper, FilterNode.create(column, key));
+    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
+        return queryListAsync(clazz, null, flipper, FilterNode.create(column, colval));
     }
 
     @Override

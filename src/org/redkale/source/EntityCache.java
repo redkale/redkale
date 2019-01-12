@@ -159,15 +159,15 @@ public final class EntityCache<T> {
         return fullloaded;
     }
 
-    public T find(Serializable id) {
-        if (id == null) return null;
-        T rs = map.get(id);
+    public T find(Serializable pk) {
+        if (pk == null) return null;
+        T rs = map.get(pk);
         return rs == null ? null : (needcopy ? newReproduce.apply(this.creator.create(), rs) : rs);
     }
 
-    public T find(final SelectColumn selects, final Serializable id) {
-        if (id == null) return null;
-        T rs = map.get(id);
+    public T find(final SelectColumn selects, final Serializable pk) {
+        if (pk == null) return null;
+        T rs = map.get(pk);
         if (rs == null) return null;
         if (selects == null) return (needcopy ? newReproduce.apply(this.creator.create(), rs) : rs);
         T t = this.creator.create();
@@ -192,9 +192,9 @@ public final class EntityCache<T> {
         return t;
     }
 
-    public Serializable findColumn(final String column, final Serializable defValue, final Serializable id) {
-        if (id == null) return defValue;
-        T rs = map.get(id);
+    public Serializable findColumn(final String column, final Serializable defValue, final Serializable pk) {
+        if (pk == null) return defValue;
+        T rs = map.get(pk);
         if (rs == null) return defValue;
         for (Attribute attr : this.info.attributes) {
             if (column.equals(attr.field())) {
@@ -221,29 +221,29 @@ public final class EntityCache<T> {
         return defValue;
     }
 
-    public boolean exists(Serializable id) {
-        if (id == null) return false;
+    public boolean exists(Serializable pk) {
+        if (pk == null) return false;
         final Class atype = this.primary.type();
-        if (id.getClass() != atype && id instanceof Number) {
+        if (pk.getClass() != atype && pk instanceof Number) {
             if (atype == int.class || atype == Integer.class) {
-                id = ((Number) id).intValue();
+                pk = ((Number) pk).intValue();
             } else if (atype == long.class || atype == Long.class) {
-                id = ((Number) id).longValue();
+                pk = ((Number) pk).longValue();
             } else if (atype == short.class || atype == Short.class) {
-                id = ((Number) id).shortValue();
+                pk = ((Number) pk).shortValue();
             } else if (atype == float.class || atype == Float.class) {
-                id = ((Number) id).floatValue();
+                pk = ((Number) pk).floatValue();
             } else if (atype == byte.class || atype == Byte.class) {
-                id = ((Number) id).byteValue();
+                pk = ((Number) pk).byteValue();
             } else if (atype == double.class || atype == Double.class) {
-                id = ((Number) id).doubleValue();
+                pk = ((Number) pk).doubleValue();
             } else if (atype == AtomicInteger.class) {
-                id = new AtomicInteger(((Number) id).intValue());
+                pk = new AtomicInteger(((Number) pk).intValue());
             } else if (atype == AtomicLong.class) {
-                id = new AtomicLong(((Number) id).longValue());
+                pk = new AtomicLong(((Number) pk).longValue());
             }
         }
-        return this.map.containsKey(id);
+        return this.map.containsKey(pk);
     }
 
     public boolean exists(FilterNode node) {
@@ -440,22 +440,22 @@ public final class EntityCache<T> {
         return new Sheet<>(total, rs);
     }
 
-    public int insert(T value) {
-        if (value == null) return 0;
-        final T rs = newReproduce.apply(this.creator.create(), value);  //确保同一主键值的map与list中的对象必须共用。
+    public int insert(T entity) {
+        if (entity == null) return 0;
+        final T rs = newReproduce.apply(this.creator.create(), entity);  //确保同一主键值的map与list中的对象必须共用。
         T old = this.map.putIfAbsent(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
             return 1;
         } else {
-            logger.log(Level.WARNING, this.type + " cache repeat insert data: " + value);
+            logger.log(Level.WARNING, this.type + " cache repeat insert data: " + entity);
             return 0;
         }
     }
 
-    public int delete(final Serializable id) {
-        if (id == null) return 0;
-        final T rs = this.map.remove(id);
+    public int delete(final Serializable pk) {
+        if (pk == null) return 0;
+        final T rs = this.map.remove(pk);
         if (rs == null) return 0;
         this.list.remove(rs);
         return 1;
@@ -484,44 +484,44 @@ public final class EntityCache<T> {
         return clear();
     }
 
-    public int update(final T value) {
-        if (value == null) return 0;
-        T rs = this.map.get(this.primary.get(value));
+    public int update(final T entity) {
+        if (entity == null) return 0;
+        T rs = this.map.get(this.primary.get(entity));
         if (rs == null) return 0;
         synchronized (rs) {
-            this.chgReproduce.apply(rs, value);
+            this.chgReproduce.apply(rs, entity);
         }
         return 1;
     }
 
-    public T update(final T value, Collection<Attribute<T, Serializable>> attrs) {
-        if (value == null) return value;
-        T rs = this.map.get(this.primary.get(value));
+    public T update(final T entity, Collection<Attribute<T, Serializable>> attrs) {
+        if (entity == null) return entity;
+        T rs = this.map.get(this.primary.get(entity));
         if (rs == null) return rs;
         synchronized (rs) {
             for (Attribute attr : attrs) {
-                attr.set(rs, attr.get(value));
+                attr.set(rs, attr.get(entity));
             }
         }
         return rs;
     }
 
-    public T[] update(final T value, final Collection<Attribute<T, Serializable>> attrs, final FilterNode node) {
-        if (value == null || node == null) return (T[]) Array.newInstance(type, 0);
+    public T[] update(final T entity, final Collection<Attribute<T, Serializable>> attrs, final FilterNode node) {
+        if (entity == null || node == null) return (T[]) Array.newInstance(type, 0);
         T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
         for (T rs : rms) {
             synchronized (rs) {
                 for (Attribute attr : attrs) {
-                    attr.set(rs, attr.get(value));
+                    attr.set(rs, attr.get(entity));
                 }
             }
         }
         return rms;
     }
 
-    public <V> T update(final Serializable id, Attribute<T, V> attr, final V fieldValue) {
-        if (id == null) return null;
-        T rs = this.map.get(id);
+    public <V> T update(final Serializable pk, Attribute<T, V> attr, final V fieldValue) {
+        if (pk == null) return null;
+        T rs = this.map.get(pk);
         if (rs != null) attr.set(rs, fieldValue);
         return rs;
     }
@@ -535,9 +535,9 @@ public final class EntityCache<T> {
         return rms;
     }
 
-    public <V> T updateColumn(final Serializable id, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
-        if (id == null || attrs == null || attrs.isEmpty()) return null;
-        T rs = this.map.get(id);
+    public <V> T updateColumn(final Serializable pk, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
+        if (pk == null || attrs == null || attrs.isEmpty()) return null;
+        T rs = this.map.get(pk);
         if (rs == null) return rs;
         synchronized (rs) {
             for (int i = 0; i < attrs.size(); i++) {
@@ -566,40 +566,40 @@ public final class EntityCache<T> {
         return rms;
     }
 
-    public <V> T updateColumnOr(final Serializable id, Attribute<T, V> attr, final long orvalue) {
-        if (id == null) return null;
-        T rs = this.map.get(id);
+    public <V> T updateColumnOr(final Serializable pk, Attribute<T, V> attr, final long orvalue) {
+        if (pk == null) return null;
+        T rs = this.map.get(pk);
         if (rs == null) return rs;
         synchronized (rs) {
             return updateColumn(attr, rs, ColumnExpress.ORR, orvalue);
         }
     }
 
-    public <V> T updateColumnAnd(final Serializable id, Attribute<T, V> attr, final long andvalue) {
-        if (id == null) return null;
-        T rs = this.map.get(id);
+    public <V> T updateColumnAnd(final Serializable pk, Attribute<T, V> attr, final long andvalue) {
+        if (pk == null) return null;
+        T rs = this.map.get(pk);
         if (rs == null) return rs;
         synchronized (rs) {
             return updateColumn(attr, rs, ColumnExpress.AND, andvalue);
         }
     }
 
-    public <V> T updateColumnIncrement(final Serializable id, Attribute<T, V> attr, final long incvalue) {
-        if (id == null) return null;
-        T rs = this.map.get(id);
+    public <V> T updateColumnIncrement(final Serializable pk, Attribute<T, V> attr, final long incvalue) {
+        if (pk == null) return null;
+        T rs = this.map.get(pk);
         if (rs == null) return rs;
         synchronized (rs) {
             return updateColumn(attr, rs, ColumnExpress.INC, incvalue);
         }
     }
 
-    private <V> T updateColumn(Attribute<T, V> attr, final T rs, final ColumnExpress express, Serializable val) {
+    private <V> T updateColumn(Attribute<T, V> attr, final T entity, final ColumnExpress express, Serializable val) {
         final Class ft = attr.type();
         Number numb = null;
         Serializable newval = null;
         switch (express) {
             case INC:
-                numb = (Number) attr.get(rs);
+                numb = (Number) attr.get(entity);
                 if (numb == null) {
                     numb = (Number) val;
                 } else {
@@ -607,7 +607,7 @@ public final class EntityCache<T> {
                 }
                 break;
             case MUL:
-                numb = (Number) attr.get(rs);
+                numb = (Number) attr.get(entity);
                 if (numb == null) {
                     numb = 0;
                 } else {
@@ -615,7 +615,7 @@ public final class EntityCache<T> {
                 }
                 break;
             case AND:
-                numb = (Number) attr.get(rs);
+                numb = (Number) attr.get(entity);
                 if (numb == null) {
                     numb = 0;
                 } else {
@@ -623,7 +623,7 @@ public final class EntityCache<T> {
                 }
                 break;
             case ORR:
-                numb = (Number) attr.get(rs);
+                numb = (Number) attr.get(entity);
                 if (numb == null) {
                     numb = 0;
                 } else {
@@ -659,8 +659,8 @@ public final class EntityCache<T> {
                 newval = new AtomicLong(((Number) newval).longValue());
             }
         }
-        attr.set(rs, (V) newval);
-        return rs;
+        attr.set(entity, (V) newval);
+        return entity;
     }
 
     public Attribute<T, Serializable> getAttribute(String fieldname) {
