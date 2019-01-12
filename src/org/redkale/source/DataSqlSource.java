@@ -1155,7 +1155,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             return updateDB(info, null, sql, true, blobs.toArray());
         } else {
             final Serializable id = info.getSQLValue(info.getPrimary(), bean);
-            String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + info.getSQLValue(info.getPrimarySQLColumn(), id);
+            String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(id);
             if (blobs == null) return updateDB(info, null, sql, false);
             return updateDB(info, null, sql, true, blobs.toArray());
         }
