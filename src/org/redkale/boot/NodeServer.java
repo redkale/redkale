@@ -156,7 +156,17 @@ public abstract class NodeServer {
         ClassFilter<Service> serviceFilter = createServiceClassFilter();
         if (application.singletonrun) { //singleton模式下只加载指定的Service
             final String ssc = System.getProperty("red" + "kale-singleton-serviceclass");
-            if (ssc != null) serviceFilter.setExpectPredicate(c -> !ssc.equals(c));
+            final String extssc = System.getProperty("red" + "kale-singleton-extserviceclasses");
+            if (ssc != null) {
+                final List<String> sscList = new ArrayList<>();
+                sscList.add(ssc);
+                if (extssc != null && !extssc.isEmpty()) {
+                    for (String s : extssc.split(",")) {
+                        if (!s.isEmpty()) sscList.add(s);
+                    }
+                }
+                serviceFilter.setExpectPredicate(c -> !sscList.contains(c));
+            }
         }
         ClassFilter<Filter> filterFilter = createFilterClassFilter();
         ClassFilter<Servlet> servletFilter = createServletClassFilter();

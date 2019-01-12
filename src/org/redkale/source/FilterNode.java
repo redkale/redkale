@@ -389,7 +389,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 .append(' ').append(fv.getExpress().value()).append(' ').append(fv.getDestvalue());
         }
         final boolean fk = (val0 instanceof FilterKey);
-        CharSequence val = fk ? info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) : formatToString(express, info.getSQLValue(column, val0));
+        CharSequence val = fk ? info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) : formatToString(express, info.getSQLValue(column, (Serializable) val0));
         if (val == null) return null;
         StringBuilder sb = new StringBuilder(32);
         if (express == CONTAIN) return info.containSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);

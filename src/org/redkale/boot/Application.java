@@ -812,14 +812,22 @@ public final class Application {
         sercdl.await();
     }
 
-    public static <T extends Service> T singleton(Class<T> serviceClass) throws Exception {
-        return singleton("", serviceClass);
+    public static <T extends Service> T singleton(Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
+        return singleton("", serviceClass, extServiceClasses);
     }
 
-    public static <T extends Service> T singleton(String name, Class<T> serviceClass) throws Exception {
+    public static <T extends Service> T singleton(String name, Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
         if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
         final Application application = Application.create(true);
         System.setProperty("red" + "kale-singleton-serviceclass", serviceClass.getName());
+        if (extServiceClasses != null && extServiceClasses.length > 0) {
+            StringBuilder sb = new StringBuilder();
+            for (Class clazz : extServiceClasses) {
+                if (sb.length() > 0) sb.append(',');
+                sb.append(clazz.getName());
+            }
+            System.setProperty("red" + "kale-singleton-extserviceclasses", sb.toString());
+        }
         application.init();
         application.start();
         for (NodeServer server : application.servers) {
