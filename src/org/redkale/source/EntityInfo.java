@@ -1032,7 +1032,7 @@ public final class EntityInfo<T> {
      * @return Entity对象
      * @throws SQLException SQLException
      */
-    protected T getValue(final SelectColumn sels, final ResultSet set) throws SQLException {
+    protected T getEntityValue(final SelectColumn sels, final ResultSet set) throws SQLException {
         T obj;
         Attribute<T, Serializable>[] attrs = this.queryAttributes;
         if (this.constructorParameters == null) {
@@ -1057,10 +1057,14 @@ public final class EntityInfo<T> {
     }
 
     protected Serializable getFieldValue(Attribute<T, Serializable> attr, final ResultSet set) throws SQLException {
+        return getFieldValue(attr, set, 0);
+    }
+
+    protected Serializable getFieldValue(Attribute<T, Serializable> attr, final ResultSet set, int index) throws SQLException {
         final Class t = attr.type();
         Serializable o;
         if (t == byte[].class) {
-            Blob blob = set.getBlob(this.getSQLColumn(null, attr.field()));
+            Blob blob = index > 0 ? set.getBlob(index) : set.getBlob(this.getSQLColumn(null, attr.field()));
             if (blob == null) {
                 o = null;
             } else { //不支持超过2G的数据
@@ -1069,7 +1073,7 @@ public final class EntityInfo<T> {
                 if (cryptHandler != null) o = (Serializable) cryptHandler.decrypt(o);
             }
         } else {
-            o = (Serializable) set.getObject(this.getSQLColumn(null, attr.field()));
+            o = (Serializable) (index > 0 ? set.getObject(index) : set.getObject(this.getSQLColumn(null, attr.field())));
             CryptHandler cryptHandler = attr.attach();
             if (cryptHandler != null) o = (Serializable) cryptHandler.decrypt(o);
             if (t.isPrimitive()) {

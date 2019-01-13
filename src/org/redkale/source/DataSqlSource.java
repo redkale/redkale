@@ -166,8 +166,16 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     //查询一页数据
     protected abstract <T> CompletableFuture<Sheet<T>> querySheetDB(final EntityInfo<T> info, final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
-    protected <T> T infoGetValue(EntityInfo<T> info, final SelectColumn sels, final ResultSet set) throws SQLException {
-        return info.getValue(sels, set);
+    protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final ResultSet set) throws SQLException {
+        return info.getEntityValue(sels, set);
+    }
+
+    protected <T> Serializable getFieldValue(EntityInfo<T> info, Attribute<T, Serializable> attr, final ResultSet set, int index) throws SQLException {
+        return info.getFieldValue(attr, set, index);
+    }
+
+    protected <T> Serializable getFieldValue(EntityInfo<T> info, Attribute<T, Serializable> attr, final ResultSet set) throws SQLException {
+        return info.getFieldValue(attr, set);
     }
 
     protected <T> String createSQLOrderby(EntityInfo<T> info, Flipper flipper) {

@@ -437,7 +437,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
             final ResultSet set = ps.executeQuery();
-            T rs = set.next() ? info.getValue(selects, set) : null;
+            T rs = set.next() ? info.getEntityValue(selects, set) : null;
             set.close();
             ps.close();
             return CompletableFuture.completedFuture(rs);
@@ -463,15 +463,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             final ResultSet set = ps.executeQuery();
             Serializable val = defValue;
             if (set.next()) {
-                if (attr.type() == byte[].class) {
-                    Blob blob = set.getBlob(1);
-                    if (blob != null) val = blob.getBytes(1, (int) blob.length());
-                } else {
-                    val = (Serializable) set.getObject(1);
-                    if (val != null && !CharSequence.class.isAssignableFrom(attr.type()) && (val instanceof CharSequence)) {
-                        val = info.jsonConvert.convertFrom(attr.genericType(), val.toString());
-                    }
-                }
+                val = info.getFieldValue(attr, set, 1);
             }
             set.close();
             ps.close();
@@ -530,7 +522,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 PreparedStatement ps = conn.prepareStatement(listsql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
                 ResultSet set = ps.executeQuery();
                 while (set.next()) {
-                    list.add(infoGetValue(info, sels, set));
+                    list.add(getEntityValue(info, sels, set));
                 }
                 set.close();
                 ps.close();
@@ -562,7 +554,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             int i = 0;
             while (set.next()) {
                 i++;
-                list.add(info.getValue(sels, set));
+                list.add(info.getEntityValue(sels, set));
                 if (limit <= i) break;
             }
             long total = list.size();
