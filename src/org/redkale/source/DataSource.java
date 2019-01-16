@@ -48,9 +48,61 @@ public interface DataSource {
      * @param <T>     泛型
      * @param entitys Entity对象
      *
+     * @return 影响的记录条数
+     */
+    default <T> int insert(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return 0;
+        return insert(entitys.toArray());
+    }
+
+    /**
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数
+     */
+    default <T> int insert(final Stream<T> entitys) {
+        if (entitys == null) return 0;
+        return insert(entitys.toArray());
+    }
+
+    /**
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
      * @return CompletableFuture
      */
     public <T> CompletableFuture<Integer> insertAsync(final T... entitys);
+
+    /**
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> insertAsync(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        return insertAsync(entitys.toArray());
+    }
+
+    /**
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> insertAsync(final Stream<T> entitys) {
+        if (entitys == null) return CompletableFuture.completedFuture(0);
+        return insertAsync(entitys.toArray());
+    }
 
     //-------------------------deleteAsync--------------------------
     /**
@@ -71,9 +123,65 @@ public interface DataSource {
      * @param <T>     泛型
      * @param entitys Entity对象
      *
+     * @return 影响的记录条数
+     */
+    default <T> int delete(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return 0;
+        return delete(entitys.toArray());
+    }
+
+    /**
+     * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数
+     */
+    default <T> int delete(final Stream<T> entitys) {
+        if (entitys == null) return 0;
+        return delete(entitys.toArray());
+    }
+
+    /**
+     * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> deleteAsync(final T... entitys);
+
+    /**
+     * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> deleteAsync(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        return deleteAsync(entitys.toArray());
+    }
+
+    /**
+     * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> deleteAsync(final Stream<T> entitys) {
+        if (entitys == null) return CompletableFuture.completedFuture(0);
+        return deleteAsync(entitys.toArray());
+    }
 
     /**
      * 删除指定主键值的记录,多主键值必须在同一张表中  <br>
@@ -270,9 +378,77 @@ public interface DataSource {
      * @param <T>     泛型
      * @param entitys Entity对象
      *
+     * @return 影响的记录条数
+     */
+    default <T> int update(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return 0;
+        return update(entitys.toArray());
+    }
+
+    /**
+     * 更新记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL:  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
+     * &#183;&#183;&#183;  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数
+     */
+    default <T> int update(final Stream<T> entitys) {
+        if (entitys == null) return 0;
+        return update(entitys.toArray());
+    }
+
+    /**
+     * 更新记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL:  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
+     * &#183;&#183;&#183;  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> updateAsync(final T... entitys);
+
+    /**
+     * 更新记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL:  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
+     * &#183;&#183;&#183;  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> updateAsync(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        return updateAsync(entitys.toArray());
+    }
+
+    /**
+     * 更新记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL:  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
+     * &#183;&#183;&#183;  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> updateAsync(final Stream<T> entitys) {
+        if (entitys == null) return CompletableFuture.completedFuture(0);
+        return updateAsync(entitys.toArray());
+    }
 
     /**
      * 更新单个记录的单个字段  <br>
