@@ -32,6 +32,7 @@ public interface DataSource {
     public String getType();
 
     //----------------------insertAsync-----------------------------
+    //insert 暂时不支持Collection、Stream， 因为存在@RpcCall问题
     /**
      * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
      *
@@ -48,61 +49,9 @@ public interface DataSource {
      * @param <T>     泛型
      * @param entitys Entity对象
      *
-     * @return 影响的记录条数
-     */
-    default <T> int insert(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return 0;
-        return insert(entitys.toArray());
-    }
-
-    /**
-     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     *
-     * @param <T>     泛型
-     * @param entitys Entity对象
-     *
-     * @return 影响的记录条数
-     */
-    default <T> int insert(final Stream<T> entitys) {
-        if (entitys == null) return 0;
-        return insert(entitys.toArray());
-    }
-
-    /**
-     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     *
-     * @param <T>     泛型
-     * @param entitys Entity对象
-     *
      * @return CompletableFuture
      */
     public <T> CompletableFuture<Integer> insertAsync(final T... entitys);
-
-    /**
-     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     *
-     * @param <T>     泛型
-     * @param entitys Entity对象
-     *
-     * @return CompletableFuture
-     */
-    default <T> CompletableFuture<Integer> insertAsync(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
-        return insertAsync(entitys.toArray());
-    }
-
-    /**
-     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     *
-     * @param <T>     泛型
-     * @param entitys Entity对象
-     *
-     * @return CompletableFuture
-     */
-    default <T> CompletableFuture<Integer> insertAsync(final Stream<T> entitys) {
-        if (entitys == null) return CompletableFuture.completedFuture(0);
-        return insertAsync(entitys.toArray());
-    }
 
     //-------------------------deleteAsync--------------------------
     /**
