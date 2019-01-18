@@ -110,18 +110,22 @@ public class TcpAioAsyncConnection extends AsyncConnection {
         channel.read(dst, timeout < 0 ? 0 : timeout, unit, dst, handler);
     }
 
-    private <A> void nextWrite(A attachment) {
+    private <A> void nextWrite(Throwable exc, A attachment) {
         BlockingQueue<WriteEntry> queue = this.writeQueue;
         WriteEntry entry = queue == null ? null : queue.poll();
         if (entry != null) {
-            try {
-                if (entry.writeOneBuffer == null) {
-                    write(false, entry.writeBuffers, entry.writeOffset, entry.writeLength, entry.writeAttachment, entry.writeHandler);
-                } else {
-                    write(false, entry.writeOneBuffer, entry.writeAttachment, entry.writeHandler);
+            if (exc == null) {
+                try {
+                    if (entry.writeOneBuffer == null) {
+                        write(false, entry.writeBuffers, entry.writeOffset, entry.writeLength, entry.writeAttachment, entry.writeHandler);
+                    } else {
+                        write(false, entry.writeOneBuffer, entry.writeAttachment, entry.writeHandler);
+                    }
+                } catch (Exception e) {
+                    entry.writeHandler.failed(e, entry.writeAttachment);
                 }
-            } catch (Exception e) {
-                entry.writeHandler.failed(e, entry.writeAttachment);
+            } else {  //当连接已经关掉了，不需要调用write方法，直接报异常
+                entry.writeHandler.failed(exc, entry.writeAttachment);
             }
         } else {
             semaphore.release();
@@ -312,17 +316,17 @@ public class TcpAioAsyncConnection extends AsyncConnection {
                     failed(e, attachment);
                     return;
                 }
-                nextWrite(attachment);
+                nextWrite(null, attachment);
                 writeHandler.completed(writeCount, attachment);
             } else {
-                nextWrite(attachment);
+                nextWrite(null, attachment);
                 writeHandler.completed(result.intValue(), attachment);
             }
         }
 
         @Override
         public void failed(Throwable exc, A attachment) {
-            nextWrite(attachment);
+            nextWrite(isOpen() ? null : exc, attachment);
             writeHandler.failed(exc, attachment);
         }
 
@@ -350,13 +354,13 @@ public class TcpAioAsyncConnection extends AsyncConnection {
                 failed(e, attachment);
                 return;
             }
-            nextWrite(attachment);
+            nextWrite(null, attachment);
             writeHandler.completed(result, attachment);
         }
 
         @Override
         public void failed(Throwable exc, A attachment) {
-            nextWrite(attachment);
+            nextWrite(isOpen() ? null : exc, attachment);
             writeHandler.failed(exc, attachment);
         }
 
