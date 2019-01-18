@@ -112,7 +112,7 @@ public class TcpAioAsyncConnection extends AsyncConnection {
 
     private <A> void nextWrite(Throwable exc, A attachment) {
         BlockingQueue<WriteEntry> queue = this.writeQueue;
-        if (exc != null && !isOpen()) {
+        if (queue != null && exc != null && !isOpen()) {
             WriteEntry entry;
             while ((entry = queue.poll()) != null) {
                 try {
