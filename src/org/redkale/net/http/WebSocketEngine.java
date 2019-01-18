@@ -127,7 +127,7 @@ public class WebSocketEngine {
     }
 
     @Comment("添加WebSocket")
-    void addLocal(WebSocket socket) {
+    CompletableFuture<Void> addLocal(WebSocket socket) {
         if (single) {
             currconns.incrementAndGet();
             websockets.put(socket._userid, socket);
@@ -140,7 +140,8 @@ public class WebSocketEngine {
             currconns.incrementAndGet();
             list.add(socket);
         }
-        if (node != null) node.connect(socket._userid);
+        if (node != null) return node.connect(socket._userid);
+        return null;
     }
 
     @Comment("从WebSocketEngine删除指定WebSocket")
