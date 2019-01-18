@@ -269,8 +269,8 @@ class WebSocketRunner implements Runnable {
                 public void failed(Throwable exc, ByteBuffer[] attachments) {
                     future.complete(RETCODE_SENDEXCEPTION);
                     closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
-                    if (exc != null) {
-                        context.getLogger().log(Level.FINE, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
+                    if (exc != null && context.getLogger().isLoggable(Level.FINER)) {
+                        context.getLogger().log(Level.FINER, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
                     }
 
                 }
@@ -278,7 +278,9 @@ class WebSocketRunner implements Runnable {
         } catch (Exception t) {
             futureResult.complete(RETCODE_SENDEXCEPTION);
             closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on channel.write");
-            context.getLogger().log(Level.FINE, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
+            if (t != null && context.getLogger().isLoggable(Level.FINER)) {
+                context.getLogger().log(Level.FINER, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
+            }
 
         }
         return futureResult;
@@ -293,24 +295,11 @@ class WebSocketRunner implements Runnable {
         synchronized (this) {
             if (closed) return null;
             closed = true;
-            channel.dispose();
             CompletableFuture<Void> future = engine.removeLocalThenClose(webSocket);
+            channel.dispose();
             webSocket.onClose(code, reason);
             return future;
         }
-    }
-
-    private static final class QueueEntry {
-
-        public final CompletableFuture<Integer> future;
-
-        public final WebSocketPacket packet;
-
-        public QueueEntry(CompletableFuture<Integer> future, WebSocketPacket packet) {
-            this.future = future;
-            this.packet = packet;
-        }
-
     }
 
 }
