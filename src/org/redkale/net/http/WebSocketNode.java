@@ -59,7 +59,11 @@ public abstract class WebSocketNode {
 
     protected Semaphore semaphore;
 
+    private int tryAcquireSeconds = 12;
+
     public void init(AnyValue conf) {
+        this.tryAcquireSeconds = Integer.getInteger("WebSocketNode.tryAcquireSeconds", 12);
+
         if (sncpNodeAddresses != null && "memory".equals(sncpNodeAddresses.getType())) {
             sncpNodeAddresses.initValueType(InetSocketAddress.class);
         }
@@ -775,7 +779,7 @@ public abstract class WebSocketNode {
     protected boolean tryAcquireSemaphore() {
         if (this.semaphore == null) return true;
         try {
-            return this.semaphore.tryAcquire(6, TimeUnit.SECONDS);
+            return this.semaphore.tryAcquire(tryAcquireSeconds, TimeUnit.SECONDS);
         } catch (Exception e) {
             return false;
         }
