@@ -39,9 +39,9 @@ public class RedkaleClassLoader extends URLClassLoader {
         HashSet<URL> set = new HashSet<>();
         String appPath = System.getProperty("java.class.path");
         if (appPath != null && !appPath.isEmpty()) {
-            for (String path : appPath.replace(":/", "&&").replace(":\\", "##").replace(':', ';').split(";")) {
+            for (String path : appPath.replace("://", "&&").replace(":\\", "##").replace(':', ';').split(";")) {
                 try {
-                    set.add(Paths.get(path.replace("&&", ":/").replace("##", ":\\")).toRealPath().toFile().toURI().toURL());
+                    set.add(Paths.get(path.replace("&&", "://").replace("##", ":\\")).toRealPath().toFile().toURI().toURL());
                 } catch (Exception e) {
                 }
             }
