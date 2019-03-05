@@ -157,7 +157,7 @@ public final class DataSources {
                 writeprop = map.get(unitName + ".write");
             }
         }
-        if ((unitName == null || unitName.isEmpty()) || readprop == null) {
+        if (unitName == null || unitName.isEmpty()) {
             String key = null;
             for (Map.Entry<String, Properties> en : map.entrySet()) {
                 key = en.getKey();
