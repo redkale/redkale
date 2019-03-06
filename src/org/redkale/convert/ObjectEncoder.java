@@ -75,7 +75,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 for (final Field field : clazz.getFields()) {
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     if (factory.isConvertDisabled(field)) continue;
-                    ref = factory.findRef(field);
+                    ref = factory.findRef(clazz, field);
                     if (ref != null && ref.ignore()) continue;
                     Encodeable<W, ?> fieldCoder = factory.findFieldCoder(clazz, field.getName());
                     if (fieldCoder == null) {
@@ -104,7 +104,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             continue;
                         }
                     }
-                    ref = factory.findRef(method);
+                    ref = factory.findRef(clazz, method);
                     if (ref != null && ref.ignore()) continue;
                     Encodeable<W, ?> fieldCoder = factory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
                     if (fieldCoder == null) {
@@ -253,24 +253,24 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
     static Attribute createAttribute(final ConvertFactory factory, Class clazz, final Field field, final Method getter, final Method setter) {
         String fieldalias;
         if (field != null) { // public field
-            ConvertColumnEntry ref = factory.findRef(field);
+            ConvertColumnEntry ref = factory.findRef(clazz, field);
             fieldalias = ref == null || ref.name().isEmpty() ? field.getName() : ref.name();
         } else if (getter != null) {
-            ConvertColumnEntry ref = factory.findRef(getter);
+            ConvertColumnEntry ref = factory.findRef(clazz, getter);
             String mfieldname = ConvertFactory.readGetSetFieldName(getter);
             if (ref == null) {
                 try {
-                    ref = factory.findRef(clazz.getDeclaredField(mfieldname));
+                    ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldname));
                 } catch (Exception e) {
                 }
             }
             fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();
         } else { // setter != null
-            ConvertColumnEntry ref = factory.findRef(setter);
+            ConvertColumnEntry ref = factory.findRef(clazz, setter);
             String mfieldname = ConvertFactory.readGetSetFieldName(setter);
             if (ref == null) {
                 try {
-                    ref = factory.findRef(clazz.getDeclaredField(mfieldname));
+                    ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldname));
                 } catch (Exception e) {
                 }
             }

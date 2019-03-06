@@ -94,7 +94,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 for (final Field field : clazz.getFields()) {
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     if (factory.isConvertDisabled(field)) continue;
-                    ref = factory.findRef(field);
+                    ref = factory.findRef(clazz, field);
                     if (ref != null && ref.ignore()) continue;
                     Decodeable<R, ?> fieldCoder = factory.findFieldCoder(clazz, field.getName());
                     if (fieldCoder == null) {
@@ -123,7 +123,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                             continue;
                         }
                     }
-                    ref = factory.findRef(method);
+                    ref = factory.findRef(clazz, method);
                     if (ref != null && ref.ignore()) continue;
 
                     Decodeable<R, ?> fieldCoder = factory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));

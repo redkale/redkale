@@ -220,15 +220,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return false;
     }
 
-    public ConvertColumnEntry findRef(AccessibleObject element) {
+    public ConvertColumnEntry findRef(Class clazz, AccessibleObject element) {
         if (element == null) return null;
         ConvertColumnEntry en = this.columnEntrys.get(element);
-        Set<String> onlyColumns = null;
-        if (element instanceof Method) {
-            onlyColumns = ignoreAlls.get(((Method) element).getDeclaringClass());
-        } else if (element instanceof Field) {
-            onlyColumns = ignoreAlls.get(((Field) element).getDeclaringClass());
-        }
+        Set<String> onlyColumns = ignoreAlls.get(clazz);
         if (en != null && onlyColumns == null) return en;
         final ConvertType ct = this.getConvertType();
         ConvertColumn[] ccs = element.getAnnotationsByType(ConvertColumn.class);
