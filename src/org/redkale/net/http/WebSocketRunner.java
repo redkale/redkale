@@ -39,9 +39,9 @@ class WebSocketRunner implements Runnable {
 
     volatile boolean closed = false;
 
-    FrameType tmpMergeFrameType;
+    FrameType currSeriesMergeFrameType;
 
-    ByteArray tmpMergeMessage;
+    ByteArray currSeriesMergeMessage;
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
 

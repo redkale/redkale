@@ -495,7 +495,12 @@ public final class WebSocketPacket {
             buffers = webSocket._engine.cryptor.decrypt(buffers, context.getBufferSupplier(), context.getBufferConsumer());
         }
         FrameType selfType = this.type;
-        if (selfType == FrameType.SERIES) selfType = runner.tmpMergeFrameType;
+        if (selfType == FrameType.SERIES) {
+            selfType = runner.currSeriesMergeFrameType;
+            this.type = selfType;
+        } else if (!this.last && (selfType == FrameType.TEXT || selfType == FrameType.BINARY)) {
+            runner.currSeriesMergeFrameType = selfType;
+        }
 
         if (selfType == FrameType.TEXT) {
             Convert textConvert = webSocket.getTextConvert();
@@ -503,23 +508,20 @@ public final class WebSocketPacket {
                 this.receiveMessage = new String(this.getReceiveBytes(buffers), StandardCharsets.UTF_8);
                 this.receiveType = MessageType.STRING;
             } else {
-                if (this.last) {
-                    if (runner.tmpMergeMessage == null) {
+                if (this.last || !runner.mergemsg) {
+                    if (runner.currSeriesMergeMessage == null) {
                         this.receiveMessage = textConvert.convertFrom(webSocket._messageTextType, this.receiveMasker, buffers);
                     } else {
-                        runner.tmpMergeMessage.write(this.getReceiveBytes(buffers));
+                        runner.currSeriesMergeMessage.write(this.getReceiveBytes(buffers));
                         try {
-                            this.type = selfType;
-                            this.receiveMessage = textConvert.convertFrom(webSocket._messageTextType, runner.tmpMergeMessage.getBytes());
+                            this.receiveMessage = textConvert.convertFrom(webSocket._messageTextType, runner.currSeriesMergeMessage.getBytes());
                         } finally {
-                            runner.tmpMergeFrameType = null;
-                            runner.tmpMergeMessage = null;
+                            runner.currSeriesMergeMessage = null;
                         }
                     }
                 } else {
-                    runner.tmpMergeFrameType = selfType;
-                    if (runner.tmpMergeMessage == null) runner.tmpMergeMessage = new ByteArray();
-                    runner.tmpMergeMessage.write(this.getReceiveBytes(buffers));
+                    if (runner.currSeriesMergeMessage == null) runner.currSeriesMergeMessage = new ByteArray();
+                    runner.currSeriesMergeMessage.write(this.getReceiveBytes(buffers));
                     this.receiveMessage = MESSAGE_NIL;
                 }
                 this.receiveCount = this.receiveLength;
@@ -531,23 +533,20 @@ public final class WebSocketPacket {
                 this.receiveMessage = this.getReceiveBytes(buffers);
                 this.receiveType = MessageType.BYTES;
             } else {
-                if (this.last) {
-                    if (runner.tmpMergeMessage == null) {
+                if (this.last || !runner.mergemsg) {
+                    if (runner.currSeriesMergeMessage == null) {
                         this.receiveMessage = binaryConvert.convertFrom(webSocket._messageTextType, this.receiveMasker, buffers);
                     } else {
-                        runner.tmpMergeMessage.write(this.getReceiveBytes(buffers));
+                        runner.currSeriesMergeMessage.write(this.getReceiveBytes(buffers));
                         try {
-                            this.type = selfType;
-                            this.receiveMessage = binaryConvert.convertFrom(webSocket._messageTextType, runner.tmpMergeMessage.getBytes());
+                            this.receiveMessage = binaryConvert.convertFrom(webSocket._messageTextType, runner.currSeriesMergeMessage.getBytes());
                         } finally {
-                            runner.tmpMergeFrameType = null;
-                            runner.tmpMergeMessage = null;
+                            runner.currSeriesMergeMessage = null;
                         }
                     }
                 } else {
-                    runner.tmpMergeFrameType = selfType;
-                    if (runner.tmpMergeMessage == null) runner.tmpMergeMessage = new ByteArray();
-                    runner.tmpMergeMessage.write(this.getReceiveBytes(buffers));
+                    if (runner.currSeriesMergeMessage == null) runner.currSeriesMergeMessage = new ByteArray();
+                    runner.currSeriesMergeMessage.write(this.getReceiveBytes(buffers));
                     this.receiveMessage = MESSAGE_NIL;
                 }
                 this.receiveCount = this.receiveLength;
