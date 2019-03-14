@@ -56,6 +56,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Comment("最大消息体长度, 小于1表示无限制")
     public static final String WEBPARAM__WSMAXBODY = "wsmaxbody";
 
+    @Comment("接收客户端的分包(last=false)消息时是否自动合并包")
+    public static final String WEBPARAM__WSMERGEMSG = "wsmergemsg";
+
     @Comment("加密解密器")
     public static final String WEBPARAM__CRYPTOR = "cryptor";
 
@@ -87,6 +90,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     //同RestWebSocket.anyuser
     protected boolean anyuser = false;
+
+    //同RestWebSocket.mergemsg
+    protected boolean mergemsg = true;
 
     //同RestWebSocket.cryptor, 变量名不可改， 被Rest.createRestWebSocketServlet用到
     protected Cryptor cryptor;
@@ -157,7 +163,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
-            this.single, context, liveinterval, wsmaxconns, wsthreads, wsmaxbody, this.cryptor, this.node, this.sendConvert, logger);
+            this.single, context, liveinterval, wsmaxconns, wsthreads, wsmaxbody, mergemsg, this.cryptor, this.node, this.sendConvert, logger);
         this.node.init(conf);
         this.node.localEngine.init(conf);
 

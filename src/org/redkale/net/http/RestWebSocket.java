@@ -61,6 +61,13 @@ public @interface RestWebSocket {
     boolean anyuser() default false;
 
     /**
+     * 接收客户端的分包(last=false)消息时是否自动合并包
+     *
+     * @return 默认true
+     */
+    boolean mergemsg() default true;
+
+    /**
      * WebScoket服务器给客户端进行ping操作的间隔时间, 单位: 秒， 默认值：15秒
      *
      * @return int

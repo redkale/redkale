@@ -15,6 +15,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.logging.*;
+import org.redkale.util.ByteArray;
 
 /**
  * WebSocket的消息接收发送器, 一个WebSocket对应一个WebSocketRunner
@@ -34,7 +35,13 @@ class WebSocketRunner implements Runnable {
 
     protected final HttpContext context;
 
+    protected final boolean mergemsg;
+
     volatile boolean closed = false;
+
+    FrameType tmpMergeFrameType;
+
+    ByteArray tmpMergeMessage;
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer;  //主要供RestWebSocket使用
 
@@ -46,6 +53,7 @@ class WebSocketRunner implements Runnable {
         this.context = context;
         this.engine = webSocket._engine;
         this.webSocket = webSocket;
+        this.mergemsg = webSocket._engine.mergemsg;
         this.restMessageConsumer = messageConsumer;
         this.channel = channel;
     }
@@ -53,6 +61,7 @@ class WebSocketRunner implements Runnable {
     @Override
     public void run() {
         final boolean debug = context.getLogger().isLoggable(Level.FINEST);
+        final WebSocketRunner self = this;
         try {
             webSocket.onConnected();
             channel.setReadTimeoutSeconds(300); //读取超时5分钟
@@ -81,7 +90,7 @@ class WebSocketRunner implements Runnable {
 
                             WebSocketPacket onePacket = null;
                             if (unfinishPacket != null) {
-                                if (unfinishPacket.receiveBody(webSocket, readBuffer)) { //已经接收完毕
+                                if (unfinishPacket.receiveBody(context.getLogger(), self, webSocket, readBuffer)) { //已经接收完毕
                                     onePacket = unfinishPacket;
                                     unfinishPacket = null;
                                     for (ByteBuffer b : exBuffers) {
@@ -98,7 +107,7 @@ class WebSocketRunner implements Runnable {
                             if (onePacket != null) packets.add(onePacket);
                             try {
                                 while (true) {
-                                    WebSocketPacket packet = new WebSocketPacket().decode(context.getLogger(), webSocket, wsmaxbody, halfBytes, readBuffer);
+                                    WebSocketPacket packet = new WebSocketPacket().decode(context.getLogger(), self, webSocket, wsmaxbody, halfBytes, readBuffer);
                                     if (packet == WebSocketPacket.NONE) break; //解析完毕但是buffer有多余字节
                                     if (packet != null && !packet.isReceiveFinished()) {
                                         unfinishPacket = packet;
@@ -134,6 +143,7 @@ class WebSocketRunner implements Runnable {
                                     failed(null, readBuffer);
                                     return;
                                 }
+                                if (packet.receiveMessage == WebSocketPacket.MESSAGE_NIL) continue; //last=false && mergemsg=true 的粘包
 
                                 if (packet.type == FrameType.TEXT) {
                                     try {

@@ -376,6 +376,10 @@ public final class Rest {
             mv.visitFieldInsn(PUTFIELD, newDynName, "wsmaxbody", "I");
 
             mv.visitVarInsn(ALOAD, 0);
+            mv.visitInsn(rws.mergemsg() ? ICONST_1 : ICONST_0);
+            mv.visitFieldInsn(PUTFIELD, newDynName, "mergemsg", "Z");
+
+            mv.visitVarInsn(ALOAD, 0);
             mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);
             mv.visitFieldInsn(PUTFIELD, newDynName, "single", "Z");
 

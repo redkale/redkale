@@ -85,6 +85,11 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     //------------------------------ convertFrom -----------------------------------------------------------
+    public <T> T convertFrom(final Type type, final byte[] bytes) {
+        if (bytes == null) return null;
+        return convertFrom(type, new String(bytes, StandardCharsets.UTF_8));
+    }
+
     public <T> T convertFrom(final Type type, final String text) {
         if (text == null) return null;
         return convertFrom(type, Utility.charArray(text));

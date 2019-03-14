@@ -33,6 +33,8 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract boolean isBinary();
 
+    public abstract <T> T convertFrom(final Type type, final byte[] bytes);
+
     public abstract <T> T convertFrom(final Type type, final ByteBuffer... buffers);
 
     public abstract <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers);
