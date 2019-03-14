@@ -121,6 +121,12 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader(mask, buffers));
     }
 
+    @Override
+    public <T> T convertFrom(final Type type, final ConvertMask[] masks, final ByteBuffer... buffers) {
+        if (type == null || buffers == null || buffers.length == 0) return null;
+        return (T) factory.loadDecoder(type).convertFrom(new JsonByteBufferReader(masks, buffers));
+    }
+
     public <T> T convertFrom(final Type type, final JsonReader reader) {
         if (type == null) return null;
         @SuppressWarnings("unchecked")

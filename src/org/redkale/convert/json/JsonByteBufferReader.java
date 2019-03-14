@@ -29,7 +29,16 @@ public class JsonByteBufferReader extends JsonReader {
 
     private ByteBuffer currentBuffer;
 
-    protected ConvertMask mask;
+    protected ConvertMask mask; //mask二选一
+
+    protected ConvertMask[] masks; //mask二选一
+
+    protected JsonByteBufferReader(ConvertMask[] masks, ByteBuffer... buffers) {
+        this.masks = masks;
+        this.buffers = buffers;
+        if (buffers != null && buffers.length > 0) this.currentBuffer = buffers[currentIndex];
+        if (this.masks.length != buffers.length) throw new RuntimeException("masks.length must equals buffers.length");
+    }
 
     protected JsonByteBufferReader(ConvertMask mask, ByteBuffer... buffers) {
         this.mask = mask;
@@ -45,19 +54,24 @@ public class JsonByteBufferReader extends JsonReader {
         this.currentBuffer = null;
         this.buffers = null;
         this.mask = null;
+        this.masks = null;
         return false;
     }
 
     protected byte nextByte() {
         if (this.currentBuffer.hasRemaining()) {
             this.position++;
-            return mask == null ? this.currentBuffer.get() : mask.unmask(this.currentBuffer.get());
+            if (mask != null) return mask.unmask(this.currentBuffer.get());
+            if (masks != null) return masks[this.currentIndex].unmask(this.currentBuffer.get());
+            return this.currentBuffer.get();
         }
         for (;;) {
             this.currentBuffer = this.buffers[++this.currentIndex];
             if (this.currentBuffer.hasRemaining()) {
                 this.position++;
-                return mask == null ? this.currentBuffer.get() : mask.unmask(this.currentBuffer.get());
+                if (mask != null) return mask.unmask(this.currentBuffer.get());
+                if (masks != null) return masks[this.currentIndex].unmask(this.currentBuffer.get());
+                return this.currentBuffer.get();
             }
         }
     }

@@ -130,6 +130,13 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(mask, buffers));
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T convertFrom(final Type type, final ConvertMask[] masks, final ByteBuffer... buffers) {
+        if (type == null || buffers.length < 1) return null;
+        return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(masks, buffers));
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final BsonReader reader) {
         if (type == null) return null;
