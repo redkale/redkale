@@ -115,7 +115,11 @@ class WebSocketRunner implements Runnable {
                                 webSocket.onOccurException(e, null);
                             }
                             //继续监听消息
-                            readBuffer.clear();
+                            if (readBuffer.hasRemaining()) { //exBuffers缓存了
+                                readBuffer = context.pollBuffer();
+                            } else {
+                                readBuffer.clear();
+                            }
                             if (halfBytes.getValue() != null) {
                                 readBuffer.put(halfBytes.getValue());
                                 halfBytes.setValue(null);

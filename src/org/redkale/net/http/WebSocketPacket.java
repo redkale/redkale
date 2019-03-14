@@ -346,9 +346,15 @@ public final class WebSocketPacket {
      */
     boolean receiveBody(WebSocket webSocket, ByteBuffer readBuffer) {
         int need = receiveLength - receiveCount;
-        boolean over = readBuffer.remaining() >= need;
+        final int remain = readBuffer.remaining();
+        boolean over = remain >= need;
         this.receiveBuffers = Utility.append(this.receiveBuffers, readBuffer);
-        if (over) parseReceiveMessage(webSocket, this.receiveBuffers);
+        if (over) {
+            this.receiveCount = this.receiveLength;
+            parseReceiveMessage(webSocket, this.receiveBuffers);
+        } else {
+            this.receiveCount += remain;
+        }
         return over;
     }
 
@@ -438,6 +444,8 @@ public final class WebSocketPacket {
             }
             if (lengthCode == 0x7E) {//0x7E=126
                 length = (int) buffer.getChar();
+            } else if (lengthCode == 0x7F) {//0x7E=127
+                length = (int) buffer.getLong();
             } else {
                 length = buffer.getInt();
             }
