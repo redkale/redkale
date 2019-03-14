@@ -448,6 +448,40 @@ public final class Utility {
     }
 
     /**
+     * 将一个或多个byte新元素添加到byte数组结尾
+     *
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static byte[] append(final byte[] array, final byte... objs) {
+        if (array == null || array.length == 0) return objs;
+        if (objs == null || objs.length == 0) return array;
+        final byte[] news = new byte[array.length + objs.length];
+        System.arraycopy(array, 0, news, 0, array.length);
+        System.arraycopy(objs, 0, news, array.length, objs.length);
+        return news;
+    }
+
+    /**
+     * 将一个或多个short新元素添加到short数组结尾
+     *
+     * @param array 原数组
+     * @param objs  待追加数据
+     *
+     * @return 新数组
+     */
+    public static short[] append(final short[] array, final short... objs) {
+        if (array == null || array.length == 0) return objs;
+        if (objs == null || objs.length == 0) return array;
+        final short[] news = new short[array.length + objs.length];
+        System.arraycopy(array, 0, news, 0, array.length);
+        System.arraycopy(objs, 0, news, array.length, objs.length);
+        return news;
+    }
+
+    /**
      * 将一个或多个char新元素添加到char数组结尾
      *
      * @param array 原数组
