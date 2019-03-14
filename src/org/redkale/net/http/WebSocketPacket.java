@@ -410,6 +410,9 @@ public final class WebSocketPacket {
         if (type == FrameType.CLOSE) {
             if (debug) logger.log(Level.FINEST, " receive close command from websocket client");
         }
+        if (type == null) {
+            logger.log(Level.SEVERE, " receive unknown frametype(opcode=" + (opcode & 0xF) + ") from websocket client");
+        }
         final boolean checkrsv = false;//暂时不校验
         if (checkrsv && (opcode & 0b0111_0000) != 0) {
             if (debug) logger.log(Level.FINE, "rsv1 rsv2 rsv3 must be 0, but not (" + opcode + ")");
@@ -458,7 +461,7 @@ public final class WebSocketPacket {
             }
         }
         if (length > wsmaxbody && wsmaxbody > 0) {
-            if (debug) logger.log(Level.FINE, "message length (" + length + ") too big, must less " + wsmaxbody + "");
+            logger.log(Level.INFO, "message length (" + length + ") too big, must less " + wsmaxbody + "");
             return null;
         }
         this.receiveLength = length;
