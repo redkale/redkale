@@ -461,7 +461,7 @@ public final class WebSocketPacket {
             }
         }
         if (length > wsmaxbody && wsmaxbody > 0) {
-            logger.log(Level.INFO, "message length (" + length + ") too big, must less " + wsmaxbody + "");
+            logger.log(Level.WARNING, "message length (" + length + ") too big, must less " + wsmaxbody + "");
             return null;
         }
         this.receiveLength = length;
@@ -495,7 +495,8 @@ public final class WebSocketPacket {
             buffers = webSocket._engine.cryptor.decrypt(buffers, context.getBufferSupplier(), context.getBufferConsumer());
         }
         FrameType selfType = this.type;
-        if (selfType == FrameType.SERIES) {
+        final boolean series = selfType == FrameType.SERIES;
+        if (series) {
             selfType = runner.currSeriesMergeFrameType;
             this.type = selfType;
         } else if (!this.last && (selfType == FrameType.TEXT || selfType == FrameType.BINARY)) {
@@ -504,7 +505,7 @@ public final class WebSocketPacket {
 
         if (selfType == FrameType.TEXT) {
             Convert textConvert = webSocket.getTextConvert();
-            if (textConvert == null) {
+            if (textConvert == null || (!runner.mergemsg && (series || !this.last))) {
                 this.receiveMessage = new String(this.getReceiveBytes(buffers), StandardCharsets.UTF_8);
                 this.receiveType = MessageType.STRING;
             } else {
@@ -529,7 +530,7 @@ public final class WebSocketPacket {
             }
         } else if (selfType == FrameType.BINARY) {
             Convert binaryConvert = webSocket.getBinaryConvert();
-            if (binaryConvert == null) {
+            if (binaryConvert == null || (!runner.mergemsg && (series || !this.last))) {
                 this.receiveMessage = this.getReceiveBytes(buffers);
                 this.receiveType = MessageType.BYTES;
             } else {
