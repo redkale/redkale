@@ -887,7 +887,7 @@ public final class Application {
         return null;
     }
 
-    private void shutdown() throws Exception {
+    public void shutdown() throws Exception {
         for (ApplicationListener listener : this.listeners) {
             try {
                 listener.preShutdown(this);
