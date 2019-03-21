@@ -279,14 +279,29 @@ public final class Utility {
     }
 
     /**
-     * 获取int数组之和
+     * 获取int数组之和, 空数组返回0
      *
      * @param array 数组
      *
      * @return int
      */
     public static int sum(final int... array) {
-        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        return sum(false, array);
+    }
+
+    /**
+     * 获取int数组之和
+     *
+     * @param check 是否检测空
+     * @param array 数组
+     *
+     * @return int
+     */
+    public static int sum(boolean check, final int... array) {
+        if (array == null || array.length == 0) {
+            if (!check) return 0;
+            throw new NullPointerException("array is null or empty");
+        }
         int sum = 0;
         for (int i : array) {
             sum += i;
@@ -295,14 +310,29 @@ public final class Utility {
     }
 
     /**
-     * 获取long数组之和
+     * 获取long数组之和, 空数组返回0
      *
      * @param array 数组
      *
      * @return long
      */
     public static long sum(final long... array) {
-        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        return sum(false, array);
+    }
+
+    /**
+     * 获取long数组之和
+     *
+     * @param check 是否检测空
+     * @param array 数组
+     *
+     * @return long
+     */
+    public static long sum(boolean check, final long... array) {
+        if (array == null || array.length == 0) {
+            if (!check) return 0;
+            throw new NullPointerException("array is null or empty");
+        }
         long sum = 0L;
         for (long i : array) {
             sum += i;
