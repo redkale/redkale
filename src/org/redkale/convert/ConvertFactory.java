@@ -402,7 +402,22 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
     }
 
+    public final void registerIgnoreAll(final Class type, Collection<String> excludeColumns) {
+        Set<String> set = ignoreAlls.get(type);
+        if (set == null) {
+            ignoreAlls.put(type, new HashSet<>(excludeColumns));
+        } else {
+            set.addAll(new ArrayList(excludeColumns));
+        }
+    }
+
     public final void register(final Class type, boolean ignore, String... columns) {
+        for (String column : columns) {
+            register(type, column, new ConvertColumnEntry(column, ignore));
+        }
+    }
+
+    public final void register(final Class type, boolean ignore, Collection<String> columns) {
         for (String column : columns) {
             register(type, column, new ConvertColumnEntry(column, ignore));
         }
