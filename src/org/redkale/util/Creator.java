@@ -85,6 +85,13 @@ public interface Creator<T> {
             creatorCacheMap.put(Stream.class, (params) -> new ArrayList<>().stream());
             creatorCacheMap.put(ConcurrentHashMap.class, (params) -> new ConcurrentHashMap<>());
             creatorCacheMap.put(CompletableFuture.class, (params) -> new CompletableFuture<>());
+            creatorCacheMap.put(AbstractMap.SimpleEntry.class, new Creator<AbstractMap.SimpleEntry>() {
+                @Override
+                @ConstructorParameters({"key", "value"})
+                public AbstractMap.SimpleEntry create(Object... params) {
+                    return new AbstractMap.SimpleEntry(params[0], params[1]);
+                }
+            });
         }
 
         static class SimpleClassVisitor extends ClassVisitor {

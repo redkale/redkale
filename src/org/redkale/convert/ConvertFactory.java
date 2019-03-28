@@ -615,6 +615,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             decoder = od;
         } else if (!clazz.getName().startsWith("java.")
             || java.net.HttpCookie.class == clazz
+            || java.util.AbstractMap.SimpleEntry.class == clazz
             || clazz.getName().startsWith("java.awt.geom.Point2D")) {
             Decodeable simpleCoder = null;
             for (final Method method : clazz.getDeclaredMethods()) {
@@ -698,7 +699,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             encoder = new OptionalCoder(this, type);
         } else if (clazz == Object.class) {
             return (Encodeable<W, E>) this.anyEncoder;
-        } else if (!clazz.getName().startsWith("java.") || java.net.HttpCookie.class == clazz) {
+        } else if (!clazz.getName().startsWith("java.") || java.net.HttpCookie.class == clazz || java.util.AbstractMap.SimpleEntry.class == clazz) {
             Encodeable simpleCoder = null;
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
