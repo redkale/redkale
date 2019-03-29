@@ -5,19 +5,21 @@
  */
 package org.redkale.convert;
 
+import org.redkale.convert.json.JsonConvert;
+
 /**
  * 序列化去掉引号的String对象。
  * <blockquote><pre>
- * 场景: JavaBean  a = ... ;
+ * 场景: JavaBean  bean = ... ;
  *        Map map = new HashMap();
  *        map.put("bean", a);
  *        records.add(map);
- *        records需要在后期序列化写入库。 但是在这期间a的内部字段值可能就变化了，会导致入库时并不是records.add的快照信息。
+ *        records需要在后期序列化写入库。 但是在这期间bean的内部字段值可能就变化了，会导致入库时并不是records.add的快照信息。
  *        所以需要使用StringConvertWrapper：
  *        Map map = new HashMap();
- *        map.put("bean", new StringConvertWrapper(a.toString()));
+ *        map.put("bean", new StringConvertWrapper(bean.toString()));
  *        records.add(map);
- *        这样序列化写库时不需要在bean的值上面多一层引号。
+ *        这样既可以保持快照又不会在bean的值上面多一层引号。
  * </pre></blockquote>
  * <p>
  * 详情见: https://redkale.org
@@ -35,8 +37,10 @@ public class StringConvertWrapper {
         this.value = value;
     }
 
-    public static StringConvertWrapper create(String value) {
-        return new StringConvertWrapper(value);
+    public static StringConvertWrapper create(Object value) {
+        if (value == null) return new StringConvertWrapper(null);
+        if (value instanceof String) return new StringConvertWrapper((String) value);
+        return new StringConvertWrapper(JsonConvert.root().convertTo(value));
     }
 
     public String getValue() {
