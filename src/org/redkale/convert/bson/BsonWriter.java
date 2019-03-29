@@ -242,6 +242,11 @@ public class BsonWriter extends Writer {
     }
 
     @Override
+    public final void writeWrapper(StringConvertWrapper value) {
+        this.writeString(value == null ? null : value.getValue());
+    }
+
+    @Override
     public final void writeNull() {
         writeShort(Reader.SIGN_NULL);
     }

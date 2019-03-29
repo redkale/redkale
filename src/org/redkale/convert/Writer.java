@@ -256,4 +256,11 @@ public abstract class Writer {
      * @param value String值
      */
     public abstract void writeString(String value);
+
+    /**
+     * 写入一个StringConvertWrapper值
+     *
+     * @param value StringConvertWrapper值
+     */
+    public abstract void writeWrapper(StringConvertWrapper value);
 }
