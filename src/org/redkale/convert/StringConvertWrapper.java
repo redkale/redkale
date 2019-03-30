@@ -38,9 +38,13 @@ public class StringConvertWrapper {
     }
 
     public static StringConvertWrapper create(Object value) {
+        return create(JsonConvert.root(), value);
+    }
+
+    public static StringConvertWrapper create(TextConvert convert, Object value) {
         if (value == null) return new StringConvertWrapper(null);
         if (value instanceof String) return new StringConvertWrapper((String) value);
-        return new StringConvertWrapper(JsonConvert.root().convertTo(value));
+        return new StringConvertWrapper(convert.convertTo(value));
     }
 
     public String getValue() {
