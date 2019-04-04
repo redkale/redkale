@@ -89,4 +89,9 @@ public final class ConvertColumnEntry {
         this.index = index;
     }
 
+    @Override
+    public String toString() {
+        return "ConvertColumnEntry{" + "index=" + index + ", name=" + name + ", ignore=" + ignore + ", convertType=" + convertType + '}';
+    }
+
 }

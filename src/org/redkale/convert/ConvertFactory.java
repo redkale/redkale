@@ -251,8 +251,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
         for (ConvertColumn ref : ccs) {
             if (ref.type().contains(ct)) {
+                String realName = ref.name().isEmpty() ? fieldName : ref.name();
                 if (onlyColumns != null && fieldName != null) {
-                    String realName = ref.name().isEmpty() ? fieldName : ref.name();
                     if (!onlyColumns.contains(realName)) return new ConvertColumnEntry(realName, true);
                 }
                 ConvertColumnEntry entry = new ConvertColumnEntry(ref);
@@ -260,7 +260,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                     entry.setIgnore(false);
                     return entry;
                 }
-                if (skipIgnores.isEmpty()) return entry;
+                if (skipIgnores.isEmpty()) {
+                    if (onlyColumns != null && realName != null && onlyColumns.contains(realName)) entry.setIgnore(false);
+                    return entry;
+                }
                 if (skipIgnores.contains(((Member) element).getDeclaringClass())) entry.setIgnore(false);
                 return entry;
             }
