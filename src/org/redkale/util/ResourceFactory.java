@@ -567,6 +567,9 @@ public final class ResourceFactory {
             Class clazz = src.getClass();
             do {
                 if (java.lang.Enum.class.isAssignableFrom(clazz)) break;
+                final String cname = clazz.getName();
+                if (cname.startsWith("java.") || cname.startsWith("javax.")
+                    || cname.startsWith("jdk.") || cname.startsWith("sun.")) break;
                 for (Field field : clazz.getDeclaredFields()) {
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     field.setAccessible(true);
