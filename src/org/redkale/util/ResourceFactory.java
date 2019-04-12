@@ -566,6 +566,7 @@ public final class ResourceFactory {
             list.add(src);
             Class clazz = src.getClass();
             do {
+                if (java.lang.Enum.class.isAssignableFrom(clazz)) break;
                 for (Field field : clazz.getDeclaredFields()) {
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     field.setAccessible(true);
@@ -583,11 +584,10 @@ public final class ResourceFactory {
                             }
                         }
                         if (ns == null) continue;
+                        final String nsname = ns.getClass().getName();
                         if (ns.getClass().isPrimitive() || ns.getClass().isArray()
-                            || ns.getClass().getName().startsWith("java.")
-                            || ns.getClass().getName().startsWith("javax.")
-                            || ns.getClass().getName().startsWith("jdk.")
-                            || ns.getClass().getName().startsWith("sun.")) continue;
+                            || nsname.startsWith("java.") || nsname.startsWith("javax.")
+                            || nsname.startsWith("jdk.") || nsname.startsWith("sun.")) continue;
                         if (flag) this.inject(ns, attachment, consumer, list);
                         continue;
                     }
