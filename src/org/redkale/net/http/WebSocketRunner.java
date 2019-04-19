@@ -181,7 +181,7 @@ class WebSocketRunner implements Runnable {
                                     }
                                 } else if (packet.type == FrameType.PONG) {
                                     try {
-                                        if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner onMessage by PONG FrameType : " + packet);
+                                        //if (debug) context.getLogger().log(Level.FINEST, "WebSocketRunner onMessage by PONG FrameType : " + packet);
                                         webSocket.onPong((byte[]) packet.receiveMessage);
                                     } catch (Exception e) {
                                         context.getLogger().log(Level.SEVERE, "WebSocket onPong error (" + packet + ")", e);
