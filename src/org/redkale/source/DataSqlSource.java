@@ -164,7 +164,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract <T> CompletableFuture<Boolean> existsDB(final EntityInfo<T> info, final String sql, final boolean onlypk);
 
     //查询一页数据
-    protected abstract <T> CompletableFuture<Sheet<T>> querySheetDB(final EntityInfo<T> info, final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+    protected abstract <T> CompletableFuture<Sheet<T>> querySheetDB(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
     protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final ResultSet set) throws SQLException {
         return info.getEntityValue(sels, set);
@@ -2321,6 +2321,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                 return CompletableFuture.completedFuture(cache.querySheet(needtotal, selects, flipper, node));
             }
         }
-        return querySheetDB(info, needtotal, selects, flipper, node);
+        return querySheetDB(info, readcache, needtotal, selects, flipper, node);
     }
 }
