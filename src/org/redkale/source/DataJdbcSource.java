@@ -516,7 +516,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             if ("mysql".equals(dbtype) || "postgresql".equals(dbtype)) {
                 final String listsql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                     + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + createSQLOrderby(info, flipper) + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset()));
-                if (!readcache && info.isLoggable(logger, Level.FINEST, listsql)) {
+                if (readcache && info.isLoggable(logger, Level.FINEST, listsql)) {
                     logger.finest(info.getType().getSimpleName() + " query sql=" + listsql);
                 }
                 PreparedStatement ps = conn.prepareStatement(listsql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -529,7 +529,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 long total = list.size();
                 if (needtotal) {
                     final String countsql = "SELECT COUNT(*) FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-                    if (!readcache && info.isLoggable(logger, Level.FINEST, countsql)) {
+                    if (readcache && info.isLoggable(logger, Level.FINEST, countsql)) {
                         logger.finest(info.getType().getSimpleName() + " query countsql=" + countsql);
                     }
                     ps = conn.prepareStatement(countsql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -542,7 +542,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             }
             final String sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
-            if (!readcache && info.isLoggable(logger, Level.FINEST, sql)) {
+            if (readcache && info.isLoggable(logger, Level.FINEST, sql)) {
                 logger.finest(info.getType().getSimpleName() + " query sql=" + sql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset())));
             }
             conn.setReadOnly(true);
