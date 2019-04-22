@@ -1474,9 +1474,11 @@ public final class Utility {
         final int limit = start + len;
         for (int i = start; i < limit; i++) {
             b = bytes[i];
-            if ((b >> 5) == -2) {
+            if ((b >> 5) == -2) {// 2 bytes, 11 bits: 110xxxxx 10xxxxxx
                 size--;
-            } else if ((b >> 4) == -2) {
+            } else if ((b >> 4) == -2) {// 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
+                size -= 2;
+            } else if ((b >> 3) == -2) {// 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
                 size -= 2;
             }
         }
@@ -1484,12 +1486,17 @@ public final class Utility {
         size = 0;
         for (int i = start; i < limit;) {
             b = bytes[i++];
-            if (b >= 0) {
+            if (b >= 0) {// 1 byte, 7 bits: 0xxxxxxx
                 text[size++] = (char) b;
-            } else if ((b >> 5) == -2) {
+            } else if ((b >> 5) == -2) {// 2 bytes, 11 bits: 110xxxxx 10xxxxxx
                 text[size++] = (char) (((b << 6) ^ bytes[i++]) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
-            } else if ((b >> 4) == -2) {
+            } else if ((b >> 4) == -2) {// 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
                 text[size++] = (char) ((b << 12) ^ (bytes[i++] << 6) ^ (bytes[i++] ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+            } else if ((b >> 3) == -2) {// 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                int uc = ((b << 18) ^ (bytes[i++] << 12) ^ (bytes[i++] << 6) ^ (bytes[i++] ^ (((byte) 0xF0 << 18) ^ ((byte) 0x80 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+                text[size++] = Character.highSurrogate(uc);
+                text[size++] = Character.lowSurrogate(uc);
+                //测试代码 byte[] bs = {(byte)34, (byte)76, (byte)105, (byte)108, (byte)121, (byte)240, (byte)159, (byte)146, (byte)171, (byte)34};
             }
         }
         return text;
@@ -1516,6 +1523,8 @@ public final class Utility {
                 size++;
             } else if (c < 0x800) {
                 size += 2;
+            } else if (Character.isSurrogate(c)) {
+                size += 2;
             } else {
                 size += 3;
             }
@@ -1529,6 +1538,13 @@ public final class Utility {
             } else if (c < 0x800) {
                 bytes[size++] = (byte) (0xc0 | (c >> 6));
                 bytes[size++] = (byte) (0x80 | (c & 0x3f));
+            } else if (Character.isSurrogate(c)) { //连取两个
+                int uc = Character.toCodePoint(c, chars[i + 1]);
+                bytes[size++] = (byte) (0xf0 | ((uc >> 18)));
+                bytes[size++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
+                bytes[size++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
+                bytes[size++] = (byte) (0x80 | (uc & 0x3f));
+                i++;
             } else {
                 bytes[size++] = (byte) (0xe0 | ((c >> 12)));
                 bytes[size++] = (byte) (0x80 | ((c >> 6) & 0x3f));
