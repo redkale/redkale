@@ -498,7 +498,7 @@ public abstract class NodeServer {
         }
         //----------------- init -----------------
         List<Service> swlist = new ArrayList<>(localServices);
-        Collections.sort(swlist, (o1, o2) -> {
+        swlist.sort((o1, o2) -> {
             Priority p1 = o1.getClass().getAnnotation(Priority.class);
             Priority p2 = o2.getClass().getAnnotation(Priority.class);
             int v = (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());

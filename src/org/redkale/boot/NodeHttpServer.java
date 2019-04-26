@@ -192,7 +192,7 @@ public class NodeHttpServer extends NodeServer {
         }
         int max = 0;
         if (ss != null && sb != null) {
-            Collections.sort(ss, (AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
+            ss.sort((AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
@@ -340,7 +340,7 @@ public class NodeHttpServer extends NodeServer {
         }
         //输出信息
         if (ss != null && !ss.isEmpty() && sb != null) {
-            Collections.sort(ss, (AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
+            ss.sort((AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
             int max = 0;
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 if (as.getKey().length() > max) max = as.getKey().length();

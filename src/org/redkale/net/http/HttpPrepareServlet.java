@@ -254,7 +254,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                         logger.log(Level.WARNING, "init HttpRender(" + renderType + ") error", e);
                     }
                 }
-                Collections.sort(renders, (o1, o2) -> o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
+                renders.sort((o1, o2) -> o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
             }
         }
     }

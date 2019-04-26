@@ -481,7 +481,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             classLoader.addURL(url);
         }
         List<URL> list = new ArrayList<>(set);
-        Collections.sort(list, (URL o1, URL o2) -> o1.getFile().compareTo(o2.getFile()));
+        list.sort((URL o1, URL o2) -> o1.getFile().compareTo(o2.getFile()));
         return list.toArray(new URL[list.size()]);
     }
 
