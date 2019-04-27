@@ -284,6 +284,21 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return null;
     }
 
+    protected <T> String formatValueToString(final EntityInfo<T> info, Object value) {
+        final String dbtype = this.readPool.getDbtype();
+        if ("mysql".equals(dbtype)) {
+            if (value == null) return null;
+            if (value instanceof CharSequence) {
+                return new StringBuilder().append('\'').append(value.toString().replace("\\", "\\\\").replace("'", "\\'")).append('\'').toString();
+            } else if (!(value instanceof Number) && !(value instanceof java.util.Date)
+                && !value.getClass().getName().startsWith("java.sql.") && !value.getClass().getName().startsWith("java.time.")) {
+                return new StringBuilder().append('\'').append(info.getJsonConvert().convertTo(value).replace("\\", "\\\\").replace("'", "\\'")).append('\'').toString();
+            }
+            return String.valueOf(value);
+        }
+        return info.formatToString(value);
+    }
+
     //----------------------------- insert -----------------------------
     /**
      * 新增对象， 必须是Entity对象
@@ -784,7 +799,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             return updateDB(info, null, sql, true, colval);
         } else {
             String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + " = "
-                + info.formatToString(info.getSQLValue(column, colval)) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), pk));
+                + formatValueToString(info, info.getSQLValue(column, colval)) + " WHERE " + info.getPrimarySQLColumn() + " = " + FilterNode.formatToString(info.getSQLValue(info.getPrimarySQLColumn(), pk));
             return updateDB(info, null, sql, false);
         }
     }
@@ -856,7 +871,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             return updateDB(info, null, sql, true, colval);
         } else {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                + " SET " + info.getSQLColumn(alias, column) + " = " + info.formatToString(colval)
+                + " SET " + info.getSQLColumn(alias, column) + " = " + formatValueToString(info, colval)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             return updateDB(info, null, sql, false);
@@ -1142,7 +1157,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                 blobs.add((byte[]) val);
                 setsql.append(" = ").append(prepareParamSign(++index));
             } else {
-                setsql.append(" = ").append(info.formatToString(val));
+                setsql.append(" = ").append(formatValueToString(info, val));
             }
         }
         if (neednode) {

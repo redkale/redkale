@@ -474,6 +474,15 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取JsonConvert
+     *
+     * @return JsonConvert
+     */
+    public JsonConvert getJsonConvert() {
+        return jsonConvert;
+    }
+
+    /**
      * 创建主键值，目前只支持UUID赋值
      *
      * @param src Entity对象
