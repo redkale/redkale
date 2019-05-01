@@ -350,7 +350,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         Connection conn = null;
         try {
             conn = readPool.poll();
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final Statement stmt = conn.createStatement();
             ResultSet set = stmt.executeQuery(sql);
             final Map map = new HashMap<>();
@@ -382,7 +382,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         Connection conn = null;
         try {
             conn = readPool.poll();
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final Statement stmt = conn.createStatement();
             Number rs = defVal;
             ResultSet set = stmt.executeQuery(sql);
@@ -407,7 +407,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         Connection conn = null;
         try {
             conn = readPool.poll();
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final Statement stmt = conn.createStatement();
             Map<K, N> rs = new LinkedHashMap<>();
             ResultSet set = stmt.executeQuery(sql);
@@ -433,7 +433,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         Connection conn = null;
         try {
             conn = readPool.poll();
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
             final ResultSet set = ps.executeQuery();
@@ -456,7 +456,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         Connection conn = null;
         try {
             conn = readPool.poll();
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final Attribute<T, Serializable> attr = info.getAttribute(column);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
@@ -483,7 +483,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         Connection conn = null;
         try {
             conn = readPool.poll();
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
@@ -506,7 +506,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         Connection conn = null;
         try {
             conn = readPool.poll();
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final SelectColumn sels = selects;
             final List<T> list = new ArrayList();
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
@@ -545,7 +545,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             if (readcache && info.isLoggable(logger, Level.FINEST, sql)) {
                 logger.finest(info.getType().getSimpleName() + " query sql=" + sql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset())));
             }
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             if (flipper != null && flipper.getLimit() > 0) ps.setFetchSize(flipper.getLimit());
             final ResultSet set = ps.executeQuery();
@@ -635,7 +635,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
         final Connection conn = readPool.poll();
         try {
             if (logger.isLoggable(Level.FINEST)) logger.finest("direct query sql=" + sql);
-            conn.setReadOnly(true);
+            //conn.setReadOnly(true);
             final Statement statement = conn.createStatement();
             //final PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = statement.executeQuery(sql);// ps.executeQuery();
