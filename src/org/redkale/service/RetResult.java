@@ -54,11 +54,11 @@ public class RetResult<T> {
         this.result = result;
     }
 
-    public static <T> RetResult<T> success() {
-        return new RetResult<>();
+    public static RetResult success() {
+        return new RetResult();
     }
 
-    public static <V, T> RetResult<T> success(V result) {
+    public static <T> RetResult<T> success(T result) {
         return new RetResult().result(result);
     }
 
