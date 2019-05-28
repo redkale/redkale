@@ -216,7 +216,7 @@ public interface DataSource {
      * @param <T>   Entity泛型
      * @param clazz Entity类
      *
-     * @return 影响的记录条数
+     * @return 影响的记录条数 -1表示表不存在
      */
     public <T> int clearTable(final Class<T> clazz);
 
@@ -227,7 +227,7 @@ public interface DataSource {
      * @param <T>   Entity泛型
      * @param clazz Entity类
      *
-     * @return 影响的记录条数CompletableFuture
+     * @return 影响的记录条数CompletableFuture -1表示表不存在
      */
     public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz);
 
@@ -239,7 +239,7 @@ public interface DataSource {
      * @param clazz Entity类
      * @param node  过滤条件
      *
-     * @return 影响的记录条数
+     * @return 影响的记录条数 -1表示表不存在
      */
     public <T> int clearTable(final Class<T> clazz, final FilterNode node);
 
@@ -251,7 +251,7 @@ public interface DataSource {
      * @param clazz Entity类
      * @param node  过滤条件
      *
-     * @return 影响的记录条数CompletableFuture
+     * @return 影响的记录条数CompletableFuture -1表示表不存在
      */
     public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz, final FilterNode node);
 
@@ -263,7 +263,7 @@ public interface DataSource {
      * @param <T>   Entity泛型
      * @param clazz Entity类
      *
-     * @return 影响的记录条数
+     * @return 影响的记录条数 -1表示表不存在
      */
     public <T> int dropTable(final Class<T> clazz);
 
@@ -274,7 +274,7 @@ public interface DataSource {
      * @param <T>   Entity泛型
      * @param clazz Entity类
      *
-     * @return 影响的记录条数CompletableFuture
+     * @return 影响的记录条数CompletableFuture -1表示表不存在
      */
     public <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz);
 
@@ -286,7 +286,7 @@ public interface DataSource {
      * @param clazz Entity类
      * @param node  过滤条件
      *
-     * @return 影响的记录条数
+     * @return 影响的记录条数 -1表示表不存在
      */
     public <T> int dropTable(final Class<T> clazz, final FilterNode node);
 
@@ -298,7 +298,7 @@ public interface DataSource {
      * @param clazz Entity类
      * @param node  过滤条件
      *
-     * @return 影响的记录条数CompletableFuture
+     * @return 影响的记录条数CompletableFuture -1表示表不存在
      */
     public <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz, final FilterNode node);
 

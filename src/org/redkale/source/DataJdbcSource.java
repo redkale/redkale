@@ -230,6 +230,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             stmt.close();
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
+            if (info.isTableNotExist(e)) return CompletableFuture.completedFuture(-1);
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(e);
             return future;
@@ -250,6 +251,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             stmt.close();
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
+            if (info.isTableNotExist(e)) return CompletableFuture.completedFuture(-1);
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(e);
             return future;
