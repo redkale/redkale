@@ -1980,14 +1980,14 @@ public final class Utility {
             }
             conn.setRequestMethod(method);
             if (headers != null) {
-                for (Map.Entry<String, String> en : headers.entrySet()) { //不用forEach是为了兼容JDK 6
+                for (Map.Entry<String, String> en : headers.entrySet()) {
                     conn.setRequestProperty(en.getKey(), en.getValue());
                 }
             }
             if (body != null && !body.isEmpty()) { //conn.getOutputStream()会将GET强制变成POST
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
-                conn.getOutputStream().write(body == null ? new byte[0] : body.getBytes(UTF_8));
+                conn.getOutputStream().write(body.getBytes(UTF_8));
             }
             conn.connect();
             int rs = conn.getResponseCode();
