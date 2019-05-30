@@ -127,7 +127,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.writeTimeoutSeconds = config.getIntValue("writeTimeoutSeconds", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 8 * 1024);
         this.maxbody = parseLenth(config.getValue("maxbody"), 64 * 1024);
-        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(protocol) ? 1480 : 32 * 1024);
+        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(protocol) ? 1350 : 32 * 1024);
         this.bufferCapacity = "UDP".equalsIgnoreCase(protocol) ? bufCapacity : (bufCapacity < 8 * 1024 ? 8 * 1024 : bufCapacity);
         this.threads = config.getIntValue("threads", Runtime.getRuntime().availableProcessors() * 32);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", this.threads * 4);
