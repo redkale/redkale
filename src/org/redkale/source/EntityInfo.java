@@ -902,10 +902,10 @@ public final class EntityInfo<T> {
      *
      * @return Object
      */
-    public Serializable getSQLValue(Attribute<T, Serializable> attr, T entity) {
-        Serializable val = attr.get(entity);
+    public <F> Object getSQLValue(Attribute<T, F> attr, T entity) {
+        Object val = attr.get(entity);
         CryptHandler cryptHandler = attr.attach();
-        if (cryptHandler != null) val = (Serializable) cryptHandler.encrypt(val);
+        if (cryptHandler != null) val = cryptHandler.encrypt(val);
         return val;
     }
 

@@ -177,7 +177,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     protected <T> int batchStatementParameters(Connection conn, PreparedStatement prestmt, EntityInfo<T> info, Attribute<T, Serializable>[] attrs, T entity) throws SQLException {
         int i = 0;
         for (Attribute<T, Serializable> attr : attrs) {
-            Serializable val = info.getSQLValue(attr, entity);
+            Object val = info.getSQLValue(attr, entity);
             if (val instanceof byte[]) {
                 Blob blob = conn.createBlob();
                 blob.setBytes(1, (byte[]) val);
