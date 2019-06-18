@@ -1810,9 +1810,10 @@ public final class Rest {
 //        HashMap<String, InnerActionEntry> _createRestInnerActionEntry() {
 //              HashMap<String, InnerActionEntry> map = new HashMap<>();
 //              map.put("asyncfind3", new InnerActionEntry(100000,200000,"asyncfind3", new String[]{},null,false,0, new _Dync_asyncfind3_HttpServlet()));
-//              map.put("asyncfind3", new InnerActionEntry(1,2,"asyncfind2", new String[]{"GET", "POST"},null,true,0, new _Dync_asyncfind2_HttpServlet()));
+//              map.put("asyncfind2", new InnerActionEntry(1,2,"asyncfind2", new String[]{"GET", "POST"},null,true,0, new _Dync_asyncfind2_HttpServlet()));
 //              return map;
 //          }
+        Map<String, Method> mappingurlToMethod = new HashMap<>();
         { //_createRestInnerActionEntry 方法
             mv = new MethodDebugVisitor(cw.visitMethod(0, "_createRestInnerActionEntry", "()Ljava/util/HashMap;", "()Ljava/util/HashMap<Ljava/lang/String;L" + innerEntryName + ";>;", null));
             //mv.setDebug(true);
@@ -1822,6 +1823,7 @@ public final class Rest {
             mv.visitVarInsn(ASTORE, 1);
 
             for (final MappingEntry entry : entrys) {
+                mappingurlToMethod.put(entry.mappingurl, entry.mappingMethod);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitLdcInsn(entry.mappingurl);  //name
                 mv.visitTypeInsn(NEW, innerEntryName); //new InnerActionEntry
@@ -1837,9 +1839,9 @@ public final class Rest {
                     mv.visitLdcInsn(entry.methods[i]);
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitInsn(ACONST_NULL); //method
+                mv.visitInsn(ACONST_NULL); //method          
                 mv.visitInsn(entry.auth ? ICONST_1 : ICONST_0); //auth
-                pushInt(mv, entry.cacheseconds); //cacheseconds
+                pushInt(mv, entry.cacheseconds); //cacheseconds      
                 mv.visitTypeInsn(NEW, newDynName + "$" + entry.newActionClassName);
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(ALOAD, 0);
@@ -1920,7 +1922,12 @@ public final class Rest {
             restactMethod.setAccessible(true);
             Field tmpentrysfield = HttpServlet.class.getDeclaredField("_tmpentrys");
             tmpentrysfield.setAccessible(true);
-            tmpentrysfield.set(obj, restactMethod.invoke(obj));
+            HashMap<String, HttpServlet.InnerActionEntry> innerEntryMap = (HashMap) restactMethod.invoke(obj);
+            for (Map.Entry<String, HttpServlet.InnerActionEntry> en : innerEntryMap.entrySet()) {
+                Method m = mappingurlToMethod.get(en.getKey());
+                if (m != null) en.getValue().annotations = HttpServlet.InnerActionEntry.annotations(m);
+            }
+            tmpentrysfield.set(obj, innerEntryMap);
             return obj;
         } catch (Throwable e) {
             throw new RuntimeException(e);

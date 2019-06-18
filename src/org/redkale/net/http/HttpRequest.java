@@ -6,6 +6,8 @@
 package org.redkale.net.http;
 
 import java.io.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
@@ -68,6 +70,8 @@ public class HttpRequest extends Request<HttpContext> {
     protected int moduleid;
 
     protected int actionid;
+
+    protected Annotation[] annotations;
 
     protected Object currentUser;
 
@@ -299,6 +303,55 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取当前操作Method上的注解集合
+     *
+     * @return Annotation[]
+     */
+    public Annotation[] getAnnotations() {
+        if (this.annotations == null) return new Annotation[0];
+        Annotation[] newanns = new Annotation[this.annotations.length];
+        System.arraycopy(this.annotations, 0, newanns, 0, newanns.length);
+        return newanns;
+    }
+
+    /**
+     * 获取当前操作Method上的注解
+     *
+     * @param <T>             注解泛型
+     * @param annotationClass 注解类型
+     *
+     * @return Annotation
+     */
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        if (this.annotations == null) return null;
+        for (Annotation ann : this.annotations) {
+            if (ann.getClass() == annotationClass) return (T) ann;
+        }
+        return null;
+    }
+
+    /**
+     * 获取当前操作Method上的注解集合
+     *
+     * @param <T>             注解泛型
+     * @param annotationClass 注解类型
+     *
+     * @return Annotation[]
+     */
+    public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
+        if (this.annotations == null) return (T[]) Array.newInstance(annotationClass, 0);
+        T[] news = (T[]) Array.newInstance(annotationClass, this.annotations.length);
+        int index = 0;
+        for (Annotation ann : this.annotations) {
+            if (ann.getClass() == annotationClass) {
+                news[index++] = (T) ann;
+            }
+        }
+        if (index < 1) return (T[]) Array.newInstance(annotationClass, 0);
+        return Arrays.copyOf(news, index);
+    }
+
+    /**
      * 获取客户端地址IP
      *
      * @return 地址
@@ -443,6 +496,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.bodyparsed = false;
         this.moduleid = 0;
         this.actionid = 0;
+        this.annotations = null;
         this.currentUser = null;
 
         this.attachment = null;

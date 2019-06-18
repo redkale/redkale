@@ -6,6 +6,7 @@
 package org.redkale.net.http;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -71,6 +72,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     request.attachment = entry;
                     request.moduleid = entry.moduleid;
                     request.actionid = entry.actionid;
+                    request.annotations = entry.annotations;
                     if (entry.auth) {
                         response.thenEvent(authSuccessServlet);
                         authenticate(request, response);
@@ -210,6 +212,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
         InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
             this(moduleid, actionid, name, methods, method, auth(method), cacheseconds(method), servlet);
+            this.annotations = annotations(method);
         }
 
         //供Rest类使用，参数不能随便更改
@@ -232,14 +235,19 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             } : null;
         }
 
-        private static boolean auth(Method method) {
+        protected static boolean auth(Method method) {
             HttpMapping mapping = method.getAnnotation(HttpMapping.class);
             return mapping == null || mapping.auth();
         }
 
-        private static int cacheseconds(Method method) {
+        protected static int cacheseconds(Method method) {
             HttpMapping mapping = method.getAnnotation(HttpMapping.class);
             return mapping == null ? 0 : mapping.cacheseconds();
+        }
+
+        //Rest.class会用到此方法
+        protected static Annotation[] annotations(Method method) {
+            return method.getAnnotations();
         }
 
         boolean isNeedCheck() {
@@ -270,9 +278,11 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
         final String[] methods;
 
-        final Method method;
-
         final HttpServlet servlet;
+
+        Method method;
+
+        Annotation[] annotations;
     }
 
     private HttpServlet createActionServlet(final Method method) {
