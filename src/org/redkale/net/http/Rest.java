@@ -568,11 +568,7 @@ public final class Rest {
                 mv.visitEnd();
             }
             cw2.visitEnd();
-            try {
-                newLoader.loadClass((newDynMessageFullName + endfix).replace('/', '.'), cw2.toByteArray()).getField("_redkale_annotations").set(null, method.getAnnotations());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            newLoader.loadClass((newDynMessageFullName + endfix).replace('/', '.'), cw2.toByteArray());
         }
 
         { //_DynXXXWebSocketMessage class
