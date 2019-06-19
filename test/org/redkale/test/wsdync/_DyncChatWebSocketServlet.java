@@ -27,7 +27,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
     @Resource
     private ChatService _redkale_resource_0;
 
-    public static Map<String, Annotation[]> _redkale_annotations = new java.util.HashMap();
+    public static Map<String, Annotation[]> _redkale_annotations;
 
     public _DyncChatWebSocketServlet() {
         super();

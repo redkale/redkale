@@ -462,12 +462,6 @@ public final class Rest {
                 av0.visitEnd();
                 fv.visitEnd();
             }
-            {//_redkale_annotations
-                fv = cw2.visitField(ACC_PUBLIC + ACC_STATIC, "_redkale_annotations", "[Ljava/lang/annotation/Annotation;", null, null);
-                av0 = fv.visitAnnotation(convertDisabledDesc, true);
-                av0.visitEnd();
-                fv.visitEnd();
-            }
             { //空构造函数
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
@@ -711,7 +705,7 @@ public final class Rest {
         Class<?> newClazz = newLoader.loadClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
             T servlet = (T) newClazz.getDeclaredConstructor().newInstance();
-            ((Map) newClazz.getField("_redkale_annotations").get(null)).putAll(msgclassToAnnotations);
+            newClazz.getField("_redkale_annotations").set(null, msgclassToAnnotations);
             if (rws.cryptor() != Cryptor.class) {
                 Cryptor cryptor = rws.cryptor().getDeclaredConstructor().newInstance();
                 Field cryptorField = newClazz.getSuperclass().getDeclaredField("cryptor"); //WebSocketServlet
