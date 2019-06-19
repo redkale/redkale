@@ -6,7 +6,8 @@
 package org.redkale.test.wsdync;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.lang.annotation.Annotation;
+import java.util.*;
 import java.util.function.BiConsumer;
 import javax.annotation.Resource;
 import org.redkale.convert.ConvertDisabled;
@@ -70,6 +71,9 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         @ConvertDisabled
         public _DyncChatWebSocket _redkale_websocket;
 
+        @ConvertDisabled
+        public static Annotation[] _redkale_annotations;
+
         @Override
         public String[] getNames() {
             return new String[]{"message", "extmap"};
@@ -80,6 +84,12 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
             if ("message".equals(name)) return (T) message;
             if ("extmap".equals(name)) return (T) extmap;
             return null;
+        }
+
+        @Override
+        public Annotation[] getAnnotations() {
+            if (_redkale_annotations == null) return new Annotation[0];
+            return Arrays.copyOf(_redkale_annotations, _redkale_annotations.length);
         }
 
         public void execute(_DyncChatWebSocket websocket) {
@@ -105,6 +115,9 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         @ConvertDisabled
         public _DyncChatWebSocket _redkale_websocket;
 
+        @ConvertDisabled
+        public static Annotation[] _redkale_annotations;
+
         @Override
         public String[] getNames() {
             return new String[]{"roomid"};
@@ -114,6 +127,12 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         public <T> T getValue(String name) {
             if ("roomid".equals(name)) return (T) (Integer) roomid;
             return null;
+        }
+
+        @Override
+        public Annotation[] getAnnotations() {
+            if (_redkale_annotations == null) return new Annotation[0];
+            return Arrays.copyOf(_redkale_annotations, _redkale_annotations.length);
         }
 
         public void execute(_DyncChatWebSocket websocket) {
