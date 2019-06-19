@@ -27,6 +27,8 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
     @Resource
     private ChatService _redkale_resource_0;
 
+    public static Map<String, Annotation[]> _redkale_annotations = new java.util.HashMap();
+
     public _DyncChatWebSocketServlet() {
         super();
         this.messageTextType = _DyncChatWebSocketMessage.class;
@@ -71,9 +73,6 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         @ConvertDisabled
         public _DyncChatWebSocket _redkale_websocket;
 
-        @ConvertDisabled
-        public static Annotation[] _redkale_annotations;
-
         @Override
         public String[] getNames() {
             return new String[]{"message", "extmap"};
@@ -88,8 +87,9 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @Override
         public Annotation[] getAnnotations() {
-            if (_redkale_annotations == null) return new Annotation[0];
-            return Arrays.copyOf(_redkale_annotations, _redkale_annotations.length);
+            Annotation[] annotations = _redkale_annotations.get("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_sendmessagee_00");
+            if (annotations == null) return new Annotation[0];
+            return Arrays.copyOf(annotations, annotations.length);
         }
 
         public void execute(_DyncChatWebSocket websocket) {
@@ -115,9 +115,6 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         @ConvertDisabled
         public _DyncChatWebSocket _redkale_websocket;
 
-        @ConvertDisabled
-        public static Annotation[] _redkale_annotations;
-
         @Override
         public String[] getNames() {
             return new String[]{"roomid"};
@@ -131,8 +128,9 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @Override
         public Annotation[] getAnnotations() {
-            if (_redkale_annotations == null) return new Annotation[0];
-            return Arrays.copyOf(_redkale_annotations, _redkale_annotations.length);
+            Annotation[] annotations = _redkale_annotations.get("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_joinroom_01");
+            if (annotations == null) return new Annotation[0];
+            return Arrays.copyOf(annotations, annotations.length);
         }
 
         public void execute(_DyncChatWebSocket websocket) {
