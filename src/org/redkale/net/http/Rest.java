@@ -355,6 +355,10 @@ public final class Rest {
                 fv.visitEnd();
             }
         }
+        { //_redkale_annotations
+            fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "_redkale_annotations", "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;[Ljava/lang/annotation/Annotation;>;", null);
+            fv.visitEnd();
+        }
         { //_DynWebSocketServlet构造函数 
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             mv.visitVarInsn(ALOAD, 0);
@@ -422,7 +426,7 @@ public final class Rest {
         }
 
         RestClassLoader newLoader = new RestClassLoader(loader);
-
+        Map<String, Annotation[]> msgclassToAnnotations = new HashMap<>();
         for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage 子消息List
             Method method = messageMethods.get(i);
             String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
@@ -510,23 +514,28 @@ public final class Rest {
                 mv.visitMaxs(2, 2);
                 mv.visitEnd();
             }
-            {
+            { //getAnnotations
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "getAnnotations", "()[Ljava/lang/annotation/Annotation;", null, null));
-                mv.visitFieldInsn(GETSTATIC, newDynMessageFullName + endfix, "_redkale_annotations", "[Ljava/lang/annotation/Annotation;");
-                Label l1 = new Label();
-                mv.visitJumpInsn(IFNONNULL, l1);
+                mv.visitFieldInsn(GETSTATIC, newDynName, "_redkale_annotations", "Ljava/util/Map;");
+                mv.visitLdcInsn(newDynMessageFullName + endfix);
+                mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);
+                mv.visitTypeInsn(CHECKCAST, "[Ljava/lang/annotation/Annotation;");
+                mv.visitVarInsn(ASTORE, 1);
+                mv.visitVarInsn(ALOAD, 1);
+                Label l2 = new Label();
+                mv.visitJumpInsn(IFNONNULL, l2);
                 mv.visitInsn(ICONST_0);
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/annotation/Annotation");
                 mv.visitInsn(ARETURN);
-                mv.visitLabel(l1);
-                mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                mv.visitFieldInsn(GETSTATIC, newDynMessageFullName + endfix, "_redkale_annotations", "[Ljava/lang/annotation/Annotation;");
-                mv.visitFieldInsn(GETSTATIC, newDynMessageFullName + endfix, "_redkale_annotations", "[Ljava/lang/annotation/Annotation;");
+                mv.visitLabel(l2);
+                mv.visitFrame(Opcodes.F_APPEND, 1, new Object[]{"[Ljava/lang/annotation/Annotation;"}, 0, null);
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitVarInsn(ALOAD, 1);
                 mv.visitInsn(ARRAYLENGTH);
                 mv.visitMethodInsn(INVOKESTATIC, "java/util/Arrays", "copyOf", "([Ljava/lang/Object;I)[Ljava/lang/Object;", false);
                 mv.visitTypeInsn(CHECKCAST, "[Ljava/lang/annotation/Annotation;");
                 mv.visitInsn(ARETURN);
-                mv.visitMaxs(2, 1);
+                mv.visitMaxs(2, 2);
                 mv.visitEnd();
             }
             { //execute
@@ -569,6 +578,7 @@ public final class Rest {
             }
             cw2.visitEnd();
             newLoader.loadClass((newDynMessageFullName + endfix).replace('/', '.'), cw2.toByteArray());
+            msgclassToAnnotations.put(newDynMessageFullName + endfix, method.getAnnotations());
         }
 
         { //_DynXXXWebSocketMessage class
@@ -701,6 +711,7 @@ public final class Rest {
         Class<?> newClazz = newLoader.loadClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
             T servlet = (T) newClazz.getDeclaredConstructor().newInstance();
+            ((Map) newClazz.getField("_redkale_annotations").get(null)).putAll(msgclassToAnnotations);
             if (rws.cryptor() != Cryptor.class) {
                 Cryptor cryptor = rws.cryptor().getDeclaredConstructor().newInstance();
                 Field cryptorField = newClazz.getSuperclass().getDeclaredField("cryptor"); //WebSocketServlet
