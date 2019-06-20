@@ -45,9 +45,13 @@ public final class SncpRequest extends Request<SncpContext> {
 
     private byte[] bufferbytes = new byte[6];
 
-    protected SncpRequest(SncpContext context) {
-        super(context);
+    protected SncpRequest(SncpContext context, ObjectPool<ByteBuffer> bufferPool) {
+        super(context, bufferPool);
         this.convert = context.getBsonConvert();
+    }
+
+    protected ObjectPool<ByteBuffer> getBufferPool() {
+        return this.bufferPool;
     }
 
     @Override

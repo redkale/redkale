@@ -28,6 +28,8 @@ public class HttpContext extends Context {
 
     protected final ConcurrentHashMap<Class, Creator> asyncHandlerCreators = new ConcurrentHashMap<>();
 
+    protected String remoteAddrHeader;
+
     public HttpContext(HttpContextConfig config) {
         super(config);
         random.setSeed(Math.abs(System.nanoTime()));
@@ -41,10 +43,6 @@ public class HttpContext extends Context {
 
     protected ExecutorService getExecutor() {
         return executor;
-    }
-
-    protected ObjectPool<Response> getResponsePool() {
-        return responsePool;
     }
 
     @SuppressWarnings("unchecked")
@@ -162,5 +160,6 @@ public class HttpContext extends Context {
 
     public static class HttpContextConfig extends ContextConfig {
 
+        public String remoteAddrHeader;
     }
 }

@@ -6,11 +6,8 @@
 package org.redkale.net;
 
 import java.net.*;
-import java.nio.*;
 import java.nio.charset.*;
-import java.util.Collection;
 import java.util.concurrent.*;
-import java.util.function.*;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.convert.bson.*;
@@ -38,12 +35,6 @@ public class Context {
 
     //ByteBuffer的容量，默认8K
     protected final int bufferCapacity;
-
-    //ByteBuffer对象池
-    protected final ObjectPool<ByteBuffer> bufferPool;
-
-    //Response对象池
-    protected final ObjectPool<Response> responsePool;
 
     //服务的根Servlet
     protected final PrepareServlet prepare;
@@ -83,22 +74,18 @@ public class Context {
 
     public Context(ContextConfig config) {
         this(config.serverStartTime, config.logger, config.executor, config.sslContext,
-            config.bufferCapacity, config.bufferPool, config.responsePool, config.maxconns, config.maxbody,
-            config.charset, config.address, config.resourceFactory, config.prepare,
-            config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
+            config.bufferCapacity, config.maxconns, config.maxbody, config.charset, config.address, config.resourceFactory,
+            config.prepare, config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
     }
 
     public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
-        int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool, final int maxconns,
-        final int maxbody, Charset charset, InetSocketAddress address, ResourceFactory resourceFactory,
-        final PrepareServlet prepare, final int aliveTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+        int bufferCapacity, final int maxconns, final int maxbody, Charset charset, InetSocketAddress address,
+        ResourceFactory resourceFactory, PrepareServlet prepare, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.executor = executor;
         this.sslContext = sslContext;
         this.bufferCapacity = bufferCapacity;
-        this.bufferPool = bufferPool;
-        this.responsePool = responsePool;
         this.maxconns = maxconns;
         this.maxbody = maxbody;
         this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
@@ -160,36 +147,6 @@ public class Context {
         return bufferCapacity;
     }
 
-    public Supplier<ByteBuffer> getBufferSupplier() {
-        return bufferPool;
-    }
-
-    public Consumer<ByteBuffer> getBufferConsumer() {
-        return bufferPool;
-    }
-
-    public ByteBuffer pollBuffer() {
-        return bufferPool.get();
-    }
-
-    public void offerBuffer(ByteBuffer buffer) {
-        bufferPool.accept(buffer);
-    }
-
-    public void offerBuffer(ByteBuffer... buffers) {
-        if (buffers == null) return;
-        for (ByteBuffer buffer : buffers) {
-            bufferPool.accept(buffer);
-        }
-    }
-
-    public void offerBuffer(Collection<ByteBuffer> buffers) {
-        if (buffers == null) return;
-        for (ByteBuffer buffer : buffers) {
-            bufferPool.accept(buffer);
-        }
-    }
-
     public Logger getLogger() {
         return logger;
     }
@@ -227,12 +184,6 @@ public class Context {
 
         //ByteBuffer的容量，默认8K
         public int bufferCapacity;
-
-        //ByteBuffer对象池
-        public ObjectPool<ByteBuffer> bufferPool;
-
-        //Response对象池
-        public ObjectPool<Response> responsePool;
 
         //服务的根Servlet
         public PrepareServlet prepare;

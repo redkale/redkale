@@ -7,14 +7,14 @@ package org.redkale.net;
 
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.text.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
-import org.redkale.net.Filter;
 import org.redkale.util.*;
 
 /**
@@ -281,7 +281,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.serverChannel = ProtocolServer.create(this.protocol, context, this.serverClassLoader, config == null ? null : config.getValue("netimpl"));
         this.serverChannel.open(config);
         serverChannel.bind(address, backlog);
-        serverChannel.accept();
+        serverChannel.accept(this);
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
             + ", threads: " + threads + ", maxbody: " + formatLenth(context.maxbody) + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
@@ -299,7 +299,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             newServerChannel = ProtocolServer.create(this.protocol, context, this.serverClassLoader, config == null ? null : config.getValue("netimpl"));
             newServerChannel.open(config);
             newServerChannel.bind(addr, backlog);
-            newServerChannel.accept();
+            newServerChannel.accept(this);
         } catch (IOException e) {
             context.address = oldAddress;
             throw e;
@@ -357,6 +357,15 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     protected abstract C createContext();
+
+    //必须在 createContext()之后调用
+    protected abstract ObjectPool<ByteBuffer> createBufferPool(AtomicLong createCounter, AtomicLong cycleCounter, int bufferPoolSize);
+
+    //必须在 createContext()之后调用
+    protected abstract ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize);
+
+    //必须在 createResponsePool()之后调用
+    protected abstract Creator<Response> createResponseCreator(ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool);
 
     public void shutdown() throws IOException {
         long s = System.currentTimeMillis();

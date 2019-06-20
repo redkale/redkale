@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.function.*;
 import java.util.logging.Level;
+import org.redkale.util.ObjectPool;
 
 /**
  * 协议响应对象
@@ -25,6 +26,10 @@ import java.util.logging.Level;
 public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected final C context;
+
+    protected final ObjectPool<ByteBuffer> bufferPool;
+
+    protected final ObjectPool<Response> responsePool;
 
     protected final R request;
 
@@ -66,15 +71,15 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
         private void offerResponseBuffer(ByteBuffer attachment) {
             if (writeHeadBuffer == null) {
-                if (context.bufferPool.getRecyclerPredicate().test(attachment)) {
+                if (bufferPool.getRecyclerPredicate().test(attachment)) {
                     writeHeadBuffer = attachment;
                 }
             } else if (writeBodyBuffer == null) {
-                if (context.bufferPool.getRecyclerPredicate().test(attachment)) {
+                if (bufferPool.getRecyclerPredicate().test(attachment)) {
                     writeBodyBuffer = attachment;
                 }
             } else {
-                context.offerBuffer(attachment);
+                bufferPool.accept(attachment);
             }
         }
 
@@ -108,31 +113,33 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         private void offerResponseBuffer(ByteBuffer[] attachments) {
             int start = 0;
             if (writeHeadBuffer == null && attachments.length > start) {
-                if (context.bufferPool.getRecyclerPredicate().test(attachments[start])) {
+                if (bufferPool.getRecyclerPredicate().test(attachments[start])) {
                     writeHeadBuffer = attachments[start];
                     start++;
                 }
             }
             if (writeBodyBuffer == null && attachments.length > start) {
-                if (context.bufferPool.getRecyclerPredicate().test(attachments[start])) {
+                if (bufferPool.getRecyclerPredicate().test(attachments[start])) {
                     writeBodyBuffer = attachments[start];
                     start++;
                 }
             }
             for (int i = start; i < attachments.length; i++) {
-                context.offerBuffer(attachments[i]);
+                bufferPool.accept(attachments[i]);
             }
         }
     };
 
-    protected Response(C context, final R request) {
+    protected Response(C context, final R request, ObjectPool<Response> responsePool) {
         this.context = context;
         this.request = request;
-        this.writeHeadBuffer = context.pollBuffer();
-        this.writeBodyBuffer = context.pollBuffer();
+        this.bufferPool = request.bufferPool;
+        this.responsePool = responsePool;
+        this.writeHeadBuffer = bufferPool.get();
+        this.writeBodyBuffer = bufferPool.get();
         this.bodyBufferSupplier = () -> {
             ByteBuffer buffer = writeBodyBuffer;
-            if (buffer == null) return context.pollBuffer();
+            if (buffer == null) return bufferPool.get();
             writeBodyBuffer = null;
             return buffer;
         };
@@ -141,14 +148,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     protected ByteBuffer pollWriteReadBuffer() {
         ByteBuffer buffer = this.writeHeadBuffer;
         this.writeHeadBuffer = null;
-        if (buffer == null) buffer = context.pollBuffer();
+        if (buffer == null) buffer = bufferPool.get();
         return buffer;
     }
 
     protected ByteBuffer pollWriteBodyBuffer() {
         ByteBuffer buffer = this.writeBodyBuffer;
         this.writeBodyBuffer = null;
-        if (buffer == null) buffer = context.pollBuffer();
+        if (buffer == null) buffer = bufferPool.get();
         return buffer;
     }
 
@@ -157,7 +164,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     protected void offerBuffer(ByteBuffer... buffers) {
-        context.offerBuffer(buffers);
+        for (ByteBuffer buffer : buffers) {
+            bufferPool.accept(buffer);
+        }
     }
 
     protected AsyncConnection removeChannel() {
@@ -257,19 +266,19 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 AsyncConnection conn = removeChannel();
                 this.recycle();
                 this.prepare();
-                new PrepareRunner(context, conn, null, this).run();
+                new PrepareRunner(context, this.responsePool, conn, null, this).run();
             } else {
                 channel.dispose();
             }
         } else {
-            this.context.responsePool.accept(this);
+            this.responsePool.accept(this);
         }
     }
 
     public void finish(final byte[] bs) {
         if (!this.inited) return; //避免重复关闭
         if (this.context.bufferCapacity == bs.length) {
-            ByteBuffer buffer = this.context.pollBuffer();
+            ByteBuffer buffer = this.bufferPool.get();
             buffer.put(bs);
             buffer.flip();
             this.finish(buffer);
@@ -285,7 +294,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         final boolean more = data != null && this.request.keepAlive;
         this.request.more = more;
         conn.write(buffer, buffer, finishHandler);
-        if (more) new PrepareRunner(this.context, conn, data, null).run();
+        if (more) new PrepareRunner(this.context, this.responsePool, conn, data, null).run();
     }
 
     public void finish(boolean kill, ByteBuffer buffer) {
@@ -296,7 +305,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         final boolean more = data != null && this.request.keepAlive;
         this.request.more = more;
         conn.write(buffer, buffer, finishHandler);
-        if (more) new PrepareRunner(this.context, conn, data, null).run();
+        if (more) new PrepareRunner(this.context, this.responsePool, conn, data, null).run();
     }
 
     public void finish(ByteBuffer... buffers) {
@@ -306,7 +315,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         final boolean more = data != null && this.request.keepAlive;
         this.request.more = more;
         conn.write(buffers, buffers, finishHandler2);
-        if (more) new PrepareRunner(this.context, conn, data, null).run();
+        if (more) new PrepareRunner(this.context, this.responsePool, conn, data, null).run();
     }
 
     public void finish(boolean kill, ByteBuffer... buffers) {
@@ -317,7 +326,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         final boolean more = data != null && this.request.keepAlive;
         this.request.more = more;
         conn.write(buffers, buffers, finishHandler2);
-        if (more) new PrepareRunner(this.context, conn, data, null).run();
+        if (more) new PrepareRunner(this.context, this.responsePool, conn, data, null).run();
     }
 
     protected <A> void send(final ByteBuffer buffer, final A attachment, final CompletionHandler<Integer, A> handler) {
@@ -328,14 +337,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 if (buffer.hasRemaining()) {
                     channel.write(buffer, attachment, this);
                 } else {
-                    context.offerBuffer(buffer);
+                    bufferPool.accept(buffer);
                     if (handler != null) handler.completed(result, attachment);
                 }
             }
 
             @Override
             public void failed(Throwable exc, A attachment) {
-                context.offerBuffer(buffer);
+                bufferPool.accept(buffer);
                 if (handler != null) handler.failed(exc, attachment);
             }
 
@@ -353,7 +362,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                         index = i;
                         break;
                     }
-                    context.offerBuffer(buffers[i]);
+                    bufferPool.accept(buffers[i]);
                 }
                 if (index == 0) {
                     channel.write(buffers, attachment, this);
@@ -367,7 +376,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             @Override
             public void failed(Throwable exc, A attachment) {
                 for (ByteBuffer buffer : buffers) {
-                    context.offerBuffer(buffer);
+                    bufferPool.accept(buffer);
                 }
                 if (handler != null) handler.failed(exc, attachment);
             }

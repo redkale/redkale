@@ -28,12 +28,15 @@ public class PrepareRunner implements Runnable {
 
     private final Context context;
 
+    private final ObjectPool<Response> responsePool;
+
     private ByteBuffer data;
 
     private Response response;
 
-    public PrepareRunner(Context context, AsyncConnection channel, ByteBuffer data, Response response) {
+    public PrepareRunner(Context context, ObjectPool<Response> responsePool, AsyncConnection channel, ByteBuffer data, Response response) {
         this.context = context;
+        this.responsePool = responsePool;
         this.channel = channel;
         this.data = data;
         this.response = response;
@@ -42,7 +45,6 @@ public class PrepareRunner implements Runnable {
     @Override
     public void run() {
         final boolean keepalive = response != null;
-        final ObjectPool<? extends Response> responsePool = context.responsePool;
         if (data != null) { //BIO模式的UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
             if (response == null) response = responsePool.get();
             try {
@@ -165,7 +167,7 @@ public class PrepareRunner implements Runnable {
     }
 
     protected Response pollResponse() {
-        return context.responsePool.get();
+        return responsePool.get();
     }
 
     protected Request pollRequest(Response response) {

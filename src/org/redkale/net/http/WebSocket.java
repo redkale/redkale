@@ -11,10 +11,11 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import org.redkale.convert.Convert;
+import org.redkale.net.AsyncConnection;
 import org.redkale.util.Comment;
 
 /**
@@ -81,6 +82,8 @@ public abstract class WebSocket<G extends Serializable, T> {
     WebSocketRunner _runner; //不可能为空 
 
     WebSocketEngine _engine; //不可能为空 
+
+    AsyncConnection _channel;//不可能为空 
 
     String _sessionid; //不可能为空 
 
@@ -674,12 +677,21 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
-     * 获取ByteBuffer资源池
+     * 获取ByteBuffer生成器
      *
      * @return Supplier
      */
-    protected Supplier<ByteBuffer> getByteBufferSupplier() {
-        return this._runner.context.getBufferSupplier();
+    protected Supplier<ByteBuffer> getBufferSupplier() {
+        return this._channel.getBufferSupplier();
+    }
+
+    /**
+     * 获取ByteBuffer回收器
+     *
+     * @return Consumer
+     */
+    protected Consumer<ByteBuffer> getBufferConsumer() {
+        return this._channel.getBufferConsumer();
     }
 
     //-------------------------------------------------------------------

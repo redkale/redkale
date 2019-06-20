@@ -37,6 +37,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private byte[] currDateBytes;
 
+    private HttpResponseConfig respConfig;
+
     public HttpServer() {
         this(System.currentTimeMillis(), ResourceFactory.root());
     }
@@ -304,16 +306,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     @SuppressWarnings("unchecked")
     protected HttpContext createContext() {
         final int port = this.address.getPort();
-        AtomicLong createBufferCounter = new AtomicLong();
-        AtomicLong cycleBufferCounter = new AtomicLong();
         this.bufferCapacity = Math.max(this.bufferCapacity, 16 * 1024 + 16); //兼容 HTTP 2.0;
-        final int rcapacity = this.bufferCapacity;
-        ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
-            (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
-                e.clear();
-                return true;
-            });
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
         boolean autoOptions = false;
@@ -423,7 +416,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
         final String addrHeader = remoteAddrHeader;
 
-        final HttpResponseConfig respConfig = new HttpResponseConfig();
+        this.respConfig = new HttpResponseConfig();
         respConfig.plainContentType = plainContentType;
         respConfig.jsonContentType = jsonContentType;
         respConfig.defaultAddHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
@@ -433,18 +426,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         respConfig.dateSupplier = dateSupplier;
         respConfig.renders = ((HttpPrepareServlet) prepare).renders;
 
-        AtomicLong createResponseCounter = new AtomicLong();
-        AtomicLong cycleResponseCounter = new AtomicLong();
-        ObjectPool<Response> responsePool = HttpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
-
         final HttpContextConfig contextConfig = new HttpContextConfig();
         contextConfig.serverStartTime = this.serverStartTime;
         contextConfig.logger = this.logger;
         contextConfig.executor = this.executor;
         contextConfig.sslContext = this.sslContext;
-        contextConfig.bufferCapacity = rcapacity;
-        contextConfig.bufferPool = bufferPool;
-        contextConfig.responsePool = responsePool;
+        contextConfig.bufferCapacity = this.bufferCapacity;
         contextConfig.maxconns = this.maxconns;
         contextConfig.maxbody = this.maxbody;
         contextConfig.charset = this.charset;
@@ -454,9 +441,32 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         contextConfig.aliveTimeoutSeconds = this.aliveTimeoutSeconds;
         contextConfig.readTimeoutSeconds = this.readTimeoutSeconds;
         contextConfig.writeTimeoutSeconds = this.writeTimeoutSeconds;
+        contextConfig.remoteAddrHeader = addrHeader;
 
-        HttpContext httpcontext = new HttpContext(contextConfig);
-        responsePool.setCreator((Object... params) -> new HttpResponse(httpcontext, new HttpRequest(httpcontext, addrHeader), respConfig));
-        return httpcontext;
+        return new HttpContext(contextConfig);
+    }
+
+    @Override
+    protected ObjectPool<ByteBuffer> createBufferPool(AtomicLong createCounter, AtomicLong cycleCounter, int bufferPoolSize) {
+        AtomicLong createBufferCounter = new AtomicLong();
+        AtomicLong cycleBufferCounter = new AtomicLong();
+        final int rcapacity = this.bufferCapacity;
+        ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
+            (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
+                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
+                e.clear();
+                return true;
+            });
+        return bufferPool;
+    }
+
+    @Override
+    protected ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize) {
+        return HttpResponse.createPool(createCounter, cycleCounter, responsePoolSize, null);
+    }
+
+    @Override
+    protected Creator<Response> createResponseCreator(ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool) {
+        return (Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context, bufferPool), responsePool, this.respConfig);
     }
 }

@@ -5,7 +5,6 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.net.AsyncConnection;
 import static org.redkale.net.http.WebSocket.*;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import java.nio.ByteBuffer;
@@ -29,8 +28,6 @@ class WebSocketRunner implements Runnable {
 
     private final WebSocketEngine engine;
 
-    private final AsyncConnection channel;
-
     private final WebSocket webSocket;
 
     protected final HttpContext context;
@@ -49,13 +46,12 @@ class WebSocketRunner implements Runnable {
 
     protected long lastReadTime;
 
-    WebSocketRunner(HttpContext context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer, AsyncConnection channel) {
+    WebSocketRunner(HttpContext context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer) {
         this.context = context;
         this.engine = webSocket._engine;
         this.webSocket = webSocket;
         this.mergemsg = webSocket._engine.mergemsg;
         this.restMessageConsumer = messageConsumer;
-        this.channel = channel;
     }
 
     @Override
@@ -64,10 +60,10 @@ class WebSocketRunner implements Runnable {
         final WebSocketRunner self = this;
         try {
             webSocket.onConnected();
-            channel.setReadTimeoutSeconds(300); //读取超时5分钟
-            if (channel.isOpen()) {
+            webSocket._channel.setReadTimeoutSeconds(300); //读取超时5分钟
+            if (webSocket._channel.isOpen()) {
                 final int wsmaxbody = webSocket._engine.wsmaxbody;
-                channel.read(new CompletionHandler<Integer, ByteBuffer>() {
+                webSocket._channel.read(new CompletionHandler<Integer, ByteBuffer>() {
 
                     //尚未解析完的数据包
                     private WebSocketPacket unfinishPacket;
@@ -94,11 +90,11 @@ class WebSocketRunner implements Runnable {
                                     onePacket = unfinishPacket;
                                     unfinishPacket = null;
                                     for (ByteBuffer b : exBuffers) {
-                                        context.offerBuffer(b);
+                                        webSocket._channel.offerBuffer(b);
                                     }
                                     exBuffers.clear();
                                 } else { //需要继续接收,  此处不能回收readBuffer
-                                    channel.read(this);
+                                    webSocket._channel.read(this);
                                     return;
                                 }
                             }
@@ -125,7 +121,7 @@ class WebSocketRunner implements Runnable {
                             }
                             //继续监听消息
                             if (readBuffer.hasRemaining()) { //exBuffers缓存了
-                                readBuffer = context.pollBuffer();
+                                readBuffer = webSocket._channel.pollReadBuffer();
                             } else {
                                 readBuffer.clear();
                             }
@@ -133,8 +129,8 @@ class WebSocketRunner implements Runnable {
                                 readBuffer.put(halfBytes.getValue());
                                 halfBytes.setValue(null);
                             }
-                            channel.setReadBuffer(readBuffer);
-                            channel.read(this);
+                            webSocket._channel.setReadBuffer(readBuffer);
+                            webSocket._channel.read(this);
 
                             //消息处理
                             for (final WebSocketPacket packet : packets) {
@@ -229,11 +225,11 @@ class WebSocketRunner implements Runnable {
         //System.out.println("推送消息");        
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
         try {
-            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(this.context.getBufferSupplier(), this.context.getBufferConsumer(), webSocket._engine.cryptor);
+            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(webSocket._channel.getBufferSupplier(), webSocket._channel.getBufferConsumer(), webSocket._engine.cryptor);
             //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + packet);
 
             this.lastSendTime = System.currentTimeMillis();
-            channel.write(buffers, buffers, new CompletionHandler<Integer, ByteBuffer[]>() {
+            webSocket._channel.write(buffers, buffers, new CompletionHandler<Integer, ByteBuffer[]>() {
 
                 private CompletableFuture<Integer> future = futureResult;
 
@@ -245,7 +241,7 @@ class WebSocketRunner implements Runnable {
                             future = null;
                             if (attachments != null) {
                                 for (ByteBuffer buf : attachments) {
-                                    context.offerBuffer(buf);
+                                    webSocket._channel.offerBuffer(buf);
                                 }
                             }
                         }
@@ -260,7 +256,7 @@ class WebSocketRunner implements Runnable {
                             }
                         }
                         if (index >= 0) { //ByteBuffer[]统一回收的可以采用此写法
-                            channel.write(attachments, index, attachments.length - index, attachments, this);
+                            webSocket._channel.write(attachments, index, attachments.length - index, attachments, this);
                             return;
                         }
                         if (future != null) {
@@ -268,7 +264,7 @@ class WebSocketRunner implements Runnable {
                             future = null;
                             if (attachments != null) {
                                 for (ByteBuffer buf : attachments) {
-                                    context.offerBuffer(buf);
+                                    webSocket._channel.offerBuffer(buf);
                                 }
                             }
                         }
@@ -310,7 +306,7 @@ class WebSocketRunner implements Runnable {
             if (closed) return null;
             closed = true;
             CompletableFuture<Void> future = engine.removeLocalThenClose(webSocket);
-            channel.dispose();
+            webSocket._channel.dispose();
             webSocket.onClose(code, reason);
             return future;
         }

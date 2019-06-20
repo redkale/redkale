@@ -99,28 +99,14 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     @Override
     @SuppressWarnings("unchecked")
     protected SncpContext createContext() {
-        final int port = this.address.getPort();
-        AtomicLong createBufferCounter = new AtomicLong();
-        AtomicLong cycleBufferCounter = new AtomicLong();
-        final int rcapacity = Math.max(this.bufferCapacity, 8 * 1024);
-        ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, this.bufferPoolSize,
-            (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
-                e.clear();
-                return true;
-            });
-        AtomicLong createResponseCounter = new AtomicLong();
-        AtomicLong cycleResponseCounter = new AtomicLong();
-        ObjectPool<Response> responsePool = SncpResponse.createPool(createResponseCounter, cycleResponseCounter, this.responsePoolSize, null);
+        this.bufferCapacity = Math.max(this.bufferCapacity, 8 * 1024);
 
         final SncpContextConfig contextConfig = new SncpContextConfig();
         contextConfig.serverStartTime = this.serverStartTime;
         contextConfig.logger = this.logger;
         contextConfig.executor = this.executor;
         contextConfig.sslContext = this.sslContext;
-        contextConfig.bufferCapacity = rcapacity;
-        contextConfig.bufferPool = bufferPool;
-        contextConfig.responsePool = responsePool;
+        contextConfig.bufferCapacity = this.bufferCapacity;
         contextConfig.maxconns = this.maxconns;
         contextConfig.maxbody = this.maxbody;
         contextConfig.charset = this.charset;
@@ -131,9 +117,31 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         contextConfig.readTimeoutSeconds = this.readTimeoutSeconds;
         contextConfig.writeTimeoutSeconds = this.writeTimeoutSeconds;
 
-        SncpContext sncpcontext = new SncpContext(contextConfig);
-        responsePool.setCreator((Object... params) -> new SncpResponse(sncpcontext, new SncpRequest(sncpcontext)));
-        return sncpcontext;
+        return new SncpContext(contextConfig);
+    }
+
+    @Override
+    protected ObjectPool<ByteBuffer> createBufferPool(AtomicLong createCounter, AtomicLong cycleCounter, int bufferPoolSize) {
+        AtomicLong createBufferCounter = new AtomicLong();
+        AtomicLong cycleBufferCounter = new AtomicLong();
+        final int rcapacity = this.bufferCapacity;
+        ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
+            (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
+                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
+                e.clear();
+                return true;
+            });
+        return bufferPool;
+    }
+
+    @Override
+    protected ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize) {
+        return SncpResponse.createPool(createCounter, cycleCounter, responsePoolSize, null);
+    }
+
+    @Override
+    protected Creator<Response> createResponseCreator(ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool) {
+        return (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context, bufferPool), responsePool);
     }
 
 }

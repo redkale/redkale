@@ -7,10 +7,12 @@ package org.redkale.net;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  * 协议底层Server
@@ -70,7 +72,14 @@ public class TcpAioProtocolServer extends ProtocolServer {
     }
 
     @Override
-    public void accept() throws IOException {
+    public void accept(Server server) throws IOException {
+        AtomicLong createBufferCounter = new AtomicLong();
+        AtomicLong cycleBufferCounter = new AtomicLong();
+        ObjectPool<ByteBuffer> bufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        AtomicLong createResponseCounter = new AtomicLong();
+        AtomicLong cycleResponseCounter = new AtomicLong();
+        ObjectPool<Response> responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
+        responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
         final AsynchronousServerSocketChannel serchannel = this.serverChannel;
         serchannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
 
@@ -93,9 +102,9 @@ public class TcpAioProtocolServer extends ProtocolServer {
                     channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
                     channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
 
-                    AsyncConnection conn = new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), channel,
+                    AsyncConnection conn = new TcpAioAsyncConnection(bufferPool, bufferPool, channel,
                         context.getSSLContext(), null, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
-                    context.runAsync(new PrepareRunner(context, conn, null, null));
+                    context.runAsync(new PrepareRunner(context, responsePool, conn, null, null));
                 } catch (Throwable e) {
                     context.logger.log(Level.INFO, channel + " accept error", e);
                 }

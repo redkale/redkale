@@ -11,7 +11,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import org.redkale.util.AnyValue;
+import java.util.concurrent.atomic.AtomicLong;
+import org.redkale.util.*;
 
 /**
  * 协议底层Server
@@ -70,7 +71,14 @@ public class UdpBioProtocolServer extends ProtocolServer {
     }
 
     @Override
-    public void accept() throws IOException {
+    public void accept(Server server) throws IOException {
+        AtomicLong createBufferCounter = new AtomicLong();
+        AtomicLong cycleBufferCounter = new AtomicLong();
+        ObjectPool<ByteBuffer> bufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        AtomicLong createResponseCounter = new AtomicLong();
+        AtomicLong cycleResponseCounter = new AtomicLong();
+        ObjectPool<Response> responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
+        responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
         final DatagramChannel serchannel = this.serverChannel;
         final int readTimeoutSeconds = this.context.readTimeoutSeconds;
         final int writeTimeoutSeconds = this.context.writeTimeoutSeconds;
@@ -81,15 +89,15 @@ public class UdpBioProtocolServer extends ProtocolServer {
             public void run() {
                 cdl.countDown();
                 while (running) {
-                    final ByteBuffer buffer = context.pollBuffer();
+                    final ByteBuffer buffer = bufferPool.get();
                     try {
                         SocketAddress address = serchannel.receive(buffer);
                         buffer.flip();
-                        AsyncConnection conn = new UdpBioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), serchannel,
+                        AsyncConnection conn = new UdpBioAsyncConnection(bufferPool, bufferPool, serchannel,
                             context.getSSLContext(), address, false, readTimeoutSeconds, writeTimeoutSeconds, null, null);
-                        context.runAsync(new PrepareRunner(context, conn, buffer, null));
+                        context.runAsync(new PrepareRunner(context, responsePool, conn, buffer, null));
                     } catch (Exception e) {
-                        context.offerBuffer(buffer);
+                        bufferPool.accept(buffer);
                     }
                 }
             }

@@ -43,7 +43,7 @@ public abstract class ProtocolServer {
 
     public abstract <T> void setOption(SocketOption<T> name, T value) throws IOException;
 
-    public abstract void accept() throws IOException;
+    public abstract void accept(Server server) throws IOException;
 
     public abstract void close() throws IOException;
 

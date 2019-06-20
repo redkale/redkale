@@ -112,7 +112,7 @@ public final class SncpDynServlet extends SncpServlet {
     @SuppressWarnings("unchecked")
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         if (bufferSupplier == null) {
-            bufferSupplier = request.getContext().getBufferSupplier();
+            bufferSupplier = request.getBufferPool();
         }
         final SncpServletAction action = actions.get(request.getActionid());
         //logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));

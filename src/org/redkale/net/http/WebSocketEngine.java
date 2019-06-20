@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import static org.redkale.net.http.WebSocketServlet.DEFAILT_LIVEINTERVAL;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -229,26 +230,45 @@ public class WebSocketEngine {
         }
         final boolean more = (!(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null);
         if (more) {
+            Supplier<ByteBuffer> bufferSupplier = null;
+            Consumer<ByteBuffer> bufferConsumer = null;
             //此处的WebSocketPacket只能是包含payload或bytes内容的，不能包含sendConvert、sendJson、sendBuffers
             final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
                 : ((message == null || message instanceof CharSequence || message instanceof byte[])
                     ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.sendConvert, false, message, last));
-            packet.setSendBuffers(packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), cryptor));
+            //packet.setSendBuffers(packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), cryptor));
             CompletableFuture<Integer> future = null;
             if (single) {
                 for (WebSocket websocket : websockets.values()) {
                     if (predicate != null && !predicate.test(websocket)) continue;
+                    if (bufferSupplier == null) {
+                        bufferSupplier = websocket.getBufferSupplier();
+                        bufferConsumer = websocket.getBufferConsumer();
+                        packet.setSendBuffers(packet.encode(bufferSupplier, bufferConsumer, cryptor));
+                    }
                     future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                 }
             } else {
                 for (List<WebSocket> list : websockets2.values()) {
                     for (WebSocket websocket : list) {
                         if (predicate != null && !predicate.test(websocket)) continue;
+                        if (bufferSupplier == null) {
+                            bufferSupplier = websocket.getBufferSupplier();
+                            bufferConsumer = websocket.getBufferConsumer();
+                            packet.setSendBuffers(packet.encode(bufferSupplier, bufferConsumer, cryptor));
+                        }
                         future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                     }
                 }
             }
-            if (future != null) future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
+            final Consumer<ByteBuffer> bufferConsumer0 = bufferConsumer;
+            if (future != null) future.whenComplete((rs, ex) -> {
+                    if (packet.sendBuffers != null && bufferConsumer0 != null) {
+                        for (ByteBuffer buffer : packet.sendBuffers) {
+                            bufferConsumer0.accept(buffer);
+                        }
+                    }
+                });
             return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         } else {
             CompletableFuture<Integer> future = null;
@@ -286,16 +306,23 @@ public class WebSocketEngine {
         }
         final boolean more = (!(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers == null) && userids.length > 1;
         if (more) {
+            Supplier<ByteBuffer> bufferSupplier = null;
+            Consumer<ByteBuffer> bufferConsumer = null;
             //此处的WebSocketPacket只能是包含payload或bytes内容的，不能包含sendConvert、sendJson、sendBuffers
             final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
                 : ((message == null || message instanceof CharSequence || message instanceof byte[])
                     ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.sendConvert, false, message, last));
-            packet.setSendBuffers(packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), cryptor));
+            //packet.setSendBuffers(packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), cryptor));
             CompletableFuture<Integer> future = null;
             if (single) {
                 for (Serializable userid : userids) {
                     WebSocket websocket = websockets.get(userid);
                     if (websocket == null) continue;
+                    if (bufferSupplier == null) {
+                        bufferSupplier = websocket.getBufferSupplier();
+                        bufferConsumer = websocket.getBufferConsumer();
+                        packet.setSendBuffers(packet.encode(bufferSupplier, bufferConsumer, cryptor));
+                    }
                     future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                 }
             } else {
@@ -303,11 +330,23 @@ public class WebSocketEngine {
                     List<WebSocket> list = websockets2.get(userid);
                     if (list == null) continue;
                     for (WebSocket websocket : list) {
+                        if (bufferSupplier == null) {
+                            bufferSupplier = websocket.getBufferSupplier();
+                            bufferConsumer = websocket.getBufferConsumer();
+                            packet.setSendBuffers(packet.encode(bufferSupplier, bufferConsumer, cryptor));
+                        }
                         future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                     }
                 }
             }
-            if (future != null) future.whenComplete((rs, ex) -> context.offerBuffer(packet.sendBuffers));
+            final Consumer<ByteBuffer> bufferConsumer0 = bufferConsumer;
+            if (future != null) future.whenComplete((rs, ex) -> {
+                    if (packet.sendBuffers != null && bufferConsumer0 != null) {
+                        for (ByteBuffer buffer : packet.sendBuffers) {
+                            bufferConsumer0.accept(buffer);
+                        }
+                    }
+                });
             return future == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : future;
         } else {
             CompletableFuture<Integer> future = null;

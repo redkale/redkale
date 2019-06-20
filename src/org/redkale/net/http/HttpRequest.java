@@ -79,9 +79,9 @@ public class HttpRequest extends Request<HttpContext> {
 
     Object attachment; //仅供HttpServlet传递Entry使用
 
-    public HttpRequest(HttpContext context, String remoteAddrHeader) {
-        super(context);
-        this.remoteAddrHeader = remoteAddrHeader;
+    public HttpRequest(HttpContext context, ObjectPool<ByteBuffer> bufferPool) {
+        super(context, bufferPool);
+        this.remoteAddrHeader = context.remoteAddrHeader;
     }
 
     protected boolean isWebSocket() {

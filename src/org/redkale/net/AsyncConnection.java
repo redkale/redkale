@@ -52,10 +52,6 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
     //关联的事件数， 小于1表示没有事件
     protected final AtomicInteger eventing = new AtomicInteger();
 
-    protected AsyncConnection(Context context) {
-        this(context.getBufferSupplier(), context.getBufferConsumer(), context.getSSLContext());
-    }
-
     protected AsyncConnection(ObjectPool<ByteBuffer> bufferPool, SSLContext sslContext) {
         this(bufferPool, bufferPool, sslContext);
     }
@@ -66,6 +62,14 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
         this.bufferSupplier = bufferSupplier;
         this.bufferConsumer = bufferConsumer;
         this.sslContext = sslContext;
+    }
+
+    public Supplier<ByteBuffer> getBufferSupplier() {
+        return this.bufferSupplier;
+    }
+
+    public Consumer<ByteBuffer> getBufferConsumer() {
+        return this.bufferConsumer;
     }
 
     public final long getLastReadTime() {
@@ -248,22 +252,6 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
     /**
      * 创建TCP协议客户端连接
      *
-     * @param context             Context
-     * @param address             连接点子
-     * @param group               连接AsynchronousChannelGroup
-     * @param readTimeoutSeconds  读取超时秒数
-     * @param writeTimeoutSeconds 写入超时秒数
-     *
-     * @return 连接CompletableFuture
-     */
-    public static CompletableFuture<AsyncConnection> createTCP(final Context context, final AsynchronousChannelGroup group,
-        final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return createTCP(context.getBufferSupplier(), context.getBufferConsumer(), group, context.getSSLContext(), address, readTimeoutSeconds, writeTimeoutSeconds);
-    }
-
-    /**
-     * 创建TCP协议客户端连接
-     *
      * @param bufferPool          ByteBuffer对象池
      * @param address             连接点子
      * @param sslContext          SSLContext
@@ -369,35 +357,6 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
         return new UdpBioAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
-    }
-
-    public static AsyncConnection create(final Context context, final AsynchronousSocketChannel ch) {
-        return create(context, ch, (SocketAddress) null, 0, 0);
-    }
-
-    public static AsyncConnection create(final Context context, final AsynchronousSocketChannel ch,
-        final SocketAddress addr0, final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), ch, context.sslContext, addr0, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
-    }
-
-    public static AsyncConnection create(final Context context, final AsynchronousSocketChannel ch,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
-    }
-
-    public static AsyncConnection create(final Context context, final AsynchronousSocketChannel ch, SSLContext sslContext,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
-    }
-
-    public static AsyncConnection create(final Context context, final AsynchronousSocketChannel ch,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds, final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
-    }
-
-    public static AsyncConnection create(final Context context, final AsynchronousSocketChannel ch, SSLContext sslContext,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds, final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new TcpAioAsyncConnection(context.getBufferSupplier(), context.getBufferConsumer(), ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
     }
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch) {

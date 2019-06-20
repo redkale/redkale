@@ -202,6 +202,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
         final WebSocket webSocket = this.createWebSocket();
         webSocket._engine = this.node.localEngine;
+        webSocket._channel = response.getChannel();
         webSocket._messageTextType = this.messageTextType;
         webSocket._textConvert = textConvert;
         webSocket._binaryConvert = binaryConvert;
@@ -262,7 +263,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                             Consumer<Boolean> task = (oldkilled) -> {
                                                 if (oldkilled) {
                                                     WebSocketServlet.this.node.localEngine.addLocal(webSocket);
-                                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
+                                                    response.removeChannel();
+                                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
                                                     webSocket._runner = runner;
                                                     context.runAsync(runner);
                                                     response.finish(true);
@@ -283,7 +285,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                             }
                                         } else {
                                             WebSocketServlet.this.node.localEngine.addLocal(webSocket);
-                                            WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
+                                            response.removeChannel();
+                                            WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
                                             webSocket._runner = runner;
                                             context.runAsync(runner);
                                             response.finish(true);
@@ -291,14 +294,15 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                     });
                                 } else {
                                     WebSocketServlet.this.node.localEngine.addLocal(webSocket);
-                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.removeChannel());
+                                    response.removeChannel();
+                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
                                     webSocket._runner = runner;
                                     context.runAsync(runner);
                                     response.finish(true);
                                 }
                             };
                             if (webSocket.delayPackets != null) { //存在待发送的消息
-                                if (temprunner == null) temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.getChannel());
+                                if (temprunner == null) temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer);
                                 List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                                 webSocket.delayPackets = null;
                                 CompletableFuture<Integer> cf = null;
@@ -323,7 +327,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         });
                     };
                     if (webSocket.delayPackets != null) { //存在待发送的消息
-                        if (temprunner == null) temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer, response.getChannel());
+                        if (temprunner == null) temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer);
                         List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                         webSocket.delayPackets = null;
                         CompletableFuture<Integer> cf = null;

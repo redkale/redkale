@@ -45,8 +45,8 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
         return null;
     }
 
-    protected SncpResponse(SncpContext context, SncpRequest request) {
-        super(context, request);
+    protected SncpResponse(SncpContext context, SncpRequest request, ObjectPool<Response> responsePool) {
+        super(context, request, responsePool);
         this.addrBytes = context.getServerAddress().getAddress().getAddress();
         this.addrPort = context.getServerAddress().getPort();
         if (this.addrBytes.length != 4) throw new RuntimeException("SNCP serverAddress only support IPv4");
@@ -56,7 +56,7 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
     protected void offerBuffer(ByteBuffer... buffers) {
         super.offerBuffer(buffers);
     }
-    
+
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
             final ByteBuffer buffer = pollWriteReadBuffer();

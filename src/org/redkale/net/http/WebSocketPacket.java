@@ -492,7 +492,7 @@ public final class WebSocketPacket {
     void parseReceiveMessage(final Logger logger, WebSocketRunner runner, WebSocket webSocket, ByteBuffer... buffers) {
         if (webSocket._engine.cryptor != null) {
             HttpContext context = webSocket._engine.context;
-            buffers = webSocket._engine.cryptor.decrypt(buffers, context.getBufferSupplier(), context.getBufferConsumer());
+            buffers = webSocket._engine.cryptor.decrypt(buffers, webSocket._channel.getBufferSupplier(), webSocket._channel.getBufferConsumer());
         }
         FrameType selfType = this.type;
         final boolean series = selfType == FrameType.SERIES;

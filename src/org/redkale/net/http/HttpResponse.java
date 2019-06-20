@@ -148,8 +148,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
     }
 
-    public HttpResponse(HttpContext context, HttpRequest request, HttpResponseConfig config) {
-        super(context, request);
+    public HttpResponse(HttpContext context, HttpRequest request, ObjectPool<Response> responsePool, HttpResponseConfig config) {
+        super(context, request, responsePool);
         this.plainContentType = config.plainContentType == null || config.plainContentType.isEmpty() ? "text/plain; charset=utf-8" : config.plainContentType;
         this.jsonContentType = config.jsonContentType == null || config.jsonContentType.isEmpty() ? "application/json; charset=utf-8" : config.jsonContentType;
         this.plainContentTypeBytes = ("Content-Type: " + this.plainContentType + "\r\n").getBytes();
@@ -172,6 +172,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected AsyncConnection getChannel() {
         return channel;
+    }
+
+    @Override
+    protected void prepare() {
+        super.prepare();
     }
 
     @Override
@@ -1197,7 +1202,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         @Override
         public void failed(Throwable exc, ByteBuffer attachment) {
-            context.offerBuffer(attachment);
+            bufferPool.accept(attachment);
             finish(true);
             try {
                 filechannel.close();
