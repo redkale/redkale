@@ -103,13 +103,6 @@ public class TcpAioAsyncConnection extends AsyncConnection {
         }
     }
 
-    @Override
-    public void read(long timeout, TimeUnit unit, CompletionHandler<Integer, ByteBuffer> handler) {
-        this.readtime = System.currentTimeMillis();
-        ByteBuffer dst = pollReadBuffer();
-        channel.read(dst, timeout < 0 ? 0 : timeout, unit, dst, handler);
-    }
-
     private <A> void nextWrite(Throwable exc, A attachment) {
         BlockingQueue<WriteEntry> queue = this.writeQueue;
         if (queue != null && exc != null && !isOpen()) {

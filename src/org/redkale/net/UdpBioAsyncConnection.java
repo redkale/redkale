@@ -10,7 +10,6 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
 import javax.net.ssl.SSLContext;
@@ -140,11 +139,6 @@ public class UdpBioAsyncConnection extends AsyncConnection {
         } catch (IOException e) {
             if (handler != null) handler.failed(e, dst);
         }
-    }
-
-    @Override
-    public void read(long timeout, TimeUnit unit, CompletionHandler<Integer, ByteBuffer> handler) {
-        read(handler);
     }
 
     @Override

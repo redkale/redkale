@@ -118,7 +118,6 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
 
     public abstract void read(CompletionHandler<Integer, ByteBuffer> handler);
 
-    public abstract void read(long timeout, TimeUnit unit, CompletionHandler<Integer, ByteBuffer> handler);
 
     @Override
     public abstract int write(ByteBuffer src) throws IOException;

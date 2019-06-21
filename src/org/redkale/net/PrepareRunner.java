@@ -8,7 +8,6 @@ package org.redkale.net;
 import java.io.IOException;
 import java.nio.*;
 import java.nio.channels.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
 import org.redkale.util.*;
@@ -44,7 +43,6 @@ public class PrepareRunner implements Runnable {
 
     @Override
     public void run() {
-        final boolean keepalive = response != null;
         if (data != null) { //BIO模式的UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
             if (response == null) response = responsePool.get();
             try {
@@ -58,8 +56,7 @@ public class PrepareRunner implements Runnable {
         }
         if (response == null) response = responsePool.get();
         try {
-            channel.read(keepalive ? context.getAliveTimeoutSeconds() : context.getReadTimeoutSeconds(), TimeUnit.SECONDS,
-                new CompletionHandler<Integer, ByteBuffer>() {
+            channel.read(new CompletionHandler<Integer, ByteBuffer>() {
                 @Override
                 public void completed(Integer count, ByteBuffer buffer) {
                     if (count < 1) {
