@@ -182,6 +182,8 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 Blob blob = conn.createBlob();
                 blob.setBytes(1, (byte[]) val);
                 prestmt.setObject(++i, blob);
+            } else if (val instanceof Boolean) {
+                prestmt.setObject(++i, ((Boolean) val) ? (byte) 1 : (byte) 0);
             } else if (val instanceof AtomicInteger) {
                 prestmt.setObject(++i, ((AtomicInteger) val).get());
             } else if (val instanceof AtomicLong) {
