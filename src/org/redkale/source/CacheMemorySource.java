@@ -677,7 +677,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    public <T> Map<String, Collection<T>> getCollectionMap(final Type componentType, final String... keys) {
+    public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys) {
         Map<String, Collection<T>> map = new HashMap<>();
         for (String key : keys) {
             Collection<T> s = (Collection<T>) get(key);
@@ -692,7 +692,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    public Map<String, Collection<String>> getStringCollectionMap(final String... keys) {
+    public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys) {
         Map<String, Collection<String>> map = new HashMap<>();
         for (String key : keys) {
             Collection<String> s = (Collection<String>) get(key);
@@ -707,7 +707,7 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    public Map<String, Collection<Long>> getLongCollectionMap(final String... keys) {
+    public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys) {
         Map<String, Collection<Long>> map = new HashMap<>();
         for (String key : keys) {
             Collection<Long> s = (Collection<Long>) get(key);
@@ -727,8 +727,8 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    public CompletableFuture<Map<String, Collection<V>>> getCollectionMapAsync(final Type componentType, final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getCollectionMap(componentType, keys), getExecutor());
+    public CompletableFuture<Map<String, Collection<V>>> getCollectionMapAsync(final boolean set, final Type componentType, final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getCollectionMap(set, componentType, keys), getExecutor());
     }
 
     @Override
@@ -737,8 +737,8 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getStringCollectionMap(keys), getExecutor());
+    public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getStringCollectionMap(set, keys), getExecutor());
     }
 
     @Override
@@ -747,8 +747,8 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-    public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getLongCollectionMap(keys), getExecutor());
+    public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getLongCollectionMap(set, keys), getExecutor());
     }
 
     @Override

@@ -92,7 +92,7 @@ public interface CacheSource<V extends Object> {
 
     public <T> Collection<T> getCollection(final String key, final Type componentType);
 
-    public <T> Map<String, Collection<T>> getCollectionMap(final Type componentType, final String... keys);
+    public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys);
 
     public int getCollectionSize(final String key);
 
@@ -140,7 +140,7 @@ public interface CacheSource<V extends Object> {
 
     public Collection<String> getStringCollection(final String key);
 
-    public Map<String, Collection<String>> getStringCollectionMap(final String... keys);
+    public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys);
 
     public Collection<String> getStringCollectionAndRefresh(final String key, final int expireSeconds);
 
@@ -164,7 +164,7 @@ public interface CacheSource<V extends Object> {
 
     public Collection<Long> getLongCollection(final String key);
 
-    public Map<String, Collection<Long>> getLongCollectionMap(final String... keys);
+    public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys);
 
     public Collection<Long> getLongCollectionAndRefresh(final String key, final int expireSeconds);
 
@@ -241,7 +241,7 @@ public interface CacheSource<V extends Object> {
 
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(final String key, final Type componentType);
 
-    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(final Type componentType, final String... keys);
+    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(final boolean set, final Type componentType, final String... keys);
 
     public CompletableFuture<Integer> getCollectionSizeAsync(final String key);
 
@@ -289,7 +289,7 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key);
 
-    public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final String... keys);
+    public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys);
 
     public CompletableFuture<Collection<String>> getStringCollectionAndRefreshAsync(final String key, final int expireSeconds);
 
@@ -313,7 +313,7 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key);
 
-    public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final String... keys);
+    public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys);
 
     public CompletableFuture<Collection<Long>> getLongCollectionAndRefreshAsync(final String key, final int expireSeconds);
 

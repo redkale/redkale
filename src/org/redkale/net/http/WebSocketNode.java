@@ -428,7 +428,7 @@ public abstract class WebSocketNode {
                 keyuser.put(keys[i], userids[i]);
             }
             tryAcquireSemaphore();
-            CompletableFuture<Map<String, Collection<InetSocketAddress>>> addrsFuture = sncpNodeAddresses.getCollectionMapAsync(InetSocketAddress.class, keys);
+            CompletableFuture<Map<String, Collection<InetSocketAddress>>> addrsFuture = sncpNodeAddresses.getCollectionMapAsync(true, InetSocketAddress.class, keys);
             if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
             rsfuture = addrsFuture.thenCompose((Map<String, Collection<InetSocketAddress>> addrs) -> {
                 if (addrs == null || addrs.isEmpty()) {
@@ -692,7 +692,7 @@ public abstract class WebSocketNode {
                 keyuser.put(keys[i], userids[i]);
             }
             tryAcquireSemaphore();
-            CompletableFuture<Map<String, Collection<InetSocketAddress>>> addrsFuture = sncpNodeAddresses.getCollectionMapAsync(InetSocketAddress.class, keys);
+            CompletableFuture<Map<String, Collection<InetSocketAddress>>> addrsFuture = sncpNodeAddresses.getCollectionMapAsync(true, InetSocketAddress.class, keys);
             if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
             rsfuture = addrsFuture.thenCompose((Map<String, Collection<InetSocketAddress>> addrs) -> {
                 if (addrs == null || addrs.isEmpty()) {
