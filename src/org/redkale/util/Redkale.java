@@ -24,7 +24,7 @@ public final class Redkale {
         return 2;
     }
 
-    public static int getMinorVersion() {
+    public static int getMinorVersion() { 
         return 0;
     }
 }
