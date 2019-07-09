@@ -94,7 +94,7 @@ public final class EntityInfo<T> {
     //用于复制表结构使用
     final String tablecopySQL;
 
-    //用于存在table_20160202类似这种分布式表
+    //用于存在database.table_20160202类似这种分布式表
     final Set<String> tables = new HashSet<>();
 
     //分表 策略

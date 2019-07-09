@@ -74,12 +74,13 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 synchronized (info.tables) {
                     final String oldTable = info.table;
                     final String newTable = info.getTable(entitys[0]);
-                    if (!info.tables.contains(newTable)) {
+                    final String catalog = conn.getCatalog();
+                    if (!info.tables.contains(catalog + '.' + newTable)) {
                         try {
                             Statement st = conn.createStatement();
                             st.execute(info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable));
                             st.close();
-                            info.tables.add(newTable);
+                            info.tables.add(catalog + '.' + newTable);
                         } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
                             if (newTable.indexOf('.') > 0 && info.isTableNotExist(se)) {
                                 Statement st;
