@@ -8,6 +8,7 @@ package org.redkale.service;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.json.*;
+import org.redkale.util.Utility;
 
 /**
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。  <br>
@@ -64,6 +65,14 @@ public class RetResult<T> {
 
     public static <T> CompletableFuture<RetResult<T>> successFuture() {
         return CompletableFuture.completedFuture(new RetResult());
+    }
+
+    public static RetResult<Map<String, String>> map(String... items) {
+        return new RetResult(Utility.ofMap(items));
+    }
+
+    public static <K, V> RetResult<Map<K, V>> map(Object... items) {
+        return new RetResult(Utility.ofMap(items));
     }
 
     /**
