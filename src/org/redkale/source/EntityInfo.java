@@ -895,8 +895,35 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 字段值转换成带转义的数据库的值
+     *
+     * @param fieldname  字段名
+     * @param fieldvalue 字段值
+     * @param sqlFormatter  转义器
+     *
+     * @return CharSequence
+     */
+    public CharSequence formatSQLValue(String fieldname, Serializable fieldvalue, BiFunction<EntityInfo, Object, CharSequence> sqlFormatter) {
+        Object val = getSQLValue(fieldname, fieldvalue);
+        return sqlFormatter == null ? formatToString(val) : sqlFormatter.apply(this, val);
+    }
+
+    /**
+     * 字段值转换成带转义的数据库的值
+     *
+     * @param value     字段值
+     * @param sqlFormatter 转义器
+     *
+     * @return CharSequence
+     */
+    public CharSequence formatSQLValue(Object value, BiFunction<EntityInfo, Object, CharSequence> sqlFormatter) {
+        return sqlFormatter == null ? formatToString(value) : sqlFormatter.apply(this, value);
+    }
+
+    /**
      * 字段值转换成数据库的值
      *
+     * @param <F>    泛型
      * @param attr   Attribute
      * @param entity 记录对象
      *
@@ -907,6 +934,21 @@ public final class EntityInfo<T> {
         CryptHandler cryptHandler = attr.attach();
         if (cryptHandler != null) val = cryptHandler.encrypt(val);
         return val;
+    }
+
+    /**
+     * 字段值转换成带转义的数据库的值
+     *
+     * @param <F>       泛型
+     * @param attr      Attribute
+     * @param entity    记录对象
+     * @param sqlFormatter 转义器
+     *
+     * @return CharSequence
+     */
+    public <F> CharSequence formatSQLValue(Attribute<T, F> attr, T entity, BiFunction<EntityInfo, Object, CharSequence> sqlFormatter) {
+        Object val = getSQLValue(attr, entity);
+        return sqlFormatter == null ? formatToString(val) : sqlFormatter.apply(this, val);
     }
 
     /**
@@ -947,13 +989,14 @@ public final class EntityInfo<T> {
     /**
      * 拼接UPDATE给字段赋值的SQL片段
      *
-     * @param col  表字段名
-     * @param attr Attribute
-     * @param cv   ColumnValue
+     * @param col       表字段名
+     * @param attr      Attribute
+     * @param cv        ColumnValue
+     * @param formatter 转义器
      *
      * @return CharSequence
      */
-    protected CharSequence formatSQLValue(String col, Attribute<T, Serializable> attr, final ColumnValue cv) {
+    protected CharSequence formatSQLValue(String col, Attribute<T, Serializable> attr, final ColumnValue cv, BiFunction<EntityInfo, Object, CharSequence> formatter) {
         if (cv == null) return null;
         Object val = cv.getValue();
         CryptHandler handler = attr.attach();
@@ -968,9 +1011,9 @@ public final class EntityInfo<T> {
             case ORR:
                 return new StringBuilder().append(col).append(" | ").append(val);
             case MOV:
-                return formatToString(val);
+                return formatter == null ? formatToString(val) : formatter.apply(this, val);
         }
-        return formatToString(val);
+        return formatter == null ? formatToString(val) : formatter.apply(this, val);
     }
 
     /**
@@ -1021,7 +1064,7 @@ public final class EntityInfo<T> {
      *
      * @return String
      */
-    protected String formatToString(Object value) {
+    private String formatToString(Object value) {
         if (value == null) return null;
         if (value instanceof CharSequence) {
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'').toString();

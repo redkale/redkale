@@ -142,7 +142,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                             if (obj != null && obj.getClass().isArray()) {
                                 sb.append("'[length=").append(java.lang.reflect.Array.getLength(obj)).append("]'");
                             } else {
-                                sb.append(FilterNode.formatToString(obj));
+                                sb.append(info.formatSQLValue(obj, sqlFormatter));
                             }
                         } else {
                             sb.append(ch);
@@ -290,7 +290,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                             if (obj != null && obj.getClass().isArray()) {
                                 sb.append("'[length=").append(java.lang.reflect.Array.getLength(obj)).append("]'");
                             } else {
-                                sb.append(FilterNode.formatToString(obj));
+                                sb.append(info.formatSQLValue(obj, sqlFormatter));
                             }
                         } else {
                             sb.append(ch);

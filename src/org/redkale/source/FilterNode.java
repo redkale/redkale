@@ -1811,7 +1811,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return sb;
     }
 
-    protected static CharSequence formatToString(Object value) {
+    private static CharSequence formatToString(Object value) {
         CharSequence sb = formatToString(null, value);
         return sb == null ? null : sb.toString();
     }
