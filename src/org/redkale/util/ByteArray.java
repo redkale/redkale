@@ -143,6 +143,21 @@ public final class ByteArray {
     }
 
     /**
+     * 获取byte[]
+     *
+     * @param offset 偏移位
+     * @param length 长度
+     *
+     * @return byte[]
+     */
+    public byte[] getBytes(int offset, int length) {
+        if (length < 1) return new byte[0];
+        byte[] bs = new byte[length];
+        System.arraycopy(this.content, offset, bs, 0, length);
+        return bs;
+    }
+
+    /**
      * 获取byte[]并清空
      *
      * @return byte[]

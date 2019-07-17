@@ -42,6 +42,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String requestURI;
 
+    private byte[] queryBytes;
+
     private long contentLength = -1;
 
     private String contentType;
@@ -120,9 +122,11 @@ public class HttpRequest extends Request<HttpContext> {
         int qst = array.find(index, offset, (byte) '?');
         if (qst > 0) {
             this.requestURI = array.toDecodeString(index, qst - index, charset).trim();
+            this.queryBytes = array.getBytes(qst + 1, offset - qst - 1);
             addParameter(array, qst + 1, offset - qst - 1);
         } else {
             this.requestURI = array.toDecodeString(index, offset - index, charset).trim();
+            this.queryBytes = new byte[0];
         }
         index = ++offset;
         this.protocol = array.toString(index, array.size() - index, charset).trim();
@@ -488,6 +492,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.method = null;
         this.protocol = null;
         this.requestURI = null;
+        this.queryBytes = null;
         this.contentType = null;
         this.host = null;
         this.connection = null;
@@ -665,6 +670,15 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getRequestURI() {
         return requestURI;
+    }
+
+    /**
+     * 获取请求参数的byte[]
+     *
+     * @return byte[]
+     */
+    public byte[] getQueryBytes() {
+        return queryBytes;
     }
 
     /**
