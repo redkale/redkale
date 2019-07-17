@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.logging.Level;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -123,7 +124,11 @@ public class HttpRequest extends Request<HttpContext> {
         if (qst > 0) {
             this.requestURI = array.toDecodeString(index, qst - index, charset).trim();
             this.queryBytes = array.getBytes(qst + 1, offset - qst - 1);
-            addParameter(array, qst + 1, offset - qst - 1);
+            try {
+                addParameter(array, qst + 1, offset - qst - 1);
+            } catch (Exception e) {
+                this.context.getLogger().log(Level.WARNING, "HttpRequest.addParameter error: " + array.toString(), e);
+            }
         } else {
             this.requestURI = array.toDecodeString(index, offset - index, charset).trim();
             this.queryBytes = new byte[0];
