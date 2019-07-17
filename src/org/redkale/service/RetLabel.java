@@ -49,8 +49,8 @@ public @interface RetLabel {
             for (Field field : clazz.getFields()) {
                 if (!Modifier.isStatic(field.getModifiers())) continue;
                 if (field.getType() != int.class) continue;
-                RetLabel info = field.getAnnotation(RetLabel.class);
-                if (info == null) continue;
+                RetLabel[] infos = field.getAnnotationsByType(RetLabel.class);
+                if (infos == null || infos.length == 0) continue;
                 int value;
                 try {
                     value = field.getInt(null);
@@ -58,7 +58,9 @@ public @interface RetLabel {
                     ex.printStackTrace();
                     continue;
                 }
-                rets.computeIfAbsent(info.locale(), (k) -> new HashMap<>()).put(value, info.value());
+                for (RetLabel info : infos) {
+                    rets.computeIfAbsent(info.locale(), (k) -> new HashMap<>()).put(value, info.value());
+                }
             }
             return rets;
         }
