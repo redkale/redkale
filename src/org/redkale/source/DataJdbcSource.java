@@ -73,14 +73,15 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 if (info.tableStrategy == null || !info.isTableNotExist(se)) throw se;
                 synchronized (info.tables) {
                     final String oldTable = info.table;
-                    final String newTable = info.getTable(entitys[0]);
                     final String catalog = conn.getCatalog();
-                    if (!info.tables.contains(catalog + '.' + newTable)) {
+                    final String newTable = info.getTable(entitys[0]);
+                    final String tablekey = newTable.indexOf('.') > 0 ? newTable : (catalog + '.' + newTable);
+                    if (!info.tables.contains(tablekey)) {
                         try {
                             Statement st = conn.createStatement();
                             st.execute(info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable));
                             st.close();
-                            info.tables.add(catalog + '.' + newTable);
+                            info.tables.add(tablekey);
                         } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
                             if (newTable.indexOf('.') > 0 && info.isTableNotExist(se)) {
                                 Statement st;
@@ -95,7 +96,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                                     st = conn.createStatement();
                                     st.execute(info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable));
                                     st.close();
-                                    info.tables.add(newTable);
+                                    info.tables.add(tablekey);
                                 } catch (SQLException sqle2) {
                                     logger.log(Level.SEVERE, "create table2(" + info.tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", oldTable) + ") error", sqle2);
                                 }
