@@ -1504,13 +1504,14 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapCompose(final EntityInfo<T> info, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
-        final String sqlkey = info.getSQLColumn(null, keyColumn);
+        final String keySqlColumn = info.getSQLColumn(null, keyColumn);
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final Set<String> haset = new HashSet<>();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
         final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
-        final String sql = "SELECT a." + sqlkey + ", " + func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : info.getSQLColumn("a", funcColumn)))
-            + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + sqlkey;
+        final String funcSqlColumn = func == null ? info.getSQLColumn("a", funcColumn) : func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : info.getSQLColumn("a", funcColumn)));
+        final String sql = "SELECT a." + keySqlColumn + ", " + funcSqlColumn
+            + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + keySqlColumn;
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " querycolumnmap sql=" + sql);
         return queryColumnMapDB(info, sql, keyColumn);
     }

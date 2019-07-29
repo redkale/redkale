@@ -265,34 +265,37 @@ public final class EntityCache<T> {
         if (filter != null) stream = stream.filter(filter);
         Collector<T, Map, ?> collector = null;
         final Class valtype = funcAttr == null ? null : funcAttr.type();
-        switch (func) {
-            case AVG:
-                if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
-                    collector = (Collector<T, Map, ?>) Collectors.averagingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
-                } else {
-                    collector = (Collector<T, Map, ?>) Collectors.averagingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
-                }
-                break;
-            case COUNT:
-                collector = (Collector<T, Map, ?>) Collectors.counting();
-                break;
-            case DISTINCTCOUNT:
-                collector = (Collector<T, Map, ?>) Collectors.mapping((t) -> funcAttr.get(t), Collectors.toSet());
-                break;
-            case MAX:
-            case MIN:
-                Comparator<T> comp = (o1, o2) -> o1 == null ? (o2 == null ? 0 : -1) : ((Comparable) funcAttr.get(o1)).compareTo(funcAttr.get(o2));
-                collector = (Collector<T, Map, ?>) ((func == MAX) ? Collectors.maxBy(comp) : Collectors.minBy(comp));
-                break;
-            case SUM:
-                if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
-                    collector = (Collector<T, Map, ?>) Collectors.summingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
-                } else {
-                    collector = (Collector<T, Map, ?>) Collectors.summingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
-                }
-                break;
+        if (func != null) {
+            switch (func) {
+                case AVG:
+                    if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
+                        collector = (Collector<T, Map, ?>) Collectors.averagingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
+                    } else {
+                        collector = (Collector<T, Map, ?>) Collectors.averagingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
+                    }
+                    break;
+                case COUNT:
+                    collector = (Collector<T, Map, ?>) Collectors.counting();
+                    break;
+                case DISTINCTCOUNT:
+                    collector = (Collector<T, Map, ?>) Collectors.mapping((t) -> funcAttr.get(t), Collectors.toSet());
+                    break;
+                case MAX:
+                case MIN:
+                    Comparator<T> comp = (o1, o2) -> o1 == null ? (o2 == null ? 0 : -1) : ((Comparable) funcAttr.get(o1)).compareTo(funcAttr.get(o2));
+                    collector = (Collector<T, Map, ?>) ((func == MAX) ? Collectors.maxBy(comp) : Collectors.minBy(comp));
+                    break;
+                case SUM:
+                    if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
+                        collector = (Collector<T, Map, ?>) Collectors.summingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
+                    } else {
+                        collector = (Collector<T, Map, ?>) Collectors.summingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
+                    }
+                    break;
+            }
         }
-        Map rs = stream.collect(Collectors.groupingBy(t -> keyAttr.get(t), LinkedHashMap::new, collector));
+        Map rs = collector == null ? stream.collect(Collectors.toMap(t -> keyAttr.get(t), t -> funcAttr.get(t), (key1, key2) -> key2))
+            : stream.collect(Collectors.groupingBy(t -> keyAttr.get(t), LinkedHashMap::new, collector));
         if (func == MAX || func == MIN) {
             Map rs2 = new LinkedHashMap();
             rs.forEach((x, y) -> {
