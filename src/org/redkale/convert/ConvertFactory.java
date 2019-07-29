@@ -433,25 +433,32 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public final boolean register(final Class type, String column, ConvertColumnEntry entry) {
         if (type == null || column == null || entry == null) return false;
+        Field field = null;
         try {
-            final Field field = type.getDeclaredField(column);
-            String get = "get";
-            if (field.getType() == boolean.class || field.getType() == Boolean.class) get = "is";
-            char[] cols = column.toCharArray();
-            cols[0] = Character.toUpperCase(cols[0]);
-            String col2 = new String(cols);
-            try {
-                register(type.getMethod(get + col2), entry);
-            } catch (Exception ex) {
-            }
-            try {
-                register(type.getMethod("set" + col2, field.getType()), entry);
-            } catch (Exception ex) {
-            }
-            return register(field, entry);
+            field = type.getDeclaredField(column);
         } catch (Exception e) {
-            return false;
         }
+        String get = "get";
+        if (field != null && (field.getType() == boolean.class || field.getType() == Boolean.class)) get = "is";
+        char[] cols = column.toCharArray();
+        cols[0] = Character.toUpperCase(cols[0]);
+        final String bigColumn = new String(cols);
+        try {
+            register(type.getMethod(get + bigColumn), entry);
+        } catch (NoSuchMethodException mex) {
+            if (get.length() >= 3) { //get
+                try {
+                    register(type.getMethod("is" + bigColumn), entry);
+                } catch (Exception ex) {
+                }
+            }
+        } catch (Exception ex) {
+        }
+        try {
+            register(type.getMethod("set" + bigColumn, field.getType()), entry);
+        } catch (Exception ex) {
+        }
+        return field == null ? true : register(field, entry);
     }
 
     public final <E> boolean register(final AccessibleObject field, final ConvertColumnEntry entry) {
