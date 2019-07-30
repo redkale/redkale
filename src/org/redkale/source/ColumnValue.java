@@ -106,9 +106,10 @@ public class ColumnValue {
      *
      * @return ColumnValue
      */
-    public static ColumnValue mod(String column, Serializable value) {
-        return new ColumnValue(column, MOD, value);
-    }
+      //不常用，防止开发者容易在mov时误输入mod
+//    public static ColumnValue mod(String column, Serializable value) {
+//        return new ColumnValue(column, MOD, value);
+//    }
     
     /**
      * 返回 {column} = {column} &#38; {value} 操作
