@@ -15,17 +15,25 @@ package org.redkale.source;
  */
 public enum ColumnExpress {
     /**
-     * 直接赋值 col = val
+     * 赋值 col = val
      */
     MOV,
     /**
-     * 追加值 col = col + val
+     * 加值 col = col + val
      */
     INC,
     /**
      * 乘值 col = col * val
      */
     MUL,
+    /**
+     * 除值 col = col / val
+     */
+    DIV,
+    /**
+     * 取模 col = col % val
+     */
+    MOD,
     /**
      * 与值 col = col &#38; val
      */

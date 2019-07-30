@@ -617,6 +617,22 @@ public final class EntityCache<T> {
                     numb = numb.longValue() * ((Number) val).floatValue();
                 }
                 break;
+            case DIV:
+                numb = (Number) attr.get(entity);
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() / ((Number) val).floatValue();
+                }
+                break;
+            case MOD:
+                numb = (Number) attr.get(entity);
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() % ((Number) val).intValue();
+                }
+                break;
             case AND:
                 numb = (Number) attr.get(entity);
                 if (numb == null) {

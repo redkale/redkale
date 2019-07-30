@@ -897,9 +897,9 @@ public final class EntityInfo<T> {
     /**
      * 字段值转换成带转义的数据库的值
      *
-     * @param fieldname  字段名
-     * @param fieldvalue 字段值
-     * @param sqlFormatter  转义器
+     * @param fieldname    字段名
+     * @param fieldvalue   字段值
+     * @param sqlFormatter 转义器
      *
      * @return CharSequence
      */
@@ -911,7 +911,7 @@ public final class EntityInfo<T> {
     /**
      * 字段值转换成带转义的数据库的值
      *
-     * @param value     字段值
+     * @param value        字段值
      * @param sqlFormatter 转义器
      *
      * @return CharSequence
@@ -939,9 +939,9 @@ public final class EntityInfo<T> {
     /**
      * 字段值转换成带转义的数据库的值
      *
-     * @param <F>       泛型
-     * @param attr      Attribute
-     * @param entity    记录对象
+     * @param <F>          泛型
+     * @param attr         Attribute
+     * @param entity       记录对象
      * @param sqlFormatter 转义器
      *
      * @return CharSequence
@@ -1006,6 +1006,10 @@ public final class EntityInfo<T> {
                 return new StringBuilder().append(col).append(" + ").append(val);
             case MUL:
                 return new StringBuilder().append(col).append(" * ").append(val);
+            case DIV:
+                return new StringBuilder().append(col).append(" / ").append(val);
+            case MOD:
+                return new StringBuilder().append(col).append(" % ").append(val);
             case AND:
                 return new StringBuilder().append(col).append(" & ").append(val);
             case ORR:
