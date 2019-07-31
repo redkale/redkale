@@ -651,6 +651,7 @@ public final class EntityCache<T> {
                 break;
             case MOV:
                 newval = val;
+                if (val instanceof Number) numb = (Number) val;
                 break;
         }
         if (numb != null) {
