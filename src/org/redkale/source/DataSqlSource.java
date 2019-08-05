@@ -937,13 +937,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
             if (attr == null) throw new RuntimeException(info.getType() + " cannot found column " + col.getColumn());
             if (setsql.length() > 0) setsql.append(", ");
-            String c = info.getSQLColumn(null, col.getColumn());
+            String sqlColumn = info.getSQLColumn(null, col.getColumn());
             if (col.getValue() instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) col.getValue());
-                setsql.append(c).append(" = ").append(prepareParamSign(++index));
+                setsql.append(sqlColumn).append(" = ").append(prepareParamSign(++index));
             } else {
-                setsql.append(c).append(" = ").append(info.formatSQLValue(c, attr, col, sqlFormatter));
+                setsql.append(sqlColumn).append(" = ").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
             }
         }
         if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
@@ -1019,13 +1019,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
             if (attr == null) continue;
             if (setsql.length() > 0) setsql.append(", ");
-            String c = info.getSQLColumn(alias, col.getColumn());
+            String sqlColumn = info.getSQLColumn(alias, col.getColumn());
             if (col.getValue() instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) col.getValue());
-                setsql.append(c).append(" = ").append(prepareParamSign(++index));
+                setsql.append(sqlColumn).append(" = ").append(prepareParamSign(++index));
             } else {
-                setsql.append(c).append(" = ").append(info.formatSQLValue(c, attr, col, sqlFormatter));
+                setsql.append(sqlColumn).append(" = ").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
             }
         }
         if (setsql.length() < 1) return CompletableFuture.completedFuture(0);

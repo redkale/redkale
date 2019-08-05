@@ -989,31 +989,31 @@ public final class EntityInfo<T> {
     /**
      * 拼接UPDATE给字段赋值的SQL片段
      *
-     * @param col       表字段名
+     * @param sqlColumn       表字段名
      * @param attr      Attribute
      * @param cv        ColumnValue
      * @param formatter 转义器
      *
      * @return CharSequence
      */
-    protected CharSequence formatSQLValue(String col, Attribute<T, Serializable> attr, final ColumnValue cv, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+    protected CharSequence formatSQLValue(String sqlColumn, Attribute<T, Serializable> attr, final ColumnValue cv, BiFunction<EntityInfo, Object, CharSequence> formatter) {
         if (cv == null) return null;
         Object val = cv.getValue();
         CryptHandler handler = attr.attach();
         if (handler != null) val = handler.encrypt(val);
         switch (cv.getExpress()) {
             case INC:
-                return new StringBuilder().append(col).append(" + ").append(val);
+                return new StringBuilder().append(sqlColumn).append(" + ").append(val);
             case MUL:
-                return new StringBuilder().append(col).append(" * ").append(val);
+                return new StringBuilder().append(sqlColumn).append(" * ").append(val);
             case DIV:
-                return new StringBuilder().append(col).append(" / ").append(val);
+                return new StringBuilder().append(sqlColumn).append(" / ").append(val);
             case MOD:
-                return new StringBuilder().append(col).append(" % ").append(val);
+                return new StringBuilder().append(sqlColumn).append(" % ").append(val);
             case AND:
-                return new StringBuilder().append(col).append(" & ").append(val);
+                return new StringBuilder().append(sqlColumn).append(" & ").append(val);
             case ORR:
-                return new StringBuilder().append(col).append(" | ").append(val);
+                return new StringBuilder().append(sqlColumn).append(" | ").append(val);
             case MOV:
                 return formatter == null ? formatToString(val) : formatter.apply(this, val);
         }
