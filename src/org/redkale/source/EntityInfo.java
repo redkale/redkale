@@ -989,7 +989,7 @@ public final class EntityInfo<T> {
     /**
      * 拼接UPDATE给字段赋值的SQL片段
      *
-     * @param sqlColumn       表字段名
+     * @param sqlColumn 表字段名
      * @param attr      Attribute
      * @param cv        ColumnValue
      * @param formatter 转义器
@@ -999,8 +999,7 @@ public final class EntityInfo<T> {
     protected CharSequence formatSQLValue(String sqlColumn, Attribute<T, Serializable> attr, final ColumnValue cv, BiFunction<EntityInfo, Object, CharSequence> formatter) {
         if (cv == null) return null;
         Object val = cv.getValue();
-        CryptHandler handler = attr.attach();
-        if (handler != null) val = handler.encrypt(val);
+        if (val instanceof ColumnNode && cv.getExpress() == ColumnExpress.MOV) return formatSQLValue(attr, (ColumnNode) val, formatter);
         switch (cv.getExpress()) {
             case INC:
                 return new StringBuilder().append(sqlColumn).append(" + ").append(val);
@@ -1015,9 +1014,43 @@ public final class EntityInfo<T> {
             case ORR:
                 return new StringBuilder().append(sqlColumn).append(" | ").append(val);
             case MOV:
+                CryptHandler handler = attr.attach();
+                if (handler != null) val = handler.encrypt(val);
                 return formatter == null ? formatToString(val) : formatter.apply(this, val);
         }
+        CryptHandler handler = attr.attach();
+        if (handler != null) val = handler.encrypt(val);
         return formatter == null ? formatToString(val) : formatter.apply(this, val);
+    }
+
+    protected CharSequence formatSQLValue(Attribute<T, Serializable> attr, final ColumnNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+        Serializable left = node.getLeft();
+        if (left instanceof CharSequence) {
+            left = this.getSQLColumn(null, left.toString());
+        } else if (left instanceof ColumnNode) {
+            left = "(" + formatSQLValue(attr, (ColumnNode) left, formatter) + ")";
+        }
+        Serializable right = node.getRight();
+        if (right instanceof CharSequence) {
+            right = this.getSQLColumn(null, right.toString());
+        } else if (left instanceof ColumnNode) {
+            right = "(" + formatSQLValue(attr, (ColumnNode) right, formatter) + ")";
+        }
+        switch (node.getExpress()) {
+            case INC:
+                return new StringBuilder().append(left).append(" + ").append(right);
+            case MUL:
+                return new StringBuilder().append(left).append(" * ").append(right);
+            case DIV:
+                return new StringBuilder().append(left).append(" / ").append(right);
+            case MOD:
+                return new StringBuilder().append(left).append(" % ").append(right);
+            case AND:
+                return new StringBuilder().append(left).append(" & ").append(right);
+            case ORR:
+                return new StringBuilder().append(left).append(" | ").append(right);
+        }
+        throw new IllegalArgumentException(node + " express cannot be null or MOV");
     }
 
     /**
