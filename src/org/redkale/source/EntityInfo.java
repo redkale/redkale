@@ -999,7 +999,7 @@ public final class EntityInfo<T> {
     protected CharSequence formatSQLValue(String sqlColumn, Attribute<T, Serializable> attr, final ColumnValue cv, BiFunction<EntityInfo, Object, CharSequence> formatter) {
         if (cv == null) return null;
         Object val = cv.getValue();
-        if (val instanceof ColumnNode && cv.getExpress() == ColumnExpress.MOV) return formatSQLValue(attr, (ColumnNode) val, formatter);
+        if (val instanceof ColumnNodeValue && cv.getExpress() == ColumnExpress.MOV) return formatSQLValue(attr, (ColumnNodeValue) val, formatter);
         switch (cv.getExpress()) {
             case INC:
                 return new StringBuilder().append(sqlColumn).append(" + ").append(val);
@@ -1023,18 +1023,18 @@ public final class EntityInfo<T> {
         return formatter == null ? formatToString(val) : formatter.apply(this, val);
     }
 
-    protected CharSequence formatSQLValue(Attribute<T, Serializable> attr, final ColumnNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+    protected CharSequence formatSQLValue(Attribute<T, Serializable> attr, final ColumnNodeValue node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
         Serializable left = node.getLeft();
         if (left instanceof CharSequence) {
             left = this.getSQLColumn(null, left.toString());
-        } else if (left instanceof ColumnNode) {
-            left = "(" + formatSQLValue(attr, (ColumnNode) left, formatter) + ")";
+        } else if (left instanceof ColumnNodeValue) {
+            left = "(" + formatSQLValue(attr, (ColumnNodeValue) left, formatter) + ")";
         }
         Serializable right = node.getRight();
         if (right instanceof CharSequence) {
             right = this.getSQLColumn(null, right.toString());
-        } else if (left instanceof ColumnNode) {
-            right = "(" + formatSQLValue(attr, (ColumnNode) right, formatter) + ")";
+        } else if (left instanceof ColumnNodeValue) {
+            right = "(" + formatSQLValue(attr, (ColumnNodeValue) right, formatter) + ")";
         }
         switch (node.getExpress()) {
             case INC:

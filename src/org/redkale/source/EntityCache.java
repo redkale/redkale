@@ -602,54 +602,15 @@ public final class EntityCache<T> {
         Serializable newval = null;
         switch (express) {
             case INC:
-                numb = (Number) attr.get(entity);
-                if (numb == null) {
-                    numb = (Number) val;
-                } else {
-                    numb = numb.longValue() + ((Number) val).longValue();
-                }
-                break;
             case MUL:
-                numb = (Number) attr.get(entity);
-                if (numb == null) {
-                    numb = 0;
-                } else {
-                    numb = numb.longValue() * ((Number) val).floatValue();
-                }
-                break;
             case DIV:
-                numb = (Number) attr.get(entity);
-                if (numb == null) {
-                    numb = 0;
-                } else {
-                    numb = numb.longValue() / ((Number) val).floatValue();
-                }
-                break;
             case MOD:
-                numb = (Number) attr.get(entity);
-                if (numb == null) {
-                    numb = 0;
-                } else {
-                    numb = numb.longValue() % ((Number) val).intValue();
-                }
-                break;
             case AND:
-                numb = (Number) attr.get(entity);
-                if (numb == null) {
-                    numb = 0;
-                } else {
-                    numb = numb.longValue() & ((Number) val).longValue();
-                }
-                break;
             case ORR:
-                numb = (Number) attr.get(entity);
-                if (numb == null) {
-                    numb = 0;
-                } else {
-                    numb = numb.longValue() | ((Number) val).longValue();
-                }
+                numb = getValue((Number) attr.get(entity), express, val);
                 break;
             case MOV:
+                if (val instanceof ColumnNodeValue) val = updateColumnNodeValue(attr, entity, (ColumnNodeValue) val);
                 newval = val;
                 if (val instanceof Number) numb = (Number) val;
                 break;
@@ -681,6 +642,70 @@ public final class EntityCache<T> {
         }
         attr.set(entity, (V) newval);
         return entity;
+    }
+
+    private <V> Serializable updateColumnNodeValue(Attribute<T, V> attr, final T entity, ColumnNodeValue node) {
+        Serializable left = node.getLeft();
+        if (left instanceof CharSequence) {
+            left = info.getUpdateAttribute(left.toString()).get(entity);
+        } else if (left instanceof ColumnNodeValue) {
+            left = updateColumnNodeValue(attr, entity, (ColumnNodeValue) left);
+        }
+        Serializable right = node.getRight();
+        if (left instanceof CharSequence) {
+            right = info.getUpdateAttribute(right.toString()).get(entity);
+        } else if (left instanceof ColumnNodeValue) {
+            right = updateColumnNodeValue(attr, entity, (ColumnNodeValue) right);
+        }
+        return getValue((Number) left, node.getExpress(), right);
+    }
+
+    private <V> Number getValue(Number numb, final ColumnExpress express, Serializable val) {
+        switch (express) {
+            case INC:
+                if (numb == null) {
+                    numb = (Number) val;
+                } else {
+                    numb = numb.longValue() + ((Number) val).longValue();
+                }
+                break;
+            case MUL:
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() * ((Number) val).floatValue();
+                }
+                break;
+            case DIV:
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() / ((Number) val).floatValue();
+                }
+                break;
+            case MOD:
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() % ((Number) val).intValue();
+                }
+                break;
+            case AND:
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() & ((Number) val).longValue();
+                }
+                break;
+            case ORR:
+                if (numb == null) {
+                    numb = 0;
+                } else {
+                    numb = numb.longValue() | ((Number) val).longValue();
+                }
+                break;
+        }
+        return numb;
     }
 
     public Attribute<T, Serializable> getAttribute(String fieldname) {

@@ -8,9 +8,11 @@ package org.redkale.convert.ext;
 import org.redkale.convert.*;
 
 /**
- *  CharSequence 的SimpledCoder实现
+ * CharSequence 的SimpledCoder实现
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
@@ -27,5 +29,21 @@ public class CharSequenceSimpledCoder<R extends Reader, W extends Writer> extend
     @Override
     public CharSequence convertFrom(R in) {
         return in.readString();
+    }
+
+    public static class StringBuilderSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, StringBuilder> {
+
+        public static final StringBuilderSimpledCoder instance = new StringBuilderSimpledCoder();
+
+        @Override
+        public void convertTo(W out, StringBuilder value) {
+            out.writeString(value == null ? null : value.toString());
+        }
+
+        @Override
+        public StringBuilder convertFrom(R in) {
+            String rs = in.readString();
+            return rs == null ? null : new StringBuilder(rs);
+        }
     }
 }

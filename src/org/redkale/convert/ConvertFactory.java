@@ -93,6 +93,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(String.class, StringSimpledCoder.instance);
             this.register(StringConvertWrapper.class, StringConvertWrapperSimpledCoder.instance);
             this.register(CharSequence.class, CharSequenceSimpledCoder.instance);
+            this.register(StringBuilder.class, CharSequenceSimpledCoder.StringBuilderSimpledCoder.instance);
             this.register(java.util.Date.class, DateSimpledCoder.instance);
             this.register(java.time.Duration.class, DurationSimpledCoder.instance);
             this.register(AtomicInteger.class, AtomicIntegerSimpledCoder.instance);

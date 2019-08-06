@@ -9,11 +9,13 @@ import java.io.Serializable;
 import static org.redkale.source.ColumnExpress.*;
 
 /**
- * 作为ColumnValue的value字段值，用于复杂的字段表达式
+ * 作为ColumnValue的value字段值，用于复杂的字段表达式 。
+ * String 视为 字段名
+ * Number 视为 数值
  *
  * @author zhangjx
  */
-public class ColumnNode implements Serializable {
+public class ColumnNodeValue implements Serializable {
 
     private Serializable left;//类型只能是String、Number、ColumnNode
 
@@ -21,70 +23,70 @@ public class ColumnNode implements Serializable {
 
     private Serializable right;//类型只能是String、Number、ColumnNode
 
-    public ColumnNode() {
+    public ColumnNodeValue() {
     }
 
-    public ColumnNode(Serializable left, ColumnExpress express, Serializable right) {
+    public ColumnNodeValue(Serializable left, ColumnExpress express, Serializable right) {
         if (express == null || express == ColumnExpress.MOV) throw new IllegalArgumentException("express cannot be null or MOV");
         this.left = left;
         this.express = express;
         this.right = right;
     }
 
-    public static ColumnNode create(Serializable left, ColumnExpress express, Serializable right) {
-        return new ColumnNode(left, express, right);
+    public static ColumnNodeValue create(Serializable left, ColumnExpress express, Serializable right) {
+        return new ColumnNodeValue(left, express, right);
     }
 
-    public static ColumnNode inc(Serializable left, Serializable right) {
-        return new ColumnNode(left, INC, right);
+    public static ColumnNodeValue inc(Serializable left, Serializable right) {
+        return new ColumnNodeValue(left, INC, right);
     }
 
-    public static ColumnNode mul(Serializable left, Serializable right) {
-        return new ColumnNode(left, MUL, right);
+    public static ColumnNodeValue mul(Serializable left, Serializable right) {
+        return new ColumnNodeValue(left, MUL, right);
     }
 
-    public static ColumnNode div(Serializable left, Serializable right) {
-        return new ColumnNode(left, DIV, right);
+    public static ColumnNodeValue div(Serializable left, Serializable right) {
+        return new ColumnNodeValue(left, DIV, right);
     }
 
-    public static ColumnNode mod(Serializable left, Serializable right) {
-        return new ColumnNode(left, MOD, right);
+    public static ColumnNodeValue mod(Serializable left, Serializable right) {
+        return new ColumnNodeValue(left, MOD, right);
     }
 
-    public static ColumnNode and(Serializable left, Serializable right) {
-        return new ColumnNode(left, AND, right);
+    public static ColumnNodeValue and(Serializable left, Serializable right) {
+        return new ColumnNodeValue(left, AND, right);
     }
 
-    public static ColumnNode orr(Serializable left, Serializable right) {
-        return new ColumnNode(left, ORR, right);
+    public static ColumnNodeValue orr(Serializable left, Serializable right) {
+        return new ColumnNodeValue(left, ORR, right);
     }
 
-    public ColumnNode inc(Serializable right) {
+    public ColumnNodeValue inc(Serializable right) {
         return any(INC, right);
     }
 
-    public ColumnNode mul(Serializable right) {
+    public ColumnNodeValue mul(Serializable right) {
         return any(MUL, right);
     }
 
-    public ColumnNode div(Serializable right) {
+    public ColumnNodeValue div(Serializable right) {
         return any(DIV, right);
     }
 
-    public ColumnNode mod(Serializable right) {
+    public ColumnNodeValue mod(Serializable right) {
         return any(MOD, right);
     }
 
-    public ColumnNode and(Serializable right) {
+    public ColumnNodeValue and(Serializable right) {
         return any(AND, right);
     }
 
-    public ColumnNode orr(Serializable right) {
+    public ColumnNodeValue orr(Serializable right) {
         return any(ORR, right);
     }
 
-    protected ColumnNode any(ColumnExpress express, Serializable right) {
-        ColumnNode one = new ColumnNode(this.left, this.express, this.right);
+    protected ColumnNodeValue any(ColumnExpress express, Serializable right) {
+        ColumnNodeValue one = new ColumnNodeValue(this.left, this.express, this.right);
         this.left = one;
         this.express = express;
         this.right = right;
