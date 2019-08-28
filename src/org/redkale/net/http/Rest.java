@@ -11,6 +11,7 @@ import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
+import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -1002,7 +1003,7 @@ public final class Rest {
 
                 RestHeader annhead = param.getAnnotation(RestHeader.class);
                 if (annhead != null) {
-                    if (ptype != String.class) throw new RuntimeException("@RestHeader must on String Parameter in " + method);
+                    if (ptype != String.class && ptype != InetSocketAddress.class) throw new RuntimeException("@RestHeader must on String or InetSocketAddress Parameter in " + method);
                     n = annhead.name();
                     radix = annhead.radix();
                     comment = annhead.comment();
