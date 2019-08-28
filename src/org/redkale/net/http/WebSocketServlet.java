@@ -209,6 +209,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         webSocket._sendConvert = sendConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
+        webSocket._sncpAddress = this.node.localSncpAddress;
         initRestWebSocket(webSocket);
         CompletableFuture<String> sessionFuture = webSocket.onOpen(request);
         if (sessionFuture == null) {

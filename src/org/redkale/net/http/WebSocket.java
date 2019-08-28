@@ -83,6 +83,8 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     WebSocketEngine _engine; //不可能为空 
 
+    InetSocketAddress _sncpAddress; //分布式下不可为空
+
     AsyncConnection _channel;//不可能为空 
 
     String _sessionid; //不可能为空 
@@ -824,6 +826,15 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public CompletableFuture<Boolean> onSingleRepeatConnect() {
         return forceCloseWebSocket(getUserid()).thenApply((r) -> true);
+    }
+
+    /**
+     * 获取分布式情况下的SNCP地址, 非分布式下为null
+     *
+     * @return InetSocketAddress sncpAddress
+     */
+    public InetSocketAddress getSncpAddress() {
+        return _sncpAddress;
     }
 
     /**
