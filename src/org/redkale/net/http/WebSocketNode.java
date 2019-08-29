@@ -282,6 +282,7 @@ public abstract class WebSocketNode {
             if (semaphore != null) addrsFuture.whenComplete((r, e) -> releaseSemaphore());
         } else {
             Collection<InetSocketAddress> addrs = userAddress.sncpAddresses();
+            if (addrs != null) addrs = new ArrayList<>(addrs); //不能修改参数内部值
             if (userAddress.sncpAddress() != null) {
                 if (addrs == null) addrs = new ArrayList<>();
                 addrs.add(userAddress.sncpAddress());
