@@ -13,12 +13,10 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * userid 与 sncpaddress组合对象
  *
- * <p>
- * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public interface WebSocketUserAddress {
+public interface WebSocketUserAddress extends Serializable {
 
     Serializable userid();
 
