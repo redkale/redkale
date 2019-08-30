@@ -6,6 +6,7 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
+import org.redkale.util.StringWrapper;
 
 /**
  * 序列化的数据输出流
@@ -262,5 +263,5 @@ public abstract class Writer {
      *
      * @param value StringConvertWrapper值
      */
-    public abstract void writeWrapper(StringConvertWrapper value);
+    public abstract void writeWrapper(StringWrapper value);
 }

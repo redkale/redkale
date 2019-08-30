@@ -6,6 +6,7 @@
 package org.redkale.convert.ext;
 
 import org.redkale.convert.*;
+import org.redkale.util.StringWrapper;
 
 /**
  * String 的SimpledCoder实现
@@ -17,18 +18,18 @@ import org.redkale.convert.*;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class StringConvertWrapperSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, StringConvertWrapper> {
+public final class StringWrapperSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, StringWrapper> {
 
-    public static final StringConvertWrapperSimpledCoder instance = new StringConvertWrapperSimpledCoder();
+    public static final StringWrapperSimpledCoder instance = new StringWrapperSimpledCoder();
 
     @Override
-    public void convertTo(W out, StringConvertWrapper value) {
+    public void convertTo(W out, StringWrapper value) {
         out.writeWrapper(value);
     }
 
     @Override
-    public StringConvertWrapper convertFrom(R in) {
-        return new StringConvertWrapper(in.readString());
+    public StringWrapper convertFrom(R in) {
+        return new StringWrapper(in.readString());
     }
 
 }

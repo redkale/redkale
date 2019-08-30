@@ -91,7 +91,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
             this.register(Number.class, NumberSimpledCoder.instance);
             this.register(String.class, StringSimpledCoder.instance);
-            this.register(StringConvertWrapper.class, StringConvertWrapperSimpledCoder.instance);
+            this.register(StringWrapper.class, StringWrapperSimpledCoder.instance);
             this.register(CharSequence.class, CharSequenceSimpledCoder.instance);
             this.register(StringBuilder.class, CharSequenceSimpledCoder.StringBuilderSimpledCoder.instance);
             this.register(java.util.Date.class, DateSimpledCoder.instance);

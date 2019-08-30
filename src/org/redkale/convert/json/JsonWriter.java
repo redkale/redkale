@@ -320,7 +320,7 @@ public class JsonWriter extends Writer {
     }
 
     @Override
-    public final void writeWrapper(StringConvertWrapper value) {
+    public final void writeWrapper(StringWrapper value) {
         writeTo(false, String.valueOf(value));
     }
 
