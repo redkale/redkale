@@ -265,6 +265,7 @@ public abstract class WebSocketNode {
             if (addrs == null) addrs = new ArrayList<>();
             addrs.add(userAddress.sncpAddress());
         }
+        if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(false);
         CompletableFuture<Boolean> future = null;
         for (InetSocketAddress addr : addrs) {
             if (addr == null || addr.equals(localSncpAddress)) continue;
@@ -319,6 +320,7 @@ public abstract class WebSocketNode {
                 if (addrs == null) addrs = new ArrayList<>();
                 addrs.add(userAddress.sncpAddress());
             }
+            if (addrs == null || addrs.isEmpty()) return CompletableFuture.completedFuture(0);
             addrsFuture = CompletableFuture.completedFuture(addrs);
         }
         CompletableFuture<Integer> remoteFuture = addrsFuture.thenCompose((Collection<InetSocketAddress> addrs) -> {
