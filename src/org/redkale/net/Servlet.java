@@ -23,11 +23,13 @@ public abstract class Servlet<C extends Context, R extends Request<C>, P extends
 
     AnyValue _conf; //当前Servlet的配置
 
+    //Server执行start时运行此方法
     public void init(C context, AnyValue config) {
     }
 
     public abstract void execute(R request, P response) throws IOException;
 
+    //Server执行shutdown后运行此方法
     public void destroy(C context, AnyValue config) {
     }
 

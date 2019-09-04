@@ -402,6 +402,21 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
         return this.resourceHttpServlet;
     }
 
+    public void postStart(HttpContext context, AnyValue config) {
+        List filters = getFilters();
+        synchronized (filters) {
+            if (!filters.isEmpty()) {
+                for (Object filter : filters) {
+                    ((HttpFilter) filter).postStart(context, config);
+                }
+            }
+        }
+        this.resourceHttpServlet.postStart(context, config);
+        getServlets().forEach(s -> {
+            s.postStart(context, getServletConf(s));
+        });
+    }
+
     @Override
     public void destroy(HttpContext context, AnyValue config) {
         super.destroy(context, config); //必须要执行

@@ -105,6 +105,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     void postDestroy(HttpContext context, AnyValue config) {
     }
 
+    //Server执行start后运行此方法
+    public void postStart(HttpContext context, AnyValue config) {
+    }
+
     /**
      * <p>
      * 预执行方法，在execute方法之前运行，设置当前用户信息，或者加入常规统计和基础检测，例如 : <br>

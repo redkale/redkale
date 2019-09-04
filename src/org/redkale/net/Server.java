@@ -283,9 +283,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         serverChannel.bind(address, backlog);
         serverChannel.accept(this);
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        postStart();
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
             + ", threads: " + threads + ", maxbody: " + formatLenth(context.maxbody) + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
+    }
+
+    protected void postStart() {
     }
 
     public void changeAddress(final InetSocketAddress addr) throws IOException {

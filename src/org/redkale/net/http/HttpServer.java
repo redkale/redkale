@@ -57,6 +57,11 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     @Override
+    protected void postStart() {
+        ((HttpPrepareServlet) this.prepare).postStart(this.context, config);
+    }
+
+    @Override
     public void destroy(final AnyValue config) throws Exception {
         super.destroy(config);
         if (this.dateScheduler != null) {
