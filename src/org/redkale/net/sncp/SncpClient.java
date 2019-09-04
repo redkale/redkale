@@ -332,9 +332,10 @@ public final class SncpClient {
             return bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
         } catch (RpcRemoteException re) {
             throw re;
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            //logger.log(Level.SEVERE, actions[index].method + " sncp (params: " + jsonConvert.convertTo(params) + ") remote error", e);
-            throw new RpcRemoteException(actions[index].method + " sncp remote error", e);
+        } catch (TimeoutException e) {
+            throw new RpcRemoteException(actions[index].method + " sncp remote timeout, params=" + JsonConvert.root().convertTo(params));
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RpcRemoteException(actions[index].method + " sncp remote error, params=" + JsonConvert.root().convertTo(params), e);
         } finally {
             bsonConvert.offerBsonReader(reader);
         }
@@ -358,12 +359,12 @@ public final class SncpClient {
         return connFuture.thenCompose(conn0 -> {
             final CompletableFuture<byte[]> future = new CompletableFuture();
             if (conn0 == null) {
-                future.completeExceptionally(new RuntimeException("sncp " + (conn0 == null ? addr : conn0.getRemoteAddress()) + " cannot connect"));
+                future.completeExceptionally(new RpcRemoteException("sncp " + (conn0 == null ? addr : conn0.getRemoteAddress()) + " cannot connect, params=" + JsonConvert.root().convertTo(params)));
                 return future;
             }
             if (!conn0.isOpen()) {
                 conn0.dispose();
-                future.completeExceptionally(new RuntimeException("sncp " + (conn0 == null ? addr : conn0.getRemoteAddress()) + " cannot connect"));
+                future.completeExceptionally(new RpcRemoteException("sncp " + (conn0 == null ? addr : conn0.getRemoteAddress()) + " cannot connect, params=" + JsonConvert.root().convertTo(params)));
                 return future;
             }
             final AsyncConnection conn = conn0;
@@ -403,7 +404,7 @@ public final class SncpClient {
                         public void completed(Integer count, ByteBuffer buffer) {
                             try {
                                 if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
-                                    future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data"));
+                                    future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data, params=" + JsonConvert.root().convertTo(params)));
                                     conn.offerBuffer(buffer);
                                     transport.offerConnection(true, conn);
                                     return;
@@ -433,7 +434,7 @@ public final class SncpClient {
                                 final int respBodyLength = buffer.getInt();
                                 final int retcode = buffer.getInt();
                                 if (retcode != 0) {
-                                    logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                                    logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + "), params=" + JsonConvert.root().convertTo(params));
                                     throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
                                 }
 
@@ -451,7 +452,7 @@ public final class SncpClient {
                                     success();
                                 }
                             } catch (Throwable e) {
-                                future.completeExceptionally(new RuntimeException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote response error"));
+                                future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote response error, params=" + JsonConvert.root().convertTo(params)));
                                 transport.offerConnection(true, conn);
                                 if (handler != null) {
                                     final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
@@ -487,27 +488,27 @@ public final class SncpClient {
 
                         @Override
                         public void failed(Throwable exc, ByteBuffer attachment2) {
-                            future.completeExceptionally(new RuntimeException(action.method + " sncp remote exec failed"));
+                            future.completeExceptionally(new RpcRemoteException(action.method + " sncp remote exec failed, params=" + JsonConvert.root().convertTo(params)));
                             conn.offerBuffer(attachment2);
                             transport.offerConnection(true, conn);
                             if (handler != null) {
                                 final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
                                 handler.failed(exc, handlerAttach);
                             }
-                            logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote read exec failed", exc);
+                            logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote read exec failed, params=" + JsonConvert.root().convertTo(params), exc);
                         }
                     });
                 }
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer[] attachment) {
-                    future.completeExceptionally(new RuntimeException(action.method + " sncp remote exec failed"));
+                    future.completeExceptionally(new RpcRemoteException(action.method + " sncp remote exec failed, params=" + JsonConvert.root().convertTo(params)));
                     transport.offerConnection(true, conn);
                     if (handler != null) {
                         final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
                         handler.failed(exc, handlerAttach);
                     }
-                    logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote write exec failed", exc);
+                    logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote write exec failed, params=" + JsonConvert.root().convertTo(params), exc);
                 }
             });
             return future;
