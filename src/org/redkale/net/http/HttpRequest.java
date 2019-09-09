@@ -210,7 +210,9 @@ public class HttpRequest extends Request<HttpContext> {
 
     private void parseBody() {
         if (this.boundary || bodyparsed) return;
-        addParameter(array, 0, array.size());
+        if (this.contentType.toLowerCase().contains("x-www-form-urlencoded")) {
+            addParameter(array, 0, array.size());
+        }
         bodyparsed = true;
     }
 
