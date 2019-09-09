@@ -1300,16 +1300,11 @@ public class HttpRequest extends Request<HttpContext> {
      * @return String
      */
     public String getParametersToString(String prefix) {
-        final StringBuilder sb = new StringBuilder();
-        getParameters().forEach((k, v) -> {
-            if (sb.length() > 0) sb.append('&');
-            try {
-                sb.append(k).append('=').append(URLEncoder.encode(v, "UTF-8"));
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
-        return (sb.length() > 0 && prefix != null) ? (prefix + sb) : sb.toString();
+        byte[] rbs = queryBytes;
+        if (rbs == null || rbs.length < 1) return "";
+        Charset charset = this.context.getCharset();
+        String str = charset == null ? new String(rbs, StandardCharsets.UTF_8) : new String(rbs, charset);
+        return (prefix == null) ? str : (prefix + str);
     }
 
     /**
