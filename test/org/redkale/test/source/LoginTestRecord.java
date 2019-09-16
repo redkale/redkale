@@ -21,12 +21,9 @@ import org.redkale.convert.json.*;
  *
  * @author zhangjx
  */
-@Entity
 public class LoginTestRecord {
 
     @Id
-    @GeneratedValue
-    //@SequenceGenerator(name = "SEQ", initialValue = 100001, allocationSize = 1000)
     private String sessionid;
 
     private int userid;
