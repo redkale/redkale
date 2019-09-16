@@ -316,11 +316,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (entitys.length == 0) return 0;
         checkEntity("insert", false, entitys);
         final EntityInfo<T> info = loadEntityInfo((Class<T>) entitys[0].getClass());
-        if (info.autouuid) {
-            for (T value : entitys) {
-                info.createPrimaryValue(value);
-            }
-        }
         if (isOnlyCache(info)) return insertCache(info, entitys);
         return insertDB(info, entitys).whenComplete((rs, t) -> {
             if (t != null) {
@@ -337,11 +332,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         CompletableFuture future = checkEntity("insert", true, entitys);
         if (future != null) return future;
         final EntityInfo<T> info = loadEntityInfo((Class<T>) entitys[0].getClass());
-        if (info.autouuid) {
-            for (T value : entitys) {
-                info.createPrimaryValue(value);
-            }
-        }
         if (isOnlyCache(info)) {
             return CompletableFuture.supplyAsync(() -> insertCache(info, entitys), getExecutor());
         }
