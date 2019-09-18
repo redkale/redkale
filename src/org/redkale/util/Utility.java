@@ -648,6 +648,180 @@ public final class Utility {
     }
 
     /**
+     * 将指定的long元素从数组中删除, 相同的元素会根据items里重复次数来执行删除 <br>
+     * 例如: <br>
+     * remove(new short[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]<br>
+     *
+     * @param array 原数组
+     * @param items short[]
+     *
+     * @return 新数组
+     */
+    public static short[] removeMatch(final short[] array, final short... items) {
+        return remove(array, false, items);
+    }
+
+    /**
+     * 将指定的int元素从数组中删除, repeat=true时相同的元素会根据items里重复次数来执行删除 <br>
+     * 例如: <br>
+     * remove(new short[]{1, 1, 1, 2, 2, 3, 3, 3}, true, 1, 1, 2, 3, 3) = [] <br>
+     * remove(new short[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]
+     *
+     * @param array  原数组
+     * @param repeat 是否重复删除相同的元素
+     * @param items  short[]
+     *
+     * @return 新数组
+     */
+    public static short[] remove(final short[] array, boolean repeat, final short... items) {
+        if (array == null || array.length == 0 || items == null || items.length == 0) return array;
+        final short[] news = new short[array.length];
+        short[] subs = items;
+        int index = 0;
+        for (int i = 0; i < news.length; i++) {
+            if (subs.length > 0 && contains(subs, array[i])) {
+                if (!repeat) {
+                    short[] newsubs = new short[subs.length - 1];
+                    int k = 0;
+                    boolean done = false;
+                    for (short v : subs) {
+                        if (done) {
+                            newsubs[k++] = v;
+                        } else if (v == array[i]) {
+                            done = true;
+                        } else {
+                            newsubs[k++] = v;
+                        }
+                    }
+                    subs = newsubs;
+                }
+            } else {
+                news[index++] = array[i];
+            }
+        }
+        if (index == array.length) return array;
+        final short[] rs = new short[index];
+        System.arraycopy(news, 0, rs, 0, index);
+        return rs;
+    }
+
+    /**
+     * 将指定的long元素从数组中删除, 相同的元素会根据items里重复次数来执行删除 <br>
+     * 例如: <br>
+     * remove(new int[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]<br>
+     *
+     * @param array 原数组
+     * @param items int[]
+     *
+     * @return 新数组
+     */
+    public static int[] removeMatch(final int[] array, final int... items) {
+        return remove(array, false, items);
+    }
+
+    /**
+     * 将指定的int元素从数组中删除, repeat=false时相同的元素会根据items里重复次数来执行删除 <br>
+     * 例如: <br>
+     * remove(new int[]{1, 1, 1, 2, 2, 3, 3, 3}, true, 1, 1, 2, 3, 3) = [] <br>
+     * remove(new int[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]
+     *
+     * @param array  原数组
+     * @param repeat 是否重复删除相同的元素
+     * @param items  int[]
+     *
+     * @return 新数组
+     */
+    public static int[] remove(final int[] array, boolean repeat, final int... items) {
+        if (array == null || array.length == 0 || items == null || items.length == 0) return array;
+        final int[] news = new int[array.length];
+        int[] subs = items;
+        int index = 0;
+        for (int i = 0; i < news.length; i++) {
+            if (subs.length > 0 && contains(subs, array[i])) {
+                if (!repeat) {
+                    int[] newsubs = new int[subs.length - 1];
+                    int k = 0;
+                    boolean done = false;
+                    for (int v : subs) {
+                        if (done) {
+                            newsubs[k++] = v;
+                        } else if (v == array[i]) {
+                            done = true;
+                        } else {
+                            newsubs[k++] = v;
+                        }
+                    }
+                    subs = newsubs;
+                }
+            } else {
+                news[index++] = array[i];
+            }
+        }
+        if (index == array.length) return array;
+        final int[] rs = new int[index];
+        System.arraycopy(news, 0, rs, 0, index);
+        return rs;
+    }
+
+    /**
+     * 将指定的long元素从数组中删除, 相同的元素会根据items里重复次数来执行删除 <br>
+     * 例如: <br>
+     * remove(new long[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]<br>
+     *
+     * @param array 原数组
+     * @param items long[]
+     *
+     * @return 新数组
+     */
+    public static long[] removeMatch(final long[] array, final long... items) {
+        return remove(array, false, items);
+    }
+
+    /**
+     * 将指定的long元素从数组中删除, repeat=false时相同的元素会根据items里重复次数来执行删除 <br>
+     * 例如: <br>
+     * remove(new long[]{1, 1, 1, 2, 2, 3, 3, 3}, true, 1, 1, 2, 3, 3) = [] <br>
+     * remove(new long[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]<br>
+     *
+     * @param array  原数组
+     * @param repeat 是否重复删除相同的元素
+     * @param items  long[]
+     *
+     * @return 新数组
+     */
+    public static long[] remove(final long[] array, boolean repeat, final long... items) {
+        if (array == null || array.length == 0 || items == null || items.length == 0) return array;
+        final long[] news = new long[array.length];
+        long[] subs = items;
+        int index = 0;
+        for (int i = 0; i < news.length; i++) {
+            if (subs.length > 0 && contains(subs, array[i])) {
+                if (!repeat) {
+                    long[] newsubs = new long[subs.length - 1];
+                    int k = 0;
+                    boolean done = false;
+                    for (long v : subs) {
+                        if (done) {
+                            newsubs[k++] = v;
+                        } else if (v == array[i]) {
+                            done = true;
+                        } else {
+                            newsubs[k++] = v;
+                        }
+                    }
+                    subs = newsubs;
+                }
+            } else {
+                news[index++] = array[i];
+            }
+        }
+        if (index == array.length) return array;
+        final long[] rs = new long[index];
+        System.arraycopy(news, 0, rs, 0, index);
+        return rs;
+    }
+
+    /**
      * 判断字符串是否包含指定的字符，包含返回true
      *
      * @param string 字符串
