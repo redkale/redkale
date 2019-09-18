@@ -872,6 +872,22 @@ public final class Utility {
     }
 
     /**
+     * 判断指定值(不要包含相同的元素)是否包含指定的数组中，包含返回true
+     *
+     * @param values 集合
+     * @param items  多值
+     *
+     * @return boolean
+     */
+    public static boolean contains(short[] values, short... items) {
+        if (values == null) return false;
+        for (short item : items) {
+            if (!contains(values, item)) return false;
+        }
+        return true;
+    }
+
+    /**
      * 判断指定值是否包含指定的数组中，包含返回true
      *
      * @param values 集合
@@ -888,6 +904,22 @@ public final class Utility {
     }
 
     /**
+     * 判断指定值(不要包含相同的元素)是否包含指定的数组中，包含返回true
+     *
+     * @param values 集合
+     * @param items  多值
+     *
+     * @return boolean
+     */
+    public static boolean contains(int[] values, int... items) {
+        if (values == null) return false;
+        for (int item : items) {
+            if (!contains(values, item)) return false;
+        }
+        return true;
+    }
+
+    /**
      * 判断指定值是否包含指定的数组中，包含返回true
      *
      * @param values 集合
@@ -901,6 +933,22 @@ public final class Utility {
             if (v == value) return true;
         }
         return false;
+    }
+
+    /**
+     * 判断指定值(不要包含相同的元素)是否包含指定的数组中，包含返回true
+     *
+     * @param values 集合
+     * @param items  多值
+     *
+     * @return boolean
+     */
+    public static boolean contains(long[] values, long... items) {
+        if (values == null) return false;
+        for (long item : items) {
+            if (!contains(values, item)) return false;
+        }
+        return true;
     }
 
     /**
@@ -932,8 +980,6 @@ public final class Utility {
      * @return 是否完全包含
      */
     public static boolean containsMatch(final short[] array, final short... items) {
-        if (array == null && items == null) return true;
-        if (array == null && items.length == 0) return true;
         if (array == null) return false;
         if (items == null || items.length == 0) return true;
         if (array.length == 0 && items.length == 0) return true;
@@ -971,8 +1017,6 @@ public final class Utility {
      * @return 是否完全包含
      */
     public static boolean containsMatch(final int[] array, final int... items) {
-        if (array == null && items == null) return true;
-        if (array == null && items.length == 0) return true;
         if (array == null) return false;
         if (items == null || items.length == 0) return true;
         if (array.length == 0 && items.length == 0) return true;
@@ -1010,8 +1054,6 @@ public final class Utility {
      * @return 是否完全包含
      */
     public static boolean containsMatch(final long[] array, final long... items) {
-        if (array == null && items == null) return true;
-        if (array == null && items.length == 0) return true;
         if (array == null) return false;
         if (items == null || items.length == 0) return true;
         if (array.length == 0 && items.length == 0) return true;
