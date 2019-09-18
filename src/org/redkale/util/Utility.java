@@ -921,6 +921,123 @@ public final class Utility {
     }
 
     /**
+     * 将指定的short元素是否数组中完全包含，重复元素的次数也要相同 <br>
+     * 例如: <br>
+     * containsMatch(new short[]{1, 2, 2, 3, 3, 3}, 1, 2, 3, 3) = true <br>
+     * containsMatch(new short[]{1, 2, 2, 3, 3, 3}, 1, 1, 2, 3, 3) = false <br>
+     *
+     * @param array 原数组
+     * @param items short[]
+     *
+     * @return 是否完全包含
+     */
+    public static boolean containsMatch(final short[] array, final short... items) {
+        if (array == null && items == null) return true;
+        if (array == null && items.length == 0) return true;
+        if (array == null) return false;
+        if (items == null || items.length == 0) return true;
+        if (array.length == 0 && items.length == 0) return true;
+        if (array.length < items.length) return false;
+
+        short[] subs = array;
+        for (short item : items) {
+            if (!contains(subs, item)) return false;
+            short[] newsubs = new short[subs.length - 1];
+            int k = 0;
+            boolean done = false;
+            for (short v : subs) {
+                if (done) {
+                    newsubs[k++] = v;
+                } else if (v == item) {
+                    done = true;
+                } else {
+                    newsubs[k++] = v;
+                }
+            }
+            subs = newsubs;
+        }
+        return true;
+    }
+
+    /**
+     * 将指定的int元素是否数组中完全包含，重复元素的次数也要相同 <br>
+     * 例如: <br>
+     * containsMatch(new int[]{1, 2, 2, 3, 3, 3}, 1, 2, 3, 3) = true <br>
+     * containsMatch(new int[]{1, 2, 2, 3, 3, 3}, 1, 1, 2, 3, 3) = false <br>
+     *
+     * @param array 原数组
+     * @param items int[]
+     *
+     * @return 是否完全包含
+     */
+    public static boolean containsMatch(final int[] array, final int... items) {
+        if (array == null && items == null) return true;
+        if (array == null && items.length == 0) return true;
+        if (array == null) return false;
+        if (items == null || items.length == 0) return true;
+        if (array.length == 0 && items.length == 0) return true;
+        if (array.length < items.length) return false;
+
+        int[] subs = array;
+        for (int item : items) {
+            if (!contains(subs, item)) return false;
+            int[] newsubs = new int[subs.length - 1];
+            int k = 0;
+            boolean done = false;
+            for (int v : subs) {
+                if (done) {
+                    newsubs[k++] = v;
+                } else if (v == item) {
+                    done = true;
+                } else {
+                    newsubs[k++] = v;
+                }
+            }
+            subs = newsubs;
+        }
+        return true;
+    }
+
+    /**
+     * 将指定的long元素是否数组中完全包含，重复元素的次数也要相同 <br>
+     * 例如: <br>
+     * containsMatch(new long[]{1, 2, 2, 3, 3, 3}, 1, 2, 3, 3) = true <br>
+     * containsMatch(new long[]{1, 2, 2, 3, 3, 3}, 1, 1, 2, 3, 3) = false <br>
+     *
+     * @param array 原数组
+     * @param items long[]
+     *
+     * @return 是否完全包含
+     */
+    public static boolean containsMatch(final long[] array, final long... items) {
+        if (array == null && items == null) return true;
+        if (array == null && items.length == 0) return true;
+        if (array == null) return false;
+        if (items == null || items.length == 0) return true;
+        if (array.length == 0 && items.length == 0) return true;
+        if (array.length < items.length) return false;
+
+        long[] subs = array;
+        for (long item : items) {
+            if (!contains(subs, item)) return false;
+            long[] newsubs = new long[subs.length - 1];
+            int k = 0;
+            boolean done = false;
+            for (long v : subs) {
+                if (done) {
+                    newsubs[k++] = v;
+                } else if (v == item) {
+                    done = true;
+                } else {
+                    newsubs[k++] = v;
+                }
+            }
+            subs = newsubs;
+        }
+        return true;
+    }
+
+    /**
      * 删除掉字符串数组中包含指定的字符串
      *
      * @param columns 待删除数组
