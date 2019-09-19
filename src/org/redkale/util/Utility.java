@@ -1959,7 +1959,7 @@ public final class Utility {
         char[] chars = text;
         final int limit = start + len;
         int remain = buffer.remaining();
-        final ByteBuffer buffer2 = remain >= bytesLength ? null : ByteBuffer.allocate(bytesLength - remain + 3); //最差情况buffer最后两byte没有填充
+        final ByteBuffer buffer2 = remain >= bytesLength ? null : ByteBuffer.allocate(bytesLength - remain + 4); //最差情况buffer最后两byte没有填充
         ByteBuffer buf = buffer;
         for (int i = start; i < limit; i++) {
             c = chars[i];
