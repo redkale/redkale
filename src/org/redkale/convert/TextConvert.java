@@ -6,8 +6,6 @@
 package org.redkale.convert;
 
 import java.lang.reflect.Type;
-import java.util.function.BiFunction;
-import org.redkale.util.Attribute;
 
 /**
  * 文本序列化/反序列化操作类
@@ -35,10 +33,4 @@ public abstract class TextConvert<R extends Reader, W extends Writer> extends Co
     public abstract String convertTo(final Type type, final Object value);
 
     public abstract String convertMapTo(final Object... values);
-
-    public abstract String convertTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object value);
-
-    public abstract String convertTo(final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value);
-
-    public abstract String convertMapTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object... values);
 }

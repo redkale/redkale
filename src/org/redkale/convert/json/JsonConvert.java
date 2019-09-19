@@ -21,7 +21,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
+public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.HashMap<String, String>>() {
     }.getType();
@@ -46,6 +46,16 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return JsonFactory.root().getConvert();
     }
 
+    @Override
+    public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> fieldFunc) {
+        return new JsonConvert(getFactory(), tiny) {
+            @Override
+            protected <S extends JsonWriter> S configWrite(S writer) {
+                return fieldFunc(writer, fieldFunc);
+            }
+        };
+    }
+
     //------------------------------ reader -----------------------------------------------------------
     public JsonReader pollJsonReader(final ByteBuffer... buffers) {
         return new JsonByteBufferReader((ConvertMask) null, buffers);
@@ -65,19 +75,19 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     //------------------------------ writer -----------------------------------------------------------
     public JsonByteBufferWriter pollJsonWriter(final Supplier<ByteBuffer> supplier) {
-        return new JsonByteBufferWriter(tiny, supplier);
+        return configWrite(new JsonByteBufferWriter(tiny, supplier));
     }
 
     public JsonWriter pollJsonWriter(final OutputStream out) {
-        return new JsonStreamWriter(tiny, out);
+        return configWrite(new JsonStreamWriter(tiny, out));
     }
 
     public JsonWriter pollJsonWriter(final Charset charset, final OutputStream out) {
-        return new JsonStreamWriter(tiny, charset, out);
+        return configWrite(new JsonStreamWriter(tiny, charset, out));
     }
 
     public JsonWriter pollJsonWriter() {
-        return writerPool.get().tiny(tiny);
+        return configWrite(writerPool.get().tiny(tiny));
     }
 
     public void offerJsonWriter(final JsonWriter writer) {
@@ -85,6 +95,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     //------------------------------ convertFrom -----------------------------------------------------------
+    @Override
     public <T> T convertFrom(final Type type, final byte[] bytes) {
         if (bytes == null) return null;
         return convertFrom(type, new String(bytes, StandardCharsets.UTF_8));
@@ -187,21 +198,10 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
-    public String convertTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
-        if (value == null) return "null";
-        return convertTo(value.getClass(), fieldFunc, value);
-    }
-
-    @Override
     public String convertTo(final Type type, final Object value) {
-        return convertTo(type, (BiFunction) null, value);
-    }
-
-    @Override
-    public String convertTo(final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (type == null) return null;
         if (value == null) return "null";
-        final JsonWriter writer = funcWrite(writerPool.get().tiny(tiny), fieldFunc);
+        final JsonWriter writer = pollJsonWriter();
         writer.specify(type);
         factory.loadEncoder(type).convertTo(writer, value);
         String result = writer.toString();
@@ -212,13 +212,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     @Override
     public String convertMapTo(final Object... values) {
         if (values == null) return "null";
-        return convertMapTo((BiFunction) null, values);
-    }
-
-    @Override
-    public String convertMapTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object... values) {
-        if (values == null) return "null";
-        final JsonWriter writer = funcWrite(writerPool.get().tiny(tiny), fieldFunc);
+        final JsonWriter writer = pollJsonWriter();
         ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
         String result = writer.toString();
         writerPool.accept(writer);
@@ -227,7 +221,7 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public void convertTo(final OutputStream out, final Object value) {
         if (value == null) {
-            new JsonStreamWriter(tiny, out).writeNull();
+            pollJsonWriter(out).writeNull();
         } else {
             convertTo(out, value.getClass(), value);
         }
@@ -236,9 +230,9 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public void convertTo(final OutputStream out, final Type type, final Object value) {
         if (type == null) return;
         if (value == null) {
-            new JsonStreamWriter(tiny, out).writeNull();
+            pollJsonWriter(out).writeNull();
         } else {
-            final JsonWriter writer = writerPool.get().tiny(tiny);
+            final JsonWriter writer = pollJsonWriter();
             writer.specify(type);
             factory.loadEncoder(type).convertTo(writer, value);
             byte[] bs = writer.toBytes();
@@ -253,9 +247,9 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public void convertMapTo(final OutputStream out, final Object... values) {
         if (values == null) {
-            new JsonStreamWriter(tiny, out).writeNull();
+            pollJsonWriter(out).writeNull();
         } else {
-            final JsonWriter writer = writerPool.get().tiny(tiny);
+            final JsonWriter writer = pollJsonWriter();
             ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
             byte[] bs = writer.toBytes();
             writerPool.accept(writer);
@@ -269,13 +263,8 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
-        return convertTo(supplier, (BiFunction) null, value);
-    }
-
-    @Override
-    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (supplier == null) return null;
-        JsonByteBufferWriter out = funcWrite(new JsonByteBufferWriter(tiny, null, supplier), fieldFunc);
+        JsonByteBufferWriter out = pollJsonWriter(supplier);
         if (value == null) {
             out.writeNull();
         } else {
@@ -286,13 +275,8 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
-        return convertTo(supplier, type, (BiFunction) null, value);
-    }
-
-    @Override
-    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (supplier == null || type == null) return null;
-        JsonByteBufferWriter out = funcWrite(new JsonByteBufferWriter(tiny, null, supplier), fieldFunc);
+        JsonByteBufferWriter out = pollJsonWriter(supplier);
         if (value == null) {
             out.writeNull();
         } else {
@@ -304,13 +288,8 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values) {
-        return convertMapTo(supplier, (BiFunction) null, values);
-    }
-
-    @Override
-    public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object... values) {
         if (supplier == null) return null;
-        JsonByteBufferWriter out = funcWrite(new JsonByteBufferWriter(tiny, null, supplier), fieldFunc);
+        JsonByteBufferWriter out = pollJsonWriter(supplier);
         if (values == null) {
             out.writeNull();
         } else {
@@ -352,14 +331,14 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public JsonWriter convertToWriter(final Type type, final Object value) {
         if (type == null) return null;
-        final JsonWriter writer = writerPool.get().tiny(tiny);
+        final JsonWriter writer = pollJsonWriter();
         writer.specify(type);
         factory.loadEncoder(type).convertTo(writer, value);
         return writer;
     }
 
     public JsonWriter convertMapToWriter(final Object... values) {
-        final JsonWriter writer = writerPool.get().tiny(tiny);
+        final JsonWriter writer = pollJsonWriter();
         ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
         return writer;
     }

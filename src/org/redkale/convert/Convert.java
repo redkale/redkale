@@ -32,10 +32,16 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return this.factory;
     }
 
-    protected <S extends W> S funcWrite(S writer, BiFunction<Attribute, Object, Object> fieldFunc) {
+    protected <S extends W> S configWrite(S writer) {
+        return writer;
+    }
+
+    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> fieldFunc) {
         writer.fieldFunc = fieldFunc;
         return writer;
     }
+
+    public abstract Convert<R, W> newConvert(final BiFunction<Attribute, Object, Object> fieldFunc);
 
     public abstract boolean isBinary();
 
@@ -51,9 +57,4 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values);
 
-    public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object value);
-
-    public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value);
-
-    public abstract ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object... values);
 }

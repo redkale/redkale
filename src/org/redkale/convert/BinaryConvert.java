@@ -6,8 +6,6 @@
 package org.redkale.convert;
 
 import java.lang.reflect.Type;
-import java.util.function.BiFunction;
-import org.redkale.util.Attribute;
 
 /**
  * 二进制序列化/反序列化操作类
@@ -35,10 +33,4 @@ public abstract class BinaryConvert<R extends Reader, W extends Writer> extends 
     public abstract byte[] convertTo(final Type type, final Object value);
 
     public abstract byte[] convertMapTo(final Object... values);
-
-    public abstract byte[] convertTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object value);
-
-    public abstract byte[] convertTo(final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value);
-
-    public abstract byte[] convertMapTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object... values);
 }
