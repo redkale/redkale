@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.io.Serializable;
 import java.net.HttpCookie;
 import java.util.*;
+import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -34,7 +35,14 @@ public class HttpResult<T> {
 
     protected String message;
 
+    protected Convert convert;
+
     public HttpResult() {
+    }
+
+    public HttpResult(Convert convert, T result) {
+        this.convert = convert;
+        this.result = result;
     }
 
     public HttpResult(T result) {
@@ -80,6 +88,15 @@ public class HttpResult<T> {
     public HttpResult<T> message(String message) {
         this.message = message;
         return this;
+    }
+
+    @ConvertDisabled
+    public Convert getConvert() {
+        return convert;
+    }
+
+    public void setConvert(Convert convert) {
+        this.convert = convert;
     }
 
     public Map<String, String> getHeaders() {

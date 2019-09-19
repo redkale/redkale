@@ -506,11 +506,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             } else if (result.getResult() instanceof CharSequence) {
                 finish(result.getResult().toString());
             } else {
-                finish(convert, result.getResult());
+                finish(result.getConvert() == null ? convert : result.getConvert(), result.getResult());
             }
-        } else if (obj instanceof RestResult) {
-            RestResult result = (RestResult) obj;
-            finish(result.getConvert() == null ? request.getJsonConvert() : result.getConvert(), type, result.getResult());
         } else {
             if (hasRender) {
                 if (onlyoneHttpRender != null) {
