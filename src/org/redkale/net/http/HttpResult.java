@@ -22,17 +22,17 @@ public class HttpResult<T> {
 
     public static final String SESSIONID_COOKIENAME = HttpRequest.SESSIONID_NAME;
 
-    private Map<String, String> headers;
+    protected Map<String, String> headers;
 
-    private List<HttpCookie> cookies;
+    protected List<HttpCookie> cookies;
 
-    private String contentType;
+    protected String contentType;
 
-    private T result;
+    protected T result;
 
-    private int status = 0; //不设置则为 200
+    protected int status = 0; //不设置则为 200
 
-    private String message;
+    protected String message;
 
     public HttpResult() {
     }
