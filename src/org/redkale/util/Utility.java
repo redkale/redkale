@@ -1969,6 +1969,14 @@ public final class Utility {
                 if (buf.remaining() < 2) buf = buffer2;
                 buf.put((byte) (0xc0 | (c >> 6)));
                 buf.put((byte) (0x80 | (c & 0x3f)));
+            } else if (Character.isSurrogate(c)) { //连取两个
+                if (buf.remaining() < 4) buf = buffer2;
+                int uc = Character.toCodePoint(c, chars[i + 1]);
+                buf.put((byte) (0xf0 | ((uc >> 18))));
+                buf.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
+                buf.put((byte) (0x80 | ((uc >> 6) & 0x3f)));
+                buf.put((byte) (0x80 | (uc & 0x3f)));
+                i++;
             } else {
                 if (buf.remaining() < 3) buf = buffer2;
                 buf.put((byte) (0xe0 | ((c >> 12))));
@@ -1976,8 +1984,8 @@ public final class Utility {
                 buf.put((byte) (0x80 | (c & 0x3f)));
             }
         }
-        if (buffer2 != null) buffer2.flip();
-        return buffer2;
+        if (buf != null) buf.flip();
+        return buf;
     }
 
     public static String getTypeDescriptor(java.lang.reflect.Type type) {
