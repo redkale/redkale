@@ -5,7 +5,6 @@
  */
 package org.redkale.test.convert;
 
-import java.util.function.BiFunction;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Attribute;
 
@@ -44,16 +43,13 @@ public class BiFunctionConvertMain {
         table.players = new GamePlayer[]{player1,player2,player3};
         JsonConvert convert1 = JsonConvert.root();
         System.out.println(convert1.convertTo(table));
-        JsonConvert convert2 = convert1.newConvert(new BiFunction<Attribute, Object, Object>() {
-            @Override
-            public Object apply(Attribute t, Object u) {
-                if(t.field().equals("cards") && u instanceof GamePlayer){
-                    int userid = ((GamePlayer)u).userid;
-                    if(userid == 3) return null; //玩家3的cards不输出
-                    return t.get(u);
-                }
+        JsonConvert convert2 = convert1.newConvert((Attribute t, Object u) -> {
+            if(t.field().equals("cards") && u instanceof GamePlayer){
+                int userid = ((GamePlayer)u).userid;
+                if(userid == 3) return null; //玩家3的cards不输出
                 return t.get(u);
             }
+            return t.get(u);
         });
         System.out.println(convert2.convertTo(table));
         //{"players":[{"cards":[11,12,13,14,15],"userid":1,"username":"玩家1"},{"cards":[21,22,23,24,25],"userid":2,"username":"玩家2"},{"cards":[31,32,33,34,35],"userid":3,"username":"玩家3"}],"tableid":100}
