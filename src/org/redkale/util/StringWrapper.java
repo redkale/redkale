@@ -8,6 +8,10 @@ package org.redkale.util;
 import java.io.Serializable;
 
 /**
+ * 主要供 JsonConvert.writeWrapper 使用
+ *
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
