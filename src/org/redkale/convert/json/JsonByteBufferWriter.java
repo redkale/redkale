@@ -48,6 +48,7 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     protected boolean recycle() {
+        super.recycle();
         this.index = 0;
         this.specify = null;
         this.charset = null;

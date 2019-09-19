@@ -97,7 +97,9 @@ public class JsonWriter extends Writer {
         if (quote) content[count++] = '"';
     }
 
+    @Override
     protected boolean recycle() {
+        super.recycle();
         this.count = 0;
         this.specify = null;
         if (this.content.length > defaultSize) {

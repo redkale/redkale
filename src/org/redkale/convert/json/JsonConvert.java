@@ -187,10 +187,21 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
+    public String convertTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
+        if (value == null) return "null";
+        return convertTo(value.getClass(), fieldFunc, value);
+    }
+
+    @Override
     public String convertTo(final Type type, final Object value) {
+        return convertTo(type, (BiFunction) null, value);
+    }
+
+    @Override
+    public String convertTo(final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (type == null) return null;
         if (value == null) return "null";
-        final JsonWriter writer = writerPool.get().tiny(tiny);
+        final JsonWriter writer = funcWrite(writerPool.get().tiny(tiny), fieldFunc);
         writer.specify(type);
         factory.loadEncoder(type).convertTo(writer, value);
         String result = writer.toString();
@@ -201,7 +212,13 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     @Override
     public String convertMapTo(final Object... values) {
         if (values == null) return "null";
-        final JsonWriter writer = writerPool.get().tiny(tiny);
+        return convertMapTo((BiFunction) null, values);
+    }
+
+    @Override
+    public String convertMapTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object... values) {
+        if (values == null) return "null";
+        final JsonWriter writer = funcWrite(writerPool.get().tiny(tiny), fieldFunc);
         ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
         String result = writer.toString();
         writerPool.accept(writer);
@@ -252,8 +269,13 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
+        return convertTo(supplier, (BiFunction) null, value);
+    }
+
+    @Override
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (supplier == null) return null;
-        JsonByteBufferWriter out = new JsonByteBufferWriter(tiny, null, supplier);
+        JsonByteBufferWriter out = funcWrite(new JsonByteBufferWriter(tiny, null, supplier), fieldFunc);
         if (value == null) {
             out.writeNull();
         } else {
@@ -264,8 +286,13 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
+        return convertTo(supplier, type, (BiFunction) null, value);
+    }
+
+    @Override
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (supplier == null || type == null) return null;
-        JsonByteBufferWriter out = new JsonByteBufferWriter(tiny, null, supplier);
+        JsonByteBufferWriter out = funcWrite(new JsonByteBufferWriter(tiny, null, supplier), fieldFunc);
         if (value == null) {
             out.writeNull();
         } else {
@@ -277,8 +304,13 @@ public final class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values) {
+        return convertMapTo(supplier, (BiFunction) null, values);
+    }
+
+    @Override
+    public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object... values) {
         if (supplier == null) return null;
-        JsonByteBufferWriter out = new JsonByteBufferWriter(tiny, null, supplier);
+        JsonByteBufferWriter out = funcWrite(new JsonByteBufferWriter(tiny, null, supplier), fieldFunc);
         if (values == null) {
             out.writeNull();
         } else {

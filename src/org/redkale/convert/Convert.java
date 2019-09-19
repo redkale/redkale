@@ -7,7 +7,8 @@ package org.redkale.convert;
 
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
-import java.util.function.Supplier;
+import java.util.function.*;
+import org.redkale.util.Attribute;
 
 /**
  * 序列化/反序列化操作类
@@ -31,6 +32,11 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return this.factory;
     }
 
+    protected <S extends W> S funcWrite(S writer, BiFunction<Attribute, Object, Object> fieldFunc) {
+        writer.fieldFunc = fieldFunc;
+        return writer;
+    }
+
     public abstract boolean isBinary();
 
     public abstract <T> T convertFrom(final Type type, final byte[] bytes);
@@ -45,4 +51,9 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values);
 
+    public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object value);
+
+    public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value);
+
+    public abstract ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object... values);
 }

@@ -97,7 +97,9 @@ public class BsonWriter extends Writer {
         count += len;
     }
 
+    @Override
     protected boolean recycle() {
+        super.recycle();
         this.count = 0;
         this.specify = null;
         if (this.content.length > defaultSize) {

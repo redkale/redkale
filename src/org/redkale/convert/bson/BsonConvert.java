@@ -94,6 +94,7 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     }
 
     //------------------------------ convertFrom -----------------------------------------------------------
+    @Override
     public <T> T convertFrom(final Type type, final byte[] bytes) {
         if (bytes == null) return null;
         return convertFrom(type, bytes, 0, bytes.length);
@@ -141,8 +142,13 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     //------------------------------ convertTo -----------------------------------------------------------
     @Override
     public byte[] convertTo(final Object value) {
+        return convertTo((BiFunction) null, value);
+    }
+
+    @Override
+    public byte[] convertTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (value == null) {
-            final BsonWriter out = writerPool.get().tiny(tiny);
+            final BsonWriter out = funcWrite(writerPool.get().tiny(tiny), fieldFunc);
             out.writeNull();
             byte[] result = out.toArray();
             writerPool.accept(out);
@@ -153,8 +159,13 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public byte[] convertTo(final Type type, final Object value) {
+        return convertTo(type, (BiFunction) null, value);
+    }
+
+    @Override
+    public byte[] convertTo(final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (type == null) return null;
-        final BsonWriter out = writerPool.get().tiny(tiny);
+        final BsonWriter out = funcWrite(writerPool.get().tiny(tiny), fieldFunc);
         factory.loadEncoder(type).convertTo(out, value);
         byte[] result = out.toArray();
         writerPool.accept(out);
@@ -163,8 +174,13 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public byte[] convertMapTo(final Object... values) {
+        return convertTo((BiFunction) null, values);
+    }
+
+    @Override
+    public byte[] convertMapTo(BiFunction<Attribute, Object, Object> fieldFunc, final Object... values) {
         if (values == null) return null;
-        final BsonWriter out = writerPool.get().tiny(tiny);
+        final BsonWriter out = funcWrite(writerPool.get().tiny(tiny), fieldFunc);
         ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
         byte[] result = out.toArray();
         writerPool.accept(out);
@@ -198,8 +214,13 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
+        return convertTo(supplier, (BiFunction) null, value);
+    }
+
+    @Override
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (supplier == null) return null;
-        BsonByteBufferWriter out = new BsonByteBufferWriter(tiny, supplier);
+        BsonByteBufferWriter out = funcWrite(new BsonByteBufferWriter(tiny, supplier), fieldFunc);
         if (value == null) {
             out.writeNull();
         } else {
@@ -210,8 +231,13 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
+        return convertTo(supplier, type, (BiFunction) null, value);
+    }
+
+    @Override
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, BiFunction<Attribute, Object, Object> fieldFunc, final Object value) {
         if (supplier == null || type == null) return null;
-        BsonByteBufferWriter out = new BsonByteBufferWriter(tiny, supplier);
+        BsonByteBufferWriter out = funcWrite(new BsonByteBufferWriter(tiny, supplier), fieldFunc);
         if (value == null) {
             out.writeNull();
         } else {
@@ -222,8 +248,13 @@ public final class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values) {
+        return convertMapTo(supplier, (BiFunction) null, values);
+    }
+
+    @Override
+    public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, BiFunction<Attribute, Object, Object> fieldFunc, final Object... values) {
         if (supplier == null) return null;
-        BsonByteBufferWriter out = new BsonByteBufferWriter(tiny, supplier);
+        BsonByteBufferWriter out = funcWrite(new BsonByteBufferWriter(tiny, supplier), fieldFunc);
         if (values == null) {
             out.writeNull();
         } else {

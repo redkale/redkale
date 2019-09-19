@@ -6,7 +6,8 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
-import org.redkale.util.StringWrapper;
+import java.util.function.BiFunction;
+import org.redkale.util.*;
 
 /**
  * 序列化的数据输出流
@@ -24,6 +25,9 @@ public abstract class Writer {
     //convertTo时是否以指定Type的ObjectEncoder进行处理
     protected Type specify;
 
+    //对某个字段值进行动态处理
+    protected BiFunction<Attribute, Object, Object> fieldFunc;
+
     /**
      * 设置specify
      *
@@ -37,6 +41,11 @@ public abstract class Writer {
         } else {
             this.specify = value;
         }
+    }
+
+    protected boolean recycle() {
+        this.fieldFunc = null;
+        return true;
     }
 
     /**
@@ -106,7 +115,12 @@ public abstract class Writer {
      */
     @SuppressWarnings("unchecked")
     public void writeObjectField(final EnMember member, Object obj) {
-        Object value = member.attribute.get(obj);
+        Object value;
+        if (fieldFunc == null) {
+            value = member.attribute.get(obj);
+        } else {
+            value = fieldFunc.apply(member.attribute, obj);
+        }
         if (value == null) return;
         if (tiny()) {
             if (member.istring) {
