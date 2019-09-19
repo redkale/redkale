@@ -1953,6 +1953,7 @@ public final class Utility {
         return encodeUTF8(buffer, encodeUTF8Length(text, start, len), text, start, len);
     }
 
+    //返回的ByteBuffer为扩展buffer，为null表示参数中的buffer足够存储数据
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, int bytesLength, final char[] text, final int start, final int len) {
         char c;
         char[] chars = text;
@@ -1984,8 +1985,8 @@ public final class Utility {
                 buf.put((byte) (0x80 | (c & 0x3f)));
             }
         }
-        if (buf != null) buf.flip();
-        return buf;
+        if (buffer2 != null) buffer2.flip();
+        return buffer2; //返回扩展buffer
     }
 
     public static String getTypeDescriptor(java.lang.reflect.Type type) {
