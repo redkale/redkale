@@ -45,7 +45,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  *
  * @see Column
- * @see GeneratedValue
+ * see GeneratedValue
  *
  * @since Java Persistence 1.0
  */
