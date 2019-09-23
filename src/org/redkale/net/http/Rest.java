@@ -860,7 +860,7 @@ public final class Rest {
                         break;
                     }
                 }
-                if (defmodulename.isEmpty() || (!pound && entrys.size() <= 6)) {
+                if (defmodulename.isEmpty() || (!pound && entrys.size() <= 2)) {
                     for (MappingEntry entry : entrys) {
                         String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name;
                         urlpath += "," + suburl;
