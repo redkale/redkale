@@ -43,7 +43,7 @@ public class BsonWriter extends Writer {
     }
 
     protected BsonWriter(byte[] bs) {
-        this.content = bs;
+        this.content = bs == null ? new byte[0] : bs;
     }
 
     public BsonWriter() {
