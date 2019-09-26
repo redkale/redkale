@@ -349,7 +349,12 @@ public final class SncpClient {
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
-            bsonConvert.convertTo(writer, CompletionHandler.class.isAssignableFrom(myparamclass[i]) ? CompletionHandler.class : myparamtypes[i], params[i]);
+            BsonConvert bcc = bsonConvert;
+            if (params[i] instanceof org.redkale.service.RetResult) {
+                org.redkale.convert.Convert cc = ((org.redkale.service.RetResult) params[i]).convert();
+                if (cc instanceof BsonConvert) bcc = (BsonConvert) cc;
+            }
+            bcc.convertTo(writer, CompletionHandler.class.isAssignableFrom(myparamclass[i]) ? CompletionHandler.class : myparamtypes[i], params[i]);
         }
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
