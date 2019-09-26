@@ -7,6 +7,7 @@ package org.redkale.service;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.*;
 import org.redkale.util.Utility;
 
@@ -33,10 +34,17 @@ public class RetResult<T> {
 
     protected Map<String, String> attach;
 
+    protected Convert convert;
+
     public RetResult() {
     }
 
     public RetResult(T result) {
+        this.result = result;
+    }
+
+    public RetResult(Convert convert, T result) {
+        this.convert = convert;
         this.result = result;
     }
 
@@ -53,6 +61,14 @@ public class RetResult<T> {
         this.retcode = retcode;
         this.retinfo = retinfo;
         this.result = result;
+    }
+
+    public Convert convert() {
+        return convert;
+    }
+
+    public void convert(Convert convert) {
+        this.convert = convert;
     }
 
     public static RetResult success() {

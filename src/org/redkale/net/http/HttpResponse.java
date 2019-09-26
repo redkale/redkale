@@ -390,7 +390,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
             this.header.addValue("retinfo", ret.getRetinfo());
         }
-        finish(request.getJsonConvert().convertTo(getBodyBufferSupplier(), ret));
+        Convert convert = ret == null ? null : ret.convert();
+        if (convert == null) convert = request.getJsonConvert();
+        finish(convert.convertTo(getBodyBufferSupplier(), ret));
     }
 
     /**
@@ -497,6 +499,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 context.getLogger().log(Level.WARNING, "HttpServlet finish File occur, force to close channel. request = " + getRequest(), e);
                 finish(500, null);
             }
+        } else if (obj instanceof org.redkale.service.RetResult) {
+            finishJson((org.redkale.service.RetResult) obj);
         } else if (obj instanceof HttpResult) {
             HttpResult result = (HttpResult) obj;
             if (result.getContentType() != null) setContentType(result.getContentType());
@@ -506,7 +510,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             } else if (result.getResult() instanceof CharSequence) {
                 finish(result.getResult().toString());
             } else {
-                finish(result.getConvert() == null ? convert : result.getConvert(), result.getResult());
+                finish(result.convert() == null ? convert : result.convert(), result.getResult());
             }
         } else {
             if (hasRender) {

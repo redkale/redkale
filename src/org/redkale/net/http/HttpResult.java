@@ -90,12 +90,11 @@ public class HttpResult<T> {
         return this;
     }
 
-    @ConvertDisabled
-    public Convert getConvert() {
+    public Convert convert() {
         return convert;
     }
 
-    public void setConvert(Convert convert) {
+    public void convert(Convert convert) {
         this.convert = convert;
     }
 
