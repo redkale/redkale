@@ -5,6 +5,7 @@
  */
 package org.redkale.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
@@ -36,18 +37,27 @@ public final class ResourceFactory {
 
     private static final Logger logger = Logger.getLogger(ResourceFactory.class.getSimpleName());
 
+    private static final ConcurrentHashMap<Type, ResourceInjectLoader> injectLoaderMap = new ConcurrentHashMap();
+
     private final ResourceFactory parent;
 
     private static final ResourceFactory instance = new ResourceFactory(null);
 
     private final List<WeakReference<ResourceFactory>> chidren = new CopyOnWriteArrayList<>();
 
-    private final ConcurrentHashMap<Type, ResourceLoader> loadermap = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Type, ResourceLoader> resLoaderMap = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ResourceEntry>> store = new ConcurrentHashMap();
 
     private ResourceFactory(ResourceFactory parent) {
         this.parent = parent;
+        if (parent == null) {
+            ServiceLoader<ResourceInjectLoader> loaders = ServiceLoader.load(ResourceInjectLoader.class);
+            Iterator<ResourceInjectLoader> it = loaders.iterator();
+            while (it.hasNext()) {
+                this.register(it.next());
+            }
+        }
     }
 
     /**
@@ -565,6 +575,7 @@ public final class ResourceFactory {
         try {
             list.add(src);
             Class clazz = src.getClass();
+            final boolean diyloaderflag = !injectLoaderMap.isEmpty();
             do {
                 if (java.lang.Enum.class.isAssignableFrom(clazz)) break;
                 final String cname = clazz.getName();
@@ -585,6 +596,13 @@ public final class ResourceFactory {
                                 flag = false;
                                 break;
                             }
+                        }
+                        if (flag && diyloaderflag) {
+                            injectLoaderMap.values().stream().forEach(iloader -> {
+                                Annotation ann = field.getAnnotation(iloader.annotationType());
+                                if (ann == null) return;
+                                iloader.load(this, src, ann, field, attachment);
+                            });
                         }
                         if (ns == null) continue;
                         final String nsname = ns.getClass().getName();
@@ -685,16 +703,21 @@ public final class ResourceFactory {
         }
     }
 
+    public <T extends Annotation> void register(final ResourceInjectLoader<T> loader) {
+        if (loader == null) return;
+        injectLoaderMap.put(loader.annotationType(), loader);
+    }
+
     public void register(final ResourceLoader rs, final Type... clazzs) {
         if (clazzs == null || rs == null) return;
         for (Type clazz : clazzs) {
-            loadermap.put(clazz, rs);
+            resLoaderMap.put(clazz, rs);
         }
     }
 
     private ResourceLoader findMatchLoader(Type ft, Field field) {
-        ResourceLoader it = this.loadermap.get(ft);
-        if (it == null && field != null) it = this.loadermap.get(field.getType());
+        ResourceLoader it = this.resLoaderMap.get(ft);
+        if (it == null && field != null) it = this.resLoaderMap.get(field.getType());
         if (it != null) return it;
         return parent == null ? null : parent.findMatchLoader(ft, field);
     }
@@ -702,7 +725,7 @@ public final class ResourceFactory {
     private ResourceLoader findRegxLoader(Type ft, Field field) {
         if (field == null) return null;
         Class c = field.getType();
-        for (Map.Entry<Type, ResourceLoader> en : this.loadermap.entrySet()) {
+        for (Map.Entry<Type, ResourceLoader> en : this.resLoaderMap.entrySet()) {
             Type t = en.getKey();
             if (t == ft) return en.getValue();
             if (t instanceof Class && (((Class) t)).isAssignableFrom(c)) return en.getValue();
