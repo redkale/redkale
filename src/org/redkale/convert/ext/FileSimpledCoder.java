@@ -20,7 +20,7 @@ import org.redkale.convert.*;
  */
 public class FileSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, File> {
 
-    public static final PatternSimpledCoder instance = new PatternSimpledCoder();
+    public static final FileSimpledCoder instance = new FileSimpledCoder();
 
     @Override
     public void convertTo(W out, File value) {
