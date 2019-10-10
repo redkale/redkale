@@ -37,13 +37,13 @@ public final class ResourceFactory {
 
     private static final Logger logger = Logger.getLogger(ResourceFactory.class.getSimpleName());
 
-    private static final ConcurrentHashMap<Type, ResourceInjectLoader> injectLoaderMap = new ConcurrentHashMap();
-
     private final ResourceFactory parent;
 
     private static final ResourceFactory instance = new ResourceFactory(null);
 
     private final List<WeakReference<ResourceFactory>> chidren = new CopyOnWriteArrayList<>();
+
+    private final ConcurrentHashMap<Type, ResourceInjectLoader> injectLoaderMap = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Type, ResourceLoader> resLoaderMap = new ConcurrentHashMap();
 
@@ -55,7 +55,8 @@ public final class ResourceFactory {
             ServiceLoader<ResourceInjectLoader> loaders = ServiceLoader.load(ResourceInjectLoader.class);
             Iterator<ResourceInjectLoader> it = loaders.iterator();
             while (it.hasNext()) {
-                this.register(it.next());
+                ResourceInjectLoader ril = it.next();
+                this.injectLoaderMap.put(ril.annotationType(), ril);
             }
         }
     }
@@ -575,7 +576,7 @@ public final class ResourceFactory {
         try {
             list.add(src);
             Class clazz = src.getClass();
-            final boolean diyloaderflag = !injectLoaderMap.isEmpty();
+            final boolean diyloaderflag = !instance.injectLoaderMap.isEmpty();
             do {
                 if (java.lang.Enum.class.isAssignableFrom(clazz)) break;
                 final String cname = clazz.getName();
@@ -598,7 +599,7 @@ public final class ResourceFactory {
                             }
                         }
                         if (flag && diyloaderflag) {
-                            injectLoaderMap.values().stream().forEach(iloader -> {
+                            instance.injectLoaderMap.values().stream().forEach(iloader -> {
                                 Annotation ann = field.getAnnotation(iloader.annotationType());
                                 if (ann == null) return;
                                 iloader.load(this, src, ann, field, attachment);
@@ -705,7 +706,7 @@ public final class ResourceFactory {
 
     public <T extends Annotation> void register(final ResourceInjectLoader<T> loader) {
         if (loader == null) return;
-        injectLoaderMap.put(loader.annotationType(), loader);
+        instance.injectLoaderMap.put(loader.annotationType(), loader);
     }
 
     public void register(final ResourceLoader rs, final Type... clazzs) {
