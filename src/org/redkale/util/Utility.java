@@ -611,6 +611,30 @@ public final class Utility {
     }
 
     /**
+     * 将int数组倒序
+     *
+     * @param array 原数组
+     *
+     * @return 新数组
+     */
+    public static int[] reverseSort(final int[] array) {
+        if (array == null || array.length == 0) return array;
+        return Arrays.stream(array).boxed().sorted(Collections.reverseOrder()).mapToInt(x -> x).toArray();
+    }
+
+    /**
+     * 将long数组倒序
+     *
+     * @param array 原数组
+     *
+     * @return 新数组
+     */
+    public static long[] reverseSort(final long[] array) {
+        if (array == null || array.length == 0) return array;
+        return Arrays.stream(array).boxed().sorted(Collections.reverseOrder()).mapToLong(x -> x).toArray();
+    }
+
+    /**
      * 将元素从数组中删除
      *
      * @param <T>   泛型
