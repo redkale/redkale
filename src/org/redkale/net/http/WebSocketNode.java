@@ -595,7 +595,7 @@ public abstract class WebSocketNode {
 
     protected CompletableFuture<Integer> sendOneAddrMessage(final InetSocketAddress sncpAddr, final Object message, final boolean last, final Serializable... userids) {
         if (message instanceof CompletableFuture) return ((CompletableFuture) message).thenApply(msg -> sendOneAddrMessage(sncpAddr, msg, last, userids));
-        if (logger.isLoggable(Level.FINEST)) {
+        if (logger.isLoggable(Level.FINEST) && this.localEngine == null) { //只打印远程模式的
             logger.finest("websocket want send message {userids:" + JsonConvert.root().convertTo(userids) + ", sncpaddr:" + sncpAddr + ", content:" + (message instanceof WebSocketPacket ? ((WebSocketPacket) message).toSimpleString() : (message instanceof CharSequence ? message : JsonConvert.root().convertTo(message))) + "} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
         }
         if (Objects.equals(sncpAddr, this.localSncpAddress)) {
@@ -918,7 +918,7 @@ public abstract class WebSocketNode {
     }
 
     protected CompletableFuture<Integer> sendOneAddrAction(final InetSocketAddress sncpAddr, final WebSocketAction action, final Serializable... userids) {
-        if (logger.isLoggable(Level.FINEST)) {
+        if (logger.isLoggable(Level.FINEST) && this.localEngine == null) { //只打印远程模式的
             logger.finest("websocket want send action {userids:" + JsonConvert.root().convertTo(userids) + ", sncpaddr:" + sncpAddr + ", action:" + action + " from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
         }
         if (Objects.equals(sncpAddr, this.localSncpAddress)) {
