@@ -36,12 +36,15 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return writer;
     }
 
-    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> fieldFunc) {
-        writer.fieldFunc = fieldFunc;
+    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, EnFieldObject[]> objExtFunc) {
+        writer.objFieldFunc = objFieldFunc;
+        writer.objExtFunc = objExtFunc;
         return writer;
     }
 
-    public abstract Convert<R, W> newConvert(final BiFunction<Attribute, Object, Object> fieldFunc);
+    public abstract Convert<R, W> newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc);
+
+    public abstract Convert<R, W> newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, EnFieldObject[]> objExtFunc);
 
     public abstract boolean isBinary();
 

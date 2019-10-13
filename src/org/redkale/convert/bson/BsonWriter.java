@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.bson;
 
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.ByteSimpledCoder;
@@ -200,11 +201,10 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final void writeFieldName(EnMember member) {
-        Attribute attribute = member.getAttribute();
+    public final void writeFieldName(String fieldName, Type fieldType, int fieldPos) {
         writeByte(BsonReader.SIGN_HASNEXT);
-        writeSmallString(attribute.field());
-        writeByte(BsonFactory.typeEnum(attribute.type()));
+        writeSmallString(fieldName);
+        writeByte(BsonFactory.typeEnum(fieldType));
     }
 
     /**

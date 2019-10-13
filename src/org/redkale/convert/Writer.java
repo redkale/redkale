@@ -6,7 +6,7 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
-import java.util.function.BiFunction;
+import java.util.function.*;
 import org.redkale.util.*;
 
 /**
@@ -26,7 +26,10 @@ public abstract class Writer {
     protected Type specify;
 
     //对某个字段值进行动态处理
-    protected BiFunction<Attribute, Object, Object> fieldFunc;
+    protected BiFunction<Attribute, Object, Object> objFieldFunc;
+
+    //对某个对象进行动态扩展字段值处理
+    protected Function<Object, EnFieldObject[]> objExtFunc;
 
     /**
      * 设置specify
@@ -44,7 +47,7 @@ public abstract class Writer {
     }
 
     protected boolean recycle() {
-        this.fieldFunc = null;
+        this.objFieldFunc = null;
         return true;
     }
 
@@ -116,10 +119,10 @@ public abstract class Writer {
     @SuppressWarnings("unchecked")
     public void writeObjectField(final EnMember member, Object obj) {
         Object value;
-        if (fieldFunc == null) {
+        if (objFieldFunc == null) {
             value = member.attribute.get(obj);
         } else {
-            value = fieldFunc.apply(member.attribute, obj);
+            value = objFieldFunc.apply(member.attribute, obj);
         }
         if (value == null) return;
         if (tiny()) {
@@ -129,9 +132,47 @@ public abstract class Writer {
                 if (!((Boolean) value)) return;
             }
         }
-        this.writeFieldName(member);
+        Attribute attr = member.getAttribute();
+        this.writeFieldName(attr.field(), attr.genericType(), member.getPosition());
         member.encoder.convertTo(this, value);
         this.comma = true;
+    }
+
+    /**
+     * 输出一个对象的某个扩展字段
+     *
+     *
+     * @param fieldName  字段名称
+     * @param fieldType  字段类型
+     * @param fieldPos   字段顺序
+     * @param anyEncoder Encoder
+     * @param value      写入的字段对象
+     */
+    @SuppressWarnings("unchecked")
+    public void writeObjectField(final String fieldName, Type fieldType, int fieldPos, Encodeable anyEncoder, Object value) {
+        if (value == null) return;
+        if (fieldType == null) fieldType = value.getClass();
+        if (tiny() && fieldType instanceof Class) {
+            Class clazz = (Class) fieldType;
+            if (CharSequence.class.isAssignableFrom(clazz)) {
+                if (((CharSequence) value).length() == 0) return;
+            } else if (clazz == boolean.class || clazz == Boolean.class) {
+                if (!((Boolean) value)) return;
+            }
+        }
+        this.writeFieldName(fieldName, fieldType, fieldPos);
+        anyEncoder.convertTo(this, value);
+        this.comma = true;
+    }
+
+    /**
+     * 输出一个字段名
+     *
+     * @param member 字段
+     */
+    public final void writeFieldName(final EnMember member) {
+        Attribute attr = member.getAttribute();
+        this.writeFieldName(attr.field(), attr.genericType(), member.getPosition());
     }
 
     /**
@@ -191,9 +232,11 @@ public abstract class Writer {
     /**
      * 输出一个字段名
      *
-     * @param member 字段的EnMember对象
+     * @param fieldName 字段名称
+     * @param fieldType 字段类型
+     * @param fieldPos  字段顺序
      */
-    public abstract void writeFieldName(EnMember member);
+    public abstract void writeFieldName(String fieldName, Type fieldType, int fieldPos);
 
     /**
      * 写入一个boolean值
