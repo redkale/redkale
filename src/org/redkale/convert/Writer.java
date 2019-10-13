@@ -29,7 +29,7 @@ public abstract class Writer {
     protected BiFunction<Attribute, Object, Object> objFieldFunc;
 
     //对某个对象进行动态扩展字段值处理
-    protected Function<Object, EnFieldObject[]> objExtFunc;
+    protected Function<Object, EnFieldValue[]> objExtFunc;
 
     /**
      * 设置specify

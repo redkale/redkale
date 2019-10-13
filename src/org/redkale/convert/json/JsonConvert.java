@@ -52,7 +52,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
-    public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> fieldFunc, Function<Object, EnFieldObject[]> objExtFunc) {
+    public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> fieldFunc, Function<Object, EnFieldValue[]> objExtFunc) {
         return new JsonConvert(getFactory(), tiny) {
             @Override
             protected <S extends JsonWriter> S configWrite(S writer) {
