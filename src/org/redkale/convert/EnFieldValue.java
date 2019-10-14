@@ -54,6 +54,15 @@ public class EnFieldValue implements Serializable {
         this.value = value;
     }
 
+    public static EnFieldValue[] ofArray(Object... items) {
+        int len = items.length / 2;
+        EnFieldValue[] rs = new EnFieldValue[len];
+        for (int i = 0; i < len; i++) {
+            rs[i] = new EnFieldValue(items[i * 2].toString(), items[i * 2 + 1]);
+        }
+        return rs;
+    }
+
     public String getName() {
         return name;
     }
