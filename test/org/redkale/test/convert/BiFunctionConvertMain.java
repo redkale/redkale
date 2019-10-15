@@ -5,7 +5,7 @@
  */
 package org.redkale.test.convert;
 
-import org.redkale.convert.EnFieldValue;
+import org.redkale.convert.ConvertField;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Attribute;
 
@@ -58,7 +58,8 @@ public class BiFunctionConvertMain {
             return t.get(u);
         }, (Object u) -> {
             if (table != u) return null;
-            return new EnFieldValue[]{new EnFieldValue("extcol1", 30), new EnFieldValue("extcol2", "扩展字段值")};
+            //return new ConvertField[]{new ConvertField("extcol1", 30), new ConvertField("extcol2", "扩展字段值")};
+            return ConvertField.ofArray("extcol1", 30, "extcol2", "扩展字段值");
         });
         System.out.println(convert2.convertTo(table));
         //{"players":[{"cards":[11,12,13,14,15],"userid":1,"username":"玩家1"},{"cards":[21,22,23,24,25],"userid":2,"username":"玩家2"},{"cards":[31,32,33,34,35],"userid":3,"username":"玩家3"}],"tableid":100}
