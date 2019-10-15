@@ -1872,10 +1872,10 @@ public final class Utility {
     public static byte[] encodeUTF8(final char[] text, final int start, final int len) {
         char c;
         int size = 0;
-        final char[] chars = text;
+        final char[] chs = text;
         final int limit = start + len;
         for (int i = start; i < limit; i++) {
-            c = chars[i];
+            c = chs[i];
             if (c < 0x80) {
                 size++;
             } else if (c < 0x800) {
@@ -1889,14 +1889,14 @@ public final class Utility {
         final byte[] bytes = new byte[size];
         size = 0;
         for (int i = start; i < limit; i++) {
-            c = chars[i];
+            c = chs[i];
             if (c < 0x80) {
                 bytes[size++] = (byte) c;
             } else if (c < 0x800) {
                 bytes[size++] = (byte) (0xc0 | (c >> 6));
                 bytes[size++] = (byte) (0x80 | (c & 0x3f));
             } else if (Character.isSurrogate(c)) { //连取两个
-                int uc = Character.toCodePoint(c, chars[i + 1]);
+                int uc = Character.toCodePoint(c, chs[i + 1]);
                 bytes[size++] = (byte) (0xf0 | ((uc >> 18)));
                 bytes[size++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
                 bytes[size++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
@@ -1944,10 +1944,10 @@ public final class Utility {
     public static int encodeUTF8Length(final char[] text, final int start, final int len) {
         char c;
         int size = 0;
-        final char[] chars = text;
+        final char[] chs = text;
         final int limit = start + len;
         for (int i = start; i < limit; i++) {
-            c = chars[i];
+            c = chs[i];
             if (c < 0x80) {
                 size++;
             } else if (c < 0x800) {
@@ -1980,13 +1980,13 @@ public final class Utility {
     //返回的ByteBuffer为扩展buffer，为null表示参数中的buffer足够存储数据
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, int bytesLength, final char[] text, final int start, final int len) {
         char c;
-        char[] chars = text;
+        char[] chs = text;
         final int limit = start + len;
         int remain = buffer.remaining();
         final ByteBuffer buffer2 = remain >= bytesLength ? null : ByteBuffer.allocate(bytesLength - remain + 4); //最差情况buffer最后两byte没有填充
         ByteBuffer buf = buffer;
         for (int i = start; i < limit; i++) {
-            c = chars[i];
+            c = chs[i];
             if (c < 0x80) {
                 if (buf.remaining() < 1) buf = buffer2;
                 buf.put((byte) c);
@@ -1996,7 +1996,7 @@ public final class Utility {
                 buf.put((byte) (0x80 | (c & 0x3f)));
             } else if (Character.isSurrogate(c)) { //连取两个
                 if (buf.remaining() < 4) buf = buffer2;
-                int uc = Character.toCodePoint(c, chars[i + 1]);
+                int uc = Character.toCodePoint(c, chs[i + 1]);
                 buf.put((byte) (0xf0 | ((uc >> 18))));
                 buf.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
                 buf.put((byte) (0x80 | ((uc >> 6) & 0x3f)));
