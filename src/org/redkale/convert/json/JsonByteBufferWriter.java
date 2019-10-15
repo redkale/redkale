@@ -115,7 +115,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         int byteLength = quote ? 2 : 0;
         ByteBuffer bb = null;
         if (charset == null) {
-            byteLength += encodeUTF8Length(chs, start, len);
+            byteLength += Utility.encodeUTF8Length(chs, start, len);
         } else {
             bb = charset.encode(CharBuffer.wrap(chs, start, len));
             byteLength += bb.remaining();
@@ -134,6 +134,13 @@ public class JsonByteBufferWriter extends JsonWriter {
                     } else if (c < 0x800) {
                         buffer.put((byte) (0xc0 | (c >> 6)));
                         buffer.put((byte) (0x80 | (c & 0x3f)));
+                    } else if (Character.isSurrogate(c)) { //连取两个
+                        int uc = Character.toCodePoint(c, chs[i + 1]);
+                        buffer.put((byte) (0xf0 | ((uc >> 18))));
+                        buffer.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
+                        buffer.put((byte) (0x80 | ((uc >> 6) & 0x3f)));
+                        buffer.put((byte) (0x80 | (uc & 0x3f)));
+                        i++;
                     } else {
                         buffer.put((byte) (0xe0 | ((c >> 12))));
                         buffer.put((byte) (0x80 | ((c >> 6) & 0x3f)));
@@ -194,25 +201,13 @@ public class JsonByteBufferWriter extends JsonWriter {
         return this.buffers[++this.index];
     }
 
-    protected static int encodeUTF8Length(final char[] text, final int start, final int len) {
-        char c;
-        int size = 0;
-        final char[] chars = text;
-        final int limit = start + len;
-        for (int i = start; i < limit; i++) {
-            c = chars[i];
-            size += (c < 0x80 ? 1 : (c < 0x800 ? 2 : 3));
-        }
-        return size;
-    }
-
     protected static int encodeEscapeUTF8Length(final char[] text, final int start, final int len) {
         char c;
         int size = 0;
-        final char[] chars = text;
+        final char[] chs = text;
         final int limit = start + len;
         for (int i = start; i < limit; i++) {
-            c = chars[i];
+            c = chs[i];
             switch (c) {
                 case '\n': size += 2;
                     break;
@@ -225,7 +220,7 @@ public class JsonByteBufferWriter extends JsonWriter {
                 case '"': size += 2;
                     break;
                 default:
-                    size += (c < 0x80 ? 1 : (c < 0x800 ? 2 : 3));
+                    size += (c < 0x80 ? 1 : (c < 0x800 || Character.isSurrogate(c) ? 2 : 3));
                     break;
             }
         }
@@ -289,7 +284,8 @@ public class JsonByteBufferWriter extends JsonWriter {
             if (expandsize == 0) { // 只需要一个buffer 
                 final ByteBuffer buffer = this.buffers[index];
                 buffer.put((byte) '"');
-                for (char c : chs) {
+                for (int i = 0; i < chs.length; i++) {
+                    char c = chs[i];
                     switch (c) {
                         case '\n': buffer.put((byte) '\\').put((byte) 'n');
                             break;
@@ -307,6 +303,13 @@ public class JsonByteBufferWriter extends JsonWriter {
                             } else if (c < 0x800) {
                                 buffer.put((byte) (0xc0 | (c >> 6)));
                                 buffer.put((byte) (0x80 | (c & 0x3f)));
+                            } else if (Character.isSurrogate(c)) { //连取两个
+                                int uc = Character.toCodePoint(c, chs[i + 1]);
+                                buffer.put((byte) (0xf0 | ((uc >> 18))));
+                                buffer.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
+                                buffer.put((byte) (0x80 | ((uc >> 6) & 0x3f)));
+                                buffer.put((byte) (0x80 | (uc & 0x3f)));
+                                i++;
                             } else {
                                 buffer.put((byte) (0xe0 | ((c >> 12))));
                                 buffer.put((byte) (0x80 | ((c >> 6) & 0x3f)));
