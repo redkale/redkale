@@ -170,10 +170,10 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 out.writeObjectField(member, value);
             }
             if (out.objExtFunc != null) {
-                EnFieldValue[] extFields = out.objExtFunc.apply(value);
+                ConvertField[] extFields = out.objExtFunc.apply(value);
                 if (extFields != null) {
                     Encodeable<W, ?> anyEncoder = factory.getAnyEncoder();
-                    for (EnFieldValue en : extFields) {
+                    for (ConvertField en : extFields) {
                         if (en == null) continue;
                         maxPosition++;
                         out.writeObjectField(en.getName(), en.getType(), Math.max(en.getPosition(), maxPosition), anyEncoder, en.getValue());

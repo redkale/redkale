@@ -17,7 +17,7 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @author zhangjx
  */
-public class EnFieldValue implements Serializable {
+public class ConvertField implements Serializable {
 
     protected String name;
 
@@ -27,38 +27,38 @@ public class EnFieldValue implements Serializable {
 
     protected Object value;
 
-    public EnFieldValue() {
+    public ConvertField() {
     }
 
-    public EnFieldValue(String name, Object value) {
+    public ConvertField(String name, Object value) {
         this.name = name;
         this.value = value;
     }
 
-    public EnFieldValue(String name, int position, Object value) {
+    public ConvertField(String name, int position, Object value) {
         this.name = name;
         this.position = position;
         this.value = value;
     }
 
-    public EnFieldValue(String name, Type type, Object value) {
+    public ConvertField(String name, Type type, Object value) {
         this.name = name;
         this.type = type;
         this.value = value;
     }
 
-    public EnFieldValue(String name, Type type, int position, Object value) {
+    public ConvertField(String name, Type type, int position, Object value) {
         this.name = name;
         this.type = type;
         this.position = position;
         this.value = value;
     }
 
-    public static EnFieldValue[] ofArray(Object... items) {
+    public static ConvertField[] ofArray(Object... items) {
         int len = items.length / 2;
-        EnFieldValue[] rs = new EnFieldValue[len];
+        ConvertField[] rs = new ConvertField[len];
         for (int i = 0; i < len; i++) {
-            rs[i] = new EnFieldValue(items[i * 2].toString(), items[i * 2 + 1]);
+            rs[i] = new ConvertField(items[i * 2].toString(), items[i * 2 + 1]);
         }
         return rs;
     }
