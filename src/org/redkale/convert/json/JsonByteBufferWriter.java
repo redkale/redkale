@@ -162,7 +162,34 @@ public class JsonByteBufferWriter extends JsonWriter {
         if (charset == null) { //UTF-8
             final int limit = start + len;
             for (int i = start; i < limit; i++) {
-                buffer = putUTF8Char(buffer, chs[i]);
+                char c = chs[i];
+                if (c < 0x80) {
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) c);
+                } else if (c < 0x800) {
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0xc0 | (c >> 6)));
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0x80 | (c & 0x3f)));
+                } else if (Character.isSurrogate(c)) { //连取两个
+                    int uc = Character.toCodePoint(c, chs[i + 1]);
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0xf0 | ((uc >> 18))));
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0x80 | ((uc >> 6) & 0x3f)));
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0x80 | (uc & 0x3f)));
+                    i++;
+                } else {
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0xe0 | ((c >> 12))));
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0x80 | ((c >> 6) & 0x3f)));
+                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    buffer.put((byte) (0x80 | (c & 0x3f)));
+                }
             }
         } else {
             while (bb.hasRemaining()) {
@@ -174,26 +201,6 @@ public class JsonByteBufferWriter extends JsonWriter {
             if (!buffer.hasRemaining()) buffer = nextByteBuffer();
             buffer.put((byte) '"');
         }
-    }
-
-    private ByteBuffer putUTF8Char(ByteBuffer buffer, char c) {
-        if (c < 0x80) {
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-            buffer.put((byte) c);
-        } else if (c < 0x800) {
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-            buffer.put((byte) (0xc0 | (c >> 6)));
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-            buffer.put((byte) (0x80 | (c & 0x3f)));
-        } else {
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-            buffer.put((byte) (0xe0 | ((c >> 12))));
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-            buffer.put((byte) (0x80 | ((c >> 6) & 0x3f)));
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-            buffer.put((byte) (0x80 | (c & 0x3f)));
-        }
-        return buffer;
     }
 
     private ByteBuffer nextByteBuffer() {
