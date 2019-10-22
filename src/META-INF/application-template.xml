@@ -116,7 +116,7 @@
         excludelibs: 排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
         charset: 文本编码， 默认: UTF-8
         backlog:  默认10K
-        threads： 线程数， 默认: CPU核数*32
+        threads： 线程数， 默认: CPU核数*2，最小8个
         maxconns：最大连接数, 小于1表示无限制， 默认: 0
         maxbody: request.body最大值， 默认: 64K
         bufferCapacity: ByteBuffer的初始化大小， TCP默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上); UDP默认: 1350B

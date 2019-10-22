@@ -129,7 +129,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.maxbody = parseLenth(config.getValue("maxbody"), 64 * 1024);
         int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(protocol) ? 1350 : 32 * 1024);
         this.bufferCapacity = "UDP".equalsIgnoreCase(protocol) ? bufCapacity : (bufCapacity < 8 * 1024 ? 8 * 1024 : bufCapacity);
-        this.threads = config.getIntValue("threads", Runtime.getRuntime().availableProcessors() * 32);
+        this.threads = config.getIntValue("threads", Math.max(8, Runtime.getRuntime().availableProcessors() * 2));
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", this.threads * 4);
         this.responsePoolSize = config.getIntValue("responsePoolSize", this.threads * 2);
         this.name = config.getValue("name", "Server-" + protocol + "-" + this.address.getPort());
