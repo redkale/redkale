@@ -30,5 +30,7 @@ module org.redkale {
     exports org.redkale.util;
     exports org.redkale.watch;
     
+    uses org.redkale.source.SourceLoader;
+    uses org.redkale.util.ResourceInjectLoader;
 }
 */
