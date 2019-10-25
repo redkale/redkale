@@ -855,7 +855,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         this.contentLength = length;
         if (filename != null && !filename.isEmpty() && file != null) {
-            addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
+            if (this.header.getValue("Content-Disposition") == null) {
+                addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
+            }
         }
         this.contentType = MimeType.getByFilename(filename == null || filename.isEmpty() ? file.getName() : filename);
         if (this.contentType == null) this.contentType = "application/octet-stream";
