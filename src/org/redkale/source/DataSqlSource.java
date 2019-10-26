@@ -91,7 +91,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             } else if (s.length() == 2) {
                 s = "0" + s;
             }
-            t.setName(cname + "-Thread-" + s);
+            t.setName("Redkale-"+cname + "-Thread-" + s);
             t.setUncaughtExceptionHandler(ueh);
             return t;
         });

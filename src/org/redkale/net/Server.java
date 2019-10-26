@@ -153,7 +153,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         final String n = name;
         this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads, (Runnable r) -> {
             Thread t = new WorkThread(executor, r);
-            t.setName(n + "-ServletThread-" + f.format(counter.incrementAndGet()));
+            t.setName("Redkale-" + n + "-ServletThread-" + f.format(counter.incrementAndGet()));
             return t;
         });
     }

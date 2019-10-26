@@ -305,7 +305,7 @@ public final class Application {
                     transportExec = Executors.newFixedThreadPool(threads, (Runnable r) -> {
                         Thread t = new Thread(r);
                         t.setDaemon(true);
-                        t.setName("Transport-Thread-" + counter.incrementAndGet());
+                        t.setName("Redkale-Transport-Thread-" + counter.incrementAndGet());
                         return t;
                     });
                     transportGroup = AsynchronousChannelGroup.withCachedThreadPool(transportExec, 1);
@@ -320,7 +320,7 @@ public final class Application {
             transportExec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8, (Runnable r) -> {
                 Thread t = new Thread(r);
                 t.setDaemon(true);
-                t.setName("Transport-Thread-" + counter.incrementAndGet());
+                t.setName("Redkale-Transport-Thread-" + counter.incrementAndGet());
                 return t;
             });
             try {
@@ -584,7 +584,7 @@ public final class Application {
         final Application application = this;
         new Thread() {
             {
-                setName("Application-Control-Thread");
+                setName("Redkale-Application-SelfServer-Thread");
             }
 
             @Override
@@ -755,7 +755,7 @@ public final class Application {
             Thread thread = new Thread() {
                 {
                     String host = serconf.getValue("host", "0.0.0.0").replace("0.0.0.0", "*");
-                    setName(serconf.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + serconf.getIntValue("port") + "-Thread");
+                    setName("Redkale-" + serconf.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + serconf.getIntValue("port") + "-Thread");
                     this.setDaemon(true);
                 }
 
@@ -869,6 +869,7 @@ public final class Application {
 
     public static void main(String[] args) throws Exception {
         Utility.midnight(); //先初始化一下Utility
+        Thread.currentThread().setName("Redkale-Application-Main-Thread");
         //运行主程序
         final Application application = Application.create(false);
         if (System.getProperty("CMD") != null) {

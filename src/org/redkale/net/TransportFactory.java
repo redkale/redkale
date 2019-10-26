@@ -119,7 +119,7 @@ public class TransportFactory {
             if (this.checkinterval < 2) this.checkinterval = 2;
         }
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-            final Thread t = new Thread(r, this.getClass().getSimpleName() + "-TransportFactoryTask-Thread");
+            final Thread t = new Thread(r, "Redkale-" + this.getClass().getSimpleName() + "-Schedule-Thread");
             t.setDaemon(true);
             return t;
         });
@@ -162,7 +162,7 @@ public class TransportFactory {
         ExecutorService transportExec = Executors.newFixedThreadPool(threads, (Runnable r) -> {
             Thread t = new Thread(r);
             t.setDaemon(true);
-            t.setName("Transport-Thread-" + counter.incrementAndGet());
+            t.setName("Redkale-Transport-Thread-" + counter.incrementAndGet());
             return t;
         });
         AsynchronousChannelGroup transportGroup = null;
