@@ -7,7 +7,7 @@ package org.redkale.source;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
-import java.net.URL;
+import java.net.*;
 import java.util.*;
 import javax.xml.stream.*;
 import org.redkale.util.AnyValue;
@@ -139,7 +139,7 @@ public final class DataSources {
     public static DataSource createDataSource(final String unitName) throws IOException {
         return createDataSource(unitName, System.getProperty(DATASOURCE_CONFPATH) == null
             ? DataJdbcSource.class.getResource("/META-INF/persistence.xml")
-            : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL());
+            : (System.getProperty(DATASOURCE_CONFPATH, "").contains("://") ? URI.create(System.getProperty(DATASOURCE_CONFPATH)).toURL() : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL()));
     }
 
     public static DataSource createDataSource(final String unitName, URL persistxml) throws IOException {

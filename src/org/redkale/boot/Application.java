@@ -57,12 +57,12 @@ public final class Application {
     public static final String RESNAME_APP_TIME = "APP_TIME";
 
     /**
-     * 当前进程的根目录， 类型：String、File、Path
+     * 当前进程的根目录， 类型：String、File、Path、URI
      */
     public static final String RESNAME_APP_HOME = "APP_HOME";
 
     /**
-     * 当前进程的配置目录，如果不是绝对路径则视为HOME目录下的相对路径 类型：String、File、Path
+     * 当前进程的配置目录，如果不是绝对路径则视为HOME目录下的相对路径 类型：String、File、Path、URI
      */
     public static final String RESNAME_APP_CONF = "APP_CONF";
 
@@ -143,7 +143,7 @@ public final class Application {
     private final File home;
 
     //配置文件目录
-    private final File confPath;
+    private final URI confPath;
 
     //日志
     private final Logger logger;
@@ -176,16 +176,19 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
         this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
         this.resourceFactory.register(RESNAME_APP_HOME, File.class, root);
+        this.resourceFactory.register(RESNAME_APP_HOME, URI.class, root.toURI());
         try {
             this.resourceFactory.register(RESNAME_APP_HOME, root.getCanonicalPath());
             this.home = root.getCanonicalFile();
             String confsubpath = System.getProperty(RESNAME_APP_CONF, "conf");
-            if (confsubpath.charAt(0) == '/' || confsubpath.indexOf(':') > 0) {
-                this.confPath = new File(confsubpath).getCanonicalFile();
+            if (confsubpath.contains("://")) {
+                this.confPath = new URI(confsubpath);
+            } else if (confsubpath.charAt(0) == '/' || confsubpath.indexOf(':') > 0) {
+                this.confPath = new File(confsubpath).getCanonicalFile().toURI();
             } else {
-                this.confPath = new File(this.home, confsubpath).getCanonicalFile();
+                this.confPath = new File(this.home, confsubpath).getCanonicalFile().toURI();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         String localaddr = config.getValue("address", "").trim();
@@ -209,11 +212,12 @@ public final class Application {
             System.setProperty(RESNAME_APP_NODE, node);
         }
         //以下是初始化日志配置
-        final File logconf = new File(confPath, "logging.properties");
-        if (logconf.isFile() && logconf.canRead()) {
+        final URI logConfURI = "file".equals(confPath.getScheme()) ? new File(new File(confPath), "logging.properties").toURI()
+            : URI.create(confPath.toString() + (confPath.toString().endsWith("/") ? "" : "/") + "logging.properties");
+        if (!"file".equals(confPath.getScheme()) || (new File(logConfURI).isFile() && new File(logConfURI).canRead())) {
             try {
                 final String rootpath = root.getCanonicalPath().replace('\\', '/');
-                FileInputStream fin = new FileInputStream(logconf);
+                InputStream fin = logConfURI.toURL().openStream();
                 Properties properties = new Properties();
                 properties.load(fin);
                 fin.close();
@@ -375,7 +379,7 @@ public final class Application {
         return home;
     }
 
-    public File getConfPath() {
+    public URI getConfPath() {
         return confPath;
     }
 
@@ -398,10 +402,14 @@ public final class Application {
         System.setProperty("convert.bson.writer.buffer.defsize", "4096");
         System.setProperty("convert.json.writer.buffer.defsize", "4096");
 
-        File persist = new File(this.confPath, "persistence.xml");
+        final String confpath = this.confPath.toString();
         final String homepath = this.home.getCanonicalPath();
-        final String confpath = this.confPath.getCanonicalPath();
-        if (persist.isFile()) System.setProperty(DataSources.DATASOURCE_CONFPATH, persist.getCanonicalPath());
+        if ("file".equals(this.confPath.getScheme())) {
+            File persist = new File(new File(confPath), "persistence.xml");
+            if (persist.isFile()) System.setProperty(DataSources.DATASOURCE_CONFPATH, persist.getCanonicalPath());
+        } else {
+            System.setProperty(DataSources.DATASOURCE_CONFPATH, confpath + (confpath.endsWith("/") ? "" : "/") + "persistence.xml");
+        }
         String pidstr = "";
         try { //JDK 9+
             Class phclass = Class.forName("java.lang.ProcessHandle");
@@ -425,13 +433,17 @@ public final class Application {
                 if (dfloads != null) {
                     for (String dfload : dfloads.split(";")) {
                         if (dfload.trim().isEmpty()) continue;
-                        final File df = (dfload.indexOf('/') < 0) ? new File(confPath, "/" + dfload) : new File(dfload);
-                        if (df.isFile()) {
+                        final URI df = (dfload.indexOf('/') < 0) ? URI.create(confpath + (confpath.endsWith("/") ? "" : "/") + dfload) : new File(dfload).toURI();
+                        if (!"file".equals(df.getScheme()) || new File(df).isFile()) {
                             Properties ps = new Properties();
-                            InputStream in = new FileInputStream(df);
-                            ps.load(in);
-                            in.close();
-                            ps.forEach((x, y) -> resourceFactory.register("property." + x, y.toString().replace("${APP_HOME}", homepath)));
+                            try {
+                                InputStream in = df.toURL().openStream();
+                                ps.load(in);
+                                in.close();
+                                ps.forEach((x, y) -> resourceFactory.register("property." + x, y.toString().replace("${APP_HOME}", homepath)));
+                            } catch (Exception e) {
+                                logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
+                            }
                         }
                     }
                 }
@@ -558,9 +570,10 @@ public final class Application {
     }
 
     public void restoreConfig() throws IOException {
+        if (!"file".equals(this.confPath.getScheme())) return;
         synchronized (this) {
-            File confFile = new File(this.confPath, "application.xml");
-            confFile.renameTo(new File(this.confPath, "application_" + String.format("%1$tY%1$tm%1$td%1$tH%1$tM%1$tS", System.currentTimeMillis()) + ".xml"));
+            File confFile = new File(this.confPath.toString(), "application.xml");
+            confFile.renameTo(new File(this.confPath.toString(), "application_" + String.format("%1$tY%1$tm%1$td%1$tH%1$tM%1$tS", System.currentTimeMillis()) + ".xml"));
             final PrintStream ps = new PrintStream(new FileOutputStream(confFile));
             ps.append(config.toXML("application"));
             ps.close();
@@ -843,14 +856,15 @@ public final class Application {
         final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/');
         System.setProperty(RESNAME_APP_HOME, home);
         String confsubpath = System.getProperty(RESNAME_APP_CONF, "conf");
-        File appfile;
-        if (confsubpath.charAt(0) == '/' || confsubpath.indexOf(':') > 0) {
-            appfile = new File(confsubpath).getCanonicalFile();
+        URI appconf;
+        if (confsubpath.contains("://")) {
+            appconf = URI.create(confsubpath + (confsubpath.endsWith("/") ? "" : "/") + "application.xml");
+        } else if (confsubpath.charAt(0) == '/' || confsubpath.indexOf(':') > 0) {
+            appconf = new File(confsubpath, "application.xml").toURI();
         } else {
-            appfile = new File(new File(home), confsubpath);
+            appconf = new File(new File(home, confsubpath), "application.xml").toURI();
         }
-        File appconf = new File(appfile, "application.xml");
-        return new Application(singleton, load(new FileInputStream(appconf)));
+        return new Application(singleton, load(appconf.toURL().openStream()));
     }
 
     public static void main(String[] args) throws Exception {
