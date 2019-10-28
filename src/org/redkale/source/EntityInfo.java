@@ -239,7 +239,7 @@ public final class EntityInfo<T> {
         }
         //---------------------------------------------
         Table t = type.getAnnotation(Table.class);
-        if (type.getAnnotation(VirtualEntity.class) != null || "memory".equalsIgnoreCase(source.getType())) {
+        if (type.getAnnotation(VirtualEntity.class) != null || (source == null || "memory".equalsIgnoreCase(source.getType()))) {
             this.table = null;
             BiFunction<DataSource, Class, List> loader = null;
             try {
