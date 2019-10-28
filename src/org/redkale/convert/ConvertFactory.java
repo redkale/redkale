@@ -711,7 +711,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             encoder = new OptionalCoder(this, type);
         } else if (clazz == Object.class) {
             return (Encodeable<W, E>) this.anyEncoder;
-        } else if (!clazz.getName().startsWith("java.") || java.net.HttpCookie.class == clazz || java.util.AbstractMap.SimpleEntry.class == clazz) {
+        } else if (!clazz.getName().startsWith("java.") || java.net.HttpCookie.class == clazz
+            || java.util.Map.Entry.class == clazz || java.util.AbstractMap.SimpleEntry.class == clazz) {
             Encodeable simpleCoder = null;
             for (final Method method : clazz.getDeclaredMethods()) {
                 if (!Modifier.isStatic(method.getModifiers())) continue;
