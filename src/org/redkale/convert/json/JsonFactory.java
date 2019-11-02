@@ -26,10 +26,7 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     private static final JsonFactory instance = new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));
 
     static {
-        instance.register(InetAddress.class, InetAddressSimpledCoder.InetAddressJsonSimpledCoder.instance);
-        instance.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
-        instance.register(DLong.class, DLongSimpledCoder.DLongJsonSimpledCoder.instance);
-        instance.register(BigInteger.class, BigIntegerSimpledCoder.BigIntegerJsonSimpledCoder.instance);
+
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
 
         instance.register(AnyValue.class, instance.loadDecoder(AnyValue.DefaultAnyValue.class));
@@ -38,6 +35,12 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     private JsonFactory(JsonFactory parent, boolean tiny) {
         super(parent, tiny);
+        if (parent == null) {
+            this.register(InetAddress.class, InetAddressSimpledCoder.InetAddressJsonSimpledCoder.instance);
+            this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
+            this.register(DLong.class, DLongSimpledCoder.DLongJsonSimpledCoder.instance);
+            this.register(BigInteger.class, BigIntegerSimpledCoder.BigIntegerJsonSimpledCoder.instance);
+        }
     }
 
     @Override
