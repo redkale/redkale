@@ -88,7 +88,7 @@ public interface Creator<T> {
             creatorCacheMap.put(Map.Entry.class, new Creator<Map.Entry>() {
                 @Override
                 @ConstructorParameters({"key", "value"})
-                public AbstractMap.SimpleEntry create(Object... params) {
+                public Map.Entry create(Object... params) {
                     return new AbstractMap.SimpleEntry(params[0], params[1]);
                 }
             });
@@ -239,6 +239,8 @@ public interface Creator<T> {
             clazz = (Class<T>) ConcurrentHashMap.class;
         } else if (Collection.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ArrayList.class)) {
             clazz = (Class<T>) ArrayList.class;
+        } else if (Map.Entry.class.isAssignableFrom(clazz) && (Modifier.isInterface(clazz.getModifiers()) || Modifier.isAbstract(clazz.getModifiers()) || !Modifier.isPublic(clazz.getModifiers()))) {
+            clazz = (Class<T>) AbstractMap.SimpleEntry.class;
         }
         Creator creator = CreatorInner.creatorCacheMap.get(clazz);
         if (creator != null) return creator;
