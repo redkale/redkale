@@ -133,6 +133,54 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 }
 
             });
+            try {
+                Class sqldateClass = Class.forName("java.sql.Date");
+                this.register(sqldateClass, new SimpledCoder<R, W, java.sql.Date>() {
+
+                    @Override
+                    public void convertTo(W out, java.sql.Date value) {
+                        out.writeLong(value == null ? 0L : value.getTime());
+                    }
+
+                    @Override
+                    public java.sql.Date convertFrom(R in) {
+                        long t = in.readLong();
+                        return t == 0 ? null : new java.sql.Date(t);
+                    }
+
+                });
+                Class sqltimeClass = Class.forName("java.sql.Time");
+                this.register(sqltimeClass, new SimpledCoder<R, W, java.sql.Time>() {
+
+                    @Override
+                    public void convertTo(W out, java.sql.Time value) {
+                        out.writeLong(value == null ? 0L : value.getTime());
+                    }
+
+                    @Override
+                    public java.sql.Time convertFrom(R in) {
+                        long t = in.readLong();
+                        return t == 0 ? null : new java.sql.Time(t);
+                    }
+
+                });
+                Class timestampClass = Class.forName("java.sql.Timestamp");
+                this.register(timestampClass, new SimpledCoder<R, W, java.sql.Timestamp>() {
+
+                    @Override
+                    public void convertTo(W out, java.sql.Timestamp value) {
+                        out.writeLong(value == null ? 0L : value.getTime());
+                    }
+
+                    @Override
+                    public java.sql.Timestamp convertFrom(R in) {
+                        long t = in.readLong();
+                        return t == 0 ? null : new java.sql.Timestamp(t);
+                    }
+
+                });
+            } catch (Throwable t) {
+            }
         }
     }
 
