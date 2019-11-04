@@ -89,16 +89,16 @@ public final class EntityInfo<T> {
     final String notcontainSQL;
 
     //用于判断表不存在的使用, 多个SQLState用;隔开
-    final String tablenotexistSqlstates;
+    private final String tablenotexistSqlstates;
 
     //用于复制表结构使用
-    final String tablecopySQL;
+    private final String tablecopySQL;
 
     //用于存在database.table_20160202类似这种分布式表
-    final Set<String> tables = new HashSet<>();
+    private final Set<String> tables = new HashSet<>();
 
     //分表 策略
-    final DistributeTableStrategy<T> tableStrategy;
+    private final DistributeTableStrategy<T> tableStrategy;
 
     //根据主键查找单个对象的SQL， 含 ？
     private final String queryPrepareSQL;
@@ -508,6 +508,18 @@ public final class EntityInfo<T> {
 
     public DistributeTableStrategy<T> getTableStrategy() {
         return tableStrategy;
+    }
+
+    public Object disTableLock() {
+        return tables;
+    }
+
+    public boolean containsDisTable(String tablekey) {
+        return tables.contains(tablekey);
+    }
+
+    public void addDisTable(String tablekey) {
+        tables.add(tablekey);
     }
 
     public String getTableNotExistSqlStates2() {
