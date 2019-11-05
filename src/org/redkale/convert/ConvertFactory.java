@@ -139,13 +139,13 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
                     @Override
                     public void convertTo(W out, java.sql.Date value) {
-                        out.writeLong(value == null ? 0L : value.getTime());
+                         out.writeSmallString(value == null ? null : value.toString());
                     }
 
                     @Override
                     public java.sql.Date convertFrom(R in) {
-                        long t = in.readLong();
-                        return t == 0 ? null : new java.sql.Date(t);
+                        String t = in.readSmallString();
+                        return t == null ? null : java.sql.Date.valueOf(t);
                     }
 
                 });
@@ -154,13 +154,13 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
                     @Override
                     public void convertTo(W out, java.sql.Time value) {
-                        out.writeLong(value == null ? 0L : value.getTime());
+                        out.writeSmallString(value == null ? null : value.toString());
                     }
 
                     @Override
                     public java.sql.Time convertFrom(R in) {
-                        long t = in.readLong();
-                        return t == 0 ? null : new java.sql.Time(t);
+                        String t = in.readSmallString();
+                        return t == null ? null : java.sql.Time.valueOf(t);
                     }
 
                 });
@@ -169,13 +169,13 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
                     @Override
                     public void convertTo(W out, java.sql.Timestamp value) {
-                        out.writeLong(value == null ? 0L : value.getTime());
+                        out.writeSmallString(value == null ? null : value.toString());
                     }
 
                     @Override
                     public java.sql.Timestamp convertFrom(R in) {
-                        long t = in.readLong();
-                        return t == 0 ? null : new java.sql.Timestamp(t);
+                        String t = in.readSmallString();
+                        return t == null ? null : java.sql.Timestamp.valueOf(t);
                     }
 
                 });
