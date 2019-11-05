@@ -140,7 +140,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             } //打印结束
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
         }
@@ -196,7 +198,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             stmt.close();
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
         }
@@ -215,7 +219,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (info.isTableNotExist(e)) return CompletableFuture.completedFuture(-1);
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
         }
@@ -234,7 +240,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (info.isTableNotExist(e)) return CompletableFuture.completedFuture(-1);
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
         }
@@ -285,7 +293,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             prestmt.close();
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
         }
@@ -317,7 +327,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 return CompletableFuture.completedFuture(c);
             }
         } catch (SQLException e) {
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
         }
@@ -348,7 +360,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(map);
         } catch (SQLException e) {
             if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(map);
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
@@ -372,7 +386,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(defVal);
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
@@ -397,7 +413,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(rs);
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
@@ -418,7 +436,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(null);
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
@@ -443,7 +463,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(val == null ? defValue : val);
         } catch (SQLException e) {
             if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(defValue);
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
@@ -464,7 +486,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(false);
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
@@ -536,7 +560,9 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             return CompletableFuture.completedFuture(new Sheet<>(total, list));
         } catch (SQLException e) {
             if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(new Sheet<>());
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
