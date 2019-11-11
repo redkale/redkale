@@ -31,6 +31,11 @@ public enum FilterExpress {
     NOTLIKE("NOT LIKE"),
     IGNORECASELIKE("LIKE"), //不区分大小写的 LIKE
     IGNORECASENOTLIKE("NOT LIKE"), //不区分大小写的 NOT LIKE
+    LENGTH_EQUAL("="), //字符串值的长度
+    LENGTH_LESSTHAN("<"), //字符串值的长度 <
+    LENGTH_LESSTHANOREQUALTO("<="), //字符串值的长度 <=
+    LENGTH_GREATERTHAN(">"), //字符串值的长度 >
+    LENGTH_GREATERTHANOREQUALTO(">="), //字符串值的长度 >=
 
     CONTAIN("CONTAIN"), //包含， 相当于反向LIKE 
     NOTCONTAIN("NOT CONTAIN"), //不包含， 相当于反向LIKE 

@@ -397,7 +397,10 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (express == NOTCONTAIN) return info.notcontainSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
         if (express == IGNORECASENOTCONTAIN) return info.notcontainSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
 
-        if (express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL || express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
+        if (express == LENGTH_EQUAL || express == LENGTH_LESSTHAN || express == LENGTH_LESSTHANOREQUALTO
+            || express == LENGTH_GREATERTHAN || express == LENGTH_GREATERTHANOREQUALTO) {
+            sb.append("LENGTH(").append(info.getSQLColumn(talis, column)).append(')');
+        } else if (express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL || express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
             if (fk) val = "LOWER(" + info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) + ')';
         } else {
@@ -1404,6 +1407,81 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     @Override
                     public String toString() {
                         return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(valstr2);
+                    }
+                };
+            case LENGTH_EQUAL:
+                final int intval = ((Number) val).intValue();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return (rs == null && 0 == intval) || (rs != null && rs.toString().length() == intval);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LENGTH(" + field + ") " + express.value() + ' ' + intval;
+                    }
+                };
+            case LENGTH_LESSTHAN:
+                final int intval2 = ((Number) val).intValue();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return (rs == null && 0 < intval2) || (rs != null && rs.toString().length() < intval2);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LENGTH(" + field + ") " + express.value() + ' ' + intval2;
+                    }
+                };
+            case LENGTH_LESSTHANOREQUALTO:
+                final int intval3 = ((Number) val).intValue();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return (rs == null && 0 <= intval3) || (rs != null && rs.toString().length() <= intval3);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LENGTH(" + field + ") " + express.value() + ' ' + intval3;
+                    }
+                };
+            case LENGTH_GREATERTHAN:
+                final int intval4 = ((Number) val).intValue();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return (rs == null && 0 > intval4) || (rs != null && rs.toString().length() > intval4);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LENGTH(" + field + ") " + express.value() + ' ' + intval4;
+                    }
+                };
+            case LENGTH_GREATERTHANOREQUALTO:
+                final int intval5 = ((Number) val).intValue();
+                return new Predicate<T>() {
+
+                    @Override
+                    public boolean test(T t) {
+                        Object rs = attr.get(t);
+                        return (rs == null && 0 >= intval5) || (rs != null && rs.toString().length() >= intval5);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "LENGTH(" + field + ") " + express.value() + ' ' + intval5;
                     }
                 };
             case CONTAIN:
