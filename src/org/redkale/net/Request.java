@@ -40,8 +40,6 @@ public abstract class Request<C extends Context> {
 
     protected AsyncConnection channel;
 
-    protected ByteBuffer readBuffer;
-
     /**
      * properties 与 attributes 的区别在于：调用recycle时， attributes会被清空而properties会保留;
      * properties 通常存放需要永久绑定在request里的一些对象
@@ -65,23 +63,6 @@ public abstract class Request<C extends Context> {
         ByteBuffer rs = this.moredata;
         this.moredata = null;
         return rs;
-    }
-
-    protected ByteBuffer pollReadBuffer() {
-        ByteBuffer buffer = this.readBuffer;
-        this.readBuffer = null;
-        if (buffer == null) buffer = bufferPool.get();
-        return buffer;
-    }
-
-    protected void offerReadBuffer(ByteBuffer buffer) {
-        if (buffer == null) return;
-        if (this.readBuffer == null) {
-            buffer.clear();
-            this.readBuffer = buffer;
-        } else {
-            bufferPool.accept(buffer);
-        }
     }
 
     /**

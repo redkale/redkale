@@ -105,6 +105,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private static final ZoneId ZONE_GMT = ZoneId.of("GMT");
 
+    private static final byte[] LENG_BYTES = ("Content-Length:              \r\n").getBytes();
+
     private int status = 200;
 
     private String contentType = "";
@@ -113,9 +115,15 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private HttpCookie[] cookies;
 
-    private boolean headsended = false;
+    private int headWritedSize = -1; //0表示跳过header，正数表示header的字节长度。
+
+    private ByteBuffer headBuffer;
+
+    private int headLenPos = -1;
 
     private BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> bufferHandler;
+
+    private Supplier<ByteBuffer> bodyBufferSupplier;
     //------------------------------------------------
 
     private final String plainContentType;
@@ -163,6 +171,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.hasRender = renders != null && !renders.isEmpty();
         this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
         this.contentType = this.plainContentType;
+        this.bodyBufferSupplier = () -> {
+            if (headWritedSize >= 0 || bufferHandler != null) return channel.pollWriteBuffer(); //bufferHandler 需要cached的请求不能带上header
+            if (contentLength < 0) contentLength = -2;
+            return createHeader();
+        };
     }
 
     @Override
@@ -185,10 +198,16 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.contentLength = -1;
         this.contentType = null;
         this.cookies = null;
-        this.headsended = false;
+        this.headWritedSize = -1;
+        this.headBuffer = null;
+        this.headLenPos = -1;
         this.header.clear();
         this.bufferHandler = null;
         return super.recycle();
+    }
+
+    protected Supplier<ByteBuffer> getBodyBufferSupplier() {
+        return bodyBufferSupplier;
     }
 
     @Override
@@ -283,15 +302,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public <H extends CompletionHandler> H createAsyncHandler(Class<H> handlerClass) {
         if (handlerClass == null || handlerClass == CompletionHandler.class) return (H) createAsyncHandler();
         return context.loadAsyncHandlerCreator(handlerClass).create(createAsyncHandler());
-    }
-
-    /**
-     * 获取ByteBuffer生成器
-     *
-     * @return ByteBuffer生成器
-     */
-    public Supplier<ByteBuffer> getBufferSupplier() {
-        return getBodyBufferSupplier();
     }
 
     /**
@@ -637,7 +647,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finish(final String contentType, final byte[] bs) {
         if (isClosed()) return; //避免重复关闭
         final byte[] content = bs == null ? new byte[0] : bs;
-        if (!this.headsended) {
+        if (this.headWritedSize < 0) {
             this.contentType = contentType;
             this.contentLength = content.length;
             ByteBuffer headbuf = createHeader();
@@ -681,7 +691,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     @Override
     public void finish(boolean kill, ByteBuffer buffer) {
         if (isClosed()) return; //避免重复关闭
-        if (!this.headsended) {
+        if (this.headWritedSize < 0) {
             this.contentLength = buffer == null ? 0 : buffer.remaining();
             ByteBuffer headbuf = createHeader();
             headbuf.flip();
@@ -719,7 +729,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             if (bufs != null) buffers = bufs;
         }
         if (kill) refuseAlive();
-        if (!this.headsended) {
+        if (this.headWritedSize < 0) {
             long len = 0;
             for (ByteBuffer buf : buffers) {
                 len += buf.remaining();
@@ -736,6 +746,17 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 super.finish(kill, newbuffers);
             }
         } else {
+            if (this.headLenPos > 0 && buffers[0] == headBuffer) {
+                long contentlen = -this.headWritedSize;
+                for (ByteBuffer buf : buffers) {
+                    contentlen += buf.remaining();
+                }
+                byte[] lenBytes = String.valueOf(contentlen).getBytes();
+                int start = this.headLenPos - lenBytes.length;
+                for (int i = 0; i < lenBytes.length; i++) {
+                    headBuffer.put(start + i, lenBytes[i]);
+                }
+            }
             super.finish(kill, buffers);
         }
     }
@@ -749,7 +770,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param handler    异步回调函数
      */
     public <A> void sendBody(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
-        if (!this.headsended) {
+        if (this.headWritedSize < 0) {
             if (this.contentLength < 0) this.contentLength = buffer == null ? 0 : buffer.remaining();
             ByteBuffer headbuf = createHeader();
             headbuf.flip();
@@ -772,7 +793,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param handler    异步回调函数
      */
     public <A> void sendBody(ByteBuffer[] buffers, A attachment, CompletionHandler<Integer, A> handler) {
-        if (!this.headsended) {
+        if (this.headWritedSize < 0) {
             if (this.contentLength < 0) {
                 int len = 0;
                 if (buffers != null && buffers.length > 0) {
@@ -899,14 +920,19 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     //Header大小不能超过一个ByteBuffer的容量
     protected ByteBuffer createHeader() {
-        this.headsended = true;
-        ByteBuffer buffer = this.pollWriteReadBuffer();
+        ByteBuffer buffer = this.channel.pollWriteBuffer();
+        int oldpos = buffer.position();
         if (this.status == 200) {
             buffer.put(status200Bytes);
         } else {
             buffer.put(("HTTP/1.1 " + this.status + " " + httpCodes.get(this.status) + "\r\n").getBytes());
         }
-        if (this.contentLength >= 0) buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
+        if (this.contentLength >= 0) {
+            buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
+        } else if (this.contentLength == -2) {
+            buffer.put(LENG_BYTES);
+            this.headLenPos = buffer.position() - 2; //去掉\r\n
+        }
         if (!this.request.isWebSocket()) {
             if (this.contentType == this.jsonContentType) {
                 buffer.put(this.jsonContentTypeBytes);
@@ -978,6 +1004,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             }
         }
         buffer.put(LINE);
+        this.headWritedSize = buffer.position() - oldpos;
+        this.headBuffer = buffer;
         return buffer;
     }
 
@@ -1003,7 +1031,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @return HttpResponse
      */
     public HttpResponse skipHeader() {
-        this.headsended = true;
+        this.headWritedSize = 0;
         return this;
     }
 
@@ -1210,7 +1238,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         @Override
         public void failed(Throwable exc, ByteBuffer attachment) {
-            bufferPool.accept(attachment);
+            channel.offerBuffer(attachment);
             finish(true);
             try {
                 filechannel.close();

@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import javax.net.ssl.SSLContext;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.*;
 
 /**
  *
@@ -118,7 +118,6 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
 
     public abstract void read(CompletionHandler<Integer, ByteBuffer> handler);
 
-
     @Override
     public abstract int write(ByteBuffer src) throws IOException;
 
@@ -141,22 +140,40 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
             this.readBuffer = null;
             return rs;
         }
+//        Thread thread = Thread.currentThread();
+//        if (thread instanceof IOThread) {
+//            return ((IOThread) thread).getBufferPool().get();
+//        }
         return bufferSupplier.get();
     }
 
     public void offerBuffer(Buffer buffer) {
         if (buffer == null) return;
+//        Thread thread = Thread.currentThread();
+//        if (thread instanceof IOThread) {
+//            ((IOThread) thread).getBufferPool().accept((ByteBuffer) buffer);
+//            return;
+//        }
         bufferConsumer.accept((ByteBuffer) buffer);
     }
 
     public void offerBuffer(Buffer... buffers) {
         if (buffers == null) return;
+        Consumer<ByteBuffer> consumer = this.bufferConsumer;
+//        Thread thread = Thread.currentThread();
+//        if (thread instanceof IOThread) {
+//            consumer = ((IOThread) thread).getBufferPool();
+//        }
         for (Buffer buffer : buffers) {
-            bufferConsumer.accept((ByteBuffer) buffer);
+            consumer.accept((ByteBuffer) buffer);
         }
     }
 
     public ByteBuffer pollWriteBuffer() {
+//        Thread thread = Thread.currentThread();
+//        if (thread instanceof IOThread) {
+//            return ((IOThread) thread).getBufferPool().get();
+//        }
         return bufferSupplier.get();
     }
 
@@ -189,7 +206,12 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
             }
         }
         if (this.readBuffer != null) {
-            bufferConsumer.accept(this.readBuffer);
+            Consumer<ByteBuffer> consumer = this.bufferConsumer;
+            Thread thread = Thread.currentThread();
+            if (thread instanceof IOThread) {
+                consumer = ((IOThread) thread).getBufferPool();
+            }
+            consumer.accept(this.readBuffer);
         }
         if (attributes == null) return;
         try {

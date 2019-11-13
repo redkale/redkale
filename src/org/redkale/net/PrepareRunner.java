@@ -60,7 +60,8 @@ public class PrepareRunner implements Runnable {
                 @Override
                 public void completed(Integer count, ByteBuffer buffer) {
                     if (count < 1) {
-                        response.request.offerReadBuffer(buffer);
+                        buffer.clear();
+                        channel.setReadBuffer(buffer);
                         channel.dispose();// response.init(channel); 在调用之前异常
                         response.removeChannel();
                         response.finish(true);
@@ -84,7 +85,8 @@ public class PrepareRunner implements Runnable {
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer buffer) {
-                    response.request.offerReadBuffer(buffer);
+                    buffer.clear();
+                    channel.setReadBuffer(buffer);
                     channel.dispose();// response.init(channel); 在调用之前异常
                     response.removeChannel();
                     response.finish(true);
@@ -97,7 +99,7 @@ public class PrepareRunner implements Runnable {
             channel.dispose();// response.init(channel); 在调用之前异常
             response.removeChannel();
             response.finish(true);
-            if (te != null && context.logger.isLoggable(Level.FINEST)) {
+            if (context.logger.isLoggable(Level.FINEST)) {
                 context.logger.log(Level.FINEST, "Servlet read channel erroneous, force to close channel ", te);
             }
         }
@@ -116,7 +118,8 @@ public class PrepareRunner implements Runnable {
             if (buffer.hasRemaining()) {
                 request.setMoredata(buffer);
             } else {
-                response.request.offerReadBuffer(buffer);
+                buffer.clear();
+                channel.setReadBuffer(buffer);
             }
             preparer.prepare(request, response);
         } else {
@@ -137,7 +140,8 @@ public class PrepareRunner implements Runnable {
                         if (attachment.hasRemaining()) {
                             request.setMoredata(attachment);
                         } else {
-                            response.request.offerReadBuffer(attachment);
+                            attachment.clear();
+                            channel.setReadBuffer(attachment);
                         }
                         try {
                             preparer.prepare(request, response);
@@ -151,7 +155,8 @@ public class PrepareRunner implements Runnable {
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
                     preparer.illRequestCounter.incrementAndGet();
-                    response.request.offerReadBuffer(attachment);
+                    attachment.clear();
+                    channel.setReadBuffer(attachment);
                     response.finish(true);
                     if (exc != null) request.context.logger.log(Level.FINER, "Servlet read channel erroneous, force to close channel ", exc);
                 }
@@ -175,19 +180,4 @@ public class PrepareRunner implements Runnable {
         return response.removeChannel();
     }
 
-    protected ByteBuffer pollReadBuffer(Request request) {
-        return request.pollReadBuffer();
-    }
-
-    protected ByteBuffer pollReadBuffer(Response response) {
-        return response.request.pollReadBuffer();
-    }
-
-    protected void offerReadBuffer(Request request, ByteBuffer buffer) {
-        request.offerReadBuffer(buffer);
-    }
-
-    protected void offerReadBuffer(Response response, ByteBuffer buffer) {
-        response.request.offerReadBuffer(buffer);
-    }
 }

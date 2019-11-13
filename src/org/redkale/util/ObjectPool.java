@@ -19,23 +19,25 @@ import java.util.logging.*;
  * @author zhangjx
  * @param <T> 对象池元素的数据类型
  */
-public final class ObjectPool<T> implements Supplier<T>, Consumer<T> {
+public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
-    private static final Logger logger = Logger.getLogger(ObjectPool.class.getSimpleName());
+    protected static final Logger logger = Logger.getLogger(ObjectPool.class.getSimpleName());
 
-    private final boolean debug;
+    protected final boolean debug;
 
-    private final Queue<T> queue;
+    protected Creator<T> creator;
 
-    private Creator<T> creator;
+    protected int max;
 
-    private final Consumer<T> prepare;
+    protected final Consumer<T> prepare;
 
-    private final Predicate<T> recycler;
+    protected final Predicate<T> recycler;
 
-    private final AtomicLong creatCounter;
+    protected final AtomicLong creatCounter;
 
-    private final AtomicLong cycleCounter;
+    protected final AtomicLong cycleCounter;
+
+    protected final Queue<T> queue;
 
     public ObjectPool(Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
         this(2, clazz, prepare, recycler);
@@ -62,12 +64,18 @@ public final class ObjectPool<T> implements Supplier<T>, Consumer<T> {
     }
 
     public ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        this(creatCounter, cycleCounter, Math.max(Runtime.getRuntime().availableProcessors() * 2, max),
+            creator, prepare, recycler, new LinkedBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors() * 2, max)));
+    }
+
+    protected ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler, Queue<T> queue) {
         this.creatCounter = creatCounter;
         this.cycleCounter = cycleCounter;
         this.creator = creator;
         this.prepare = prepare;
         this.recycler = recycler;
-        this.queue = new LinkedBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors() * 2, max));
+        this.queue = queue;
+        this.max = max;
         this.debug = logger.isLoggable(Level.FINEST);
     }
 
