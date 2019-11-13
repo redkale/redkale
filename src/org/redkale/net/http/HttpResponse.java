@@ -50,6 +50,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected static final byte[] connectAliveBytes = "Connection: keep-alive\r\n".getBytes();
 
+    private static final byte[] fillContentLengthBytes = ("Content-Length:              \r\n").getBytes();
+
+    private static final ZoneId ZONE_GMT = ZoneId.of("GMT");
+
     private static final Set<OpenOption> options = new HashSet<>();
 
     private static final Map<Integer, String> httpCodes = new HashMap<>();
@@ -102,10 +106,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         httpCodes.put(504, "Gateway Timeout");
         httpCodes.put(505, "HTTP Version Not Supported");
     }
-
-    private static final ZoneId ZONE_GMT = ZoneId.of("GMT");
-
-    private static final byte[] LENG_BYTES = ("Content-Length:              \r\n").getBytes();
 
     private int status = 200;
 
@@ -930,7 +930,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (this.contentLength >= 0) {
             buffer.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
         } else if (this.contentLength == -2) {
-            buffer.put(LENG_BYTES);
+            buffer.put(fillContentLengthBytes);
             this.headLenPos = buffer.position() - 2; //去掉\r\n
         }
         if (!this.request.isWebSocket()) {
