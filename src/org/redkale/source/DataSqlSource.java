@@ -209,6 +209,8 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     @Override
     public void destroy(AnyValue config) {
         if (this.executor != null) this.executor.shutdownNow();
+        if (readPool != null) readPool.close();
+        if (writePool != null) writePool.close();
     }
 
     @Local
