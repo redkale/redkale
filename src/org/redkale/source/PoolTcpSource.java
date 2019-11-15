@@ -68,11 +68,17 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             long time = System.currentTimeMillis() - 30 * 1000;
             pollAsync().whenComplete((conn, e) -> {
                 if (e != null) return;
-                if (conn.getLastReadTime() >= time || conn.getLastWriteTime() >= time) return; //半分钟内已经用过
+                if (conn.getLastReadTime() >= time || conn.getLastWriteTime() >= time) {//半分钟内已经用过
+                    offerConnection(conn);
+                    return;
+                }
                 CompletableFuture<AsyncConnection> future = sendPingCommand(conn);
-                if (future == null) return; //不支持ping
+                if (future == null) {     //不支持ping                
+                    offerConnection(conn);
+                    return;
+                }
                 future.whenComplete((conn2, e2) -> {
-                    if (e != null) return;
+                    if (e2 != null) return;
                     offerConnection(conn2);
                     runPingTask();
                 });
