@@ -66,6 +66,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         try {
             if (connQueue.isEmpty()) return;
             long time = System.currentTimeMillis() - 30 * 1000;
+            AsyncConnection first = connQueue.peek();
+            if (first == null || first.getLastReadTime() >= time || first.getLastWriteTime() >= time) return;
             pollAsync().whenComplete((conn, e) -> {
                 if (e != null) return;
                 if (conn.getLastReadTime() >= time || conn.getLastWriteTime() >= time) {//半分钟内已经用过
