@@ -89,7 +89,7 @@ public class JsonWriter extends Writer {
      * @param quote 是否加双引号
      * @param value 非null且不含需要转义的字符的String值
      */
-    public void writeTo(final boolean quote, final String value) {
+    public void writeLatin1To(final boolean quote, final String value) {
         int len = value.length();
         expand(len + (quote ? 2 : 0));
         if (quote) content[count++] = '"';
@@ -162,13 +162,13 @@ public class JsonWriter extends Writer {
     @Override
     public final void writeFieldName(String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) writeTo(',');
-        writeSmallString(fieldName);
+        writeLatin1To(true, fieldName);
         writeTo(':');
     }
 
     @Override
-    public void writeSmallString(String value) {
-        writeTo(true, value);
+    public final void writeSmallString(String value) {
+        writeLatin1To(true, value);
     }
 
     @Override
@@ -314,17 +314,17 @@ public class JsonWriter extends Writer {
 
     @Override
     public final void writeFloat(float value) {
-        writeTo(false, String.valueOf(value));
+        writeLatin1To(false, String.valueOf(value));
     }
 
     @Override
     public final void writeDouble(double value) {
-        writeTo(false, String.valueOf(value));
+        writeLatin1To(false, String.valueOf(value));
     }
 
     @Override
     public final void writeWrapper(StringWrapper value) {
-        writeTo(false, String.valueOf(value));
+        writeLatin1To(false, String.valueOf(value));
     }
 
     @Override

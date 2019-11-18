@@ -87,19 +87,19 @@ class JsonStreamWriter extends JsonByteBufferWriter {
      * @param value String值
      */
     @Override
-    public void writeTo(final boolean quote, final String value) {
+    public void writeLatin1To(final boolean quote, final String value) {
         char[] chs = Utility.charArray(value);
         writeTo(quote, chs, 0, chs.length);
     }
 
     @Override
     public void writeInt(int value) {
-        writeTo(false, String.valueOf(value));
+        writeLatin1To(false, String.valueOf(value));
     }
 
     @Override
     public void writeLong(long value) {
-        writeTo(false, String.valueOf(value));
+        writeLatin1To(false, String.valueOf(value));
     }
 
     @Override

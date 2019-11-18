@@ -107,28 +107,6 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeSmallString(String value) {
-        byte[] bs = Utility.byteArray(value);
-        int expandsize = expand(bs.length + 2);
-        if (expandsize == 0) {// 只需要一个buffer 
-            final ByteBuffer buffer = this.buffers[index];
-            buffer.put((byte) '"');
-            buffer.put(bs);
-            buffer.put((byte) '"');
-        } else {
-            ByteBuffer buffer = this.buffers[index];
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-            buffer.put((byte) '"');
-            for (byte b : bs) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-                buffer.put(b);
-            }
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
-            buffer.put((byte) '"');
-        }
-    }
-
-    @Override
     public void writeTo(final char[] chs, final int start, final int len) {
         writeTo(-1, false, chs, start, len);
     }
@@ -263,19 +241,39 @@ public class JsonByteBufferWriter extends JsonWriter {
      * @param value String值
      */
     @Override
-    public void writeTo(final boolean quote, final String value) {
-        char[] chs = Utility.charArray(value);
-        writeTo(-1, quote, chs, 0, chs.length);
+    public void writeLatin1To(final boolean quote, final String value) {
+        byte[] bs = Utility.byteArray(value);
+        int expandsize = expand(bs.length + (quote ? 2 : 0));
+        if (expandsize == 0) {// 只需要一个buffer 
+            final ByteBuffer buffer = this.buffers[index];
+            if (quote) buffer.put((byte) '"');
+            buffer.put(bs);
+            if (quote) buffer.put((byte) '"');
+        } else {
+            ByteBuffer buffer = this.buffers[index];
+            if (quote) {
+                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                buffer.put((byte) '"');
+            }
+            for (byte b : bs) {
+                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                buffer.put(b);
+            }
+            if (quote) {
+                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                buffer.put((byte) '"');
+            }
+        }
     }
 
     @Override
     public void writeInt(int value) {
-        writeTo(false, String.valueOf(value));
+        writeLatin1To(false, String.valueOf(value));
     }
 
     @Override
     public void writeLong(long value) {
-        writeTo(false, String.valueOf(value));
+        writeLatin1To(false, String.valueOf(value));
     }
 
     @Override
