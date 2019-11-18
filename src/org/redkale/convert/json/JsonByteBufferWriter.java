@@ -107,6 +107,28 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
+    public void writeSmallString(String value) {
+        byte[] bs = Utility.byteArray(value);
+        int expandsize = expand(bs.length + 2);
+        if (expandsize == 0) {// 只需要一个buffer 
+            final ByteBuffer buffer = this.buffers[index];
+            buffer.put((byte) '"');
+            buffer.put(bs);
+            buffer.put((byte) '"');
+        } else {
+            ByteBuffer buffer = this.buffers[index];
+            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+            buffer.put((byte) '"');
+            for (byte b : bs) {
+                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                buffer.put(b);
+            }
+            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+            buffer.put((byte) '"');
+        }
+    }
+
+    @Override
     public void writeTo(final char[] chs, final int start, final int len) {
         writeTo(-1, false, chs, start, len);
     }

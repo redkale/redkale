@@ -162,12 +162,12 @@ public class JsonWriter extends Writer {
     @Override
     public final void writeFieldName(String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) writeTo(',');
-        writeTo(true, fieldName);
+        writeSmallString(fieldName);
         writeTo(':');
     }
 
     @Override
-    public final void writeSmallString(String value) {
+    public void writeSmallString(String value) {
         writeTo(true, value);
     }
 
