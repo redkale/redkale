@@ -207,10 +207,10 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
         }
         if (this.readBuffer != null) {
             Consumer<ByteBuffer> consumer = this.bufferConsumer;
-            Thread thread = Thread.currentThread();
-            if (thread instanceof IOThread) {
-                consumer = ((IOThread) thread).getBufferPool();
-            }
+//            Thread thread = Thread.currentThread();
+//            if (thread instanceof IOThread) {
+//                consumer = ((IOThread) thread).getBufferPool();
+//            }
             consumer.accept(this.readBuffer);
         }
         if (attributes == null) return;

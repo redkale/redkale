@@ -104,7 +104,8 @@ public class TcpAioProtocolServer extends ProtocolServer {
 
                     AsyncConnection conn = new TcpAioAsyncConnection(bufferPool, bufferPool, channel,
                         context.getSSLContext(), null, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
-                    context.runAsync(new PrepareRunner(context, responsePool, conn, null, null));
+                    //context.runAsync(new PrepareRunner(context, responsePool, conn, null, null));
+                    new PrepareRunner(context, responsePool, conn, null, null).run();
                 } catch (Throwable e) {
                     context.logger.log(Level.INFO, channel + " accept error", e);
                 }
