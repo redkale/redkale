@@ -50,7 +50,7 @@ public class ServerWatchService extends AbstractWatchService {
         return new RetResult(rs);
     }
 
-    @RestMapping(name = "changeaddress", comment = "更改Server的监听地址和端口")
+    @RestMapping(name = "changeAddress", comment = "更改Server的监听地址和端口")
     public RetResult changeAddress(@RestParam(name = "#port:") final int oldport,
         @RestParam(name = "#newhost:") final String newhost, @RestParam(name = "#newport:") final int newport) {
         if (oldport < 1) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `oldport`");

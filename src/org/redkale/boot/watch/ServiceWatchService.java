@@ -30,8 +30,8 @@ public class ServiceWatchService extends AbstractWatchService {
     protected Application application;
 
     @RestConvert(type = void.class)
-    @RestMapping(name = "setfield", auth = false, comment = "设置Service中指定字段的内容")
-    public RetResult setfield(@RestParam(name = "name", comment = "Service的资源名") String name,
+    @RestMapping(name = "setField", auth = false, comment = "设置Service中指定字段的内容")
+    public RetResult setField(@RestParam(name = "name", comment = "Service的资源名") String name,
         @RestParam(name = "type", comment = "Service的类名") String type,
         @RestParam(name = "field", comment = "字段名") String field,
         @RestParam(name = "value", comment = "字段值") String value) {
@@ -65,8 +65,8 @@ public class ServiceWatchService extends AbstractWatchService {
     }
 
     @RestConvert(type = void.class)
-    @RestMapping(name = "getfield", auth = false, comment = "查询Service中指定字段的内容")
-    public RetResult getfield(@RestParam(name = "name", comment = "Service的资源名") String name,
+    @RestMapping(name = "getField", auth = false, comment = "查询Service中指定字段的内容")
+    public RetResult getField(@RestParam(name = "name", comment = "Service的资源名") String name,
         @RestParam(name = "type", comment = "Service的类名") String type,
         @RestParam(name = "field", comment = "字段名") String field) {
         if (name == null) name = "";
@@ -98,8 +98,8 @@ public class ServiceWatchService extends AbstractWatchService {
     }
 
     @RestConvert(type = void.class)
-    @RestMapping(name = "runmethod", auth = false, comment = "调用Service中指定方法")
-    public RetResult runmethod(@RestParam(name = "name", comment = "Service的资源名") String name,
+    @RestMapping(name = "runMethod", auth = false, comment = "调用Service中指定方法")
+    public RetResult runMethod(@RestParam(name = "name", comment = "Service的资源名") String name,
         @RestParam(name = "type", comment = "Service的类名") String type,
         @RestParam(name = "method", comment = "Service的方法名") String method,
         @RestParam(name = "params", comment = "方法的参数值") List<String> params,
@@ -169,28 +169,28 @@ public class ServiceWatchService extends AbstractWatchService {
         return dest;
     }
 
-    @RestMapping(name = "load", auth = false, comment = "动态增加Service")
+    @RestMapping(name = "loadService", auth = false, comment = "动态增加Service")
     public RetResult loadService(@RestParam(name = "type", comment = "Service的类名") String type,
         @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameReg = "\\.jar$") byte[] jar) {
         //待开发
         return RetResult.success();
     }
 
-    @RestMapping(name = "reload", auth = false, comment = "重新加载Service")
+    @RestMapping(name = "reloadService", auth = false, comment = "重新加载Service")
     public RetResult reloadService(@RestParam(name = "name", comment = "Service的资源名") String name,
         @RestParam(name = "type", comment = "Service的类名") String type) {
         //待开发
         return RetResult.success();
     }
 
-    @RestMapping(name = "stop", auth = false, comment = "动态停止Service")
+    @RestMapping(name = "stopService", auth = false, comment = "动态停止Service")
     public RetResult stopService(@RestParam(name = "name", comment = "Service的资源名") String name,
         @RestParam(name = "type", comment = "Service的类名") String type) {
         //待开发
         return RetResult.success();
     }
 
-    @RestMapping(name = "find", auth = false, comment = "查找Service")
+    @RestMapping(name = "findService", auth = false, comment = "查找Service")
     public RetResult find(@RestParam(name = "name", comment = "Service的资源名") String name,
         @RestParam(name = "type", comment = "Service的类名") String type) {
         //待开发
