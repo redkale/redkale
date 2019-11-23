@@ -105,6 +105,15 @@ public class ByteBufferReader {
         return v;
     }
 
+    //提前预读一个字节
+    public byte preget() {
+        ByteBuffer buf = this.currBuffer;
+        if (!buf.hasRemaining()) {
+            buf = this.buffers[this.currIndex + 1];
+        }
+        return buf.get(buf.position());
+    }
+
     public byte get() {
         ByteBuffer buf = this.currBuffer;
         if (!buf.hasRemaining()) {
