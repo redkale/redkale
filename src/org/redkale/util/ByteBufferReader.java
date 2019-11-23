@@ -51,6 +51,14 @@ public class ByteBufferReader {
         this.bigEndian = this.currBuffer.order() == ByteOrder.BIG_ENDIAN;
     }
 
+    public ByteBufferReader append(ByteBuffer... buffs) {
+        for (ByteBuffer buf : buffs) {
+            Objects.requireNonNull(buf);
+        }
+        this.buffers = Utility.append(this.buffers, buffs);
+        return this;
+    }
+
     public static ByteBufferReader create(ByteBuffer buffer) {
         return new ByteBufferReader(buffer);
     }
