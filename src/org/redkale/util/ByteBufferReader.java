@@ -80,7 +80,21 @@ public class ByteBufferReader {
     }
 
     public boolean hasRemaining() {
-        return this.currBuffer.hasRemaining();
+        boolean v = this.currBuffer.hasRemaining();
+        if (v) return v;
+        if (this.currIndex == this.buffers.length - 1) return false;
+        for (int i = this.currIndex + 1; i < this.buffers.length; i++) {
+            if (this.buffers[i].hasRemaining()) return true;
+        }
+        return false;
+    }
+
+    public int remaining() {
+        int v = this.currBuffer.remaining();
+        for (int i = this.currIndex + 1; i < this.buffers.length; i++) {
+            v += this.buffers[i].remaining();
+        }
+        return v;
     }
 
     public byte get() {
