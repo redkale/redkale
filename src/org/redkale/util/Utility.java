@@ -1281,8 +1281,8 @@ public final class Utility {
                 Enumeration<InetAddress> eis = nif.getInetAddresses();
                 while (eis.hasMoreElements()) {
                     InetAddress ia = eis.nextElement();
-                    if (ia.isLoopbackAddress()) back = ia;
-                    if (ia.isSiteLocalAddress()) return ia;
+                    if (ia.isLoopbackAddress() && ia instanceof Inet4Address) back = ia;
+                    if (ia.isSiteLocalAddress() && ia instanceof Inet4Address) return ia;
                 }
             }
         } catch (Exception e) {
