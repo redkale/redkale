@@ -300,16 +300,16 @@ public class TcpAioAsyncConnection extends AsyncConnection {
             if (result >= 0) {
                 writeCount += result;
                 try {
-                    int index = -1;
+                    int incre = -1;
                     for (int i = writeOffset; i < (writeOffset + writeLength); i++) {
                         if (writeBuffers[i].hasRemaining()) {
-                            index = i;
+                            incre = i - writeOffset;
                             break;
                         }
                     }
-                    if (index >= 0) {
-                        writeOffset += index;
-                        writeLength -= index;
+                    if (incre >= 0) {
+                        writeOffset += incre;
+                        writeLength -= incre;
                         channel.write(writeBuffers, writeOffset, writeLength, writeTimeoutSeconds > 0 ? writeTimeoutSeconds : 60, TimeUnit.SECONDS, attachment, this);
                         return;
                     }
