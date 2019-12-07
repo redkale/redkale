@@ -32,6 +32,7 @@ public class HttpContext extends Context {
 
     public HttpContext(HttpContextConfig config) {
         super(config);
+        this.remoteAddrHeader = config.remoteAddrHeader;
         random.setSeed(Math.abs(System.nanoTime()));
     }
 
