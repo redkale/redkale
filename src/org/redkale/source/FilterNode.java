@@ -884,7 +884,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                     @Override
                     public boolean test(T t) {
-                        return ((Number) attr.get(t)).longValue() > ((Number) fkattr.get(t)).longValue();
+                        return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) > 0;
                     }
 
                     @Override
@@ -895,7 +895,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                     @Override
                     public boolean test(T t) {
-                        return ((Number) attr.get(t)).longValue() > ((Number) val).longValue();
+                        return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) > 0;
                     }
 
                     @Override
@@ -908,7 +908,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                     @Override
                     public boolean test(T t) {
-                        return ((Number) attr.get(t)).longValue() < ((Number) fkattr.get(t)).longValue();
+                        return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) < 0;
                     }
 
                     @Override
@@ -919,7 +919,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                     @Override
                     public boolean test(T t) {
-                        return ((Number) attr.get(t)).longValue() < ((Number) val).longValue();
+                        return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) < 0;
                     }
 
                     @Override
@@ -932,7 +932,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                     @Override
                     public boolean test(T t) {
-                        return ((Number) attr.get(t)).longValue() >= ((Number) fkattr.get(t)).longValue();
+                        return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) >= 0;
                     }
 
                     @Override
@@ -943,7 +943,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                     @Override
                     public boolean test(T t) {
-                        return ((Number) attr.get(t)).longValue() >= ((Number) val).longValue();
+                        return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) >= 0;
                     }
 
                     @Override
@@ -956,7 +956,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                     @Override
                     public boolean test(T t) {
-                        return ((Number) attr.get(t)).longValue() <= ((Number) fkattr.get(t)).longValue();
+                        return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) <= 0;
                     }
 
                     @Override
@@ -967,7 +967,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                     @Override
                     public boolean test(T t) {
-                        return ((Number) attr.get(t)).longValue() <= ((Number) val).longValue();
+                        return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) <= 0;
                     }
 
                     @Override
