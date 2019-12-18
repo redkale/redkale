@@ -37,6 +37,8 @@ import static org.redkale.asm.Opcodes.*;
  *
  *      private java.lang.reflect.Type _gtype = String.class;
  *
+ *      private java.lang.Object _attach;
+ *
  *      &#64;Override
  *      public String field() {
  *          return "name";
@@ -60,6 +62,11 @@ import static org.redkale.asm.Opcodes.*;
  *      &#64;Override
  *      public java.lang.reflect.Type genericType() {
  *          return _gtype;
+ *      }
+ *
+ *      &#64;Override
+ *      public Object attach() {
+ *          return _attach;
  *      }
  *
  *      &#64;Override
@@ -680,6 +687,7 @@ public interface Attribute<T, F> {
         final String fieldname = fieldalias;
         Class column = fieldtype;
         java.lang.reflect.Type generictype = fieldtype;
+        System.out.println("------------generictype：" + generictype + ", tfield: " + tfield + ", tgetter: " + tgetter);
         if (tfield != null) { // public tfield
             column = tfield.getType();
             generictype = tfield.getGenericType();
@@ -694,19 +702,25 @@ public interface Attribute<T, F> {
         } else if (column == null) {
             throw new RuntimeException("[" + clazz + "]have no field type");
         }
+        boolean checkCast = false;
+        if (generictype instanceof java.lang.reflect.TypeVariable) {
+            checkCast = true;
+            generictype = TypeToken.getGenericType(generictype, subclass);
+            if (generictype instanceof Class) column = (Class) generictype;
+        }
         final Class pcolumn = column;
         if (column.isPrimitive()) column = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(column, 1), 0).getClass();
         final String supDynName = Attribute.class.getName().replace('.', '/');
-        final String interName = clazz.getName().replace('.', '/');
+        final String interName = subclass.getName().replace('.', '/');
         final String columnName = column.getName().replace('.', '/');
-        final String interDesc = Type.getDescriptor(clazz);
+        final String interDesc = Type.getDescriptor(subclass);
         final String columnDesc = Type.getDescriptor(column);
 
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        String newDynName = supDynName + "_Dyn_" + clazz.getSimpleName() + "_"
+        String newDynName = supDynName + "_Dyn_" + subclass.getSimpleName() + "_"
             + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
-        if (String.class.getClassLoader() != clazz.getClassLoader()) {
-            loader = clazz.getClassLoader();
+        if (String.class.getClassLoader() != subclass.getClassLoader()) {
+            loader = subclass.getClassLoader();
             newDynName = interName + "_Dyn" + Attribute.class.getSimpleName() + "_"
                 + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         }
@@ -790,7 +804,7 @@ public interface Attribute<T, F> {
         }
         { //declaringClass 方法
             mv = cw.visitMethod(ACC_PUBLIC, "declaringClass", "()Ljava/lang/Class;", null, null);
-            mv.visitLdcInsn(Type.getType(clazz));
+            mv.visitLdcInsn(Type.getType(subclass));
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -807,6 +821,8 @@ public interface Attribute<T, F> {
                     if (pcolumn != column) {
                         mv.visitMethodInsn(INVOKESTATIC, columnName, "valueOf", "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc, false);
                         m = 2;
+                    } else {
+                        if (checkCast) mv.visitTypeInsn(CHECKCAST, columnName);
                     }
                 }
             } else {
@@ -815,6 +831,8 @@ public interface Attribute<T, F> {
                 if (pcolumn != column) {
                     mv.visitMethodInsn(INVOKESTATIC, columnName, "valueOf", "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc, false);
                     m = 2;
+                } else {
+                    if (checkCast) mv.visitTypeInsn(CHECKCAST, columnName);
                 }
             }
             mv.visitInsn(ARETURN);
