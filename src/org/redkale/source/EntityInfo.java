@@ -304,7 +304,7 @@ public final class EntityInfo<T> {
                 }
                 Attribute attr;
                 try {
-                    attr = Attribute.create(cltmp, field, cryptHandler);
+                    attr = Attribute.create(type, cltmp, field, cryptHandler);
                 } catch (RuntimeException e) {
                     continue;
                 }
