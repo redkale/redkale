@@ -687,7 +687,7 @@ public interface Attribute<T, F> {
         final String fieldname = fieldalias;
         Class column = fieldtype;
         java.lang.reflect.Type generictype = fieldtype;
-        System.out.println("------------generictype：" + generictype + ", tfield: " + tfield + ", tgetter: " + tgetter);
+        
         if (tfield != null) { // public tfield
             column = tfield.getType();
             generictype = tfield.getGenericType();
