@@ -151,7 +151,13 @@ public abstract class TypeToken<T> {
                 }
                 if (atas.length == asts.length) {
                     for (int i = 0; i < asts.length; i++) {
-                        if (asts[i] == type) return atas[i];
+                        if (asts[i] == type) {
+                            if (atas[i] instanceof Class
+                                && ((TypeVariable) type).getBounds().length == 1
+                                && ((TypeVariable) type).getBounds()[0] instanceof Class
+                                && ((Class) ((TypeVariable) type).getBounds()[0]).isAssignableFrom((Class) atas[i]))
+                                return atas[i];
+                        }
                     }
                 }
                 Type moreType = ((ParameterizedType) superType).getRawType();
