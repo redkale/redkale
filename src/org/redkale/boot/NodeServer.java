@@ -303,7 +303,7 @@ public abstract class NodeServer {
                 //NodeServer.this.watchFactory.inject(src);
                 if (source instanceof Service && needinit) ((Service) source).init(sourceConf);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "DataSource inject error", e);
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] DataSource inject error", e);
             }
         }, DataSource.class);
 
