@@ -171,6 +171,10 @@ public class SelectColumn implements Predicate<String> {
         return new SelectColumn(Utility.append(cols, columns), true);
     }
 
+    public boolean isOnlyOneColumn() {
+        return !excludable && columns != null && columns.length == 1;
+    }
+
     @Override
     public boolean test(final String column) {
         if (this.columns != null) {
