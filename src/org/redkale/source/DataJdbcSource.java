@@ -495,7 +495,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected <T> CompletableFuture<Sheet<T>> querySheetDB(EntityInfo<T> info, final boolean readcache, boolean needtotal, SelectColumn selects, Flipper flipper, FilterNode node) {
+    protected <T> CompletableFuture<Sheet<T>> querySheetDB(EntityInfo<T> info, final boolean readcache, boolean needtotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
         Connection conn = null;
         try {
             conn = readPool.poll();
@@ -507,7 +507,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
             final String dbtype = this.readPool.getDbtype();
             if ("mysql".equals(dbtype) || "postgresql".equals(dbtype)) {
-                final String listsql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
+                final String listsql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                     + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + createSQLOrderby(info, flipper) + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset()));
                 if (readcache && info.isLoggable(logger, Level.FINEST, listsql)) {
                     logger.finest(info.getType().getSimpleName() + " query sql=" + listsql);
@@ -521,7 +521,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 ps.close();
                 long total = list.size();
                 if (needtotal) {
-                    final String countsql = "SELECT COUNT(*) FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                    final String countsql = "SELECT " + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)") + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
                     if (readcache && info.isLoggable(logger, Level.FINEST, countsql)) {
                         logger.finest(info.getType().getSimpleName() + " query countsql=" + countsql);
                     }
@@ -533,7 +533,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 }
                 return CompletableFuture.completedFuture(new Sheet<>(total, list));
             }
-            final String sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
+            final String sql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
                 + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
             if (readcache && info.isLoggable(logger, Level.FINEST, sql)) {
                 logger.finest(info.getType().getSimpleName() + " query sql=" + sql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset())));

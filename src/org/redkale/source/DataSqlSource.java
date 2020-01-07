@@ -65,7 +65,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (t != null) logger.log(Level.SEVERE, "CompletableFuture complete error", (Throwable) t);
     };
 
-    protected final BiFunction<DataSource, Class, List> fullloader = (s, t) -> ((Sheet) querySheetCompose(false, false, t, null, null, (FilterNode) null).join()).list(true);
+    protected final BiFunction<DataSource, Class, List> fullloader = (s, t) -> ((Sheet) querySheetCompose(false, false, false, t, null, null, (FilterNode) null).join()).list(true);
 
     @SuppressWarnings({"OverridableMethodCallInConstructor", "LeakingThisInConstructor"})
     public DataSqlSource(String unitName, URL persistxml, Properties readprop, Properties writeprop) {
@@ -91,7 +91,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             } else if (s.length() == 2) {
                 s = "0" + s;
             }
-            t.setName("Redkale-"+cname + "-Thread-" + s);
+            t.setName("Redkale-" + cname + "-Thread-" + s);
             t.setUncaughtExceptionHandler(ueh);
             return t;
         });
@@ -167,7 +167,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract <T> CompletableFuture<Boolean> existsDB(final EntityInfo<T> info, final String sql, final boolean onlypk);
 
     //查询一页数据
-    protected abstract <T> CompletableFuture<Sheet<T>> querySheetDB(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+    protected abstract <T> CompletableFuture<Sheet<T>> querySheetDB(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
     protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final ResultSet set) throws SQLException {
         return info.getEntityValue(sels, set);
@@ -1279,7 +1279,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         String column = info.getPrimary().field();
         int c = 0;
         for (Serializable id : pks) {
-            Sheet<T> sheet = querySheetCompose(false, true, clazz, null, FLIPPER_ONE, FilterNode.create(column, id)).join();
+            Sheet<T> sheet = querySheetCompose(false, true, false, clazz, null, FLIPPER_ONE, FilterNode.create(column, id)).join();
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
             if (value != null) c += cache.update(value);
         }
@@ -1800,36 +1800,74 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     //-----------------------list set----------------------------
+    
     @Override
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, Class<T> clazz, String column, Serializable colval) {
-        return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, null, FilterNode.create(column, colval)));
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
+        return queryColumnSet(selectedColumn, clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, Class<T> clazz, String column, Serializable colval) {
-        return queryColumnListAsync(selectedColumn, clazz, null, FilterNode.create(column, colval)).thenApply((list) -> new LinkedHashSet(list));
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
+        return queryColumnSetAsync(selectedColumn, clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
-        return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean)));
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+        return queryColumnSet(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
-        return queryColumnListAsync(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean)).thenApply((list) -> new LinkedHashSet(list));
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+        return queryColumnSetAsync(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(String selectedColumn, Class<T> clazz, FilterNode node) {
-        return new LinkedHashSet<>(queryColumnList(selectedColumn, clazz, null, node));
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+        return queryColumnSet(selectedColumn, clazz, null, node);
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
-        return queryColumnListAsync(selectedColumn, clazz, null, node).thenApply((list) -> new LinkedHashSet(list));
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+        return queryColumnSetAsync(selectedColumn, clazz, null, node);
     }
 
+    @Override
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnSet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnSetAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        final Set<T> list = querySet(clazz, SelectColumn.includes(selectedColumn), flipper, node);
+        final Set<V> rs = new LinkedHashSet<>();
+        if (list.isEmpty()) return rs;
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final Attribute<T, V> selected = (Attribute<T, V>) info.getAttribute(selectedColumn);
+        for (T t : list) {
+            rs.add(selected.get(t));
+        }
+        return rs;
+    }
+
+    @Override
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return querySetAsync(clazz, SelectColumn.includes(selectedColumn), flipper, node).thenApply((Set<T> list) -> {
+            final Set<V> rs = new LinkedHashSet<>();
+            if (list.isEmpty()) return rs;
+            final EntityInfo<T> info = loadEntityInfo(clazz);
+            final Attribute<T, V> selected = (Attribute<T, V>) info.getAttribute(selectedColumn);
+            for (T t : list) {
+                rs.add(selected.get(t));
+            }
+            return rs;
+        });
+    }
+    
     @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnList(selectedColumn, clazz, null, FilterNode.create(column, colval));
@@ -2132,6 +2170,145 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
      * @return Entity对象的集合
      */
     @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final String column, final Serializable colval) {
+        return querySet(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final String column, final Serializable colval) {
+        return querySetAsync(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
+    }
+
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz) {
+        return querySet(clazz, (SelectColumn) null, null, (FilterNode) null);
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz) {
+        return querySetAsync(clazz, (SelectColumn) null, null, (FilterNode) null);
+    }
+
+    /**
+     * 根据过滤对象FilterBean查询对象集合
+     *
+     * @param <T>   Entity类的泛型
+     * @param clazz Entity类
+     * @param bean  过滤Bean
+     *
+     * @return Entity对象集合
+     */
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final FilterBean bean) {
+        return querySet(clazz, (SelectColumn) null, null, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final FilterBean bean) {
+        return querySetAsync(clazz, (SelectColumn) null, null, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final FilterNode node) {
+        return querySet(clazz, (SelectColumn) null, null, node);
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final FilterNode node) {
+        return querySetAsync(clazz, (SelectColumn) null, null, node);
+    }
+
+    /**
+     * 根据过滤对象FilterBean查询对象集合， 对象只填充或排除SelectField指定的字段
+     *
+     * @param <T>     Entity类的泛型
+     * @param clazz   Entity类
+     * @param selects 收集的字段
+     * @param bean    过滤Bean
+     *
+     * @return Entity对象的集合
+     */
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return querySet(clazz, selects, null, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, SelectColumn selects, final FilterBean bean) {
+        return querySetAsync(clazz, selects, null, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        return querySet(clazz, selects, null, node);
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, SelectColumn selects, final FilterNode node) {
+        return querySetAsync(clazz, selects, null, node);
+    }
+
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
+        return querySet(clazz, null, flipper, FilterNode.create(column, colval));
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
+        return querySetAsync(clazz, null, flipper, FilterNode.create(column, colval));
+    }
+
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return querySet(clazz, null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return querySetAsync(clazz, null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return querySet(clazz, null, flipper, node);
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return querySetAsync(clazz, null, flipper, node);
+    }
+
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return querySet(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return querySetAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        return new LinkedHashSet<>(querySheetCompose(true, false, true, clazz, selects, flipper, node).join().list(true));
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        return querySheetCompose(true, false, true, clazz, selects, flipper, node).thenApply((rs) -> new LinkedHashSet<>(rs.list(true)));
+    }
+
+    /**
+     * 根据指定字段值查询对象集合
+     *
+     * @param <T>    Entity类的泛型
+     * @param clazz  Entity类
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
+     *
+     * @return Entity对象的集合
+     */
+    @Override
     public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable colval) {
         return queryList(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
     }
@@ -2252,12 +2429,12 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheetCompose(true, false, clazz, selects, flipper, node).join().list(true);
+        return querySheetCompose(true, false, false, clazz, selects, flipper, node).join().list(true);
     }
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheetCompose(true, false, clazz, selects, flipper, node).thenApply((rs) -> rs.list(true));
+        return querySheetCompose(true, false, false, clazz, selects, flipper, node).thenApply((rs) -> rs.list(true));
     }
 
     //-----------------------sheet----------------------------
@@ -2314,24 +2491,24 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @Override
     public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheetCompose(true, true, clazz, selects, flipper, node).join();
+        return querySheetCompose(true, true, false, clazz, selects, flipper, node).join();
     }
 
     @Override
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        if (isAsync()) return querySheetCompose(true, true, clazz, selects, flipper, node);
-        return CompletableFuture.supplyAsync(() -> querySheetCompose(true, true, clazz, selects, flipper, node).join(), getExecutor());
+        if (isAsync()) return querySheetCompose(true, true, false, clazz, selects, flipper, node);
+        return CompletableFuture.supplyAsync(() -> querySheetCompose(true, true, false, clazz, selects, flipper, node).join(), getExecutor());
     }
 
-    protected <T> CompletableFuture<Sheet<T>> querySheetCompose(final boolean readcache, final boolean needtotal, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+    protected <T> CompletableFuture<Sheet<T>> querySheetCompose(final boolean readcache, final boolean needtotal, final boolean distinct, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (readcache && cache != null && cache.isFullLoaded()) {
             if (node == null || node.isCacheUseable(this)) {
                 if (info.isLoggable(logger, Level.FINEST, " cache query predicate = ")) logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : node.createPredicate(cache)));
-                return CompletableFuture.completedFuture(cache.querySheet(needtotal, selects, flipper, node));
+                return CompletableFuture.completedFuture(cache.querySheet(needtotal, distinct, selects, flipper, node));
             }
         }
-        return querySheetDB(info, readcache, needtotal, selects, flipper, node);
+        return querySheetDB(info, readcache, needtotal, distinct, selects, flipper, node);
     }
 }

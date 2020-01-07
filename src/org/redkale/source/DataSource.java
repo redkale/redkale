@@ -1429,9 +1429,10 @@ public interface DataSource {
     public <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final FilterNode node);
 
     //-----------------------list set----------------------------
+
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>
      *
      * @param <T>            Entity泛型
      * @param <V>            字段类型
@@ -1442,11 +1443,11 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval);
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval);
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>
      *
      * @param <T>            Entity泛型
      * @param <V>            字段类型
@@ -1457,11 +1458,11 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval);
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval);
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean}  <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean}  <br>
      *
      * @param <T>            Entity泛型
      * @param <V>            字段类型
@@ -1471,11 +1472,11 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean}  <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean}  <br>
      *
      * @param <T>            Entity泛型
      * @param <V>            字段类型
@@ -1485,11 +1486,11 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node}  <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node}  <br>
      *
      * @param <T>            Entity泛型
      * @param <V>            字段类型
@@ -1499,11 +1500,11 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> HashSet<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterNode node);
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node}  <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node}  <br>
      *
      * @param <T>            Entity泛型
      * @param <V>            字段类型
@@ -1513,7 +1514,67 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<HashSet<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node);
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的某个字段Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>            Entity泛型
+     * @param <V>            字段类型
+     * @param selectedColumn 指定字段
+     * @param clazz          Entity类
+     * @param flipper        翻页对象
+     * @param bean           过滤条件
+     *
+     * @return 字段值的集合
+     */
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的某个字段Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>            Entity泛型
+     * @param <V>            字段类型
+     * @param selectedColumn 指定字段
+     * @param clazz          Entity类
+     * @param flipper        翻页对象
+     * @param bean           过滤条件
+     *
+     * @return 字段值的集合CompletableFuture
+     */
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的某个字段Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>            Entity泛型
+     * @param <V>            字段类型
+     * @param selectedColumn 指定字段
+     * @param clazz          Entity类
+     * @param flipper        翻页对象
+     * @param node           过滤条件
+     *
+     * @return 字段值的集合
+     */
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的某个字段Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>            Entity泛型
+     * @param <V>            字段类型
+     * @param selectedColumn 指定字段
+     * @param clazz          Entity类
+     * @param flipper        翻页对象
+     * @param node           过滤条件
+     *
+     * @return 字段值的集合CompletableFuture
+     */
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1882,6 +1943,296 @@ public interface DataSource {
      * @return Entity的集合CompletableFuture
      */
     public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>    Entity泛型
+     * @param clazz  Entity类
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final String column, final Serializable colval);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>    Entity泛型
+     * @param clazz  Entity类
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final String column, final Serializable colval);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param bean  过滤条件
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param bean  过滤条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final FilterBean bean);
+
+    /**
+     * 查询记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     *
+     * @return Entity的集合
+     */
+    default <T> Set<T> querySet(final Class<T> clazz) {
+        return querySet(clazz, (FilterNode) null);
+    }
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  过滤条件
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final FilterNode node);
+
+    /**
+     * 查询记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz) {
+        return querySetAsync(clazz, (FilterNode) null);
+    }
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param node  过滤条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param bean    过滤条件
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param bean    过滤条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param node    过滤条件
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param node    过滤条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param column  过滤字段名
+     * @param colval  过滤字段值
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param column  过滤字段名
+     * @param colval  过滤字段值
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param bean    过滤条件
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param bean    过滤条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param node    过滤条件
+     *
+     * @return Entity的集合
+     *
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param flipper 翻页对象
+     * @param node    过滤条件
+     *
+     * @return Entity的集合
+     *
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param flipper 翻页对象
+     * @param bean    过滤条件
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param flipper 翻页对象
+     * @param bean    过滤条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param flipper 翻页对象
+     * @param node    过滤条件
+     *
+     * @return Entity的集合
+     */
+    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的Set集合   <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param flipper 翻页对象
+     * @param node    过滤条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的List集合   <br>

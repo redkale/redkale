@@ -395,21 +395,47 @@ public final class EntityCache<T> {
     }
 
     public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheet(true, selects, flipper, node);
+        return querySheet(true, false, selects, flipper, node);
     }
 
-    public Sheet<T> querySheet(final boolean needtotal, final SelectColumn selects, final Flipper flipper, FilterNode node) {
+    protected <T> Stream<T> distinctStream(Stream<T> stream, final List<Attribute<T, Serializable>> keyattrs) {
+        if (keyattrs == null) return stream;
+        final Set<String> keys = new HashSet<>();
+        Predicate<T> filter = t -> {
+            StringBuilder sb = new StringBuilder();
+            for (Attribute attr : keyattrs) {
+                sb.append(attr.get(t));
+            }
+            String key = sb.toString();
+            if (keys.contains(key)) return false;
+            keys.add(key);
+            return true;
+        };
+        return stream.filter(filter);
+    }
+
+    public Sheet<T> querySheet(final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, FilterNode node) {
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         final Comparator<T> comparator = createComparator(flipper);
         long total = 0;
+        List<Attribute<T, Serializable>> keyattrs = null;
+        if (distinct) {
+            final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
+            info.forEachAttribute((k, v) -> {
+                if (selects == null || selects.test(k)) attrs.add(v);
+            });
+            keyattrs = attrs;
+        }
         if (needtotal) {
             Stream<T> stream = this.list.stream();
             if (filter != null) stream = stream.filter(filter);
+            if (distinct) stream = distinctStream(stream, keyattrs);
             total = stream.count();
         }
         if (needtotal && total == 0) return new Sheet<>();
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
+        if (distinct) stream = distinctStream(stream, keyattrs);
         if (comparator != null) stream = stream.sorted(comparator);
         if (flipper != null && flipper.getOffset() > 0) stream = stream.skip(flipper.getOffset());
         if (flipper != null && flipper.getLimit() > 0) stream = stream.limit(flipper.getLimit());
