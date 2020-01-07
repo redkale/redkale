@@ -1550,8 +1550,8 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取翻页对象 https://redkale.org/pipes/records/list/offset:0/limit:20/sort:createtime%20ASC  <br>
-     * https://redkale.org/pipes/records/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'}  <br>
+     * 获取翻页对象 https://redkale.org/pipes/users/list/offset:0/limit:20/sort:createtime%20ASC  <br>
+     * https://redkale.org/pipes/users/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'}  <br>
      * 以上两种接口都可以获取到翻页对象
      *
      *
