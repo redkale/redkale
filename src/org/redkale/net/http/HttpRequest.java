@@ -24,7 +24,7 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
  * 同时提供json的解析接口: public Object getJsonParameter(Type type, String name)  <br>
  * Redkale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getRequstURIPath 系列接口。  <br>
  * 例如简单的翻页查询   <br>
- *      /pipes/record/query/offset:0/limit:20 <br>
+ *      /pipes/user/query/offset:0/limit:20 <br>
  * 获取页号: int offset = request.getRequstURIPath("offset:", 0);   <br>
  * 获取行数: int limit = request.getRequstURIPath("limit:", 10);  <br>
  * <p>
@@ -700,7 +700,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL最后的一个/后面的部分的short值   <br>
-     * 例如请求URL /pipes/record/query/2   <br>
+     * 例如请求URL /pipes/user/query/2   <br>
      * 获取type参数: short type = request.getRequstURILastPath((short)0); //type = 2
      *
      * @param defvalue 默认short值
@@ -719,7 +719,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL最后的一个/后面的部分的short值   <br>
-     * 例如请求URL /pipes/record/query/2   <br>
+     * 例如请求URL /pipes/user/query/2   <br>
      * 获取type参数: short type = request.getRequstURILastPath(16, (short)0); //type = 2
      *
      * @param radix    进制数
@@ -739,7 +739,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL最后的一个/后面的部分的int值   <br>
-     * 例如请求URL /pipes/record/query/2   <br>
+     * 例如请求URL /pipes/user/query/2   <br>
      * 获取type参数: int type = request.getRequstURILastPath(0); //type = 2
      *
      * @param defvalue 默认int值
@@ -757,7 +757,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL最后的一个/后面的部分的int值   <br>
-     * 例如请求URL /pipes/record/query/2   <br>
+     * 例如请求URL /pipes/user/query/2   <br>
      * 获取type参数: int type = request.getRequstURILastPath(16, 0); //type = 2
      *
      * @param radix    进制数
@@ -776,7 +776,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL最后的一个/后面的部分的float值   <br>
-     * 例如请求URL /pipes/record/query/2   <br>
+     * 例如请求URL /pipes/user/query/2   <br>
      * 获取type参数: float type = request.getRequstURILastPath(0.0f); //type = 2.0f
      *
      * @param defvalue 默认float值
@@ -794,7 +794,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL最后的一个/后面的部分的int值   <br>
-     * 例如请求URL /pipes/record/query/2   <br>
+     * 例如请求URL /pipes/user/query/2   <br>
      * 获取type参数: long type = request.getRequstURILastPath(0L); //type = 2
      *
      * @param defvalue 默认long值
@@ -812,7 +812,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL最后的一个/后面的部分的int值   <br>
-     * 例如请求URL /pipes/record/query/2   <br>
+     * 例如请求URL /pipes/user/query/2   <br>
      * 获取type参数: long type = request.getRequstURILastPath(16, 0L); //type = 2
      *
      * @param radix    进制数
@@ -831,7 +831,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL最后的一个/后面的部分的double值   <br>
-     * 例如请求URL /pipes/record/query/2   <br>
+     * 例如请求URL /pipes/user/query/2   <br>
      * 获取type参数: double type = request.getRequstURILastPath(0.0); //type = 2.0
      *
      * @param defvalue 默认double值
@@ -862,7 +862,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的值   <br>
-     * 例如请求URL /pipes/record/query/name:hello   <br>
+     * 例如请求URL /pipes/user/query/name:hello   <br>
      * 获取name参数: String name = request.getRequstURIPath("name:", "none");
      *
      * @param prefix   prefix段前缀
@@ -881,7 +881,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的short值   <br>
-     * 例如请求URL /pipes/record/query/type:10   <br>
+     * 例如请求URL /pipes/user/query/type:10   <br>
      * 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
      *
      * @param prefix   prefix段前缀
@@ -900,7 +900,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的short值   <br>
-     * 例如请求URL /pipes/record/query/type:a   <br>
+     * 例如请求URL /pipes/user/query/type:a   <br>
      * 获取type参数: short type = request.getRequstURIPath(16, "type:", (short)0); //type = 10
      *
      * @param radix    进制数
@@ -920,7 +920,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的int值  <br>
-     * 例如请求URL /pipes/record/query/offset:0/limit:50   <br>
+     * 例如请求URL /pipes/user/query/offset:0/limit:50   <br>
      * 获取offset参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
      * 获取limit参数: int limit = request.getRequstURIPath("limit:", 20);  <br>
      *
@@ -940,7 +940,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的int值  <br>
-     * 例如请求URL /pipes/record/query/offset:0/limit:50   <br>
+     * 例如请求URL /pipes/user/query/offset:0/limit:50   <br>
      * 获取offset参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
      * 获取limit参数: int limit = request.getRequstURIPath(16, "limit:", 20); // limit = 16  <br>
      *
@@ -961,7 +961,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的float值   <br>
-     * 例如请求URL /pipes/record/query/point:40.0   <br>
+     * 例如请求URL /pipes/user/query/point:40.0   <br>
      * 获取time参数: float point = request.getRequstURIPath("point:", 0.0f);
      *
      * @param prefix   prefix段前缀
@@ -980,7 +980,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的long值   <br>
-     * 例如请求URL /pipes/record/query/time:1453104341363/id:40   <br>
+     * 例如请求URL /pipes/user/query/time:1453104341363/id:40   <br>
      * 获取time参数: long time = request.getRequstURIPath("time:", 0L);
      *
      * @param prefix   prefix段前缀
@@ -999,7 +999,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的long值   <br>
-     * 例如请求URL /pipes/record/query/time:1453104341363/id:40   <br>
+     * 例如请求URL /pipes/user/query/time:1453104341363/id:40   <br>
      * 获取time参数: long time = request.getRequstURIPath(16, "time:", 0L);
      *
      * @param radix    进制数
@@ -1019,7 +1019,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取请求URL分段中含prefix段的double值   <br>
-     * 例如请求URL /pipes/record/query/point:40.0   <br>
+     * 例如请求URL /pipes/user/query/point:40.0   <br>
      * 获取time参数: double point = request.getRequstURIPath("point:", 0.0);
      *
      * @param prefix   prefix段前缀
