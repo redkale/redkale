@@ -78,7 +78,7 @@ public class TestSourceCache {
                 @Override
                 public void run() {
                     for (int k = 0; k < 10; k++) {
-                        info.getCache().querySheet(true, null, flipper, node);
+                        info.getCache().querySheet(true, false, null, flipper, node);
                     }
                     cdl.countDown();
                 }
