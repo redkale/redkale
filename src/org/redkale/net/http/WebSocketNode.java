@@ -11,7 +11,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import java.util.stream.Stream;
+import java.util.stream.*;
 import javax.annotation.*;
 import org.redkale.boot.*;
 import org.redkale.convert.*;
@@ -204,6 +204,22 @@ public abstract class WebSocketNode {
         }
         tryAcquireSemaphore();
         CompletableFuture<Integer> rs = this.sncpNodeAddresses.queryKeysStartsWithAsync(SOURCE_SNCP_USERID_PREFIX).thenApply(v -> v.size());
+        if (semaphore != null) rs.whenComplete((r, e) -> releaseSemaphore());
+        return rs;
+    }
+
+    /**
+     * 获取在线用户总数
+     *
+     *
+     * @return boolean
+     */
+    public CompletableFuture<Set<String>> getUserSet() {
+        if (this.localEngine != null && this.sncpNodeAddresses == null) {
+            return CompletableFuture.completedFuture(new LinkedHashSet<>(this.localEngine.getLocalUserSet().stream().map(x -> String.valueOf(x)).collect(Collectors.toList())));
+        }
+        tryAcquireSemaphore();
+        CompletableFuture<Set<String>> rs = this.sncpNodeAddresses.queryKeysStartsWithAsync(SOURCE_SNCP_USERID_PREFIX).thenApply(v -> new LinkedHashSet<>(v.stream().map(x -> x.substring(SOURCE_SNCP_USERID_PREFIX.length())).collect(Collectors.toList())));
         if (semaphore != null) rs.whenComplete((r, e) -> releaseSemaphore());
         return rs;
     }

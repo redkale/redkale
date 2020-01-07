@@ -453,6 +453,11 @@ public class WebSocketEngine {
     }
 
     @Comment("获取当前用户总数")
+    public Set<Serializable> getLocalUserSet() {
+        return single ? new LinkedHashSet<>(websockets.keySet()) : new LinkedHashSet<>(websockets2.keySet());
+    }
+
+    @Comment("获取当前用户总数")
     public int getLocalUserSize() {
         return single ? websockets.size() : websockets2.size();
     }
