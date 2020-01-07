@@ -914,7 +914,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -931,7 +931,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -948,7 +948,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -966,7 +966,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -984,7 +984,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -1002,7 +1002,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM record GROUP BY name<br>
+     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
