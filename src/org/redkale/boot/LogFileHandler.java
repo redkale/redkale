@@ -46,19 +46,19 @@ public class LogFileHandler extends Handler {
         private static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s\r\n%5$s%6$s\r\n";
 
         @Override
-        public String format(LogRecord record) {
+        public String format(LogRecord log) {
             String source;
-            if (record.getSourceClassName() != null) {
-                source = record.getSourceClassName();
-                if (record.getSourceMethodName() != null) {
-                    source += " " + record.getSourceMethodName();
+            if (log.getSourceClassName() != null) {
+                source = log.getSourceClassName();
+                if (log.getSourceMethodName() != null) {
+                    source += " " + log.getSourceMethodName();
                 }
             } else {
-                source = record.getLoggerName();
+                source = log.getLoggerName();
             }
-            String message = formatMessage(record);
+            String message = formatMessage(log);
             String throwable = "";
-            if (record.getThrown() != null) {
+            if (log.getThrown() != null) {
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw) {
                     @Override
@@ -67,22 +67,22 @@ public class LogFileHandler extends Handler {
                     }
                 };
                 pw.println();
-                record.getThrown().printStackTrace(pw);
+                log.getThrown().printStackTrace(pw);
                 pw.close();
                 throwable = sw.toString();
             }
             return String.format(format,
                 System.currentTimeMillis(),
                 source,
-                record.getLoggerName(),
-                record.getLevel().getName(),
+                log.getLoggerName(),
+                log.getLevel().getName(),
                 message,
                 throwable);
         }
 
     }
 
-    protected final LinkedBlockingQueue<LogRecord> records = new LinkedBlockingQueue();
+    protected final LinkedBlockingQueue<LogRecord> logqueue = new LinkedBlockingQueue();
 
     private String pattern;
 
@@ -144,9 +144,9 @@ public class LogFileHandler extends Handler {
             public void run() {
                 while (true) {
                     try {
-                        LogRecord record = records.take();
+                        LogRecord log = logqueue.take();
                         final boolean bigger = (limit > 0 && limit <= loglength.get());
-                        final boolean changeday = tomorrow <= record.getMillis();
+                        final boolean changeday = tomorrow <= log.getMillis();
                         if (bigger || changeday) {
                             updateTomorrow();
                             if (logstream != null) {
@@ -193,12 +193,12 @@ public class LogFileHandler extends Handler {
                             logunusualstream = new FileOutputStream(logunusualfile, append);
                         }
                         //----------------------写日志-------------------------
-                        String message = getFormatter().format(record);
+                        String message = getFormatter().format(log);
                         String encoding = getEncoding();
                         byte[] bytes = encoding == null ? message.getBytes() : message.getBytes(encoding);
                         logstream.write(bytes);
                         loglength.addAndGet(bytes.length);
-                        if (unusual != null && (record.getLevel() == Level.WARNING || record.getLevel() == Level.SEVERE)) {
+                        if (unusual != null && (log.getLevel() == Level.WARNING || log.getLevel() == Level.SEVERE)) {
                             logunusualstream.write(bytes);
                             logunusuallength.addAndGet(bytes.length);
                         }
@@ -310,21 +310,21 @@ public class LogFileHandler extends Handler {
     }
 
     @Override
-    public void publish(LogRecord record) {
-        final String sourceClassName = record.getSourceClassName();
+    public void publish(LogRecord log) {
+        final String sourceClassName = log.getSourceClassName();
         if (sourceClassName == null || true) {
             StackTraceElement[] ses = new Throwable().getStackTrace();
             for (int i = 2; i < ses.length; i++) {
                 if (ses[i].getClassName().startsWith("java.util.logging")) continue;
-                record.setSourceClassName('[' + Thread.currentThread().getName() + "] " + ses[i].getClassName());
-                record.setSourceMethodName(ses[i].getMethodName());
+                log.setSourceClassName('[' + Thread.currentThread().getName() + "] " + ses[i].getClassName());
+                log.setSourceMethodName(ses[i].getMethodName());
                 break;
             }
         } else {
-            record.setSourceClassName('[' + Thread.currentThread().getName() + "] " + sourceClassName);
+            log.setSourceClassName('[' + Thread.currentThread().getName() + "] " + sourceClassName);
         }
-        if (denyreg != null && denyreg.matcher(record.getMessage()).find()) return;
-        records.offer(record);
+        if (denyreg != null && denyreg.matcher(log.getMessage()).find()) return;
+        logqueue.offer(log);
     }
 
     @Override
