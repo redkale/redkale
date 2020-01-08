@@ -65,7 +65,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
             }
 
             @Override
-            public void onConnected() {
+            public CompletableFuture onConnected() {
                 if (repeat) {
                     super.close();
                 } else {
@@ -82,6 +82,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
                     String msg = ("{'type':'discover_user','user':{'userid':'" + this.getSessionid() + "','username':'" + users.get(this.getSessionid()) + "'}}").replace('\'', '"');
                     super.broadcastMessage(msg);
                 }
+                return null;
             }
 
             @Override
@@ -91,10 +92,10 @@ public class VideoWebSocketServlet extends WebSocketServlet {
             }
 
             @Override
-            public void onClose(int code, String reason) {
+            public CompletableFuture onClose(int code, String reason) {
                 sessions.remove(this.getSessionid());
                 String msg = ("{'type':'remove_user','user':{'userid':'" + this.getSessionid() + "','username':'" + users.get(this.getSessionid()) + "'}}").replace('\'', '"');
-                super.broadcastMessage(msg);
+                return super.broadcastMessage(msg);
             } 
 
             @Override
