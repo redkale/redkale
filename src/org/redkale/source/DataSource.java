@@ -49,9 +49,49 @@ public interface DataSource {
      * @param <T>     泛型
      * @param entitys Entity对象
      *
+     * @return 影响的记录条数
+     */
+    public <T> int insert(final Collection<T> entitys);
+
+    /**
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数
+     */
+    public <T> int insert(final Stream<T> entitys);
+
+    /**
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
      * @return CompletableFuture
      */
     public <T> CompletableFuture<Integer> insertAsync(final T... entitys);
+
+    /**
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return CompletableFuture
+     */
+    public <T> CompletableFuture<Integer> insertAsync(final Collection<T> entitys);
+
+    /**
+     * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     *
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return CompletableFuture
+     */
+    public <T> CompletableFuture<Integer> insertAsync(final Stream<T> entitys);
 
     //-------------------------deleteAsync--------------------------
     /**
@@ -1429,7 +1469,6 @@ public interface DataSource {
     public <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final FilterNode node);
 
     //-----------------------list set----------------------------
-
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
      * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>

@@ -329,6 +329,18 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
+    public final <T> int insert(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return 0;
+        return insert(entitys.toArray());
+    }
+
+    @Override
+    public final <T> int insert(final Stream<T> entitys) {
+        if (entitys == null) return 0;
+        return insert(entitys.toArray());
+    }
+
+    @Override
     public <T> CompletableFuture<Integer> insertAsync(@RpcCall(DataCallArrayAttribute.class) T... entitys) {
         if (entitys.length == 0) return CompletableFuture.completedFuture(0);
         CompletableFuture future = checkEntity("insert", true, entitys);
@@ -351,6 +363,18 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                 insertCache(info, entitys);
             }
         });
+    }
+
+    @Override
+    public final <T> CompletableFuture<Integer> insertAsync(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        return insertAsync(entitys.toArray());
+    }
+
+    @Override
+    public final <T> CompletableFuture<Integer> insertAsync(final Stream<T> entitys) {
+        if (entitys == null) return CompletableFuture.completedFuture(0);
+        return insertAsync(entitys.toArray());
     }
 
     protected <T> int insertCache(final EntityInfo<T> info, T... entitys) {
@@ -1800,7 +1824,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     //-----------------------list set----------------------------
-    
     @Override
     public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnSet(selectedColumn, clazz, null, FilterNode.create(column, colval));
@@ -1867,7 +1890,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             return rs;
         });
     }
-    
+
     @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnList(selectedColumn, clazz, null, FilterNode.create(column, colval));
