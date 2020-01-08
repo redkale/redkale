@@ -740,8 +740,11 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     /**
      * WebSokcet连接成功后的回调方法
+     *
+     * @return Future 可以为null
      */
-    public void onConnected() {
+    public CompletableFuture onConnected() {
+        return null;
     }
 
     /**
@@ -805,8 +808,11 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @param code   结果码，非0表示非正常关闭
      * @param reason 关闭原因
+     *
+     * @return Future 可以为null
      */
-    public void onClose(int code, String reason) {
+    public CompletableFuture onClose(int code, String reason) {
+        return null;
     }
 
     /**

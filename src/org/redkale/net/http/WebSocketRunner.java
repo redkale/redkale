@@ -59,7 +59,8 @@ class WebSocketRunner implements Runnable {
         final boolean debug = context.getLogger().isLoggable(Level.FINEST);
         final WebSocketRunner self = this;
         try {
-            webSocket.onConnected();
+            CompletableFuture connectfFuture = webSocket.onConnected();
+            if (connectfFuture != null) connectfFuture.join();
             webSocket._channel.setReadTimeoutSeconds(300); //读取超时5分钟
             if (webSocket._channel.isOpen()) {
                 final int wsmaxbody = webSocket._engine.wsmaxbody;
@@ -307,8 +308,9 @@ class WebSocketRunner implements Runnable {
             closed = true;
             CompletableFuture<Void> future = engine.removeLocalThenClose(webSocket);
             webSocket._channel.dispose();
-            webSocket.onClose(code, reason);
-            return future;
+            CompletableFuture closeFuture = webSocket.onClose(code, reason);
+            if (closeFuture == null) return future;
+            return CompletableFuture.allOf(future, closeFuture);
         }
     }
 
