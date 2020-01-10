@@ -973,7 +973,8 @@ public final class EntityInfo<T> {
     protected CharSequence formatSQLValue(String sqlColumn, Attribute<T, Serializable> attr, final ColumnValue cv, BiFunction<EntityInfo, Object, CharSequence> formatter) {
         if (cv == null) return null;
         Object val = cv.getValue();
-        if (val instanceof ColumnNodeValue && cv.getExpress() == ColumnExpress.MOV) return formatSQLValue(attr, (ColumnNodeValue) val, formatter);
+        //ColumnNodeValue时 cv.getExpress() == ColumnExpress.MOV 只用于updateColumn
+        if (val instanceof ColumnNodeValue) return formatSQLValue(attr, (ColumnNodeValue) val, formatter);
         switch (cv.getExpress()) {
             case INC:
                 return new StringBuilder().append(sqlColumn).append(" + ").append(val);
