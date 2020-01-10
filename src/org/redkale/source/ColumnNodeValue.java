@@ -69,6 +69,10 @@ public class ColumnNodeValue implements Serializable {
         return any(INC, right);
     }
 
+    public ColumnNodeValue dec(Serializable right) {
+        return any(DEC, right);
+    }
+    
     public ColumnNodeValue mul(Serializable right) {
         return any(MUL, right);
     }
