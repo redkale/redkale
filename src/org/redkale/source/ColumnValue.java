@@ -75,6 +75,18 @@ public class ColumnValue {
     }
 
     /**
+     * 返回 {column} = {column} - {value} 操作
+     *
+     * @param column 字段名
+     * @param value  字段值
+     *
+     * @return ColumnValue
+     */
+    public static ColumnValue dec(String column, Serializable value) {
+        return new ColumnValue(column, DEC, value);
+    }
+    
+    /**
      * 返回 {column} = {column} * {value} 操作
      *
      * @param column 字段名

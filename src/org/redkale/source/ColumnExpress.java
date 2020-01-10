@@ -23,6 +23,10 @@ public enum ColumnExpress {
      */
     INC,
     /**
+     * 加值 col = col - val
+     */
+    DEC,
+    /**
      * 乘值 col = col * val
      */
     MUL,

@@ -17,11 +17,11 @@ import static org.redkale.source.ColumnExpress.*;
  */
 public class ColumnNodeValue implements Serializable {
 
-    private Serializable left;//类型只能是String、Number、ColumnNode
+    private Serializable left;//类型只能是String、Number、ColumnNodeValue
 
     private ColumnExpress express; //不能是MOV
 
-    private Serializable right;//类型只能是String、Number、ColumnNode
+    private Serializable right;//类型只能是String、Number、ColumnNodeValue
 
     public ColumnNodeValue() {
     }
@@ -39,6 +39,10 @@ public class ColumnNodeValue implements Serializable {
 
     public static ColumnNodeValue inc(Serializable left, Serializable right) {
         return new ColumnNodeValue(left, INC, right);
+    }
+
+    public static ColumnNodeValue dec(Serializable left, Serializable right) {
+        return new ColumnNodeValue(left, DEC, right);
     }
 
     public static ColumnNodeValue mul(Serializable left, Serializable right) {

@@ -977,6 +977,8 @@ public final class EntityInfo<T> {
         switch (cv.getExpress()) {
             case INC:
                 return new StringBuilder().append(sqlColumn).append(" + ").append(val);
+            case DEC:
+                return new StringBuilder().append(sqlColumn).append(" - ").append(val);
             case MUL:
                 return new StringBuilder().append(sqlColumn).append(" * ").append(val);
             case DIV:
@@ -1013,6 +1015,8 @@ public final class EntityInfo<T> {
         switch (node.getExpress()) {
             case INC:
                 return new StringBuilder().append(left).append(" + ").append(right);
+            case DEC:
+                return new StringBuilder().append(left).append(" - ").append(right);
             case MUL:
                 return new StringBuilder().append(left).append(" * ").append(right);
             case DIV:

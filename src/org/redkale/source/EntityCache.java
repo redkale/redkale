@@ -622,6 +622,15 @@ public final class EntityCache<T> {
         }
     }
 
+    public <V> T updateColumnDecrement(final Serializable pk, Attribute<T, V> attr, final long incvalue) {
+        if (pk == null) return null;
+        T rs = this.map.get(pk);
+        if (rs == null) return rs;
+        synchronized (rs) {
+            return updateColumn(attr, rs, ColumnExpress.DEC, incvalue);
+        }
+    }
+
     private <V> T updateColumn(Attribute<T, V> attr, final T entity, final ColumnExpress express, Serializable val) {
         final Class ft = attr.type();
         Number numb = null;
@@ -693,6 +702,13 @@ public final class EntityCache<T> {
                     numb = (Number) val;
                 } else {
                     numb = numb.longValue() + ((Number) val).longValue();
+                }
+                break;
+            case DEC:
+                if (numb == null) {
+                    numb = (Number) val;
+                } else {
+                    numb = numb.longValue() - ((Number) val).longValue();
                 }
                 break;
             case MUL:
