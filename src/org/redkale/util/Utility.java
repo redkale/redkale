@@ -285,6 +285,18 @@ public final class Utility {
     }
 
     /**
+     * 将多个元素组合成一个Array
+     *
+     * @param <T>   泛型
+     * @param items 元素
+     *
+     * @return Array
+     */
+    public static <T> T[] ofArray(T... items) {
+        return items;
+    }
+
+    /**
      * 获取不带"-"的UUID值
      *
      * @return 不带"-"UUID值
