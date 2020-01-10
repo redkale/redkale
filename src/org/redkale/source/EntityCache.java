@@ -702,14 +702,26 @@ public final class EntityCache<T> {
                 if (numb == null) {
                     numb = (Number) val;
                 } else {
-                    numb = numb.longValue() + ((Number) val).longValue();
+                    if (numb instanceof Float || ((Number) val) instanceof Float) {
+                        numb = numb.floatValue() + ((Number) val).floatValue();
+                    } else if (numb instanceof Double || ((Number) val) instanceof Double) {
+                        numb = numb.doubleValue() + ((Number) val).doubleValue();
+                    } else {
+                        numb = numb.longValue() + ((Number) val).longValue();
+                    }
                 }
                 break;
             case DEC:
                 if (numb == null) {
                     numb = (Number) val;
                 } else {
-                    numb = numb.longValue() - ((Number) val).longValue();
+                    if (numb instanceof Float || ((Number) val) instanceof Float) {
+                        numb = numb.floatValue() - ((Number) val).floatValue();
+                    } else if (numb instanceof Double || ((Number) val) instanceof Double) {
+                        numb = numb.doubleValue() - ((Number) val).doubleValue();
+                    } else {
+                        numb = numb.longValue() - ((Number) val).longValue();
+                    }
                 }
                 break;
             case MUL:
