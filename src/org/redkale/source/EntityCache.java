@@ -637,6 +637,7 @@ public final class EntityCache<T> {
         Serializable newval = null;
         switch (express) {
             case INC:
+            case DEC:
             case MUL:
             case DIV:
             case MOD:
