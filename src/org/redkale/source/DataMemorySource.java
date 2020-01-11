@@ -150,7 +150,7 @@ public class DataMemorySource extends DataSqlSource<Void> {
 
     @Override
     protected <T> CompletableFuture<Sheet<T>> querySheetDB(EntityInfo<T> info, final boolean readcache, boolean needtotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
-        return CompletableFuture.completedFuture(new Sheet<>());
+        return CompletableFuture.completedFuture(new Sheet<>(0, new ArrayList()));
     }
 
 }

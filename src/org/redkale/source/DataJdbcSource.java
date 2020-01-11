@@ -601,7 +601,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             ps.close();
             return CompletableFuture.completedFuture(new Sheet<>(total, list));
         } catch (SQLException e) {
-            if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(new Sheet<>());
+            if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(new Sheet<>(0, new ArrayList()));
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(e);
             return future;//return CompletableFuture.failedFuture(e);

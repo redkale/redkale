@@ -436,7 +436,7 @@ public final class EntityCache<T> {
             if (distinct) stream = distinctStream(stream, keyattrs);
             total = stream.count();
         }
-        if (needtotal && total == 0) return new Sheet<>();
+        if (needtotal && total == 0) return new Sheet<>(0, new ArrayList());
         Stream<T> stream = this.list.stream();
         if (filter != null) stream = stream.filter(filter);
         if (distinct) stream = distinctStream(stream, keyattrs);
