@@ -431,12 +431,18 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             final Statement stmt = conn.createStatement();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
-            boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
+            boolean[] smallints = null;
             while (set.next()) {
                 int index = 0;
                 Serializable[] keys = new Serializable[groupByColumns.length];
+                if (smallints == null) {
+                    smallints = new boolean[keys.length];
+                    for (int i = 0; i < keys.length; i++) {
+                        smallints[i] = rsd == null ? false : rsd.getColumnType(i + 1) == Types.SMALLINT;
+                    }
+                }
                 for (int i = 0; i < keys.length; i++) {
-                    keys[i] = (Serializable) ((smallint && index == 0) ? set.getShort(++index) : set.getObject(++index));
+                    keys[i] = (Serializable) ((smallints[i] && index == 0) ? set.getShort(++index) : set.getObject(++index));
                 }
                 Number[] vals = new Number[funcNodes.length];
                 for (int i = 0; i < vals.length; i++) {
