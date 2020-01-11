@@ -310,6 +310,10 @@ public final class EntityCache<T> {
         return rs;
     }
 
+    public Map<Serializable[], Number[]> queryColumnMap(final ColumnNode[] funcNodes, final String[] groupByColumns, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     public <V> Number getNumberResult(final FilterFunc func, final Number defResult, final String column, final FilterNode node) {
         final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);

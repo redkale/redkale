@@ -422,6 +422,42 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDB(EntityInfo<T> info, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        Connection conn = null;
+        Map rs = new LinkedHashMap<>();
+        try {
+            conn = readPool.poll();
+            //conn.setReadOnly(true);
+            final Statement stmt = conn.createStatement();
+            ResultSet set = stmt.executeQuery(sql);
+            ResultSetMetaData rsd = set.getMetaData();
+            boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
+            while (set.next()) {
+                int index = 0;
+                Serializable[] keys = new Serializable[groupByColumns.length];
+                for (int i = 0; i < keys.length; i++) {
+                    keys[i] = (Serializable) ((smallint && index == 0) ? set.getShort(++index) : set.getObject(++index));
+                }
+                Number[] vals = new Number[funcNodes.length];
+                for (int i = 0; i < vals.length; i++) {
+                    vals[i] = (Number) set.getObject(++index);
+                }
+                rs.put(keys, vals);
+            }
+            set.close();
+            stmt.close();
+            return CompletableFuture.completedFuture(rs);
+        } catch (SQLException e) {
+            if (info.getTableStrategy() != null && info.isTableNotExist(e)) return CompletableFuture.completedFuture(rs);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(e);
+            return future;//return CompletableFuture.failedFuture(e);
+        } finally {
+            if (conn != null) readPool.offerConnection(conn);
+        }
+    }
+
+    @Override
     protected <T> CompletableFuture<T> findDB(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
         Connection conn = null;
         try {

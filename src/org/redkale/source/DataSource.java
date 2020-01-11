@@ -702,7 +702,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -715,7 +715,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -728,7 +728,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -742,7 +742,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -756,7 +756,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -770,7 +770,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -784,7 +784,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -798,7 +798,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -812,7 +812,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -827,7 +827,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -842,7 +842,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -857,7 +857,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
      * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResultAsync(Record.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param entityClass Entity类
      * @param func        聚合函数
@@ -872,7 +872,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table}  <br>
-     * 如 getNumberMapAsync(Record.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(User.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -885,7 +885,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table}  <br>
-     * 如 getNumberMapAsync(Record.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(User.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -898,7 +898,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberMapAsync(Record.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(User.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -912,7 +912,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberMapAsync(Record.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(User.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -926,7 +926,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberMapAsync(Record.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(User.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -940,7 +940,7 @@ public interface DataSource {
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
      * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberMapAsync(Record.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 如 getNumberMapAsync(User.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
      * @param <N>         Number
      * @param entityClass Entity类
@@ -954,7 +954,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -971,7 +971,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -988,7 +988,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -1006,7 +1006,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -1024,7 +1024,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -1042,7 +1042,7 @@ public interface DataSource {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(Record.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
      *
      * @param <T>         Entity泛型
      * @param <K>         Key字段的数据类型
@@ -1056,6 +1056,218 @@ public interface DataSource {
      * @return 聚合结果Map CompletableFuture
      */
     public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE GROUP BY {col1}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid")
+     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     *
+     * @param <T>           Entity泛型
+     * @param <K>           Key字段的数据类型
+     * @param <N>           Number
+     * @param entityClass   Entity类
+     * @param funcNodes     ColumnNode[]
+     * @param groupByColumn GROUP BY字段
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid")
+     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     *
+     * @param <T>           Entity泛型
+     * @param <K>           Key字段的数据类型
+     * @param <N>           Number
+     * @param entityClass   Entity类
+     * @param funcNodes     ColumnNode[]
+     * @param groupByColumn GROUP BY字段
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid", (FilterBean)null)
+     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     *
+     * @param <T>           Entity泛型
+     * @param <K>           Key字段的数据类型
+     * @param <N>           Number
+     * @param entityClass   Entity类
+     * @param funcNodes     ColumnNode[]
+     * @param groupByColumn GROUP BY字段
+     * @param bean          过滤条件
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid", (FilterBean)null)
+     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     *
+     * @param <T>           Entity泛型
+     * @param <K>           Key字段的数据类型
+     * @param <N>           Number
+     * @param entityClass   Entity类
+     * @param funcNodes     ColumnNode[]
+     * @param groupByColumn GROUP BY字段
+     * @param bean          过滤条件
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid", (FilterNode)null)
+     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     *
+     * @param <T>           Entity泛型
+     * @param <K>           Key字段的数据类型
+     * @param <N>           Number
+     * @param entityClass   Entity类
+     * @param funcNodes     ColumnNode[]
+     * @param groupByColumn GROUP BY字段
+     * @param node          过滤条件
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid", (FilterNode)null)
+     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     *
+     * @param <T>           Entity泛型
+     * @param <K>           Key字段的数据类型
+     * @param <N>           Number
+     * @param entityClass   Entity类
+     * @param funcNodes     ColumnNode[]
+     * @param groupByColumn GROUP BY字段
+     * @param node          过滤条件
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
+     * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
+     *
+     * @param <T>            Entity泛型
+     * @param <K>            Key字段的数据类型
+     * @param <N>            Number
+     * @param entityClass    Entity类
+     * @param funcNodes      ColumnNode[]
+     * @param groupByColumns GROUP BY字段
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
+     * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
+     *
+     * @param <T>            Entity泛型
+     * @param <K>            Key字段的数据类型
+     * @param <N>            Number
+     * @param entityClass    Entity类
+     * @param funcNodes      ColumnNode[]
+     * @param groupByColumns GROUP BY字段
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}, {col2}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
+     * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
+     *
+     * @param <T>            Entity泛型
+     * @param <K>            Key字段的数据类型
+     * @param <N>            Number
+     * @param entityClass    Entity类
+     * @param funcNodes      ColumnNode[]
+     * @param groupByColumns GROUP BY字段
+     * @param bean           过滤条件
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}, {col2}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
+     * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
+     *
+     * @param <T>            Entity泛型
+     * @param <K>            Key字段的数据类型
+     * @param <N>            Number
+     * @param entityClass    Entity类
+     * @param funcNodes      ColumnNode[]
+     * @param groupByColumns GROUP BY字段
+     * @param bean           过滤条件
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}, {col2}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
+     * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
+     *
+     * @param <T>            Entity泛型
+     * @param <K>            Key字段的数据类型
+     * @param <N>            Number
+     * @param entityClass    Entity类
+     * @param funcNodes      ColumnNode[]
+     * @param groupByColumns GROUP BY字段
+     * @param node           过滤条件
+     *
+     * @return 聚合结果Map
+     */
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node);
+
+    /**
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}, {col2}  <br>
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
+     * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
+     *
+     * @param <T>            Entity泛型
+     * @param <K>            Key字段的数据类型
+     * @param <N>            Number
+     * @param entityClass    Entity类
+     * @param funcNodes      ColumnNode[]
+     * @param groupByColumns GROUP BY字段
+     * @param node           过滤条件
+     *
+     * @return 聚合结果Map CompletableFuture
+     */
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node);
 
     //-----------------------findAsync----------------------------
     /**

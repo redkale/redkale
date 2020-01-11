@@ -129,6 +129,11 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDB(final EntityInfo<T> info, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
     protected <T> CompletableFuture<T> findDB(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
         return CompletableFuture.completedFuture(null);
     }

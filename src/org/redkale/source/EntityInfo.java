@@ -974,7 +974,8 @@ public final class EntityInfo<T> {
         if (cv == null) return null;
         Object val = cv.getValue();
         //ColumnNodeValue时 cv.getExpress() == ColumnExpress.MOV 只用于updateColumn
-        if (val instanceof ColumnNodeValue) return formatSQLValue(attr, (ColumnNodeValue) val, formatter);
+        if (val instanceof ColumnNodeValue) return formatSQLValue(attr, null, (ColumnNodeValue) val, formatter);
+        if (val instanceof ColumnFuncNode) return formatSQLValue(attr, null, (ColumnFuncNode) val, formatter);
         switch (cv.getExpress()) {
             case INC:
                 return new StringBuilder().append(sqlColumn).append(" + ").append(val);
@@ -1000,18 +1001,30 @@ public final class EntityInfo<T> {
         return formatter == null ? formatToString(val) : formatter.apply(this, val);
     }
 
-    protected CharSequence formatSQLValue(Attribute<T, Serializable> attr, final ColumnNodeValue node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+    protected CharSequence formatSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnFuncNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+        if (node.getValue() instanceof ColumnNodeValue) {
+            return node.getFunc().getColumn(formatSQLValue(attr, tabalis, (ColumnNodeValue) node.getValue(), formatter).toString());
+        } else {
+            return node.getFunc().getColumn(this.getSQLColumn(tabalis, String.valueOf(node.getValue())));
+        }
+    }
+
+    protected CharSequence formatSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnNodeValue node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
         Serializable left = node.getLeft();
         if (left instanceof CharSequence) {
-            left = this.getSQLColumn(null, left.toString());
+            left = this.getSQLColumn(tabalis, left.toString());
         } else if (left instanceof ColumnNodeValue) {
-            left = "(" + formatSQLValue(attr, (ColumnNodeValue) left, formatter) + ")";
+            left = "(" + formatSQLValue(attr, tabalis, (ColumnNodeValue) left, formatter) + ")";
+        } else if (left instanceof ColumnFuncNode) {
+            left = "(" + formatSQLValue(attr, tabalis, (ColumnFuncNode) left, formatter) + ")";
         }
         Serializable right = node.getRight();
         if (right instanceof CharSequence) {
             right = this.getSQLColumn(null, right.toString());
         } else if (left instanceof ColumnNodeValue) {
-            right = "(" + formatSQLValue(attr, (ColumnNodeValue) right, formatter) + ")";
+            right = "(" + formatSQLValue(attr, tabalis, (ColumnNodeValue) right, formatter) + ")";
+        } else if (left instanceof ColumnFuncNode) {
+            right = "(" + formatSQLValue(attr, tabalis, (ColumnFuncNode) right, formatter) + ")";
         }
         switch (node.getExpress()) {
             case INC:

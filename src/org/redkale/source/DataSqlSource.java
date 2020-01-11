@@ -157,6 +157,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     //查询Map数据
     protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDB(final EntityInfo<T> info, final String sql, final String keyColumn);
 
+    //查询Map数据
+    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDB(final EntityInfo<T> info, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns);
+
     //查询单条记录
     protected abstract <T> CompletableFuture<T> findDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final SelectColumn selects);
 
@@ -1530,6 +1533,118 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + " GROUP BY a." + keySqlColumn;
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " querycolumnmap sql=" + sql);
         return queryColumnMapDB(info, sql, keyColumn);
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn) {
+        return queryColumnMap(entityClass, funcNodes, groupByColumn, (FilterNode) null);
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn) {
+        return queryColumnMapAsync(entityClass, funcNodes, groupByColumn, (FilterNode) null);
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
+        return queryColumnMap(entityClass, funcNodes, groupByColumn, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
+        return queryColumnMapAsync(entityClass, funcNodes, groupByColumn, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterNode node) {
+        Map<K[], N[]> map = queryColumnMap(entityClass, funcNodes, Utility.ofArray(groupByColumn), node);
+        final Map<K, N[]> rs = new LinkedHashMap<>();
+        map.forEach((keys, values) -> rs.put(keys[0], values));
+        return rs;
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterNode node) {
+        CompletableFuture<Map<K[], N[]>> future = queryColumnMapAsync(entityClass, funcNodes, Utility.ofArray(groupByColumn), node);
+        return future.thenApply(map -> {
+            final Map<K, N[]> rs = new LinkedHashMap<>();
+            map.forEach((keys, values) -> rs.put(keys[0], values));
+            return rs;
+        });
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return queryColumnMap(entityClass, funcNodes, groupByColumns, (FilterNode) null);
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return queryColumnMapAsync(entityClass, funcNodes, groupByColumns, (FilterNode) null);
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
+        return queryColumnMap(entityClass, funcNodes, groupByColumns, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
+        return queryColumnMapAsync(entityClass, funcNodes, groupByColumns, FilterNodeBean.createFilterNode(bean));
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityCache cache = info.getCache();
+        if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
+            if (node == null || node.isCacheUseable(this)) {
+                return cache.queryColumnMap(funcNodes, groupByColumns, node);
+            }
+        }
+        return (Map) queryColumnMapCompose(info, funcNodes, groupByColumns, node).join();
+    }
+
+    @Override
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityCache cache = info.getCache();
+        if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
+            if (node == null || node.isCacheUseable(this)) {
+                return CompletableFuture.completedFuture(cache.queryColumnMap(funcNodes, groupByColumns, node));
+            }
+        }
+        if (isAsync()) return queryColumnMapCompose(info, funcNodes, groupByColumns, node);
+        return CompletableFuture.supplyAsync(() -> (Map) queryColumnMapCompose(info, funcNodes, groupByColumns, node).join(), getExecutor());
+    }
+
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapCompose(final EntityInfo<T> info, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+        final StringBuilder groupBySqlColumns = new StringBuilder();
+        if (groupByColumns != null && groupByColumns.length > 0) {
+            for (int i = 0; i < groupByColumns.length; i++) {
+                if (groupBySqlColumns.length() > 0) groupBySqlColumns.append(", ");
+                groupBySqlColumns.append(info.getSQLColumn("a", groupByColumns[i]));
+            }
+        }
+        final StringBuilder funcSqlColumns = new StringBuilder();
+        for (int i = 0; i < funcNodes.length; i++) {
+            if (funcSqlColumns.length() > 0) funcSqlColumns.append(", ");
+            if (funcNodes[i] instanceof ColumnFuncNode) {
+                funcSqlColumns.append(info.formatSQLValue((Attribute) null, "a", (ColumnFuncNode) funcNodes[i], sqlFormatter));
+            } else {
+                funcSqlColumns.append(info.formatSQLValue((Attribute) null, "a", (ColumnNodeValue) funcNodes[i], sqlFormatter));
+            }
+        }
+        final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
+        final Set<String> haset = new HashSet<>();
+        final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
+        final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
+        String sql = "SELECT ";
+        if (groupBySqlColumns.length() > 0) sql += groupBySqlColumns + ", ";
+        sql += funcSqlColumns + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+        if (groupBySqlColumns.length() > 0) sql += " GROUP BY " + groupBySqlColumns;
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " querycolumnmap sql=" + sql);
+        return queryColumnMapDB(info, sql, funcNodes, groupByColumns);
     }
 
     //----------------------------- findCompose -----------------------------

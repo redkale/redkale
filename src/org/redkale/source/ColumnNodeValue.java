@@ -13,21 +13,33 @@ import static org.redkale.source.ColumnExpress.*;
  * String 视为 字段名
  * Number 视为 数值
  *
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
+ * @since 2.0.0
  */
-public class ColumnNodeValue implements Serializable {
+public class ColumnNodeValue implements ColumnNode {
 
-    private Serializable left;//类型只能是String、Number、ColumnNodeValue
+    protected Serializable left;//类型只能是String、Number、ColumnNodeValue
 
-    private ColumnExpress express; //不能是MOV
+    protected ColumnExpress express; //不能是MOV
 
-    private Serializable right;//类型只能是String、Number、ColumnNodeValue
+    protected Serializable right;//类型只能是String、Number、ColumnNodeValue
 
     public ColumnNodeValue() {
     }
 
     public ColumnNodeValue(Serializable left, ColumnExpress express, Serializable right) {
-        if (express == null || express == ColumnExpress.MOV) throw new IllegalArgumentException("express cannot be null or MOV");
+        if (express == null || express == ColumnExpress.MOV) {
+            throw new IllegalArgumentException("express cannot be null or MOV");
+        }
+        if (!(left instanceof String) && !(left instanceof Number) && !(left instanceof ColumnNodeValue) && !(left instanceof ColumnFuncNode)) {
+            throw new IllegalArgumentException("left value must be String, Number, ColumnFuncNode or ColumnNodeValue");
+        }
+        if (!(right instanceof String) && !(right instanceof Number) && !(right instanceof ColumnNodeValue) && !(right instanceof ColumnFuncNode)) {
+            throw new IllegalArgumentException("right value must be String, Number, ColumnFuncNode or ColumnNodeValue");
+        }
         this.left = left;
         this.express = express;
         this.right = right;
@@ -72,7 +84,7 @@ public class ColumnNodeValue implements Serializable {
     public ColumnNodeValue dec(Serializable right) {
         return any(DEC, right);
     }
-    
+
     public ColumnNodeValue mul(Serializable right) {
         return any(MUL, right);
     }
