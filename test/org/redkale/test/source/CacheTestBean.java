@@ -11,12 +11,12 @@ import java.util.function.BiFunction;
 import javax.persistence.Id;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.*;
-import org.redkale.util.Attribute;
 
 /**
  *
  * @author zhangjx
  */
+@VirtualEntity(loader = CacheTestBean.DefaultBeanLoader.class)
 public class CacheTestBean {
 
     @Id
@@ -27,19 +27,9 @@ public class CacheTestBean {
     private long price;
 
     public static void main(String[] args) throws Exception {
-        final List<CacheTestBean> list = new ArrayList<>();
-        list.add(new CacheTestBean(1, "a", 12));
-        list.add(new CacheTestBean(1, "a", 18));
-        list.add(new CacheTestBean(2, "b", 20));
-        list.add(new CacheTestBean(2, "bb", 60));
-        Attribute idattr = Attribute.create(CacheTestBean.class, "pkgid");
-        Attribute nameattr = Attribute.create(CacheTestBean.class, "name");
-        Attribute priceattr = Attribute.create(CacheTestBean.class, "price");
-        BiFunction<DataSource, Class, List> fullloader = (s, z) -> list;
-        Method method = EntityInfo.class.getDeclaredMethod("load", Class.class, boolean.class, Properties.class,
-            DataSource.class, BiFunction.class);
+        Method method = EntityInfo.class.getDeclaredMethod("load", Class.class, boolean.class, Properties.class, DataSource.class, BiFunction.class);
         method.setAccessible(true);
-        final EntityInfo<CacheTestBean> info = (EntityInfo<CacheTestBean>) method.invoke(null, CacheTestBean.class, true, new Properties(), null, fullloader);
+        final EntityInfo<CacheTestBean> info = (EntityInfo<CacheTestBean>) method.invoke(null, CacheTestBean.class, true, new Properties(), null, new CacheTestBean.DefaultBeanLoader());
         EntityCache<CacheTestBean> cache = new EntityCache(info, null);
         cache.fullLoad();
 
@@ -93,4 +83,17 @@ public class CacheTestBean {
         return JsonConvert.root().convertTo(this);
     }
 
+    public static class DefaultBeanLoader implements BiFunction<DataSource, Class, List> {
+
+        @Override
+        public List apply(DataSource t, Class u) {
+            final List<CacheTestBean> list = new ArrayList<>();
+            list.add(new CacheTestBean(1, "a", 12));
+            list.add(new CacheTestBean(1, "a", 18));
+            list.add(new CacheTestBean(2, "b", 20));
+            list.add(new CacheTestBean(2, "bb", 60));
+            return list;
+        }
+
+    }
 }
