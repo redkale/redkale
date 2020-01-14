@@ -94,12 +94,12 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, String sql) {
+    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, final String table, String sql) {
         return CompletableFuture.completedFuture(0);
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, String sql) {
+    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, final String table, String sql) {
         return CompletableFuture.completedFuture(0);
     }
 

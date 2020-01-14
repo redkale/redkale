@@ -137,10 +137,10 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract <T> CompletableFuture<Integer> deleteDB(final EntityInfo<T> info, Flipper flipper, final String sql);
 
     //清空表
-    protected abstract <T> CompletableFuture<Integer> clearTableDB(final EntityInfo<T> info, final String sql);
+    protected abstract <T> CompletableFuture<Integer> clearTableDB(final EntityInfo<T> info, final String table, final String sql);
 
     //删除表
-    protected abstract <T> CompletableFuture<Integer> dropTableDB(final EntityInfo<T> info, final String sql);
+    protected abstract <T> CompletableFuture<Integer> dropTableDB(final EntityInfo<T> info, final String table, final String sql);
 
     //更新纪录
     protected abstract <T> CompletableFuture<Integer> updateDB(final EntityInfo<T> info, T... entitys);
@@ -608,9 +608,10 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     protected <T> CompletableFuture<Integer> clearTableCompose(final EntityInfo<T> info, final FilterNode node) {
-        String sql = "TRUNCATE TABLE " + info.getTable(node);
+        final String table = info.getTable(node);
+        String sql = "TRUNCATE TABLE " + table;
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " clearTable sql=" + sql);
-        return clearTableDB(info, sql);
+        return clearTableDB(info, table, sql);
     }
 
     //----------------------------- dropTableCompose -----------------------------
@@ -660,9 +661,10 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     protected <T> CompletableFuture<Integer> dropTableCompose(final EntityInfo<T> info, final FilterNode node) {
-        String sql = "DROP TABLE " + info.getTable(node);
+        final String table = info.getTable(node);
+        String sql = "DROP TABLE " + table;
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " dropTable sql=" + sql);
-        return dropTableDB(info, sql);
+        return dropTableDB(info, table, sql);
     }
 
     protected <T> int clearTableCache(final EntityInfo<T> info, FilterNode node) {

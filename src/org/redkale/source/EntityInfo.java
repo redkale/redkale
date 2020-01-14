@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
@@ -95,7 +95,7 @@ public final class EntityInfo<T> {
     private final String tablecopySQL;
 
     //用于存在database.table_20160202类似这种分布式表
-    private final Set<String> tables = new HashSet<>();
+    private final Set<String> tables = new CopyOnWriteArraySet<>();
 
     //分表 策略
     private final DistributeTableStrategy<T> tableStrategy;
@@ -520,6 +520,10 @@ public final class EntityInfo<T> {
 
     public void addDisTable(String tablekey) {
         tables.add(tablekey);
+    }
+
+    public boolean removeDisTable(String tablekey) {
+        return tables.remove(tablekey);
     }
 
     public String getTableNotExistSqlStates2() {

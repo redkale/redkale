@@ -207,7 +207,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, String sql) {
+    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, final String table, String sql) {
         Connection conn = null;
         try {
             conn = writePool.poll();
@@ -228,7 +228,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, String sql) {
+    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, final String table, String sql) {
         Connection conn = null;
         try {
             conn = writePool.poll();
@@ -237,6 +237,10 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
             final Statement stmt = conn.createStatement();
             int c = stmt.executeUpdate(sql);
             stmt.close();
+            if (info.getTableStrategy() != null) {
+                String tablekey = table.indexOf('.') > 0 ? table : (conn.getCatalog() + '.' + table);
+                info.removeDisTable(tablekey);
+            }
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (info.isTableNotExist(e)) return CompletableFuture.completedFuture(-1);
