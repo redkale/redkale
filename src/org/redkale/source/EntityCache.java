@@ -311,91 +311,156 @@ public final class EntityCache<T> {
     }
 
     public Map<Serializable[], Number[]> queryColumnMap(final ColumnNode[] funcNodes, final String[] groupByColumns, FilterNode node) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this);
+        Stream<T> stream = this.list.stream();
+        if (filter != null) stream = stream.filter(filter);
+        final Attribute<T, Serializable>[] attrs = new Attribute[groupByColumns.length];
+        for (int i = 0; i < groupByColumns.length; i++) {
+            attrs[i] = info.getAttribute(groupByColumns[i]);
+        }
+        final Map<String, Serializable[]> valmap = new HashMap<>();
+        Function<T, Serializable[]> func = t -> {
+            StringBuilder sb = new StringBuilder();
+            final Serializable[] vals = new Serializable[attrs.length];
+            for (int i = 0; i < attrs.length; i++) {
+                vals[i] = attrs[i].get(t);
+                sb.append((char) 20).append(vals[i]);
+            }
+            final String key = sb.toString();
+            if (!valmap.containsKey(key)) valmap.put(key, vals);
+            return valmap.get(key);
+        };
+        Map<Serializable[], List<T>> listmap = stream.collect(Collectors.groupingBy(func));
+        final Map<Serializable[], Number[]> rsmap = new HashMap<>(listmap.size());
+        listmap.forEach((k, l) -> rsmap.put(k, queryColumnNumbers(l, funcNodes)));
+        return rsmap;
+    }
+
+    private Number[] queryColumnNumbers(final List<T> list, final ColumnNode[] funcNodes) {
+        if(true) throw new UnsupportedOperationException("Not supported yet.");
+        Number[] rs = new Number[funcNodes.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = queryColumnNumber(list, funcNodes[i]);
+        }
+        return rs;
+    }
+
+    private Number queryColumnNumber(final List<T> list, final ColumnNode funcNode) {
+        if (funcNode instanceof ColumnFuncNode) {
+            return queryColumnNumber(list, (ColumnFuncNode) funcNode);
+        } else if (funcNode instanceof ColumnNodeValue) {
+            return queryColumnNumber(list, (ColumnNodeValue) funcNode);
+        } else {
+            return null;
+        }
+    }
+
+    private Number queryColumnNumber(final List<T> list, final ColumnFuncNode funcNode) {
+        if (funcNode.getValue() instanceof String) {
+            final Attribute<T, Serializable> attr = info.getAttribute((String) funcNode.getValue());
+            final Function<T, Number> attrFunc = x -> (Number) attr.get(x);
+            return getNumberResult(list, funcNode.getFunc(), null, attr.type(), attrFunc, (FilterNode) null);
+        }
+        Number num = null;
+        if (funcNode.getValue() instanceof ColumnFuncNode) {
+            num = queryColumnNumber(list, (ColumnFuncNode) funcNode.getValue());
+        } else if (funcNode.getValue() instanceof ColumnNodeValue) {
+            num = queryColumnNumber(list, (ColumnNodeValue) funcNode.getValue());
+        }
+        return num;
+    }
+
+    private Number queryColumnNumber(final List<T> list, final ColumnNodeValue nodeValue) {
+        return null;
+    }
+
+    private <V> Number getNumberResult(final Collection<T> entityList, final FilterFunc func, final Number defResult, final Class attrType, final Function<T, Number> attrFunc, final FilterNode node) {
+        final Predicate<T> filter = node == null ? null : node.createPredicate(this);
+        Stream<T> stream = entityList.stream();
+        if (filter != null) stream = stream.filter(filter);
+        switch (func) {
+            case AVG:
+                if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
+                    OptionalDouble rs = stream.mapToInt(x -> ((Number) attrFunc.apply(x)).intValue()).average();
+                    return rs.isPresent() ? (int) rs.getAsDouble() : defResult;
+                } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class) {
+                    OptionalDouble rs = stream.mapToLong(x -> ((Number) attrFunc.apply(x)).longValue()).average();
+                    return rs.isPresent() ? (long) rs.getAsDouble() : defResult;
+                } else if (attrType == short.class || attrType == Short.class) {
+                    OptionalDouble rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).average();
+                    return rs.isPresent() ? (short) rs.getAsDouble() : defResult;
+                } else if (attrType == float.class || attrType == Float.class) {
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue()).average();
+                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
+                } else if (attrType == double.class || attrType == Double.class) {
+                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).average();
+                    return rs.isPresent() ? rs.getAsDouble() : defResult;
+                }
+                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
+            case COUNT:
+                return stream.count();
+            case DISTINCTCOUNT:
+                return stream.map(x -> attrFunc.apply(x)).distinct().count();
+
+            case MAX:
+                if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
+                    OptionalInt rs = stream.mapToInt(x -> ((Number) attrFunc.apply(x)).intValue()).max();
+                    return rs.isPresent() ? rs.getAsInt() : defResult;
+                } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class) {
+                    OptionalLong rs = stream.mapToLong(x -> ((Number) attrFunc.apply(x)).longValue()).max();
+                    return rs.isPresent() ? rs.getAsLong() : defResult;
+                } else if (attrType == short.class || attrType == Short.class) {
+                    OptionalInt rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).max();
+                    return rs.isPresent() ? (short) rs.getAsInt() : defResult;
+                } else if (attrType == float.class || attrType == Float.class) {
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue()).max();
+                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
+                } else if (attrType == double.class || attrType == Double.class) {
+                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).max();
+                    return rs.isPresent() ? rs.getAsDouble() : defResult;
+                }
+                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
+
+            case MIN:
+                if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
+                    OptionalInt rs = stream.mapToInt(x -> ((Number) attrFunc.apply(x)).intValue()).min();
+                    return rs.isPresent() ? rs.getAsInt() : defResult;
+                } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class) {
+                    OptionalLong rs = stream.mapToLong(x -> ((Number) attrFunc.apply(x)).longValue()).min();
+                    return rs.isPresent() ? rs.getAsLong() : defResult;
+                } else if (attrType == short.class || attrType == Short.class) {
+                    OptionalInt rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).min();
+                    return rs.isPresent() ? (short) rs.getAsInt() : defResult;
+                } else if (attrType == float.class || attrType == Float.class) {
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue()).min();
+                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
+                } else if (attrType == double.class || attrType == Double.class) {
+                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).min();
+                    return rs.isPresent() ? rs.getAsDouble() : defResult;
+                }
+                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
+
+            case SUM:
+                if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
+                    return stream.mapToInt(x -> ((Number) attrFunc.apply(x)).intValue()).sum();
+                } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class) {
+                    return stream.mapToLong(x -> ((Number) attrFunc.apply(x)).longValue()).sum();
+                } else if (attrType == short.class || attrType == Short.class) {
+                    return (short) stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).sum();
+                } else if (attrType == float.class || attrType == Float.class) {
+                    return (float) stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue()).sum();
+                } else if (attrType == double.class || attrType == Double.class) {
+                    return stream.mapToDouble(x -> (Double) attrFunc.apply(x)).sum();
+                }
+                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
+        }
+        return defResult;
     }
 
     public <V> Number getNumberResult(final FilterFunc func, final Number defResult, final String column, final FilterNode node) {
         final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
-        final Predicate<T> filter = node == null ? null : node.createPredicate(this);
-        Stream<T> stream = this.list.stream();
-        if (filter != null) stream = stream.filter(filter);
-        switch (func) {
-            case AVG:
-                if (attr.type() == int.class || attr.type() == Integer.class || attr.type() == AtomicInteger.class) {
-                    OptionalDouble rs = stream.mapToInt(x -> ((Number) attr.get(x)).intValue()).average();
-                    return rs.isPresent() ? (int) rs.getAsDouble() : defResult;
-                } else if (attr.type() == long.class || attr.type() == Long.class || attr.type() == AtomicLong.class) {
-                    OptionalDouble rs = stream.mapToLong(x -> ((Number) attr.get(x)).longValue()).average();
-                    return rs.isPresent() ? (long) rs.getAsDouble() : defResult;
-                } else if (attr.type() == short.class || attr.type() == Short.class) {
-                    OptionalDouble rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).average();
-                    return rs.isPresent() ? (short) rs.getAsDouble() : defResult;
-                } else if (attr.type() == float.class || attr.type() == Float.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).average();
-                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
-                } else if (attr.type() == double.class || attr.type() == Double.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attr.get(x)).average();
-                    return rs.isPresent() ? rs.getAsDouble() : defResult;
-                }
-                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
-            case COUNT:
-                return stream.count();
-            case DISTINCTCOUNT:
-                return stream.map(x -> attr.get(x)).distinct().count();
-
-            case MAX:
-                if (attr.type() == int.class || attr.type() == Integer.class || attr.type() == AtomicInteger.class) {
-                    OptionalInt rs = stream.mapToInt(x -> ((Number) attr.get(x)).intValue()).max();
-                    return rs.isPresent() ? rs.getAsInt() : defResult;
-                } else if (attr.type() == long.class || attr.type() == Long.class || attr.type() == AtomicLong.class) {
-                    OptionalLong rs = stream.mapToLong(x -> ((Number) attr.get(x)).longValue()).max();
-                    return rs.isPresent() ? rs.getAsLong() : defResult;
-                } else if (attr.type() == short.class || attr.type() == Short.class) {
-                    OptionalInt rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).max();
-                    return rs.isPresent() ? (short) rs.getAsInt() : defResult;
-                } else if (attr.type() == float.class || attr.type() == Float.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).max();
-                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
-                } else if (attr.type() == double.class || attr.type() == Double.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attr.get(x)).max();
-                    return rs.isPresent() ? rs.getAsDouble() : defResult;
-                }
-                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
-
-            case MIN:
-                if (attr.type() == int.class || attr.type() == Integer.class || attr.type() == AtomicInteger.class) {
-                    OptionalInt rs = stream.mapToInt(x -> ((Number) attr.get(x)).intValue()).min();
-                    return rs.isPresent() ? rs.getAsInt() : defResult;
-                } else if (attr.type() == long.class || attr.type() == Long.class || attr.type() == AtomicLong.class) {
-                    OptionalLong rs = stream.mapToLong(x -> ((Number) attr.get(x)).longValue()).min();
-                    return rs.isPresent() ? rs.getAsLong() : defResult;
-                } else if (attr.type() == short.class || attr.type() == Short.class) {
-                    OptionalInt rs = stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).min();
-                    return rs.isPresent() ? (short) rs.getAsInt() : defResult;
-                } else if (attr.type() == float.class || attr.type() == Float.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).min();
-                    return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
-                } else if (attr.type() == double.class || attr.type() == Double.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attr.get(x)).min();
-                    return rs.isPresent() ? rs.getAsDouble() : defResult;
-                }
-                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
-
-            case SUM:
-                if (attr.type() == int.class || attr.type() == Integer.class || attr.type() == AtomicInteger.class) {
-                    return stream.mapToInt(x -> ((Number) attr.get(x)).intValue()).sum();
-                } else if (attr.type() == long.class || attr.type() == Long.class || attr.type() == AtomicLong.class) {
-                    return stream.mapToLong(x -> ((Number) attr.get(x)).longValue()).sum();
-                } else if (attr.type() == short.class || attr.type() == Short.class) {
-                    return (short) stream.mapToInt(x -> ((Short) attr.get(x)).intValue()).sum();
-                } else if (attr.type() == float.class || attr.type() == Float.class) {
-                    return (float) stream.mapToDouble(x -> ((Float) attr.get(x)).doubleValue()).sum();
-                } else if (attr.type() == double.class || attr.type() == Double.class) {
-                    return stream.mapToDouble(x -> (Double) attr.get(x)).sum();
-                }
-                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.declaringClass: " + attr.declaringClass() + ", attr.field: " + attr.field() + ", attr.type: " + attr.type());
-        }
-        return defResult;
+        final Function<T, Number> attrFunc = x -> (Number) attr.get(x);
+        return getNumberResult(this.list, func, defResult, attr.type(), attrFunc, node);
     }
 
     public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node) {
