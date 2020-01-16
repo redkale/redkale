@@ -1188,7 +1188,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param retResultHandler 拦截器
      */
-    protected void setRetResultHandler(BiFunction<HttpResponse, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler) {
+    public void retResultHandler(BiFunction<HttpResponse, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler) {
         this.retResultHandler = retResultHandler;
     }
 
