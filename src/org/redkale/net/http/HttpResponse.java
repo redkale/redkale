@@ -123,6 +123,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> bufferHandler;
 
+    private BiFunction<HttpResponse, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler;
+
     private Supplier<ByteBuffer> bodyBufferSupplier;
     //------------------------------------------------
 
@@ -203,6 +205,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.headLenPos = -1;
         this.header.clear();
         this.bufferHandler = null;
+        this.retResultHandler = null;
         return super.recycle();
     }
 
@@ -393,8 +396,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param ret RetResult输出对象
      */
-    public void finishJson(final org.redkale.service.RetResult ret) {
+    public void finishJson(org.redkale.service.RetResult ret) {
         this.contentType = this.jsonContentType;
+        if (this.retResultHandler != null) {
+            ret = this.retResultHandler.apply(this, ret);
+        }
         if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
@@ -411,8 +417,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param convert 指定的JsonConvert
      * @param ret     RetResult输出对象
      */
-    public void finishJson(final JsonConvert convert, final org.redkale.service.RetResult ret) {
+    public void finishJson(final JsonConvert convert, org.redkale.service.RetResult ret) {
         this.contentType = this.jsonContentType;
+        if (this.retResultHandler != null) {
+            ret = this.retResultHandler.apply(this, ret);
+        }
         if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
@@ -482,7 +491,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj     输出对象
      */
     @SuppressWarnings("unchecked")
-    public void finish(final Convert convert, final Type type, final Object obj) {
+    public void finish(final Convert convert, final Type type, Object obj) {
         if (obj == null) {
             finish("null");
         } else if (obj instanceof CompletableFuture) {
@@ -549,6 +558,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             if (this.recycleListener != null) this.output = obj;
             if (obj instanceof org.redkale.service.RetResult) {
                 org.redkale.service.RetResult ret = (org.redkale.service.RetResult) obj;
+                if (this.retResultHandler != null) {
+                    ret = this.retResultHandler.apply(this, ret);
+                    obj = ret;
+                }
                 if (!ret.isSuccess()) {
                     this.header.addValue("retcode", String.valueOf(ret.getRetcode())).addValue("retinfo", ret.getRetinfo());
                 }
@@ -1159,6 +1172,24 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     protected void setBufferHandler(BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> bufferHandler) {
         this.bufferHandler = bufferHandler;
+    }
+
+    /**
+     * 获取输出RetResult时的拦截器
+     *
+     * @return 拦截器
+     */
+    protected BiFunction<HttpResponse, org.redkale.service.RetResult, org.redkale.service.RetResult> getRetResultHandler() {
+        return retResultHandler;
+    }
+
+    /**
+     * 设置输出RetResult时的拦截器
+     *
+     * @param retResultHandler 拦截器
+     */
+    protected void setRetResultHandler(BiFunction<HttpResponse, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler) {
+        this.retResultHandler = retResultHandler;
     }
 
     protected final class TransferFileHandler implements CompletionHandler<Integer, ByteBuffer> {
