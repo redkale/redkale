@@ -123,7 +123,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> bufferHandler;
 
-    private BiFunction<HttpResponse, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler;
+    private BiFunction<HttpRequest, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler;
 
     private Supplier<ByteBuffer> bodyBufferSupplier;
     //------------------------------------------------
@@ -399,7 +399,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(org.redkale.service.RetResult ret) {
         this.contentType = this.jsonContentType;
         if (this.retResultHandler != null) {
-            ret = this.retResultHandler.apply(this, ret);
+            ret = this.retResultHandler.apply(this.request, ret);
         }
         if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
@@ -420,7 +420,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final JsonConvert convert, org.redkale.service.RetResult ret) {
         this.contentType = this.jsonContentType;
         if (this.retResultHandler != null) {
-            ret = this.retResultHandler.apply(this, ret);
+            ret = this.retResultHandler.apply(this.request, ret);
         }
         if (this.recycleListener != null) this.output = ret;
         if (ret != null && !ret.isSuccess()) {
@@ -559,7 +559,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             if (obj instanceof org.redkale.service.RetResult) {
                 org.redkale.service.RetResult ret = (org.redkale.service.RetResult) obj;
                 if (this.retResultHandler != null) {
-                    ret = this.retResultHandler.apply(this, ret);
+                    ret = this.retResultHandler.apply(this.request, ret);
                     obj = ret;
                 }
                 if (!ret.isSuccess()) {
@@ -1179,7 +1179,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @return 拦截器
      */
-    protected BiFunction<HttpResponse, org.redkale.service.RetResult, org.redkale.service.RetResult> getRetResultHandler() {
+    protected BiFunction<HttpRequest, org.redkale.service.RetResult, org.redkale.service.RetResult> getRetResultHandler() {
         return retResultHandler;
     }
 
@@ -1188,7 +1188,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param retResultHandler 拦截器
      */
-    public void retResultHandler(BiFunction<HttpResponse, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler) {
+    public void retResultHandler(BiFunction<HttpRequest, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler) {
         this.retResultHandler = retResultHandler;
     }
 
