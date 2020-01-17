@@ -337,7 +337,7 @@ public final class EntityCache<T> {
     }
 
     private Number[] queryColumnNumbers(final List<T> list, final ColumnNode[] funcNodes) {
-        if(true) throw new UnsupportedOperationException("Not supported yet.");
+        if (true) throw new UnsupportedOperationException("Not supported yet.");
         Number[] rs = new Number[funcNodes.length];
         for (int i = 0; i < rs.length; i++) {
             rs[i] = queryColumnNumber(list, funcNodes[i]);
@@ -458,9 +458,9 @@ public final class EntityCache<T> {
     }
 
     public <V> Number getNumberResult(final FilterFunc func, final Number defResult, final String column, final FilterNode node) {
-        final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column);
-        final Function<T, Number> attrFunc = x -> (Number) attr.get(x);
-        return getNumberResult(this.list, func, defResult, attr.type(), attrFunc, node);
+        final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column); //COUNT的column=null
+        final Function<T, Number> attrFunc = attr == null ? null : x -> (Number) attr.get(x);
+        return getNumberResult(this.list, func, defResult, attr == null ? null : attr.type(), attrFunc, node);
     }
 
     public Sheet<T> querySheet(final SelectColumn selects, final Flipper flipper, final FilterNode node) {
