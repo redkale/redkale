@@ -74,9 +74,9 @@ public abstract class PoolSource<DBChannel> {
         this.username = prop.getProperty(JDBC_USER, "");
         this.password = prop.getProperty(JDBC_PWD, "");
         this.encoding = prop.getProperty(JDBC_ENCODING, "");
-        this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "3"));
-        this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "3"));
-        this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "3"));
+        this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "6"));
+        this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "6"));
+        this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "6"));
         this.maxconns = Math.max(8, Integer.decode(prop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors() * 100)));
         this.semaphore = semaphore == null ? new Semaphore(this.maxconns) : semaphore;
         String dbtype0 = "";
