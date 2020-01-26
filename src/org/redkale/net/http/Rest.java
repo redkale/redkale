@@ -1555,7 +1555,7 @@ public final class Rest {
                             RestUploadFile ru = field.getAnnotation(RestUploadFile.class);
                             RestURI ri = field.getAnnotation(RestURI.class);
                             if (rh == null && rc == null && ra == null && rb == null && rs == null && ru == null && ri == null) continue;
-                            if (rh != null && field.getType() != String.class) throw new RuntimeException("@RestHeader must on String Field in " + field);
+                            if (rh != null && field.getType() != String.class && field.getType() != InetSocketAddress.class) throw new RuntimeException("@RestHeader must on String Field in " + field);
                             if (rc != null && field.getType() != String.class) throw new RuntimeException("@RestCookie must on String Field in " + field);
                             if (rs != null && field.getType() != String.class) throw new RuntimeException("@RestSessionid must on String Field in " + field);
                             if (ra != null && field.getType() != String.class) throw new RuntimeException("@RestAddress must on String Field in " + field);
