@@ -1569,7 +1569,7 @@ public final class Rest {
                             String attrFieldName;
                             String restname = "";
                             if (rh != null) {
-                                attrFieldName = "_redkale_attr_header_" + restAttributes.size();
+                                attrFieldName = "_redkale_attr_header_" + (field.getType() != String.class ? "json_" : "") + restAttributes.size();
                                 restname = rh.name();
                             } else if (rc != null) {
                                 attrFieldName = "_redkale_attr_cookie_" + restAttributes.size();
@@ -1630,6 +1630,14 @@ public final class Rest {
                                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getConnection", "()Ljava/lang/String;", false);
                                 } else if ("Method".equalsIgnoreCase(headerkey)) {
                                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMethod", "()Ljava/lang/String;", false);
+                                } else if (en.getKey().contains("_header_json_")) {
+                                    String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
+                                    bodyTypes.put(typefieldname, (java.lang.reflect.Type) en.getValue()[2]);
+                                    mv.visitVarInsn(ALOAD, 0);
+                                    mv.visitFieldInsn(GETFIELD, newDynName, typefieldname, "Ljava/lang/reflect/Type;");
+                                    mv.visitLdcInsn(headerkey);
+                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getJsonHeader", "(Ljava/lang/reflect/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
+                                    mv.visitTypeInsn(CHECKCAST, Type.getInternalName((Class) en.getValue()[1]));
                                 } else {
                                     mv.visitLdcInsn(headerkey);
                                     mv.visitLdcInsn("");
