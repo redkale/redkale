@@ -345,6 +345,17 @@ public final class ByteArray {
     /**
      * 将指定的起始位置和长度按指定字符集并转义后转成字符串
      *
+     * @param charset 字符集
+     *
+     * @return 字符串
+     */
+    public String toDecodeString(final Charset charset) {
+        return toDecodeString(0, count, charset);
+    }
+
+    /**
+     * 将指定的起始位置和长度按指定字符集并转义后转成字符串
+     *
      * @param offset  起始位置
      * @param len     长度
      * @param charset 字符集
