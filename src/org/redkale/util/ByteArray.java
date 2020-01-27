@@ -5,9 +5,9 @@
  */
 package org.redkale.util;
 
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.*;
-import java.util.*;
+import java.util.Arrays;
 
 /**
  * 简单的byte[]操作类。
@@ -338,7 +338,7 @@ public final class ByteArray {
      * @return 字符串
      */
     public String toString(final int offset, int len, final Charset charset) {
-        if (charset == null) return new String(Utility.decodeUTF8(content, offset, len));
+        if (charset == null) return new String(content, offset, len, StandardCharsets.UTF_8);
         return new String(content, offset, len, charset);
     }
 
