@@ -16,8 +16,8 @@ import java.util.*;
 import java.util.logging.Level;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
-import org.redkale.util.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.*;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
@@ -109,40 +109,41 @@ public class HttpRequest extends Request<HttpContext> {
 
     @Override
     protected int readHeader(final ByteBuffer buffer) {
-        if (!readLine(buffer, array)) return -1;
+        ByteArray bytes = array;
+        if (!readLine(buffer, bytes)) return -1;
         Charset charset = this.context.getCharset();
         int index = 0;
-        int offset = array.find(index, ' ');
+        int offset = bytes.find(index, ' ');
         if (offset <= 0) return -1;
-        this.method = array.toString(index, offset, charset).trim();
+        this.method = bytes.toString(index, offset, charset);
         index = ++offset;
-        offset = array.find(index, ' ');
+        offset = bytes.find(index, ' ');
         if (offset <= 0) return -1;
-        int off = array.find(index, '#');
+        int off = bytes.find(index, '#');
         if (off > 0) offset = off;
-        int qst = array.find(index, offset, (byte) '?');
+        int qst = bytes.find(index, offset, (byte) '?');
         if (qst > 0) {
-            this.requestURI = array.toDecodeString(index, qst - index, charset).trim();
-            this.queryBytes = array.getBytes(qst + 1, offset - qst - 1);
+            this.requestURI = bytes.toDecodeString(index, qst - index, charset);
+            this.queryBytes = bytes.getBytes(qst + 1, offset - qst - 1);
             try {
-                addParameter(array, qst + 1, offset - qst - 1);
+                addParameter(bytes, qst + 1, offset - qst - 1);
             } catch (Exception e) {
-                this.context.getLogger().log(Level.WARNING, "HttpRequest.addParameter error: " + array.toString(), e);
+                this.context.getLogger().log(Level.WARNING, "HttpRequest.addParameter error: " + bytes.toString(), e);
             }
         } else {
-            this.requestURI = array.toDecodeString(index, offset - index, charset).trim();
+            this.requestURI = bytes.toDecodeString(index, offset - index, charset);
             this.queryBytes = new byte[0];
         }
         index = ++offset;
-        this.protocol = array.toString(index, array.size() - index, charset).trim();
-        while (readLine(buffer, array)) {
-            if (array.size() < 2) break;
+        this.protocol = bytes.toString(index, bytes.size() - index, charset);
+        while (readLine(buffer, bytes)) {
+            if (bytes.size() < 2) break;
             index = 0;
-            offset = array.find(index, ':');
+            offset = bytes.find(index, ':');
             if (offset <= 0) return -1;
-            String name = array.toString(index, offset, charset).trim();
+            String name = bytes.toString(index, offset, charset);
             index = offset + 1;
-            String value = array.toString(index, array.size() - index, charset).trim();
+            String value = bytes.toString(index, bytes.size() - index, charset);
             switch (name) {
                 case "Content-Type":
                 case "content-type":
@@ -181,14 +182,14 @@ public class HttpRequest extends Request<HttpContext> {
         if (this.contentType != null && this.contentType.contains("boundary=")) this.boundary = true;
         if (this.boundary) this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
 
-        array.clear();
+        bytes.clear();
         if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
             if (this.contentLength > context.getMaxbody()) return -1;
-            array.write(buffer, Math.min((int) this.contentLength, buffer.remaining()));
-            int lr = (int) this.contentLength - array.size();
+            bytes.write(buffer, Math.min((int) this.contentLength, buffer.remaining()));
+            int lr = (int) this.contentLength - bytes.size();
             return lr > 0 ? lr : 0;
         }
-        if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) array.write(buffer, buffer.remaining()); //文件上传、HTTP1.0或Connection:close
+        if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) bytes.write(buffer, buffer.remaining()); //文件上传、HTTP1.0或Connection:close
         //暂不考虑是keep-alive且存在body却没有指定Content-Length的情况
         return 0;
     }
