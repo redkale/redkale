@@ -5,10 +5,10 @@
  */
 package org.redkale.net.sncp;
 
-import java.nio.*;
-import java.util.*;
+import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.atomic.*;
-import org.redkale.convert.bson.*;
+import org.redkale.convert.bson.BsonFactory;
 import org.redkale.net.*;
 import org.redkale.net.sncp.SncpContext.SncpContextConfig;
 import org.redkale.service.Service;
@@ -122,10 +122,10 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
 
     @Override
     protected ObjectPool<ByteBuffer> createBufferPool(AtomicLong createCounter, AtomicLong cycleCounter, int bufferPoolSize) {
-        AtomicLong createBufferCounter = new AtomicLong();
-        AtomicLong cycleBufferCounter = new AtomicLong();
+        if (createCounter == null) createCounter = new AtomicLong();
+        if (cycleCounter == null) cycleCounter = new AtomicLong();
         final int rcapacity = this.bufferCapacity;
-        ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
+        ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createCounter, cycleCounter, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
                 e.clear();
