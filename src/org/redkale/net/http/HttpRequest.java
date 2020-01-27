@@ -136,6 +136,8 @@ public class HttpRequest extends Request<HttpContext> {
         }
         index = ++offset;
         this.protocol = bytes.toString(index, bytes.size() - index, charset);
+
+        //header
         while (readLine(buffer, bytes)) {
             if (bytes.size() < 2) break;
             index = 0;
