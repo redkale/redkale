@@ -393,7 +393,7 @@ public final class ByteArray {
             start = 0;
             len = index;
         }
-        if (charset == null) return new String(Utility.decodeUTF8(bs, start, len));
+        if (charset == null) return new String(bs, start, len, StandardCharsets.UTF_8);
         return new String(bs, start, len, charset);
     }
 
