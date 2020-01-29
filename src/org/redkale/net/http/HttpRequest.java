@@ -145,7 +145,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (offset <= 0) return -1;
             String name = bytes.toString(index, offset, charset);
             index = offset + 1;
-            String value = bytes.toString(index, bytes.size() - index, charset);
+            String value = bytes.toString(index, bytes.size() - index, charset).trim();
             switch (name) {
                 case "Content-Type":
                 case "content-type":
