@@ -145,6 +145,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (offset <= 0) return -1;
             String name = bytes.toString(index, offset, charset);
             index = offset + 1;
+            //Upgrade: websocket 前面有空格，所以需要trim()
             String value = bytes.toString(index, bytes.size() - index, charset).trim();
             switch (name) {
                 case "Content-Type":
