@@ -1007,7 +1007,9 @@ public final class EntityInfo<T> {
             case MOV:
                 CryptHandler handler = attr.attach();
                 if (handler != null) val = handler.encrypt(val);
-                return formatter == null ? formatToString(val) : formatter.apply(this, val);
+                CharSequence rs = formatter == null ? formatToString(val) : formatter.apply(this, val);
+                if (rs == null && isNotNullJson(attr)) rs = "";
+                return rs;
         }
         CryptHandler handler = attr.attach();
         if (handler != null) val = handler.encrypt(val);
