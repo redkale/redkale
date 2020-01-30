@@ -97,6 +97,9 @@ public final class EntityInfo<T> {
     //用于存在database.table_20160202类似这种分布式表
     private final Set<String> tables = new CopyOnWriteArraySet<>();
 
+    //不能为null的字段名
+    private final Set<String> notNullColumns = new CopyOnWriteArraySet<>();
+
     //分表 策略
     private final DistributeTableStrategy<T> tableStrategy;
 
@@ -321,6 +324,9 @@ public final class EntityInfo<T> {
                         updatecols.add(sqlfield);
                         updateattrs.add(attr);
                         updateAttributeMap.put(fieldname, attr);
+                    }
+                    if (col != null && !col.nullable()) {
+                        notNullColumns.add(fieldname);
                     }
                 }
                 queryattrs.add(attr);
@@ -1068,6 +1074,14 @@ public final class EntityInfo<T> {
      */
     public boolean isLoggable(Logger logger, Level l) {
         return logger.isLoggable(l) && l.intValue() >= this.logLevel;
+    }
+
+    public boolean isNotNullable(String fieldname) {
+        return notNullColumns.contains(fieldname);
+    }
+
+    public boolean isNotNullable(Attribute<T, Serializable> attr) {
+        return attr == null ? false : notNullColumns.contains(attr.field());
     }
 
     /**
