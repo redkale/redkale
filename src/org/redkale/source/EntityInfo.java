@@ -872,6 +872,9 @@ public final class EntityInfo<T> {
      * @return Object
      */
     public Object getSQLValue(String fieldname, Serializable fieldvalue) {
+        if (fieldvalue == null && fieldname != null && isNotNullable(fieldname)) {
+            if (isNotNullJson(getAttribute(fieldname))) return "";
+        }
         if (this.cryptmap == null) return fieldvalue;
         CryptHandler handler = this.cryptmap.get(fieldname);
         if (handler == null) return fieldvalue;
