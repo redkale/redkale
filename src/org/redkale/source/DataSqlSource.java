@@ -1181,7 +1181,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
                 blobs.add((byte[]) val);
                 setsql.append(" = ").append(prepareParamSign(++index));
             } else {
-                setsql.append(" = ").append(info.formatSQLValue(val, sqlFormatter));
+                CharSequence sqlval = info.formatSQLValue(val, sqlFormatter);
+                if (sqlval == null && info.isNotNullJson(attr)) sqlval = "''";
+                setsql.append(" = ").append(sqlval);
             }
         }
         if (neednode) {
