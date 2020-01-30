@@ -1084,6 +1084,16 @@ public final class EntityInfo<T> {
         return attr == null ? false : notNullColumns.contains(attr.field());
     }
 
+    public boolean isNotNullJson(Attribute<T, Serializable> attr) {
+        if (attr == null) return false;
+        return notNullColumns.contains(attr.field())
+            && !Number.class.isAssignableFrom(attr.type())
+            && !CharSequence.class.isAssignableFrom(attr.type())
+            && java.util.Date.class != attr.type()
+            && !attr.type().getName().startsWith("java.sql.")
+            && !attr.type().getName().startsWith("java.time.");
+    }
+
     /**
      * 判断日志级别
      *

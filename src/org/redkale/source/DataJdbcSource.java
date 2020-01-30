@@ -174,9 +174,11 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
                 prestmt.setObject(++i, ((AtomicInteger) val).get());
             } else if (val instanceof AtomicLong) {
                 prestmt.setObject(++i, ((AtomicLong) val).get());
-            } else if (val != null && !(val instanceof Number) && !(val instanceof CharSequence) && !(entity instanceof java.util.Date)
+            } else if (val != null && !(val instanceof Number) && !(val instanceof CharSequence) && !(val instanceof java.util.Date)
                 && !val.getClass().getName().startsWith("java.sql.") && !val.getClass().getName().startsWith("java.time.")) {
                 prestmt.setObject(++i, info.jsonConvert.convertTo(attr.genericType(), val));
+            } else if (val == null && info.isNotNullJson(attr)) {
+                prestmt.setObject(++i, "");
             } else {
                 prestmt.setObject(++i, val);
             }
