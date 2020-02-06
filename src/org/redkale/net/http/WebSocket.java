@@ -561,6 +561,17 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
+     * 获取WebSocketNode
+     *
+     *
+     * @return WebSocketNode
+     */
+    @Comment("获取WebSocketNode")
+    public final WebSocketNode webSocketNode() {
+        return _engine.node;
+    }
+
+    /**
      * 获取当前WebSocket下的属性，非线程安全
      *
      * @param <V>  属性值的类型
