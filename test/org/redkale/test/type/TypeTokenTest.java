@@ -18,7 +18,8 @@ public class TypeTokenTest {
         Class declaringClass = TwoService.class;
         for (Method method : declaringClass.getMethods()) {
             if (!"run".equals(method.getName())) continue;
-            System.out.println(TypeToken.getGenericType(method.getGenericParameterTypes()[0], declaringClass));
+            System.out.println("返回值应该是: " + TwoRound.class);
+            System.out.println("返回值结果是: " + TypeToken.getGenericType(method.getGenericParameterTypes()[0], declaringClass));
             break;
         }
     }
