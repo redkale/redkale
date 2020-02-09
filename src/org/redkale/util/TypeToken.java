@@ -159,6 +159,20 @@ public abstract class TypeToken<T> {
                                 return atas[i];
                         }
                     }
+                    ParameterizedType cycType = superPT;
+                    if (cycType.getRawType() instanceof Class) {
+                        TypeVariable[] argTypes = ((Class) cycType.getRawType()).getTypeParameters();
+                        if (argTypes.length == asts.length) {
+                            for (int i = 0; i < argTypes.length; i++) {
+                                if (argTypes[i] == type) {
+                                    if (atas[i] instanceof TypeVariable
+                                        && ((TypeVariable) atas[i]).getBounds().length == 1
+                                        && ((TypeVariable) atas[i]).getBounds()[0] instanceof Class)
+                                        return ((Class) ((TypeVariable) atas[i]).getBounds()[0]);
+                                }
+                            }
+                        }
+                    }
                 }
                 Type moreType = ((ParameterizedType) superType).getRawType();
                 if (moreType != Object.class) return getGenericType(type, moreType);
