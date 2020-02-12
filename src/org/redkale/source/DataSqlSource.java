@@ -2653,4 +2653,8 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         }
         return querySheetDB(info, readcache, needtotal, distinct, selects, flipper, node);
     }
+
+    protected static enum UpdateMode {
+        INSERT, DELETE, UPDATE, CLEAR, DROP, ALTER, OTHER;
+    }
 }
