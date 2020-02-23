@@ -1050,9 +1050,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             }
         }
         if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
-        Map<Class, String> joinTabalis = node.getJoinTabalis();
-        CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
-        CharSequence where = node.createSQLExpress(info, joinTabalis);
+        Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
+        CharSequence join = node == null ? null : node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
+        CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
         StringBuilder join1 = null;
         StringBuilder join2 = null;
         if (join != null) {
