@@ -1517,6 +1517,17 @@ public final class Utility {
     }
 
     /**
+     * 获取明天20151230格式的int值
+     *
+     * @return 20151230格式的int值
+     */
+    public static int tomorrow() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_YEAR, 1);
+        return cal.get(Calendar.YEAR) * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+    }
+
+    /**
      * 获取昨天20151230格式的int值
      *
      * @return 20151230格式的int值
