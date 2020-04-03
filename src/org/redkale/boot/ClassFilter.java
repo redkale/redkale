@@ -208,7 +208,7 @@ public final class ClassFilter<T> {
             if (finest && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
                 && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.") && !clazzname.startsWith("META-INF")
                 && !clazzname.startsWith("com.mysql.") && !clazzname.startsWith("com.microsoft.")
-                && !clazzname.startsWith("org.redkale")) {
+                && !clazzname.startsWith("org.redkale") && (clazzname.contains("Service") || clazzname.contains("Servlet"))) {
                 //&& (!(cfe instanceof NoClassDefFoundError) || (cfe instanceof UnsupportedClassVersionError) || ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
                 logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzname + (url == null ? "" : (" in " + url)), cfe);
             }
