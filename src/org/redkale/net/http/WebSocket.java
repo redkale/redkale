@@ -14,6 +14,7 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
+import java.util.zip.*;
 import org.redkale.convert.Convert;
 import org.redkale.net.AsyncConnection;
 import org.redkale.util.Comment;
@@ -103,7 +104,11 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     java.lang.reflect.Type _messageTextType; //不可能为空
 
-    private long createtime = System.currentTimeMillis();
+    Deflater deflater; //压缩
+
+    Inflater inflater; //解压
+
+    long createtime = System.currentTimeMillis();
 
     private long pingtime;
 
@@ -894,6 +899,8 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 显式地关闭WebSocket
      */
     public final void close() {
+        if (this.deflater != null) this.deflater.end();
+        if (this.inflater != null) this.inflater.end();
         if (this._runner != null) {
             CompletableFuture<Void> future = this._runner.closeRunner(CLOSECODE_SERVERCLOSE, "user close");
             if (future != null) future.join();

@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import java.util.logging.*;
+import java.util.zip.*;
 import javax.annotation.*;
 import org.redkale.convert.Convert;
 import org.redkale.net.Cryptor;
@@ -210,6 +211,10 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
         webSocket._sncpAddress = this.node.localSncpAddress;
+        if (request.getHeader("Sec-WebSocket-Extensions", "").contains("permessage-deflate")) {
+            webSocket.deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
+            webSocket.inflater = new Inflater(true);
+        }
         initRestWebSocket(webSocket);
         CompletableFuture<String> sessionFuture = webSocket.onOpen(request);
         if (sessionFuture == null) {
@@ -233,6 +238,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             response.setHeader("Connection", "Upgrade");
             response.addHeader("Upgrade", "websocket");
             response.addHeader("Sec-WebSocket-Accept", Base64.getEncoder().encodeToString(bytes));
+            if (webSocket.deflater != null) response.addHeader("Sec-WebSocket-Extensions", "permessage-deflate");
+
             response.sendBody((ByteBuffer) null, null, new CompletionHandler<Integer, Void>() {
 
                 WebSocketRunner temprunner = null;

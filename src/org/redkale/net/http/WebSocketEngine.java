@@ -244,7 +244,7 @@ public class WebSocketEngine {
                     if (bufferSupplier == null) {
                         bufferSupplier = websocket.getBufferSupplier();
                         bufferConsumer = websocket.getBufferConsumer();
-                        packet.setSendBuffers(packet.encode(bufferSupplier, bufferConsumer, cryptor));
+                        packet.setSendBuffers(packet.encodePacket(bufferSupplier, bufferConsumer, cryptor));
                     }
                     future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                 }
@@ -255,7 +255,7 @@ public class WebSocketEngine {
                         if (bufferSupplier == null) {
                             bufferSupplier = websocket.getBufferSupplier();
                             bufferConsumer = websocket.getBufferConsumer();
-                            packet.setSendBuffers(packet.encode(bufferSupplier, bufferConsumer, cryptor));
+                            packet.setSendBuffers(packet.encodePacket(bufferSupplier, bufferConsumer, cryptor));
                         }
                         future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                     }
@@ -321,7 +321,7 @@ public class WebSocketEngine {
                     if (bufferSupplier == null) {
                         bufferSupplier = websocket.getBufferSupplier();
                         bufferConsumer = websocket.getBufferConsumer();
-                        packet.setSendBuffers(packet.encode(bufferSupplier, bufferConsumer, cryptor));
+                        packet.setSendBuffers(packet.encodePacket(bufferSupplier, bufferConsumer, cryptor));
                     }
                     future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                 }
@@ -333,7 +333,7 @@ public class WebSocketEngine {
                         if (bufferSupplier == null) {
                             bufferSupplier = websocket.getBufferSupplier();
                             bufferConsumer = websocket.getBufferConsumer();
-                            packet.setSendBuffers(packet.encode(bufferSupplier, bufferConsumer, cryptor));
+                            packet.setSendBuffers(packet.encodePacket(bufferSupplier, bufferConsumer, cryptor));
                         }
                         future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                     }

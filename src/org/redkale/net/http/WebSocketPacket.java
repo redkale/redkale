@@ -9,9 +9,10 @@ import org.redkale.util.Utility;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.AbstractMap;
+import java.util.*;
 import java.util.function.*;
 import java.util.logging.*;
+import java.util.zip.*;
 import org.redkale.convert.*;
 import org.redkale.net.Cryptor;
 import org.redkale.util.*;
@@ -28,6 +29,8 @@ public final class WebSocketPacket {
     public static final Object MESSAGE_NIL = new Object();
 
     static final WebSocketPacket NONE = new WebSocketPacket();
+
+    private static final byte[] EOM_BYTES = new byte[]{0, 0, -1, -1};
 
     public static final WebSocketPacket DEFAULT_PING_PACKET = new WebSocketPacket(FrameType.PING, new byte[0]);
 
@@ -81,6 +84,8 @@ public final class WebSocketPacket {
 
     //---------------接收------------------------
     MessageType receiveType;
+
+    boolean receiveCompress;
 
     int receiveCount;
 
@@ -223,7 +228,7 @@ public final class WebSocketPacket {
      *
      * @return ByteBuffer[]
      */
-    ByteBuffer[] encode(final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer, final Cryptor cryptor) {
+    ByteBuffer[] encodePacket(final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer, final Cryptor cryptor) {
         final byte opcode = (byte) (this.type.getValue() | 0x80);
         if (this.sendConvert != null) {
             Supplier<ByteBuffer> newsupplier = new Supplier<ByteBuffer>() {
@@ -391,7 +396,7 @@ public final class WebSocketPacket {
      *
      * @return 返回NONE表示Buffer内容不够； 返回this表示解析完成或部分解析完成；返回null表示解析异常；
      */
-    WebSocketPacket decode(final Logger logger, final WebSocketRunner runner, final WebSocket webSocket, final int wsmaxbody,
+    WebSocketPacket decodePacket(final Logger logger, final WebSocketRunner runner, final WebSocket webSocket, final int wsmaxbody,
         final AbstractMap.SimpleEntry<String, byte[]> halfBytes, final ByteBuffer buffer) {
         //开始
         final boolean debug = false; //调试开关
@@ -407,6 +412,17 @@ public final class WebSocketPacket {
         this.last = (opcode & 0b1000_0000) != 0;
         this.type = FrameType.valueOf(opcode & 0xF);
 
+        //0x00 表示一个后续帧 
+        //0x01 表示一个文本帧 
+        //0x02 表示一个二进制帧 
+        //0x03-07 为以后的非控制帧保留
+        //0x8 表示一个连接关闭
+        //0x9 表示一个ping
+        //0xA 表示一个pong
+        //0x0B-0F 为以后的控制帧保留
+        final boolean control = (opcode & 0b0000_1000) != 0; //是否控制帧
+        this.receiveCompress = !control && webSocket.deflater != null && (opcode & 0b0100_0000) != 0; //rsv1 为 1
+
         if (type == FrameType.CLOSE) {
             if (debug) logger.log(Level.FINEST, " receive close command from websocket client");
         }
@@ -418,15 +434,6 @@ public final class WebSocketPacket {
             if (debug) logger.log(Level.FINE, "rsv1 rsv2 rsv3 must be 0, but not (" + opcode + ")");
             return null; //rsv1 rsv2 rsv3 must be 0     
         }
-        //0x00 表示一个后续帧 
-        //0x01 表示一个文本帧 
-        //0x02 表示一个二进制帧 
-        //0x03-07 为以后的非控制帧保留
-        //0x8 表示一个连接关闭
-        //0x9 表示一个ping
-        //0xA 表示一个pong
-        //0x0B-0F 为以后的控制帧保留
-        final boolean control = (opcode & 0b0000_1000) != 0; //是否控制帧
         final byte crcode = buffer.get();  //第二个字节
 
         byte lengthCode = crcode;
@@ -506,14 +513,15 @@ public final class WebSocketPacket {
         if (selfType == FrameType.TEXT) {
             Convert textConvert = webSocket.getTextConvert();
             if (textConvert == null || (!runner.mergemsg && (series || !this.last))) {
-                this.receiveMessage = new String(this.getReceiveBytes(buffers), StandardCharsets.UTF_8);
+                this.receiveMessage = new String(this.getReceiveBytes(webSocket, buffers), StandardCharsets.UTF_8);
                 this.receiveType = MessageType.STRING;
             } else {
                 if (this.last || !runner.mergemsg) {
-                    if (runner.currSeriesMergeMessage == null) {
+                    if (runner.currSeriesMergeMessage == null && !this.receiveCompress) {
                         this.receiveMessage = textConvert.convertFrom(webSocket._messageTextType, this.receiveMasker, buffers);
                     } else {
-                        runner.currSeriesMergeMessage.write(this.getReceiveBytes(buffers));
+                        if (runner.currSeriesMergeMessage == null) runner.currSeriesMergeMessage = new ByteArray();
+                        runner.currSeriesMergeMessage.write(this.getReceiveBytes(webSocket, buffers));
                         try {
                             this.receiveMessage = textConvert.convertFrom(webSocket._messageTextType, runner.currSeriesMergeMessage.getBytes());
                         } finally {
@@ -522,7 +530,7 @@ public final class WebSocketPacket {
                     }
                 } else {
                     if (runner.currSeriesMergeMessage == null) runner.currSeriesMergeMessage = new ByteArray();
-                    runner.currSeriesMergeMessage.write(this.getReceiveBytes(buffers));
+                    runner.currSeriesMergeMessage.write(this.getReceiveBytes(webSocket, buffers));
                     this.receiveMessage = MESSAGE_NIL;
                 }
                 this.receiveCount = this.receiveLength;
@@ -531,14 +539,15 @@ public final class WebSocketPacket {
         } else if (selfType == FrameType.BINARY) {
             Convert binaryConvert = webSocket.getBinaryConvert();
             if (binaryConvert == null || (!runner.mergemsg && (series || !this.last))) {
-                this.receiveMessage = this.getReceiveBytes(buffers);
+                this.receiveMessage = this.getReceiveBytes(webSocket, buffers);
                 this.receiveType = MessageType.BYTES;
             } else {
                 if (this.last || !runner.mergemsg) {
-                    if (runner.currSeriesMergeMessage == null) {
+                    if (runner.currSeriesMergeMessage == null && !this.receiveCompress) {
                         this.receiveMessage = binaryConvert.convertFrom(webSocket._messageTextType, this.receiveMasker, buffers);
                     } else {
-                        runner.currSeriesMergeMessage.write(this.getReceiveBytes(buffers));
+                        if (runner.currSeriesMergeMessage == null) runner.currSeriesMergeMessage = new ByteArray();
+                        runner.currSeriesMergeMessage.write(this.getReceiveBytes(webSocket, buffers));
                         try {
                             this.receiveMessage = binaryConvert.convertFrom(webSocket._messageTextType, runner.currSeriesMergeMessage.getBytes());
                         } finally {
@@ -547,20 +556,20 @@ public final class WebSocketPacket {
                     }
                 } else {
                     if (runner.currSeriesMergeMessage == null) runner.currSeriesMergeMessage = new ByteArray();
-                    runner.currSeriesMergeMessage.write(this.getReceiveBytes(buffers));
+                    runner.currSeriesMergeMessage.write(this.getReceiveBytes(webSocket, buffers));
                     this.receiveMessage = MESSAGE_NIL;
                 }
                 this.receiveCount = this.receiveLength;
                 this.receiveType = MessageType.OBJECT;
             }
         } else if (selfType == FrameType.PING) {
-            this.receiveMessage = this.getReceiveBytes(buffers);
+            this.receiveMessage = this.getReceiveBytes(webSocket, buffers);
             this.receiveType = MessageType.BYTES;
         } else if (selfType == FrameType.PONG) {
-            this.receiveMessage = this.getReceiveBytes(buffers);
+            this.receiveMessage = this.getReceiveBytes(webSocket, buffers);
             this.receiveType = MessageType.BYTES;
         } else if (selfType == FrameType.CLOSE) {
-            this.receiveMessage = this.getReceiveBytes(buffers);
+            this.receiveMessage = this.getReceiveBytes(webSocket, buffers);
             this.receiveType = MessageType.BYTES;
         }
     }
@@ -569,7 +578,7 @@ public final class WebSocketPacket {
         return this.receiveLength <= this.receiveCount;
     }
 
-    byte[] getReceiveBytes(ByteBuffer... buffers) {
+    byte[] getReceiveBytes(WebSocket webSocket, ByteBuffer... buffers) {
         final int length = this.receiveLength;
         if (length == 0) return new byte[0];
         byte[] bs = new byte[length];
@@ -585,6 +594,23 @@ public final class WebSocketPacket {
         if (mask != null) {
             for (int i = 0; i < bs.length; i++) {
                 bs[i] = mask.unmask(bs[i]);
+            }
+        }
+
+        if (this.receiveCompress) {
+            Inflater inflater = new Inflater(true);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(bs.length);
+            inflater.setInput(Utility.append(bs, EOM_BYTES));
+            byte[] buff = new byte[1024];
+            try {
+                while (!inflater.finished()) {
+                    int count = inflater.inflate(buff);
+                    if (count == 0) break;
+                    baos.write(buff, 0, count);
+                }
+                return baos.toByteArray();
+            } catch (Exception ex) {
+                return bs;
             }
         }
         return bs;

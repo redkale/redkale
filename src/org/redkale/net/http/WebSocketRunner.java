@@ -108,7 +108,7 @@ class WebSocketRunner implements Runnable {
                             if (onePacket != null) packets.add(onePacket);
                             try {
                                 while (true) {
-                                    WebSocketPacket packet = new WebSocketPacket().decode(context.getLogger(), self, webSocket, wsmaxbody, halfBytes, readBuffer);
+                                    WebSocketPacket packet = new WebSocketPacket().decodePacket(context.getLogger(), self, webSocket, wsmaxbody, halfBytes, readBuffer);
                                     if (packet == WebSocketPacket.NONE) break; //解析完毕但是buffer有多余字节
                                     if (packet != null && !packet.isReceiveFinished()) {
                                         unfinishPacket = packet;
@@ -230,7 +230,7 @@ class WebSocketRunner implements Runnable {
         //System.out.println("推送消息");        
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
         try {
-            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encode(webSocket._channel.getBufferSupplier(), webSocket._channel.getBufferConsumer(), webSocket._engine.cryptor);
+            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encodePacket(webSocket._channel.getBufferSupplier(), webSocket._channel.getBufferConsumer(), webSocket._engine.cryptor);
             //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + packet);
             CompletionHandler<Integer, ByteBuffer[]> handler = new CompletionHandler<Integer, ByteBuffer[]>() {
 
