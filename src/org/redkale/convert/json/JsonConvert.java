@@ -106,6 +106,16 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return convertFrom(type, new String(bytes, StandardCharsets.UTF_8));
     }
 
+    @Override
+    public <T> T convertFrom(final Type type, final ConvertMask mask, final byte[] bytes) {
+        if (mask == null) return convertFrom(type, bytes);
+        byte[] bs = new byte[bytes.length];
+        for (int i = 0; i < bytes.length; i++) {
+            bs[i] = mask.unmask(bytes[i]);
+        }
+        return convertFrom(type, new String(bs, StandardCharsets.UTF_8));
+    }
+
     public <T> T convertFrom(final Type type, final String text) {
         if (text == null) return null;
         return convertFrom(type, Utility.charArray(text));

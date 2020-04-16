@@ -36,7 +36,7 @@ public class BsonReader extends Reader {
 
     protected int position = -1;
 
-    private byte[] content;
+    protected byte[] content;
 
     public BsonReader() {
     }
