@@ -230,7 +230,8 @@ class WebSocketRunner implements Runnable {
         //System.out.println("推送消息");        
         final CompletableFuture<Integer> futureResult = new CompletableFuture<>();
         try {
-            ByteBuffer[] buffers = packet.sendBuffers != null ? packet.duplicateSendBuffers() : packet.encodePacket(webSocket._channel.getBufferSupplier(), webSocket._channel.getBufferConsumer(), webSocket._engine.cryptor);
+            if (packet.sendBuffers == null) packet.encodePacket(webSocket._channel.getBufferSupplier(), webSocket._channel.getBufferConsumer(), webSocket._engine.cryptor);
+            ByteBuffer[] buffers = packet.duplicateSendBuffers();
             //if (debug) context.getLogger().log(Level.FINEST, "wsrunner.sending websocket message:  " + packet);
             CompletionHandler<Integer, ByteBuffer[]> handler = new CompletionHandler<Integer, ByteBuffer[]>() {
 

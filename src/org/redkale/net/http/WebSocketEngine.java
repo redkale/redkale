@@ -244,7 +244,7 @@ public class WebSocketEngine {
                     if (bufferSupplier == null) {
                         bufferSupplier = websocket.getBufferSupplier();
                         bufferConsumer = websocket.getBufferConsumer();
-                        packet.setSendBuffers(packet.encodePacket(bufferSupplier, bufferConsumer, cryptor));
+                        packet.encodePacket(bufferSupplier, bufferConsumer, cryptor);
                     }
                     future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                 }
@@ -255,7 +255,7 @@ public class WebSocketEngine {
                         if (bufferSupplier == null) {
                             bufferSupplier = websocket.getBufferSupplier();
                             bufferConsumer = websocket.getBufferConsumer();
-                            packet.setSendBuffers(packet.encodePacket(bufferSupplier, bufferConsumer, cryptor));
+                            packet.encodePacket(bufferSupplier, bufferConsumer, cryptor);
                         }
                         future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                     }
@@ -312,7 +312,7 @@ public class WebSocketEngine {
             final WebSocketPacket packet = (message instanceof WebSocketPacket) ? (WebSocketPacket) message
                 : ((message == null || message instanceof CharSequence || message instanceof byte[])
                     ? new WebSocketPacket((Serializable) message, last) : new WebSocketPacket(this.sendConvert, false, message, last));
-            //packet.setSendBuffers(packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), cryptor));
+            //packet.encode(context.getBufferSupplier(), context.getBufferConsumer(), cryptor);
             CompletableFuture<Integer> future = null;
             if (single) {
                 for (Serializable userid : userids) {
@@ -321,7 +321,7 @@ public class WebSocketEngine {
                     if (bufferSupplier == null) {
                         bufferSupplier = websocket.getBufferSupplier();
                         bufferConsumer = websocket.getBufferConsumer();
-                        packet.setSendBuffers(packet.encodePacket(bufferSupplier, bufferConsumer, cryptor));
+                        packet.encodePacket(bufferSupplier, bufferConsumer, cryptor);
                     }
                     future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                 }
@@ -333,7 +333,7 @@ public class WebSocketEngine {
                         if (bufferSupplier == null) {
                             bufferSupplier = websocket.getBufferSupplier();
                             bufferConsumer = websocket.getBufferConsumer();
-                            packet.setSendBuffers(packet.encodePacket(bufferSupplier, bufferConsumer, cryptor));
+                            packet.encodePacket(bufferSupplier, bufferConsumer, cryptor);
                         }
                         future = future == null ? websocket.sendPacket(packet) : future.thenCombine(websocket.sendPacket(packet), (a, b) -> a | (Integer) b);
                     }

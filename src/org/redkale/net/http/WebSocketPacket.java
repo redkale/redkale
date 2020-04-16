@@ -153,16 +153,6 @@ public final class WebSocketPacket {
         if (mapconvable && !(json instanceof Object[])) throw new IllegalArgumentException();
     }
 
-    WebSocketPacket(ByteBuffer[] sendBuffers, FrameType type, boolean fin) {
-        this.type = type;
-        this.last = fin;
-        this.setSendBuffers(sendBuffers);
-    }
-
-    void setSendBuffers(ByteBuffer[] sendBuffers) {
-        this.sendBuffers = sendBuffers;
-    }
-
     ByteBuffer[] duplicateSendBuffers() {
         ByteBuffer[] rs = new ByteBuffer[this.sendBuffers.length];
         for (int i = 0; i < this.sendBuffers.length; i++) {
@@ -228,7 +218,7 @@ public final class WebSocketPacket {
      *
      * @return ByteBuffer[]
      */
-    ByteBuffer[] encodePacket(final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer, final Cryptor cryptor) {
+    void encodePacket(final Supplier<ByteBuffer> supplier, final Consumer<ByteBuffer> consumer, final Cryptor cryptor) {
         final byte opcode = (byte) (this.type.getValue() | 0x80);
         if (this.sendConvert != null) {
             Supplier<ByteBuffer> newsupplier = new Supplier<ByteBuffer>() {
@@ -268,7 +258,8 @@ public final class WebSocketPacket {
                 firstbuf.put(1, (byte) 0x7F); //127
                 firstbuf.putInt(2, contentLength);
             }
-            return buffers;
+            this.sendBuffers = buffers;
+            return;
         }
 
         ByteBuffer buffer = supplier.get();  //确保ByteBuffer的capacity不能小于128
@@ -299,7 +290,8 @@ public final class WebSocketPacket {
             buffer.put((byte) len);
             buffer.put(content);
             buffer.flip();
-            return new ByteBuffer[]{buffer};
+            this.sendBuffers = new ByteBuffer[]{buffer};
+            return;
         }
         if (len <= 0xFFFF) { // 65535
             buffer.put(opcode);
@@ -315,7 +307,8 @@ public final class WebSocketPacket {
         if (pend <= 0) {
             buffer.put(content);
             buffer.flip();
-            return new ByteBuffer[]{buffer};
+            this.sendBuffers = new ByteBuffer[]{buffer};
+            return;
         }
         buffer.put(content, 0, buffer.remaining());
         buffer.flip();
@@ -330,7 +323,7 @@ public final class WebSocketPacket {
             start += capacity;
             pend -= capacity;
         }
-        return buffers;
+        this.sendBuffers = buffers;
     }
 
 //    public static void main(String[] args) throws Throwable {
