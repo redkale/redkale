@@ -98,6 +98,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     //同RestWebSocket.cryptor, 变量名不可改， 被Rest.createRestWebSocketServlet用到
     protected Cryptor cryptor;
 
+    protected boolean permessageDeflate = false;
+
     @Resource(name = "jsonconvert")
     protected Convert jsonConvert;
 
@@ -211,7 +213,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
         webSocket._sncpAddress = this.node.localSncpAddress;
-        if (request.getHeader("Sec-WebSocket-Extensions", "").contains("permessage-deflate")) {
+        if (this.permessageDeflate && request.getHeader("Sec-WebSocket-Extensions", "").contains("permessage-deflate")) {
             webSocket.deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
             webSocket.inflater = new Inflater(true);
         }
