@@ -101,7 +101,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
                         fieldCoder = factory.loadDecoder(t);
                     }
-                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, field, null, null), fieldCoder);
+                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, field, null, null), fieldCoder);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -131,7 +131,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericParameterTypes()[0], this.type), this.type);
                         fieldCoder = factory.loadDecoder(t);
                     }
-                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, null, method), fieldCoder);
+                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, null, null, method), fieldCoder);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -149,7 +149,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         try {
                             Field f = clazz.getDeclaredField(constructorField);
                             Type t = TypeToken.createClassType(f.getGenericType(), this.type);
-                            list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, f, null, null), factory.loadDecoder(t)));
+                            list.add(new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, f, null, null), factory.loadDecoder(t)));
                         } catch (NoSuchFieldException nsfe) { //不存在field， 可能存在getter方法
                             char[] fs = constructorField.toCharArray();
                             fs[0] = Character.toUpperCase(fs[0]);
@@ -161,7 +161,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                                 getter = clazz.getMethod("is" + mn);
                             }
                             Type t = TypeToken.createClassType(TypeToken.getGenericType(getter.getGenericParameterTypes()[0], this.type), this.type);
-                            list.add(new DeMember(ObjectEncoder.createAttribute(factory, clazz, null, getter, null), factory.loadDecoder(t)));
+                            list.add(new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, null, getter, null), factory.loadDecoder(t)));
                         }
                     }
                 }

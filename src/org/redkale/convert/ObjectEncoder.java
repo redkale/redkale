@@ -82,7 +82,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
                         fieldCoder = factory.loadEncoder(t);
                     }
-                    EnMember member = new EnMember(createAttribute(factory, clazz, field, null, null), fieldCoder);
+                    EnMember member = new EnMember(createAttribute(factory, type, clazz, field, null, null), fieldCoder);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -111,7 +111,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericReturnType(), this.type), this.type);
                         fieldCoder = factory.loadEncoder(t);
                     }
-                    EnMember member = new EnMember(createAttribute(factory, clazz, null, method, null), fieldCoder);
+                    EnMember member = new EnMember(createAttribute(factory, type, clazz, null, method, null), fieldCoder);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -263,7 +263,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
         }
     }
 
-    static Attribute createAttribute(final ConvertFactory factory, Class clazz, final Field field, final Method getter, final Method setter) {
+    static Attribute createAttribute(final ConvertFactory factory, Type realType, Class clazz, final Field field, final Method getter, final Method setter) {
         String fieldalias;
         if (field != null) { // public field
             ConvertColumnEntry ref = factory.findRef(clazz, field);
@@ -289,7 +289,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             }
             fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();
         }
-        return Attribute.create(clazz, fieldalias, field, getter, setter);
+        return Attribute.create(realType, clazz, fieldalias, null, field, getter, setter, null);
     }
 
 }

@@ -157,6 +157,10 @@ public abstract class TypeToken<T> {
                                 && ((TypeVariable) type).getBounds()[0] instanceof Class
                                 && ((Class) ((TypeVariable) type).getBounds()[0]).isAssignableFrom((Class) atas[i]))
                                 return atas[i];
+                            if (atas[i] instanceof ParameterizedType
+                                && ((TypeVariable) type).getBounds().length == 1
+                                && ((TypeVariable) type).getBounds()[0] == Object.class)
+                                return atas[i];
                         }
                     }
                     ParameterizedType cycType = superPT;

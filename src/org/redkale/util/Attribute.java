@@ -636,7 +636,7 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     @SuppressWarnings("unchecked")
-    public static <T, F> Attribute<T, F> create(Class<T> subclass, final Class<T> clazz, String fieldalias, final Class<F> fieldtype, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
+    public static <T, F> Attribute<T, F> create(java.lang.reflect.Type subclass, final Class<T> clazz, String fieldalias, final Class<F> fieldtype, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
         if (subclass == null) subclass = clazz;
         if (fieldalias != null && fieldalias.isEmpty()) fieldalias = null;
         int mod = field == null ? java.lang.reflect.Modifier.STATIC : field.getModifiers();
@@ -687,7 +687,7 @@ public interface Attribute<T, F> {
         final String fieldname = fieldalias;
         Class column = fieldtype;
         java.lang.reflect.Type generictype = fieldtype;
-        
+
         if (tfield != null) { // public tfield
             column = tfield.getType();
             generictype = tfield.getGenericType();
@@ -711,16 +711,16 @@ public interface Attribute<T, F> {
         final Class pcolumn = column;
         if (column.isPrimitive()) column = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(column, 1), 0).getClass();
         final String supDynName = Attribute.class.getName().replace('.', '/');
-        final String interName = subclass.getName().replace('.', '/');
+        final String interName = TypeToken.typeToClass(subclass).getName().replace('.', '/');
         final String columnName = column.getName().replace('.', '/');
-        final String interDesc = Type.getDescriptor(subclass);
+        final String interDesc = Type.getDescriptor(TypeToken.typeToClass(subclass));
         final String columnDesc = Type.getDescriptor(column);
 
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        String newDynName = supDynName + "_Dyn_" + subclass.getSimpleName() + "_"
+        String newDynName = supDynName + "_Dyn_" + TypeToken.typeToClass(subclass).getSimpleName() + "_"
             + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
-        if (String.class.getClassLoader() != subclass.getClassLoader()) {
-            loader = subclass.getClassLoader();
+        if (String.class.getClassLoader() != TypeToken.typeToClass(subclass).getClassLoader()) {
+            loader = TypeToken.typeToClass(subclass).getClassLoader();
             newDynName = interName + "_Dyn" + Attribute.class.getSimpleName() + "_"
                 + fieldname.substring(fieldname.indexOf('.') + 1) + "_" + pcolumn.getSimpleName().replace("[]", "Array");
         }
@@ -804,7 +804,7 @@ public interface Attribute<T, F> {
         }
         { //declaringClass 方法
             mv = cw.visitMethod(ACC_PUBLIC, "declaringClass", "()Ljava/lang/Class;", null, null);
-            mv.visitLdcInsn(Type.getType(subclass));
+            mv.visitLdcInsn(Type.getType(TypeToken.typeToClass(subclass)));
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
