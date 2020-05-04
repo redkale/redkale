@@ -7,7 +7,7 @@ package org.redkale.service;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import org.redkale.convert.Convert;
+import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.Utility;
 
@@ -96,6 +96,7 @@ public class RetResult<T> {
      *
      * @return 是否成功
      */
+    @ConvertColumn(index = 3)
     public boolean isSuccess() {
         return retcode == 0;
     }
@@ -179,10 +180,12 @@ public class RetResult<T> {
      *
      * @return 结果码
      */
+    @ConvertColumn(index = 1)
     public int getRetcode() {
         return retcode;
     }
 
+    @ConvertColumn(index = 1)
     public void setRetcode(int retcode) {
         this.retcode = retcode;
     }
@@ -192,6 +195,7 @@ public class RetResult<T> {
      *
      * @return 结果信息
      */
+    @ConvertColumn(index = 2)
     public String getRetinfo() {
         return retinfo;
     }
@@ -201,6 +205,7 @@ public class RetResult<T> {
      *
      * @param retinfo 结果信息
      */
+    @ConvertColumn(index = 2)
     public void setRetinfo(String retinfo) {
         this.retinfo = retinfo;
     }
@@ -210,6 +215,7 @@ public class RetResult<T> {
      *
      * @return 结果对象
      */
+    @ConvertColumn(index = 4)
     public T getResult() {
         return result;
     }
@@ -219,6 +225,7 @@ public class RetResult<T> {
      *
      * @param result T
      */
+    @ConvertColumn(index = 4)
     public void setResult(T result) {
         this.result = result;
     }
@@ -228,6 +235,7 @@ public class RetResult<T> {
      *
      * @return 结果附件
      */
+    @ConvertColumn(index = 5)
     public Map<String, String> getAttach() {
         return attach;
     }
@@ -240,6 +248,7 @@ public class RetResult<T> {
      *
      * @return 结果值
      */
+    @ConvertColumn(index = 5)
     public String getAttach(String name, String defValue) {
         return attach == null ? defValue : attach.getOrDefault(name, defValue);
     }
@@ -257,4 +266,5 @@ public class RetResult<T> {
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
+
 }
