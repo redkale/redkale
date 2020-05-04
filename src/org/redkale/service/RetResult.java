@@ -26,13 +26,17 @@ import org.redkale.util.Utility;
  */
 public class RetResult<T> {
 
+    @ConvertColumn(index = 1)
     protected int retcode;
 
+    @ConvertColumn(index = 2)
     protected String retinfo;
 
-    protected T result;
-
+    @ConvertColumn(index = 3)
     protected Map<String, String> attach;
+
+    @ConvertColumn(index = 4)
+    protected T result;
 
     protected Convert convert;
 
@@ -170,12 +174,10 @@ public class RetResult<T> {
      *
      * @return 结果码
      */
-    @ConvertColumn(index = 1)
     public int getRetcode() {
         return retcode;
     }
 
-    @ConvertColumn(index = 1)
     public void setRetcode(int retcode) {
         this.retcode = retcode;
     }
@@ -185,7 +187,6 @@ public class RetResult<T> {
      *
      * @return 结果信息
      */
-    @ConvertColumn(index = 2)
     public String getRetinfo() {
         return retinfo;
     }
@@ -195,7 +196,6 @@ public class RetResult<T> {
      *
      * @param retinfo 结果信息
      */
-    @ConvertColumn(index = 2)
     public void setRetinfo(String retinfo) {
         this.retinfo = retinfo;
     }
@@ -205,7 +205,6 @@ public class RetResult<T> {
      *
      * @return 结果附件
      */
-    @ConvertColumn(index = 3)
     public Map<String, String> getAttach() {
         return attach;
     }
@@ -215,7 +214,6 @@ public class RetResult<T> {
      *
      * @param attach Map
      */
-    @ConvertColumn(index = 3)
     public void setAttach(Map<String, String> attach) {
         this.attach = attach;
     }
@@ -237,7 +235,6 @@ public class RetResult<T> {
      *
      * @return 结果对象
      */
-    @ConvertColumn(index = 4)
     public T getResult() {
         return result;
     }
@@ -247,7 +244,6 @@ public class RetResult<T> {
      *
      * @param result T
      */
-    @ConvertColumn(index = 4)
     public void setResult(T result) {
         this.result = result;
     }
