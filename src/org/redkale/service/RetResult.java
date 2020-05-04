@@ -92,16 +92,6 @@ public class RetResult<T> {
     }
 
     /**
-     * 判断结果是否成功返回， retcode = 0 视为成功， 否则视为错误码
-     *
-     * @return 是否成功
-     */
-    @ConvertColumn(index = 3)
-    public boolean isSuccess() {
-        return retcode == 0;
-    }
-
-    /**
      * 同 setRetcode
      *
      * @param retcode retcode
@@ -211,23 +201,13 @@ public class RetResult<T> {
     }
 
     /**
-     * 结果对象， 通常只有在retcode = 0时值才有效
+     * 判断结果是否成功返回， retcode = 0 视为成功， 否则视为错误码
      *
-     * @return 结果对象
+     * @return 是否成功
      */
-    @ConvertColumn(index = 4)
-    public T getResult() {
-        return result;
-    }
-
-    /**
-     * 设置结果对象
-     *
-     * @param result T
-     */
-    @ConvertColumn(index = 4)
-    public void setResult(T result) {
-        this.result = result;
+    @ConvertColumn(index = 3)
+    public boolean isSuccess() {
+        return retcode == 0;
     }
 
     /**
@@ -235,9 +215,19 @@ public class RetResult<T> {
      *
      * @return 结果附件
      */
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 4)
     public Map<String, String> getAttach() {
         return attach;
+    }
+
+    /**
+     * 设置结果附件
+     *
+     * @param attach Map
+     */
+    @ConvertColumn(index = 4)
+    public void setAttach(Map<String, String> attach) {
+        this.attach = attach;
     }
 
     /**
@@ -248,18 +238,28 @@ public class RetResult<T> {
      *
      * @return 结果值
      */
-    @ConvertColumn(index = 5)
     public String getAttach(String name, String defValue) {
         return attach == null ? defValue : attach.getOrDefault(name, defValue);
     }
 
     /**
-     * 设置结果附件
+     * 结果对象， 通常只有在retcode = 0时值才有效
      *
-     * @param attach Map
+     * @return 结果对象
      */
-    public void setAttach(Map<String, String> attach) {
-        this.attach = attach;
+    @ConvertColumn(index = 5)
+    public T getResult() {
+        return result;
+    }
+
+    /**
+     * 设置结果对象
+     *
+     * @param result T
+     */
+    @ConvertColumn(index = 5)
+    public void setResult(T result) {
+        this.result = result;
     }
 
     @Override
