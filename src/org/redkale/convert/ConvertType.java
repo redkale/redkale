@@ -17,8 +17,9 @@ public enum ConvertType {
 
     JSON(1),
     BSON(2),
-    DIY(64),
-    ALL(127);
+    PBUF(64), //protobuf
+    DIY(256),
+    ALL(1023);
 
     private final int value;
 
@@ -30,4 +31,5 @@ public enum ConvertType {
         if (type == null) return false;
         return this.value >= type.value && (this.value & type.value) > 0;
     }
+
 }
