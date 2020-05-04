@@ -201,21 +201,11 @@ public class RetResult<T> {
     }
 
     /**
-     * 判断结果是否成功返回， retcode = 0 视为成功， 否则视为错误码
-     *
-     * @return 是否成功
-     */
-    @ConvertColumn(index = 3)
-    public boolean isSuccess() {
-        return retcode == 0;
-    }
-
-    /**
      * 结果附件
      *
      * @return 结果附件
      */
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 3)
     public Map<String, String> getAttach() {
         return attach;
     }
@@ -225,7 +215,7 @@ public class RetResult<T> {
      *
      * @param attach Map
      */
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 3)
     public void setAttach(Map<String, String> attach) {
         this.attach = attach;
     }
@@ -247,7 +237,7 @@ public class RetResult<T> {
      *
      * @return 结果对象
      */
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 4)
     public T getResult() {
         return result;
     }
@@ -257,9 +247,19 @@ public class RetResult<T> {
      *
      * @param result T
      */
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 4)
     public void setResult(T result) {
         this.result = result;
+    }
+
+    /**
+     * 判断结果是否成功返回， retcode = 0 视为成功， 否则视为错误码
+     *
+     * @return 是否成功
+     */
+    @ConvertColumn(index = 5)
+    public boolean isSuccess() {
+        return retcode == 0;
     }
 
     @Override
