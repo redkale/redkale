@@ -17,7 +17,7 @@ public enum ConvertType {
 
     JSON(1),
     BSON(2),
-    PBUF(64), //protobuf
+    PROTOBUF(64),
     DIY(256),
     ALL(1023);
 
