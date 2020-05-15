@@ -369,7 +369,7 @@ public final class SncpClient {
             }
             if (!conn0.isOpen()) {
                 conn0.dispose();
-                future.completeExceptionally(new RpcRemoteException("sncp " + (conn0 == null ? addr : conn0.getRemoteAddress()) + " cannot connect, params=" + JsonConvert.root().convertTo(params)));
+                future.completeExceptionally(new RpcRemoteException("sncp " + conn0.getRemoteAddress() + " cannot connect, params=" + JsonConvert.root().convertTo(params)));
                 return future;
             }
             final AsyncConnection conn = conn0;
