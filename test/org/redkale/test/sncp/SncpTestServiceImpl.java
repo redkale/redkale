@@ -43,13 +43,11 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     @Override
-    @RpcMultiRun
     public long queryLongResult(String a, int b, long value) {
         return value + 1;
     }
 
     @Override
-    @RpcMultiRun
     public double queryDoubleResult(String a, int b, double value) {
         return value + 1;
     }
@@ -103,7 +101,6 @@ public class SncpTestServiceImpl implements SncpTestIService {
         if (handler != null) handler.completed("result: " + bean, bean);
     }
 
-    @RpcMultiRun
     @Override
     public String updateBean(@RpcCall(CallAttribute.class) SncpTestBean bean) {
         bean.setId(System.currentTimeMillis());
