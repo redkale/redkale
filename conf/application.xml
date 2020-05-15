@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<application port="2121">     
+<application nodeid="10" port="2121">     
     
     <!--  详细配置说明见： http://redkale.org/redkale.html#redkale_confxml  -->
     
