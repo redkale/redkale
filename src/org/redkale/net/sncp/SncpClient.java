@@ -42,7 +42,7 @@ public final class SncpClient {
 
     private final Class serviceClass;
 
-    protected final InetSocketAddress clientAddress;
+    protected final InetSocketAddress clientSncpAddress;
 
     private final byte[] addrBytes;
 
@@ -83,13 +83,13 @@ public final class SncpClient {
     protected Transport[] diffGroupTransports;
 
     public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final TransportFactory factory,
-        final boolean remote, final Class serviceClass, final InetSocketAddress clientAddress) {
+        final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
         this.remote = remote;
         this.executor = factory.getExecutor();
         this.bufferSupplier = factory.getBufferSupplier();
         this.serviceClass = serviceClass;
         this.serviceversion = 0;
-        this.clientAddress = clientAddress;
+        this.clientSncpAddress = clientSncpAddress;
         this.name = serviceName;
         Class tn = serviceTypeOrImplClass;
         ResourceType rt = (ResourceType) tn.getAnnotation(ResourceType.class);
@@ -101,8 +101,8 @@ public final class SncpClient {
             methodens.add(new SncpAction(serviceClass, method, Sncp.hash(method)));
         }
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
-        this.addrBytes = clientAddress == null ? new byte[4] : clientAddress.getAddress().getAddress();
-        this.addrPort = clientAddress == null ? 0 : clientAddress.getPort();
+        this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
+        this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
         if (this.addrBytes.length != 4) throw new RuntimeException("SNCP clientAddress only support IPv4");
     }
 
@@ -116,7 +116,7 @@ public final class SncpClient {
     }
 
     public InetSocketAddress getClientAddress() {
-        return clientAddress;
+        return clientSncpAddress;
     }
 
     public DLong getServiceid() {
@@ -184,7 +184,7 @@ public final class SncpClient {
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
         return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", serviceversion = " + serviceversion + ", name = '" + name
-            + "', address = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
+            + "', address = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
             + ", actions.size = " + actions.length + ")";
     }
 
@@ -198,7 +198,7 @@ public final class SncpClient {
             }
         }
         return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceversion = " + serviceversion
-            + ", clientaddr = " + (clientAddress == null ? "" : (clientAddress.getHostString() + ":" + clientAddress.getPort()))
+            + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
             + ((sameGroup == null || sameGroup.isEmpty()) ? "" : ", sameGroup = " + sameGroup)
             + (sameGroupTransport == null ? "" : ", sameGroupTransport = " + Arrays.toString(sameGroupTransport.getRemoteAddresses()))
             + ((diffGroups == null || diffGroups.isEmpty()) ? "" : ", diffGroups = " + diffGroups)
@@ -344,7 +344,7 @@ public final class SncpClient {
     private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
-        if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientAddress;
+        if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientSncpAddress;
         if (bsonConvert == null) bsonConvert = BsonConvert.root();
         final BsonWriter writer = bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
