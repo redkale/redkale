@@ -118,7 +118,7 @@ public final class Application {
     //DataSource 资源
     final List<DataSource> dataSources = new CopyOnWriteArrayList<>();
 
-    //NodeServer 资源
+    //NodeServer 资源, 顺序必须是sncps, others, watchs
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
     //SNCP传输端的TransportFactory, 注意： 只给SNCP使用
@@ -907,8 +907,9 @@ public final class Application {
                 logger.log(Level.WARNING, listener.getClass() + " preShutdown erroneous", e);
             }
         }
-
-        servers.stream().forEach((server) -> {
+        List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs
+        Collections.reverse(localServers); //倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
+        localServers.stream().forEach((server) -> {
             try {
                 server.shutdown();
             } catch (Exception t) {
