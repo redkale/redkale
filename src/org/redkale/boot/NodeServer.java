@@ -284,20 +284,6 @@ public abstract class NodeServer {
                 application.dataSources.add(source);
                 appResFactory.register(resourceName, DataSource.class, source);
 
-                SncpClient client = Sncp.getSncpClient((Service) src);
-                final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                if ((src instanceof DataSource) && sncpAddr != null && resourceFactory.find(resourceName, DataCacheListener.class) == null) { //只有DataSourceService 才能赋值 DataCacheListener   
-                    final NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
-                    final Set<String> groups = new HashSet<>();
-                    if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
-                    if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
-                    Service cacheListenerService = Sncp.createLocalService(serverClassLoader, resourceName, DataCacheListenerService.class, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf((Service) src));
-                    appResFactory.register(resourceName, DataCacheListener.class, cacheListenerService);
-                    localServices.add(cacheListenerService);
-                    sncpServer.consumerAccept(cacheListenerService);
-                    rf.inject(cacheListenerService, self);
-                    logger.info("[" + Thread.currentThread().getName() + "] Load Service " + cacheListenerService);
-                }
                 field.set(src, source);
                 rf.inject(source, self); // 给其可能包含@Resource的字段赋值;
                 //NodeServer.this.watchFactory.inject(src);
@@ -418,7 +404,6 @@ public abstract class NodeServer {
                 if (Modifier.isAbstract(serviceImplClass.getModifiers())) continue; //修饰abstract的类跳过
                 if (DataSource.class.isAssignableFrom(serviceImplClass)) continue;
                 if (CacheSource.class.isAssignableFrom(serviceImplClass)) continue;
-                if (DataCacheListener.class.isAssignableFrom(serviceImplClass)) continue;
             }
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
             Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);

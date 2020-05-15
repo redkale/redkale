@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
-import javax.annotation.Resource;
 import org.redkale.service.*;
 import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
@@ -34,7 +33,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(DataSource.class)
-public abstract class DataSqlSource<DBChannel> extends AbstractService implements DataSource, DataCacheListener, Function<Class, EntityInfo>, AutoCloseable, Resourcable {
+public abstract class DataSqlSource<DBChannel> extends AbstractService implements DataSource, Function<Class, EntityInfo>, AutoCloseable, Resourcable {
 
     protected static final Flipper FLIPPER_ONE = new Flipper(1);
 
@@ -55,9 +54,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected PoolSource<DBChannel> readPool;
 
     protected PoolSource<DBChannel> writePool;
-
-    @Resource(name = "$")
-    protected DataCacheListener cacheListener;
 
     protected final BiFunction<EntityInfo, Object, CharSequence> sqlFormatter;
 
@@ -387,20 +383,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         for (final T value : entitys) {
             c += cache.insert(value);
         }
-        if (cacheListener != null) cacheListener.insertCache(info.getType(), entitys);
-        return c;
-    }
-
-    @Override
-    public <T> int insertCache(Class<T> clazz, T... entitys) {
-        if (entitys.length == 0) return 0;
-        final EntityInfo<T> info = loadEntityInfo(clazz);
-        final EntityCache<T> cache = info.getCache();
-        if (cache == null) return -1;
-        int c = 0;
-        for (T value : entitys) {
-            c += cache.insert(value);
-        }
         return c;
     }
 
@@ -683,7 +665,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return -1;
         Serializable[] ids = cache.delete(flipper, node);
-        if (cacheListener != null) cacheListener.deleteCache(info.getType(), ids);
         return count >= 0 ? count : (ids == null ? 0 : ids.length);
     }
 
@@ -694,21 +675,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         for (Serializable key : pks) {
             c += cache.delete(key);
         }
-        if (cacheListener != null) cacheListener.deleteCache(info.getType(), pks);
         return count >= 0 ? count : c;
-    }
-
-    @Override
-    public <T> int deleteCache(Class<T> clazz, Serializable... pks) {
-        if (pks.length == 0) return 0;
-        final EntityInfo<T> info = loadEntityInfo(clazz);
-        final EntityCache<T> cache = info.getCache();
-        if (cache == null) return -1;
-        int c = 0;
-        for (Serializable id : pks) {
-            c += cache.delete(id);
-        }
-        return c;
     }
 
     protected static StringBuilder multisplit(char ch1, char ch2, String split, StringBuilder sb, String str, int from) {
@@ -1220,11 +1187,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         }
         if (neednode) {
             T[] rs = cache.update(entity, attrs, node);
-            if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
             return count >= 0 ? count : (rs == null ? 0 : rs.length);
         } else {
             T rs = cache.update(entity, attrs);
-            if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
             return count >= 0 ? count : (rs == null ? 0 : 1);
         }
     }
@@ -1242,7 +1207,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             cols.add(col);
         }
         T[] rs = cache.updateColumn(node, flipper, attrs, cols);
-        if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
         return count >= 0 ? count : (rs == null ? 0 : 1);
     }
 
@@ -1259,7 +1223,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             cols.add(col);
         }
         T rs = cache.updateColumn(pk, attrs, cols);
-        if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
         return count >= 0 ? count : (rs == null ? 0 : 1);
     }
 
@@ -1267,7 +1230,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return count;
         T[] rs = cache.update(info.getAttribute(column), colval, node);
-        if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
         return count >= 0 ? count : (rs == null ? 0 : 1);
     }
 
@@ -1275,7 +1237,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return count;
         T rs = cache.update(pk, info.getAttribute(column), colval);
-        if (cacheListener != null) cacheListener.updateCache(info.getType(), rs);
         return count >= 0 ? count : (rs == null ? 0 : 1);
     }
 
@@ -1286,21 +1247,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         for (final T value : entitys) {
             c2 += cache.update(value);
         }
-        if (cacheListener != null) cacheListener.updateCache(info.getType(), entitys);
         return count >= 0 ? count : c2;
-    }
-
-    @Override
-    public <T> int updateCache(Class<T> clazz, T... entitys) {
-        if (entitys.length == 0) return 0;
-        final EntityInfo<T> info = loadEntityInfo(clazz);
-        final EntityCache<T> cache = info.getCache();
-        if (cache == null) return -1;
-        int c = 0;
-        for (T value : entitys) {
-            c += cache.update(value);
-        }
-        return c;
     }
 
     public <T> int reloadCache(Class<T> clazz, Serializable... pks) {
