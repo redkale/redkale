@@ -72,9 +72,9 @@ public final class Application {
     public static final String RESNAME_APP_GRES = "APP_GRES";
 
     /**
-     * 当前进程节点的name， 类型：String
+     * 当前进程节点的nodeid， 类型：int
      */
-    public static final String RESNAME_APP_NODE = "APP_NODE";
+    public static final String RESNAME_APP_NODEID = "APP_NODEID";
 
     /**
      * 当前进程节点的IP地址， 类型：InetAddress、String
@@ -105,6 +105,9 @@ public final class Application {
      * 当前Server的ResourceFactory
      */
     public static final String RESNAME_SERVER_RESFACTORY = Server.RESNAME_SERVER_RESFACTORY;
+
+    //本进程节点ID
+    final int nodeid;
 
     //本地IP地址
     final InetAddress localAddress;
@@ -196,20 +199,10 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_ADDR, this.localAddress.getHostAddress());
         this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, this.localAddress);
         {
-            String node = config.getValue("node", "").trim();
-            if (node.isEmpty()) {
-                StringBuilder sb = new StringBuilder();
-                byte[] bs = this.localAddress.getAddress();
-                int v1 = bs[bs.length - 2] & 0xff;
-                int v2 = bs[bs.length - 1] & 0xff;
-                if (v1 <= 0xf) sb.append('0');
-                sb.append(Integer.toHexString(v1));
-                if (v2 <= 0xf) sb.append('0');
-                sb.append(Integer.toHexString(v2));
-                node = sb.toString();
-            }
-            this.resourceFactory.register(RESNAME_APP_NODE, node);
-            System.setProperty(RESNAME_APP_NODE, node);
+            int nid = config.getIntValue("nodeid", 0);
+            this.nodeid = nid;
+            this.resourceFactory.register(RESNAME_APP_NODEID, nid);
+            System.setProperty(RESNAME_APP_NODEID, "" + nid);
         }
         //以下是初始化日志配置
         final URI logConfURI = "file".equals(confPath.getScheme()) ? new File(new File(confPath), "logging.properties").toURI()
@@ -373,6 +366,10 @@ public final class Application {
 
     public List<CacheSource> getCacheSources() {
         return new ArrayList<>(cacheSources);
+    }
+
+    public int getNodeid() {
+        return nodeid;
     }
 
     public File getHome() {
