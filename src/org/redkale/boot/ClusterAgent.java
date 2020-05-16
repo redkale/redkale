@@ -8,7 +8,8 @@ package org.redkale.boot;
 import java.net.InetSocketAddress;
 import java.util.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.sncp.Sncp;
+import org.redkale.net.*;
+import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -66,30 +67,42 @@ public abstract class ClusterAgent {
     }
 
     //注册服务
-    public void register(NodeServer ns, Set<Service> localServices, Set<Service> remoteServices) {
+    public void register(NodeServer ns, TransportFactory transportFactory, Set<Service> localServices, Set<Service> remoteServices) {
         if (localServices.isEmpty()) return;
-        for (Service service : localServices) {  //注册本地模式
-            register(ns, service);
+        //注册本地模式
+        for (Service service : localServices) {
+            register(ns, transportFactory, service);
         }
-        //远程模式不注册
+        Server server = ns.getServer();
+        String subprotocol = server instanceof SncpServer ? ((SncpServer) server).getSubprotocol() : "TCP";
+        //远程模式加载IP列表, 只能是SNCP协议        
+        for (Service service : remoteServices) {
+            if (!Sncp.isSncpDyn(service)) continue;
+            List<InetSocketAddress> addrs = queryAddress(ns, service);
+            if (addrs != null && !addrs.isEmpty()) {
+                SncpClient client = Sncp.getSncpClient(service);
+                if (client != null) client.setRemoteGroupTransport(transportFactory.createTransport(Sncp.getResourceType(service).getName(), server.getProtocol(), subprotocol, ns.getSncpAddress(), addrs));
+            }
+        }
     }
 
     //注销服务
-    public void deregister(NodeServer ns, Set<Service> localServices, Set<Service> remoteServices) {
-        for (Service service : localServices) {//注销本地模式
-            deregister(ns, service);
+    public void deregister(NodeServer ns, TransportFactory transportFactory, Set<Service> localServices, Set<Service> remoteServices) {
+        //注销本地模式
+        for (Service service : localServices) {
+            deregister(ns, transportFactory, service);
         }
         //远程模式不注册
     }
 
     //获取远程服务的可用ip列表
-    public abstract List<InetSocketAddress> queryAddress(NodeServer server, Service service);
+    public abstract List<InetSocketAddress> queryAddress(NodeServer ns, Service service);
 
     //注册服务
-    public abstract void register(NodeServer server, Service service);
+    public abstract void register(NodeServer ns, TransportFactory transportFactory, Service service);
 
     //注销服务
-    public abstract void deregister(NodeServer server, Service service);
+    public abstract void deregister(NodeServer ns, TransportFactory transportFactory, Service service);
 
     //格式: protocol:classtype-resourcename
     public String generateServiceType(NodeServer ns, Service service) {

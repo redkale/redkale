@@ -266,23 +266,7 @@ public class TransportFactory {
         return true;
     }
 
-    public Transport loadSameGroupTransport(InetSocketAddress sncpAddress) {
-        return loadTransport(groupAddrs.get(sncpAddress), sncpAddress);
-    }
-
-    public Transport[] loadDiffGroupTransports(InetSocketAddress sncpAddress, final Set<String> diffGroups) {
-        if (diffGroups == null) return null;
-        final String sncpGroup = groupAddrs.get(sncpAddress);
-        final List<Transport> transports = new ArrayList<>();
-        for (String group : diffGroups) {
-            if (sncpGroup == null || !sncpGroup.equals(group)) {
-                transports.add(loadTransport(group, sncpAddress));
-            }
-        }
-        return transports.toArray(new Transport[transports.size()]);
-    }
-
-    public Transport loadRemoteTransport(InetSocketAddress sncpAddress, final Set<String> groups) {
+    public Transport loadTransport(InetSocketAddress sncpAddress, final Set<String> groups) {
         if (groups == null) return null;
         Set<InetSocketAddress> addresses = new HashSet<>();
         TransportGroupInfo info = null;
@@ -294,13 +278,6 @@ public class TransportFactory {
         if (info == null) info = new TransportGroupInfo("TCP");
         if (sncpAddress != null) addresses.remove(sncpAddress);
         return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, this.sslContext, sncpAddress, addresses, this.strategy);
-    }
-
-    private Transport loadTransport(final String groupName, InetSocketAddress sncpAddress) {
-        if (groupName == null) return null;
-        TransportGroupInfo info = groupInfos.get(groupName);
-        if (info == null) return null;
-        return new Transport(groupName, info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, this.sslContext, sncpAddress, info.addresses, this.strategy);
     }
 
     public ExecutorService getExecutor() {

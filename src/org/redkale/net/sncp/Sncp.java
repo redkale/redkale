@@ -547,7 +547,7 @@ public abstract class Sncp {
             T rs = (T) newClazz.getDeclaredConstructor().newInstance();
             SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
-            client.setRemoteGroupTransport(transportFactory.loadRemoteTransport(clientAddress, groups));
+            client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
             c.set(rs, client);
@@ -728,7 +728,7 @@ public abstract class Sncp {
             T rs = (T) newClazz.getDeclaredConstructor().newInstance();
             SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
-            client.setRemoteGroupTransport(transportFactory.loadRemoteTransport(clientAddress, groups));
+            client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                 c.setAccessible(true);

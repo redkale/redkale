@@ -64,10 +64,10 @@ public final class SncpClient {
     @Resource
     protected BsonConvert bsonConvert;
 
-    //远程模式
+    //远程模式, 可能为null
     protected Set<String> remoteGroups;
 
-    //远程模式
+    //远程模式, 可能为null
     protected Transport remoteGroupTransport;
 
     public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final TransportFactory factory,

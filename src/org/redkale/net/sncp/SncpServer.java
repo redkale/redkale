@@ -29,6 +29,9 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
 
     private final AtomicInteger maxNameLength = new AtomicInteger();
 
+    //协议层协议名
+    protected static final String subprotocol = "TCP";
+
     public SncpServer() {
         this(System.currentTimeMillis(), ResourceFactory.root());
     }
@@ -38,12 +41,16 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     public SncpServer(long serverStartTime, ResourceFactory resourceFactory) {
-        super(serverStartTime, "TCP", resourceFactory, new SncpPrepareServlet());
+        super(serverStartTime, subprotocol, resourceFactory, new SncpPrepareServlet());
     }
 
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
+    }
+
+    public String getSubprotocol() {
+        return subprotocol;
     }
 
     public List<SncpServlet> getSncpServlets() {
