@@ -407,7 +407,7 @@ public final class ClassFilter<T> {
                 str = str.trim();
                 if (str.endsWith(";")) str = str.substring(0, str.length() - 1);
             }
-            if (str != null) groups.addAll(Arrays.asList(str.split(";")));
+            if (str != null) this.groups.addAll(Arrays.asList(str.split(";")));
             this.property = property;
             this.autoload = autoload;
             this.expect = expect;
@@ -417,7 +417,7 @@ public final class ClassFilter<T> {
         @Override
         public String toString() {
             return this.getClass().getSimpleName() + "[thread=" + Thread.currentThread().getName()
-                + ", type=" + this.type.getSimpleName() + ", name=" + name + ", groups=" + groups + "]";
+                + ", type=" + this.type.getSimpleName() + ", name=" + name + ", groups=" + this.groups + "]";
         }
 
         @Override
@@ -442,6 +442,10 @@ public final class ClassFilter<T> {
 
         public AnyValue getProperty() {
             return property;
+        }
+
+        public boolean containsGroup(String group) {
+            return groups != null && groups.contains(group);
         }
 
         public boolean isEmptyGroups() {

@@ -301,7 +301,7 @@ public abstract class NodeServer {
                     if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 CacheSource 
                     final Service srcService = (Service) src;
                     SncpClient client = Sncp.getSncpClient(srcService);
-                    final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();                    
+                    final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                     SimpleEntry<Class, AnyValue> resEntry = cacheResource.get(resourceName);
                     AnyValue sourceConf = resEntry == null ? null : resEntry.getValue();
                     if (sourceConf == null) {
@@ -408,10 +408,10 @@ public abstract class NodeServer {
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
             if (groups.isEmpty() && isSNCP() && this.sncpGroup != null) groups.add(this.sncpGroup);
 
-            final boolean localed = (this.sncpAddress == null && entry.isEmptyGroups() && !serviceImplClass.isInterface() && !Modifier.isAbstract(serviceImplClass.getModifiers())) //非SNCP的Server，通常是单点服务
+            final boolean localed = !entry.containsGroup("$cluster") && ((this.sncpAddress == null && entry.isEmptyGroups() && !serviceImplClass.isInterface() && !Modifier.isAbstract(serviceImplClass.getModifiers())) //非SNCP的Server，通常是单点服务
                 || groups.contains(this.sncpGroup) //本地IP含在内的
                 || (this.sncpGroup == null && entry.isEmptyGroups()) //空的SNCP配置
-                || serviceImplClass.getAnnotation(Local.class) != null;//本地模式
+                || serviceImplClass.getAnnotation(Local.class) != null);//本地模式
             if (localed && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
             final ResourceFactory.ResourceLoader resourceLoader = (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
                 try {

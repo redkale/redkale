@@ -529,7 +529,7 @@ public abstract class Sncp {
         final AnyValue conf) {
         if (serviceTypeOrImplClass == null) return null;
         if (!Service.class.isAssignableFrom(serviceTypeOrImplClass)) return null;
-        Set<String> groups = groups0 == null ? new HashSet<>() : groups0;
+        final Set<String> groups = groups0 == null ? new HashSet<>() : groups0;
         ResourceFactory.checkResourceName(name);
         int mod = serviceTypeOrImplClass.getModifiers();
         boolean realed = !(java.lang.reflect.Modifier.isAbstract(mod) || serviceTypeOrImplClass.isInterface());
