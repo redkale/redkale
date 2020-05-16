@@ -81,23 +81,35 @@ public final class Transport {
     public final InetSocketAddress[] updateRemoteAddresses(final Collection<InetSocketAddress> addresses) {
         final TransportNode[] oldNodes = this.transportNodes;
         synchronized (this) {
-            List<TransportNode> list = new ArrayList<>();
-            if (addresses != null) {
-                for (InetSocketAddress addr : addresses) {
-                    if (clientAddress != null && clientAddress.equals(addr)) continue;
-                    boolean hasold = false;
-                    for (TransportNode oldAddr : oldNodes) {
-                        if (oldAddr.getAddress().equals(addr)) {
-                            list.add(oldAddr);
-                            hasold = true;
-                            break;
-                        }
+            boolean same = false;
+            if (this.transportNodes != null && addresses != null && this.transportNodes.length == addresses.size()) {
+                same = true;
+                for (TransportNode node : this.transportNodes) {
+                    if (!addresses.contains(node.getAddress())) {
+                        same = false;
+                        break;
                     }
-                    if (hasold) continue;
-                    list.add(new TransportNode(factory.poolmaxconns, addr));
                 }
             }
-            this.transportNodes = list.toArray(new TransportNode[list.size()]);
+            if (!same) {
+                List<TransportNode> list = new ArrayList<>();
+                if (addresses != null) {
+                    for (InetSocketAddress addr : addresses) {
+                        if (clientAddress != null && clientAddress.equals(addr)) continue;
+                        boolean hasold = false;
+                        for (TransportNode oldAddr : oldNodes) {
+                            if (oldAddr.getAddress().equals(addr)) {
+                                list.add(oldAddr);
+                                hasold = true;
+                                break;
+                            }
+                        }
+                        if (hasold) continue;
+                        list.add(new TransportNode(factory.poolmaxconns, addr));
+                    }
+                }
+                this.transportNodes = list.toArray(new TransportNode[list.size()]);
+            }
         }
         InetSocketAddress[] rs = new InetSocketAddress[oldNodes.length];
         for (int i = 0; i < rs.length; i++) {
