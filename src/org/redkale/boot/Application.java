@@ -945,7 +945,11 @@ public final class Application {
                 serversLatch.countDown();
             }
         });
-
+        if (clusterAgents != null) {
+            for (ClusterAgent cluster : clusterAgents) {
+                if (cluster != null) cluster.destroy(cluster.getConfig());
+            }
+        }
         for (DataSource source : dataSources) {
             if (source == null) continue;
             try {

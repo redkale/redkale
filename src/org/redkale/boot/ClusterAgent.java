@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import java.net.InetSocketAddress;
 import java.util.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.sncp.Sncp;
@@ -80,6 +81,9 @@ public abstract class ClusterAgent {
         }
         //远程模式不注册
     }
+
+    //获取远程服务的可用ip列表
+    public abstract List<InetSocketAddress> queryAddress(NodeServer server, Service service);
 
     //注册服务
     public abstract void register(NodeServer server, Service service);
