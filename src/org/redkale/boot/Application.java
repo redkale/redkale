@@ -320,8 +320,7 @@ public final class Application {
                             logger.log(Level.SEVERE, "load application cluster resource, but not " + ClusterAgent.class.getSimpleName() + " error: " + clusterConf);
                         } else {
                             ClusterAgent cluster = (ClusterAgent) type.getDeclaredConstructor().newInstance();
-                            cluster.setNodeid(this.nodeid);
-                            cluster.init(clusterConf);
+                            cluster.setConfig(clusterConf);
                             clusters.add(cluster);
                         }
                     } catch (Exception e) {
@@ -353,12 +352,17 @@ public final class Application {
                     return true;
                 });
         }
-        this.clusterAgents = clusters == null ? null : clusters.toArray(new ClusterAgent[clusters.size()]);
         this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, (SSLContext) null, readTimeoutSeconds, writeTimeoutSeconds, strategy);
         DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("net.transport.poolmaxconns", "100"))
             .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"))
             .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.checkinterval", "30"));
         this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
+        for (ClusterAgent cluster : clusters) {
+            cluster.setNodeid(this.nodeid);
+            cluster.setTransportFactory(this.sncpTransportFactory);
+            cluster.init(cluster.getConfig());
+        }
+        this.clusterAgents = clusters.isEmpty() ? null : clusters.toArray(new ClusterAgent[clusters.size()]);
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
     }

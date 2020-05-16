@@ -520,7 +520,7 @@ public abstract class NodeServer {
         for (ClusterAgent cluster : clusters) {
             if (!cluster.containsProtocol(server.getProtocol())) continue;
             if (!cluster.containsPort(server.getSocketAddress().getPort())) continue;
-            cluster.register(this, application.getSncpTransportFactory(), localServices, remoteServices);
+            cluster.register(this, localServices, remoteServices);
         }
     }
 
@@ -531,7 +531,7 @@ public abstract class NodeServer {
         for (ClusterAgent cluster : clusters) {
             if (!cluster.containsProtocol(server.getProtocol())) continue;
             if (!cluster.containsPort(server.getSocketAddress().getPort())) continue;
-            cluster.deregister(this, application.getSncpTransportFactory(), localServices, remoteServices);
+            cluster.deregister(this, localServices, remoteServices);
         }
     }
 

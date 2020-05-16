@@ -33,6 +33,8 @@ public abstract class ClusterAgent {
 
     protected AnyValue config;
 
+    protected TransportFactory transportFactory;
+
     public void init(AnyValue config) {
         this.config = config;
         this.name = config.getValue("name", "");
@@ -67,29 +69,23 @@ public abstract class ClusterAgent {
     }
 
     //注册服务
-    public void register(NodeServer ns, TransportFactory transportFactory, Set<Service> localServices, Set<Service> remoteServices) {
+    public void register(NodeServer ns, Set<Service> localServices, Set<Service> remoteServices) {
         if (localServices.isEmpty()) return;
         //注册本地模式
         for (Service service : localServices) {
-            register(ns, transportFactory, service);
+            register(ns, service);
         }
-        Server server = ns.getServer();
-        String netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
         //远程模式加载IP列表, 只能是SNCP协议        
         for (Service service : remoteServices) {
-            if (!Sncp.isSncpDyn(service)) continue;
-            List<InetSocketAddress> addrs = queryAddress(ns, service);
-            if (addrs != null && !addrs.isEmpty()) {
-                Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), netprotocol, ns.getSncpAddress(), null, addrs);
-            }
+            updateTransport(ns, service);
         }
     }
 
     //注销服务
-    public void deregister(NodeServer ns, TransportFactory transportFactory, Set<Service> localServices, Set<Service> remoteServices) {
+    public void deregister(NodeServer ns, Set<Service> localServices, Set<Service> remoteServices) {
         //注销本地模式
         for (Service service : localServices) {
-            deregister(ns, transportFactory, service);
+            deregister(ns, service);
         }
         //远程模式不注册
     }
@@ -98,10 +94,21 @@ public abstract class ClusterAgent {
     public abstract List<InetSocketAddress> queryAddress(NodeServer ns, Service service);
 
     //注册服务
-    public abstract void register(NodeServer ns, TransportFactory transportFactory, Service service);
+    public abstract void register(NodeServer ns, Service service);
 
     //注销服务
-    public abstract void deregister(NodeServer ns, TransportFactory transportFactory, Service service);
+    public abstract void deregister(NodeServer ns, Service service);
+
+    //格式: protocol:classtype-resourcename
+    public void updateTransport(NodeServer ns, Service service) {
+        Server server = ns.getServer();
+        String netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
+        if (!Sncp.isSncpDyn(service)) return;
+        List<InetSocketAddress> addrs = queryAddress(ns, service);
+        if (addrs != null && !addrs.isEmpty()) {
+            Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), netprotocol, ns.getSncpAddress(), null, addrs);
+        }
+    }
 
     //格式: protocol:classtype-resourcename
     public String generateServiceType(NodeServer ns, Service service) {
@@ -125,6 +132,14 @@ public abstract class ClusterAgent {
 
     public void setNodeid(int nodeid) {
         this.nodeid = nodeid;
+    }
+
+    public TransportFactory getTransportFactory() {
+        return transportFactory;
+    }
+
+    public void setTransportFactory(TransportFactory transportFactory) {
+        this.transportFactory = transportFactory;
     }
 
     public String getName() {
