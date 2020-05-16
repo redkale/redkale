@@ -19,10 +19,10 @@
   serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2    
 -->
 <!--     
-    address:  本地局域网的IP地址， 默认值为默认网卡的ip，当不使用默认值需要指定值，如192.168.1.22
+    address:        本地局域网的IP地址， 默认值为默认网卡的ip，当不使用默认值需要指定值，如192.168.1.22
     port: required  程序的管理Server的端口，用于关闭或者与监管系统进行数据交互
-    nodeid: int  进程节点ID值，默认0，一般用于分布式环境
-    lib:  加上额外的lib路径,多个路径用分号;隔开； 默认为空。  例如: ${APP_HOME}/lib/a.jar;${APP_HOME}/lib2/b.jar;
+    nodeid: int     进程节点ID值，默认0，一般用于分布式环境
+    lib:            加上额外的lib路径,多个路径用分号;隔开； 默认为空。  例如: ${APP_HOME}/lib/a.jar;${APP_HOME}/lib2/b.jar;
 -->
 <application nodeid="10" port="6560" lib="">  
     
@@ -35,21 +35,31 @@
         <!--
             【节点全局唯一】
             transport节点只能有一个，用于配置所有Transport的池参数，没配置该节点将自动创建一个。
-            threads： 线程总数， 默认: <group>节点数*CPU核数*2
-            bufferCapacity: ByteBuffer的初始化大小， 默认: 32K; 
-            bufferPoolSize： ByteBuffer池的大小，默认: 线程总数*4
-            readTimeoutSeconds: TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
+            threads：            线程总数， 默认: <group>节点数*CPU核数*2
+            bufferCapacity:      ByteBuffer的初始化大小， 默认: 32K; 
+            bufferPoolSize：     ByteBuffer池的大小，默认: 线程总数*4
+            readTimeoutSeconds:  TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
             writeTimeoutSeconds: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制
-            strategy: 远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
+            strategy:            远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
         -->
         <transport bufferCapacity="32K" bufferPoolSize="32" threads="32" readTimeoutSeconds="6" writeTimeoutSeconds="6"/>
         
         <!--
+            第三方服务发现管理接口
+            name:      cluster名称，不能包含特殊字符。
+            value：    类名，必须是org.redkale.watch.ClusterAgent的子类
+            protocols: 服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
+            ports:     服务发现可以处理的端口， 多个端口用分号;隔开
+        <cluster name="cluster1" value="org.redkalex.consul.ConsulClusterAgent" protocols="SNCP;" ports="7070;7071">
+            <property name="xxxxxx" value="XXXXXXXX"/>
+        </cluster>
+        -->
+        <!--
             一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             一个group节点对应一个 Transport 对象。
-            name: 服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
-            protocol：值范围：UDP TCP， 默认TCP
-            subprotocol: 子协议，预留字段。默认值为空
+            name:         服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
+            protocol：    值范围：UDP TCP， 默认TCP
+            subprotocol:  子协议，预留字段。默认值为空
             注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。
         -->
         <group name="" protocol="TCP">
@@ -64,10 +74,10 @@
         
         <!--
             全局的数据源设置, 可以是CacheSource、DataSource， JDBC的DataSource通常通过persistence.xml配置，此处多用于CacheSource的配置
-            name:  资源名，用于依赖注入。
-            value：类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。如果是DataSource.class，系统自动映射成DataJdbcSource.class
-            groups: 指定groups。
-            xxx: 其他属性与子节点通过Service.init方法传入的AnyValue获取。
+            name:    资源名，用于依赖注入。
+            value：  类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。如果是DataSource.class，系统自动映射成DataJdbcSource.class
+            groups:  指定groups。
+            xxx:     其他属性与子节点通过Service.init方法传入的AnyValue获取。
         -->
         <source name="redis" value="org.redkalex.cache.RedisCacheSource" xxx="16">
             <node addr="127.0.0.1" port="7070"/>
@@ -108,35 +118,35 @@
                 
     </resources> 
     <!--
-        protocol: required  server所启动的协议，Redkale内置的有HTTP、SNCP、WATCH。协议均使用TCP实现; WATCH服务只能存在一个。
-        name: 服务的名称，用于监控识别，一个配置文件中的server.name不能重复,命名规则: 字母、数字、下划线
-        host:  服务所占address ， 默认: 0.0.0.0
-        port:  required 服务所占端口 
-        root:  如果是web类型服务，则包含页面  默认:{APP_HOME}/root
-        lib: server额外的class目录， 默认为${APP_HOME}/libs/*; 
-        excludelibs: 排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
-        charset: 文本编码， 默认: UTF-8
-        backlog:  默认10K
-        threads： 线程数， 默认: CPU核数*2，最小8个
-        maxconns：最大连接数, 小于1表示无限制， 默认: 0
-        maxbody: request.body最大值， 默认: 64K
-        bufferCapacity: ByteBuffer的初始化大小， TCP默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上); UDP默认: 1350B
-        bufferPoolSize： ByteBuffer池的大小，默认: 线程数*4
-        responsePoolSize： Response池的大小，默认: 线程数*2
+        protocol: required   server所启动的协议，Redkale内置的有HTTP、SNCP、WATCH。协议均使用TCP实现; WATCH服务只能存在一个。
+        name:                服务的名称，用于监控识别，一个配置文件中的server.name不能重复,命名规则: 字母、数字、下划线
+        host:                服务所占address ， 默认: 0.0.0.0
+        port:                required 服务所占端口 
+        root:                如果是web类型服务，则包含页面  默认:{APP_HOME}/root
+        lib:                 server额外的class目录， 默认为${APP_HOME}/libs/*; 
+        excludelibs:         排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
+        charset:             文本编码， 默认: UTF-8
+        backlog:             默认10K
+        threads：            线程数， 默认: CPU核数*2，最小8个
+        maxconns：           最大连接数, 小于1表示无限制， 默认: 0
+        maxbody:             request.body最大值， 默认: 64K
+        bufferCapacity:      ByteBuffer的初始化大小， TCP默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上); UDP默认: 1350B
+        bufferPoolSize：     ByteBuffer池的大小，默认: 线程数*4
+        responsePoolSize：   Response池的大小，默认: 线程数*2
         aliveTimeoutSeconds: KeepAlive读操作超时秒数， 默认30， 0表示永久不超时; -1表示禁止KeepAlive
-        readTimeoutSeconds: 读操作超时秒数， 默认0， 表示永久不超时
-        writeTimeoutSeconds:  写操作超时秒数， 默认0， 表示永久不超时
-        netimpl: ProtocolServer的实现类。TCP情况下值可以是aio或nio，默认值为aio；UDP情况下值可以是bio，默认值为bio；
-        interceptor: 启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null
+        readTimeoutSeconds:  读操作超时秒数， 默认0， 表示永久不超时
+        writeTimeoutSeconds: 写操作超时秒数， 默认0， 表示永久不超时
+        netimpl:             ProtocolServer的实现类。TCP情况下值可以是aio或nio，默认值为aio；UDP情况下值可以是bio，默认值为bio；
+        interceptor:         启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
         
         <!-- 
            【节点在<server>中唯一】
            value: 创建SSLContext的实现类, 可自定义，必须是org.redkale.net.SSLCreator的子类
-           clientauth: true/false/want
-           keystorepass: KEY密码
-           keystorefile: KEY文件
+           clientauth:     true/false/want
+           keystorepass:   KEY密码
+           keystorefile:   KEY文件
            truststorepass: TRUST密码
            truststorefile: TRUST文件
         -->
@@ -149,10 +159,10 @@
            autoload="false" 需要显著的指定Service类
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开           
-           groups:   所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性.
-                    当 protocol == SNCP 时 group表示当前Server与哪些节点组关联。
-                    当 protocol != SNCP 时 group只能是空或者一个group的节点值，不能为多个节点值。
-                    特殊值"$cluster", 视为通过第三方服务注册发现管理工具来获取远程模式的ip端口信息
+           groups:    所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性.
+                         当 protocol == SNCP 时 group表示当前Server与哪些节点组关联。
+                         当 protocol != SNCP 时 group只能是空或者一个group的节点值，不能为多个节点值。
+                         特殊值"$cluster", 视为通过第三方服务注册发现管理工具来获取远程模式的ip端口信息
         -->
         <services autoload="true" includes="" excludes="">
 
@@ -176,8 +186,8 @@
            加载所有的Filter服务;
            autoload="true"  默认值.  
            autoload="false" 需要显著的指定Filter类
-           includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
-           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开    
+           includes：       当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes：       当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开    
         -->
         <filters autoload="true" includes="" excludes="">
             
@@ -265,21 +275,21 @@
            当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点
            webroot: web资源的根目录, 默认取server节点中的root值
            servlet: 静态资源HttpServlet的实现，默认使用HttpResourceServlet
-           index : 启始页，默认值：index.html
+           index :  启始页，默认值：index.html
         -->
         <resource-servlet webroot="root" index="index.html">
             <!--
                 【节点在<resource-servlet>中唯一】
                 资源缓存的配置, 默认存在一个含默认属性的caches节点
-                limit:  资源缓存最大容量， 默认: 0, 为0表示不缓存， 单位可以是B、K、M、G，不区分大小写
+                limit:     资源缓存最大容量， 默认: 0, 为0表示不缓存， 单位可以是B、K、M、G，不区分大小写
                 lengthmax: 可缓存的文件大小上限， 默认: 1M（超过1M的文件不会被缓存）
-                watch: 是否监控缓存文件的变化， 默认为false，不监控
+                watch:     是否监控缓存文件的变化， 默认为false，不监控
             -->
             <cache  limit="0M" lengthmax="1M" watch="false"/>
             <!--
                支持类似nginx中的rewrite， 目前只支持静态资源对静态资源的跳转。
-               type: 匹配的类型, 目前只支持location(匹配requestURI), 默认: location
-               match: 匹配的正则表达式
+               type:    匹配的类型, 目前只支持location(匹配requestURI), 默认: location
+               match:   匹配的正则表达式
                forward: 需跳转后的资源链接
                例如下面例子是将/xxx-yyy.html的页面全部跳转到/xxx.html
             -->
@@ -287,11 +297,11 @@
         </resource-servlet>
         <!-- 
            加载所有的Servlet服务;
-           path:  servlet的ContextPath前缀 默认为空
+           path:            servlet的ContextPath前缀 默认为空
            autoload="true"  默认值. 自动加载classpath下所有的Servlet类 
            autoload="false" 需要显著的指定Service类
-           includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
-           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           includes：       当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes：       当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
         -->
         <servlets path="/pipes" autoload="true" includes="" excludes="">
             <!-- 
