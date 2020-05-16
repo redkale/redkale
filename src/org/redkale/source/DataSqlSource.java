@@ -313,7 +313,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
      * @return 影响的记录条数
      */
     @Override
-    public <T> int insert(@RpcCall(DataCallArrayAttribute.class) T... entitys) {
+    public <T> int insert(T... entitys) {
         if (entitys.length == 0) return 0;
         checkEntity("insert", false, entitys);
         final EntityInfo<T> info = loadEntityInfo((Class<T>) entitys[0].getClass());
@@ -340,7 +340,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
-    public <T> CompletableFuture<Integer> insertAsync(@RpcCall(DataCallArrayAttribute.class) T... entitys) {
+    public <T> CompletableFuture<Integer> insertAsync(T... entitys) {
         if (entitys.length == 0) return CompletableFuture.completedFuture(0);
         CompletableFuture future = checkEntity("insert", true, entitys);
         if (future != null) return future;
