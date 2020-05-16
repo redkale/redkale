@@ -71,16 +71,10 @@ public final class SncpClient {
     protected Transport remoteGroupTransport;
 
     //本地模式
-    protected String sameGroup;
+    protected String localGroup;
 
     //本地模式
-    protected Transport sameGroupTransport;
-
-    //本地模式
-    protected Set<String> diffGroups;
-
-    //本地模式
-    protected Transport[] diffGroupTransports;
+    protected Transport localGroupTransport;
 
     public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
@@ -147,36 +141,20 @@ public final class SncpClient {
         this.remoteGroupTransport = remoteGroupTransport;
     }
 
-    public String getSameGroup() {
-        return sameGroup;
+    public String getLocalGroup() {
+        return localGroup;
     }
 
-    public void setSameGroup(String sameGroup) {
-        this.sameGroup = sameGroup;
+    public void setLocalGroup(String localGroup) {
+        this.localGroup = localGroup;
     }
 
-    public Transport getSameGroupTransport() {
-        return sameGroupTransport;
+    public Transport getLocalGroupTransport() {
+        return localGroupTransport;
     }
 
-    public void setSameGroupTransport(Transport sameGroupTransport) {
-        this.sameGroupTransport = sameGroupTransport;
-    }
-
-    public Set<String> getDiffGroups() {
-        return diffGroups;
-    }
-
-    public void setDiffGroups(Set<String> diffGroups) {
-        this.diffGroups = diffGroups;
-    }
-
-    public Transport[] getDiffGroupTransports() {
-        return diffGroupTransports;
-    }
-
-    public void setDiffGroupTransports(Transport[] diffGroupTransports) {
-        this.diffGroupTransports = diffGroupTransports;
+    public void setLocalGroupTransport(Transport localGroupTransport) {
+        this.localGroupTransport = localGroupTransport;
     }
 
     @Override
@@ -191,18 +169,10 @@ public final class SncpClient {
     public String toSimpleString() { //给Sncp产生的Service用
         String service = serviceClass.getName();
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
-        List<InetSocketAddress> diffaddrs = new ArrayList<>();
-        if (diffGroupTransports != null && diffGroupTransports.length > 1) {
-            for (Transport t : diffGroupTransports) {
-                diffaddrs.addAll(Utility.ofList(t.getRemoteAddresses()));
-            }
-        }
         return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceversion = " + serviceversion
             + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
-            + ((sameGroup == null || sameGroup.isEmpty()) ? "" : ", sameGroup = " + sameGroup)
-            + (sameGroupTransport == null ? "" : ", sameGroupTransport = " + Arrays.toString(sameGroupTransport.getRemoteAddresses()))
-            + ((diffGroups == null || diffGroups.isEmpty()) ? "" : ", diffGroups = " + diffGroups)
-            + ((diffGroupTransports == null || diffGroupTransports.length < 1) ? "" : ", diffGroupTransports = " + diffaddrs)
+            + ((localGroup == null || localGroup.isEmpty()) ? "" : ", localGroup = " + localGroup)
+            + (localGroupTransport == null ? "" : ", localGroupTransport = " + Arrays.toString(localGroupTransport.getRemoteAddresses()))
             + ((remoteGroups == null || remoteGroups.isEmpty()) ? "" : ", remoteGroups = " + remoteGroups)
             + (remoteGroupTransport == null ? "" : ", remoteGroupTransport = " + Arrays.toString(remoteGroupTransport.getRemoteAddresses()))
             + ", actions.size = " + actions.length + ")";
@@ -247,46 +217,6 @@ public final class SncpClient {
         //带SncpDyn必须排在前面
         multis.addAll(list);
         return multis;
-    }
-
-    public void remoteSameGroup(final int index, final Object... params) {
-        if (sameGroupTransport == null) return;
-        final SncpAction action = actions[index];
-        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
-        for (InetSocketAddress addr : sameGroupTransport.getRemoteAddresses()) {
-            remote0(null, sameGroupTransport, addr, action, params);
-        }
-    }
-
-    public void asyncRemoteSameGroup(final int index, final Object... params) {
-        if (sameGroupTransport == null) return;
-        if (executor != null) {
-            executor.execute(() -> {
-                remoteSameGroup(index, params);
-            });
-        } else {
-            remoteSameGroup(index, params);
-        }
-    }
-
-    public void remoteDiffGroup(final int index, final Object... params) {
-        if (diffGroupTransports == null || diffGroupTransports.length < 1) return;
-        final SncpAction action = actions[index];
-        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null; //不能让远程调用handler，因为之前本地方法已经调用过了
-        for (Transport transport : diffGroupTransports) {
-            remote0(null, transport, null, action, params);
-        }
-    }
-
-    public void asyncRemoteDiffGroup(final int index, final Object... params) {
-        if (diffGroupTransports == null || diffGroupTransports.length < 1) return;
-        if (executor != null) {
-            executor.execute(() -> {
-                remoteDiffGroup(index, params);
-            });
-        } else {
-            remoteDiffGroup(index, params);
-        }
     }
 
     //只给远程模式调用的

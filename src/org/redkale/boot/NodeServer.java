@@ -271,8 +271,7 @@ public abstract class NodeServer {
                             SncpClient client = Sncp.getSncpClient(srcService);
                             final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                             final Set<String> groups = new HashSet<>();
-                            if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
-                            if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
+                            if (client != null && client.getLocalGroup() != null) groups.add(client.getLocalGroup());
                             source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
                         }
                     }
@@ -305,9 +304,8 @@ public abstract class NodeServer {
                     SncpClient client = Sncp.getSncpClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                     final Set<String> groups = new HashSet<>();
-                    if (client != null && client.getSameGroup() != null) groups.add(client.getSameGroup());
-                    if (client != null && client.getDiffGroups() != null) groups.addAll(client.getDiffGroups());
-
+                    if (client != null && client.getLocalGroup() != null) groups.add(client.getLocalGroup());
+                    
                     SimpleEntry<Class, AnyValue> resEntry = cacheResource.get(resourceName);
                     AnyValue sourceConf = resEntry == null ? null : resEntry.getValue();
                     if (sourceConf == null) {

@@ -454,10 +454,8 @@ public abstract class Sncp {
                     Set<String> diffGroups = groups == null ? new HashSet<>() : new HashSet<>(groups);
                     String sameGroup = transportFactory.findGroupName(clientSncpAddress);
                     if (sameGroup != null) diffGroups.remove(sameGroup);
-                    client.setSameGroup(sameGroup);
-                    client.setDiffGroups(diffGroups);
-                    client.setSameGroupTransport(transportFactory.loadSameGroupTransport(clientSncpAddress));
-                    client.setDiffGroupTransports(transportFactory.loadDiffGroupTransports(clientSncpAddress, diffGroups));
+                    client.setLocalGroup(sameGroup);
+                    client.setLocalGroupTransport(transportFactory.loadSameGroupTransport(clientSncpAddress));
                     e.set(rs, client);
                     transportFactory.addSncpService(rs);
                 } catch (NoSuchFieldException ne) {
@@ -519,7 +517,7 @@ public abstract class Sncp {
      * @param serviceTypeOrImplClass Service类
      * @param transportFactory       TransportFactory
      * @param clientAddress          本地IP地址
-     * @param groups0                 所有的组节点，包含自身
+     * @param groups0                所有的组节点，包含自身
      * @param conf                   启动配置项
      *
      * @return Service的远程模式实例

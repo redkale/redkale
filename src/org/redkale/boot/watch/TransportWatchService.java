@@ -73,13 +73,8 @@ public class TransportWatchService extends AbstractWatchService {
                         client.getRemoteGroupTransport().addRemoteAddresses(address);
                     }
                 } else {
-                    if (group.equals(client.getSameGroup())) {
-                        client.getSameGroupTransport().addRemoteAddresses(address);
-                    }
-                    if (client.getDiffGroups() != null && client.getDiffGroups().contains(group)) {
-                        for (Transport transport : client.getDiffGroupTransports()) {
-                            transport.addRemoteAddresses(address);
-                        }
+                    if (group.equals(client.getLocalGroup())) {
+                        client.getLocalGroupTransport().addRemoteAddresses(address);
                     }
                 }
             }
@@ -115,13 +110,8 @@ public class TransportWatchService extends AbstractWatchService {
                         client.getRemoteGroupTransport().removeRemoteAddresses(address);
                     }
                 } else {
-                    if (group.equals(client.getSameGroup())) {
-                        client.getSameGroupTransport().removeRemoteAddresses(address);
-                    }
-                    if (client.getDiffGroups() != null && client.getDiffGroups().contains(group)) {
-                        for (Transport transport : client.getDiffGroupTransports()) {
-                            transport.removeRemoteAddresses(address);
-                        }
+                    if (group.equals(client.getLocalGroup())) {
+                        client.getLocalGroupTransport().removeRemoteAddresses(address);
                     }
                 }
             }
