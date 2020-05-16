@@ -50,7 +50,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
     public double queryDoubleResult(String a, int b, double value) {
         return value + 1;
     }
-    
+
     public static class CallAttribute implements Attribute<SncpTestBean, Long> {
 
         @Override
@@ -83,7 +83,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     @Override
-    public void insert(@RpcCall(RpcCallAttribute.RpcCallArrayAttribute.class) SncpTestBean... beans) {
+    public void insert(@RpcCall(RpcCallArrayAttribute.class) SncpTestBean... beans) {
         for (SncpTestBean bean : beans) {
             bean.setId(System.currentTimeMillis());
         }

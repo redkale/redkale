@@ -72,10 +72,6 @@ public class TransportWatchService extends AbstractWatchService {
                     if (client.getRemoteGroups() != null && client.getRemoteGroups().contains(group)) {
                         client.getRemoteGroupTransport().addRemoteAddresses(address);
                     }
-                } else {
-                    if (group.equals(client.getLocalGroup())) {
-                        client.getLocalGroupTransport().addRemoteAddresses(address);
-                    }
                 }
             }
             DefaultAnyValue node = DefaultAnyValue.create("addr", addr).addValue("port", port);
@@ -108,10 +104,6 @@ public class TransportWatchService extends AbstractWatchService {
                 if (Sncp.isRemote(service)) {
                     if (client.getRemoteGroups() != null && client.getRemoteGroups().contains(group)) {
                         client.getRemoteGroupTransport().removeRemoteAddresses(address);
-                    }
-                } else {
-                    if (group.equals(client.getLocalGroup())) {
-                        client.getLocalGroupTransport().removeRemoteAddresses(address);
                     }
                 }
             }

@@ -70,12 +70,6 @@ public final class SncpClient {
     //远程模式
     protected Transport remoteGroupTransport;
 
-    //本地模式
-    protected String localGroup;
-
-    //本地模式
-    protected Transport localGroupTransport;
-
     public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
         this.remote = remote;
@@ -141,22 +135,6 @@ public final class SncpClient {
         this.remoteGroupTransport = remoteGroupTransport;
     }
 
-    public String getLocalGroup() {
-        return localGroup;
-    }
-
-    public void setLocalGroup(String localGroup) {
-        this.localGroup = localGroup;
-    }
-
-    public Transport getLocalGroupTransport() {
-        return localGroupTransport;
-    }
-
-    public void setLocalGroupTransport(Transport localGroupTransport) {
-        this.localGroupTransport = localGroupTransport;
-    }
-
     @Override
     public String toString() {
         String service = serviceClass.getName();
@@ -171,8 +149,6 @@ public final class SncpClient {
         if (remote) service = service.replace(Sncp.LOCALPREFIX, Sncp.REMOTEPREFIX);
         return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceversion = " + serviceversion
             + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
-            + ((localGroup == null || localGroup.isEmpty()) ? "" : ", localGroup = " + localGroup)
-            + (localGroupTransport == null ? "" : ", localGroupTransport = " + Arrays.toString(localGroupTransport.getRemoteAddresses()))
             + ((remoteGroups == null || remoteGroups.isEmpty()) ? "" : ", remoteGroups = " + remoteGroups)
             + (remoteGroupTransport == null ? "" : ", remoteGroupTransport = " + Arrays.toString(remoteGroupTransport.getRemoteAddresses()))
             + ", actions.size = " + actions.length + ")";

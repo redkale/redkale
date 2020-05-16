@@ -271,7 +271,6 @@ public abstract class NodeServer {
                             SncpClient client = Sncp.getSncpClient(srcService);
                             final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                             final Set<String> groups = new HashSet<>();
-                            if (client != null && client.getLocalGroup() != null) groups.add(client.getLocalGroup());
                             source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
                         }
                     }
@@ -302,10 +301,7 @@ public abstract class NodeServer {
                     if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 CacheSource 
                     final Service srcService = (Service) src;
                     SncpClient client = Sncp.getSncpClient(srcService);
-                    final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                    final Set<String> groups = new HashSet<>();
-                    if (client != null && client.getLocalGroup() != null) groups.add(client.getLocalGroup());
-                    
+                    final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();                    
                     SimpleEntry<Class, AnyValue> resEntry = cacheResource.get(resourceName);
                     AnyValue sourceConf = resEntry == null ? null : resEntry.getValue();
                     if (sourceConf == null) {
@@ -315,7 +311,7 @@ public abstract class NodeServer {
                     final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("value"));
                     Object source = null;
                     if (CacheSource.class.isAssignableFrom(sourceType)) { // CacheSource
-                        source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                        source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, null, Sncp.getConf(srcService));
                         Type genericType = field.getGenericType();
                         ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                         Type valType = pt == null ? null : pt.getActualTypeArguments()[0];

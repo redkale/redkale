@@ -451,11 +451,6 @@ public abstract class Sncp {
                     Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     e.setAccessible(true);
                     client = new SncpClient(name, serviceImplClass, rs, transportFactory, false, newClazz, clientSncpAddress);
-                    Set<String> diffGroups = groups == null ? new HashSet<>() : new HashSet<>(groups);
-                    String sameGroup = transportFactory.findGroupName(clientSncpAddress);
-                    if (sameGroup != null) diffGroups.remove(sameGroup);
-                    client.setLocalGroup(sameGroup);
-                    client.setLocalGroupTransport(transportFactory.loadSameGroupTransport(clientSncpAddress));
                     e.set(rs, client);
                     transportFactory.addSncpService(rs);
                 } catch (NoSuchFieldException ne) {
