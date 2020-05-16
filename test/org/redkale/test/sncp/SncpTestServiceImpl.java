@@ -83,7 +83,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     @Override
-    public void insert(@RpcCall(RpcCallAttribute.class) SncpTestBean... beans) {
+    public void insert(@RpcCall(RpcCallAttribute.RpcCallArrayAttribute.class) SncpTestBean... beans) {
         for (SncpTestBean bean : beans) {
             bean.setId(System.currentTimeMillis());
         }
