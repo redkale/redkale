@@ -12,7 +12,6 @@ import java.util.concurrent.*;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
-import org.redkale.source.DataCallArrayAttribute;
 import static org.redkale.test.sncp.SncpTest.*;
 import org.redkale.util.*;
 
@@ -84,7 +83,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     @Override
-    public void insert(@RpcCall(DataCallArrayAttribute.class) SncpTestBean... beans) {
+    public void insert(@RpcCall(RpcCallAttribute.class) SncpTestBean... beans) {
         for (SncpTestBean bean : beans) {
             bean.setId(System.currentTimeMillis());
         }
