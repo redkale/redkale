@@ -312,6 +312,23 @@ public final class Application {
                 logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity / 1024 + "K; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
             AnyValue[] clusterConfs = resources.getAnyValues("cluster");
+            if (clusterConfs != null && clusterConfs.length > 0) {
+                for (AnyValue clusterConf : clusterConfs) {
+                    try {
+                        Class type = classLoader.loadClass(clusterConf.getValue("value"));
+                        if (!ClusterAgent.class.isAssignableFrom(type)) {
+                            logger.log(Level.SEVERE, "load application cluster resource, but not " + ClusterAgent.class.getSimpleName() + " error: " + clusterConf);
+                        } else {
+                            ClusterAgent cluster = (ClusterAgent) type.getDeclaredConstructor().newInstance();
+                            cluster.setNodeid(this.nodeid);
+                            cluster.init(clusterConf);
+                            clusters.add(cluster);
+                        }
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, "load application cluster resource error: " + clusterConf, e);
+                    }
+                }
+            }
         }
         if (transportGroup == null) {
             final AtomicInteger counter = new AtomicInteger();

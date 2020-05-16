@@ -515,10 +515,24 @@ public abstract class NodeServer {
 
     //Service.init执行之前调用
     protected void preInitServices(Set<Service> localServices, Set<Service> remoteServices) {
+        final ClusterAgent[] clusters = application.clusterAgents;
+        if (clusters == null || clusters.length == 0) return;
+        for (ClusterAgent cluster : clusters) {
+            if (!cluster.containsProtocol(server.getProtocol())) continue;
+            if (!cluster.containsPort(server.getSocketAddress().getPort())) continue;
+            cluster.register(this, localServices, remoteServices);
+        }
     }
 
     //Service.destroy执行之前调用
     protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices) {
+        final ClusterAgent[] clusters = application.clusterAgents;
+        if (clusters == null || clusters.length == 0) return;
+        for (ClusterAgent cluster : clusters) {
+            if (!cluster.containsProtocol(server.getProtocol())) continue;
+            if (!cluster.containsPort(server.getSocketAddress().getPort())) continue;
+            cluster.deregister(this, localServices, remoteServices);
+        }
     }
 
     protected abstract ClassFilter<Filter> createFilterClassFilter();
