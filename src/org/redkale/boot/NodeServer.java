@@ -489,6 +489,7 @@ public abstract class NodeServer {
         localServices.clear();
         localServices.addAll(swlist);
         //this.loadPersistData();
+        preInitServices(localServices, remoteServices);
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
         localServices.stream().forEach(y -> {
             long s = System.currentTimeMillis();
@@ -502,7 +503,7 @@ public abstract class NodeServer {
             for (String s : wlist) {
                 sb.append(s);
             }
-            sb.append(threadName).append("All Services load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
+            sb.append(threadName).append("All Services load cost ").append(System.currentTimeMillis() - starts).append(" ms" + LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
@@ -510,6 +511,14 @@ public abstract class NodeServer {
     private void calcMaxLength(Service y) { //计算toString中的长度
         maxNameLength = Math.max(maxNameLength, Sncp.getResourceName(y).length());
         maxClassNameLength = Math.max(maxClassNameLength, Sncp.getResourceType(y).getName().length() + 1);
+    }
+
+    //Service.init执行之前调用
+    protected void preInitServices(Set<Service> localServices, Set<Service> remoteServices) {
+    }
+
+    //Service.destroy执行之前调用
+    protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices) {
     }
 
     protected abstract ClassFilter<Filter> createFilterClassFilter();
@@ -645,6 +654,7 @@ public abstract class NodeServer {
         if (interceptor != null) interceptor.preShutdown(this);
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final boolean finest = logger.isLoggable(Level.FINEST);
+        preDestroyServices(localServices, remoteServices);
         localServices.forEach(y -> {
             long s = System.currentTimeMillis();
             if (finest) logger.finest(y + " is destroying");
