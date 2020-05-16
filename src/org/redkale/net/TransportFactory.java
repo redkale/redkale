@@ -203,16 +203,11 @@ public class TransportFactory {
     }
 
     public Transport createTransportTCP(String name, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, "TCP", "", this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
+        return new Transport(name, "TCP", this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
     public Transport createTransport(String name, String protocol, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, protocol, "", this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
-    }
-
-    public Transport createTransport(String name, String protocol, String subprotocol,
-        final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, protocol, subprotocol, this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
+        return new Transport(name, protocol, this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
     public String findGroupName(InetSocketAddress addr) {
@@ -251,7 +246,6 @@ public class TransportFactory {
         if (!checkName(info.name)) throw new RuntimeException("Transport.group.name only 0-9 a-z A-Z _ cannot begin 0-9");
         TransportGroupInfo old = groupInfos.get(info.name);
         if (old != null && !old.protocol.equals(info.protocol)) throw new RuntimeException("Transport.group.name repeat but protocol is different");
-        if (old != null && !old.subprotocol.equals(info.subprotocol)) throw new RuntimeException("Transport.group.name repeat but subprotocol is different");
         for (InetSocketAddress addr : info.addresses) {
             if (!groupAddrs.getOrDefault(addr, info.name).equals(info.name)) throw new RuntimeException(addr + " repeat but different group.name");
         }
@@ -277,7 +271,7 @@ public class TransportFactory {
         }
         if (info == null) info = new TransportGroupInfo("TCP");
         if (sncpAddress != null) addresses.remove(sncpAddress);
-        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, info.subprotocol, this, this.bufferPool, this.channelGroup, this.sslContext, sncpAddress, addresses, this.strategy);
+        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, this, this.bufferPool, this.channelGroup, this.sslContext, sncpAddress, addresses, this.strategy);
     }
 
     public ExecutorService getExecutor() {

@@ -572,7 +572,7 @@ public final class Application {
                 if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                     throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
                 }
-                TransportGroupInfo ginfo = new TransportGroupInfo(group, protocol, conf.getValue("subprotocol", ""), new LinkedHashSet<>());
+                TransportGroupInfo ginfo = new TransportGroupInfo(group, protocol, new LinkedHashSet<>());
                 for (AnyValue node : conf.getAnyValues("node")) {
                     final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
                     ginfo.putAddress(addr);

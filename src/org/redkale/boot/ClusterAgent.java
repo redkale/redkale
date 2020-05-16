@@ -74,14 +74,13 @@ public abstract class ClusterAgent {
             register(ns, transportFactory, service);
         }
         Server server = ns.getServer();
-        String subprotocol = server instanceof SncpServer ? ((SncpServer) server).getSubprotocol() : "TCP";
+        String netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
         //远程模式加载IP列表, 只能是SNCP协议        
         for (Service service : remoteServices) {
             if (!Sncp.isSncpDyn(service)) continue;
             List<InetSocketAddress> addrs = queryAddress(ns, service);
             if (addrs != null && !addrs.isEmpty()) {
-                SncpClient client = Sncp.getSncpClient(service);
-                if (client != null) client.setRemoteGroupTransport(transportFactory.createTransport(Sncp.getResourceType(service).getName(), server.getProtocol(), subprotocol, ns.getSncpAddress(), addrs));
+                Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), netprotocol, ns.getSncpAddress(), null, addrs);
             }
         }
     }

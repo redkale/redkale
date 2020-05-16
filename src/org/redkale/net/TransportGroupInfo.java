@@ -24,30 +24,27 @@ public class TransportGroupInfo {
 
     protected String protocol; //协议 取值范围:  TCP、UDP
 
-    protected String subprotocol; //子协议，预留使用
-
     protected Set<InetSocketAddress> addresses; //地址列表， 对应 resources-&#62;group-&#62;node节点信息
 
     public TransportGroupInfo() {
     }
 
     public TransportGroupInfo(String name, InetSocketAddress... addrs) {
-        this(name, "TCP", "", Utility.ofSet(addrs));
+        this(name, "TCP", Utility.ofSet(addrs));
     }
 
     public TransportGroupInfo(String name, Set<InetSocketAddress> addrs) {
-        this(name, "TCP", "", addrs);
+        this(name, "TCP", addrs);
     }
 
-    public TransportGroupInfo(String name, String protocol, String subprotocol, InetSocketAddress... addrs) {
-        this(name, protocol, subprotocol, Utility.ofSet(addrs));
+    public TransportGroupInfo(String name, String protocol, InetSocketAddress... addrs) {
+        this(name, protocol, Utility.ofSet(addrs));
     }
 
-    public TransportGroupInfo(String name, String protocol, String subprotocol, Set<InetSocketAddress> addrs) {
+    public TransportGroupInfo(String name, String protocol, Set<InetSocketAddress> addrs) {
         Objects.requireNonNull(name, "Transport.group.name can not null");
         this.name = name;
         this.protocol = protocol == null ? "TCP" : protocol;
-        this.subprotocol = subprotocol == null ? "" : subprotocol;
         this.addresses = addrs;
     }
 
@@ -66,15 +63,6 @@ public class TransportGroupInfo {
 
     public void setProtocol(String protocol) {
         this.protocol = protocol == null ? "TCP" : protocol;
-    }
-
-    public String getSubprotocol() {
-        return subprotocol;
-    }
-
-    public void setSubprotocol(String subprotocol) {
-        this.subprotocol = subprotocol == null ? "" : subprotocol;
-        this.subprotocol = subprotocol;
     }
 
     public Set<InetSocketAddress> getAddresses() {

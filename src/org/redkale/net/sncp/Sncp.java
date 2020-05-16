@@ -139,6 +139,20 @@ public abstract class Sncp {
         }
     }
 
+    public static boolean updateTransport(Service service,
+        final TransportFactory transportFactory, String name, String protocol, InetSocketAddress clientAddress,
+        final Set<String> groups, final Collection<InetSocketAddress> addresses) {
+        if (!isSncpDyn(service)) return false;
+        SncpClient client = getSncpClient(service);
+        client.setRemoteGroups(groups);
+        if (client.getRemoteGroupTransport() != null) {
+            client.getRemoteGroupTransport().updateRemoteAddresses(addresses);
+        } else {
+            client.setRemoteGroupTransport(transportFactory.createTransport(name, protocol, clientAddress, addresses));
+        }
+        return true;
+    }
+
     static void checkAsyncModifier(Class param, Method method) {
         if (param == CompletionHandler.class) return;
         if (Modifier.isFinal(param.getModifiers())) {

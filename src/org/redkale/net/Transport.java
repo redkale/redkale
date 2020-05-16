@@ -38,8 +38,6 @@ public final class Transport {
 
     protected final String name; //即<group>的name属性
 
-    protected final String subprotocol; //即<group>的subprotocol属性
-
     protected final boolean tcp;
 
     protected final String protocol;
@@ -58,18 +56,16 @@ public final class Transport {
     //负载均衡策略
     protected final TransportStrategy strategy;
 
-    protected Transport(String name, String subprotocol, TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
+    protected Transport(String name, TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
         final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
-        this(name, DEFAULT_PROTOCOL, subprotocol, factory, transportBufferPool, transportChannelGroup, sslContext, clientAddress, addresses, strategy);
+        this(name, DEFAULT_PROTOCOL, factory, transportBufferPool, transportChannelGroup, sslContext, clientAddress, addresses, strategy);
     }
 
-    protected Transport(String name, String protocol, String subprotocol,
-        final TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
+    protected Transport(String name, String protocol, final TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
         final AsynchronousChannelGroup transportChannelGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
         final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
         this.name = name;
-        this.subprotocol = subprotocol == null ? "" : subprotocol.trim();
         this.protocol = protocol;
         this.factory = factory;
         factory.transportReferences.add(new WeakReference<>(this));
@@ -138,10 +134,6 @@ public final class Transport {
         return name;
     }
 
-    public String getSubprotocol() {
-        return subprotocol;
-    }
-
     public void close() {
         TransportNode[] nodes = this.transportNodes;
         if (nodes == null) return;
@@ -196,6 +188,10 @@ public final class Transport {
 
     public AsynchronousChannelGroup getTransportChannelGroup() {
         return group;
+    }
+
+    public String getProtocol() {
+        return protocol;
     }
 
     public boolean isTCP() {
