@@ -137,11 +137,11 @@ public abstract class ClusterAgent {
     }
 
     protected String generateCheckName(NodeServer ns, String protocol, Service service) {
-        return generateServiceName(ns, protocol, service) + "-Check";
+        return "check-" + generateServiceName(ns, protocol, service);
     }
 
     protected String generateCheckId(NodeServer ns, String protocol, Service service) {
-        return generateServiceId(ns, protocol, service) + "-Check";
+        return "check-" + generateServiceId(ns, protocol, service);
     }
 
     protected ConcurrentHashMap<String, ClusterEntry> getLocalEntrys() {
