@@ -85,8 +85,8 @@ public abstract class ClusterAgent {
         }
         //远程模式加载IP列表, 只能是SNCP协议        
         for (Service service : remoteServices) {
-            updateTransport(ns, protocol, service);
             ClusterEntry entry = new ClusterEntry(ns, protocol, service);
+            updateTransport(entry);
             remoteEntrys.put(entry.serviceid, entry);
         }
         afterRegister(ns, protocol);
@@ -105,7 +105,7 @@ public abstract class ClusterAgent {
     }
 
     //获取远程服务的可用ip列表
-    protected abstract Collection<InetSocketAddress> queryAddress(NodeServer ns, String protocol, Service service);
+    protected abstract Collection<InetSocketAddress> queryAddress(ClusterEntry entry);
 
     //注册服务
     protected abstract void register(NodeServer ns, String protocol, Service service);
@@ -114,21 +114,18 @@ public abstract class ClusterAgent {
     protected abstract void deregister(NodeServer ns, String protocol, Service service);
 
     //格式: protocol:classtype-resourcename
-    protected void updateTransport(NodeServer ns, String protocol, Service service) {
-        Server server = ns.getServer();
-        String netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
-        if (!Sncp.isSncpDyn(service)) return;
-        Collection<InetSocketAddress> addrs = queryAddress(ns, protocol, service);
-        if (addrs != null && !addrs.isEmpty()) {
-            Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), netprotocol, ns.getSncpAddress(), null, addrs);
-        }
+    protected void updateTransport(ClusterEntry entry) {
+        Service service = entry.serviceref.get();
+        if (service == null) return;
+        Collection<InetSocketAddress> addrs = queryAddress(entry);
+        Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netprotocol, entry.address, null, addrs);
     }
 
     //格式: protocol:classtype-resourcename
     protected String generateServiceName(NodeServer ns, String protocol, Service service) {
         if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + ":" + service.getClass().getName();
-        String name = Sncp.getResourceName(service);
-        return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + (name.isEmpty() ? "" : ("-" + name));
+        String resname = Sncp.getResourceName(service);
+        return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: protocol:classtype-resourcename:nodeid
@@ -217,6 +214,8 @@ public abstract class ClusterAgent {
 
         public String protocol;
 
+        public String netprotocol;
+
         public WeakReference<Service> serviceref;
 
         public InetSocketAddress address;
@@ -229,6 +228,8 @@ public abstract class ClusterAgent {
             this.protocol = protocol;
             this.address = ns.getSocketAddress();
             this.serviceref = new WeakReference(service);
+            Server server = ns.getServer();
+            this.netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
         }
     }
 }
