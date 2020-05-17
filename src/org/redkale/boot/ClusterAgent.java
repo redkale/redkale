@@ -89,6 +89,7 @@ public abstract class ClusterAgent {
             ClusterEntry entry = new ClusterEntry(ns, protocol, service);
             remoteEntrys.put(entry.serviceid, entry);
         }
+        afterRegister(ns, protocol);
     }
 
     //注销服务
@@ -98,6 +99,9 @@ public abstract class ClusterAgent {
             deregister(ns, protocol, service);
         }
         //远程模式不注册
+    }
+
+    protected void afterRegister(NodeServer ns, String protocol) {
     }
 
     //获取远程服务的可用ip列表
@@ -121,14 +125,31 @@ public abstract class ClusterAgent {
     }
 
     //格式: protocol:classtype-resourcename
-    protected String generateServiceType(NodeServer ns, String protocol, Service service) {
+    protected String generateServiceName(NodeServer ns, String protocol, Service service) {
         if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + ":" + service.getClass().getName();
-        return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service);
+        String name = Sncp.getResourceName(service);
+        return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + (name.isEmpty() ? "" : ("-" + name));
     }
 
     //格式: protocol:classtype-resourcename:nodeid
     protected String generateServiceId(NodeServer ns, String protocol, Service service) {
-        return generateServiceType(ns, protocol, service) + ":" + this.nodeid;
+        return generateServiceName(ns, protocol, service) + ":" + this.nodeid;
+    }
+
+    protected String generateCheckName(NodeServer ns, String protocol, Service service) {
+        return generateServiceName(ns, protocol, service) + "-Check";
+    }
+
+    protected String generateCheckId(NodeServer ns, String protocol, Service service) {
+        return generateServiceId(ns, protocol, service) + "-Check";
+    }
+
+    protected ConcurrentHashMap<String, ClusterEntry> getLocalEntrys() {
+        return localEntrys;
+    }
+
+    protected ConcurrentHashMap<String, ClusterEntry> getRemoteEntrys() {
+        return remoteEntrys;
     }
 
     @Override
@@ -188,7 +209,13 @@ public abstract class ClusterAgent {
 
         public String serviceid;
 
-        public String servicetype;
+        public String servicename;
+
+        public String checkid;
+
+        public String checkname;
+
+        public String protocol;
 
         public WeakReference<Service> serviceref;
 
@@ -196,7 +223,10 @@ public abstract class ClusterAgent {
 
         public ClusterEntry(NodeServer ns, String protocol, Service service) {
             this.serviceid = generateServiceId(ns, protocol, service);
-            this.servicetype = generateServiceType(ns, protocol, service);
+            this.servicename = generateServiceName(ns, protocol, service);
+            this.checkid = generateCheckId(ns, protocol, service);
+            this.checkname = generateCheckName(ns, protocol, service);
+            this.protocol = protocol;
             this.address = ns.getSocketAddress();
             this.serviceref = new WeakReference(service);
         }
