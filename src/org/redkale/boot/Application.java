@@ -817,15 +817,13 @@ public final class Application {
                                         for (FilterEntry<NodeServer> entry : entrys) {
                                             final Class<? extends NodeServer> type = entry.getType();
                                             NodeProtocol pros = type.getAnnotation(NodeProtocol.class);
-                                            for (String p : pros.value()) {
-                                                p = p.toUpperCase();
-                                                if ("SNCP".equals(p) || "HTTP".equals(p)) continue;
-                                                final Class<? extends NodeServer> old = nodeClasses.get(p);
-                                                if (old != null && old != type) {
-                                                    throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
-                                                }
-                                                nodeClasses.put(p, type);
+                                            String p = pros.value().toUpperCase();
+                                            if ("SNCP".equals(p) || "HTTP".equals(p)) continue;
+                                            final Class<? extends NodeServer> old = nodeClasses.get(p);
+                                            if (old != null && old != type) {
+                                                throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
                                             }
+                                            nodeClasses.put(p, type);
                                         }
                                     }
                                 }

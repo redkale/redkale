@@ -16,7 +16,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-@NodeProtocol({"WATCH"})
+@NodeProtocol("WATCH")
 public class NodeWatchServer extends NodeHttpServer {
 
     public NodeWatchServer(Application application, AnyValue serconf) {

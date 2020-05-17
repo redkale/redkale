@@ -81,7 +81,7 @@ public class ServerWatchService extends AbstractWatchService {
             protocol += "/HTTP";
         } else {
             NodeProtocol np = node.getClass().getAnnotation(NodeProtocol.class);
-            if (np != null && np.value().length > 0) protocol += "/" + np.value()[0];
+            protocol += "/" + np.value();
         }
         rs.put("name", server.getName());
         rs.put("protocol", protocol);

@@ -30,7 +30,7 @@ import org.redkale.watch.*;
  *
  * @author zhangjx
  */
-@NodeProtocol({"HTTP"})
+@NodeProtocol("HTTP")
 public class NodeHttpServer extends NodeServer {
 
     protected final boolean rest; //是否加载REST服务， 为true加载rest节点信息并将所有可REST化的Service生成RestServlet

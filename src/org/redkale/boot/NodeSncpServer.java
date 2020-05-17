@@ -24,7 +24,7 @@ import org.redkale.util.AnyValue.DefaultAnyValue;
  *
  * @author zhangjx
  */
-@NodeProtocol({"SNCP"})
+@NodeProtocol("SNCP")
 public class NodeSncpServer extends NodeServer {
 
     protected final SncpServer sncpServer;
