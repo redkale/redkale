@@ -101,16 +101,16 @@ public abstract class ClusterAgent {
     }
 
     //获取远程服务的可用ip列表
-    public abstract List<InetSocketAddress> queryAddress(NodeServer ns, String protocol, Service service);
+    protected abstract List<InetSocketAddress> queryAddress(NodeServer ns, String protocol, Service service);
 
     //注册服务
-    public abstract void register(NodeServer ns, String protocol, Service service);
+    protected abstract void register(NodeServer ns, String protocol, Service service);
 
     //注销服务
-    public abstract void deregister(NodeServer ns, String protocol, Service service);
+    protected abstract void deregister(NodeServer ns, String protocol, Service service);
 
     //格式: protocol:classtype-resourcename
-    public void updateTransport(NodeServer ns, String protocol, Service service) {
+    protected void updateTransport(NodeServer ns, String protocol, Service service) {
         Server server = ns.getServer();
         String netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
         if (!Sncp.isSncpDyn(service)) return;
@@ -121,13 +121,13 @@ public abstract class ClusterAgent {
     }
 
     //格式: protocol:classtype-resourcename
-    public String generateServiceType(NodeServer ns, String protocol, Service service) {
+    protected String generateServiceType(NodeServer ns, String protocol, Service service) {
         if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + ":" + service.getClass().getName();
         return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service);
     }
 
     //格式: protocol:classtype-resourcename:nodeid
-    public String generateServiceId(NodeServer ns, String protocol, Service service) {
+    protected String generateServiceId(NodeServer ns, String protocol, Service service) {
         return generateServiceType(ns, protocol, service) + ":" + this.nodeid;
     }
 
