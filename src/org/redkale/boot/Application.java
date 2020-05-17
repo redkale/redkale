@@ -125,7 +125,7 @@ public final class Application {
     final TransportFactory sncpTransportFactory;
 
     //第三方服务发现管理接口
-    final ClusterAgent[] clusterAgents;
+    final ClusterAgent clusterAgent;
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
@@ -267,7 +267,7 @@ public final class Application {
         AsynchronousChannelGroup transportGroup = null;
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
-        List<ClusterAgent> clusters = new ArrayList<>();
+        ClusterAgent cluster = null;
         int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 8;
         int readTimeoutSeconds = TransportFactory.DEFAULT_READTIMEOUTSECONDS;
@@ -311,21 +311,18 @@ public final class Application {
                 }
                 logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity / 1024 + "K; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
-            AnyValue[] clusterConfs = resources.getAnyValues("cluster");
-            if (clusterConfs != null && clusterConfs.length > 0) {
-                for (AnyValue clusterConf : clusterConfs) {
-                    try {
-                        Class type = classLoader.loadClass(clusterConf.getValue("value"));
-                        if (!ClusterAgent.class.isAssignableFrom(type)) {
-                            logger.log(Level.SEVERE, "load application cluster resource, but not " + ClusterAgent.class.getSimpleName() + " error: " + clusterConf);
-                        } else {
-                            ClusterAgent cluster = (ClusterAgent) type.getDeclaredConstructor().newInstance();
-                            cluster.setConfig(clusterConf);
-                            clusters.add(cluster);
-                        }
-                    } catch (Exception e) {
-                        logger.log(Level.SEVERE, "load application cluster resource error: " + clusterConf, e);
+            AnyValue clusterConf = resources.getAnyValue("cluster");
+            if (clusterConf != null) {
+                try {
+                    Class type = classLoader.loadClass(clusterConf.getValue("value"));
+                    if (!ClusterAgent.class.isAssignableFrom(type)) {
+                        logger.log(Level.SEVERE, "load application cluster resource, but not " + ClusterAgent.class.getSimpleName() + " error: " + clusterConf);
+                    } else {
+                        cluster = (ClusterAgent) type.getDeclaredConstructor().newInstance();
+                        cluster.setConfig(clusterConf);
                     }
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "load application cluster resource error: " + clusterConf, e);
                 }
             }
         }
@@ -357,12 +354,12 @@ public final class Application {
             .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"))
             .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.checkinterval", "30"));
         this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
-        for (ClusterAgent cluster : clusters) {
+        if (cluster != null) {
             cluster.setNodeid(this.nodeid);
             cluster.setTransportFactory(this.sncpTransportFactory);
             cluster.init(cluster.getConfig());
         }
-        this.clusterAgents = clusters.isEmpty() ? null : clusters.toArray(new ClusterAgent[clusters.size()]);
+        this.clusterAgent = cluster;
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
     }
@@ -375,8 +372,8 @@ public final class Application {
         return sncpTransportFactory;
     }
 
-    public ClusterAgent[] getClusterAgents() {
-        return clusterAgents;
+    public ClusterAgent getClusterAgent() {
+        return clusterAgent;
     }
 
     public RedkaleClassLoader getClassLoader() {
@@ -947,10 +944,8 @@ public final class Application {
                 serversLatch.countDown();
             }
         });
-        if (clusterAgents != null) {
-            for (ClusterAgent cluster : clusterAgents) {
-                if (cluster != null) cluster.destroy(cluster.getConfig());
-            }
+        if (clusterAgent != null) {
+            clusterAgent.destroy(clusterAgent.getConfig());
         }
         for (DataSource source : dataSources) {
             if (source == null) continue;

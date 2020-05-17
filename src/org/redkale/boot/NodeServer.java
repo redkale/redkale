@@ -518,28 +518,25 @@ public abstract class NodeServer {
 
     //Service.init执行之前调用
     protected void preInitServices(Set<Service> localServices, Set<Service> remoteServices) {
-        final ClusterAgent[] clusters = application.clusterAgents;
-        if (clusters == null || clusters.length == 0) return;
+        final ClusterAgent cluster = application.clusterAgent;
+        if (cluster == null) return;
         NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
         String protocol = pros.value().toUpperCase();
-        for (ClusterAgent cluster : clusters) {
-            if (!cluster.containsProtocol(protocol)) continue;
-            if (!cluster.containsPort(server.getSocketAddress().getPort())) continue;
-            cluster.register(this, protocol, localServices, remoteServices);
-        }
+        if (!cluster.containsProtocol(protocol)) return;
+        if (!cluster.containsPort(server.getSocketAddress().getPort())) return;
+        cluster.register(this, protocol, localServices, remoteServices);
+
     }
 
     //Service.destroy执行之前调用
     protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices) {
-        final ClusterAgent[] clusters = application.clusterAgents;
-        if (clusters == null || clusters.length == 0) return;
+        final ClusterAgent cluster = application.clusterAgent;
+        if (cluster == null) return;
         NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
         String protocol = pros.value().toUpperCase();
-        for (ClusterAgent cluster : clusters) {
-            if (!cluster.containsProtocol(protocol)) continue;
-            if (!cluster.containsPort(server.getSocketAddress().getPort())) continue;
-            cluster.deregister(this, protocol, localServices, remoteServices);
-        }
+        if (!cluster.containsProtocol(protocol)) return;
+        if (!cluster.containsPort(server.getSocketAddress().getPort())) return;
+        cluster.deregister(this, protocol, localServices, remoteServices);
     }
 
     protected abstract ClassFilter<Filter> createFilterClassFilter();
