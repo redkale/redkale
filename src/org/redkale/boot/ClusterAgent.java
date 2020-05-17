@@ -105,7 +105,7 @@ public abstract class ClusterAgent {
     }
 
     //获取远程服务的可用ip列表
-    protected abstract List<InetSocketAddress> queryAddress(NodeServer ns, String protocol, Service service);
+    protected abstract Collection<InetSocketAddress> queryAddress(NodeServer ns, String protocol, Service service);
 
     //注册服务
     protected abstract void register(NodeServer ns, String protocol, Service service);
@@ -118,7 +118,7 @@ public abstract class ClusterAgent {
         Server server = ns.getServer();
         String netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
         if (!Sncp.isSncpDyn(service)) return;
-        List<InetSocketAddress> addrs = queryAddress(ns, protocol, service);
+        Collection<InetSocketAddress> addrs = queryAddress(ns, protocol, service);
         if (addrs != null && !addrs.isEmpty()) {
             Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), netprotocol, ns.getSncpAddress(), null, addrs);
         }

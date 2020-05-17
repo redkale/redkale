@@ -489,7 +489,9 @@ public abstract class NodeServer {
         localServices.clear();
         localServices.addAll(swlist);
         //this.loadPersistData();
+        long preinits = System.currentTimeMillis();
         preInitServices(localServices, remoteServices);
+        long preinite = System.currentTimeMillis() - preinits;
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
         localServices.stream().forEach(y -> {
             long s = System.currentTimeMillis();
@@ -505,6 +507,7 @@ public abstract class NodeServer {
             }
             sb.append(threadName).append("All Services load cost ").append(System.currentTimeMillis() - starts).append(" ms" + LINE_SEPARATOR);
         }
+        if (sb != null && preinite > 10) sb.append(threadName).append("ALL cluster agents load ").append(preinite).append(" ms" + LINE_SEPARATOR);
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 
