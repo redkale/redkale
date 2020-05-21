@@ -9,6 +9,7 @@ import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
@@ -24,6 +25,8 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 public abstract class ClusterAgent {
+
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected int nodeid;
 
@@ -98,10 +101,22 @@ public abstract class ClusterAgent {
         for (Service service : localServices) {
             deregister(ns, protocol, service);
         }
+        int s = intervalCheckSeconds();
+        if (s > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
+            try {
+                Thread.sleep(s * 1000);
+            } catch (InterruptedException ex) {
+            }
+            logger.info(this.getClass().getSimpleName() + " sleep " + s + " s after deregister");
+        }
         //远程模式不注册
     }
 
     protected void afterRegister(NodeServer ns, String protocol) {
+    }
+
+    public int intervalCheckSeconds() {
+        return 10;
     }
 
     //获取远程服务的可用ip列表
