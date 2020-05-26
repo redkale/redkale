@@ -45,6 +45,10 @@ public class MessageRecord implements Serializable {
     public MessageRecord() {
     }
 
+    public MessageRecord(String resptopic, byte[] content) {
+        this(System.nanoTime(), 0, 0, null, null, resptopic, content);
+    }
+
     public MessageRecord(long seqid, String topic, String resptopic, byte[] content) {
         this(seqid, 0, 0, null, topic, resptopic, content);
     }
@@ -107,7 +111,7 @@ public class MessageRecord implements Serializable {
         return this;
     }
 
-    public MessageRecord contentUTF8(String content) {
+    public MessageRecord contentUTF8String(String content) {
         this.content = content == null ? null : content.getBytes(StandardCharsets.UTF_8);
         return this;
     }
