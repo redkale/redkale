@@ -22,7 +22,7 @@ import org.redkale.util.Comment;
 public class MessageRecord implements Serializable {
 
     @Comment("消息序列号")
-    protected long seqno;
+    protected long seqid;
 
     @Comment("标记位, 自定义时使用")
     protected int flag;
@@ -45,16 +45,16 @@ public class MessageRecord implements Serializable {
     public MessageRecord() {
     }
 
-    public MessageRecord(long seqno, String topic, String resptopic, byte[] content) {
-        this(seqno, 0, 0, null, topic, resptopic, content);
+    public MessageRecord(long seqid, String topic, String resptopic, byte[] content) {
+        this(seqid, 0, 0, null, topic, resptopic, content);
     }
 
-    public MessageRecord(long seqno, int userid, String groupid, String topic, String resptopic, byte[] content) {
-        this(seqno, 0, userid, groupid, topic, resptopic, content);
+    public MessageRecord(long seqid, int userid, String groupid, String topic, String resptopic, byte[] content) {
+        this(seqid, 0, userid, groupid, topic, resptopic, content);
     }
 
-    public MessageRecord(long seqno, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
-        this.seqno = seqno;
+    public MessageRecord(long seqid, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
+        this.seqid = seqid;
         this.flag = flag;
         this.userid = userid;
         this.groupid = groupid;
@@ -112,12 +112,12 @@ public class MessageRecord implements Serializable {
         return this;
     }
 
-    public long getSeqno() {
-        return seqno;
+    public long getSeqid() {
+        return seqid;
     }
 
-    public void setSeqno(long seqno) {
-        this.seqno = seqno;
+    public void setSeqid(long seqid) {
+        this.seqid = seqid;
     }
 
     public int getFlag() {
