@@ -14,8 +14,15 @@ import org.redkale.net.http.*;
  */
 public class MessageHttpRequest extends HttpRequest {
 
+    protected String remoteAddr;
+
     public MessageHttpRequest(HttpContext context) {
         super(context, null);
+    }
+
+    @Override
+    public String getRemoteAddr() {
+        return remoteAddr;
     }
 
     @Override

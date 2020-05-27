@@ -5,6 +5,10 @@
  */
 package org.redkale.mq;
 
+import java.util.List;
+import java.util.logging.Logger;
+import org.redkale.util.AnyValue;
+
 /**
  * MQ管理
  *
@@ -15,9 +19,39 @@ package org.redkale.mq;
  */
 public abstract class MessageAgent {
 
+    protected String name;
+
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+
+    public void init(AnyValue config) {
+
+    }
+
+    public void destroy(AnyValue config) {
+
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    protected String checkName(String name) {  //不能含特殊字符
+        if (name.isEmpty()) throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+        for (char ch : name.toCharArray()) {
+            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+                throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+            }
+        }
+        return name;
+    }
+
     //创建topic，如果已存在则跳过
-    public abstract void createTopic(String... topics);
+    public abstract boolean createTopic(String... topics);
 
     //删除topic，如果不存在则跳过
-    public abstract void deleteTopic(String... topics);
+    public abstract boolean deleteTopic(String... topics);
+
+    //查询所有topic
+    public abstract List<String> queryTopic();
 }
