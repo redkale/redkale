@@ -20,9 +20,7 @@ import java.util.*;
  */
 public class OptionalCoder<R extends Reader, W extends Writer, T> extends SimpledCoder<R, W, Optional<T>> {
 
-    private final Type type;
-
-    private final Type componentType;
+    protected final Type componentType;
 
     protected final Class componentClass;
 
