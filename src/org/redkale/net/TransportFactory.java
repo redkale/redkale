@@ -21,8 +21,8 @@ import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
- * System.getProperty("net.transport.pinginterval", "30") 心跳周期，默认30秒
- * System.getProperty("net.transport.checkinterval", "30") 检查不可用地址周期，默认30秒
+ * System.getProperty("net.transport.ping.interval", "30") 心跳周期，默认30秒
+ * System.getProperty("net.transport.check.interval", "30") 检查不可用地址周期，默认30秒
  *
  * <p>
  * 详情见: https://redkale.org
@@ -65,10 +65,10 @@ public class TransportFactory {
     protected final List<WeakReference<Transport>> transportReferences = new CopyOnWriteArrayList<>();
 
     //连接池大小
-    protected int poolmaxconns = Integer.getInteger("net.transport.poolmaxconns", Math.max(100, Runtime.getRuntime().availableProcessors() * 16)); //最少是wsthreads的两倍
+    protected int poolmaxconns = Integer.getInteger("net.transport.pool.maxconns", Math.max(100, Runtime.getRuntime().availableProcessors() * 16)); //最少是wsthreads的两倍
 
     //检查不可用地址周期， 单位：秒
-    protected int checkinterval = Integer.getInteger("net.transport.checkinterval", 30);
+    protected int checkinterval = Integer.getInteger("net.transport.check.interval", 30);
 
     //心跳周期， 单位：秒
     protected int pinginterval;

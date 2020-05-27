@@ -350,9 +350,9 @@ public final class Application {
                 });
         }
         this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, (SSLContext) null, readTimeoutSeconds, writeTimeoutSeconds, strategy);
-        DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("net.transport.poolmaxconns", "100"))
-            .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.pinginterval", "30"))
-            .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.checkinterval", "30"));
+        DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("net.transport.pool.maxconns", "100"))
+            .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.ping.interval", "30"))
+            .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.check.interval", "30"));
         this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
         if (cluster != null) {
             cluster.setNodeid(this.nodeid);
@@ -856,14 +856,14 @@ public final class Application {
     public static <T extends Service> T singleton(String name, Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
         if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
         final Application application = Application.create(true);
-        System.setProperty("red" + "kale-singleton-serviceclass", serviceClass.getName());
+        System.setProperty("red" + "kale.singleton.serviceclass", serviceClass.getName());
         if (extServiceClasses != null && extServiceClasses.length > 0) {
             StringBuilder sb = new StringBuilder();
             for (Class clazz : extServiceClasses) {
                 if (sb.length() > 0) sb.append(',');
                 sb.append(clazz.getName());
             }
-            System.setProperty("red" + "kale-singleton-extserviceclasses", sb.toString());
+            System.setProperty("red" + "kale.singleton.extserviceclasses", sb.toString());
         }
         application.init();
         application.start();
