@@ -54,6 +54,10 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers);
 
+    public abstract byte[] convertToBytes(final Object value);
+
+    public abstract byte[] convertToBytes(final Type type, final Object value);
+
     public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value);
 
     public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value);

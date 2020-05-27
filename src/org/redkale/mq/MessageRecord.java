@@ -7,7 +7,7 @@ package org.redkale.mq;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import org.redkale.convert.ConvertDisabled;
+import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Comment;
 
@@ -43,6 +43,10 @@ public class MessageRecord implements Serializable {
     protected byte[] content;
 
     public MessageRecord() {
+    }
+
+    public MessageRecord(String resptopic, Convert convert, Object bean) {
+        this(System.nanoTime(), 0, 0, null, null, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord(String resptopic, byte[] content) {

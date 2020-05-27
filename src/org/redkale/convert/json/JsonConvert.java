@@ -215,6 +215,25 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
+    public byte[] convertToBytes(final Object value) {
+        if (value == null) return null;
+        String result = convertTo(value.getClass(), value);
+        return result == null ? null : result.getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public byte[] convertToBytes(final Type type, final Object value) {
+        if (type == null) return null;
+        if (value == null) return null;
+        final JsonWriter writer = pollJsonWriter();
+        writer.specify(type);
+        factory.loadEncoder(type).convertTo(writer, value);
+        String result = writer.toString();
+        writerPool.accept(writer);
+        return result == null ? null : result.getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Override
     public String convertMapTo(final Object... values) {
         if (values == null) return "null";
         final JsonWriter writer = pollJsonWriter();
