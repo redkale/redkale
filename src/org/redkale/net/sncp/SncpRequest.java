@@ -19,7 +19,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class SncpRequest extends Request<SncpContext> {
+public class SncpRequest extends Request<SncpContext> {
 
     public static final int HEADER_SIZE = 60;
 

@@ -19,7 +19,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class SncpResponse extends Response<SncpContext, SncpRequest> {
+public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public static final int RETCODE_ILLSERVICEID = (1 << 1); //无效serviceid
 
@@ -70,7 +70,7 @@ public final class SncpResponse extends Response<SncpContext, SncpRequest> {
         finish(buffers);
     }
 
-    private void fillHeader(ByteBuffer buffer, int bodyLength, int retcode) {
+    protected void fillHeader(ByteBuffer buffer, int bodyLength, int retcode) {
         //---------------------head----------------------------------
         final int currentpos = buffer.position();
         buffer.position(0);
