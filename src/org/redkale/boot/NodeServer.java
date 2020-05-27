@@ -75,6 +75,9 @@ public abstract class NodeServer {
     //加载server节点后的拦截器
     protected NodeInterceptor interceptor;
 
+    //MQ管理
+    protected MessageAgent messageAgent;
+
     //供interceptor使用的Service对象集合
     protected final Set<Service> interceptorServices = new LinkedHashSet<>();
 
@@ -364,7 +367,7 @@ public abstract class NodeServer {
                     if (Sncp.isRemote(nodeService)) {
                         remoteServices.add(nodeService);
                     } else {
-                        if (field != null) rf.inject(nodeService); //动态加载的Service也存在按需加载的注入资源
+                        rf.inject(nodeService); //动态加载的Service也存在按需加载的注入资源
                         localServices.add(nodeService);
                         interceptorServices.add(nodeService);
                         if (consumer != null) consumer.accept(nodeService);
@@ -657,6 +660,10 @@ public abstract class NodeServer {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public MessageAgent getMessageAgent() {
+        return messageAgent;
     }
 
     public String getSncpGroup() {
