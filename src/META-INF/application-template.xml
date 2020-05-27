@@ -60,7 +60,7 @@
         <!--
             MQ管理接口配置
             name:         MQ名称，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
-            value：    实现类名，必须是org.redkale.boot.MessageAgent的子类
+            value：    实现类名，必须是org.redkale.mq.MessageAgent的子类
             MQ节点下的子节点配置没有固定格式, 根据MessageAgent实现方的定义来配置
         -->
         <!--

@@ -5,6 +5,9 @@
  */
 package org.redkale.mq;
 
+import java.nio.ByteBuffer;
+import java.util.function.*;
+import org.redkale.convert.Convert;
 import org.redkale.net.Response;
 import org.redkale.net.http.*;
 import org.redkale.util.ObjectPool;
@@ -15,8 +18,53 @@ import org.redkale.util.ObjectPool;
  */
 public class MessageHttpResponse extends HttpResponse {
 
+    protected MessageRecord message;
+
+    protected BiConsumer<MessageRecord, byte[]> resultConsumer;
+
     public MessageHttpResponse(HttpContext context, MessageHttpRequest request,
         ObjectPool<Response> responsePool, HttpResponseConfig config) {
         super(context, request, responsePool, config);
+    }
+
+    public MessageHttpResponse resultConsumer(MessageRecord message, BiConsumer<MessageRecord, byte[]> resultConsumer) {
+        this.message = message;
+        this.resultConsumer = resultConsumer;
+        return this;
+    }
+
+    @Override
+    public void finishJson(org.redkale.service.RetResult ret) {
+
+    }
+
+    @Override
+    public void finish(String obj) {
+
+    }
+
+    @Override
+    public void finish(final Convert convert, final Object obj) {
+
+    }
+
+    @Override
+    public void finish(final byte[] bs) {
+
+    }
+
+    @Override
+    public void finish(ByteBuffer buffer) {
+
+    }
+
+    @Override
+    public void finish(ByteBuffer... buffers) {
+
+    }
+
+    @Override
+    public void finish(int status, String message) {
+
     }
 }

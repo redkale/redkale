@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import org.redkale.mq.MessageAgent;
 import org.redkale.util.RedkaleClassLoader;
 import java.io.*;
 import java.lang.annotation.Annotation;
@@ -27,7 +28,6 @@ import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * Server节点的初始化配置类
@@ -572,7 +572,7 @@ public abstract class NodeServer {
         }
         cf = null;
         for (AnyValue list : proplist) {
-            DefaultAnyValue prop = null;
+            AnyValue.DefaultAnyValue prop = null;
             String sc = list.getValue("groups");
             if (sc != null) {
                 sc = sc.trim();
@@ -586,8 +586,8 @@ public abstract class NodeServer {
             ClassFilter filter = new ClassFilter(this.serverClassLoader, ref, inter, excludeSuperClasses, prop);
             for (AnyValue av : list.getAnyValues(property)) { // <service>、<filter>、<servlet> 节点
                 final AnyValue[] items = av.getAnyValues("property");
-                if (av instanceof DefaultAnyValue && items.length > 0) { //存在 <property>节点
-                    DefaultAnyValue dav = DefaultAnyValue.create();
+                if (av instanceof AnyValue.DefaultAnyValue && items.length > 0) { //存在 <property>节点
+                    AnyValue.DefaultAnyValue dav = AnyValue.DefaultAnyValue.create();
                     final AnyValue.Entry<String>[] strings = av.getStringEntrys();
                     if (strings != null) {  //将<service>、<filter>、<servlet>节点的属性值传给dav
                         for (AnyValue.Entry<String> en : strings) {
@@ -600,7 +600,7 @@ public abstract class NodeServer {
                             if (!"property".equals(en.name)) dav.addValue(en.name, en.getValue());
                         }
                     }
-                    DefaultAnyValue ps = DefaultAnyValue.create();
+                    AnyValue.DefaultAnyValue ps = AnyValue.DefaultAnyValue.create();
                     for (AnyValue item : items) {
                         ps.addValue(item.getValue("name"), item.getValue("value"));
                     }

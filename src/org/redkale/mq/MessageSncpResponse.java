@@ -5,8 +5,12 @@
  */
 package org.redkale.mq;
 
+import java.nio.ByteBuffer;
+import java.util.function.*;
+import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
 import org.redkale.net.sncp.*;
+import static org.redkale.net.sncp.SncpRequest.HEADER_SIZE;
 import org.redkale.util.ObjectPool;
 
 /**
@@ -18,7 +22,31 @@ import org.redkale.util.ObjectPool;
  */
 public class MessageSncpResponse extends SncpResponse {
 
+    protected MessageRecord message;
+
+    protected BiConsumer<MessageRecord, byte[]> resultConsumer;
+
     public MessageSncpResponse(SncpContext context, MessageSncpRequest request, ObjectPool<Response> responsePool) {
         super(context, request, responsePool);
+    }
+
+    public MessageSncpResponse resultConsumer(MessageRecord message, BiConsumer<MessageRecord, byte[]> resultConsumer) {
+        this.message = message;
+        this.resultConsumer = resultConsumer;
+        return this;
+    }
+
+    @Override
+    public void finish(final int retcode, final BsonWriter out) {
+        if (out == null) {
+            final byte[] result = new byte[SncpRequest.HEADER_SIZE];
+            fillHeader(ByteBuffer.wrap(result), 0, retcode);
+            resultConsumer.accept(message, result);
+            return;
+        }
+        final int respBodyLength = out.count(); //body总长度
+        final byte[] result = out.toArray();
+        fillHeader(ByteBuffer.wrap(result), respBodyLength - HEADER_SIZE, retcode);
+        resultConsumer.accept(message, result);
     }
 }
