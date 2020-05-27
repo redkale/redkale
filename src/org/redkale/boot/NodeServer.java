@@ -636,6 +636,10 @@ public abstract class NodeServer {
         return false;
     }
 
+    public Application getApplication() {
+        return application;
+    }
+
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
     }
