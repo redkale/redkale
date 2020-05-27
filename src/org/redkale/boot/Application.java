@@ -357,6 +357,7 @@ public final class Application {
         if (cluster != null) {
             cluster.setNodeid(this.nodeid);
             cluster.setTransportFactory(this.sncpTransportFactory);
+            this.resourceFactory.inject(cluster);
             cluster.init(cluster.getConfig());
         }
         this.clusterAgent = cluster;
