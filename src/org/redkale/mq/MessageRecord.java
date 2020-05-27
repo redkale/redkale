@@ -45,12 +45,12 @@ public class MessageRecord implements Serializable {
     public MessageRecord() {
     }
 
-    public MessageRecord(String resptopic, Convert convert, Object bean) {
-        this(System.nanoTime(), 0, 0, null, null, resptopic, convert.convertToBytes(bean));
+    public MessageRecord(String topic, String resptopic, Convert convert, Object bean) {
+        this(System.nanoTime(), 0, 0, null, topic, resptopic, convert.convertToBytes(bean));
     }
 
-    public MessageRecord(String resptopic, byte[] content) {
-        this(System.nanoTime(), 0, 0, null, null, resptopic, content);
+    public MessageRecord(String topic, String resptopic, byte[] content) {
+        this(System.nanoTime(), 0, 0, null, topic, resptopic, content);
     }
 
     public MessageRecord(long seqid, String topic, String resptopic, byte[] content) {
