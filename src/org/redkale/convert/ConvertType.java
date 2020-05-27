@@ -28,9 +28,19 @@ public enum ConvertType {
         this.value = v;
     }
 
+    public int getValue() {
+        return value;
+    }
+
     public boolean contains(ConvertType type) {
         if (type == null) return false;
         return this.value >= type.value && (this.value & type.value) > 0;
     }
 
+    public static ConvertType find(int value) {
+        for (ConvertType t : ConvertType.values()) {
+            if (value == t.value) return t;
+        }
+        return null;
+    }
 }
