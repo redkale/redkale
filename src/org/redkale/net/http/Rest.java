@@ -1067,6 +1067,18 @@ public final class Rest {
                     comment = annuri.comment();
                 }
 
+                RestUserid userid = param.getAnnotation(RestUserid.class);
+                if (userid != null) {
+                    if (annhead != null) throw new RuntimeException("@RestUserid and @RestHeader cannot on the same Parameter in " + method);
+                    if (anncookie != null) throw new RuntimeException("@RestUserid and @RestCookie cannot on the same Parameter in " + method);
+                    if (annsid != null) throw new RuntimeException("@RestUserid and @RestSessionid cannot on the same Parameter in " + method);
+                    if (annaddr != null) throw new RuntimeException("@RestUserid and @RestAddress cannot on the same Parameter in " + method);
+                    if (annbody != null) throw new RuntimeException("@RestUserid and @RestBody cannot on the same Parameter in " + method);
+                    if (annfile != null) throw new RuntimeException("@RestUserid and @RestUploadFile cannot on the same Parameter in " + method);
+                    if (!ptype.isPrimitive() && !java.io.Serializable.class.isAssignableFrom(ptype)) throw new RuntimeException("@RestUserid must on java.io.Serializable Parameter in " + method);
+                    comment = "";
+                }
+
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 if (annpara != null) radix = annpara.radix();
                 if (annpara != null) comment = annpara.comment();
@@ -1100,7 +1112,7 @@ public final class Rest {
                         }
                     } while ((loop = loop.getSuperclass()) != Object.class);
                 }
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, param.getParameterizedType()});
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, userid, param.getParameterizedType()});
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
@@ -1218,7 +1230,8 @@ public final class Rest {
                 RestBody annbody = (RestBody) ps[11];
                 RestUploadFile annfile = (RestUploadFile) ps[12];
                 RestURI annuri = (RestURI) ps[13];
-                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[14];
+                RestUserid userid = (RestUserid) ps[14];
+                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[15];
 
                 final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
                 final boolean iscookie = anncookie != null; //是否取getCookie
@@ -1283,6 +1296,36 @@ public final class Rest {
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequestURI", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
+                } else if (userid != null) { //HttpRequest.currentUserid
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUserid", "()Ljava/io/Serializable;", false);
+                    if (ptype == int.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
+                        mv.visitVarInsn(ISTORE, maxLocals);
+                        varInsns.add(new int[]{ILOAD, maxLocals});
+                    } else if (ptype == float.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
+                        mv.visitVarInsn(FSTORE, maxLocals);
+                        varInsns.add(new int[]{FLOAD, maxLocals});
+                    } else if (ptype == long.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
+                        mv.visitVarInsn(LSTORE, maxLocals);
+                        varInsns.add(new int[]{LLOAD, maxLocals});
+                        maxLocals++;
+                    } else if (ptype == double.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
+                        mv.visitVarInsn(DSTORE, maxLocals);
+                        varInsns.add(new int[]{DLOAD, maxLocals});
+                        maxLocals++;
+                    } else {
+                        mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ptype));
+                        mv.visitVarInsn(ASTORE, maxLocals);
+                        varInsns.add(new int[]{ALOAD, maxLocals});
+                    }
                 } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);

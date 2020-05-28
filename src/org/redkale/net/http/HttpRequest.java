@@ -72,6 +72,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected Annotation[] annotations;
 
+    protected Serializable currentUserid;
+
     protected Object currentUser;
 
     private final ByteArray array = new ByteArray();
@@ -273,6 +275,34 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 设置当前用户ID, 通常在HttpServlet.preExecute方法里设置currentUserid <br>
+     * 数据类型通常是int、long、String
+     *
+     * @param <T>  泛型
+     * @param user 用户信息
+     *
+     * @return HttpRequest
+     */
+    public <T extends Serializable> HttpRequest setCurrentUserid(T userid) {
+        this.currentUserid = userid;
+        return this;
+    }
+
+    /**
+     * 获取当前用户ID<br>
+     *
+     * @param <T> 通常是int、long、String类型
+     *
+     * @return 用户信息
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Serializable> T currentUserid() {
+        return (T) this.currentUserid;
+    }
+
+    /**
+     * @Deprecated
+     * 建议使用 setCurrentUserid, 通过userid从Service或缓存中获取用户信息<br>
      * 设置当前用户信息, 通常在HttpServlet.preExecute方法里设置currentUser <br>
      * 数据类型由&#64;HttpUserType指定
      *
@@ -281,12 +311,15 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return HttpRequest
      */
+    @Deprecated
     public <T> HttpRequest setCurrentUser(T user) {
         this.currentUser = user;
         return this;
     }
 
     /**
+     * @Deprecated
+     * 建议使用 currentUserid, 通过userid从Service或缓存中获取用户信息<br>
      * 获取当前用户信息<br>
      * 数据类型由&#64;HttpUserType指定
      *
@@ -294,6 +327,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 用户信息
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     public <T> T currentUser() {
         return (T) this.currentUser;
@@ -513,6 +547,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.moduleid = 0;
         this.actionid = 0;
         this.annotations = null;
+        this.currentUserid = null;
         this.currentUser = null;
 
         this.attachment = null;
