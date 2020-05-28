@@ -22,6 +22,8 @@ public abstract class MessageAgent {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
+    protected AnyValue config;
+
     //本地Service消息接收处理器， key:topic
     protected Map<String, Service> localConsumers;
 
@@ -31,6 +33,14 @@ public abstract class MessageAgent {
 
     public void destroy(AnyValue config) {
 
+    }
+
+    public AnyValue getConfig() {
+        return config;
+    }
+
+    public void setConfig(AnyValue config) {
+        this.config = config;
     }
 
     protected String checkName(String name) {  //不能含特殊字符

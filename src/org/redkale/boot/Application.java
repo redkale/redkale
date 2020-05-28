@@ -25,6 +25,7 @@ import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.JsonFactory;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.MimeType;
 import org.redkale.net.sncp.*;
@@ -127,6 +128,9 @@ public final class Application {
 
     //第三方服务发现管理接口
     final ClusterAgent clusterAgent;
+
+    //MQ管理接口
+    final MessageAgent messageAgent;
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
@@ -269,6 +273,7 @@ public final class Application {
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
         ClusterAgent cluster = null;
+        MessageAgent mq = null;
         int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 8;
         int readTimeoutSeconds = TransportFactory.DEFAULT_READTIMEOUTSECONDS;
@@ -312,6 +317,7 @@ public final class Application {
                 }
                 logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity / 1024 + "K; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
+
             AnyValue clusterConf = resources.getAnyValue("cluster");
             if (clusterConf != null) {
                 try {
@@ -324,6 +330,21 @@ public final class Application {
                     }
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "load application cluster resource error: " + clusterConf, e);
+                }
+            }
+
+            AnyValue mqConf = resources.getAnyValue("mq");
+            if (mqConf != null) {
+                try {
+                    Class type = classLoader.loadClass(mqConf.getValue("value"));
+                    if (!MessageAgent.class.isAssignableFrom(type)) {
+                        logger.log(Level.SEVERE, "load application mq resource, but not " + MessageAgent.class.getSimpleName() + " error: " + mqConf);
+                    } else {
+                        mq = (MessageAgent) type.getDeclaredConstructor().newInstance();
+                        mq.setConfig(mqConf);
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "load application mq resource error: " + mq, e);
                 }
             }
         }
@@ -362,6 +383,7 @@ public final class Application {
             cluster.init(cluster.getConfig());
         }
         this.clusterAgent = cluster;
+        this.messageAgent = mq;
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
     }
