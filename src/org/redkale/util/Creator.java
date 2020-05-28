@@ -99,6 +99,8 @@ public interface Creator<T> {
                     return new AbstractMap.SimpleEntry(params[0], params[1]);
                 }
             });
+            creatorCacheMap.put(AnyValue.DefaultAnyValue.class, (params) -> new AnyValue.DefaultAnyValue());
+            creatorCacheMap.put(AnyValue.class, (params) -> new AnyValue.DefaultAnyValue());
         }
 
         static class SimpleClassVisitor extends ClassVisitor {
