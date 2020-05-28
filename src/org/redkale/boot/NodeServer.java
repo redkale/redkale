@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import org.redkale.cluster.ClusterAgent;
 import org.redkale.mq.MessageAgent;
 import org.redkale.util.RedkaleClassLoader;
 import java.io.*;

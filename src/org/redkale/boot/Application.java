@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import org.redkale.cluster.ClusterAgent;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.net.TransportGroupInfo;
 import java.io.*;

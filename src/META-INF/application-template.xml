@@ -46,25 +46,25 @@
         <transport bufferCapacity="32K" bufferPoolSize="32" threads="32" readTimeoutSeconds="6" writeTimeoutSeconds="6"/>
         
         <!--
-            【节点全局唯一】
+           【节点全局唯一】
             第三方服务发现管理接口
-            value：    类名，必须是org.redkale.boot.ClusterAgent的子类
+            value：    类名，必须是org.redkale.cluster.ClusterAgent的子类
             protocols: 服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
             ports:     服务发现可以处理的端口， 多个端口用分号;隔开
         -->
         <!--
-        <cluster value="org.redkalex.cluster.ConsulClusterAgent" protocols="SNCP" ports="7070;7071">
+        <cluster value="org.redkalex.cluster.consul.ConsulClusterAgent" protocols="SNCP" ports="7070;7071">
             <property name="xxxxxx" value="XXXXXXXX"/>
         </cluster>
         -->
         <!--
+           【节点全局唯一】
             MQ管理接口配置
-            name:         MQ名称，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
             value：    实现类名，必须是org.redkale.mq.MessageAgent的子类
             MQ节点下的子节点配置没有固定格式, 根据MessageAgent实现方的定义来配置
         -->
         <!--
-        <mq name="kafka" value="org.redkalex.mq.kafka.KafkaMessageAgent">
+        <mq value="org.redkalex.mq.kafka.KafkaMessageAgent">
             <servers value="127.0.0.1:9101"/>
             <consumer>
                 <property name="xxxxxx" value="XXXXXXXX"/>

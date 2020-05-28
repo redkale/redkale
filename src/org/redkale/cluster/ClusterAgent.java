@@ -3,13 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.boot;
+package org.redkale.cluster;
 
 import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import org.redkale.boot.NodeServer;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
