@@ -26,7 +26,7 @@ public class MessageRecord implements Serializable {
     protected long seqid;
 
     @ConvertColumn(index = 2)
-    @Comment("内容的格式， 只能是JSON、BSON、PROTOBUF、DIY和null")
+    @Comment("内容的格式， 只能是JSON、BSON、PROTOBUF、DIY和null, 普通文本也归于JSON")
     protected ConvertType format;
 
     @ConvertColumn(index = 3)
@@ -241,7 +241,7 @@ public class MessageRecord implements Serializable {
         return sb.toString();
     }
 
-    public static void main(String[] args) throws Throwable {
-        System.out.println(new MessageRecord(333, ConvertType.JSON, 2, 3, null, "tt", null, "xxx".getBytes()));
-    }
+//    public static void main(String[] args) throws Throwable {
+//        System.out.println(new MessageRecord(333, ConvertType.JSON, 2, 3, null, "tt", null, "xxx".getBytes()));
+//    }
 }
