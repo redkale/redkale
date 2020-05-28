@@ -78,13 +78,13 @@ public interface Creator<T> {
         static final Map<Class, Creator> creatorCacheMap = new HashMap<>();
 
         static {
-            creatorCacheMap.put(Object.class, (params) -> new Object());
-            creatorCacheMap.put(ArrayList.class, (params) -> new ArrayList<>());
-            creatorCacheMap.put(HashMap.class, (params) -> new HashMap<>());
-            creatorCacheMap.put(HashSet.class, (params) -> new HashSet<>());
-            creatorCacheMap.put(Stream.class, (params) -> new ArrayList<>().stream());
-            creatorCacheMap.put(ConcurrentHashMap.class, (params) -> new ConcurrentHashMap<>());
-            creatorCacheMap.put(CompletableFuture.class, (params) -> new CompletableFuture<>());
+            creatorCacheMap.put(Object.class, p -> new Object());
+            creatorCacheMap.put(ArrayList.class, p -> new ArrayList<>());
+            creatorCacheMap.put(HashMap.class, p -> new HashMap<>());
+            creatorCacheMap.put(HashSet.class, p -> new HashSet<>());
+            creatorCacheMap.put(Stream.class, p -> new ArrayList<>().stream());
+            creatorCacheMap.put(ConcurrentHashMap.class, p -> new ConcurrentHashMap<>());
+            creatorCacheMap.put(CompletableFuture.class, p -> new CompletableFuture<>());
             creatorCacheMap.put(Map.Entry.class, new Creator<Map.Entry>() {
                 @Override
                 @ConstructorParameters({"key", "value"})
@@ -99,8 +99,8 @@ public interface Creator<T> {
                     return new AbstractMap.SimpleEntry(params[0], params[1]);
                 }
             });
-            creatorCacheMap.put(AnyValue.DefaultAnyValue.class, (params) -> new AnyValue.DefaultAnyValue());
-            creatorCacheMap.put(AnyValue.class, (params) -> new AnyValue.DefaultAnyValue());
+            creatorCacheMap.put(AnyValue.DefaultAnyValue.class, p -> new AnyValue.DefaultAnyValue());
+            creatorCacheMap.put(AnyValue.class, p -> new AnyValue.DefaultAnyValue());
         }
 
         static class SimpleClassVisitor extends ClassVisitor {
