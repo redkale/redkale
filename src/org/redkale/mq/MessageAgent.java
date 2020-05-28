@@ -5,12 +5,14 @@
  */
 package org.redkale.mq;
 
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
+import org.redkale.boot.MessageAgentRoot;
+import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 
 /**
- * MQ管理
+ * MQ管理器
  *
  *
  * 详情见: https://redkale.org
@@ -19,9 +21,16 @@ import org.redkale.util.AnyValue;
  */
 public abstract class MessageAgent {
 
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+
+    //MQ管理器名称
     protected String name;
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+    //application根MQ管理器
+    protected MessageAgentRoot root;
+
+    //本地Service消息接收处理器， key:topic
+    protected Map<String, Service> localConsumers;
 
     public void init(AnyValue config) {
 
@@ -33,6 +42,14 @@ public abstract class MessageAgent {
 
     public String getName() {
         return name;
+    }
+
+    public MessageAgentRoot getRoot() {
+        return root;
+    }
+
+    public void setRoot(MessageAgentRoot root) {
+        this.root = root;
     }
 
     protected String checkName(String name) {  //不能含特殊字符

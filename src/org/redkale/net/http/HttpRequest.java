@@ -37,36 +37,32 @@ public class HttpRequest extends Request<HttpContext> {
     public static final String SESSIONID_NAME = "JSESSIONID";
 
     @Comment("Method GET/POST/...")
-    private String method;
+    protected String method;
 
-    private String protocol;
+    protected String protocol;
 
     protected String requestURI;
 
-    private byte[] queryBytes;
+    protected byte[] queryBytes;
 
-    private long contentLength = -1;
+    protected long contentLength = -1;
 
-    private String contentType;
+    protected String contentType;
 
-    private String host;
+    protected String host;
 
-    private String connection;
+    protected String connection;
 
     @Comment("原始的cookie字符串，解析后值赋给HttpCookie[] cookies")
     protected String cookie;
 
-    private HttpCookie[] cookies;
+    protected HttpCookie[] cookies;
 
     protected String newsessionid;
 
     protected final DefaultAnyValue header = new DefaultAnyValue();
 
     protected final DefaultAnyValue params = new DefaultAnyValue();
-
-    private final ByteArray array = new ByteArray();
-
-    private boolean bodyparsed = false;
 
     protected boolean boundary = false;
 
@@ -77,6 +73,10 @@ public class HttpRequest extends Request<HttpContext> {
     protected Annotation[] annotations;
 
     protected Object currentUser;
+
+    private final ByteArray array = new ByteArray();
+
+    private boolean bodyparsed = false;
 
     private final String remoteAddrHeader;
 

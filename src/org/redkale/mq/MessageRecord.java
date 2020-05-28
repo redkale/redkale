@@ -21,17 +21,13 @@ import org.redkale.util.Comment;
  */
 public class MessageRecord implements Serializable {
 
-    public static final byte FORMAT_TEXT = 1;
-
-    public static final byte FORMAT_BINARY = 2;
-
     @ConvertColumn(index = 1)
     @Comment("消息序列号")
     protected long seqid;
 
     @ConvertColumn(index = 2)
-    @Comment("内容的格式")
-    protected byte format;
+    @Comment("内容的格式， 只能是JSON、BSON、PROTOBUF、DIY和null")
+    protected ConvertType format;
 
     @ConvertColumn(index = 3)
     @Comment("标记位, 自定义时使用")
@@ -61,26 +57,26 @@ public class MessageRecord implements Serializable {
     }
 
     public MessageRecord(String resptopic, String content) {
-        this(System.nanoTime(), content == null ? 0 : FORMAT_TEXT, 0, 0, null, null, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        this(System.nanoTime(), content == null ? null : ConvertType.JSON, 0, 0, null, null, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord(String topic, String resptopic, String content) {
-        this(System.nanoTime(), content == null ? 0 : FORMAT_TEXT, 0, 0, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        this(System.nanoTime(), content == null ? null : ConvertType.JSON, 0, 0, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord(int userid, String topic, String resptopic, String content) {
-        this(System.nanoTime(), content == null ? 0 : FORMAT_TEXT, 0, userid, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        this(System.nanoTime(), content == null ? null : ConvertType.JSON, 0, userid, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
-    public MessageRecord(byte format, String topic, String resptopic, byte[] content) {
+    public MessageRecord(ConvertType format, String topic, String resptopic, byte[] content) {
         this(System.nanoTime(), format, 0, 0, null, topic, resptopic, content);
     }
 
-    public MessageRecord(long seqid, byte format, String topic, String resptopic, byte[] content) {
+    public MessageRecord(long seqid, ConvertType format, String topic, String resptopic, byte[] content) {
         this(seqid, format, 0, null, topic, resptopic, content);
     }
 
-    public MessageRecord(long seqid, byte format, int userid, String groupid, String topic, String resptopic, byte[] content) {
+    public MessageRecord(long seqid, ConvertType format, int userid, String groupid, String topic, String resptopic, byte[] content) {
         this(seqid, format, 0, userid, groupid, topic, resptopic, content);
     }
 
@@ -97,10 +93,10 @@ public class MessageRecord implements Serializable {
     }
 
     public MessageRecord(int flag, int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
-        this(System.nanoTime(), convert instanceof TextConvert ? FORMAT_TEXT : FORMAT_BINARY, flag, userid, groupid, topic, resptopic, convert.convertToBytes(bean));
+        this(System.nanoTime(), convert.getFactory().getConvertType(), flag, userid, groupid, topic, resptopic, convert.convertToBytes(bean));
     }
 
-    public MessageRecord(long seqid, byte format, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
+    public MessageRecord(long seqid, ConvertType format, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
         this.seqid = seqid;
         this.format = format;
         this.flag = flag;
@@ -125,7 +121,7 @@ public class MessageRecord implements Serializable {
         return this.resptopic == null || this.resptopic.isEmpty();
     }
 
-    public MessageRecord format(byte format) {
+    public MessageRecord format(ConvertType format) {
         this.format = format;
         return this;
     }
@@ -173,11 +169,11 @@ public class MessageRecord implements Serializable {
         this.seqid = seqid;
     }
 
-    public byte getFormat() {
+    public ConvertType getFormat() {
         return format;
     }
 
-    public void setFormat(byte format) {
+    public void setFormat(ConvertType format) {
         this.format = format;
     }
 
@@ -234,18 +230,18 @@ public class MessageRecord implements Serializable {
         //return JsonConvert.root().convertTo(this);
         StringBuilder sb = new StringBuilder(128);
         sb.append("{\"seqid\":").append(this.seqid);
-        if (this.format != 0) sb.append(",\"format\":").append(this.format);
+        if (this.format != null) sb.append(",\"format\":\"").append(this.format).append("\"");
         if (this.flag != 0) sb.append(",\"flag\":").append(this.flag);
         if (this.userid != 0) sb.append(",\"userid\":").append(this.userid);
         if (this.groupid != null) sb.append(",\"groupid\":\"").append(this.groupid).append("\"");
         if (this.topic != null) sb.append(",\"topic\":\"").append(this.topic).append("\"");
         if (this.resptopic != null) sb.append(",\"resptopic\":\"").append(this.resptopic).append("\"");
-        if (this.content != null) sb.append(",\"content\":").append(this.format == FORMAT_TEXT ? ("\"" + new String(this.content, StandardCharsets.UTF_8) + "\"") : JsonConvert.root().convertTo(this.content));
+        if (this.content != null) sb.append(",\"content\":").append(this.format == ConvertType.JSON ? ("\"" + new String(this.content, StandardCharsets.UTF_8) + "\"") : JsonConvert.root().convertTo(this.content));
         sb.append("}");
         return sb.toString();
     }
 
     public static void main(String[] args) throws Throwable {
-        System.out.println(new MessageRecord(333, FORMAT_TEXT, 2, 3, null, "tt", null, "xxx".getBytes()));
+        System.out.println(new MessageRecord(333, ConvertType.JSON, 2, 3, null, "tt", null, "xxx".getBytes()));
     }
 }

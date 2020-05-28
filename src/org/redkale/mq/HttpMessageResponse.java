@@ -16,18 +16,18 @@ import org.redkale.util.ObjectPool;
  *
  * @author zhangjx
  */
-public class MessageHttpResponse extends HttpResponse {
+public class HttpMessageResponse extends HttpResponse {
 
     protected MessageRecord message;
 
     protected BiConsumer<MessageRecord, byte[]> resultConsumer;
 
-    public MessageHttpResponse(HttpContext context, MessageHttpRequest request,
+    public HttpMessageResponse(HttpContext context, HttpMessageRequest request,
         ObjectPool<Response> responsePool, HttpResponseConfig config) {
         super(context, request, responsePool, config);
     }
 
-    public MessageHttpResponse resultConsumer(MessageRecord message, BiConsumer<MessageRecord, byte[]> resultConsumer) {
+    public HttpMessageResponse resultConsumer(MessageRecord message, BiConsumer<MessageRecord, byte[]> resultConsumer) {
         this.message = message;
         this.resultConsumer = resultConsumer;
         return this;

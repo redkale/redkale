@@ -20,17 +20,17 @@ import org.redkale.util.ObjectPool;
  *
  * @author zhangjx
  */
-public class MessageSncpResponse extends SncpResponse {
+public class SncpMessageResponse extends SncpResponse {
 
     protected MessageRecord message;
 
     protected BiConsumer<MessageRecord, byte[]> resultConsumer;
 
-    public MessageSncpResponse(SncpContext context, MessageSncpRequest request, ObjectPool<Response> responsePool) {
+    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, ObjectPool<Response> responsePool) {
         super(context, request, responsePool);
     }
 
-    public MessageSncpResponse resultConsumer(MessageRecord message, BiConsumer<MessageRecord, byte[]> resultConsumer) {
+    public SncpMessageResponse resultConsumer(MessageRecord message, BiConsumer<MessageRecord, byte[]> resultConsumer) {
         this.message = message;
         this.resultConsumer = resultConsumer;
         return this;

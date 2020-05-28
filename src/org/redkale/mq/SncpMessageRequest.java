@@ -6,23 +6,19 @@
 package org.redkale.mq;
 
 import java.nio.ByteBuffer;
-import org.redkale.net.http.*;
+import org.redkale.net.sncp.*;
 
 /**
  *
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
-public class MessageHttpRequest extends HttpRequest {
+public class SncpMessageRequest extends SncpRequest {
 
-    protected String remoteAddr;
-
-    public MessageHttpRequest(HttpContext context) {
+    public SncpMessageRequest(SncpContext context) {
         super(context, null);
-    }
-
-    @Override
-    public String getRemoteAddr() {
-        return remoteAddr;
     }
 
     @Override
