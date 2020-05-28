@@ -101,6 +101,11 @@ public final class Flipper implements Serializable, Cloneable {
         return this;
     }
 
+    public Flipper maxLimit(int maxlimit) {
+        setLimit(Math.max(1, Math.min(maxlimit, limit)));
+        return this;
+    }
+
     public Flipper unlimit() {
         this.limit = 0;
         return this;
