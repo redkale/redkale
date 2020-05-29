@@ -69,6 +69,10 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     protected final char nextChar() {
+        return nextChar(null);
+    }
+
+    protected final char nextChar(StringBuilder sb) {
         if (currentChar != 0) {
             char ch = currentChar;
             this.currentChar = 0;
@@ -78,14 +82,18 @@ public class JsonByteBufferReader extends JsonReader {
             int remain = this.currentBuffer.remaining();
             if (remain == 0 && this.currentIndex + 1 >= this.buffers.length) return 0;
         }
-        byte b1 = nextByte();
-        if (b1 >= 0) {// 1 byte, 7 bits: 0xxxxxxx
-            return (char) b1;
-        } else if ((b1 >> 5) == -2 && (b1 & 0x1e) != 0) { // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
-            return (char) (((b1 << 6) ^ nextByte()) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
-        } else if ((b1 >> 4) == -2) { // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
-            return (char) ((b1 << 12) ^ (nextByte() << 6) ^ (nextByte() ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
-        } else { // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+        byte b = nextByte();
+        if (b >= 0) {// 1 byte, 7 bits: 0xxxxxxx
+            return (char) b;
+        } else if ((b >> 5) == -2 && (b & 0x1e) != 0) { // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
+            return (char) (((b << 6) ^ nextByte()) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
+        } else if ((b >> 4) == -2) { // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
+            return (char) ((b << 12) ^ (nextByte() << 6) ^ (nextByte() ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+        } else if ((b >> 3) == -2) {// 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+            int uc = ((b << 18) ^ (nextByte() << 12) ^ (nextByte() << 6) ^ (nextByte() ^ (((byte) 0xF0 << 18) ^ ((byte) 0x80 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+            if (sb != null) sb.append(Character.highSurrogate(uc));
+            return Character.lowSurrogate(uc);
+        } else {
             throw new RuntimeException(new UnmappableCharacterException(4));
         }
     }
@@ -208,9 +216,9 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
             for (;;) {
-                ch = nextChar();
+                ch = nextChar(sb);
                 if (ch == '\\') {
-                    char c = nextChar();
+                    char c = nextChar(sb);
                     switch (c) {
                         case '"':
                         case '\'':
@@ -249,9 +257,9 @@ public class JsonByteBufferReader extends JsonReader {
         } else {
             sb.append(ch);
             for (;;) {
-                ch = nextChar();
+                ch = nextChar(sb);
                 if (ch == '\\') {
-                    char c = nextChar();
+                    char c = nextChar(sb);
                     switch (c) {
                         case '"':
                         case '\'':
