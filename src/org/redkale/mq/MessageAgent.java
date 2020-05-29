@@ -6,7 +6,7 @@
 package org.redkale.mq;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.logging.Logger;
 import org.redkale.boot.*;
 import org.redkale.net.http.Rest;
@@ -68,7 +68,7 @@ public abstract class MessageAgent {
     public abstract List<String> queryTopic();
 
     //创建指定topic的消费处理器
-    public abstract MessageConsumer createConsumer(String topic, MessageProcessor processor);
+    public abstract MessageConsumer createConsumer(String topic, Consumer<MessageRecord> processor);
 
     //创建指定topic的生产处理器
     public abstract MessageProducer createProducer();

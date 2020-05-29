@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 /**
@@ -19,20 +20,20 @@ public abstract class MessageConsumer extends Thread {
 
     protected final String topic;
 
-    protected final MessageProcessor processor;
+    protected final Consumer<MessageRecord> processor;
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected volatile boolean closed;
 
-    protected MessageConsumer(String topic, MessageProcessor processor) {
+    protected MessageConsumer(String topic, Consumer<MessageRecord> processor) {
         Objects.requireNonNull(topic);
         Objects.requireNonNull(processor);
         this.topic = topic;
         this.processor = processor;
     }
 
-    public MessageProcessor getProcessor() {
+    public Consumer<MessageRecord> getProcessor() {
         return processor;
     }
 
