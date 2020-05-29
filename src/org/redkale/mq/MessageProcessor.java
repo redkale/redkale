@@ -7,7 +7,6 @@ package org.redkale.mq;
 
 /**
  *
- *
  * <p>
  * 详情见: https://redkale.org
  *
@@ -15,5 +14,5 @@ package org.redkale.mq;
  */
 public interface MessageProcessor {
 
-    public void process(MessageRecord req, MessageResponse response);
+    public void process(MessageRecord message);
 }

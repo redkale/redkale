@@ -7,7 +7,6 @@ package org.redkale.mq;
 
 /**
  *
- *
  * <p>
  * 详情见: https://redkale.org
  *
@@ -15,5 +14,5 @@ package org.redkale.mq;
  */
 public interface MessageResponse {
 
-    public void finish(MessageRecord result);
+    public void finish(MessageRecord message);
 }

@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import org.redkale.boot.*;
 import org.redkale.net.http.Rest;
@@ -65,6 +66,15 @@ public abstract class MessageAgent {
 
     //查询所有topic
     public abstract List<String> queryTopic();
+
+    //创建指定topic的消费处理器
+    public abstract MessageConsumer createConsumer(String topic, MessageProcessor processor);
+
+    //创建指定topic的生产处理器
+    public abstract MessageProducer createProducer();
+
+    //创建指定topic的流处理器
+    public abstract MessageStreams createStreams(String topic, Function<MessageRecord, MessageRecord> processor);
 
     //格式: sncp:req:user
     protected static String generateSncpReqTopic(NodeServer ns, Service service) {
