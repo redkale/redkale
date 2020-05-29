@@ -72,9 +72,6 @@
             <producer>
                 <property name="xxxxxx" value="XXXXXXXX"/>
             </producer>
-            <streams>
-                <property name="xxxxxx" value="XXXXXXXX"/>
-            </streams>
         </mq>
         -->
         <!--

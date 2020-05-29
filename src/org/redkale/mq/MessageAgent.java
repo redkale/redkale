@@ -73,9 +73,6 @@ public abstract class MessageAgent {
     //创建指定topic的生产处理器
     public abstract MessageProducer createProducer();
 
-    //创建指定topic的流处理器
-    public abstract MessageStreams createStreams(String topic, Function<MessageRecord, MessageRecord> processor);
-
     //格式: sncp:req:user
     protected static String generateSncpReqTopic(NodeServer ns, Service service) {
         String resname = Sncp.getResourceName(service);
