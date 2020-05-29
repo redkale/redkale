@@ -7,6 +7,9 @@ package org.redkale.mq;
 
 import java.util.*;
 import java.util.logging.Logger;
+import org.redkale.boot.*;
+import org.redkale.net.http.Rest;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 
@@ -62,4 +65,31 @@ public abstract class MessageAgent {
 
     //查询所有topic
     public abstract List<String> queryTopic();
+
+    //格式: sncp:req:user
+    protected static String generateSncpReqTopic(NodeServer ns, Service service) {
+        String resname = Sncp.getResourceName(service);
+        return "sncp:req:" + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
+    }
+
+    //格式: sncp:resp:node10
+    protected static String generateSncpRespTopic(Application application) {
+        return "sncp:resp:node" + application.getNodeid();
+    }
+
+    //格式: http:req:user
+    protected static String generateHttpReqTopic(NodeServer ns, Service service) {
+        String resname = Sncp.getResourceName(service);
+        return "http:req:" + Rest.getWebModuleName(service.getClass()).toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
+    }
+
+    //格式: http:resp:node10
+    protected static String generateHttpRespTopic(Application application) {
+        return "http:resp:node" + application.getNodeid();
+    }
+
+    //格式: ws:resp:node10
+    protected static String generateWebSocketRespTopic(Application application) {
+        return "ws:resp:node" + application.getNodeid();
+    }
 }

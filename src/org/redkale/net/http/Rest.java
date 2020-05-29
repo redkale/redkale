@@ -172,7 +172,7 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name().trim() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    static String getWebModuleName(Class<? extends Service> serviceType) {
+    public static String getWebModuleName(Class<? extends Service> serviceType) {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "");
         if (controller.ignore()) return null;

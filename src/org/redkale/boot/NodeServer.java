@@ -534,13 +534,24 @@ public abstract class NodeServer {
 
     //Service.destroy执行之前调用
     protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices) {
-        final ClusterAgent cluster = application.clusterAgent;
-        if (cluster == null) return;
-        NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
-        String protocol = pros.value().toUpperCase();
-        if (!cluster.containsProtocol(protocol)) return;
-        if (!cluster.containsPort(server.getSocketAddress().getPort())) return;
-        cluster.deregister(this, protocol, localServices, remoteServices);
+        if (application.clusterAgent != null) { //服务注销
+            final ClusterAgent agent = application.clusterAgent;
+            NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
+            String protocol = pros.value().toUpperCase();
+            if (agent.containsProtocol(protocol) && agent.containsPort(server.getSocketAddress().getPort())) {
+                agent.deregister(this, protocol, localServices, remoteServices);
+            }
+        }
+        if (application.messageAgent != null) { //MQ
+
+        }
+    }
+
+    //Server.start执行之后调用
+    protected void postStartServer(Set<Service> localServices, Set<Service> remoteServices) {
+        if (application.messageAgent != null) { //MQ
+            final MessageAgent agent = application.messageAgent;
+        }
     }
 
     protected abstract ClassFilter<Filter> createFilterClassFilter();
@@ -678,6 +689,7 @@ public abstract class NodeServer {
     public void start() throws IOException {
         if (interceptor != null) interceptor.preStart(this);
         server.start();
+        postStartServer(localServices, remoteServices);
     }
 
     public void shutdown() throws IOException {

@@ -7,6 +7,10 @@ package org.redkale.mq;
 
 /**
  *
+ *
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public interface MessageResponse {

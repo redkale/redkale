@@ -5,21 +5,13 @@
  */
 package org.redkale.mq;
 
-import java.io.Serializable;
-import org.redkale.convert.json.JsonConvert;
-
 /**
- *
  *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public class HttpMessageContent implements Serializable {
-
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(this);
-    }
+public interface MessageStreams {
+    
 }

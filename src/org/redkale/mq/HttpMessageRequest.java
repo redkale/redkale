@@ -10,6 +10,10 @@ import org.redkale.net.http.*;
 
 /**
  *
+ *
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  */
 public class HttpMessageRequest extends HttpRequest {
