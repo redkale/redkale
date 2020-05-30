@@ -26,30 +26,38 @@ public class MessageRecord implements Serializable {
     protected long seqid;
 
     @ConvertColumn(index = 2)
+    @Comment("版本")
+    protected int version;
+
+    @ConvertColumn(index = 3)
     @Comment("内容的格式， 只能是JSON、BSON、PROTOBUF、DIY和null, 普通文本也归于JSON")
     protected ConvertType format;
 
-    @ConvertColumn(index = 3)
+    @ConvertColumn(index = 4)
     @Comment("标记位, 自定义时使用")
     protected int flag;
 
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 5)
+    @Comment("创建时间")
+    protected long createtime;
+
+    @ConvertColumn(index = 6)
     @Comment("用户ID，无用户信息视为0")
     protected int userid;
 
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 7)
     @Comment("组ID")
     protected String groupid;
 
-    @ConvertColumn(index = 6)
+    @ConvertColumn(index = 8)
     @Comment("当前topic")
     protected String topic;
 
-    @ConvertColumn(index = 7)
+    @ConvertColumn(index = 9)
     @Comment("目标topic, 为空表示无目标topic")
     protected String resptopic;
 
-    @ConvertColumn(index = 8)
+    @ConvertColumn(index = 10)
     @Comment("消息内容")
     protected byte[] content;
 
@@ -97,9 +105,15 @@ public class MessageRecord implements Serializable {
     }
 
     public MessageRecord(long seqid, ConvertType format, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
+        this(seqid, 1, format, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, content);
+    }
+
+    public MessageRecord(long seqid, int version, ConvertType format, int flag, long createtime, int userid, String groupid, String topic, String resptopic, byte[] content) {
         this.seqid = seqid;
+        this.version = version;
         this.format = format;
         this.flag = flag;
+        this.createtime = createtime;
         this.userid = userid;
         this.groupid = groupid;
         this.topic = topic;
@@ -121,6 +135,11 @@ public class MessageRecord implements Serializable {
         return this.resptopic == null || this.resptopic.isEmpty();
     }
 
+    public MessageRecord version(int version) {
+        this.version = version;
+        return this;
+    }
+
     public MessageRecord format(ConvertType format) {
         this.format = format;
         return this;
@@ -128,6 +147,11 @@ public class MessageRecord implements Serializable {
 
     public MessageRecord flag(int flag) {
         this.flag = flag;
+        return this;
+    }
+
+    public MessageRecord createtime(long createtime) {
+        this.createtime = createtime;
         return this;
     }
 
@@ -169,6 +193,14 @@ public class MessageRecord implements Serializable {
         this.seqid = seqid;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
     public ConvertType getFormat() {
         return format;
     }
@@ -183,6 +215,14 @@ public class MessageRecord implements Serializable {
 
     public void setFlag(int flag) {
         this.flag = flag;
+    }
+
+    public long getCreatetime() {
+        return createtime;
+    }
+
+    public void setCreatetime(long createtime) {
+        this.createtime = createtime;
     }
 
     public int getUserid() {
@@ -230,8 +270,10 @@ public class MessageRecord implements Serializable {
         //return JsonConvert.root().convertTo(this);
         StringBuilder sb = new StringBuilder(128);
         sb.append("{\"seqid\":").append(this.seqid);
+        sb.append(",\"version\":").append(this.version);
         if (this.format != null) sb.append(",\"format\":\"").append(this.format).append("\"");
         if (this.flag != 0) sb.append(",\"flag\":").append(this.flag);
+        if (this.createtime != 0) sb.append(",\"createtime\":").append(this.createtime);
         if (this.userid != 0) sb.append(",\"userid\":").append(this.userid);
         if (this.groupid != null) sb.append(",\"groupid\":\"").append(this.groupid).append("\"");
         if (this.topic != null) sb.append(",\"topic\":\"").append(this.topic).append("\"");
