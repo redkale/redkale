@@ -31,6 +31,10 @@ public class HttpMessageResponse extends HttpResponse {
         super(context, request, responsePool, config);
     }
 
+    public HttpMessageResponse(HttpContext context, HttpSimpleRequest req, HttpResponseConfig config) {
+        super(context, new HttpMessageRequest(context, req), null, config);
+    }
+
     public HttpMessageResponse resultConsumer(MessageRecord message, BiConsumer<MessageRecord, byte[]> resultConsumer) {
         this.message = message;
         this.resultConsumer = resultConsumer;

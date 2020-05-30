@@ -21,6 +21,8 @@ import org.redkale.util.Comment;
  */
 public class MessageRecord implements Serializable {
 
+    static final byte[] EMPTY_BYTES = new byte[0];
+
     @ConvertColumn(index = 1)
     @Comment("消息序列号")
     protected long seqid;
@@ -138,6 +140,16 @@ public class MessageRecord implements Serializable {
     public <T> T convertFromContent(Convert convert, java.lang.reflect.Type type) {
         if (this.content == null || this.content.length == 0) return null;
         return (T) convert.convertFrom(type, this.content);
+    }
+
+    public <T> T decodeContent(MessageCoder<T> coder, java.lang.reflect.Type type) {
+        if (this.content == null || this.content.length == 0) return null;
+        return (T) coder.decode(this.content);
+    }
+
+    public <T> MessageRecord encodeContent(MessageCoder<T> coder, T data) {
+        this.content = coder.encode(data);
+        return this;
     }
 
     public MessageRecord version(int version) {
