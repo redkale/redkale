@@ -92,7 +92,7 @@ public abstract class MessageAgent {
     public abstract MessageConsumer createConsumer(String topic, Consumer<MessageRecord> processor);
 
     //格式: sncp:req:user
-    protected static String generateSncpReqTopic(NodeServer ns, Service service) {
+    protected static String generateSncpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
         return "sncp:req:" + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
@@ -103,7 +103,7 @@ public abstract class MessageAgent {
     }
 
     //格式: http:req:user
-    protected static String generateHttpReqTopic(NodeServer ns, Service service) {
+    protected static String generateHttpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
         return "http:req:" + Rest.getWebModuleName(service.getClass()).toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }

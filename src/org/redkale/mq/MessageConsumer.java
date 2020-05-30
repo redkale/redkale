@@ -43,9 +43,9 @@ public abstract class MessageConsumer extends Thread {
 
     public abstract void waitFor();
 
-    public boolean isClosed() {
+    protected boolean isClosed() {
         return closed;
     }
 
-    public abstract void close();
+    protected abstract void close();
 }

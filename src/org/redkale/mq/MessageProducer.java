@@ -23,11 +23,11 @@ public abstract class MessageProducer extends Thread {
 
     public abstract CompletableFuture apply(MessageRecord message);
 
-    public abstract void waitFor();
+    protected abstract void waitFor();
 
-    public boolean isClosed() {
+    protected boolean isClosed() {
         return closed;
     }
 
-    public abstract void close();
+    protected abstract void close();
 }
