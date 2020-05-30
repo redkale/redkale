@@ -18,6 +18,8 @@ import org.redkale.util.Comment;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.1.0
  */
 public class MessageRecord implements Serializable {
 

@@ -75,12 +75,13 @@ public final class SncpClient {
         this.remote = remote;
         this.executor = factory.getExecutor();
         this.bufferSupplier = factory.getBufferSupplier();
+        Class<?> tn = serviceTypeOrImplClass;
+        Version ver = tn.getAnnotation(Version.class);
         this.serviceClass = serviceClass;
-        this.serviceversion = 0;
+        this.serviceversion = ver == null ? 0 : ver.value();
         this.clientSncpAddress = clientSncpAddress;
         this.name = serviceName;
-        Class tn = serviceTypeOrImplClass;
-        ResourceType rt = (ResourceType) tn.getAnnotation(ResourceType.class);
+        ResourceType rt = tn.getAnnotation(ResourceType.class);
         if (rt != null) tn = rt.value();
         this.serviceid = Sncp.hash(tn.getName() + ':' + serviceName);
         final List<SncpAction> methodens = new ArrayList<>();

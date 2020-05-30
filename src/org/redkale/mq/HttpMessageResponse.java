@@ -19,6 +19,8 @@ import org.redkale.util.ObjectPool;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.1.0
  */
 public class HttpMessageResponse extends HttpResponse {
 

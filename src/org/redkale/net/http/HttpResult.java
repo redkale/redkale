@@ -23,17 +23,20 @@ public class HttpResult<T> {
 
     public static final String SESSIONID_COOKIENAME = HttpRequest.SESSIONID_NAME;
 
-    protected Map<String, String> headers;
-
-    protected List<HttpCookie> cookies;
-
-    protected String contentType;
-
-    protected T result;
-
+    @ConvertColumn(index = 1)
     protected int status = 0; //不设置则为 200
 
-    protected String message;
+    @ConvertColumn(index = 2)
+    protected String contentType;
+
+    @ConvertColumn(index = 3)
+    protected Map<String, String> headers;
+
+    @ConvertColumn(index = 4)
+    protected List<HttpCookie> cookies;
+
+    @ConvertColumn(index = 5)
+    protected T result;
 
     protected Convert convert;
 
@@ -85,11 +88,6 @@ public class HttpResult<T> {
         return this;
     }
 
-    public HttpResult<T> message(String message) {
-        this.message = message;
-        return this;
-    }
-
     public Convert convert() {
         return convert;
     }
@@ -136,14 +134,6 @@ public class HttpResult<T> {
 
     public void setStatus(int status) {
         this.status = status;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     @Override

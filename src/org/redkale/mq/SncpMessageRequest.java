@@ -14,6 +14,8 @@ import org.redkale.net.sncp.*;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.1.0
  */
 public class SncpMessageRequest extends SncpRequest {
 

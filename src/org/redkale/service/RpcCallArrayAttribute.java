@@ -15,6 +15,8 @@ import org.redkale.util.Attribute;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.1.0
  * @param <T> 对象类型
  * @param <F> 字段类型
  */

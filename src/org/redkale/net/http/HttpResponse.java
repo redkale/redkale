@@ -1013,7 +1013,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                     if (defaultCookie.getDomain() != null && cookie.getDomain() == null) cookie.setDomain(defaultCookie.getDomain());
                     if (defaultCookie.getPath() != null && cookie.getPath() == null) cookie.setPath(defaultCookie.getPath());
                 }
-                buffer.put(("Set-Cookie: " + genString(cookie) + "\r\n").getBytes());
+                buffer.put(("Set-Cookie: " + cookieString(cookie) + "\r\n").getBytes());
             }
         }
         buffer.put(LINE);
@@ -1022,7 +1022,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return buffer;
     }
 
-    private CharSequence genString(HttpCookie cookie) {
+    private CharSequence cookieString(HttpCookie cookie) {
         StringBuilder sb = new StringBuilder();
         sb.append(cookie.getName()).append("=").append(cookie.getValue()).append("; Version=1");
         if (cookie.getDomain() != null) sb.append("; Domain=").append(cookie.getDomain());

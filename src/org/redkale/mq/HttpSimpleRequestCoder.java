@@ -16,6 +16,8 @@ import org.redkale.net.http.HttpSimpleRequest;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.1.0
  */
 public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
 

@@ -100,6 +100,12 @@ public abstract class Sncp {
         return service.getClass().getAnnotation(SncpDyn.class) != null;
     }
 
+    public static int getVersion(Service service) {
+        if (service == null) return -1;
+        Version ver = service.getClass().getAnnotation(Version.class);
+        return ver == null ? -1 : ver.value();
+    }
+
     public static String getResourceName(Service service) {
         if (service == null) return null;
         Resource res = service.getClass().getAnnotation(Resource.class);
