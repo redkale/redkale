@@ -130,7 +130,7 @@ public final class Application {
     final ClusterAgent clusterAgent;
 
     //MQ管理接口
-    final MessageAgent messageAgent;
+    final MessageAgent[] messageAgents;
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.root();
@@ -273,7 +273,7 @@ public final class Application {
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
         ClusterAgent cluster = null;
-        MessageAgent mq = null;
+        MessageAgent[] mqs = null;
         int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 8;
         int readTimeoutSeconds = TransportFactory.DEFAULT_READTIMEOUTSECONDS;
@@ -333,18 +333,26 @@ public final class Application {
                 }
             }
 
-            AnyValue mqConf = resources.getAnyValue("mq");
-            if (mqConf != null) {
-                try {
-                    Class type = classLoader.loadClass(mqConf.getValue("value"));
-                    if (!MessageAgent.class.isAssignableFrom(type)) {
-                        logger.log(Level.SEVERE, "load application mq resource, but not " + MessageAgent.class.getSimpleName() + " error: " + mqConf);
-                    } else {
-                        mq = (MessageAgent) type.getDeclaredConstructor().newInstance();
-                        mq.setConfig(mqConf);
+            AnyValue[] mqConfs = resources.getAnyValues("mq");
+            if (mqConfs != null && mqConfs.length > 0) {
+                mqs = new MessageAgent[mqConfs.length];
+                Set<String> mqnames = new HashSet<>();
+                for (int i = 0; i < mqConfs.length; i++) {
+                    AnyValue mqConf = mqConfs[0];
+                    String mqname = mqConf.getValue("name", "");
+                    if (mqnames.contains(mqname)) throw new RuntimeException("mq.name(" + mqname + ") is repeat");
+                    try {
+                        Class type = classLoader.loadClass(mqConf.getValue("value"));
+                        if (!MessageAgent.class.isAssignableFrom(type)) {
+                            logger.log(Level.SEVERE, "load application mq resource, but not " + MessageAgent.class.getSimpleName() + " error: " + mqConf);
+                        } else {
+                            mqs[i] = (MessageAgent) type.getDeclaredConstructor().newInstance();
+                            mqs[i].setConfig(mqConf);
+                        }
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, "load application mq resource error: " + mqs[i], e);
                     }
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "load application mq resource error: " + mq, e);
+                    mqnames.add(mqname);
                 }
             }
         }
@@ -383,7 +391,7 @@ public final class Application {
             cluster.init(cluster.getConfig());
         }
         this.clusterAgent = cluster;
-        this.messageAgent = mq;
+        this.messageAgents = mqs;
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
     }
@@ -398,6 +406,10 @@ public final class Application {
 
     public ClusterAgent getClusterAgent() {
         return clusterAgent;
+    }
+
+    public MessageAgent[] getMessageAgents() {
+        return messageAgents;
     }
 
     public RedkaleClassLoader getClassLoader() {

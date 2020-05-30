@@ -26,6 +26,8 @@ public abstract class MessageAgent {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
+    protected String name;
+
     protected AnyValue config;
 
     protected MessageProducer producer;
@@ -41,6 +43,10 @@ public abstract class MessageAgent {
 
     }
 
+    public String getName() {
+        return name;
+    }
+
     public AnyValue getConfig() {
         return config;
     }
@@ -50,7 +56,7 @@ public abstract class MessageAgent {
     }
 
     protected String checkName(String name) {  //不能含特殊字符
-        if (name.isEmpty()) throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (name.isEmpty()) return name;
         if (name.charAt(0) >= '0' && name.charAt(0) <= '9') throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
         for (char ch : name.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符

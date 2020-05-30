@@ -542,15 +542,15 @@ public abstract class NodeServer {
                 agent.deregister(this, protocol, localServices, remoteServices);
             }
         }
-        if (application.messageAgent != null) { //MQ
+        if (application.messageAgents != null) { //MQ
 
         }
     }
 
     //Server.start执行之后调用
     protected void postStartServer(Set<Service> localServices, Set<Service> remoteServices) {
-        if (application.messageAgent != null) { //MQ
-            final MessageAgent agent = application.messageAgent;
+        if (application.messageAgents != null) { //MQ
+            final MessageAgent agent = application.messageAgents[0];
         }
     }
 
