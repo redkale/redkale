@@ -84,7 +84,9 @@ public abstract class TypeToken<T> {
         if (type instanceof GenericArrayType) return Array.newInstance(typeToClass(((GenericArrayType) type).getGenericComponentType()), 0).getClass();
         if (!(type instanceof ParameterizedType)) return null; //只能是null了
         Type owner = ((ParameterizedType) type).getOwnerType();
-        return typeToClass(owner == null ? ((ParameterizedType) type).getRawType() : owner);
+        Type raw = ((ParameterizedType) type).getRawType();
+        //A$B<C> owner=A  raw=A$B, 所以内部类情况下使用owner是错误的
+        return typeToClass(raw != null ? raw : owner);
     }
 
     public static Type[] getGenericType(final Type[] types, final Type declaringClass) {
