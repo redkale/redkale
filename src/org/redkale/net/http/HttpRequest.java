@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ * To change this license headers, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -17,7 +17,6 @@ import java.util.logging.Level;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 
 /**
@@ -61,9 +60,10 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String newsessionid;
 
-    protected final DefaultAnyValue header = new DefaultAnyValue();
+    //protected final DefaultAnyValue headers = new DefaultAnyValue();
+    protected final Map<String, String> headers = new HashMap<>();
 
-    protected final DefaultAnyValue params = new DefaultAnyValue();
+    protected final Map<String, String> params = new HashMap<>();
 
     protected boolean boundary = false;
 
@@ -77,6 +77,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected Object currentUser;
 
+    protected String remoteAddr;
+
     private final ByteArray array = new ByteArray();
 
     private boolean bodyparsed = false;
@@ -88,6 +90,32 @@ public class HttpRequest extends Request<HttpContext> {
     public HttpRequest(HttpContext context, ObjectPool<ByteBuffer> bufferPool) {
         super(context, bufferPool);
         this.remoteAddrHeader = context.remoteAddrHeader;
+    }
+
+    public HttpRequest(HttpContext context, HttpSimpleRequest req) {
+        super(context, null);
+        this.remoteAddrHeader = null;
+        if (req != null) {
+            if (req.getBody() != null) this.array.write(req.getBody());
+            if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
+            if (req.getParams() != null) this.params.putAll(req.getParams());
+            this.remoteAddr = req.getRemoteAddr();
+            this.requestURI = req.getRequestURI();
+            if (req.getSessionid() != null && !req.getSessionid().isEmpty()) {
+                this.cookies = new HttpCookie[]{new HttpCookie(SESSIONID_NAME, req.getSessionid())};
+            }
+        }
+    }
+
+    public HttpSimpleRequest createSimpleRequest() {
+        HttpSimpleRequest req = new HttpSimpleRequest();
+        req.setBody(array.size() == 0 ? null : array.getBytes());
+        req.setHeaders(headers.isEmpty() ? null : headers);
+        req.setParams(params.isEmpty() ? null : params);
+        req.setRemoteAddr(getRemoteAddr());
+        req.setRequestURI(this.requestURI);
+        req.setSessionid(getSessionid(false));
+        return req;
     }
 
     protected boolean isWebSocket() {
@@ -179,10 +207,10 @@ public class HttpRequest extends Request<HttpContext> {
                     }
                     break;
                 case "user-agent":
-                    header.addValue("User-Agent", value);
+                    headers.put("User-Agent", value);
                     break;
                 default:
-                    header.addValue(name, value);
+                    headers.put(name, value);
             }
         }
         if (this.contentType != null && this.contentType.contains("boundary=")) this.boundary = true;
@@ -237,7 +265,7 @@ public class HttpRequest extends Request<HttpContext> {
         if (name.charAt(0) == '<') return; //内容可能是xml格式; 如: <?xml version="1.0"
         ++keypos;
         String value = array.toDecodeString(keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
-        this.params.addValue(name, value);
+        this.params.put(name, value);
         if (valpos >= 0) {
             addParameter(array, valpos + 1, limit - valpos - 1);
         }
@@ -421,14 +449,22 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 地址
      */
     public String getRemoteAddr() {
+        if (this.remoteAddr != null) return this.remoteAddr;
         if (remoteAddrHeader != null) {
             String val = getHeader(remoteAddrHeader);
-            if (val != null) return val;
+            if (val != null) {
+                this.remoteAddr = val;
+                return val;
+            }
         }
         SocketAddress addr = getRemoteAddress();
         if (addr == null) return "";
-        if (addr instanceof InetSocketAddress) return ((InetSocketAddress) addr).getAddress().getHostAddress();
-        return String.valueOf(addr);
+        if (addr instanceof InetSocketAddress) {
+            this.remoteAddr = ((InetSocketAddress) addr).getAddress().getHostAddress();
+            return this.remoteAddr;
+        }
+        this.remoteAddr = String.valueOf(addr);
+        return this.remoteAddr;
     }
 
     /**
@@ -507,7 +543,20 @@ public class HttpRequest extends Request<HttpContext> {
             + ", \r\n    remoteAddr: " + this.getRemoteAddr() + ", \r\n    cookies: " + this.cookie + ", \r\n    contentType: " + this.contentType
             + ", \r\n    connection: " + this.connection + ", \r\n    protocol: " + this.protocol + ", \r\n    host: " + this.host
             + ", \r\n    contentLength: " + this.contentLength + ", \r\n    bodyLength: " + this.array.size() + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + this.getBodyUTF8()))
-            + ", \r\n    params: " + this.params.toString(4) + ", \r\n    header: " + this.header.toString(4) + "\r\n}";
+            + ", \r\n    params: " + toMapString(this.params, 4) + ", \r\n    header: " + toMapString(this.headers, 4) + "\r\n}"; //this.headers.toString(4)
+    }
+
+    private static CharSequence toMapString(Map<String, String> map, int indent) {
+        char[] chars = new char[indent];
+        Arrays.fill(chars, ' ');
+        final String space = new String(chars);
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\r\n");
+        for (Map.Entry en : map.entrySet()) {
+            sb.append(space).append("    '").append(en.getKey()).append("': '").append(en.getValue()).append("',\r\n");
+        }
+        sb.append(space).append('}');
+        return sb;
     }
 
     /**
@@ -558,10 +607,11 @@ public class HttpRequest extends Request<HttpContext> {
         this.annotations = null;
         this.currentUserid = null;
         this.currentUser = null;
+        this.remoteAddr = null;
 
         this.attachment = null;
 
-        this.header.clear();
+        this.headers.clear();
         this.params.clear();
         this.array.clear();
         super.recycle();
@@ -1094,8 +1144,8 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return AnyValue
      */
-    public AnyValue getHeaders() {
-        return header;
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 
     /**
@@ -1109,7 +1159,7 @@ public class HttpRequest extends Request<HttpContext> {
     public Map<String, String> getHeadersToMap(Map<String, String> map) {
         if (map == null) map = new LinkedHashMap<>();
         final Map<String, String> map0 = map;
-        header.forEach((k, v) -> map0.put(k, v));
+        headers.forEach((k, v) -> map0.put(k, v));
         return map0;
     }
 
@@ -1120,7 +1170,8 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @ConvertDisabled
     public String[] getHeaderNames() {
-        return header.getNames();
+        Set<String> names = headers.keySet();
+        return names.toArray(new String[names.size()]);
     }
 
     /**
@@ -1131,7 +1182,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public String getHeader(String name) {
-        return header.getValue(name);
+        return headers.get(name);
     }
 
     /**
@@ -1143,7 +1194,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public String getHeader(String name, String defaultValue) {
-        return header.getValue(name, defaultValue);
+        return headers.getOrDefault(name, defaultValue);
     }
 
     /**
@@ -1184,7 +1235,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public boolean getBooleanHeader(String name, boolean defaultValue) {
-        return header.getBoolValue(name, defaultValue);
+        //return headers.getBoolValue(name, defaultValue);
+        String value = headers.get(name);
+        return value == null || value.length() == 0 ? defaultValue : Boolean.parseBoolean(value);
     }
 
     /**
@@ -1196,7 +1249,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public short getShortHeader(String name, short defaultValue) {
-        return header.getShortValue(name, defaultValue);
+        //return headers.getShortValue(name, defaultValue);        
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Short.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1209,7 +1269,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public short getShortHeader(int radix, String name, short defaultValue) {
-        return header.getShortValue(name, defaultValue);
+        //return headers.getShortValue(name, defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1221,7 +1288,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public short getShortHeader(String name, int defaultValue) {
-        return header.getShortValue(name, (short) defaultValue);
+        //return headers.getShortValue(name, (short) defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return (short) defaultValue;
+        try {
+            return Short.decode(value);
+        } catch (NumberFormatException e) {
+            return (short) defaultValue;
+        }
     }
 
     /**
@@ -1234,7 +1308,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public short getShortHeader(int radix, String name, int defaultValue) {
-        return header.getShortValue(radix, name, (short) defaultValue);
+        //return headers.getShortValue(radix, name, (short) defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return (short) defaultValue;
+        try {
+            return (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
+        } catch (NumberFormatException e) {
+            return (short) defaultValue;
+        }
     }
 
     /**
@@ -1246,7 +1327,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public int getIntHeader(String name, int defaultValue) {
-        return header.getIntValue(name, defaultValue);
+        //return headers.getIntValue(name, defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1259,7 +1347,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public int getIntHeader(int radix, String name, int defaultValue) {
-        return header.getIntValue(radix, name, defaultValue);
+        //return headers.getIntValue(radix, name, defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Integer.decode(value) : Integer.parseInt(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1271,7 +1366,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public long getLongHeader(String name, long defaultValue) {
-        return header.getLongValue(name, defaultValue);
+        //return headers.getLongValue(name, defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Long.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1284,7 +1386,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public long getLongHeader(int radix, String name, long defaultValue) {
-        return header.getLongValue(radix, name, defaultValue);
+        //return headers.getLongValue(radix, name, defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Long.decode(value) : Long.parseLong(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1296,7 +1405,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public float getFloatHeader(String name, float defaultValue) {
-        return header.getFloatValue(name, defaultValue);
+        //return headers.getFloatValue(name, defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1308,7 +1424,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public double getDoubleHeader(String name, double defaultValue) {
-        return header.getDoubleValue(name, defaultValue);
+        //return headers.getDoubleValue(name, defaultValue);
+        String value = headers.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     //------------------------------------------------------------------------------
@@ -1317,7 +1440,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return AnyValue
      */
-    public AnyValue getParameters() {
+    public Map<String, String> getParameters() {
         parseBody();
         return params;
     }
@@ -1373,7 +1496,8 @@ public class HttpRequest extends Request<HttpContext> {
     @ConvertDisabled
     public String[] getParameterNames() {
         parseBody();
-        return params.getNames();
+        Set<String> names = params.keySet();
+        return names.toArray(new String[names.size()]);
     }
 
     /**
@@ -1385,7 +1509,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getParameter(String name) {
         parseBody();
-        return params.getValue(name);
+        return params.get(name);
     }
 
     /**
@@ -1398,7 +1522,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getParameter(String name, String defaultValue) {
         parseBody();
-        return params.getValue(name, defaultValue);
+        return params.getOrDefault(name, defaultValue);
     }
 
     /**
@@ -1440,7 +1564,8 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public boolean getBooleanParameter(String name, boolean defaultValue) {
         parseBody();
-        return params.getBoolValue(name, defaultValue);
+        String value = params.get(name);
+        return value == null || value.length() == 0 ? defaultValue : Boolean.parseBoolean(value);
     }
 
     /**
@@ -1453,7 +1578,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getShortParameter(String name, short defaultValue) {
         parseBody();
-        return params.getShortValue(name, defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Short.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1467,7 +1598,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getShortParameter(int radix, String name, short defaultValue) {
         parseBody();
-        return params.getShortValue(radix, name, defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1480,7 +1617,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getShortParameter(String name, int defaultValue) {
         parseBody();
-        return params.getShortValue(name, (short) defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return (short) defaultValue;
+        try {
+            return Short.decode(value);
+        } catch (NumberFormatException e) {
+            return (short) defaultValue;
+        }
     }
 
     /**
@@ -1493,7 +1636,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public int getIntParameter(String name, int defaultValue) {
         parseBody();
-        return params.getIntValue(name, defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Integer.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1507,7 +1656,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public int getIntParameter(int radix, String name, int defaultValue) {
         parseBody();
-        return params.getIntValue(radix, name, defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Integer.decode(value) : Integer.parseInt(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1520,7 +1675,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getLongParameter(String name, long defaultValue) {
         parseBody();
-        return params.getLongValue(name, defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Long.decode(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1534,7 +1695,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getLongParameter(int radix, String name, long defaultValue) {
         parseBody();
-        return params.getLongValue(radix, name, defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return (radix == 10 ? Long.decode(value) : Long.parseLong(value, radix));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1547,7 +1714,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public float getFloatParameter(String name, float defaultValue) {
         parseBody();
-        return params.getFloatValue(name, defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**
@@ -1560,7 +1733,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public double getDoubleParameter(String name, double defaultValue) {
         parseBody();
-        return params.getDoubleValue(name, defaultValue);
+        String value = params.get(name);
+        if (value == null || value.length() == 0) return defaultValue;
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     /**

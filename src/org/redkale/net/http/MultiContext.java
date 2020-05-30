@@ -12,7 +12,6 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import java.util.regex.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * HTTP的文件上传请求的上下文对象
@@ -38,7 +37,7 @@ public final class MultiContext {
 
     private final ByteArray buf = new ByteArray(64);
 
-    private final DefaultAnyValue parameters;
+    private final Map<String, String> parameters;
 
     private final Pattern fielnamePattern;
 
@@ -55,7 +54,7 @@ public final class MultiContext {
         }
     };
 
-    public MultiContext(final Charset charsetName, final String contentType, final DefaultAnyValue params, final InputStream in, String fielnameRegex) {
+    public MultiContext(final Charset charsetName, final String contentType, final Map<String, String> params, final InputStream in, String fielnameRegex) {
         this.charset = charsetName == null ? StandardCharsets.UTF_8 : charsetName;
         this.contentType = contentType == null ? "" : contentType.trim();
         this.parameters = params;
@@ -205,7 +204,7 @@ public final class MultiContext {
         final byte[] boundarray = ("\n" + boundarystr).getBytes();
         final byte[] buffer = new byte[boundarray.length];
         final InputStream input = this.in;
-        final DefaultAnyValue params = this.parameters;
+        final Map<String, String> params = this.parameters;
         final AtomicBoolean finaled = new AtomicBoolean(false);
         return () -> new Iterator<MultiPart>() {
 
@@ -305,7 +304,7 @@ public final class MultiContext {
                         return true;
                     } else { //不是文件
                         readLine(); //读掉空白
-                        params.addValue(parseValue(disposition, "name"), readLine());
+                        params.put(parseValue(disposition, "name"), readLine());
                         this.boundaryline = null;
                         this.lastentry = null;
                         return this.hasNext();

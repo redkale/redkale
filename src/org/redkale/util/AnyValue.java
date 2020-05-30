@@ -303,6 +303,19 @@ public abstract class AnyValue {
             return this;
         }
 
+        public DefaultAnyValue put(String name, boolean value) {
+            return addValue(name, String.valueOf(value));
+        }
+
+        public DefaultAnyValue put(String name, Number value) {
+            return addValue(name, String.valueOf(value));
+        }
+
+        public DefaultAnyValue put(String name, String value) {
+            this.stringEntrys = Utility.append(this.stringEntrys, new Entry(name, value));
+            return this;
+        }
+
         public DefaultAnyValue addValue(String name, boolean value) {
             return addValue(name, String.valueOf(value));
         }
@@ -342,6 +355,11 @@ public abstract class AnyValue {
                 }
             }
             return null;
+        }
+
+        @Override
+        public String get(String name) {
+            return getValue(name);
         }
 
         @Override
@@ -471,6 +489,8 @@ public abstract class AnyValue {
     public abstract AnyValue getAnyValue(String name);
 
     public abstract String getValue(String name);
+
+    public abstract String get(String name);
 
     public boolean getBoolValue(String name) {
         return Boolean.parseBoolean(getValue(name));
@@ -615,6 +635,11 @@ public abstract class AnyValue {
     }
 
     public String getValue(String name, String defaultValue) {
+        String value = getValue(name);
+        return value == null ? defaultValue : value;
+    }
+
+    public String getOrDefault(String name, String defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : value;
     }

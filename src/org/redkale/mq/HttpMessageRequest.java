@@ -5,7 +5,6 @@
  */
 package org.redkale.mq;
 
-import java.nio.ByteBuffer;
 import org.redkale.net.http.*;
 
 /**
@@ -18,19 +17,8 @@ import org.redkale.net.http.*;
  */
 public class HttpMessageRequest extends HttpRequest {
 
-    protected String remoteAddr;
-
-    public HttpMessageRequest(HttpContext context) {
-        super(context, null);
+    public HttpMessageRequest(HttpContext context, HttpSimpleRequest req) {
+        super(context, req);
     }
 
-    @Override
-    public String getRemoteAddr() {
-        return remoteAddr;
-    }
-
-    @Override
-    public int readHeader(ByteBuffer buffer) {
-        return super.readHeader(buffer);
-    }
 }
