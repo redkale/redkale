@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.util.*;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.Comment;
 
 /**
  * HttpRequest的缩减版, 只提供部分字段
@@ -20,21 +21,27 @@ import org.redkale.convert.json.JsonConvert;
 public class HttpSimpleRequest implements java.io.Serializable {
 
     @ConvertColumn(index = 1)
+    @Comment("请求的URI")
     protected String requestURI;
 
     @ConvertColumn(index = 2)
+    @Comment("客户端IP")
     protected String remoteAddr;
 
     @ConvertColumn(index = 3)
+    @Comment("会话ID")
     protected String sessionid;
 
     @ConvertColumn(index = 4)
+    @Comment("http header信息")
     protected Map<String, String> headers;
 
     @ConvertColumn(index = 5)
+    @Comment("参数信息")
     protected Map<String, String> params;
 
     @ConvertColumn(index = 6)
+    @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
     public HttpSimpleRequest clearParams() {
