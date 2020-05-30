@@ -14,6 +14,7 @@ import java.nio.channels.Channels;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.logging.Level;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
@@ -278,8 +279,8 @@ public class HttpRequest extends Request<HttpContext> {
      * 设置当前用户ID, 通常在HttpServlet.preExecute方法里设置currentUserid <br>
      * 数据类型通常是int、long、String
      *
-     * @param <T>  泛型
-     * @param user 用户信息
+     * @param <T>    泛型
+     * @param userid 用户ID
      *
      * @return HttpRequest
      */
@@ -338,6 +339,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 模块ID
      */
+    @ConvertDisabled
     public int getModuleid() {
         return this.moduleid;
     }
@@ -347,6 +349,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 模块ID
      */
+    @ConvertDisabled
     public int getActionid() {
         return this.actionid;
     }
@@ -356,6 +359,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return Annotation[]
      */
+    @ConvertDisabled
     public Annotation[] getAnnotations() {
         if (this.annotations == null) return new Annotation[0];
         Annotation[] newanns = new Annotation[this.annotations.length];
@@ -405,6 +409,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 地址
      */
+    @ConvertDisabled
     public SocketAddress getRemoteAddress() {
         return this.channel == null || !this.channel.isOpen() ? null : this.channel.getRemoteAddress();
     }
@@ -442,6 +447,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 内容
      */
+    @ConvertDisabled
     public String getBodyUTF8() {
         return array.toString(StandardCharsets.UTF_8);
     }
@@ -481,7 +487,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public byte[] getBody() {
-        return array.getBytes();
+        return array.size() == 0 ? null : array.getBytes();
     }
 
     /**
@@ -489,6 +495,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return body对象
      */
+    @ConvertDisabled
     protected ByteArray getDirectBody() {
         return array;
     }
@@ -508,6 +515,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 文件上传对象
      */
+    @ConvertDisabled
     public final MultiContext getMultiContext() {
         return new MultiContext(context.getCharset(), this.getContentType(), this.params,
             new BufferedInputStream(Channels.newInputStream(this.channel), Math.max(array.size(), 8192)) {
@@ -525,6 +533,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @throws IOException IO异常
      */
+    @ConvertDisabled
     public final Iterable<MultiPart> multiParts() throws IOException {
         return getMultiContext().parts();
     }
@@ -565,6 +574,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return sessionid
      */
+    @ConvertDisabled
     public String getSessionid(boolean create) {
         String sessionid = getCookie(SESSIONID_NAME, null);
         if (create && (sessionid == null || sessionid.isEmpty())) {
@@ -610,7 +620,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public HttpCookie[] getCookies() {
         if (this.cookies == null) this.cookies = parseCookies(this.cookie);
-        return this.cookies;
+        return this.cookies.length == 0 ? null : this.cookies;
     }
 
     /**
@@ -633,7 +643,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return cookie值
      */
     public String getCookie(String name, String dfvalue) {
-        for (HttpCookie c : getCookies()) {
+        HttpCookie[] cs = getCookies();
+        if (cs == null) return dfvalue;
+        for (HttpCookie c : cs) {
             if (name.equals(c.getName())) return c.getValue();
         }
         return dfvalue;
@@ -732,6 +744,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return String
      */
+    @ConvertDisabled
     public String getRequstURILastPath() {
         if (requestURI == null) return "";
         return requestURI.substring(requestURI.lastIndexOf('/') + 1);
@@ -1092,6 +1105,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return Map
      */
+    @ConvertDisabled
     public Map<String, String> getHeadersToMap(Map<String, String> map) {
         if (map == null) map = new LinkedHashMap<>();
         final Map<String, String> map0 = map;
@@ -1104,6 +1118,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header名数组
      */
+    @ConvertDisabled
     public String[] getHeaderNames() {
         return header.getNames();
     }
@@ -1314,6 +1329,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return Map
      */
+    @ConvertDisabled
     public Map<String, String> getParametersToMap(Map<String, String> map) {
         if (map == null) map = new LinkedHashMap<>();
         final Map<String, String> map0 = map;
@@ -1328,6 +1344,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return String
      */
+    @ConvertDisabled
     public String getParametersToString() {
         return getParametersToString(null);
     }
@@ -1353,6 +1370,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 参数名数组
      */
+    @ConvertDisabled
     public String[] getParameterNames() {
         parseBody();
         return params.getNames();
