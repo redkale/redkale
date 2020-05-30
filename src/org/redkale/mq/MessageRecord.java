@@ -135,6 +135,11 @@ public class MessageRecord implements Serializable {
         return this.resptopic == null || this.resptopic.isEmpty();
     }
 
+    public <T> T convertFromContent(Convert convert, java.lang.reflect.Type type) {
+        if (this.content == null || this.content.length == 0) return null;
+        return (T) convert.convertFrom(type, this.content);
+    }
+
     public MessageRecord version(int version) {
         this.version = version;
         return this;
