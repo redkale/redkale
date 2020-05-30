@@ -6,6 +6,7 @@
 package org.redkale.net.http;
 
 import java.util.*;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -18,16 +19,22 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class HttpSimpleRequest implements java.io.Serializable {
 
+    @ConvertColumn(index = 1)
     protected String requestURI;
 
-    protected String sessionid;
-
+    @ConvertColumn(index = 2)
     protected String remoteAddr;
 
+    @ConvertColumn(index = 3)
+    protected String sessionid;
+
+    @ConvertColumn(index = 4)
     protected Map<String, String> headers;
 
+    @ConvertColumn(index = 5)
     protected Map<String, String> params;
 
+    @ConvertColumn(index = 6)
     protected byte[] body; //对应HttpRequest.array
 
     public HttpSimpleRequest clearParams() {
@@ -48,11 +55,6 @@ public class HttpSimpleRequest implements java.io.Serializable {
     public HttpSimpleRequest clearSessionid() {
         this.sessionid = null;
         return this;
-    }
-
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(this);
     }
 
     public String getRequestURI() {
@@ -101,6 +103,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public void setBody(byte[] body) {
         this.body = body;
+    }
+
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
     }
 
 }
