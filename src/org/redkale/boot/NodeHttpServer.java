@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import javax.annotation.*;
 import static org.redkale.boot.Application.RESNAME_SNCP_ADDR;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.Sncp;
@@ -226,7 +227,13 @@ public class NodeHttpServer extends NodeServer {
 
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
-
+        String mqname = restConf.getValue("mq");
+        MessageAgent agent0 = null;
+        if (mqname != null) {
+            agent0 = application.getMessageAgent(mqname);
+            if (agent0 == null) throw new RuntimeException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
+        }
+        final MessageAgent agent = agent0;
         final boolean autoload = restConf.getBoolValue("autoload", true);
         {  //加载RestService
             String userTypeStr = restConf.getValue("usertype");

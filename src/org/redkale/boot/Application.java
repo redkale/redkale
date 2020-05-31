@@ -127,9 +127,11 @@ public final class Application {
     final TransportFactory sncpTransportFactory;
 
     //第三方服务发现管理接口
+    //@since 2.1.0
     final ClusterAgent clusterAgent;
 
     //MQ管理接口
+    //@since 2.1.0
     final MessageAgent[] messageAgents;
 
     //全局根ResourceFactory
@@ -406,6 +408,14 @@ public final class Application {
 
     public ClusterAgent getClusterAgent() {
         return clusterAgent;
+    }
+
+    public MessageAgent getMessageAgent(String name) {
+        if (messageAgents == null) return null;
+        for (MessageAgent agent : messageAgents) {
+            if (agent.getName().equals(name)) return agent;
+        }
+        return null;
     }
 
     public MessageAgent[] getMessageAgents() {

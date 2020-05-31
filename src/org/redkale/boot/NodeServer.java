@@ -76,9 +76,6 @@ public abstract class NodeServer {
     //加载server节点后的拦截器
     protected NodeInterceptor interceptor;
 
-    //MQ管理
-    protected MessageAgent messageAgent;
-
     //供interceptor使用的Service对象集合
     protected final Set<Service> interceptorServices = new LinkedHashSet<>();
 
@@ -676,10 +673,6 @@ public abstract class NodeServer {
 
     public Logger getLogger() {
         return logger;
-    }
-
-    public MessageAgent getMessageAgent() {
-        return messageAgent;
     }
 
     public String getSncpGroup() {
