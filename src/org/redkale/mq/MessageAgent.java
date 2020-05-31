@@ -120,4 +120,8 @@ public abstract class MessageAgent {
         return "ws:resp:node" + application.getNodeid();
     }
 
+    //格式: xxxx:resp:node10
+    protected static String generateRespTopic(String protocol, Application application) {
+        return protocol + ":resp:node" + application.getNodeid();
+    }
 }
