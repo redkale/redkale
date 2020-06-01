@@ -43,7 +43,7 @@ public class SncpRequest extends Request<SncpContext> {
 
     private byte[] body;
 
-    private byte[] bufferbytes = new byte[6];
+    private byte[] addrbytes = new byte[6];
 
     protected SncpRequest(SncpContext context, ObjectPool<ByteBuffer> bufferPool) {
         super(context, bufferPool);
@@ -70,7 +70,7 @@ public class SncpRequest extends Request<SncpContext> {
         this.serviceid = DLong.read(buffer);
         this.serviceversion = buffer.getInt();
         this.actionid = DLong.read(buffer);
-        buffer.get(bufferbytes);
+        buffer.get(addrbytes); //ipaddr
         this.bodylength = buffer.getInt();
 
         if (buffer.getInt() != 0) {
@@ -116,7 +116,7 @@ public class SncpRequest extends Request<SncpContext> {
         this.bodyoffset = 0;
         this.body = null;
         this.ping = false;
-        this.bufferbytes[0] = 0;
+        this.addrbytes[0] = 0;
         super.recycle();
     }
 
@@ -145,9 +145,9 @@ public class SncpRequest extends Request<SncpContext> {
     }
 
     public InetSocketAddress getRemoteAddress() {
-        if (bufferbytes[0] == 0) return null;
-        return new InetSocketAddress((0xff & bufferbytes[0]) + "." + (0xff & bufferbytes[1]) + "." + (0xff & bufferbytes[2]) + "." + (0xff & bufferbytes[3]),
-            ((0xff00 & (bufferbytes[4] << 8)) | (0xff & bufferbytes[5])));
+        if (addrbytes[0] == 0) return null;
+        return new InetSocketAddress((0xff & addrbytes[0]) + "." + (0xff & addrbytes[1]) + "." + (0xff & addrbytes[2]) + "." + (0xff & addrbytes[3]),
+            ((0xff00 & (addrbytes[4] << 8)) | (0xff & addrbytes[5])));
     }
 
 }

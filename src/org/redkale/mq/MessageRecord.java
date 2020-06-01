@@ -144,7 +144,7 @@ public class MessageRecord implements Serializable {
         return (T) convert.convertFrom(type, this.content);
     }
 
-    public <T> T decodeContent(MessageCoder<T> coder, java.lang.reflect.Type type) {
+    public <T> T decodeContent(MessageCoder<T> coder) {
         if (this.content == null || this.content.length == 0) return null;
         return (T) coder.decode(this.content);
     }

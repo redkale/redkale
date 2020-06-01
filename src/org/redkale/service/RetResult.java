@@ -71,6 +71,12 @@ public class RetResult<T> {
         return convert;
     }
 
+    public Convert clearConvert() {
+        Convert c = this.convert;
+        this.convert = null;
+        return c;
+    }
+
     public void convert(Convert convert) {
         this.convert = convert;
     }

@@ -18,8 +18,11 @@ import org.redkale.net.http.*;
  */
 public class HttpMessageRequest extends HttpRequest {
 
-    public HttpMessageRequest(HttpContext context, HttpSimpleRequest req) {
-        super(context, req);
+    protected MessageRecord reqMessage;
+
+    public HttpMessageRequest(HttpContext context, MessageRecord reqMessage) {
+        super(context, reqMessage.decodeContent(HttpSimpleRequestCoder.getInstance()));
+        this.reqMessage = reqMessage; 
     }
 
 }

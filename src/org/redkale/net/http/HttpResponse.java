@@ -431,6 +431,26 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
+     * 将HttpResult对象输出
+     *
+     * @param convert 指定的Convert
+     * @param result  HttpResult输出对象
+     */
+    public void finish(final Convert convert, HttpResult result) {
+        if (result.getContentType() != null) setContentType(result.getContentType());
+        addHeader(result.getHeaders()).addCookie(result.getCookies()).setStatus(result.getStatus() < 1 ? 200 : result.getStatus());
+        if (result.getResult() == null) {
+            finish("");
+        } else if (result.getResult() instanceof CharSequence) {
+            finish(result.getResult().toString());
+        } else {
+            Convert cc = result.convert();
+            if (cc == null || !(cc instanceof TextConvert)) cc = convert;
+            finish(cc, result.getResult());
+        }
+    }
+
+    /**
      * 将CompletableFuture的结果对象以JSON格式输出
      *
      * @param future 输出对象的句柄
@@ -521,18 +541,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         } else if (obj instanceof org.redkale.service.RetResult) {
             finishJson((org.redkale.service.RetResult) obj);
         } else if (obj instanceof HttpResult) {
-            HttpResult result = (HttpResult) obj;
-            if (result.getContentType() != null) setContentType(result.getContentType());
-            addHeader(result.getHeaders()).addCookie(result.getCookies()).setStatus(result.getStatus() < 1 ? 200 : result.getStatus());
-            if (result.getResult() == null) {
-                finish("");
-            } else if (result.getResult() instanceof CharSequence) {
-                finish(result.getResult().toString());
-            } else {
-                Convert cc = result.convert();
-                if (cc == null || !(cc instanceof TextConvert)) cc = convert;
-                finish(cc, result.getResult());
-            }
+            finish(convert, (HttpResult) obj);
         } else {
             if (hasRender) {
                 if (onlyoneHttpRender != null) {
