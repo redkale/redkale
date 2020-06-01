@@ -359,6 +359,7 @@ public abstract class NodeServer {
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) groups.add(NodeServer.this.sncpGroup);
                         nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
+                        ((WebSocketNodeService) nodeService).setName(resourceName);
                     }
                     resourceFactory.inject(nodeService, self);
                     field.set(src, nodeService);

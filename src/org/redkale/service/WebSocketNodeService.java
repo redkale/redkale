@@ -36,6 +36,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         super.destroy(conf);
     }
 
+    public final void setName(String name) {
+        this.name = name;
+    }
+
     @Override
     public CompletableFuture<List<String>> getWebSocketAddresses(final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
         if (localSncpAddress == null || !localSncpAddress.equals(targetAddress)) return remoteWebSocketAddresses(targetAddress, groupid);

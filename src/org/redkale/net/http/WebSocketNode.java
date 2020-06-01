@@ -41,6 +41,8 @@ public abstract class WebSocketNode {
     @Resource(name = Application.RESNAME_SNCP_ADDR)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
+    protected String name;
+
     //如果不是分布式(没有SNCP) 值为null
     @RpcRemote
     protected WebSocketNode remoteNode;
@@ -126,6 +128,10 @@ public abstract class WebSocketNode {
     final CompletableFuture<Void> changeUserid(Serializable olduserid, final Serializable newuserid) {
         if (logger.isLoggable(Level.FINEST)) logger.finest(localSncpAddress + " receive websocket changeUserid event (from " + olduserid + " to " + newuserid + " on " + (this.localEngine == null ? null : this.localEngine.getEngineid()) + ").");
         return changeUserid(olduserid, newuserid, localSncpAddress);
+    }
+
+    public final String getName() {
+        return name;
     }
 
     //--------------------------------------------------------------------------------
