@@ -20,6 +20,10 @@ public interface WebSocketUserAddress extends Serializable {
 
     Serializable userid();
 
+    String mqtopic();
+
+    Collection<String> mqtopics();
+
     InetSocketAddress sncpAddress();
 
     Collection<InetSocketAddress> sncpAddresses();
@@ -28,17 +32,29 @@ public interface WebSocketUserAddress extends Serializable {
         return new SimpleWebSocketUserAddress(userAddress);
     }
 
+    public static WebSocketUserAddress createTopic(Serializable userid, String mqtopic) {
+        return new SimpleWebSocketUserAddress(userid, mqtopic, null, null, null);
+    }
+
+    public static WebSocketUserAddress createTopic(Serializable userid, Collection<String> mqtopics) {
+        return new SimpleWebSocketUserAddress(userid, null, mqtopics, null, null);
+    }
+
     public static WebSocketUserAddress create(Serializable userid, InetSocketAddress sncpAddress) {
-        return new SimpleWebSocketUserAddress(userid, sncpAddress, null);
+        return new SimpleWebSocketUserAddress(userid, null, null, sncpAddress, null);
     }
 
     public static WebSocketUserAddress create(Serializable userid, Collection<InetSocketAddress> sncpAddresses) {
-        return new SimpleWebSocketUserAddress(userid, null, sncpAddresses);
+        return new SimpleWebSocketUserAddress(userid, null, null, null, sncpAddresses);
     }
 
     public static class SimpleWebSocketUserAddress implements WebSocketUserAddress {
 
         private Serializable userid;
+
+        private String mqtopic;
+
+        private Collection<String> mqtopics;
 
         private InetSocketAddress sncpAddress;
 
@@ -47,8 +63,10 @@ public interface WebSocketUserAddress extends Serializable {
         public SimpleWebSocketUserAddress() {
         }
 
-        public SimpleWebSocketUserAddress(Serializable userid, InetSocketAddress sncpAddress, Collection<InetSocketAddress> sncpAddresses) {
+        public SimpleWebSocketUserAddress(Serializable userid, String mqtopic, Collection<String> mqtopics, InetSocketAddress sncpAddress, Collection<InetSocketAddress> sncpAddresses) {
             this.userid = userid;
+            this.mqtopic = mqtopic;
+            this.mqtopics = mqtopics;
             this.sncpAddress = sncpAddress;
             this.sncpAddresses = sncpAddresses;
         }
@@ -56,6 +74,8 @@ public interface WebSocketUserAddress extends Serializable {
         public SimpleWebSocketUserAddress(WebSocketUserAddress userAddress) {
             if (userAddress == null) return;
             this.userid = userAddress.userid();
+            this.mqtopic = userAddress.mqtopic();
+            this.mqtopics = userAddress.mqtopics();
             this.sncpAddress = userAddress.sncpAddress();
             this.sncpAddresses = userAddress.sncpAddresses();
         }
@@ -63,6 +83,16 @@ public interface WebSocketUserAddress extends Serializable {
         @Override
         public Serializable userid() {
             return userid;
+        }
+
+        @Override
+        public String mqtopic() {
+            return mqtopic;
+        }
+
+        @Override
+        public Collection<String> mqtopics() {
+            return mqtopics;
         }
 
         @Override
@@ -81,6 +111,22 @@ public interface WebSocketUserAddress extends Serializable {
 
         public void setUserid(Serializable userid) {
             this.userid = userid;
+        }
+
+        public String getMqtopic() {
+            return mqtopic;
+        }
+
+        public void setMqtopic(String mqtopic) {
+            this.mqtopic = mqtopic;
+        }
+
+        public Collection<String> getMqtopics() {
+            return mqtopics;
+        }
+
+        public void setMqtopics(Collection<String> mqtopics) {
+            this.mqtopics = mqtopics;
         }
 
         public InetSocketAddress getSncpAddress() {
