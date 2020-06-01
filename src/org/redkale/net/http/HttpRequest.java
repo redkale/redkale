@@ -73,6 +73,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected Annotation[] annotations;
 
+    // @since 2.1.0
     protected Serializable currentUserid;
 
     protected Object currentUser;
@@ -305,12 +306,14 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 设置当前用户ID, 通常在HttpServlet.preExecute方法里设置currentUserid <br>
-     * 数据类型通常是int、long、String
+     * 数据类型只能是int、long、String、JavaBean
      *
      * @param <T>    泛型
      * @param userid 用户ID
      *
      * @return HttpRequest
+     *
+     * @since 2.1.0
      */
     public <T extends Serializable> HttpRequest setCurrentUserid(T userid) {
         this.currentUserid = userid;
@@ -320,9 +323,11 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取当前用户ID<br>
      *
-     * @param <T> 通常是int、long、String类型
+     * @param <T> 数据类型只能是int、long、String、JavaBean
      *
-     * @return 用户信息
+     * @return 用户ID
+     *
+     * @since 2.1.0
      */
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T currentUserid() {

@@ -205,6 +205,11 @@ public final class Rest {
         }
     }
 
+    //仅供Rest动态构建里 currentUserid() 使用
+    public static <T> T orElse(T t, T defValue) {
+        return t == null ? defValue : t;
+    }
+
     public static <T extends HttpServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType) {
         if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
         if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
@@ -726,6 +731,7 @@ public final class Rest {
         if (!java.lang.reflect.Modifier.isPublic(mod)) throw new RuntimeException(baseServletType + " is not Public Class on createRestServlet");
         if (java.lang.reflect.Modifier.isAbstract(mod)) throw new RuntimeException(baseServletType + " cannot a abstract Class on createRestServlet");
 
+        final String restInternalName = Type.getInternalName(Rest.class);
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String resDesc = Type.getDescriptor(Resource.class);
@@ -1301,25 +1307,24 @@ public final class Rest {
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUserid", "()Ljava/io/Serializable;", false);
                     if (ptype == int.class) {
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
+                        mv.visitInsn(ICONST_0);
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                        mv.visitMethodInsn(INVOKESTATIC, restInternalName, "orElse", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false);
+
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
-                    } else if (ptype == float.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-                        mv.visitVarInsn(FSTORE, maxLocals);
-                        varInsns.add(new int[]{FLOAD, maxLocals});
                     } else if (ptype == long.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
+                        mv.visitInsn(LCONST_0);
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
+                        mv.visitMethodInsn(INVOKESTATIC, restInternalName, "orElse", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false);
+
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
                         varInsns.add(new int[]{LLOAD, maxLocals});
-                        maxLocals++;
-                    } else if (ptype == double.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-                        mv.visitVarInsn(DSTORE, maxLocals);
-                        varInsns.add(new int[]{DLOAD, maxLocals});
                         maxLocals++;
                     } else {
                         mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ptype));

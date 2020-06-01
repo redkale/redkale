@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import java.util.logging.Logger;
 import org.redkale.boot.*;
@@ -38,11 +39,17 @@ public abstract class MessageAgent {
     protected Map<String, Service> localConsumers;
 
     public void init(AnyValue config) {
+    }
 
+    public CompletableFuture<Void> start() {
+        return null;
+    }
+
+    public CompletableFuture<Void> stop() {
+        return null;
     }
 
     public void destroy(AnyValue config) {
-
     }
 
     public String getName() {
