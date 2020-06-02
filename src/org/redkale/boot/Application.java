@@ -393,6 +393,13 @@ public final class Application {
             cluster.init(cluster.getConfig());
         }
         this.clusterAgent = cluster;
+        if (mqs != null) {
+            for (MessageAgent agent : mqs) {
+                this.resourceFactory.inject(agent);
+                agent.init(agent.getConfig());
+                this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
+            }
+        }
         this.messageAgents = mqs;
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);

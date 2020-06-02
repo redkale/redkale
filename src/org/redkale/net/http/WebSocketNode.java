@@ -16,6 +16,7 @@ import javax.annotation.*;
 import org.redkale.boot.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.mq.MessageAgent;
 import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -55,6 +56,9 @@ public abstract class WebSocketNode {
     //如果不是分布式(没有SNCP)，sncpNodeAddresses 将不会被用到
     @Resource(name = "$")
     protected CacheSource<InetSocketAddress> sncpNodeAddresses;
+
+    @Resource(name = "$")
+    protected MessageAgent messageAgent;
 
     //当前节点的本地WebSocketEngine
     protected WebSocketEngine localEngine;
