@@ -40,6 +40,8 @@ public abstract class MessageAgent {
 
     protected MessageProducer producer;
 
+    protected MessageConsumer sncpRespConsumer;
+
     //本地Service消息接收处理器， key:topic
     protected ConcurrentHashMap<String, Service> localConsumers;
 
@@ -121,6 +123,11 @@ public abstract class MessageAgent {
     }
 
     //格式: http:req:user
+    public String generateHttpReqTopic(String module) {
+        return "http:req:" + module.toLowerCase();
+    }
+
+    //格式: http:req:user
     protected String generateHttpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
         return "http:req:" + Rest.getWebModuleName(service.getClass()).toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
@@ -132,7 +139,7 @@ public abstract class MessageAgent {
     }
 
     //格式: ws:resp:wsgame
-    protected String generateWebSocketRespTopic(WebSocketNode node) {
+    public String generateWebSocketRespTopic(WebSocketNode node) {
         return "ws:resp:" + node.getName();
     }
 

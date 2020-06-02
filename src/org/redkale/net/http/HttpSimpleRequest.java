@@ -46,6 +46,48 @@ public class HttpSimpleRequest implements java.io.Serializable {
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
+    public HttpSimpleRequest requestURI(String requestURI) {
+        this.requestURI = requestURI;
+        return this;
+    }
+
+    public HttpSimpleRequest remoteAddr(String remoteAddr) {
+        this.remoteAddr = remoteAddr;
+        return this;
+    }
+
+    public HttpSimpleRequest sessionid(String sessionid) {
+        this.sessionid = sessionid;
+        return this;
+    }
+
+    public HttpSimpleRequest headers(Map<String, String> headers) {
+        this.headers = headers;
+        return this;
+    }
+
+    public HttpSimpleRequest params(Map<String, String> params) {
+        this.params = params;
+        return this;
+    }
+
+    public HttpSimpleRequest header(String key, String value) {
+        if (this.headers == null) this.headers = new HashMap<>();
+        this.headers.put(key, value);
+        return this;
+    }
+
+    public HttpSimpleRequest param(String key, String value) {
+        if (this.params == null) this.params = new HashMap<>();
+        this.params.put(key, value);
+        return this;
+    }
+
+    public HttpSimpleRequest body(byte[] body) {
+        this.body = body;
+        return this;
+    }
+
     public HttpSimpleRequest clearParams() {
         this.params = null;
         return this;
