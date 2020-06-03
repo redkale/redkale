@@ -346,6 +346,7 @@ public class NodeHttpServer extends NodeServer {
                 }
             }
         }
+        if (agent != null) this.messageAgents.put(agent.getName(), agent);
         //输出信息
         if (ss != null && !ss.isEmpty() && sb != null) {
             ss.sort((AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));

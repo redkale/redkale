@@ -85,6 +85,9 @@ public abstract class NodeServer {
     //远程模式的Service对象集合
     protected final Set<Service> remoteServices = new LinkedHashSet<>();
 
+    //MessageAgent对象集合
+    protected final Map<String, MessageAgent> messageAgents = new HashMap<>();
+
     private volatile int maxClassNameLength = 0;
 
     private volatile int maxNameLength = 0;
@@ -540,15 +543,15 @@ public abstract class NodeServer {
                 agent.deregister(this, protocol, localServices, remoteServices);
             }
         }
-        if (application.messageAgents != null) { //MQ
+        if (!this.messageAgents.isEmpty()) { //MQ
 
         }
     }
 
     //Server.start执行之后调用
     protected void postStartServer(Set<Service> localServices, Set<Service> remoteServices) {
-        if (application.messageAgents != null) { //MQ
-            final MessageAgent agent = application.messageAgents[0];
+        if (!this.messageAgents.isEmpty()) { //MQ
+            this.messageAgents.values().forEach(agent -> agent.start());
         }
     }
 
