@@ -164,7 +164,7 @@ public abstract class MessageAgent {
     }
 
     //格式: sncp.req.user
-    protected String generateSncpReqTopic(Service service) {
+    public String generateSncpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
         if (service instanceof WebSocketNode) return "sncp.req.wsn" + (resname.isEmpty() ? "" : ("-" + resname));
         return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
