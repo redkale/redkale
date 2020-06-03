@@ -784,8 +784,8 @@ public final class Application {
             for (MessageAgent agent : this.messageAgents) {
                 agent.start(sb).join();
             }
-            if (sb.length() > 0) logger.info(sb.toString());
-            logger.info(this.getClass().getSimpleName() + " MessageAgent init in " + (System.currentTimeMillis() - s) + " ms\r\n");
+            if (sb.length() > 0) logger.info(sb.toString().trim());
+            logger.info(this.getClass().getSimpleName() + " MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
         }
         //if (!singletonrun) signalHandle();
         //if (!singletonrun) clearPersistData();

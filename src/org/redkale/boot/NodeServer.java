@@ -68,7 +68,7 @@ public abstract class NodeServer {
     private InetSocketAddress sncpAddress;
 
     //加载Service时的处理函数
-    protected Consumer<Service> consumer;
+    protected BiConsumer<MessageAgent, Service> consumer;
 
     //server节点的配置
     protected AnyValue serverConf;
@@ -89,6 +89,9 @@ public abstract class NodeServer {
 
     //MessageAgent对象集合
     protected final Map<String, MessageAgent> messageAgents = new HashMap<>();
+
+    //需要远程模式Service的MessageAgent对象集合
+    protected final Map<String, MessageAgent> sncpRemoteAgents = new HashMap<>();
 
     private volatile int maxClassNameLength = 0;
 
@@ -375,7 +378,7 @@ public abstract class NodeServer {
                         rf.inject(nodeService); //动态加载的Service也存在按需加载的注入资源
                         localServices.add(nodeService);
                         interceptorServices.add(nodeService);
-                        if (consumer != null) consumer.accept(nodeService);
+                        if (consumer != null) consumer.accept(null, nodeService);
                     }
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "WebSocketNode inject error", e);
@@ -441,13 +444,19 @@ public abstract class NodeServer {
                     } else if (isSNCP() && !entry.isAutoload()) {
                         throw new RuntimeException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + groups + ") is repeat.");
                     }
+                    MessageAgent agent = null;
+                    if (entry.getProperty() != null && entry.getProperty().getValue("mq") != null) {
+                        agent = application.getMessageAgent(entry.getProperty().getValue("mq"));
+                        if (agent != null) messageAgents.put(agent.getName(), agent);
+                    }
                     if (Sncp.isRemote(service)) {
                         remoteServices.add(service);
+                        if (agent != null) sncpRemoteAgents.put(agent.getName(), agent);
                     } else {
                         if (field != null) rf.inject(service); //动态加载的Service也存在按需加载的注入资源
                         localServices.add(service);
                         interceptorServices.add(service);
-                        if (consumer != null) consumer.accept(service);
+                        if (consumer != null) consumer.accept(agent, service);
                     }
                 } catch (RuntimeException ex) {
                     throw ex;
@@ -481,6 +490,12 @@ public abstract class NodeServer {
         if (sb != null) {
             remoteServices.forEach(y -> {
                 sb.append(localThreadName).append(Sncp.toSimpleString(y, maxNameLength, maxClassNameLength)).append(" load and inject").append(LINE_SEPARATOR);
+            });
+        }
+        if (isSNCP() && !sncpRemoteAgents.isEmpty()) {
+            sncpRemoteAgents.values().forEach(agent -> {
+                agent.putSncpResp((NodeSncpServer) this);
+                agent.startSncpRespConsumer();
             });
         }
         //----------------- init -----------------
@@ -587,14 +602,16 @@ public abstract class NodeServer {
         for (AnyValue list : proplist) {
             AnyValue.DefaultAnyValue prop = null;
             String sc = list.getValue("groups");
+            String mq = list.getValue("mq");
             if (sc != null) {
                 sc = sc.trim();
                 if (sc.endsWith(";")) sc = sc.substring(0, sc.length() - 1);
             }
             if (sc == null) sc = localGroup;
-            if (sc != null) {
+            if (sc != null || mq != null) {
                 prop = new AnyValue.DefaultAnyValue();
-                prop.addValue("groups", sc);
+                if (sc != null) prop.addValue("groups", sc);
+                if (mq != null) prop.addValue("mq", mq);
             }
             ClassFilter filter = new ClassFilter(this.serverClassLoader, ref, inter, excludeSuperClasses, prop);
             for (AnyValue av : list.getAnyValues(property)) { // <service>、<filter>、<servlet> 节点

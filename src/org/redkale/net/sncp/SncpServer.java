@@ -97,10 +97,11 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         return ((SncpPrepareServlet) this.prepare).removeSncpServlet(sncpService);
     }
 
-    public void addSncpServlet(Service sncpService) {
+    public SncpDynServlet addSncpServlet(Service sncpService) {
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService),
             Sncp.getResourceType(sncpService), sncpService, maxClassNameLength, maxNameLength);
         this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
+        return sds;
     }
 
     @Override

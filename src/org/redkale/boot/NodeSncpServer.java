@@ -10,6 +10,7 @@ import java.net.*;
 import java.util.*;
 import java.util.logging.Level;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
@@ -32,7 +33,10 @@ public class NodeSncpServer extends NodeServer {
     private NodeSncpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
-        this.consumer = sncpServer == null || application.singletonrun ? null : x -> sncpServer.addSncpServlet(x); //singleton模式下不生成SncpServlet
+        this.consumer = sncpServer == null || application.singletonrun ? null : (agent, x) -> {
+            SncpDynServlet servlet = sncpServer.addSncpServlet(x); //singleton模式下不生成SncpServlet
+            if (agent != null) agent.putService(this, x, servlet);
+        };
     }
 
     public static NodeServer createNodeServer(Application application, AnyValue serconf) {
@@ -48,8 +52,8 @@ public class NodeSncpServer extends NodeServer {
         return sncpServer == null ? null : sncpServer.getSocketAddress();
     }
 
-    public void consumerAccept(Service service) {
-        if (this.consumer != null) this.consumer.accept(service);
+    public void consumerAccept(MessageAgent agent, Service service) {
+        if (this.consumer != null) this.consumer.accept(agent, service);
     }
 
     @Override

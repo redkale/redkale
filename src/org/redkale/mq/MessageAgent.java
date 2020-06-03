@@ -45,10 +45,23 @@ public abstract class MessageAgent {
 
     protected SncpMessageProcessor sncpRespProcessor;
 
+    //sncpRespConsumer启动耗时， 小于0表示未启动
+    protected long sncpRespStartms = -1;
+
     //本地Service消息接收处理器， key:topic
-    protected ConcurrentHashMap<String, MessageNode> messageNodes = new ConcurrentHashMap<>();
+    protected HashMap<String, MessageNode> messageNodes = new LinkedHashMap<>();
 
     public void init(AnyValue config) {
+    }
+
+    public final synchronized void startSncpRespConsumer() {
+        if (this.sncpRespStartms >= 0) return;
+        long s = System.currentTimeMillis();
+        if (this.sncpRespConsumer != null) {
+            this.sncpRespConsumer.start();
+            this.sncpRespConsumer.waitFor();
+        }
+        this.sncpRespStartms = System.currentTimeMillis() - s;
     }
 
     public CompletableFuture<Void> start(final StringBuffer sb) {
@@ -56,11 +69,8 @@ public abstract class MessageAgent {
         this.messageNodes.values().forEach(node -> {
             if (node.consumer.topic.length() > maxlen.get()) maxlen.set(node.consumer.topic.length());
         });
-        if (this.sncpRespConsumer != null) {
-            long s = System.currentTimeMillis();
-            this.sncpRespConsumer.start();
-            this.sncpRespConsumer.waitFor();
-            sb.append("MessageConsumer(topic=").append(fillString(this.sncpRespConsumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
+        if (this.sncpRespStartms >= 0) {
+            sb.append("MessageConsumer(topic=").append(fillString(this.sncpRespConsumer.topic, maxlen.get())).append(") init and start in ").append(this.sncpRespStartms).append(" ms\r\n");
         }
         this.messageNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
@@ -152,6 +162,7 @@ public abstract class MessageAgent {
     //格式: sncp.req.user
     protected String generateSncpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
+        if (service instanceof WebSocketNode) return "sncp.req.wsn" + (resname.isEmpty() ? "" : ("-" + resname));
         return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
