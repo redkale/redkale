@@ -220,7 +220,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @return RestServlet
      */
-    public <S extends WebSocket, T extends HttpServlet> T addRestWebSocketServlet(final ClassLoader classLoader, final Class<S> webSocketType, final String prefix, final AnyValue conf) {
+    public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(final ClassLoader classLoader, final Class<S> webSocketType, final String prefix, final AnyValue conf) {
         T servlet = Rest.createRestWebSocketServlet(classLoader, webSocketType);
         if (servlet != null) this.prepare.addServlet(servlet, prefix, conf);
         return servlet;

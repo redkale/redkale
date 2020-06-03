@@ -329,7 +329,7 @@ public class NodeHttpServer extends NodeServer {
                     return;
                 }
                 restedObjects.add(stype); //避免重复创建Rest对象
-                HttpServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, prefix, en.getProperty());
+                WebSocketServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, prefix, en.getProperty());
                 if (servlet == null) return; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
                 String prefix2 = prefix;
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
