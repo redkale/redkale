@@ -23,7 +23,7 @@ public abstract class MessageProducer extends Thread {
 
     protected volatile boolean closed;
 
-    public abstract CompletableFuture<MessageRecord> apply(MessageRecord message);
+    public abstract CompletableFuture<Void> apply(MessageRecord message);
 
     protected abstract void waitFor();
 

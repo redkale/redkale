@@ -18,7 +18,7 @@ import java.util.logging.*;
  *
  * @since 2.1.0
  */
-public class SncpRespProcessor implements MessageProcessor {
+public class HttpRespProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
@@ -26,7 +26,7 @@ public class SncpRespProcessor implements MessageProcessor {
 
     protected final ConcurrentHashMap<Long, RespFutureNode> respNodes = new ConcurrentHashMap<>();
 
-    public SncpRespProcessor(Logger logger, MessageAgent agent) {
+    public HttpRespProcessor(Logger logger, MessageAgent agent) {
         this.logger = logger;
         this.agent = agent;
     }
@@ -35,7 +35,7 @@ public class SncpRespProcessor implements MessageProcessor {
     public void process(MessageRecord message) {
         RespFutureNode node = respNodes.get(message.getSeqid());
         if (node == null) {
-            logger.log(Level.WARNING, SncpRespProcessor.class.getSimpleName() + " process " + message + " error");
+            logger.log(Level.WARNING, HttpRespProcessor.class.getSimpleName() + " process " + message + " error");
             return;
         }
         node.future.complete(message);

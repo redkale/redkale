@@ -54,6 +54,10 @@ public abstract class MessageAgent {
     public void init(AnyValue config) {
     }
 
+    public final CompletableFuture<MessageRecord> createSncpRespFuture(MessageRecord message) {
+        return this.sncpRespProcessor.createFuture(message.getSeqid());
+    }
+
     public final synchronized void startSncpRespConsumer() {
         if (this.sncpRespStartms >= 0) return;
         long s = System.currentTimeMillis();
