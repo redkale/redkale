@@ -22,7 +22,8 @@ public class HttpMessageRequest extends HttpRequest {
 
     public HttpMessageRequest(HttpContext context, MessageRecord reqMessage) {
         super(context, reqMessage.decodeContent(HttpSimpleRequestCoder.getInstance()));
-        this.reqMessage = reqMessage; 
+        this.reqMessage = reqMessage;
+        this.currentUserid = reqMessage.getUserid();
     }
 
 }
