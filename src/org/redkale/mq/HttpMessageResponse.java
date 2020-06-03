@@ -41,9 +41,13 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     public void finishHttpResult(HttpResult result) {
+        finishHttpResult(this.producer, reqMessage.getResptopic(), result);
+    }
+
+    public static void finishHttpResult(MessageProducer producer, String resptopic, HttpResult result) {
         ConvertType format = result.convert() == null ? null : result.convert().getFactory().getConvertType();
         byte[] content = HttpResultCoder.getInstance().encode(result);
-        this.producer.apply(new MessageRecord(format, reqMessage.getResptopic(), null, content));
+        producer.apply(new MessageRecord(format, resptopic, null, content));
     }
 
     @Override
