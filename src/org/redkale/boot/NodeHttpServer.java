@@ -225,7 +225,7 @@ public class NodeHttpServer extends NodeServer {
         if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
         final String prefix = prefix0;
 
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
         String mqname = restConf.getValue("mq");
         MessageAgent agent0 = null;
@@ -276,8 +276,8 @@ public class NodeHttpServer extends NodeServer {
                     WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
                     if (ws != null && !ws.repair()) prefix2 = "";
                     resourceFactory.inject(servlet, NodeHttpServer.this);
-                    if (agent != null) agent.putHttpService(this, service, servlet);
-                    //if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
+                    if (agent != null) agent.putService(this, service, servlet);
+                    //if (finest) logger.finest(localThreadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
                     if (ss != null) {
                         String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                         for (int i = 0; i < mappings.length; i++) {
@@ -336,7 +336,7 @@ public class NodeHttpServer extends NodeServer {
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
                 if (ws != null && !ws.repair()) prefix2 = "";
                 resourceFactory.inject(servlet, NodeHttpServer.this);
-                if (finest) logger.finest(threadName + " " + stype.getName() + " create a RestWebSocketServlet");
+                if (finest) logger.finest(localThreadName + " " + stype.getName() + " create a RestWebSocketServlet");
                 if (ss != null) {
                     String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                     for (int i = 0; i < mappings.length; i++) {
@@ -355,13 +355,13 @@ public class NodeHttpServer extends NodeServer {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
-                sb.append(threadName).append(" Load ").append(as.getKey());
+                sb.append(localThreadName).append(" Load ").append(as.getKey());
                 for (int i = 0; i < max - as.getKey().length(); i++) {
                     sb.append(' ');
                 }
                 sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
             }
-            sb.append(threadName).append(" All HttpServlets load cost ").append(System.currentTimeMillis() - starts).append(" ms").append(LINE_SEPARATOR);
+            sb.append(localThreadName).append(" All HttpServlets load cost ").append(System.currentTimeMillis() - starts).append(" ms").append(LINE_SEPARATOR);
         }
     }
 }
