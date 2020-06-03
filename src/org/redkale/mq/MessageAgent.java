@@ -117,41 +117,41 @@ public abstract class MessageAgent {
         this.httpNodes.put(topic, new HttpMessageNode(ns, service, servlet, processor, createConsumer(topic, processor)));
     }
 
-    //格式: sncp:req:user
+    //格式: sncp.req.user
     protected String generateSncpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
-        return "sncp:req:" + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
+        return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
-    //格式: sncp:resp:node10
+    //格式: sncp.resp.node10
     protected String generateSncpRespTopic() {
-        return "sncp:resp:node" + nodeid;
+        return "sncp.resp.node" + nodeid;
     }
 
-    //格式: http:req:user
+    //格式: http.req.user
     public String generateHttpReqTopic(String module) {
-        return "http:req:" + module.toLowerCase();
+        return "http.req." + module.toLowerCase();
     }
 
-    //格式: http:req:user
+    //格式: http.req.user
     protected String generateHttpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
-        return "http:req:" + Rest.getWebModuleName(service.getClass()).toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
+        return "http.req." + Rest.getRestName(service).toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
-    //格式: http:resp:node10
+    //格式: http.resp.node10
     protected String generateHttpRespTopic() {
-        return "http:resp:node" + nodeid;
+        return "http.resp.node" + nodeid;
     }
 
-    //格式: ws:resp:wsgame
+    //格式: ws.resp.wsgame
     public String generateWebSocketRespTopic(WebSocketNode node) {
-        return "ws:resp:" + node.getName();
+        return "ws.resp." + node.getName();
     }
 
-    //格式: xxxx:resp:node10
+    //格式: xxxx.resp.node10
     protected String generateRespTopic(String protocol) {
-        return protocol + ":resp:node" + nodeid;
+        return protocol + ".resp.node" + nodeid;
     }
 
     protected static class HttpMessageNode {

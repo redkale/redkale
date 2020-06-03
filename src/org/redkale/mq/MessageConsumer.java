@@ -22,15 +22,19 @@ public abstract class MessageConsumer extends Thread {
 
     protected final String topic;
 
+    protected MessageAgent agent;
+
     protected final MessageProcessor processor;
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected volatile boolean closed;
 
-    protected MessageConsumer(String topic, MessageProcessor processor) {
+    protected MessageConsumer(MessageAgent agent, String topic, MessageProcessor processor) {
+        Objects.requireNonNull(agent);
         Objects.requireNonNull(topic);
         Objects.requireNonNull(processor);
+        this.agent = agent;
         this.topic = topic;
         this.processor = processor;
     }

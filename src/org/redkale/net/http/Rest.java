@@ -23,6 +23,7 @@ import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.Cryptor;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.util.*;
 import org.redkale.source.Flipper;
@@ -172,7 +173,7 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name().trim() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    public static String getWebModuleName(Class<? extends Service> serviceType) {
+    static String getWebModuleName(Class<? extends Service> serviceType) {
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller == null) return serviceType.getSimpleName().replaceAll("Service.*$", "");
         if (controller.ignore()) return null;
@@ -203,6 +204,13 @@ public final class Rest {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static String getRestName(Service service) {
+        final RestService controller = service.getClass().getAnnotation(RestService.class);
+        if (controller != null && !controller.name().isEmpty()) return controller.name();
+        final Class serviceType = Sncp.getServiceType(service);
+        return serviceType.getSimpleName().replaceAll("Service.*$", "");
     }
 
     //仅供Rest动态构建里 currentUserid() 使用
