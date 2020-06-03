@@ -778,6 +778,13 @@ public final class Application {
         runServers(timecd, others);
         runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
         timecd.await();
+        if (this.messageAgents != null) {
+            long s = System.currentTimeMillis();
+            for (NodeServer ns : servers) {
+                ns.messageAgents.values().forEach(agent -> agent.start().join());
+            }
+            logger.info(this.getClass().getSimpleName() + " messageagent init in " + (System.currentTimeMillis() - s) + " ms\r\n");
+        }
         //if (!singletonrun) signalHandle();
         //if (!singletonrun) clearPersistData();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");

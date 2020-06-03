@@ -550,9 +550,6 @@ public abstract class NodeServer {
 
     //Server.start执行之后调用
     protected void postStartServer(Set<Service> localServices, Set<Service> remoteServices) {
-        if (!this.messageAgents.isEmpty()) { //MQ
-            this.messageAgents.values().forEach(agent -> agent.start());
-        }
     }
 
     protected abstract ClassFilter<Filter> createFilterClassFilter();

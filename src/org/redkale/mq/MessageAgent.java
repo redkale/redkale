@@ -48,7 +48,11 @@ public abstract class MessageAgent {
     }
 
     public CompletableFuture<Void> start() {
-        return null;
+        this.httpNodes.values().forEach(node -> {
+            node.consumer.start();
+            node.consumer.waitFor();
+        });
+        return CompletableFuture.completedFuture(null);
     }
 
     public CompletableFuture<Void> stop() {
