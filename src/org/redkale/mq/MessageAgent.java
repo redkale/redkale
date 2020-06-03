@@ -180,15 +180,15 @@ public abstract class MessageAgent {
         return "http.req." + module.toLowerCase();
     }
 
+    //格式: http.resp.node10
+    public String generateHttpRespTopic() {
+        return "http.resp.node" + nodeid;
+    }
+
     //格式: http.req.user
     protected String generateHttpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
         return "http.req." + Rest.getRestName(service).toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
-    }
-
-    //格式: http.resp.node10
-    protected String generateHttpRespTopic() {
-        return "http.resp.node" + nodeid;
     }
 
     //格式: ws.resp.wsgame
