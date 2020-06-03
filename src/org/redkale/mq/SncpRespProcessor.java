@@ -24,7 +24,7 @@ public class SncpRespProcessor implements MessageProcessor {
 
     protected final MessageAgent agent;
 
-    protected final ConcurrentHashMap<Long, RespFutureNode> respNodes = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<Long, MessageRespFutureNode> respNodes = new ConcurrentHashMap<>();
 
     public SncpRespProcessor(Logger logger, MessageAgent agent) {
         this.logger = logger;
@@ -33,7 +33,7 @@ public class SncpRespProcessor implements MessageProcessor {
 
     @Override
     public void process(MessageRecord message) {
-        RespFutureNode node = respNodes.get(message.getSeqid());
+        MessageRespFutureNode node = respNodes.get(message.getSeqid());
         if (node == null) {
             logger.log(Level.WARNING, SncpRespProcessor.class.getSimpleName() + " process " + message + " error");
             return;
@@ -43,24 +43,9 @@ public class SncpRespProcessor implements MessageProcessor {
 
     public CompletableFuture<MessageRecord> createFuture(long seqid) {
         CompletableFuture<MessageRecord> future = new CompletableFuture<>();
-        RespFutureNode node = new RespFutureNode(seqid, future);
+        MessageRespFutureNode node = new MessageRespFutureNode(seqid, future);
         respNodes.put(seqid, node);
         return future;
     }
 
-    protected static class RespFutureNode {
-
-        public final long seqid;
-
-        public final long createtime;
-
-        public final CompletableFuture<MessageRecord> future;
-
-        public RespFutureNode(long seqid, CompletableFuture<MessageRecord> future) {
-            this.seqid = seqid;
-            this.future = future;
-            this.createtime = System.currentTimeMillis();
-        }
-
-    }
 }

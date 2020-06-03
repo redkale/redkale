@@ -160,16 +160,16 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     public HttpResponse(HttpContext context, HttpRequest request, ObjectPool<Response> responsePool, HttpResponseConfig config) {
         super(context, request, responsePool);
-        this.plainContentType = config.plainContentType == null || config.plainContentType.isEmpty() ? "text/plain; charset=utf-8" : config.plainContentType;
-        this.jsonContentType = config.jsonContentType == null || config.jsonContentType.isEmpty() ? "application/json; charset=utf-8" : config.jsonContentType;
+        this.plainContentType = config == null || config.plainContentType == null || config.plainContentType.isEmpty() ? "text/plain; charset=utf-8" : config.plainContentType;
+        this.jsonContentType = config == null || config.jsonContentType == null || config.jsonContentType.isEmpty() ? "application/json; charset=utf-8" : config.jsonContentType;
         this.plainContentTypeBytes = ("Content-Type: " + this.plainContentType + "\r\n").getBytes();
         this.jsonContentTypeBytes = ("Content-Type: " + this.jsonContentType + "\r\n").getBytes();
-        this.defaultAddHeaders = config.defaultAddHeaders;
-        this.defaultSetHeaders = config.defaultSetHeaders;
-        this.defaultCookie = config.defaultCookie;
-        this.autoOptions = config.autoOptions;
-        this.dateSupplier = config.dateSupplier;
-        this.renders = config.renders;
+        this.defaultAddHeaders = config == null ? null : config.defaultAddHeaders;
+        this.defaultSetHeaders = config == null ? null : config.defaultSetHeaders;
+        this.defaultCookie = config == null ? null : config.defaultCookie;
+        this.autoOptions = config == null ? false : config.autoOptions;
+        this.dateSupplier = config == null ? null : config.dateSupplier;
+        this.renders = config == null ? null : config.renders;
         this.hasRender = renders != null && !renders.isEmpty();
         this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
         this.contentType = this.plainContentType;
