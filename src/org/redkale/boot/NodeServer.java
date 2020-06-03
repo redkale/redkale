@@ -73,6 +73,8 @@ public abstract class NodeServer {
     //server节点的配置
     protected AnyValue serverConf;
 
+    protected final String threadName;
+
     //加载server节点后的拦截器
     protected NodeInterceptor interceptor;
 
@@ -93,6 +95,7 @@ public abstract class NodeServer {
     private volatile int maxNameLength = 0;
 
     public NodeServer(Application application, Server server) {
+        this.threadName = Thread.currentThread().getName();
         this.application = application;
         this.server = server;
         this.resourceFactory = server.getResourceFactory();
@@ -721,4 +724,7 @@ public abstract class NodeServer {
         return new LinkedHashSet<>(remoteServices);
     }
 
+    public String getThreadName() {
+        return this.threadName;
+    }
 }

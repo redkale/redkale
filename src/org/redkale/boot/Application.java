@@ -780,10 +780,12 @@ public final class Application {
         timecd.await();
         if (this.messageAgents != null) {
             long s = System.currentTimeMillis();
-            for (NodeServer ns : servers) {
-                ns.messageAgents.values().forEach(agent -> agent.start().join());
+            final StringBuffer sb = new StringBuffer();
+            for (MessageAgent agent : this.messageAgents) {
+                agent.start(sb).join();
             }
-            logger.info(this.getClass().getSimpleName() + " messageagent init in " + (System.currentTimeMillis() - s) + " ms\r\n");
+            if (sb.length() > 0) logger.info(sb.toString());
+            logger.info(this.getClass().getSimpleName() + " MessageAgent init in " + (System.currentTimeMillis() - s) + " ms\r\n");
         }
         //if (!singletonrun) signalHandle();
         //if (!singletonrun) clearPersistData();
@@ -995,6 +997,13 @@ public final class Application {
         }
         List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs
         Collections.reverse(localServers); //倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
+        if (this.messageAgents != null) {
+            long s = System.currentTimeMillis();
+            for (MessageAgent agent : this.messageAgents) {
+                agent.stop().join();
+            }
+            logger.info(this.getClass().getSimpleName() + " MessageAgent stop in " + (System.currentTimeMillis() - s) + " ms\r\n");
+        }
         localServers.stream().forEach((server) -> {
             try {
                 server.shutdown();

@@ -7,6 +7,7 @@ package org.redkale.mq;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
@@ -47,10 +48,16 @@ public abstract class MessageAgent {
     public void init(AnyValue config) {
     }
 
-    public CompletableFuture<Void> start() {
+    public CompletableFuture<Void> start(final StringBuffer sb) {
+        AtomicInteger maxlen = new AtomicInteger();
         this.httpNodes.values().forEach(node -> {
+            if (node.consumer.topic.length() > maxlen.get()) maxlen.set(node.consumer.topic.length());
+        });
+        this.httpNodes.values().forEach(node -> {
+            long s = System.currentTimeMillis();
             node.consumer.start();
             node.consumer.waitFor();
+            sb.append("[").append(node.server.getThreadName()).append("] MessageConsumer(topic=").append(fillString(node.consumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
         });
         return CompletableFuture.completedFuture(null);
     }
@@ -155,6 +162,15 @@ public abstract class MessageAgent {
     //格式: xxxx.resp.node10
     protected String generateRespTopic(String protocol) {
         return protocol + ".resp.node" + nodeid;
+    }
+
+    protected static String fillString(String value, int maxlen) {
+        StringBuilder sb = new StringBuilder(maxlen);
+        sb.append(value);
+        for (int i = 0; i < maxlen - value.length(); i++) {
+            sb.append(' ');
+        }
+        return sb.toString();
     }
 
     protected static class HttpMessageNode {
