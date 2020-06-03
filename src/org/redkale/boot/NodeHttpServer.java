@@ -121,7 +121,7 @@ public class NodeHttpServer extends NodeServer {
                         resourceFactory.register(RESNAME_SNCP_ADDR, String.class, sncpResFactory.find(RESNAME_SNCP_ADDR, String.class));
                     }
                     if (nodeService == null) {
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, null, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
                     resourceFactory.inject(nodeService, self);

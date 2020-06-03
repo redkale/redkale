@@ -281,7 +281,7 @@ public abstract class NodeServer {
                             SncpClient client = Sncp.getSncpClient(srcService);
                             final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                             final Set<String> groups = new HashSet<>();
-                            source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
+                            source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, client == null ? null : client.getMessageAgent(), appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
                         }
                     }
                 }
@@ -321,7 +321,7 @@ public abstract class NodeServer {
                     final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("value"));
                     Object source = null;
                     if (CacheSource.class.isAssignableFrom(sourceType)) { // CacheSource
-                        source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, appResFactory, appSncpTranFactory, sncpAddr, null, Sncp.getConf(srcService));
+                        source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, client == null ? null : client.getMessageAgent(), appResFactory, appSncpTranFactory, sncpAddr, null, Sncp.getConf(srcService));
                         Type genericType = field.getGenericType();
                         ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                         Type valType = pt == null ? null : pt.getActualTypeArguments()[0];
@@ -366,7 +366,7 @@ public abstract class NodeServer {
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) groups.add(NodeServer.this.sncpGroup);
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, null, application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
                         ((WebSocketNodeService) nodeService).setName(resourceName);
                     }
@@ -431,23 +431,24 @@ public abstract class NodeServer {
                         return;
                     }
 
+                    MessageAgent agent = null;
+                    if (entry.getProperty() != null && entry.getProperty().getValue("mq") != null) {
+                        agent = application.getMessageAgent(entry.getProperty().getValue("mq"));
+                        if (agent != null) messageAgents.put(agent.getName(), agent);
+                    }
+
                     Service service;
                     boolean ws = src instanceof WebSocketServlet;
                     if (ws || localed) { //本地模式
-                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
+                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, agent, appResourceFactory, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     } else {
-                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
+                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, agent, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     }
                     final Class restype = Sncp.getResourceType(service);
                     if (rf.find(resourceName, restype) == null) {
                         regFactory.register(resourceName, restype, service);
                     } else if (isSNCP() && !entry.isAutoload()) {
                         throw new RuntimeException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + groups + ") is repeat.");
-                    }
-                    MessageAgent agent = null;
-                    if (entry.getProperty() != null && entry.getProperty().getValue("mq") != null) {
-                        agent = application.getMessageAgent(entry.getProperty().getValue("mq"));
-                        if (agent != null) messageAgents.put(agent.getName(), agent);
                     }
                     if (Sncp.isRemote(service)) {
                         remoteServices.add(service);

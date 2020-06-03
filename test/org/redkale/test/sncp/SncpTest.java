@@ -81,7 +81,7 @@ public class SncpTest {
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
         final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
         transFactory.addGroupInfo("client", set);
-        final SncpTestIService service = Sncp.createSimpleRemoteService(SncpTestIService.class, transFactory, addr, "client");
+        final SncpTestIService service = Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, addr, "client");
         ResourceFactory.root().inject(service);
 
 //        SncpTestBean bean = new SncpTestBean();
@@ -94,7 +94,7 @@ public class SncpTest {
         SncpTestBean callbean = new SncpTestBean();
         callbean.setId(1);
         callbean.setContent("数据X");
-        service.queryLongResult("f", 3,33L);
+        service.queryLongResult("f", 3, 33L);
 
         service.insert(callbean);
         System.out.println("bean.id应该会被修改(id不会是1)： " + callbean);
@@ -159,7 +159,7 @@ public class SncpTest {
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
                     final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
                     transFactory.addGroupInfo("server", set);
-                    SncpTestIService service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, addr, "server");
+                    SncpTestIService service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, transFactory, addr, "server");
                     ResourceFactory.root().inject(service);
                     server.addSncpServlet(service);
                     System.out.println(service);
@@ -194,7 +194,7 @@ public class SncpTest {
 
                     final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
                     transFactory.addGroupInfo("server", set);
-                    Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, transFactory, addr, "server");
+                    Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, transFactory, addr, "server");
                     server.addSncpServlet(service);
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");

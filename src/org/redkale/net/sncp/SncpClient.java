@@ -17,6 +17,7 @@ import java.util.logging.*;
 import javax.annotation.Resource;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import static org.redkale.net.sncp.SncpRequest.*;
 import org.redkale.service.*;
@@ -56,6 +57,8 @@ public final class SncpClient {
 
     protected final ExecutorService executor;
 
+    protected final MessageAgent agent;
+
     protected final Supplier<ByteBuffer> bufferSupplier;
 
     @Resource
@@ -70,11 +73,12 @@ public final class SncpClient {
     //远程模式, 可能为null
     protected Transport remoteGroupTransport;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, final TransportFactory factory,
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent agent, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
         this.remote = remote;
         this.executor = factory.getExecutor();
         this.bufferSupplier = factory.getBufferSupplier();
+        this.agent = agent;
         Class<?> tn = serviceTypeOrImplClass;
         Version ver = tn.getAnnotation(Version.class);
         this.serviceClass = serviceClass;
@@ -102,6 +106,10 @@ public final class SncpClient {
             actions.add(new SncpAction(serviceClass, method, Sncp.hash(method)));
         }
         return actions;
+    }
+
+    public MessageAgent getMessageAgent() {
+        return agent;
     }
 
     public InetSocketAddress getClientAddress() {

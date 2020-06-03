@@ -46,7 +46,7 @@ public class ABMainService implements Service {
         resFactory.register(BsonConvert.root());
 
         //------------------------ 初始化 CService ------------------------------------
-        CService cservice = Sncp.createSimpleLocalService(CService.class, transFactory, new InetSocketAddress("127.0.0.1", 5577), "g77");
+        CService cservice = Sncp.createSimpleLocalService(CService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5577), "g77");
         SncpServer cserver = new SncpServer();
         cserver.getLogger().setLevel(Level.WARNING);
         cserver.addSncpServlet(cservice);
@@ -54,8 +54,8 @@ public class ABMainService implements Service {
         cserver.start();
 
         //------------------------ 初始化 BCService ------------------------------------
-        BCService bcservice = Sncp.createSimpleLocalService(BCService.class, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g88");
-        CService remoteCService = Sncp.createSimpleRemoteService(CService.class, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g77");
+        BCService bcservice = Sncp.createSimpleLocalService(BCService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g88");
+        CService remoteCService = Sncp.createSimpleRemoteService(CService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g77");
         resFactory.inject(remoteCService);
         resFactory.register("", remoteCService);
         SncpServer bcserver = new SncpServer();
@@ -65,8 +65,8 @@ public class ABMainService implements Service {
         bcserver.start();
 
         //------------------------ 初始化 ABMainService ------------------------------------
-        ABMainService service = Sncp.createSimpleLocalService(ABMainService.class, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g99");
-        BCService remoteBCService = Sncp.createSimpleRemoteService(BCService.class, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g88");
+        ABMainService service = Sncp.createSimpleLocalService(ABMainService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g99");
+        BCService remoteBCService = Sncp.createSimpleRemoteService(BCService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g88");
         resFactory.inject(remoteBCService);
         resFactory.register("", remoteBCService);
 

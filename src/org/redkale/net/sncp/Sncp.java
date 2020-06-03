@@ -18,6 +18,7 @@ import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.sncp.SncpClient.SncpAction;
 import org.redkale.service.*;
@@ -413,9 +414,9 @@ public abstract class Sncp {
         }
     }
 
-    public static <T extends Service> T createSimpleLocalService(final Class<T> serviceImplClass,
+    public static <T extends Service> T createSimpleLocalService(final Class<T> serviceImplClass, final MessageAgent remoteAgent,
         final TransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
-        return createLocalService(null, "", serviceImplClass, ResourceFactory.root(), transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
+        return createLocalService(null, "", serviceImplClass, remoteAgent, ResourceFactory.root(), transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
     /**
@@ -426,6 +427,7 @@ public abstract class Sncp {
      * @param classLoader       ClassLoader
      * @param name              资源名
      * @param serviceImplClass  Service类
+     * @param remoteAgent       MQ管理器
      * @param resourceFactory   ResourceFactory
      * @param transportFactory  TransportFactory
      * @param clientSncpAddress 本地IP地址
@@ -439,6 +441,7 @@ public abstract class Sncp {
         final ClassLoader classLoader,
         final String name,
         final Class<T> serviceImplClass,
+        final MessageAgent remoteAgent,
         final ResourceFactory resourceFactory,
         final TransportFactory transportFactory,
         final InetSocketAddress clientSncpAddress,
@@ -459,7 +462,7 @@ public abstract class Sncp {
                         if (!field.getType().isAssignableFrom(newClazz)) continue;
                         field.setAccessible(true);
                         if (remoteService == null && clientSncpAddress != null) {
-                            remoteService = createRemoteService(classLoader, name, serviceImplClass, transportFactory, clientSncpAddress, groups, conf);
+                            remoteService = createRemoteService(classLoader, name, serviceImplClass, remoteAgent, transportFactory, clientSncpAddress, groups, conf);
                         }
                         if (remoteService != null) field.set(rs, remoteService);
                     }
@@ -470,7 +473,7 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, serviceImplClass, rs, transportFactory, false, newClazz, clientSncpAddress);
+                    client = new SncpClient(name, serviceImplClass, rs, remoteAgent, transportFactory, false, newClazz, clientSncpAddress);
                     e.set(rs, client);
                     transportFactory.addSncpService(rs);
                 } catch (NoSuchFieldException ne) {
@@ -491,9 +494,9 @@ public abstract class Sncp {
         }
     }
 
-    public static <T extends Service> T createSimpleRemoteService(final Class<T> serviceImplClass,
+    public static <T extends Service> T createSimpleRemoteService(final Class<T> serviceImplClass, final MessageAgent agent,
         final TransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
-        return createRemoteService(null, "", serviceImplClass, transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
+        return createRemoteService(null, "", serviceImplClass, agent, transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
     /**
@@ -530,6 +533,7 @@ public abstract class Sncp {
      * @param classLoader            ClassLoader
      * @param name                   资源名
      * @param serviceTypeOrImplClass Service类
+     * @param agent                  MQ管理器
      * @param transportFactory       TransportFactory
      * @param clientAddress          本地IP地址
      * @param groups0                所有的组节点，包含自身
@@ -543,6 +547,7 @@ public abstract class Sncp {
         final ClassLoader classLoader,
         final String name,
         final Class<T> serviceTypeOrImplClass,
+        final MessageAgent agent,
         final TransportFactory transportFactory,
         final InetSocketAddress clientAddress,
         final Set<String> groups0,
@@ -565,7 +570,7 @@ public abstract class Sncp {
         try {
             Class newClazz = loader.loadClass(newDynName.replace('/', '.'));
             T rs = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, agent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
@@ -746,7 +751,7 @@ public abstract class Sncp {
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
             T rs = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, agent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             {
