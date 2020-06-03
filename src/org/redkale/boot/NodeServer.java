@@ -393,7 +393,7 @@ public abstract class NodeServer {
     protected void loadService(ClassFilter<? extends Service> serviceFilter, ClassFilter otherFilter) throws Exception {
         if (serviceFilter == null) return;
         final long starts = System.currentTimeMillis();
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
         final ResourceFactory appResourceFactory = application.getResourceFactory();
@@ -480,7 +480,7 @@ public abstract class NodeServer {
 
         if (sb != null) {
             remoteServices.forEach(y -> {
-                sb.append(threadName).append(Sncp.toSimpleString(y, maxNameLength, maxClassNameLength)).append(" load and inject").append(LINE_SEPARATOR);
+                sb.append(localThreadName).append(Sncp.toSimpleString(y, maxNameLength, maxClassNameLength)).append(" load and inject").append(LINE_SEPARATOR);
             });
         }
         //----------------- init -----------------
@@ -506,16 +506,16 @@ public abstract class NodeServer {
             y.init(Sncp.getConf(y));
             long e = System.currentTimeMillis() - s;
             String serstr = Sncp.toSimpleString(y, maxNameLength, maxClassNameLength);
-            if (slist != null) slist.add(new StringBuilder().append(threadName).append(serstr).append(" load and init in ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
+            if (slist != null) slist.add(new StringBuilder().append(localThreadName).append(serstr).append(" load and init in ").append(e).append(" ms").append(LINE_SEPARATOR).toString());
         });
         if (slist != null && sb != null) {
             List<String> wlist = new ArrayList<>(slist); //直接使用CopyOnWriteArrayList偶尔会出现莫名的异常(CopyOnWriteArrayList源码1185行)
             for (String s : wlist) {
                 sb.append(s);
             }
-            sb.append(threadName).append("All Services load cost ").append(System.currentTimeMillis() - starts).append(" ms" + LINE_SEPARATOR);
+            sb.append(localThreadName).append("All Services load cost ").append(System.currentTimeMillis() - starts).append(" ms" + LINE_SEPARATOR);
         }
-        if (sb != null && preinite > 10) sb.append(threadName).append("ALL cluster agents load ").append(preinite).append(" ms" + LINE_SEPARATOR);
+        if (sb != null && preinite > 10) sb.append(localThreadName).append("ALL cluster agents load ").append(preinite).append(" ms" + LINE_SEPARATOR);
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 

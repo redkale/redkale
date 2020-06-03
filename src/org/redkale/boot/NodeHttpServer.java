@@ -361,7 +361,7 @@ public class NodeHttpServer extends NodeServer {
                 }
                 sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
             }
-            sb.append(threadName).append(" All HttpServlets load cost " + (System.currentTimeMillis() - starts) + " ms" + LINE_SEPARATOR);
+            sb.append(threadName).append(" All HttpServlets load cost ").append(System.currentTimeMillis() - starts).append(" ms").append(LINE_SEPARATOR);
         }
     }
 }

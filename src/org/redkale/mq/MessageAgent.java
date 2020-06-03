@@ -42,6 +42,8 @@ public abstract class MessageAgent {
 
     protected MessageConsumer sncpRespConsumer;
 
+    protected SncpMessageProcessor sncpRespProcessor;
+
     //本地Service消息接收处理器， key:topic
     protected ConcurrentHashMap<String, HttpMessageNode> httpNodes = new ConcurrentHashMap<>();
 
@@ -49,15 +51,21 @@ public abstract class MessageAgent {
     }
 
     public CompletableFuture<Void> start(final StringBuffer sb) {
-        AtomicInteger maxlen = new AtomicInteger();
+        AtomicInteger maxlen = new AtomicInteger(sncpRespConsumer == null ? 0 : sncpRespConsumer.topic.length());
         this.httpNodes.values().forEach(node -> {
             if (node.consumer.topic.length() > maxlen.get()) maxlen.set(node.consumer.topic.length());
         });
+        if (this.sncpRespConsumer != null) {
+            long s = System.currentTimeMillis();
+            this.sncpRespConsumer.start();
+            this.sncpRespConsumer.waitFor();
+            sb.append("MessageConsumer(topic=").append(fillString(this.sncpRespConsumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
+        }
         this.httpNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
             node.consumer.start();
             node.consumer.waitFor();
-            sb.append("[").append(node.server.getThreadName()).append("] MessageConsumer(topic=").append(fillString(node.consumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
+            sb.append("MessageConsumer(topic=").append(fillString(node.consumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
         });
         return CompletableFuture.completedFuture(null);
     }
@@ -119,6 +127,12 @@ public abstract class MessageAgent {
 
     //创建指定topic的消费处理器
     public abstract MessageConsumer createConsumer(String topic, MessageProcessor processor);
+
+    public final synchronized void putSncpResp(NodeSncpServer ns) {
+        if (this.sncpRespConsumer != null) return;
+        this.sncpRespProcessor = new SncpMessageProcessor(logger, this);
+        this.sncpRespConsumer = createConsumer(generateSncpRespTopic(), sncpRespProcessor);
+    }
 
     public final synchronized void putHttpService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         String topic = generateHttpReqTopic(service);

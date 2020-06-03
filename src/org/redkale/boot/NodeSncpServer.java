@@ -58,11 +58,11 @@ public class NodeSncpServer extends NodeServer {
         //-------------------------------------------------------------------
         if (sncpServer == null) return; //调试时server才可能为null
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         List<SncpServlet> servlets = sncpServer.getSncpServlets();
         Collections.sort(servlets);
         for (SncpServlet en : servlets) {
-            if (sb != null) sb.append(threadName).append(" Load ").append(en).append(LINE_SEPARATOR);
+            if (sb != null) sb.append(localThreadName).append(" Load ").append(en).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());
     }
@@ -84,7 +84,7 @@ public class NodeSncpServer extends NodeServer {
     @SuppressWarnings("unchecked")
     protected void loadSncpFilter(final AnyValue servletsConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
         for (FilterEntry<? extends Filter> en : list) {
             Class<SncpFilter> clazz = (Class<SncpFilter>) en.getType();
@@ -93,7 +93,7 @@ public class NodeSncpServer extends NodeServer {
             resourceFactory.inject(filter, this);
             DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
             this.sncpServer.addSncpFilter(filter, filterConf);
-            if (sb != null) sb.append(threadName).append(" Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+            if (sb != null) sb.append(localThreadName).append(" Load ").append(clazz.getName()).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
