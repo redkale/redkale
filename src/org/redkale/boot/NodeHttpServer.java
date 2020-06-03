@@ -276,6 +276,7 @@ public class NodeHttpServer extends NodeServer {
                     WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
                     if (ws != null && !ws.repair()) prefix2 = "";
                     resourceFactory.inject(servlet, NodeHttpServer.this);
+                    if (agent != null) agent.putHttpService(this, service, servlet);
                     //if (finest) logger.finest(threadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
                     if (ss != null) {
                         String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();

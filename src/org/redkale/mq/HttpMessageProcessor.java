@@ -21,19 +21,20 @@ import org.redkale.service.Service;
  */
 public class HttpMessageProcessor implements MessageProcessor {
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+    protected final Logger logger;
 
     protected final MessageProducer producer;
 
-    protected final NodeHttpServer ns;
+    protected final NodeHttpServer server;
 
     protected final Service service;
 
     protected final HttpServlet servlet;
 
-    public HttpMessageProcessor(MessageProducer producer, NodeHttpServer ns, Service service, HttpServlet servlet) {
+    public HttpMessageProcessor(Logger logger, MessageProducer producer, NodeHttpServer server, Service service, HttpServlet servlet) {
+        this.logger = logger;
         this.producer = producer;
-        this.ns = ns;
+        this.server = server;
         this.service = service;
         this.servlet = servlet;
     }
@@ -41,7 +42,7 @@ public class HttpMessageProcessor implements MessageProcessor {
     @Override
     public void process(MessageRecord message) {
         try {
-            HttpContext context = ns.getHttpServer().getContext();
+            HttpContext context = server.getHttpServer().getContext();
             HttpMessageRequest request = new HttpMessageRequest(context, message);
             HttpMessageResponse response = new HttpMessageResponse(context, request, null, null, producer);
             servlet.execute(request, response);
@@ -49,6 +50,22 @@ public class HttpMessageProcessor implements MessageProcessor {
             HttpMessageResponse.finishHttpResult(producer, message.getResptopic(), new HttpResult().status(500));
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
         }
+    }
+
+    public MessageProducer getProducer() {
+        return producer;
+    }
+
+    public NodeHttpServer getServer() {
+        return server;
+    }
+
+    public Service getService() {
+        return service;
+    }
+
+    public HttpServlet getServlet() {
+        return servlet;
     }
 
 }

@@ -7,7 +7,6 @@ package org.redkale.mq;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.*;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
@@ -43,7 +42,7 @@ public abstract class MessageAgent {
     protected MessageConsumer sncpRespConsumer;
 
     //本地Service消息接收处理器， key:topic
-    protected ConcurrentHashMap<String, Service> localConsumers;
+    protected ConcurrentHashMap<String, HttpMessageNode> httpNodes = new ConcurrentHashMap<>();
 
     public void init(AnyValue config) {
     }
@@ -105,10 +104,13 @@ public abstract class MessageAgent {
     public abstract List<String> queryTopic();
 
     //创建指定topic的消费处理器
-    public abstract MessageConsumer createConsumer(String topic, Consumer<MessageRecord> processor);
+    public abstract MessageConsumer createConsumer(String topic, MessageProcessor processor);
 
-    public final void putHttpService(NodeHttpServer ns, Service service) {
-
+    public final synchronized void putHttpService(NodeHttpServer ns, Service service, HttpServlet servlet) {
+        String topic = generateHttpReqTopic(service);
+        if (httpNodes.containsKey(topic)) throw new RuntimeException("topic(" + topic + ") is repeat");
+        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, this.producer, ns, service, servlet);
+        this.httpNodes.put(topic, new HttpMessageNode(ns, service, servlet, processor, createConsumer(topic, processor)));
     }
 
     //格式: sncp:req:user
@@ -148,4 +150,25 @@ public abstract class MessageAgent {
         return protocol + ":resp:node" + nodeid;
     }
 
+    protected static class HttpMessageNode {
+
+        public final NodeHttpServer server;
+
+        public final Service service;
+
+        public final HttpServlet servlet;
+
+        public final HttpMessageProcessor processor;
+
+        public final MessageConsumer consumer;
+
+        public HttpMessageNode(NodeHttpServer server, Service service, HttpServlet servlet, HttpMessageProcessor processor, MessageConsumer consumer) {
+            this.server = server;
+            this.service = service;
+            this.servlet = servlet;
+            this.processor = processor;
+            this.consumer = consumer;
+        }
+
+    }
 }
