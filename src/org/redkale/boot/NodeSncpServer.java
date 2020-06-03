@@ -13,7 +13,7 @@ import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.util.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 
@@ -34,6 +34,7 @@ public class NodeSncpServer extends NodeServer {
         super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
         this.consumer = sncpServer == null || application.singletonrun ? null : (agent, x) -> {
+            if (x.getClass().getAnnotation(Local.class) != null) return;
             SncpDynServlet servlet = sncpServer.addSncpServlet(x); //singleton模式下不生成SncpServlet
             if (agent != null) agent.putService(this, x, servlet);
         };

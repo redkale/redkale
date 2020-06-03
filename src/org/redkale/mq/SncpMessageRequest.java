@@ -19,12 +19,13 @@ import org.redkale.net.sncp.*;
  */
 public class SncpMessageRequest extends SncpRequest {
 
-    public SncpMessageRequest(SncpContext context) {
+    protected MessageRecord message;
+
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public SncpMessageRequest(SncpContext context, MessageRecord message) {
         super(context, null);
+        this.message = message;
+        readHeader(ByteBuffer.wrap(message.getContent()));
     }
 
-    @Override
-    public int readHeader(ByteBuffer buffer) {
-        return super.readHeader(buffer);
-    }
 }

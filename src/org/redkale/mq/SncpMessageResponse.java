@@ -6,7 +6,7 @@
 package org.redkale.mq;
 
 import java.nio.ByteBuffer;
-import java.util.function.*;
+import org.redkale.convert.ConvertType;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
 import org.redkale.net.sncp.*;
@@ -26,16 +26,18 @@ public class SncpMessageResponse extends SncpResponse {
 
     protected MessageRecord message;
 
-    protected BiConsumer<MessageRecord, byte[]> resultConsumer;
+    protected MessageProducer producer;
 
-    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, ObjectPool<Response> responsePool) {
+    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, ObjectPool<Response> responsePool, MessageProducer producer) {
         super(context, request, responsePool);
+        this.message = request.message;
+        this.producer = producer;
     }
 
-    public SncpMessageResponse resultConsumer(MessageRecord message, BiConsumer<MessageRecord, byte[]> resultConsumer) {
+    public SncpMessageResponse(SncpContext context, MessageRecord message, ObjectPool<Response> responsePool, MessageProducer producer) {
+        super(context, new SncpMessageRequest(context, message), responsePool);
         this.message = message;
-        this.resultConsumer = resultConsumer;
-        return this;
+        this.producer = producer;
     }
 
     @Override
@@ -43,12 +45,12 @@ public class SncpMessageResponse extends SncpResponse {
         if (out == null) {
             final byte[] result = new byte[SncpRequest.HEADER_SIZE];
             fillHeader(ByteBuffer.wrap(result), 0, retcode);
-            resultConsumer.accept(message, result);
+            producer.apply(new MessageRecord(ConvertType.BSON, message.getResptopic(), null, (byte[]) null));
             return;
         }
         final int respBodyLength = out.count(); //body总长度
         final byte[] result = out.toArray();
         fillHeader(ByteBuffer.wrap(result), respBodyLength - HEADER_SIZE, retcode);
-        resultConsumer.accept(message, result);
+        producer.apply(new MessageRecord(ConvertType.BSON, message.getResptopic(), null, result));
     }
 }

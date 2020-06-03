@@ -23,25 +23,25 @@ import org.redkale.util.ObjectPool;
  */
 public class HttpMessageResponse extends HttpResponse {
 
-    protected MessageRecord reqMessage;
+    protected MessageRecord message;
 
     protected MessageProducer producer;
 
     public HttpMessageResponse(HttpContext context, HttpMessageRequest request,
         ObjectPool<Response> responsePool, HttpResponseConfig config, MessageProducer producer) {
         super(context, request, responsePool, config);
-        this.reqMessage = request.reqMessage;
+        this.message = request.message;
         this.producer = producer;
     }
 
-    public HttpMessageResponse(HttpContext context, MessageRecord reqMessage, HttpResponseConfig config, MessageProducer producer) {
-        super(context, new HttpMessageRequest(context, reqMessage), null, config);
-        this.reqMessage = reqMessage;
+    public HttpMessageResponse(HttpContext context, MessageRecord message, HttpResponseConfig config, MessageProducer producer) {
+        super(context, new HttpMessageRequest(context, message), null, config);
+        this.message = message;
         this.producer = producer;
     }
 
     public void finishHttpResult(HttpResult result) {
-        finishHttpResult(this.producer, reqMessage.getResptopic(), result);
+        finishHttpResult(this.producer, message.getResptopic(), result);
     }
 
     public static void finishHttpResult(MessageProducer producer, String resptopic, HttpResult result) {
@@ -52,44 +52,44 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finishJson(org.redkale.service.RetResult ret) {
-        if (reqMessage.isEmptyResptopic()) return;
+        if (message.isEmptyResptopic()) return;
         finishHttpResult(new HttpResult(ret.clearConvert(), ret));
     }
 
     @Override
     public void finish(String obj) {
-        if (reqMessage.isEmptyResptopic()) return;
+        if (message.isEmptyResptopic()) return;
         finishHttpResult(new HttpResult(obj == null ? "" : obj));
     }
 
     @Override
     public void finish(int status, String message) {
-        if (reqMessage.isEmptyResptopic()) return;
+        if (this.message.isEmptyResptopic()) return;
         finishHttpResult(new HttpResult(message == null ? "" : message).status(status));
     }
 
     @Override
     public void finish(final Convert convert, HttpResult result) {
-        if (reqMessage.isEmptyResptopic()) return;
+        if (message.isEmptyResptopic()) return;
         if (convert != null) result.convert(convert);
         finishHttpResult(result);
     }
 
     @Override
     public void finish(final byte[] bs) {
-        if (reqMessage.isEmptyResptopic()) return;
+        if (message.isEmptyResptopic()) return;
         finishHttpResult(new HttpResult(bs));
     }
 
     @Override
     public void finish(final String contentType, final byte[] bs) {
-        if (reqMessage.isEmptyResptopic()) return;
+        if (message.isEmptyResptopic()) return;
         finishHttpResult(new HttpResult(bs).contentType(contentType));
     }
 
     @Override
     public void finish(boolean kill, ByteBuffer buffer) {
-        if (reqMessage.isEmptyResptopic()) return;
+        if (message.isEmptyResptopic()) return;
         byte[] bs = new byte[buffer.remaining()];
         buffer.get(bs);
         finishHttpResult(new HttpResult(bs));
@@ -97,7 +97,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(boolean kill, ByteBuffer... buffers) {
-        if (reqMessage.isEmptyResptopic()) return;
+        if (message.isEmptyResptopic()) return;
         int size = 0;
         for (ByteBuffer buf : buffers) {
             size += buf.remaining();

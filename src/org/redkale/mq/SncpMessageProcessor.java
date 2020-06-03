@@ -5,7 +5,10 @@
  */
 package org.redkale.mq;
 
-import java.util.logging.Logger;
+import java.util.logging.*;
+import org.redkale.boot.NodeSncpServer;
+import org.redkale.net.sncp.*;
+import org.redkale.service.Service;
 
 /**
  *
@@ -20,15 +23,49 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
-    protected final MessageAgent agent;
+    protected final MessageProducer producer;
 
-    public SncpMessageProcessor(Logger logger, MessageAgent agent) {
+    protected final NodeSncpServer server;
+
+    protected final Service service;
+
+    protected final SncpServlet servlet;
+
+    public SncpMessageProcessor(Logger logger, MessageProducer producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
-        this.agent = agent;
+        this.producer = producer;
+        this.server = server;
+        this.service = service;
+        this.servlet = servlet;
     }
 
     @Override
     public void process(MessageRecord message) {
-
+        SncpContext context = server.getSncpServer().getContext();
+        SncpMessageRequest request = new SncpMessageRequest(context, message);
+        SncpMessageResponse response = new SncpMessageResponse(context, request, null, producer);
+        try {
+            servlet.execute(request, response);
+        } catch (Exception ex) {
+            response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
+            logger.log(Level.SEVERE, SncpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
+        }
     }
+
+    public MessageProducer getProducer() {
+        return producer;
+    }
+
+    public NodeSncpServer getServer() {
+        return server;
+    }
+
+    public Service getService() {
+        return service;
+    }
+
+    public SncpServlet getServlet() {
+        return servlet;
+    }
+
 }

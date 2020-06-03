@@ -43,7 +43,7 @@ public abstract class MessageAgent {
 
     protected MessageConsumer sncpRespConsumer;
 
-    protected SncpMessageProcessor sncpRespProcessor;
+    protected SncpRespProcessor sncpRespProcessor;
 
     //sncpRespConsumer启动耗时， 小于0表示未启动
     protected long sncpRespStartms = -1;
@@ -141,21 +141,21 @@ public abstract class MessageAgent {
 
     public final synchronized void putSncpResp(NodeSncpServer ns) {
         if (this.sncpRespConsumer != null) return;
-        this.sncpRespProcessor = new SncpMessageProcessor(logger, this);
+        this.sncpRespProcessor = new SncpRespProcessor(this.logger, this);
         this.sncpRespConsumer = createConsumer(generateSncpRespTopic(), sncpRespProcessor);
     }
 
     public final synchronized void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         String topic = generateHttpReqTopic(service);
         if (messageNodes.containsKey(topic)) throw new RuntimeException("topic(" + topic + ") is repeat");
-        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, this.producer, ns, service, servlet);
+        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, getProducer(), ns, service, servlet);
         this.messageNodes.put(topic, new MessageNode(ns, service, servlet, processor, createConsumer(topic, processor)));
     }
 
     public final synchronized void putService(NodeSncpServer ns, Service service, SncpServlet servlet) {
         String topic = generateSncpReqTopic(service);
         if (messageNodes.containsKey(topic)) throw new RuntimeException("topic(" + topic + ") is repeat");
-        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, this);
+        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, getProducer(), ns, service, servlet);
         this.messageNodes.put(topic, new MessageNode(ns, service, servlet, processor, createConsumer(topic, processor)));
     }
 

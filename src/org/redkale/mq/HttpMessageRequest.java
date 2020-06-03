@@ -18,12 +18,12 @@ import org.redkale.net.http.*;
  */
 public class HttpMessageRequest extends HttpRequest {
 
-    protected MessageRecord reqMessage;
+    protected MessageRecord message;
 
-    public HttpMessageRequest(HttpContext context, MessageRecord reqMessage) {
-        super(context, reqMessage.decodeContent(HttpSimpleRequestCoder.getInstance()));
-        this.reqMessage = reqMessage;
-        this.currentUserid = reqMessage.getUserid();
+    public HttpMessageRequest(HttpContext context, MessageRecord message) {
+        super(context, message.decodeContent(HttpSimpleRequestCoder.getInstance()));
+        this.message = message;
+        this.currentUserid = message.getUserid();
     }
 
 }
