@@ -449,7 +449,7 @@ public abstract class Sncp {
         final AnyValue conf) {
         try {
             final Class newClazz = createLocalServiceClass(classLoader, name, serviceImplClass);
-            T rs = (T) newClazz.getDeclaredConstructor().newInstance();
+            T service = (T) newClazz.getDeclaredConstructor().newInstance();
             //--------------------------------------            
             Service remoteService = null;
             {
@@ -464,7 +464,7 @@ public abstract class Sncp {
                         if (remoteService == null && clientSncpAddress != null) {
                             remoteService = createRemoteService(classLoader, name, serviceImplClass, remoteAgent, transportFactory, clientSncpAddress, groups, conf);
                         }
-                        if (remoteService != null) field.set(rs, remoteService);
+                        if (remoteService != null) field.set(service, remoteService);
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
             }
@@ -473,20 +473,20 @@ public abstract class Sncp {
                 try {
                     Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     e.setAccessible(true);
-                    client = new SncpClient(name, serviceImplClass, rs, remoteAgent, transportFactory, false, newClazz, clientSncpAddress);
-                    e.set(rs, client);
-                    transportFactory.addSncpService(rs);
+                    client = new SncpClient(name, serviceImplClass, service, remoteAgent, transportFactory, false, newClazz, clientSncpAddress);
+                    e.set(service, client);
+                    if (transportFactory != null) transportFactory.addSncpService(service);
                 } catch (NoSuchFieldException ne) {
                     ne.printStackTrace();
                 }
             }
-            if (client == null) return rs;
+            if (client == null) return service;
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
-                c.set(rs, conf);
+                c.set(service, conf);
             }
-            return rs;
+            return service;
         } catch (RuntimeException rex) {
             throw rex;
         } catch (Exception ex) {
@@ -569,15 +569,15 @@ public abstract class Sncp {
         String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceTypeOrImplClass.getSimpleName();
         try {
             Class newClazz = loader.loadClass(newDynName.replace('/', '.'));
-            T rs = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, agent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            T service = (T) newClazz.getDeclaredConstructor().newInstance();
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, agent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
-            c.set(rs, client);
-            transportFactory.addSncpService(rs);
-            return rs;
+            c.set(service, client);
+            if (transportFactory != null) transportFactory.addSncpService(service);
+            return service;
         } catch (Throwable ex) {
         }
         //------------------------------------------------------------------------------
@@ -750,22 +750,22 @@ public abstract class Sncp {
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
-            T rs = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, rs, agent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            T service = (T) newClazz.getDeclaredConstructor().newInstance();
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, agent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                 c.setAccessible(true);
-                c.set(rs, client);
+                c.set(service, client);
             }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
-                c.set(rs, conf);
+                c.set(service, conf);
             }
-            transportFactory.addSncpService(rs);
-            return rs;
+            if (transportFactory != null) transportFactory.addSncpService(service);
+            return service;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

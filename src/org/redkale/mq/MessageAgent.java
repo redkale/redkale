@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
 import static org.redkale.boot.Application.RESNAME_APP_NODEID;
+import org.redkale.convert.ConvertType;
 import org.redkale.net.Servlet;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -40,6 +41,8 @@ public abstract class MessageAgent {
     protected AnyValue config;
 
     protected MessageProducer producer;
+
+    protected String sncpRespTopic;
 
     protected MessageConsumer sncpRespConsumer;
 
@@ -148,6 +151,17 @@ public abstract class MessageAgent {
         this.sncpRespConsumer = createConsumer(generateSncpRespTopic(), sncpRespProcessor);
     }
 
+    public CompletableFuture<MessageRecord> sendRemoteSncp(AtomicLong counter, MessageRecord message) {
+        if (this.sncpRespConsumer == null) {
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(new RuntimeException("Not open sncp consumer"));
+            return future;
+        }
+        message.setFormat(ConvertType.BSON);
+        message.setResptopic(generateSncpRespTopic());
+        return this.sncpRespProcessor.createFuture(message.getSeqid(), counter);
+    }
+
     public final synchronized void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         String topic = generateHttpReqTopic(service);
         if (messageNodes.containsKey(topic)) throw new RuntimeException("topic(" + topic + ") is repeat");
@@ -165,13 +179,15 @@ public abstract class MessageAgent {
     //格式: sncp.req.user
     public String generateSncpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
-        if (service instanceof WebSocketNode) return "sncp.req.wsn" + (resname.isEmpty() ? "" : ("-" + resname));
+        if (service instanceof WebSocketNode) return "sncp.req.ws" + (resname.isEmpty() ? "" : ("-" + resname));
         return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: sncp.resp.node10
-    protected String generateSncpRespTopic() {
-        return "sncp.resp.node" + nodeid;
+    private String generateSncpRespTopic() {
+        if (this.sncpRespTopic != null) return this.sncpRespTopic;
+        this.sncpRespTopic = "sncp.resp.node" + nodeid;
+        return this.sncpRespTopic;
     }
 
     //格式: http.req.user
