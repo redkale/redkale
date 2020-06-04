@@ -723,10 +723,10 @@ public final class Application {
         }.start();
     }
 
-    private void sendCommand(String command) throws Exception {
+    private static void sendCommand(Logger logger, int port, String command) throws Exception {
         final DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(true);
-        channel.connect(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
+        channel.connect(new InetSocketAddress("127.0.0.1", port));
         ByteBuffer buffer = ByteBuffer.allocate(128);
         buffer.put(command.getBytes());
         buffer.flip();
@@ -739,7 +739,7 @@ public final class Application {
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
             channel.close();
-            logger.info("Send: " + command + ", Reply: " + new String(bytes));
+            if (logger != null) logger.info("Send: " + command + ", Reply: " + new String(bytes));
             Thread.sleep(1000);
         } catch (Exception e) {
             if (e instanceof PortUnreachableException) {
@@ -748,7 +748,7 @@ public final class Application {
                     application.init();
                     application.start();
                     new ApiDocsService(application).run();
-                    logger.info("APIDOC OK");
+                    if (logger != null) logger.info("APIDOC OK");
                     return;
                 }
             }
@@ -938,6 +938,10 @@ public final class Application {
     }
 
     public static Application create(final boolean singleton) throws IOException {
+        return new Application(singleton, loadAppXml());
+    }
+
+    private static AnyValue loadAppXml() throws IOException {
         final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/');
         System.setProperty(RESNAME_APP_HOME, home);
         String confsubpath = System.getProperty(RESNAME_APP_CONF, "conf");
@@ -949,21 +953,19 @@ public final class Application {
         } else {
             appconf = new File(new File(home, confsubpath), "application.xml").toURI();
         }
-        return new Application(singleton, load(appconf.toURL().openStream()));
+        return load(appconf.toURL().openStream());
     }
 
     public static void main(String[] args) throws Exception {
         Utility.midnight(); //先初始化一下Utility
         Thread.currentThread().setName("Redkale-Application-Main-Thread");
         //运行主程序
-        final Application application = Application.create(false);
         if (System.getProperty("CMD") != null) {
-            application.sendCommand(System.getProperty("CMD"));
-            return;
-        } else if (System.getProperty("SHUTDOWN") != null) { //兼容旧接口
-            application.sendCommand("SHUTDOWN");
+            AnyValue config = loadAppXml();
+            Application.sendCommand(null, config.getIntValue("port"), System.getProperty("CMD"));
             return;
         }
+        final Application application = Application.create(false);
         application.init();
         application.startSelfServer();
         try {
