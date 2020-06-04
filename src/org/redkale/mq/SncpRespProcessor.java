@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.*;
 
 /**
@@ -38,12 +39,13 @@ public class SncpRespProcessor implements MessageProcessor {
             logger.log(Level.WARNING, SncpRespProcessor.class.getSimpleName() + " process " + message + " error");
             return;
         }
+        if (node.getCounter() != null) node.getCounter().decrementAndGet();
         node.future.complete(message);
     }
 
-    public CompletableFuture<MessageRecord> createFuture(long seqid) {
+    public CompletableFuture<MessageRecord> createFuture(long seqid, AtomicLong counter) {
         CompletableFuture<MessageRecord> future = new CompletableFuture<>();
-        MessageRespFutureNode node = new MessageRespFutureNode(seqid, future);
+        MessageRespFutureNode node = new MessageRespFutureNode(seqid, counter, future);
         respNodes.put(seqid, node);
         return future;
     }

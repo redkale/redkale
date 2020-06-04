@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import org.redkale.convert.ConvertColumn;
+import org.redkale.convert.*;
 import org.redkale.convert.json.JsonFactory;
 import org.redkale.util.ConstructorParameters;
 
@@ -70,11 +70,19 @@ public interface CacheSource<V extends Object> {
 
     public void set(final String key, final V value);
 
+    public <T> void set(final String key, final Convert convert, final T value);
+
     public <T> void set(final String key, final Type type, final T value);
+
+    public <T> void set(final String key, final Convert convert, final Type type, final T value);
 
     public void set(final int expireSeconds, final String key, final V value);
 
+    public <T> void set(final int expireSeconds, final String key, final Convert convert, final T value);
+
     public <T> void set(final int expireSeconds, final String key, final Type type, final T value);
+
+    public <T> void set(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
 
     public void setExpireSeconds(final String key, final int expireSeconds);
 
@@ -219,11 +227,19 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> setAsync(final String key, final V value);
 
+    public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final T value);
+
     public <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value);
+
+    public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final Type type, final T value);
 
     public CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final V value);
 
+    public <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final T value);
+
     public <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Type type, final T value);
+
+    public <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
 
     public CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds);
 

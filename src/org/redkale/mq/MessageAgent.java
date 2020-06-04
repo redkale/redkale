@@ -7,7 +7,7 @@ package org.redkale.mq;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.*;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
@@ -54,8 +54,8 @@ public abstract class MessageAgent {
     public void init(AnyValue config) {
     }
 
-    public final CompletableFuture<MessageRecord> createSncpRespFuture(MessageRecord message) {
-        return this.sncpRespProcessor.createFuture(message.getSeqid());
+    public final CompletableFuture<MessageRecord> createSncpRespFuture(AtomicLong counter, MessageRecord message) {
+        return this.sncpRespProcessor.createFuture(message.getSeqid(), counter);
     }
 
     public final synchronized void startSncpRespConsumer() {

@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * MQ管理器
@@ -23,10 +24,13 @@ public class MessageRespFutureNode {
 
     protected final long createtime;
 
+    protected final AtomicLong counter;
+
     protected final CompletableFuture<MessageRecord> future;
 
-    public MessageRespFutureNode(long seqid, CompletableFuture<MessageRecord> future) {
+    public MessageRespFutureNode(long seqid, AtomicLong counter, CompletableFuture<MessageRecord> future) {
         this.seqid = seqid;
+        this.counter = counter;
         this.future = future;
         this.createtime = System.currentTimeMillis();
     }
@@ -37,6 +41,10 @@ public class MessageRespFutureNode {
 
     public long getCreatetime() {
         return createtime;
+    }
+
+    public AtomicLong getCounter() {
+        return counter;
     }
 
     public CompletableFuture<MessageRecord> getFuture() {
