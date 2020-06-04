@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  *
  * @since 2.1.0
  */
-public abstract class MessageProducer extends Thread {
+public abstract class MessageProducer  {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -25,11 +25,11 @@ public abstract class MessageProducer extends Thread {
 
     public abstract CompletableFuture<Void> apply(MessageRecord message);
 
-    protected abstract void waitFor();
+    public abstract CompletableFuture<Void> startup();
 
     protected boolean isClosed() {
         return closed;
     }
 
-    protected abstract void close();
+    protected abstract CompletableFuture<Void> shutdown();
 }

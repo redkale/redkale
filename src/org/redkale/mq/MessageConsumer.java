@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 /**
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
  *
  * @since 2.1.0
  */
-public abstract class MessageConsumer extends Thread {
+public abstract class MessageConsumer {
 
     protected final String topic;
 
@@ -47,11 +48,11 @@ public abstract class MessageConsumer extends Thread {
         return topic;
     }
 
-    public abstract void waitFor();
+    public abstract CompletableFuture<Void> startup();
 
     protected boolean isClosed() {
         return closed;
     }
 
-    protected abstract void close();
+    protected abstract CompletableFuture<Void> shutdown();
 }

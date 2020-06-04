@@ -62,8 +62,7 @@ public abstract class MessageAgent {
         if (this.sncpRespStartms >= 0) return;
         long s = System.currentTimeMillis();
         if (this.sncpRespConsumer != null) {
-            this.sncpRespConsumer.start();
-            this.sncpRespConsumer.waitFor();
+            this.sncpRespConsumer.startup().join();
         }
         this.sncpRespStartms = System.currentTimeMillis() - s;
     }
@@ -78,8 +77,7 @@ public abstract class MessageAgent {
         }
         this.messageNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
-            node.consumer.start();
-            node.consumer.waitFor();
+            node.consumer.startup().join();
             sb.append("MessageConsumer(topic=").append(fillString(node.consumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
         });
         return CompletableFuture.completedFuture(null);
@@ -87,7 +85,7 @@ public abstract class MessageAgent {
 
     public CompletableFuture<Void> stop() {
         this.messageNodes.values().forEach(node -> {
-            node.consumer.close();
+            node.consumer.shutdown().join();
         });
         return CompletableFuture.completedFuture(null);
     }
@@ -122,8 +120,7 @@ public abstract class MessageAgent {
     public synchronized MessageProducer getProducer() {
         if (this.producer == null) {
             this.producer = createProducer();
-            this.producer.start();
-            this.producer.waitFor();
+            this.producer.startup().join();
         }
         return this.producer;
     }
