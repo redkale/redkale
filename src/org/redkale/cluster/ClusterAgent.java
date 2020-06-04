@@ -14,7 +14,7 @@ import org.redkale.boot.NodeServer;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
@@ -85,6 +85,7 @@ public abstract class ClusterAgent {
         if (localServices.isEmpty()) return;
         //注册本地模式
         for (Service service : localServices) {
+            if (service.getClass().getAnnotation(Local.class) != null) continue;
             register(ns, protocol, service);
             ClusterEntry entry = new ClusterEntry(ns, protocol, service);
             localEntrys.put(entry.serviceid, entry);
@@ -102,6 +103,7 @@ public abstract class ClusterAgent {
     public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
         //注销本地模式
         for (Service service : localServices) {
+            if (service.getClass().getAnnotation(Local.class) != null) continue;
             deregister(ns, protocol, service);
         }
         int s = intervalCheckSeconds();
