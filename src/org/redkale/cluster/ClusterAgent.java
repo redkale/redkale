@@ -8,7 +8,7 @@ package org.redkale.cluster;
 import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 import org.redkale.boot.NodeServer;
 import org.redkale.convert.json.JsonConvert;
@@ -237,6 +237,8 @@ public abstract class ClusterAgent {
         public WeakReference<Service> serviceref;
 
         public InetSocketAddress address;
+
+        public ScheduledFuture checkScheduledFuture;
 
         public ClusterEntry(NodeServer ns, String protocol, Service service) {
             this.serviceid = generateServiceId(ns, protocol, service);
