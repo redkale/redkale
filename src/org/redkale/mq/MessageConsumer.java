@@ -50,9 +50,9 @@ public abstract class MessageConsumer {
 
     public abstract CompletableFuture<Void> startup();
 
-    protected boolean isClosed() {
+    public boolean isClosed() {
         return closed;
     }
 
-    protected abstract CompletableFuture<Void> shutdown();
+    public abstract CompletableFuture<Void> shutdown();
 }
