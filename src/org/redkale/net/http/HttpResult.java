@@ -92,8 +92,9 @@ public class HttpResult<T> {
         return convert;
     }
 
-    public void convert(Convert convert) {
+    public HttpResult<T> convert(Convert convert) {
         this.convert = convert;
+        return this;
     }
 
     public Map<String, String> getHeaders() {
