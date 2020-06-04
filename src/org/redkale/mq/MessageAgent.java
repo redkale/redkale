@@ -190,9 +190,9 @@ public abstract class MessageAgent {
         return "http.req." + Rest.getRestName(service).toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
-    //格式: ws.resp.wsgame
+    //格式: ws.resp.wsgame.node100
     public String generateWebSocketRespTopic(WebSocketNode node) {
-        return "ws.resp." + node.getName();
+        return "ws.resp." + node.getName() + ".node" + nodeid;
     }
 
     //格式: xxxx.resp.node10
