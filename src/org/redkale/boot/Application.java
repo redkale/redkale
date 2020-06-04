@@ -1016,6 +1016,13 @@ public final class Application {
         if (clusterAgent != null) {
             clusterAgent.destroy(clusterAgent.getConfig());
         }
+        if (this.messageAgents != null) {
+            long s = System.currentTimeMillis();
+            for (MessageAgent agent : this.messageAgents) {
+                agent.destroy(agent.getConfig());
+            }
+            logger.info(this.getClass().getSimpleName() + " MessageAgent destroy in " + (System.currentTimeMillis() - s) + " ms\r\n");
+        }
         for (DataSource source : dataSources) {
             if (source == null) continue;
             try {

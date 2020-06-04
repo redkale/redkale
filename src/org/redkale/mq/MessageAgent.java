@@ -91,6 +91,8 @@ public abstract class MessageAgent {
     }
 
     public void destroy(AnyValue config) {
+        if (this.sncpRespConsumer != null) this.sncpRespConsumer.shutdown().join();
+        if (this.producer != null) this.producer.shutdown().join();
     }
 
     public String getName() {
