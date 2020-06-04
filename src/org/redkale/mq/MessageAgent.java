@@ -73,21 +73,24 @@ public abstract class MessageAgent {
     public CompletableFuture<Map<String, Long>> start() {
         final LinkedHashMap<String, Long> map = new LinkedHashMap<>();
         if (this.sncpRespStartms >= 0) map.put(this.sncpRespConsumer.topic, this.sncpRespStartms);
+        final List<CompletableFuture> futures = new ArrayList<>();
         this.messageNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
-            node.consumer.startup().join();
-            map.put(node.consumer.topic, System.currentTimeMillis() - s);
+            futures.add(node.consumer.startup().whenComplete((r, t) -> map.put(node.consumer.topic, System.currentTimeMillis() - s)));
         });
-        return CompletableFuture.completedFuture(map);
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).thenApply(r -> map);
     }
 
+    //Application.shutdown  在执行server.shutdown之前执行
     public CompletableFuture<Void> stop() {
+        List<CompletableFuture> futures = new ArrayList<>();
         this.messageNodes.values().forEach(node -> {
-            node.consumer.shutdown().join();
+            futures.add(node.consumer.shutdown());
         });
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
     }
 
+    //Application.shutdown 在所有server.shutdown执行后执行
     public void destroy(AnyValue config) {
         if (this.sncpRespConsumer != null) this.sncpRespConsumer.shutdown().join();
         if (this.producer != null) this.producer.shutdown().join();
