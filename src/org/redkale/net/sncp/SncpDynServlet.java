@@ -119,7 +119,7 @@ public final class SncpDynServlet extends SncpServlet {
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
-            BsonWriter out = action.convert.pollBsonWriter(bufferSupplier);
+            BsonWriter out = bufferSupplier == null ? action.convert.pollBsonWriter() : action.convert.pollBsonWriter(bufferSupplier);
             out.writeTo(DEFAULT_HEADER);
             BsonReader in = action.convert.pollBsonReader();
             SncpAsyncHandler handler = null;

@@ -159,6 +159,7 @@ public abstract class MessageAgent {
         }
         message.setFormat(ConvertType.BSON);
         message.setResptopic(generateSncpRespTopic());
+        getProducer().apply(message);
         return this.sncpRespProcessor.createFuture(message.getSeqid(), counter);
     }
 
