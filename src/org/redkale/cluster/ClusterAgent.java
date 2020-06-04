@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import org.redkale.boot.NodeServer;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
+import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -85,7 +86,7 @@ public abstract class ClusterAgent {
         if (localServices.isEmpty()) return;
         //注册本地模式
         for (Service service : localServices) {
-            if (service.getClass().getAnnotation(Local.class) != null) continue;
+            if (!canRegister(service)) continue;
             register(ns, protocol, service);
             ClusterEntry entry = new ClusterEntry(ns, protocol, service);
             localEntrys.put(entry.serviceid, entry);
@@ -103,7 +104,7 @@ public abstract class ClusterAgent {
     public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
         //注销本地模式
         for (Service service : localServices) {
-            if (service.getClass().getAnnotation(Local.class) != null) continue;
+            if (!canRegister(service)) continue;
             deregister(ns, protocol, service);
         }
         int s = intervalCheckSeconds();
@@ -115,6 +116,14 @@ public abstract class ClusterAgent {
             logger.info(this.getClass().getSimpleName() + " sleep " + s + " s after deregister");
         }
         //远程模式不注册
+    }
+
+    protected boolean canRegister(Service service) {
+        if (service.getClass().getAnnotation(Local.class) != null) return false;
+        if (service instanceof WebSocketNode) {
+            if (((WebSocketNode) service).getLocalWebSocketEngine() == null) return false;
+        }
+        return true;
     }
 
     protected void afterRegister(NodeServer ns, String protocol) {
