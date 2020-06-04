@@ -70,20 +70,15 @@ public abstract class MessageAgent {
         this.sncpRespStartms = System.currentTimeMillis() - s;
     }
 
-    public CompletableFuture<Void> start(final StringBuffer sb) {
-        AtomicInteger maxlen = new AtomicInteger(sncpRespConsumer == null ? 0 : sncpRespConsumer.topic.length());
-        this.messageNodes.values().forEach(node -> {
-            if (node.consumer.topic.length() > maxlen.get()) maxlen.set(node.consumer.topic.length());
-        });
-        if (this.sncpRespStartms >= 0) {
-            if (sb != null) sb.append("MessageConsumer(topic=").append(fillString(this.sncpRespConsumer.topic, maxlen.get())).append(") init and start in ").append(this.sncpRespStartms).append(" ms\r\n");
-        }
+    public CompletableFuture<Map<String, Long>> start() {
+        final LinkedHashMap<String, Long> map = new LinkedHashMap<>();
+        if (this.sncpRespStartms >= 0) map.put(this.sncpRespConsumer.topic, this.sncpRespStartms);
         this.messageNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
             node.consumer.startup().join();
-            if (sb != null) sb.append("MessageConsumer(topic=").append(fillString(node.consumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
+            map.put(node.consumer.topic, System.currentTimeMillis() - s);
         });
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(map);
     }
 
     public CompletableFuture<Void> stop() {
@@ -215,15 +210,6 @@ public abstract class MessageAgent {
     //格式: xxxx.resp.node10
     protected String generateRespTopic(String protocol) {
         return protocol + ".resp.node" + nodeid;
-    }
-
-    protected static String fillString(String value, int maxlen) {
-        StringBuilder sb = new StringBuilder(maxlen);
-        sb.append(value);
-        for (int i = 0; i < maxlen - value.length(); i++) {
-            sb.append(' ');
-        }
-        return sb.toString();
     }
 
     protected static class MessageNode {

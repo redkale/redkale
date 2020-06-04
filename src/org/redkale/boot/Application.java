@@ -496,7 +496,7 @@ public final class Application {
             pidstr = "APP_PID  = " + pid + "\r\n";
         } catch (Throwable t) {
         }
-        logger.log(Level.INFO, pidstr + "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostAddress() + "\r\n" + RESNAME_APP_HOME + " = " + homepath + "\r\n" + RESNAME_APP_CONF + " = " + confpath);
+        logger.log(Level.INFO, pidstr + "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_NODEID + " = " + this.nodeid + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostAddress() + "\r\n" + RESNAME_APP_HOME + " = " + homepath + "\r\n" + RESNAME_APP_CONF + " = " + confpath);
         String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? confpath : (lib + ";" + confpath);
         Server.loadLib(classLoader, logger, lib);
@@ -782,7 +782,13 @@ public final class Application {
             long s = System.currentTimeMillis();
             final StringBuffer sb = new StringBuffer();
             for (MessageAgent agent : this.messageAgents) {
-                agent.start(sb).join();
+                Map<String, Long> map = agent.start().join();
+                AtomicInteger maxlen = new AtomicInteger();
+                map.keySet().forEach(str -> {
+                    if (str.length() > maxlen.get()) maxlen.set(str.length());
+                });
+                map.forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
+                );
             }
             if (sb.length() > 0) logger.info(sb.toString().trim());
             logger.info(this.getClass().getSimpleName() + " MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
@@ -791,6 +797,15 @@ public final class Application {
         //if (!singletonrun) clearPersistData();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
         if (!singletonrun) this.serversLatch.await();
+    }
+
+    private static String alignString(String value, int maxlen) {
+        StringBuilder sb = new StringBuilder(maxlen);
+        sb.append(value);
+        for (int i = 0; i < maxlen - value.length(); i++) {
+            sb.append(' ');
+        }
+        return sb.toString();
     }
 
 //    private void clearPersistData() {
