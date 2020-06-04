@@ -76,12 +76,12 @@ public abstract class MessageAgent {
             if (node.consumer.topic.length() > maxlen.get()) maxlen.set(node.consumer.topic.length());
         });
         if (this.sncpRespStartms >= 0) {
-            sb.append("MessageConsumer(topic=").append(fillString(this.sncpRespConsumer.topic, maxlen.get())).append(") init and start in ").append(this.sncpRespStartms).append(" ms\r\n");
+            if (sb != null) sb.append("MessageConsumer(topic=").append(fillString(this.sncpRespConsumer.topic, maxlen.get())).append(") init and start in ").append(this.sncpRespStartms).append(" ms\r\n");
         }
         this.messageNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
             node.consumer.startup().join();
-            sb.append("MessageConsumer(topic=").append(fillString(node.consumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
+            if (sb != null) sb.append("MessageConsumer(topic=").append(fillString(node.consumer.topic, maxlen.get())).append(") init and start in ").append(System.currentTimeMillis() - s).append(" ms\r\n");
         });
         return CompletableFuture.completedFuture(null);
     }
