@@ -444,6 +444,7 @@ public abstract class NodeServer {
                     } else {
                         service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, agent, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     }
+                    if(service instanceof WebSocketNodeService)((WebSocketNodeService) service).setName(resourceName);
                     final Class restype = Sncp.getResourceType(service);
                     if (rf.find(resourceName, restype) == null) {
                         regFactory.register(resourceName, restype, service);
