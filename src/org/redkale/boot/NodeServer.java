@@ -416,7 +416,7 @@ public abstract class NodeServer {
             if (entry.getName().contains("$")) throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
             Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);
             if (oldother != null) { //Server加载Service时需要判断是否已经加载过了。
-                interceptorServices.add(oldother);
+                if (!Sncp.isRemote(oldother)) interceptorServices.add(oldother);
                 continue;
             }
             final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
