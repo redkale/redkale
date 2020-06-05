@@ -48,6 +48,8 @@ public abstract class ClusterAgent {
 
     protected final ConcurrentHashMap<String, ClusterEntry> remoteEntrys = new ConcurrentHashMap<>();
 
+    protected long closeEndMaxTime;
+
     public void init(AnyValue config) {
         this.config = config;
         this.name = config.getValue("name", "");
@@ -124,13 +126,8 @@ public abstract class ClusterAgent {
 
     protected void afterDeregister(NodeServer ns, String protocol) {
         int s = intervalCheckSeconds();
-        if (s / 2 > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
-            try {
-                Thread.sleep(s * 1000 / 2);
-            } catch (InterruptedException ex) {
-            }
-            logger.info(this.getClass().getSimpleName() + " sleep " + s / 2 + "s after deregister");
-        }
+        long end = System.currentTimeMillis() + s * 1000 / 2; //暂停，弥补其他依赖本进程服务的周期偏差
+        if (end > this.closeEndMaxTime) this.closeEndMaxTime = end;
     }
 
     public int intervalCheckSeconds() {
