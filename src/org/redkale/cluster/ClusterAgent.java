@@ -53,7 +53,7 @@ public abstract class ClusterAgent {
         this.name = config.getValue("name", "");
         {
             String ps = config.getValue("protocols", "").toUpperCase();
-            if (ps == null || ps.isEmpty()) ps = "SNCP";
+            if (ps == null || ps.isEmpty()) ps = "SNCP;HTTP";
             this.protocols = ps.split(";");
         }
         String ts = config.getValue("ports", "");
@@ -91,11 +91,13 @@ public abstract class ClusterAgent {
             ClusterEntry entry = new ClusterEntry(ns, protocol, service);
             localEntrys.put(entry.serviceid, entry);
         }
-        //远程模式加载IP列表, 只能是SNCP协议        
-        for (Service service : remoteServices) {
-            ClusterEntry entry = new ClusterEntry(ns, protocol, service);
-            updateTransport(entry);
-            remoteEntrys.put(entry.serviceid, entry);
+        //远程模式加载IP列表, 只支持SNCP协议    
+        if (ns.isSNCP()) {
+            for (Service service : remoteServices) {
+                ClusterEntry entry = new ClusterEntry(ns, protocol, service);
+                updateSncpTransport(entry);
+                remoteEntrys.put(entry.serviceid, entry);
+            }
         }
         afterRegister(ns, protocol);
     }
@@ -143,7 +145,7 @@ public abstract class ClusterAgent {
     protected abstract void deregister(NodeServer ns, String protocol, Service service);
 
     //格式: protocol:classtype-resourcename
-    protected void updateTransport(ClusterEntry entry) {
+    protected void updateSncpTransport(ClusterEntry entry) {
         Service service = entry.serviceref.get();
         if (service == null) return;
         Collection<InetSocketAddress> addrs = queryAddress(entry);
