@@ -138,7 +138,7 @@ public class NodeHttpServer extends NodeServer {
     @SuppressWarnings("unchecked")
     protected void loadHttpFilter(final AnyValue filtersConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
         for (FilterEntry<? extends Filter> en : list) {
             Class<HttpFilter> clazz = (Class<HttpFilter>) en.getType();
@@ -147,7 +147,7 @@ public class NodeHttpServer extends NodeServer {
             resourceFactory.inject(filter, this);
             DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
             this.httpServer.addHttpFilter(filter, filterConf);
-            if (sb != null) sb.append(threadName).append(" Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+            if (sb != null) sb.append(localThreadName).append(" Load ").append(clazz.getName()).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
