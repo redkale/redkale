@@ -48,8 +48,6 @@ public abstract class ClusterAgent {
 
     protected final ConcurrentHashMap<String, ClusterEntry> remoteEntrys = new ConcurrentHashMap<>();
 
-    protected long closeEndMaxTime;
-
     public void init(AnyValue config) {
         this.config = config;
         this.name = config.getValue("name", "");
@@ -83,7 +81,7 @@ public abstract class ClusterAgent {
         return Utility.contains(ports, port);
     }
 
-    //注册服务
+    //注册服务, 在NodeService调用Service.init方法之前调用
     public void register(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
         if (localServices.isEmpty()) return;
         //注册本地模式
@@ -103,7 +101,7 @@ public abstract class ClusterAgent {
         }
     }
 
-    //注销服务
+    //注销服务, 在NodeService调用Service.destroy 方法之前调用
     public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
         //注销本地模式  远程模式不注册
         for (Service service : localServices) {
@@ -126,8 +124,13 @@ public abstract class ClusterAgent {
 
     protected void afterDeregister(NodeServer ns, String protocol) {
         int s = intervalCheckSeconds();
-        long end = System.currentTimeMillis() + s * 1000 / 2; //暂停，弥补其他依赖本进程服务的周期偏差
-        if (end > this.closeEndMaxTime) this.closeEndMaxTime = end;
+        if (s / 2 > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
+            try {
+                Thread.sleep(s * 1000 / 2);
+            } catch (InterruptedException ex) {
+            }
+            logger.info(this.getClass().getSimpleName() + " sleep " + s * 1000 / 2 + "ms after deregister");
+        }
     }
 
     public int intervalCheckSeconds() {
