@@ -778,6 +778,7 @@ public final class Application {
         runServers(timecd, others);
         runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
         timecd.await();
+        if (this.clusterAgent != null) this.clusterAgent.start();
         if (this.messageAgents != null) {
             long s = System.currentTimeMillis();
             final StringBuffer sb = new StringBuffer();
@@ -1035,6 +1036,7 @@ public final class Application {
             }
         });
         if (clusterAgent != null) {
+            clusterAgent.stop();
             clusterAgent.destroy(clusterAgent.getConfig());
         }
         if (this.messageAgents != null) {

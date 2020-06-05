@@ -86,7 +86,7 @@ public abstract class ClusterAgent {
         if (localServices.isEmpty()) return;
         //注册本地模式
         for (Service service : localServices) {
-            if (!canRegister(service)) continue;
+            if (!canRegister(protocol, service)) continue;
             register(ns, protocol, service);
             ClusterEntry entry = new ClusterEntry(ns, protocol, service);
             localEntrys.put(entry.serviceid, entry);
@@ -99,36 +99,38 @@ public abstract class ClusterAgent {
                 remoteEntrys.put(entry.serviceid, entry);
             }
         }
-        afterRegister(ns, protocol);
     }
 
     //注销服务
     public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
         //注销本地模式
         for (Service service : localServices) {
-            if (!canRegister(service)) continue;
+            if (!canRegister(protocol, service)) continue;
             deregister(ns, protocol, service);
-        }
-        int s = intervalCheckSeconds();
-        if (s > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
-            try {
-                Thread.sleep(s * 1000);
-            } catch (InterruptedException ex) {
-            }
-            logger.info(this.getClass().getSimpleName() + " sleep " + s + " s after deregister");
         }
         //远程模式不注册
     }
 
-    protected boolean canRegister(Service service) {
-        if (service.getClass().getAnnotation(Local.class) != null) return false;
+    protected boolean canRegister(String protocol, Service service) {
+        if ("SNCP".equalsIgnoreCase(protocol) && service.getClass().getAnnotation(Local.class) != null) return false;
         if (service instanceof WebSocketNode) {
             if (((WebSocketNode) service).getLocalWebSocketEngine() == null) return false;
         }
         return true;
     }
 
-    protected void afterRegister(NodeServer ns, String protocol) {
+    public void start() {
+    }
+
+    public void stop() {
+        int s = intervalCheckSeconds();
+        if (s > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
+            try {
+                Thread.sleep(s * 1000);
+            } catch (InterruptedException ex) {
+            }
+            logger.info(this.getClass().getSimpleName() + " sleep " + s + "s after deregister");
+        }
     }
 
     public int intervalCheckSeconds() {

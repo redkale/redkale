@@ -36,6 +36,7 @@ public class NodeSncpServer extends NodeServer {
         this.consumer = sncpServer == null || application.singletonrun ? null : (agent, x) -> {
             if (x.getClass().getAnnotation(Local.class) != null) return;
             SncpDynServlet servlet = sncpServer.addSncpServlet(x); //singleton模式下不生成SncpServlet
+            dynServletMap.put(x, servlet);
             if (agent != null) agent.putService(this, x, servlet);
         };
     }

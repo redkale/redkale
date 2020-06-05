@@ -87,6 +87,8 @@ public abstract class NodeServer {
     //远程模式的Service对象集合
     protected final Set<Service> remoteServices = new LinkedHashSet<>();
 
+    protected final Map<Service, Servlet> dynServletMap = new LinkedHashMap<>();
+
     //MessageAgent对象集合
     protected final Map<String, MessageAgent> messageAgents = new HashMap<>();
 
@@ -189,6 +191,7 @@ public abstract class NodeServer {
         if (!application.singletonrun) { //非singleton模式下才加载Filter、Servlet
             loadFilter(filterFilter, otherFilter);
             loadServlet(servletFilter, otherFilter);
+            postLoadServlets();
         }
         if (this.interceptor != null) this.resourceFactory.inject(this.interceptor);
     }
@@ -444,7 +447,7 @@ public abstract class NodeServer {
                     } else {
                         service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, agent, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     }
-                    if(service instanceof WebSocketNodeService)((WebSocketNodeService) service).setName(resourceName);
+                    if (service instanceof WebSocketNodeService) ((WebSocketNodeService) service).setName(resourceName);
                     final Class restype = Sncp.getResourceType(service);
                     if (rf.find(resourceName, restype) == null) {
                         regFactory.register(resourceName, restype, service);
@@ -550,22 +553,29 @@ public abstract class NodeServer {
         if (!cluster.containsProtocol(protocol)) return;
         if (!cluster.containsPort(server.getSocketAddress().getPort())) return;
         cluster.register(this, protocol, localServices, remoteServices);
+    }
+
+    //loadServlet执行之后调用
+    protected void postLoadServlets() {
 
     }
 
     //Service.destroy执行之前调用
     protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices) {
         if (application.clusterAgent != null) { //服务注销
-            final ClusterAgent agent = application.clusterAgent;
+            final ClusterAgent cluster = application.clusterAgent;
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();
-            if (agent.containsProtocol(protocol) && agent.containsPort(server.getSocketAddress().getPort())) {
-                agent.deregister(this, protocol, localServices, remoteServices);
+            if (cluster.containsProtocol(protocol) && cluster.containsPort(server.getSocketAddress().getPort())) {
+                cluster.deregister(this, protocol, localServices, remoteServices);
+                afterClusterDeregisterOnPreDestroyServices(cluster, protocol);
             }
         }
         if (!this.messageAgents.isEmpty()) { //MQ
-
         }
+    }
+
+    protected void afterClusterDeregisterOnPreDestroyServices(ClusterAgent cluster, String protocol) {
     }
 
     //Server.start执行之后调用

@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import javax.annotation.*;
 import static org.redkale.boot.Application.RESNAME_SNCP_ADDR;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.cluster.ClusterAgent;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
@@ -159,7 +160,7 @@ public class NodeHttpServer extends NodeServer {
         if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
         if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
         final String prefix = prefix0;
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
+        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Servlet>> list = new ArrayList(servletFilter.getFilterEntrys());
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
             boolean ws1 = WebSocketServlet.class.isAssignableFrom(o1.getType());
@@ -198,7 +199,7 @@ public class NodeHttpServer extends NodeServer {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
-                sb.append(threadName).append(" Load ").append(as.getKey());
+                sb.append(localThreadName).append(" Load ").append(as.getKey());
                 for (int i = 0; i < max - as.getKey().length(); i++) {
                     sb.append(' ');
                 }
@@ -276,6 +277,7 @@ public class NodeHttpServer extends NodeServer {
                     WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
                     if (ws != null && !ws.repair()) prefix2 = "";
                     resourceFactory.inject(servlet, NodeHttpServer.this);
+                    dynServletMap.put(service, servlet);
                     if (agent != null) agent.putService(this, service, servlet);
                     //if (finest) logger.finest(localThreadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
                     if (ss != null) {
@@ -363,5 +365,22 @@ public class NodeHttpServer extends NodeServer {
             }
             sb.append(localThreadName).append(" All HttpServlets load cost ").append(System.currentTimeMillis() - starts).append(" ms").append(LINE_SEPARATOR);
         }
+    }
+
+    @Override //loadServlet执行之后调用
+    protected void postLoadServlets() {
+        final ClusterAgent cluster = application.clusterAgent;
+        if (cluster != null) {
+            NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
+            String protocol = pros.value().toUpperCase();
+            if (!cluster.containsProtocol(protocol)) return;
+            if (!cluster.containsPort(server.getSocketAddress().getPort())) return;
+            cluster.register(this, protocol, dynServletMap.keySet(), new HashSet<>());
+        }
+    }
+
+    @Override
+    protected void afterClusterDeregisterOnPreDestroyServices(ClusterAgent cluster, String protocol) {
+        cluster.deregister(this, protocol, dynServletMap.keySet(), new HashSet<>());
     }
 }
