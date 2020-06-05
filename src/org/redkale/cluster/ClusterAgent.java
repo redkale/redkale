@@ -36,6 +36,8 @@ public abstract class ClusterAgent {
 
     protected String name;
 
+    protected boolean waits;
+
     protected String[] protocols; //必须全大写
 
     protected int[] ports;
@@ -51,6 +53,7 @@ public abstract class ClusterAgent {
     public void init(AnyValue config) {
         this.config = config;
         this.name = config.getValue("name", "");
+        this.waits = config.getBoolValue("waits", false);
         {
             String ps = config.getValue("protocols", "").toUpperCase();
             if (ps == null || ps.isEmpty()) ps = "SNCP;HTTP";
@@ -123,13 +126,14 @@ public abstract class ClusterAgent {
     }
 
     protected void afterDeregister(NodeServer ns, String protocol) {
+        if (!this.waits) return;
         int s = intervalCheckSeconds();
-        if (s / 2 > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
+        if (s > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
             try {
-                Thread.sleep(s * 1000 / 2);
+                Thread.sleep(s * 1000);
             } catch (InterruptedException ex) {
             }
-            logger.info(this.getClass().getSimpleName() + " sleep " + s * 1000 / 2 + "ms after deregister");
+            logger.info(this.getClass().getSimpleName() + " wait for " + s * 1000 + "ms after deregister");
         }
     }
 

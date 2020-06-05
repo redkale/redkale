@@ -49,11 +49,15 @@
            【节点全局唯一】
             第三方服务发现管理接口
             value：    类名，必须是org.redkale.cluster.ClusterAgent的子类
+            waits:     注销服务后是否需要等待检查周期时间后再进行Service销毁，默认值为：false
+                       当一个Service进行服务注销后，不能立刻销毁Service，因为健康检测是有间隔时间差的，
+                       需要等待一个健康检测周期时间，让其他进程都更新完服务列表。
+                       如果使用MQ，可以设置为false，如果对服务健壮性要求高，建议设置为true
             protocols: 服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
             ports:     服务发现可以处理的端口， 多个端口用分号;隔开
         -->
         <!--
-        <cluster value="org.redkalex.cluster.consul.ConsulClusterAgent" protocols="SNCP" ports="7070;7071">
+        <cluster value="org.redkalex.cluster.consul.ConsulClusterAgent" waits="false" protocols="SNCP" ports="7070;7071">
             <property name="xxxxxx" value="XXXXXXXX"/>
         </cluster>
         -->
