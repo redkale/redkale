@@ -1036,7 +1036,6 @@ public final class Application {
             }
         });
         if (clusterAgent != null) {
-            clusterAgent.stop();
             clusterAgent.destroy(clusterAgent.getConfig());
         }
         if (this.messageAgents != null) {

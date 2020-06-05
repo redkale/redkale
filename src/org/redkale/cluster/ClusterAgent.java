@@ -103,12 +103,12 @@ public abstract class ClusterAgent {
 
     //注销服务
     public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
-        //注销本地模式
+        //注销本地模式  远程模式不注册
         for (Service service : localServices) {
             if (!canRegister(protocol, service)) continue;
             deregister(ns, protocol, service);
         }
-        //远程模式不注册
+        afterDeregister(ns, protocol);
     }
 
     protected boolean canRegister(String protocol, Service service) {
@@ -122,14 +122,14 @@ public abstract class ClusterAgent {
     public void start() {
     }
 
-    public void stop() {
+    protected void afterDeregister(NodeServer ns, String protocol) {
         int s = intervalCheckSeconds();
-        if (s > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
+        if (s / 2 > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
             try {
-                Thread.sleep(s * 1000);
+                Thread.sleep(s * 1000 / 2);
             } catch (InterruptedException ex) {
             }
-            logger.info(this.getClass().getSimpleName() + " sleep " + s + "s after deregister");
+            logger.info(this.getClass().getSimpleName() + " sleep " + s / 2 + "s after deregister");
         }
     }
 
