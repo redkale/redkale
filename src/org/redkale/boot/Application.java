@@ -323,12 +323,26 @@ public final class Application {
             AnyValue clusterConf = resources.getAnyValue("cluster");
             if (clusterConf != null) {
                 try {
-                    Class type = classLoader.loadClass(clusterConf.getValue("value"));
-                    if (!ClusterAgent.class.isAssignableFrom(type)) {
-                        logger.log(Level.SEVERE, "load application cluster resource, but not " + ClusterAgent.class.getSimpleName() + " error: " + clusterConf);
+                    String classval = clusterConf.getValue("value");
+                    if (classval == null || classval.isEmpty()) {
+                        Iterator<ClusterAgent> it = ServiceLoader.load(ClusterAgent.class, classLoader).iterator();
+                        while (it.hasNext()) {
+                            ClusterAgent agent = it.next();
+                            if (agent.match(clusterConf)) {
+                                cluster = agent;
+                                cluster.setConfig(clusterConf);
+                                break;
+                            }
+                        }
+                        if (cluster == null) logger.log(Level.SEVERE, "load application cluster resource, but not found name='value' value error: " + clusterConf);
                     } else {
-                        cluster = (ClusterAgent) type.getDeclaredConstructor().newInstance();
-                        cluster.setConfig(clusterConf);
+                        Class type = classLoader.loadClass(clusterConf.getValue("value"));
+                        if (!ClusterAgent.class.isAssignableFrom(type)) {
+                            logger.log(Level.SEVERE, "load application cluster resource, but not found " + ClusterAgent.class.getSimpleName() + " implements class error: " + clusterConf);
+                        } else {
+                            cluster = (ClusterAgent) type.getDeclaredConstructor().newInstance();
+                            cluster.setConfig(clusterConf);
+                        }
                     }
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "load application cluster resource error: " + clusterConf, e);
@@ -344,12 +358,26 @@ public final class Application {
                     String mqname = mqConf.getValue("name", "");
                     if (mqnames.contains(mqname)) throw new RuntimeException("mq.name(" + mqname + ") is repeat");
                     try {
-                        Class type = classLoader.loadClass(mqConf.getValue("value"));
-                        if (!MessageAgent.class.isAssignableFrom(type)) {
-                            logger.log(Level.SEVERE, "load application mq resource, but not " + MessageAgent.class.getSimpleName() + " error: " + mqConf);
+                        String classval = mqConf.getValue("value");
+                        if (classval == null || classval.isEmpty()) {
+                            Iterator<MessageAgent> it = ServiceLoader.load(MessageAgent.class, classLoader).iterator();
+                            while (it.hasNext()) {
+                                MessageAgent agent = it.next();
+                                if (agent.match(mqConf)) {
+                                    mqs[i] = agent;
+                                    mqs[i].setConfig(mqConf);
+                                    break;
+                                }
+                            }
+                            if (mqs[i] == null) logger.log(Level.SEVERE, "load application mq resource, but not found name='value' value error: " + mqConf);
                         } else {
-                            mqs[i] = (MessageAgent) type.getDeclaredConstructor().newInstance();
-                            mqs[i].setConfig(mqConf);
+                            Class type = classLoader.loadClass(classval);
+                            if (!MessageAgent.class.isAssignableFrom(type)) {
+                                logger.log(Level.SEVERE, "load application mq resource, but not found " + MessageAgent.class.getSimpleName() + " implements class error: " + mqConf);
+                            } else {
+                                mqs[i] = (MessageAgent) type.getDeclaredConstructor().newInstance();
+                                mqs[i].setConfig(mqConf);
+                            }
                         }
                     } catch (Exception e) {
                         logger.log(Level.SEVERE, "load application mq resource error: " + mqs[i], e);

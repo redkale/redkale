@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonFactory;
-import org.redkale.util.ConstructorParameters;
+import org.redkale.util.*;
 
 /**
  * Redkale中缓存数据源的核心类。 主要供业务开发者使用， 技术开发者提供CacheSource的实现。<br>
@@ -33,6 +33,9 @@ public interface CacheSource<V extends Object> {
     public void initValueType(Type valueType);
 
     public void initTransient(boolean flag);
+
+    //ServiceLoader时判断配置是否符合当前实现类
+    public boolean match(AnyValue config);
 
     default boolean isOpen() {
         return true;

@@ -90,6 +90,11 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
         return "memory";
     }
 
+    @Override //ServiceLoader时判断配置是否符合当前实现类
+    public boolean match(AnyValue config) {
+        return false;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void init(AnyValue conf) {

@@ -211,7 +211,20 @@ public abstract class NodeServer {
         if (resources != null) {
             for (AnyValue sourceConf : resources.getAnyValues("source")) {
                 try {
-                    Class type = serverClassLoader.loadClass(sourceConf.getValue("value"));
+                    String classval = sourceConf.getValue("value");
+                    Class type = null;
+                    if (classval == null || classval.isEmpty()) {
+                        Iterator<CacheSource> it = ServiceLoader.load(CacheSource.class, serverClassLoader).iterator();
+                        while (it.hasNext()) {
+                            CacheSource s = it.next();
+                            if (s.match(sourceConf)) {
+                                type = s.getClass();
+                                break;
+                            }
+                        }
+                    } else {
+                        type = serverClassLoader.loadClass(classval);
+                    }
                     if (type == DataSource.class) {
                         type = DataMemorySource.class;
                         for (AnyValue itemConf : sourceConf.getAnyValues("property")) {
@@ -321,7 +334,23 @@ public abstract class NodeServer {
                         SimpleEntry<Class, AnyValue> resEntry2 = dataResources.get(resourceName);
                         sourceConf = resEntry2 == null ? null : resEntry2.getValue();
                     }
-                    final Class sourceType = sourceConf == null ? CacheMemorySource.class : serverClassLoader.loadClass(sourceConf.getValue("value"));
+                    Class sourceType0 = CacheMemorySource.class;
+                    if (sourceConf != null) {
+                        String classval = sourceConf.getValue("value");
+                        if (classval == null || classval.isEmpty()) {
+                            Iterator<CacheSource> it = ServiceLoader.load(CacheSource.class, serverClassLoader).iterator();
+                            while (it.hasNext()) {
+                                CacheSource s = it.next();
+                                if (s.match(sourceConf)) {
+                                    sourceType0 = s.getClass();
+                                    break;
+                                }
+                            }
+                        } else {
+                            sourceType0 = serverClassLoader.loadClass(classval);
+                        }
+                    }
+                    final Class sourceType = sourceType0;
                     Object source = null;
                     if (CacheSource.class.isAssignableFrom(sourceType)) { // CacheSource
                         source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, client == null ? null : client.getMessageAgent(), appResFactory, appSncpTranFactory, sncpAddr, null, Sncp.getConf(srcService));

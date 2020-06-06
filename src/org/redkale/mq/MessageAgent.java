@@ -57,6 +57,9 @@ public abstract class MessageAgent {
     public void init(AnyValue config) {
     }
 
+    //ServiceLoader时判断配置是否符合当前实现类
+    public abstract boolean match(AnyValue config);
+
     public final CompletableFuture<MessageRecord> createSncpRespFuture(AtomicLong counter, MessageRecord message) {
         return this.sncpRespProcessor.createFuture(message.getSeqid(), counter);
     }

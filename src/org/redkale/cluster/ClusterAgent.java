@@ -74,6 +74,9 @@ public abstract class ClusterAgent {
     public void destroy(AnyValue config) {
     }
 
+    //ServiceLoader时判断配置是否符合当前实现类
+    public abstract boolean match(AnyValue config);
+
     public boolean containsProtocol(String protocol) {
         if (protocol == null || protocol.isEmpty()) return false;
         return protocols == null || Utility.contains(protocols, protocol.toUpperCase());
