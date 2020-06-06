@@ -58,7 +58,7 @@ public final class SncpClient {
 
     protected final ExecutorService executor;
 
-    protected final MessageAgent agent;
+    protected final MessageAgent messageAgent;
 
     protected final String topic;
 
@@ -76,13 +76,13 @@ public final class SncpClient {
     //远程模式, 可能为null
     protected Transport remoteGroupTransport;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent agent, final TransportFactory factory,
+    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent messageAgent, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
         this.remote = remote;
         this.executor = factory.getExecutor();
         this.bufferSupplier = factory.getBufferSupplier();
-        this.agent = agent;
-        this.topic = agent == null ? null : agent.generateSncpReqTopic(service);
+        this.messageAgent = messageAgent;
+        this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(service);
         Class<?> tn = serviceTypeOrImplClass;
         Version ver = tn.getAnnotation(Version.class);
         this.serviceClass = serviceClass;
@@ -113,7 +113,7 @@ public final class SncpClient {
     }
 
     public MessageAgent getMessageAgent() {
-        return agent;
+        return messageAgent;
     }
 
     public InetSocketAddress getClientAddress() {
@@ -265,7 +265,7 @@ public final class SncpClient {
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientSncpAddress;
         if (bsonConvert == null) bsonConvert = BsonConvert.root();
-        final BsonWriter writer = agent == null ? bsonConvert.pollBsonWriter() : bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
+        final BsonWriter writer = messageAgent == null ? bsonConvert.pollBsonWriter() : bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
             BsonConvert bcc = bsonConvert;
@@ -278,11 +278,11 @@ public final class SncpClient {
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
         final DLong actionid = action.actionid;
-        if (agent != null) { //MQ模式
+        if (messageAgent != null) { //MQ模式
             final byte[] reqbytes = writer.toArray();
             fillHeader(ByteBuffer.wrap(reqbytes), seqid, actionid, reqBodyLength);
             MessageRecord message = new MessageRecord(ConvertType.BSON, this.topic, null, reqbytes);
-            return agent.sendRemoteSncp(null, message).thenApply(msg -> {
+            return messageAgent.sendRemoteSncp(null, message).thenApply(msg -> {
                 ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
                 checkResult(seqid, action, buffer);
 

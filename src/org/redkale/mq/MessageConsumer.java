@@ -23,7 +23,7 @@ public abstract class MessageConsumer {
 
     protected final String topic;
 
-    protected MessageAgent agent;
+    protected MessageAgent messageAgent;
 
     protected final MessageProcessor processor;
 
@@ -31,11 +31,11 @@ public abstract class MessageConsumer {
 
     protected volatile boolean closed;
 
-    protected MessageConsumer(MessageAgent agent, String topic, MessageProcessor processor) {
-        Objects.requireNonNull(agent);
+    protected MessageConsumer(MessageAgent messageAgent, String topic, MessageProcessor processor) {
+        Objects.requireNonNull(messageAgent);
         Objects.requireNonNull(topic);
         Objects.requireNonNull(processor);
-        this.agent = agent;
+        this.messageAgent = messageAgent;
         this.topic = topic;
         this.processor = processor;
     }

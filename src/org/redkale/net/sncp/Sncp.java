@@ -494,9 +494,9 @@ public abstract class Sncp {
         }
     }
 
-    public static <T extends Service> T createSimpleRemoteService(final Class<T> serviceImplClass, final MessageAgent agent,
+    public static <T extends Service> T createSimpleRemoteService(final Class<T> serviceImplClass, final MessageAgent messageAgent,
         final TransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
-        return createRemoteService(null, "", serviceImplClass, agent, transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
+        return createRemoteService(null, "", serviceImplClass, messageAgent, transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
     /**
@@ -533,7 +533,7 @@ public abstract class Sncp {
      * @param classLoader            ClassLoader
      * @param name                   资源名
      * @param serviceTypeOrImplClass Service类
-     * @param agent                  MQ管理器
+     * @param messageAgent                  MQ管理器
      * @param transportFactory       TransportFactory
      * @param clientAddress          本地IP地址
      * @param groups0                所有的组节点，包含自身
@@ -547,7 +547,7 @@ public abstract class Sncp {
         final ClassLoader classLoader,
         final String name,
         final Class<T> serviceTypeOrImplClass,
-        final MessageAgent agent,
+        final MessageAgent messageAgent,
         final TransportFactory transportFactory,
         final InetSocketAddress clientAddress,
         final Set<String> groups0,
@@ -570,7 +570,7 @@ public abstract class Sncp {
         try {
             Class newClazz = loader.loadClass(newDynName.replace('/', '.'));
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, agent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
@@ -751,7 +751,7 @@ public abstract class Sncp {
         }.loadClass(newDynName.replace('/', '.'), bytes);
         try {
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, agent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             {

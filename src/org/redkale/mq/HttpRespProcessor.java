@@ -22,13 +22,13 @@ public class HttpRespProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
-    protected final MessageAgent agent;
+    protected final MessageAgent messageAgent;
 
     protected final ConcurrentHashMap<Long, RespFutureNode> respNodes = new ConcurrentHashMap<>();
 
-    public HttpRespProcessor(Logger logger, MessageAgent agent) {
+    public HttpRespProcessor(Logger logger, MessageAgent messageAgent) {
         this.logger = logger;
-        this.agent = agent;
+        this.messageAgent = messageAgent;
     }
 
     @Override

@@ -23,13 +23,13 @@ public class SncpRespProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
-    protected final MessageAgent agent;
+    protected final MessageAgent messageAgent;
 
     protected final ConcurrentHashMap<Long, MessageRespFutureNode> respNodes = new ConcurrentHashMap<>();
 
-    public SncpRespProcessor(Logger logger, MessageAgent agent) {
+    public SncpRespProcessor(Logger logger, MessageAgent messageAgent) {
         this.logger = logger;
-        this.agent = agent;
+        this.messageAgent = messageAgent;
     }
 
     @Override

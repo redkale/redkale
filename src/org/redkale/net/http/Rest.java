@@ -22,6 +22,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.Cryptor;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
@@ -218,7 +219,7 @@ public final class Rest {
         return t == null ? defValue : t;
     }
 
-    public static <T extends WebSocketServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType) {
+    public static <T extends WebSocketServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType, final MessageAgent messageAgent) {
         if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
         if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
         if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
@@ -719,6 +720,11 @@ public final class Rest {
         Class<?> newClazz = newLoader.loadClass(newDynName.replace('/', '.'), cw.toByteArray());
         try {
             T servlet = (T) newClazz.getDeclaredConstructor().newInstance();
+            if (messageAgent != null) {
+                Field agentField = servlet.getClass().getDeclaredField("messageAgent");
+                agentField.setAccessible(true);
+                agentField.set(servlet, messageAgent);
+            }
             newClazz.getField("_redkale_annotations").set(null, msgclassToAnnotations);
             if (rws.cryptor() != Cryptor.class) {
                 Cryptor cryptor = rws.cryptor().getDeclaredConstructor().newInstance();

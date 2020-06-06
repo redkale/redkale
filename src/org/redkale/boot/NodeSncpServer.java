@@ -33,9 +33,9 @@ public class NodeSncpServer extends NodeServer {
     private NodeSncpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
-        this.consumer = sncpServer == null || application.singletonrun ? null : (agent, x) -> {
+        this.consumer = sncpServer == null || application.singletonrun ? null : (agent, x) -> {//singleton模式下不生成SncpServlet
             if (x.getClass().getAnnotation(Local.class) != null) return;
-            SncpDynServlet servlet = sncpServer.addSncpServlet(x); //singleton模式下不生成SncpServlet
+            SncpDynServlet servlet = sncpServer.addSncpServlet(x);
             dynServletMap.put(x, servlet);
             if (agent != null) agent.putService(this, x, servlet);
         };
@@ -54,8 +54,8 @@ public class NodeSncpServer extends NodeServer {
         return sncpServer == null ? null : sncpServer.getSocketAddress();
     }
 
-    public void consumerAccept(MessageAgent agent, Service service) {
-        if (this.consumer != null) this.consumer.accept(agent, service);
+    public void consumerAccept(MessageAgent messageAgent, Service service) {
+        if (this.consumer != null) this.consumer.accept(messageAgent, service);
     }
 
     @Override

@@ -362,9 +362,9 @@ public final class Application {
                         if (classval == null || classval.isEmpty()) {
                             Iterator<MessageAgent> it = ServiceLoader.load(MessageAgent.class, classLoader).iterator();
                             while (it.hasNext()) {
-                                MessageAgent agent = it.next();
-                                if (agent.match(mqConf)) {
-                                    mqs[i] = agent;
+                                MessageAgent messageAgent = it.next();
+                                if (messageAgent.match(mqConf)) {
+                                    mqs[i] = messageAgent;
                                     mqs[i].setConfig(mqConf);
                                     break;
                                 }

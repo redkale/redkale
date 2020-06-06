@@ -234,7 +234,7 @@ public class NodeHttpServer extends NodeServer {
             agent0 = application.getMessageAgent(mqname);
             if (agent0 == null) throw new RuntimeException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
         }
-        final MessageAgent agent = agent0;
+        final MessageAgent messageAgent = agent0;
         final boolean autoload = restConf.getBoolValue("autoload", true);
         {  //加载RestService
             String userTypeStr = restConf.getValue("usertype");
@@ -278,7 +278,7 @@ public class NodeHttpServer extends NodeServer {
                     if (ws != null && !ws.repair()) prefix2 = "";
                     resourceFactory.inject(servlet, NodeHttpServer.this);
                     dynServletMap.put(service, servlet);
-                    if (agent != null) agent.putService(this, service, servlet);
+                    if (messageAgent != null) messageAgent.putService(this, service, servlet);
                     //if (finest) logger.finest(localThreadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
                     if (ss != null) {
                         String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
@@ -332,7 +332,7 @@ public class NodeHttpServer extends NodeServer {
                     return;
                 }
                 restedObjects.add(stype); //避免重复创建Rest对象
-                WebSocketServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, prefix, en.getProperty());
+                WebSocketServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, prefix, en.getProperty(), messageAgent);
                 if (servlet == null) return; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
                 String prefix2 = prefix;
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
@@ -348,7 +348,7 @@ public class NodeHttpServer extends NodeServer {
                 }
             }
         }
-        if (agent != null) this.messageAgents.put(agent.getName(), agent);
+        if (messageAgent != null) this.messageAgents.put(messageAgent.getName(), messageAgent);
         //输出信息
         if (ss != null && !ss.isEmpty() && sb != null) {
             ss.sort((AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
