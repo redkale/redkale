@@ -38,6 +38,8 @@ public abstract class MessageAgent {
 
     protected String name;
 
+    protected String[] names;
+
     protected AnyValue config;
 
     protected MessageProducer producer;
@@ -55,6 +57,16 @@ public abstract class MessageAgent {
     protected HashMap<String, MessageNode> messageNodes = new LinkedHashMap<>();
 
     public void init(AnyValue config) {
+        this.name = checkName(config.getValue("name", ""));
+        String namex = config.getValue("names");
+        if (namex != null && !namex.isEmpty()) {
+            List<String> list = new ArrayList<>();
+            for (String n : namex.split(";")) {
+                if (n.trim().isEmpty()) continue;
+                list.add(n.trim());
+            }
+            if (!list.isEmpty()) this.names = list.toArray(new String[list.size()]);
+        }
     }
 
     //ServiceLoader时判断配置是否符合当前实现类
@@ -101,6 +113,10 @@ public abstract class MessageAgent {
 
     public String getName() {
         return name;
+    }
+
+    public String[] getNames() {
+        return names;
     }
 
     public AnyValue getConfig() {

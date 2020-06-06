@@ -357,6 +357,15 @@ public final class Application {
                     AnyValue mqConf = mqConfs[0];
                     String mqname = mqConf.getValue("name", "");
                     if (mqnames.contains(mqname)) throw new RuntimeException("mq.name(" + mqname + ") is repeat");
+                    mqnames.add(mqname);
+                    String namex = mqConf.getValue("names");
+                    if (namex != null && !namex.isEmpty()) {
+                        for (String n : namex.split(";")) {
+                            if (n.trim().isEmpty()) continue;
+                            if (mqnames.contains(n.trim())) throw new RuntimeException("mq.name(" + n.trim() + ") is repeat");
+                            mqnames.add(n.trim());
+                        }
+                    }
                     try {
                         String classval = mqConf.getValue("value");
                         if (classval == null || classval.isEmpty()) {
@@ -382,7 +391,6 @@ public final class Application {
                     } catch (Exception e) {
                         logger.log(Level.SEVERE, "load application mq resource error: " + mqs[i], e);
                     }
-                    mqnames.add(mqname);
                 }
             }
         }
@@ -426,6 +434,11 @@ public final class Application {
                 this.resourceFactory.inject(agent);
                 agent.init(agent.getConfig());
                 this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
+                if (agent.getNames() != null) {
+                    for (String n : agent.getNames()) {
+                        this.resourceFactory.register(n, MessageAgent.class, agent);
+                    }
+                }
             }
         }
         this.messageAgents = mqs;
@@ -449,6 +462,11 @@ public final class Application {
         if (messageAgents == null) return null;
         for (MessageAgent agent : messageAgents) {
             if (agent.getName().equals(name)) return agent;
+            if (agent.getNames() != null) {
+                for (String n : agent.getNames()) {
+                    if (n.equals(name)) return agent;
+                }
+            }
         }
         return null;
     }

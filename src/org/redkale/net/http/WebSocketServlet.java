@@ -18,7 +18,6 @@ import java.util.logging.*;
 import java.util.zip.*;
 import javax.annotation.*;
 import org.redkale.convert.Convert;
-import org.redkale.mq.MessageAgent;
 import org.redkale.net.Cryptor;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -115,8 +114,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     @Resource(name = "$")
     protected WebSocketNode node;
-
-    protected MessageAgent messageAgent;
 
     @Resource(name = "SERVER_RESFACTORY")
     protected ResourceFactory resourceFactory;
