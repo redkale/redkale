@@ -403,6 +403,8 @@ public abstract class NodeServer {
                         ((WebSocketNodeService) nodeService).setName(resourceName);
                     }
                     resourceFactory.inject(nodeService, self);
+                    MessageAgent messageAgent = Sncp.getMessageAgent((Service) src);
+                    if (messageAgent != null && Sncp.getMessageAgent(nodeService) == null) Sncp.setMessageAgent(nodeService, messageAgent);
                     field.set(src, nodeService);
                     if (Sncp.isRemote(nodeService)) {
                         remoteServices.add(nodeService);
@@ -470,13 +472,16 @@ public abstract class NodeServer {
                     }
 
                     Service service;
-                    boolean ws = src instanceof WebSocketServlet;
+                    final boolean ws = src instanceof WebSocketServlet;
                     if (ws || localed) { //本地模式
                         service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, agent, appResourceFactory, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     } else {
                         service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, agent, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     }
-                    if (service instanceof WebSocketNodeService) ((WebSocketNodeService) service).setName(resourceName);
+                    if (service instanceof WebSocketNodeService) {
+                        ((WebSocketNodeService) service).setName(resourceName);
+                        if (agent != null) Sncp.setMessageAgent(service, agent);
+                    }
                     final Class restype = Sncp.getResourceType(service);
                     if (rf.find(resourceName, restype) == null) {
                         regFactory.register(resourceName, restype, service);

@@ -146,6 +146,28 @@ public abstract class Sncp {
         }
     }
 
+    public static MessageAgent getMessageAgent(Service service) {
+        if (service == null) return null;
+        try {
+            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageagent");
+            ts.setAccessible(true);
+            return (MessageAgent) ts.get(service);
+        } catch (Exception e) {
+            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_messageagent");
+        }
+    }
+
+    public static void setMessageAgent(Service service, MessageAgent messageAgent) {
+        if (service == null) return;
+        try {
+            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageagent");
+            ts.setAccessible(true);
+            ts.set(service, messageAgent);
+        } catch (Exception e) {
+            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_messageagent");
+        }
+    }
+
     public static boolean updateTransport(Service service,
         final TransportFactory transportFactory, String name, String protocol, InetSocketAddress clientAddress,
         final Set<String> groups, final Collection<InetSocketAddress> addresses) {
@@ -329,6 +351,10 @@ public abstract class Sncp {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_client", clientDesc, null, null);
             fv.visitEnd();
         }
+        {
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_messageagent", Type.getDescriptor(MessageAgent.class), null, null);
+            fv.visitEnd();
+        }
         { //构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
@@ -414,9 +440,9 @@ public abstract class Sncp {
         }
     }
 
-    public static <T extends Service> T createSimpleLocalService(final Class<T> serviceImplClass, final MessageAgent remoteAgent,
+    public static <T extends Service> T createSimpleLocalService(final Class<T> serviceImplClass, final MessageAgent messageAgent,
         final TransportFactory transportFactory, final InetSocketAddress clientSncpAddress, final String... groups) {
-        return createLocalService(null, "", serviceImplClass, remoteAgent, ResourceFactory.root(), transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
+        return createLocalService(null, "", serviceImplClass, messageAgent, ResourceFactory.root(), transportFactory, clientSncpAddress, Utility.ofSet(groups), null);
     }
 
     /**
@@ -427,7 +453,7 @@ public abstract class Sncp {
      * @param classLoader       ClassLoader
      * @param name              资源名
      * @param serviceImplClass  Service类
-     * @param remoteAgent       MQ管理器
+     * @param messageAgent      MQ管理器
      * @param resourceFactory   ResourceFactory
      * @param transportFactory  TransportFactory
      * @param clientSncpAddress 本地IP地址
@@ -441,7 +467,7 @@ public abstract class Sncp {
         final ClassLoader classLoader,
         final String name,
         final Class<T> serviceImplClass,
-        final MessageAgent remoteAgent,
+        final MessageAgent messageAgent,
         final ResourceFactory resourceFactory,
         final TransportFactory transportFactory,
         final InetSocketAddress clientSncpAddress,
@@ -462,7 +488,7 @@ public abstract class Sncp {
                         if (!field.getType().isAssignableFrom(newClazz)) continue;
                         field.setAccessible(true);
                         if (remoteService == null && clientSncpAddress != null) {
-                            remoteService = createRemoteService(classLoader, name, serviceImplClass, remoteAgent, transportFactory, clientSncpAddress, groups, conf);
+                            remoteService = createRemoteService(classLoader, name, serviceImplClass, messageAgent, transportFactory, clientSncpAddress, groups, conf);
                         }
                         if (remoteService != null) field.set(service, remoteService);
                     }
@@ -471,14 +497,19 @@ public abstract class Sncp {
             SncpClient client = null;
             {
                 try {
-                    Field e = newClazz.getDeclaredField(FIELDPREFIX + "_client");
-                    e.setAccessible(true);
-                    client = new SncpClient(name, serviceImplClass, service, remoteAgent, transportFactory, false, newClazz, clientSncpAddress);
-                    e.set(service, client);
+                    Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
+                    c.setAccessible(true);
+                    client = new SncpClient(name, serviceImplClass, service, messageAgent, transportFactory, false, newClazz, clientSncpAddress);
+                    c.set(service, client);
                     if (transportFactory != null) transportFactory.addSncpService(service);
                 } catch (NoSuchFieldException ne) {
                     ne.printStackTrace();
                 }
+            }
+            if (messageAgent != null) {
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
+                c.setAccessible(true);
+                c.set(service, messageAgent);
             }
             if (client == null) return service;
             {
@@ -533,7 +564,7 @@ public abstract class Sncp {
      * @param classLoader            ClassLoader
      * @param name                   资源名
      * @param serviceTypeOrImplClass Service类
-     * @param messageAgent                  MQ管理器
+     * @param messageAgent           MQ管理器
      * @param transportFactory       TransportFactory
      * @param clientAddress          本地IP地址
      * @param groups0                所有的组节点，包含自身
@@ -572,10 +603,15 @@ public abstract class Sncp {
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
-            client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
+            if (transportFactory != null) client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             c.setAccessible(true);
             c.set(service, client);
+            if (messageAgent != null) {
+                Field m = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
+                m.setAccessible(true);
+                m.set(service, messageAgent);
+            }
             if (transportFactory != null) transportFactory.addSncpService(service);
             return service;
         } catch (Throwable ex) {
@@ -615,6 +651,10 @@ public abstract class Sncp {
         }
         {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_client", clientDesc, null, null);
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_messageagent", Type.getDescriptor(MessageAgent.class), null, null);
             fv.visitEnd();
         }
         { //构造函数
@@ -753,11 +793,16 @@ public abstract class Sncp {
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
-            client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
+            if (transportFactory != null) client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                 c.setAccessible(true);
                 c.set(service, client);
+            }
+            {
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
+                c.setAccessible(true);
+                c.set(service, messageAgent);
             }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");

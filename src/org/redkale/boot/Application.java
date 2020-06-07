@@ -434,11 +434,6 @@ public final class Application {
                 this.resourceFactory.inject(agent);
                 agent.init(agent.getConfig());
                 this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
-                if (agent.getNames() != null) {
-                    for (String n : agent.getNames()) {
-                        this.resourceFactory.register(n, MessageAgent.class, agent);
-                    }
-                }
             }
         }
         this.messageAgents = mqs;
@@ -462,11 +457,6 @@ public final class Application {
         if (messageAgents == null) return null;
         for (MessageAgent agent : messageAgents) {
             if (agent.getName().equals(name)) return agent;
-            if (agent.getNames() != null) {
-                for (String n : agent.getNames()) {
-                    if (n.equals(name)) return agent;
-                }
-            }
         }
         return null;
     }
