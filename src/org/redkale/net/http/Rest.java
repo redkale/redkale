@@ -22,6 +22,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.Cryptor;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
@@ -218,7 +219,7 @@ public final class Rest {
         return t == null ? defValue : t;
     }
 
-    public static <T extends WebSocketServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType) {
+    public static <T extends WebSocketServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType, MessageAgent messageAgent) {
         if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
         if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
         if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
@@ -726,6 +727,7 @@ public final class Rest {
                 cryptorField.setAccessible(true);
                 cryptorField.set(servlet, cryptor);
             }
+            if (messageAgent != null) ((WebSocketServlet) servlet).messageAgent = messageAgent;
             return servlet;
         } catch (Exception e) {
             throw new RuntimeException(e);

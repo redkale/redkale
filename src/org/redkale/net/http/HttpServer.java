@@ -16,6 +16,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.HttpContext.HttpContextConfig;
 import org.redkale.net.http.HttpResponse.HttpResponseConfig;
@@ -215,13 +216,14 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @param <T>           HttpServlet
      * @param classLoader   ClassLoader
      * @param webSocketType WebSocket的类型
+     * @param messageAgent  MessageAgent
      * @param prefix        url前缀
      * @param conf          配置信息
      *
      * @return RestServlet
      */
-    public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(final ClassLoader classLoader, final Class<S> webSocketType, final String prefix, final AnyValue conf) {
-        T servlet = Rest.createRestWebSocketServlet(classLoader, webSocketType);
+    public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(final ClassLoader classLoader, final Class<S> webSocketType, MessageAgent messageAgent, final String prefix, final AnyValue conf) {
+        T servlet = Rest.createRestWebSocketServlet(classLoader, webSocketType, messageAgent);
         if (servlet != null) this.prepare.addServlet(servlet, prefix, conf);
         return servlet;
     }

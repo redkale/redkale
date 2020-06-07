@@ -122,7 +122,15 @@ public class NodeHttpServer extends NodeServer {
                         resourceFactory.register(RESNAME_SNCP_ADDR, String.class, sncpResFactory.find(RESNAME_SNCP_ADDR, String.class));
                     }
                     if (nodeService == null) {
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, null, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
+                        MessageAgent messageAgent = null;
+                        try {
+                            Field c = src.getClass().getDeclaredField("messageAgent");
+                            c.setAccessible(true);
+                            messageAgent = (MessageAgent) c.get(src);
+                        } catch (Exception ex) {
+                            logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
+                        }
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, messageAgent, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
                     resourceFactory.inject(nodeService, self);
@@ -332,7 +340,7 @@ public class NodeHttpServer extends NodeServer {
                     return;
                 }
                 restedObjects.add(stype); //避免重复创建Rest对象
-                WebSocketServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, prefix, en.getProperty());
+                WebSocketServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, messageAgent, prefix, en.getProperty());
                 if (servlet == null) return; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
                 String prefix2 = prefix;
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);

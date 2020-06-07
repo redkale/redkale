@@ -18,6 +18,7 @@ import java.util.logging.*;
 import java.util.zip.*;
 import javax.annotation.*;
 import org.redkale.convert.Convert;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.Cryptor;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -100,6 +101,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected boolean permessageDeflate = false;
 
+    protected MessageAgent messageAgent;
+
     @Resource(name = "jsonconvert")
     protected Convert jsonConvert;
 
@@ -149,6 +152,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
         }
         if (this.node.sendConvert == null) this.node.sendConvert = this.sendConvert;
+        if (this.messageAgent != null) this.node.messageAgent = this.messageAgent;
         {
             AnyValue props = conf;
             if (conf != null && conf.getAnyValue("properties") != null) props = conf.getAnyValue("properties");

@@ -398,7 +398,7 @@ public abstract class NodeServer {
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) groups.add(NodeServer.this.sncpGroup);
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, null, application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, Sncp.getMessageAgent((Service) src), application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
                         ((WebSocketNodeService) nodeService).setName(resourceName);
                     }

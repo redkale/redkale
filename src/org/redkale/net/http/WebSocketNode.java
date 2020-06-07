@@ -16,6 +16,7 @@ import javax.annotation.*;
 import org.redkale.boot.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.mq.MessageAgent;
 import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -59,6 +60,8 @@ public abstract class WebSocketNode {
     //当前节点的本地WebSocketEngine
     protected WebSocketEngine localEngine;
 
+    protected MessageAgent messageAgent;
+
     protected Semaphore semaphore;
 
     private int tryAcquireSeconds = 12;
@@ -82,6 +85,11 @@ public abstract class WebSocketNode {
     @Local
     public final Semaphore getSemaphore() {
         return semaphore;
+    }
+
+    @Local
+    public final MessageAgent getMessageAgent() {
+        return messageAgent;
     }
 
     @Local

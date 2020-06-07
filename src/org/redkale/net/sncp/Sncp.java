@@ -20,6 +20,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.TransportFactory;
+import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.SncpClient.SncpAction;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -516,6 +517,11 @@ public abstract class Sncp {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
                 c.set(service, conf);
+                if (service instanceof WebSocketNode) {
+                    c = WebSocketNode.class.getDeclaredField("messageAgent");
+                    c.setAccessible(true);
+                    c.set(service, messageAgent);
+                }
             }
             return service;
         } catch (RuntimeException rex) {
@@ -611,6 +617,11 @@ public abstract class Sncp {
                 Field m = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
                 m.setAccessible(true);
                 m.set(service, messageAgent);
+                if (service instanceof WebSocketNode) {
+                    c = WebSocketNode.class.getDeclaredField("messageAgent");
+                    c.setAccessible(true);
+                    c.set(service, messageAgent);
+                }
             }
             if (transportFactory != null) transportFactory.addSncpService(service);
             return service;
@@ -799,10 +810,15 @@ public abstract class Sncp {
                 c.setAccessible(true);
                 c.set(service, client);
             }
-            {
+            if (messageAgent != null) {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
                 c.setAccessible(true);
                 c.set(service, messageAgent);
+                if (service instanceof WebSocketNode) {
+                    c = WebSocketNode.class.getDeclaredField("messageAgent");
+                    c.setAccessible(true);
+                    c.set(service, messageAgent);
+                }
             }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
