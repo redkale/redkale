@@ -164,6 +164,11 @@ public abstract class Sncp {
             Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageagent");
             ts.setAccessible(true);
             ts.set(service, messageAgent);
+            if (service instanceof WebSocketNode) {
+                Field c = WebSocketNode.class.getDeclaredField("messageAgent");
+                c.setAccessible(true);
+                c.set(service, messageAgent);
+            }
         } catch (Exception e) {
             throw new RuntimeException(service + " not found " + FIELDPREFIX + "_messageagent");
         }
