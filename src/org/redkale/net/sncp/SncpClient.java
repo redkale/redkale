@@ -281,7 +281,9 @@ public final class SncpClient {
         if (messageAgent != null) { //MQ模式
             final byte[] reqbytes = writer.toArray();
             fillHeader(ByteBuffer.wrap(reqbytes), seqid, actionid, reqBodyLength);
-            MessageRecord message = new MessageRecord(ConvertType.BSON, this.topic, null, reqbytes);
+            String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
+            if (targetTopic == null) targetTopic = this.topic;
+            MessageRecord message = new MessageRecord(ConvertType.BSON, targetTopic, null, reqbytes);
             return messageAgent.sendRemoteSncp(null, message).thenApply(msg -> {
                 ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
                 checkResult(seqid, action, buffer);
@@ -511,6 +513,8 @@ public final class SncpClient {
 
         protected final int addressSourceParamIndex;
 
+        protected final int topicTargetParamIndex;
+
         protected final boolean boolReturnTypeFuture; // 返回结果类型是否为 CompletableFuture
 
         protected final Creator<? extends CompletableFuture> futureCreator;
@@ -526,6 +530,7 @@ public final class SncpClient {
             this.paramClass = method.getParameterTypes();
             this.method = method;
             Annotation[][] anns = method.getParameterAnnotations();
+            int tpoicAddrIndex = -1;
             int targetAddrIndex = -1;
             int sourceAddrIndex = -1;
             int handlerAttachIndex = -1;
@@ -559,6 +564,8 @@ public final class SncpClient {
                                 targetAddrIndex = i;
                             } else if (ann.annotationType() == RpcSourceAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
                                 sourceAddrIndex = i;
+                            } else if (ann.annotationType() == RpcTargetTopic.class && String.class.isAssignableFrom(params[i])) {
+                                tpoicAddrIndex = i;
                             }
                         }
                         for (Annotation ann : anns[i]) {
@@ -575,6 +582,7 @@ public final class SncpClient {
                     }
                 }
             }
+            this.topicTargetParamIndex = tpoicAddrIndex;
             this.addressTargetParamIndex = targetAddrIndex;
             this.addressSourceParamIndex = sourceAddrIndex;
             this.handlerFuncParamIndex = handlerFuncIndex;

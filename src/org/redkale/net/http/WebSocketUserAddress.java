@@ -20,76 +20,57 @@ public interface WebSocketUserAddress extends Serializable {
 
     Serializable userid();
 
-    String mqtopic();
+    WebSocketAddress address();
 
-    Collection<String> mqtopics();
-
-    InetSocketAddress sncpAddress();
-
-    Collection<InetSocketAddress> sncpAddresses();
+    Collection<WebSocketAddress> addresses();
 
     public static WebSocketUserAddress create(WebSocketUserAddress userAddress) {
         return new SimpleWebSocketUserAddress(userAddress);
     }
 
-    public static WebSocketUserAddress createTopic(Serializable userid, String mqtopic) {
-        return new SimpleWebSocketUserAddress(userid, mqtopic, null, null, null);
+    public static WebSocketUserAddress createTopic(Serializable userid, String mqtopic, InetSocketAddress sncpAddress) {
+        return new SimpleWebSocketUserAddress(userid, mqtopic, sncpAddress);
     }
 
-    public static WebSocketUserAddress createTopic(Serializable userid, Collection<String> mqtopics) {
-        return new SimpleWebSocketUserAddress(userid, null, mqtopics, null, null);
+    public static WebSocketUserAddress create(Serializable userid, WebSocketAddress address) {
+        return new SimpleWebSocketUserAddress(userid, address);
     }
 
-    public static WebSocketUserAddress create(Serializable userid, InetSocketAddress sncpAddress) {
-        return new SimpleWebSocketUserAddress(userid, null, null, sncpAddress, null);
-    }
-
-    public static WebSocketUserAddress create(Serializable userid, Collection<InetSocketAddress> sncpAddresses) {
-        return new SimpleWebSocketUserAddress(userid, null, null, null, sncpAddresses);
+    public static WebSocketUserAddress create(Serializable userid, Collection<WebSocketAddress> addresses) {
+        return new SimpleWebSocketUserAddress(userid, addresses);
     }
 
     public static class SimpleWebSocketUserAddress implements WebSocketUserAddress {
 
         private Serializable userid;
 
-        private String mqtopic;
+        private WebSocketAddress address;
 
-        private Collection<String> mqtopics;
-
-        private InetSocketAddress sncpAddress;
-
-        private Collection<InetSocketAddress> sncpAddresses;
+        private Collection<WebSocketAddress> addresses;
 
         public SimpleWebSocketUserAddress() {
         }
 
         public SimpleWebSocketUserAddress(Serializable userid, String mqtopic, InetSocketAddress sncpAddress) {
             this.userid = userid;
-            this.mqtopic = mqtopic;
-            this.sncpAddress = sncpAddress;
+            this.address = new WebSocketAddress(mqtopic, sncpAddress);
         }
 
-        public SimpleWebSocketUserAddress(Serializable userid, Collection<String> mqtopics, Collection<InetSocketAddress> sncpAddresses) {
+        public SimpleWebSocketUserAddress(Serializable userid, WebSocketAddress address) {
             this.userid = userid;
-            this.mqtopics = mqtopics;
-            this.sncpAddresses = sncpAddresses;
+            this.address = address;
         }
 
-        public SimpleWebSocketUserAddress(Serializable userid, String mqtopic, Collection<String> mqtopics, InetSocketAddress sncpAddress, Collection<InetSocketAddress> sncpAddresses) {
+        public SimpleWebSocketUserAddress(Serializable userid, Collection<WebSocketAddress> addresses) {
             this.userid = userid;
-            this.mqtopic = mqtopic;
-            this.mqtopics = mqtopics;
-            this.sncpAddress = sncpAddress;
-            this.sncpAddresses = sncpAddresses;
+            this.addresses = addresses;
         }
 
         public SimpleWebSocketUserAddress(WebSocketUserAddress userAddress) {
             if (userAddress == null) return;
             this.userid = userAddress.userid();
-            this.mqtopic = userAddress.mqtopic();
-            this.mqtopics = userAddress.mqtopics();
-            this.sncpAddress = userAddress.sncpAddress();
-            this.sncpAddresses = userAddress.sncpAddresses();
+            this.address = userAddress.address();
+            this.addresses = userAddress.addresses();
         }
 
         @Override
@@ -98,23 +79,13 @@ public interface WebSocketUserAddress extends Serializable {
         }
 
         @Override
-        public String mqtopic() {
-            return mqtopic;
+        public WebSocketAddress address() {
+            return address;
         }
 
         @Override
-        public Collection<String> mqtopics() {
-            return mqtopics;
-        }
-
-        @Override
-        public InetSocketAddress sncpAddress() {
-            return sncpAddress;
-        }
-
-        @Override
-        public Collection<InetSocketAddress> sncpAddresses() {
-            return sncpAddresses;
+        public Collection<WebSocketAddress> addresses() {
+            return addresses;
         }
 
         public Serializable getUserid() {
@@ -125,36 +96,20 @@ public interface WebSocketUserAddress extends Serializable {
             this.userid = userid;
         }
 
-        public String getMqtopic() {
-            return mqtopic;
+        public WebSocketAddress getAddress() {
+            return address;
         }
 
-        public void setMqtopic(String mqtopic) {
-            this.mqtopic = mqtopic;
+        public void setAddress(WebSocketAddress address) {
+            this.address = address;
         }
 
-        public Collection<String> getMqtopics() {
-            return mqtopics;
+        public Collection<WebSocketAddress> getAddresses() {
+            return addresses;
         }
 
-        public void setMqtopics(Collection<String> mqtopics) {
-            this.mqtopics = mqtopics;
-        }
-
-        public InetSocketAddress getSncpAddress() {
-            return sncpAddress;
-        }
-
-        public void setSncpAddress(InetSocketAddress sncpAddress) {
-            this.sncpAddress = sncpAddress;
-        }
-
-        public Collection<InetSocketAddress> getSncpAddresses() {
-            return sncpAddresses;
-        }
-
-        public void setSncpAddresses(Collection<InetSocketAddress> sncpAddresses) {
-            this.sncpAddresses = sncpAddresses;
+        public void setAddresses(Collection<WebSocketAddress> addresses) {
+            this.addresses = addresses;
         }
 
         @Override

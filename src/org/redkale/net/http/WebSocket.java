@@ -522,7 +522,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return 地址列表
      */
-    public CompletableFuture<Collection<InetSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
+    public CompletableFuture<Collection<WebSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
         if (_engine.node == null) return CompletableFuture.completedFuture(null);
         return _engine.node.getRpcNodeAddresses(userid);
     }
@@ -536,7 +536,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return 地址集合
      */
-    public CompletableFuture<Map<InetSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable userid) {
+    public CompletableFuture<Map<WebSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable userid) {
         if (_engine.node == null) return CompletableFuture.completedFuture(null);
         return _engine.node.getRpcNodeWebSocketAddresses(userid);
     }
