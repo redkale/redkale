@@ -45,6 +45,7 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     public static void finishHttpResult(MessageRecord msg, MessageProducer producer, String resptopic, HttpResult result) {
+        if (resptopic == null || resptopic.isEmpty()) return;
         ConvertType format = result.convert() == null ? null : result.convert().getFactory().getConvertType();
         byte[] content = HttpResultCoder.getInstance().encode(result);
         producer.apply(new MessageRecord(msg.getSeqid(), format, resptopic, null, content));
