@@ -47,7 +47,9 @@ public class HttpMessageProcessor implements MessageProcessor {
             HttpMessageResponse response = new HttpMessageResponse(context, request, null, null, producer);
             servlet.execute(request, response);
         } catch (Exception ex) {
-            HttpMessageResponse.finishHttpResult(message, producer, message.getResptopic(), new HttpResult().status(500));
+            if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
+                HttpMessageResponse.finishHttpResult(message, producer, message.getResptopic(), new HttpResult().status(500));
+            }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
         }
     }
