@@ -93,7 +93,7 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
             len.addAndGet(2 + (cookie.getDomain() == null ? 0 : Utility.encodeUTF8Length(cookie.getDomain())));
             len.addAndGet(2 + (cookie.getPath() == null ? 0 : Utility.encodeUTF8Length(cookie.getPath())));
             len.addAndGet(2 + (cookie.getPortlist() == null ? 0 : Utility.encodeUTF8Length(cookie.getPortlist())));
-            len.addAndGet(4 + 1 + 1); //maxage Secure HttpOnly
+            len.addAndGet(8 + 1 + 1); //maxage Secure HttpOnly
         });
         final byte[] bs = new byte[len.get()];
         final ByteBuffer buffer = ByteBuffer.wrap(bs);
