@@ -575,6 +575,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                     this.header.addValue("retcode", String.valueOf(ret.getRetcode())).addValue("retinfo", ret.getRetinfo());
                 }
             }
+            if (this.channel == null) { //虚拟的HttpResponse
+                finish(type == null ? convert.convertToBytes(obj) : convert.convertToBytes(type, obj));
+                return;
+            }
             ByteBuffer[] buffers = type == null ? convert.convertTo(getBodyBufferSupplier(), obj)
                 : convert.convertTo(getBodyBufferSupplier(), type, obj);
             finish(buffers);
