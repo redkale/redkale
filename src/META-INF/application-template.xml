@@ -47,6 +47,13 @@
         
         <!--
            【节点全局唯一】
+            自动扫描时排除部分包路径
+            value：    排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
+        -->
+        <excludelibs value="^.*mysql.*$;^.*kafka.*$"/>
+        
+        <!--
+           【节点全局唯一】
             第三方服务发现管理接口
             value：    类名，必须是org.redkale.cluster.ClusterAgent的子类
             waits:     注销服务后是否需要等待检查周期时间后再进行Service销毁，默认值为：false

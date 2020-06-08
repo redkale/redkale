@@ -140,6 +140,9 @@ public final class Application {
     //服务配置项
     final AnyValue config;
 
+    //排除的jar路径
+    final String excludelibs;
+
     //临时计数器
     CountDownLatch servicecdl;  //会出现两次赋值
 
@@ -274,6 +277,7 @@ public final class Application {
         AsynchronousChannelGroup transportGroup = null;
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
+        String excludelib0 = null;
         ClusterAgent cluster = null;
         MessageAgent[] mqs = null;
         int bufferCapacity = 32 * 1024;
@@ -283,6 +287,8 @@ public final class Application {
         AtomicLong createBufferCounter = new AtomicLong();
         AtomicLong cycleBufferCounter = new AtomicLong();
         if (resources != null) {
+            AnyValue excludelibConf = resources.getAnyValue("excludelibs");
+            if (excludelibConf != null) excludelib0 = excludelibConf.getValue("value");
             AnyValue transportConf = resources.getAnyValue("transport");
             int groupsize = resources.getAnyValues("group").length;
             if (groupsize > 0 && transportConf == null) transportConf = new DefaultAnyValue();
@@ -417,6 +423,7 @@ public final class Application {
                     return true;
                 });
         }
+        this.excludelibs = excludelib0;
         this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, (SSLContext) null, readTimeoutSeconds, writeTimeoutSeconds, strategy);
         DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("net.transport.pool.maxconns", "100"))
             .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.ping.interval", "30"))
@@ -925,7 +932,7 @@ public final class Application {
                                 synchronized (nodeClasses) {
                                     if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
                                         ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
-                                        ClassFilter.Loader.load(home, serconf.getValue("excludelibs", "").split(";"), profilter);
+                                        ClassFilter.Loader.load(home, ((excludelibs != null ? (excludelibs + ";") : "") + serconf.getValue("excludelibs", "")).split(";"), profilter);
                                         final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
                                         for (FilterEntry<NodeServer> entry : entrys) {
                                             final Class<? extends NodeServer> type = entry.getType();

@@ -184,7 +184,7 @@ public abstract class NodeServer {
         ClassFilter<Servlet> servletFilter = createServletClassFilter();
         ClassFilter otherFilter = createOtherClassFilter();
         long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(application.getHome(), serverConf.getValue("excludelibs", "").split(";"), serviceFilter, filterFilter, servletFilter, otherFilter);
+        ClassFilter.Loader.load(application.getHome(), ((application.excludelibs != null ? (application.excludelibs + ";") : "") + serverConf.getValue("excludelibs", "")).split(";"), serviceFilter, filterFilter, servletFilter, otherFilter);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter, otherFilter); //必须在servlet之前

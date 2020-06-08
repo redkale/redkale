@@ -499,7 +499,7 @@ public final class ClassFilter<T> {
                     boolean skip = false;
                     for (Pattern p : excludePatterns) {
                         if (p.matcher(url.toString()).matches()) {
-                            skip = false;
+                            skip = true;
                             break;
                         }
                     }
