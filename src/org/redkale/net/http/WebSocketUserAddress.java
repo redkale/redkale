@@ -63,6 +63,18 @@ public interface WebSocketUserAddress extends Serializable {
         public SimpleWebSocketUserAddress() {
         }
 
+        public SimpleWebSocketUserAddress(Serializable userid, String mqtopic, InetSocketAddress sncpAddress) {
+            this.userid = userid;
+            this.mqtopic = mqtopic;
+            this.sncpAddress = sncpAddress;
+        }
+
+        public SimpleWebSocketUserAddress(Serializable userid, Collection<String> mqtopics, Collection<InetSocketAddress> sncpAddresses) {
+            this.userid = userid;
+            this.mqtopics = mqtopics;
+            this.sncpAddresses = sncpAddresses;
+        }
+
         public SimpleWebSocketUserAddress(Serializable userid, String mqtopic, Collection<String> mqtopics, InetSocketAddress sncpAddress, Collection<InetSocketAddress> sncpAddresses) {
             this.userid = userid;
             this.mqtopic = mqtopic;
