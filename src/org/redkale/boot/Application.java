@@ -833,7 +833,7 @@ public final class Application {
                 map.keySet().forEach(str -> {
                     if (str.length() > maxlen.get()) maxlen.set(str.length());
                 });
-                map.forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
+                new TreeMap<String, Long>(map).forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
                 );
             }
             if (sb.length() > 0) logger.info(sb.toString().trim());
