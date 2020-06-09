@@ -50,6 +50,9 @@ public final class Rest {
 
     private static final String REST_PARAMTYPES_FIELD_NAME = "_redkale_paramtypes"; //存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
 
+    private static final java.lang.reflect.Type TYPE_MAP_STRING_STRING = new TypeToken<Map<String, String>>() {
+    }.getType();
+
     private static final Set<String> EXCLUDERMETHODS = new HashSet<>();
 
     static {
@@ -1095,6 +1098,19 @@ public final class Rest {
                     comment = "";
                 }
 
+                RestHeaders annheaders = param.getAnnotation(RestHeaders.class);
+                if (annheaders != null) {
+                    if (annhead != null) throw new RuntimeException("@RestHeaders and @RestHeader cannot on the same Parameter in " + method);
+                    if (anncookie != null) throw new RuntimeException("@RestHeaders and @RestCookie cannot on the same Parameter in " + method);
+                    if (annsid != null) throw new RuntimeException("@RestHeaders and @RestSessionid cannot on the same Parameter in " + method);
+                    if (annaddr != null) throw new RuntimeException("@RestHeaders and @RestAddress cannot on the same Parameter in " + method);
+                    if (annbody != null) throw new RuntimeException("@RestHeaders and @RestBody cannot on the same Parameter in " + method);
+                    if (annfile != null) throw new RuntimeException("@RestHeaders and @RestUploadFile cannot on the same Parameter in " + method);
+                    if (userid != null) throw new RuntimeException("@RestHeaders and @RestUserid cannot on the same Parameter in " + method);
+                    if (!TYPE_MAP_STRING_STRING.equals(param.getParameterizedType())) throw new RuntimeException("@RestHeaders must on Map<String, String> Parameter in " + method);
+                    comment = "";
+                }
+
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 if (annpara != null) radix = annpara.radix();
                 if (annpara != null) comment = annpara.comment();
@@ -1128,7 +1144,7 @@ public final class Rest {
                         }
                     } while ((loop = loop.getSuperclass()) != Object.class);
                 }
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, userid, param.getParameterizedType()});
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, userid, annheaders, param.getParameterizedType()});
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
@@ -1247,7 +1263,9 @@ public final class Rest {
                 RestUploadFile annfile = (RestUploadFile) ps[12];
                 RestURI annuri = (RestURI) ps[13];
                 RestUserid userid = (RestUserid) ps[14];
-                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[15];
+                RestHeaders annheaders = (RestHeaders) ps[15];
+
+                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[16];
 
                 final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
                 final boolean iscookie = anncookie != null; //是否取getCookie
@@ -1279,6 +1297,11 @@ public final class Rest {
                 } else if (annaddr != null) { //HttpRequest.getRemoteAddr
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRemoteAddr", "()Ljava/lang/String;", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
+                } else if (annheaders != null) { //HttpRequest.getHeaders
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeaders", "()Ljava/util/Map;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (annbody != null) { //HttpRequest.getBodyUTF8 / HttpRequest.getBody
