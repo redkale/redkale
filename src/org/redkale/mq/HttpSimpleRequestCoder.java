@@ -32,11 +32,12 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         byte[] requestURI = MessageCoder.getBytes(data.getRequestURI()); //long-string
         byte[] remoteAddr = MessageCoder.getBytes(data.getRemoteAddr());//short-string
         byte[] sessionid = MessageCoder.getBytes(data.getSessionid());//short-string
+        byte[] contentType = MessageCoder.getBytes(data.getContentType());//short-string
         byte[] headers = MessageCoder.getBytes(data.getHeaders());
         byte[] params = MessageCoder.getBytes(data.getParams());
         byte[] body = MessageCoder.getBytes(data.getBody());
         int count = 4 + requestURI.length + 2 + remoteAddr.length + 2 + sessionid.length
-            + headers.length + params.length + 4 + body.length;
+            + 2 + contentType.length + headers.length + params.length + 4 + body.length;
         byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.putInt(requestURI.length);
@@ -45,6 +46,8 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         if (remoteAddr.length > 0) buffer.put(remoteAddr);
         buffer.putChar((char) sessionid.length);
         if (sessionid.length > 0) buffer.put(sessionid);
+        buffer.putChar((char) contentType.length);
+        if (contentType.length > 0) buffer.put(contentType);
         buffer.put(headers);
         buffer.put(params);
         buffer.putInt(body.length);
@@ -60,6 +63,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         req.setRequestURI(MessageCoder.getLongString(buffer));
         req.setRemoteAddr(MessageCoder.getShortString(buffer));
         req.setSessionid(MessageCoder.getShortString(buffer));
+        req.setContentType(MessageCoder.getShortString(buffer));
         req.setHeaders(MessageCoder.getMap(buffer));
         req.setParams(MessageCoder.getMap(buffer));
         int len = buffer.getInt();

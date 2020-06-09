@@ -35,14 +35,18 @@ public class HttpSimpleRequest implements java.io.Serializable {
     protected String sessionid;
 
     @ConvertColumn(index = 4)
+    @Comment("Content-Type")
+    protected String contentType;
+
+    @ConvertColumn(index = 5)
     @Comment("http header信息")
     protected Map<String, String> headers;
 
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 6)
     @Comment("参数信息")
     protected Map<String, String> params;
 
-    @ConvertColumn(index = 6)
+    @ConvertColumn(index = 7)
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
@@ -58,6 +62,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public HttpSimpleRequest sessionid(String sessionid) {
         this.sessionid = sessionid;
+        return this;
+    }
+
+    public HttpSimpleRequest contentType(String contentType) {
+        this.contentType = contentType;
         return this;
     }
 
@@ -108,6 +117,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
         return this;
     }
 
+    public HttpSimpleRequest clearContentType() {
+        this.contentType = null;
+        return this;
+    }
+
     public String getRequestURI() {
         return requestURI;
     }
@@ -130,6 +144,14 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public void setRemoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public Map<String, String> getHeaders() {

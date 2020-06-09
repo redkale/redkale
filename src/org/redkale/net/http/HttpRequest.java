@@ -100,6 +100,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (req.getBody() != null) this.array.write(req.getBody());
             if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
             if (req.getParams() != null) this.params.putAll(req.getParams());
+            this.contentType = req.getContentType();
             this.remoteAddr = req.getRemoteAddr();
             this.requestURI = req.getRequestURI();
             if (req.getSessionid() != null && !req.getSessionid().isEmpty()) {
@@ -114,6 +115,7 @@ public class HttpRequest extends Request<HttpContext> {
         req.setHeaders(headers.isEmpty() ? null : headers);
         req.setParams(params.isEmpty() ? null : params);
         req.setRemoteAddr(getRemoteAddr());
+        req.setContentType(getContentType());
         req.setRequestURI(this.requestURI);
         req.setSessionid(getSessionid(false));
         return req;
