@@ -60,6 +60,8 @@ public final class SncpClient {
 
     protected final MessageAgent messageAgent;
 
+    protected final SncpMessageClient messageClient;
+
     protected final String topic;
 
     protected final Supplier<ByteBuffer> bufferSupplier;
@@ -82,6 +84,7 @@ public final class SncpClient {
         this.executor = factory.getExecutor();
         this.bufferSupplier = factory.getBufferSupplier();
         this.messageAgent = messageAgent;
+        this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
         this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(service);
         Class<?> tn = serviceTypeOrImplClass;
         Version ver = tn.getAnnotation(Version.class);
@@ -284,7 +287,7 @@ public final class SncpClient {
             String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
             if (targetTopic == null) targetTopic = this.topic;
             MessageRecord message = new MessageRecord(ConvertType.BSON, targetTopic, null, reqbytes);
-            return messageAgent.sendRemoteSncp(null, message).thenApply(msg -> {
+            return messageClient.sendMessage(message).thenApply(msg -> {
                 ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
                 checkResult(seqid, action, buffer);
 

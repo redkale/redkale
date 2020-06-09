@@ -533,8 +533,8 @@ public abstract class NodeServer {
         }
         if (isSNCP() && !sncpRemoteAgents.isEmpty()) {
             sncpRemoteAgents.values().forEach(agent -> {
-                agent.putSncpResp((NodeSncpServer) this);
-                agent.startSncpRespConsumer();
+               // agent.putSncpResp((NodeSncpServer) this);
+              //  agent.startSncpRespConsumer();
             });
         }
         //----------------- init -----------------

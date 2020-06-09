@@ -25,7 +25,7 @@ import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
-import org.redkale.mq.MessageAgent;
+import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.MimeType;
 import org.redkale.net.sncp.*;
@@ -441,6 +441,8 @@ public final class Application {
                 this.resourceFactory.inject(agent);
                 agent.init(agent.getConfig());
                 this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
+                this.resourceFactory.register(agent.getName(), HttpMessageClient.class, agent.getHttpMessageClient());
+                this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient());
             }
         }
         this.messageAgents = mqs;
@@ -833,7 +835,7 @@ public final class Application {
                 map.keySet().forEach(str -> {
                     if (str.length() > maxlen.get()) maxlen.set(str.length());
                 });
-                new TreeMap<String, Long>(map).forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
+                new TreeMap<>(map).forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
                 );
             }
             if (sb.length() > 0) logger.info(sb.toString().trim());

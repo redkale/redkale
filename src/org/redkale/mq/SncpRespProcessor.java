@@ -43,7 +43,7 @@ public class SncpRespProcessor implements MessageProcessor {
         node.future.complete(message);
     }
 
-    public CompletableFuture<MessageRecord> createFuture(long seqid, AtomicLong counter) {
+    public CompletableFuture<MessageRecord> createFuture2(long seqid, AtomicLong counter) {
         CompletableFuture<MessageRecord> future = new CompletableFuture<>();
         MessageRespFutureNode node = new MessageRespFutureNode(seqid, counter, future);
         respNodes.put(seqid, node);

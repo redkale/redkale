@@ -7,12 +7,10 @@ package org.redkale.mq;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
 import static org.redkale.boot.Application.RESNAME_APP_NODEID;
-import org.redkale.convert.ConvertType;
 import org.redkale.net.Servlet;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -42,41 +40,41 @@ public abstract class MessageAgent {
 
     protected MessageProducer producer;
 
-    protected String sncpRespTopic;
+    protected HttpMessageClient httpMessageClient;
 
-    protected MessageConsumer sncpRespConsumer;
+    protected SncpMessageClient sncpMessageClient;
 
-    protected SncpRespProcessor sncpRespProcessor;
-
+    //protected MessageConsumer sncpRespConsumer;
+    //protected SncpRespProcessor sncpRespProcessor;
     //sncpRespConsumer启动耗时， 小于0表示未启动
-    protected long sncpRespStartms = -1;
-
+    //protected long sncpRespStartms = -1;
     //本地Service消息接收处理器， key:topic
-    protected HashMap<String, MessageNode> messageNodes = new LinkedHashMap<>();
+    protected HashMap<String, MessageConsumerNode> messageNodes = new LinkedHashMap<>();
 
     public void init(AnyValue config) {
         this.name = checkName(config.getValue("name", ""));
+        this.httpMessageClient = new HttpMessageClient(this);
+        this.sncpMessageClient = new SncpMessageClient(this);
     }
 
     //ServiceLoader时判断配置是否符合当前实现类
     public abstract boolean match(AnyValue config);
 
-    public final CompletableFuture<MessageRecord> createSncpRespFuture(AtomicLong counter, MessageRecord message) {
-        return this.sncpRespProcessor.createFuture(message.getSeqid(), counter);
-    }
-
-    public final synchronized void startSncpRespConsumer() {
-        if (this.sncpRespStartms >= 0) return;
-        long s = System.currentTimeMillis();
-        if (this.sncpRespConsumer != null) {
-            this.sncpRespConsumer.startup().join();
-        }
-        this.sncpRespStartms = System.currentTimeMillis() - s;
-    }
-
+//    public final CompletableFuture<MessageRecord> createSncpRespFuture2(AtomicLong counter, MessageRecord message) {
+//        return this.sncpRespProcessor.createFuture2(message.getSeqid(), counter);
+//    }
+//
+//    public final synchronized void startSncpRespConsumer() {
+//        if (this.sncpRespStartms >= 0) return;
+//        long s = System.currentTimeMillis();
+//        if (this.sncpRespConsumer != null) {
+//            this.sncpRespConsumer.startup().join();
+//        }
+//        this.sncpRespStartms = System.currentTimeMillis() - s;
+//    }
     public CompletableFuture<Map<String, Long>> start() {
         final LinkedHashMap<String, Long> map = new LinkedHashMap<>();
-        if (this.sncpRespStartms >= 0) map.put(this.sncpRespConsumer.topic, this.sncpRespStartms);
+        //if (this.sncpRespStartms >= 0) map.put(this.sncpRespConsumer.topic, this.sncpRespStartms);
         final List<CompletableFuture> futures = new ArrayList<>();
         this.messageNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
@@ -96,7 +94,9 @@ public abstract class MessageAgent {
 
     //Application.shutdown 在所有server.shutdown执行后执行
     public void destroy(AnyValue config) {
-        if (this.sncpRespConsumer != null) this.sncpRespConsumer.shutdown().join();
+        //if (this.sncpRespConsumer != null) this.sncpRespConsumer.shutdown().join();
+        this.httpMessageClient.close().join();
+        this.sncpMessageClient.close().join();
         if (this.producer != null) this.producer.shutdown().join();
     }
 
@@ -112,6 +112,14 @@ public abstract class MessageAgent {
         this.config = config;
     }
 
+    public HttpMessageClient getHttpMessageClient() {
+        return httpMessageClient;
+    }
+
+    public SncpMessageClient getSncpMessageClient() {
+        return sncpMessageClient;
+    }
+
     protected String checkName(String name) {  //不能含特殊字符
         if (name.isEmpty()) return name;
         if (name.charAt(0) >= '0' && name.charAt(0) <= '9') throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
@@ -124,10 +132,14 @@ public abstract class MessageAgent {
     }
 
     //获取指定topic的生产处理器
-    public synchronized MessageProducer getProducer() {
+    public MessageProducer getProducer() {
         if (this.producer == null) {
-            this.producer = createProducer();
-            this.producer.startup().join();
+            synchronized (this) {
+                if (this.producer == null) {
+                    this.producer = createProducer();
+                    this.producer.startup().join();
+                }
+            }
         }
         return this.producer;
     }
@@ -147,36 +159,35 @@ public abstract class MessageAgent {
     //创建指定topic的消费处理器
     public abstract MessageConsumer createConsumer(String topic, MessageProcessor processor);
 
-    public final synchronized void putSncpResp(NodeSncpServer ns) {
-        if (this.sncpRespConsumer != null) return;
-        this.sncpRespProcessor = new SncpRespProcessor(this.logger, this);
-        this.sncpRespConsumer = createConsumer(generateSncpRespTopic(), sncpRespProcessor);
-    }
-
-    public CompletableFuture<MessageRecord> sendRemoteSncp(AtomicLong counter, MessageRecord message) {
-        if (this.sncpRespConsumer == null) {
-            CompletableFuture future = new CompletableFuture();
-            future.completeExceptionally(new RuntimeException("Not open sncp consumer"));
-            return future;
-        }
-        message.setFormat(ConvertType.BSON);
-        message.setResptopic(generateSncpRespTopic());
-        getProducer().apply(message);
-        return this.sncpRespProcessor.createFuture(message.getSeqid(), counter);
-    }
-
+//    public final synchronized void putSncpResp(NodeSncpServer ns) {
+//        if (this.sncpRespConsumer != null) return;
+//        this.sncpRespProcessor = new SncpRespProcessor(this.logger, this);
+//        this.sncpRespConsumer = createConsumer(generateSncpRespTopic(), sncpRespProcessor);
+//    }
+//
+//    public CompletableFuture<MessageRecord> sendRemoteSncp(AtomicLong counter, MessageRecord message) {
+//        if (this.sncpRespConsumer == null) {
+//            CompletableFuture future = new CompletableFuture();
+//            future.completeExceptionally(new RuntimeException("Not open sncp consumer"));
+//            return future;
+//        }
+//        message.setFormat(ConvertType.BSON);
+//        message.setResptopic(generateSncpRespTopic());
+//        getProducer().apply(message);
+//        return this.sncpRespProcessor.createFuture(message.getSeqid(), counter);
+//    }
     public final synchronized void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         String topic = generateHttpReqTopic(service);
         if (messageNodes.containsKey(topic)) throw new RuntimeException("topic(" + topic + ") is repeat");
         HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, getProducer(), ns, service, servlet);
-        this.messageNodes.put(topic, new MessageNode(ns, service, servlet, processor, createConsumer(topic, processor)));
+        this.messageNodes.put(topic, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topic, processor)));
     }
 
     public final synchronized void putService(NodeSncpServer ns, Service service, SncpServlet servlet) {
         String topic = generateSncpReqTopic(service);
         if (messageNodes.containsKey(topic)) throw new RuntimeException("topic(" + topic + ") is repeat");
         SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, getProducer(), ns, service, servlet);
-        this.messageNodes.put(topic, new MessageNode(ns, service, servlet, processor, createConsumer(topic, processor)));
+        this.messageNodes.put(topic, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topic, processor)));
     }
 
     //格式: sncp.req.user
@@ -186,20 +197,18 @@ public abstract class MessageAgent {
         return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
-    //格式: sncp.resp.node10
-    private String generateSncpRespTopic() {
-        if (this.sncpRespTopic != null) return this.sncpRespTopic;
-        this.sncpRespTopic = "sncp.resp.node" + nodeid;
-        return this.sncpRespTopic;
-    }
-
     //格式: http.req.user
     public String generateHttpReqTopic(String module) {
         return "http.req." + module.toLowerCase();
     }
 
+    //格式: sncp.resp.node10
+    protected String generateSncpRespTopic() {
+        return "sncp.resp.node" + nodeid;
+    }
+
     //格式: http.resp.node10
-    public String generateHttpRespTopic() {
+    protected String generateHttpRespTopic() {
         return "http.resp.node" + nodeid;
     }
 
@@ -219,7 +228,7 @@ public abstract class MessageAgent {
         return protocol + ".resp.node" + nodeid;
     }
 
-    protected static class MessageNode {
+    protected static class MessageConsumerNode {
 
         public final NodeServer server;
 
@@ -231,7 +240,7 @@ public abstract class MessageAgent {
 
         public final MessageConsumer consumer;
 
-        public MessageNode(NodeServer server, Service service, Servlet servlet, MessageProcessor processor, MessageConsumer consumer) {
+        public MessageConsumerNode(NodeServer server, Service service, Servlet servlet, MessageProcessor processor, MessageConsumer consumer) {
             this.server = server;
             this.service = service;
             this.servlet = servlet;
