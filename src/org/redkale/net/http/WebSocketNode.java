@@ -79,7 +79,7 @@ public abstract class WebSocketNode {
             if (wsthreads == 0) wsthreads = Runtime.getRuntime().availableProcessors() * 8;
             if (wsthreads > 0) this.semaphore = new Semaphore(wsthreads);
         }
-        String mqtopic = this.messageAgent == null ? null : this.messageAgent.generateWebSocketRespTopic(this);
+        String mqtopic = this.messageAgent == null ? null : this.messageAgent.generateSncpReqTopic((Service)this);
         if (mqtopic != null || this.localSncpAddress != null) {
             this.wsaddress = new WebSocketAddress(mqtopic, localSncpAddress);
         }

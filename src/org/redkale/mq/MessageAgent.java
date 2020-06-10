@@ -159,8 +159,11 @@ public abstract class MessageAgent {
 
     //格式: sncp.req.user
     public final String generateSncpReqTopic(Service service) {
+        if (service instanceof WebSocketNode) {
+            String resname = Sncp.getResourceName(service);
+            return "sncp.req.ws" + (resname.isEmpty() ? "" : ("-" + resname)) + ".node" + nodeid;
+        }
         String resname = Sncp.getResourceName(service);
-        if (service instanceof WebSocketNode) return "sncp.req.ws" + (resname.isEmpty() ? "" : ("-" + resname));
         return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
@@ -196,11 +199,6 @@ public abstract class MessageAgent {
         String key = Rest.getRestName(service).toLowerCase();
         return "consumer-http.req." + key + (resname.isEmpty() ? "" : ("-" + resname));
 
-    }
-
-    //格式: ws.resp.wsgame.node100
-    public String generateWebSocketRespTopic(WebSocketNode node) {
-        return "ws.resp." + node.getName() + ".node" + nodeid;
     }
 
     //格式: xxxx.resp.node10
