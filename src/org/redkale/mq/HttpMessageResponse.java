@@ -64,6 +64,11 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
+    public void finish404() {
+        finish(404, null);
+    }
+
+    @Override
     public void finish(int status, String message) {
         if (this.message.isEmptyResptopic()) return;
         finishHttpResult(new HttpResult(message == null ? "" : message).status(status));

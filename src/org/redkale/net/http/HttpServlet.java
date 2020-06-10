@@ -82,7 +82,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     return;
                 }
             }
-            throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
+            response.finish404();
+            //throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
         }
     };
 
