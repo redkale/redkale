@@ -29,6 +29,8 @@ public class MessageClient {
 
     protected String respTopic;
 
+    protected String respConsumerid;
+
     protected ConvertType convertType;
 
     protected MessageClient(MessageAgent messageAgent) {
@@ -61,6 +63,7 @@ public class MessageClient {
         try {
             if (this.consumer == null) {
                 synchronized (this) {
+                    if (this.respConsumerid == null) this.respConsumerid = "consumer-" + this.respTopic;
                     if (this.consumer == null) {
                         MessageProcessor processor = msg -> {
                             MessageRespFutureNode node = respNodes.get(msg.getSeqid());
@@ -71,7 +74,7 @@ public class MessageClient {
                             if (node.getCounter() != null) node.getCounter().decrementAndGet();
                             node.future.complete(msg);
                         };
-                        this.consumer = messageAgent.createConsumer(respTopic, processor);
+                        this.consumer = messageAgent.createConsumer(respTopic, respConsumerid, processor);
                         this.consumer.startup().join();
                     }
                 }
