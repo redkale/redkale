@@ -80,12 +80,16 @@ public class MessageClient {
                 }
             }
             if (convertType != null) message.setFormat(convertType);
-            if (needresp && message.getResptopic() == null) message.setResptopic(respTopic);
-            messageAgent.getProducer().apply(message);
+            if (needresp && (message.getResptopic() == null || message.getResptopic().isEmpty())) {
+                message.setResptopic(respTopic);
+            }
             if (counter != null) counter.incrementAndGet();
+            messageAgent.getProducer().apply(message);
             if (needresp) {
                 MessageRespFutureNode node = new MessageRespFutureNode(message.getSeqid(), counter, future);
                 respNodes.put(message.getSeqid(), node);
+            } else {
+                future.complete(null);
             }
         } catch (Exception ex) {
             future.completeExceptionally(ex);
