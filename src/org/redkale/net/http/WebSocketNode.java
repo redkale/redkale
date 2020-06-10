@@ -260,7 +260,7 @@ public abstract class WebSocketNode {
         if (this.source == null || this.remoteNode == null) {
             if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
             //没有CacheSource就不会有分布式节点
-            return localFuture;
+            return localFuture == null ? CompletableFuture.completedFuture(false) : localFuture;
         }
         //远程节点关闭
         tryAcquireSemaphore();
@@ -289,12 +289,11 @@ public abstract class WebSocketNode {
      */
     @Local
     public CompletableFuture<Boolean> existsWebSocket(final WebSocketUserAddress userAddress) {
-        CompletableFuture<Boolean> localFuture = null;
-        if (this.localEngine != null) localFuture = CompletableFuture.completedFuture(localEngine.existsLocalWebSocket(userAddress.userid()));
+        if (this.localEngine != null && localEngine.existsLocalWebSocket(userAddress.userid())) return CompletableFuture.completedFuture(true);
         if (this.source == null || this.remoteNode == null) {
             if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
             //没有CacheSource就不会有分布式节点
-            return localFuture;
+            return CompletableFuture.completedFuture(false);
         }
         Collection<WebSocketAddress> addrs = userAddress.addresses();
         if (addrs != null) addrs = new ArrayList<>(addrs); //不能修改参数内部值
@@ -342,7 +341,7 @@ public abstract class WebSocketNode {
         if (this.source == null || this.remoteNode == null) {
             if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
             //没有CacheSource就不会有分布式节点
-            return localFuture;
+            return localFuture == null ? CompletableFuture.completedFuture(0) : localFuture;
         }
         //远程节点关闭
         CompletableFuture<Collection<WebSocketAddress>> addrsFuture;
