@@ -5,7 +5,7 @@
  */
 package org.redkale.mq;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @since 2.1.0
  */
-public class MessageRespFutureNode {
+public class MessageRespFutureNode implements Runnable {
 
     protected final long seqid;
 
@@ -28,11 +28,20 @@ public class MessageRespFutureNode {
 
     protected final CompletableFuture<MessageRecord> future;
 
-    public MessageRespFutureNode(long seqid, AtomicLong counter, CompletableFuture<MessageRecord> future) {
+    protected final ConcurrentHashMap<Long, MessageRespFutureNode> respNodes;
+
+    public MessageRespFutureNode(long seqid, ConcurrentHashMap<Long, MessageRespFutureNode> respNodes, AtomicLong counter, CompletableFuture<MessageRecord> future) {
         this.seqid = seqid;
+        this.respNodes = respNodes;
         this.counter = counter;
         this.future = future;
         this.createtime = System.currentTimeMillis();
+    }
+
+    @Override  //超时后被timeoutExecutor调用
+    public void run() { //timeout
+        respNodes.remove(this.seqid);
+        future.completeExceptionally(new TimeoutException());
     }
 
     public long getSeqid() {

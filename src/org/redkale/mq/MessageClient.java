@@ -86,8 +86,10 @@ public class MessageClient {
             if (counter != null) counter.incrementAndGet();
             messageAgent.getProducer().apply(message);
             if (needresp) {
-                MessageRespFutureNode node = new MessageRespFutureNode(message.getSeqid(), counter, future);
+                MessageRespFutureNode node = new MessageRespFutureNode(message.getSeqid(), respNodes, counter, future);
                 respNodes.put(message.getSeqid(), node);
+                ScheduledThreadPoolExecutor executor = messageAgent.timeoutExecutor;
+                if (executor != null) executor.schedule(node, 6, TimeUnit.SECONDS);
             } else {
                 future.complete(null);
             }

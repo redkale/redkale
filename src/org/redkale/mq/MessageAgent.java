@@ -44,6 +44,8 @@ public abstract class MessageAgent {
 
     protected SncpMessageClient sncpMessageClient;
 
+    protected ScheduledThreadPoolExecutor timeoutExecutor;
+
     //本地Service消息接收处理器， key:consumer
     protected HashMap<String, MessageConsumerNode> messageNodes = new LinkedHashMap<>();
 
@@ -51,6 +53,14 @@ public abstract class MessageAgent {
         this.name = checkName(config.getValue("name", ""));
         this.httpMessageClient = new HttpMessageClient(this);
         this.sncpMessageClient = new SncpMessageClient(this);
+        // application (it doesn't execute completion handlers).
+        this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
+            Thread t = new Thread(r);
+            t.setName("MessageAgent-Timeout-Thread");
+            t.setDaemon(true);
+            return t;
+        });
+        this.timeoutExecutor.setRemoveOnCancelPolicy(true);
     }
 
     public CompletableFuture<Map<String, Long>> start() {
@@ -76,6 +86,7 @@ public abstract class MessageAgent {
     public void destroy(AnyValue config) {
         this.httpMessageClient.close().join();
         this.sncpMessageClient.close().join();
+        if (this.timeoutExecutor != null) this.timeoutExecutor.shutdown();
         if (this.producer != null) this.producer.shutdown().join();
     }
 
