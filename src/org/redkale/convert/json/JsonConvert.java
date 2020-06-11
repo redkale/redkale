@@ -11,6 +11,7 @@ import java.nio.*;
 import java.nio.charset.*;
 import java.util.function.*;
 import org.redkale.convert.*;
+import org.redkale.service.RetResult;
 import org.redkale.util.*;
 
 /**
@@ -24,6 +25,9 @@ import org.redkale.util.*;
 public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.HashMap<String, String>>() {
+    }.getType();
+
+    public static final Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
 
     private static final ObjectPool<JsonReader> readerPool = JsonReader.createPool(Integer.getInteger("convert.json.pool.size", 16));
