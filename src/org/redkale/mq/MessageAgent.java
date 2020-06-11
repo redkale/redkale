@@ -38,7 +38,9 @@ public abstract class MessageAgent {
 
     protected AnyValue config;
 
-    protected MessageProducer producer;
+    protected MessageProducer httpProducer;
+
+    protected MessageProducer sncpProducer;
 
     protected HttpMessageClient httpMessageClient;
 
@@ -87,7 +89,8 @@ public abstract class MessageAgent {
         this.httpMessageClient.close().join();
         this.sncpMessageClient.close().join();
         if (this.timeoutExecutor != null) this.timeoutExecutor.shutdown();
-        if (this.producer != null) this.producer.shutdown().join();
+        if (this.sncpProducer != null) this.sncpProducer.shutdown().join();
+        if (this.httpProducer != null) this.httpProducer.shutdown().join();
     }
 
     public String getName() {
@@ -122,16 +125,28 @@ public abstract class MessageAgent {
     }
 
     //获取指定topic的生产处理器
-    public MessageProducer getProducer() {
-        if (this.producer == null) {
+    public MessageProducer getSncpProducer() {
+        if (this.sncpProducer == null) {
             synchronized (this) {
-                if (this.producer == null) {
-                    this.producer = createProducer();
-                    this.producer.startup().join();
+                if (this.sncpProducer == null) {
+                    this.sncpProducer = createProducer();
+                    this.sncpProducer.startup().join();
                 }
             }
         }
-        return this.producer;
+        return this.sncpProducer;
+    }
+
+    public MessageProducer getHttpProducer() {
+        if (this.httpProducer == null) {
+            synchronized (this) {
+                if (this.httpProducer == null) {
+                    this.httpProducer = createProducer();
+                    this.httpProducer.startup().join();
+                }
+            }
+        }
+        return this.httpProducer;
     }
 
     //创建指定topic的生产处理器
@@ -156,7 +171,7 @@ public abstract class MessageAgent {
         String[] topics = generateHttpReqTopics(service);
         String consumerid = generateHttpConsumerid(topics, service);
         if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
-        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, getProducer(), ns, service, servlet);
+        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, getHttpProducer(), ns, service, servlet);
         this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topics, consumerid, processor)));
     }
 
@@ -164,7 +179,7 @@ public abstract class MessageAgent {
         String topic = generateSncpReqTopic(service);
         String consumerid = generateSncpConsumerid(topic, service);
         if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
-        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, getProducer(), ns, service, servlet);
+        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, getSncpProducer(), ns, service, servlet);
         this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(new String[]{topic}, consumerid, processor)));
     }
 

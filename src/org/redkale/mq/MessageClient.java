@@ -19,7 +19,7 @@ import org.redkale.convert.ConvertType;
  *
  * @since 2.1.0
  */
-public class MessageClient {
+public abstract class MessageClient {
 
     protected final ConcurrentHashMap<Long, MessageRespFutureNode> respNodes = new ConcurrentHashMap<>();
 
@@ -84,7 +84,7 @@ public class MessageClient {
                 message.setResptopic(respTopic);
             }
             if (counter != null) counter.incrementAndGet();
-            messageAgent.getProducer().apply(message);
+            getProducer().apply(message);
             if (needresp) {
                 MessageRespFutureNode node = new MessageRespFutureNode(message.getSeqid(), respNodes, counter, future);
                 respNodes.put(message.getSeqid(), node);
@@ -99,4 +99,6 @@ public class MessageClient {
             return future;
         }
     }
+
+    protected abstract MessageProducer getProducer();
 }

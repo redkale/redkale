@@ -136,4 +136,9 @@ public class HttpMessageClient extends MessageClient {
         message.userid(userid).groupid(groupid);
         return sendMessage(message, needresp, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
     }
+
+    @Override
+    protected MessageProducer getProducer() {
+        return messageAgent.getHttpProducer();
+    }
 }

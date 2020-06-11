@@ -23,4 +23,9 @@ public class SncpMessageClient extends MessageClient {
         this.respTopic = messageAgent.generateSncpRespTopic();
         this.convertType = ConvertType.BSON;
     }
+
+    @Override
+    protected MessageProducer getProducer() {
+        return messageAgent.getSncpProducer();
+    }
 }
