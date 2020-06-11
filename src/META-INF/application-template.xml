@@ -242,9 +242,9 @@
         <!-- 
            REST的核心配置项
            当Server为HTTP协议时, rest节点才有效。存在[rest]节点则Server启动时会加载REST服务, 节点可以多个,(WATCH协议不需要设置，系统会自动生成)
-           path:     servlet的ContextPath前缀 默认为空
+           path:     servlet的ContextPath前缀 默认为空 【注: 开启MQ时,该字段失效】
            base:     REST服务的BaseServlet，必须是 org.redkale.net.http.HttpServlet 的子类，且子类必须标记@HttpUserType。
-           mq:        所属的MQ管理器, 存在该属性表示RestService的请求来自于消息总线
+           mq:        所属的MQ管理器, 存在该属性表示RestService的请求来自于消息总线 【注: 开启MQ时,path字段失效】
            autoload：默认值"true"  默认值. 加载当前server所能使用的Servce对象;    
            includes：当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes：当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开

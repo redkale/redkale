@@ -39,6 +39,38 @@ public class HttpMessageClient extends MessageClient {
         return messageAgent.generateHttpReqTopic(module);
     }
 
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, true, null);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, AtomicLong counter) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, true, counter);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, boolean needresp) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, needresp, null);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, boolean needresp, AtomicLong counter) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, needresp, counter);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, true, null);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, true, counter);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request, boolean needresp) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, needresp, null);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request, boolean needresp, AtomicLong counter) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, needresp, counter);
+    }
+
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request) {
         return sendMessage(topic, ConvertType.JSON, 0, null, request, true, null);
     }

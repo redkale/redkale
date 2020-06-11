@@ -109,14 +109,18 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-    public HttpSimpleRequest createSimpleRequest() {
+    public HttpSimpleRequest createSimpleRequest(String prefix) {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setBody(array.size() == 0 ? null : array.getBytes());
         req.setHeaders(headers.isEmpty() ? null : headers);
         req.setParams(params.isEmpty() ? null : params);
         req.setRemoteAddr(getRemoteAddr());
         req.setContentType(getContentType());
-        req.setRequestURI(this.requestURI);
+        String uri = this.requestURI;
+        if (prefix != null && !prefix.isEmpty() && uri.startsWith(prefix)) {
+            uri = uri.substring(prefix.length());
+        }
+        req.setRequestURI(uri);
         req.setSessionid(getSessionid(false));
         return req;
     }

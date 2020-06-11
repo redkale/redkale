@@ -232,7 +232,6 @@ public class NodeHttpServer extends NodeServer {
         String prefix0 = restConf.getValue("path", "");
         if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
         if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
-        final String prefix = prefix0;
 
         final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
@@ -243,6 +242,8 @@ public class NodeHttpServer extends NodeServer {
             if (agent0 == null) throw new RuntimeException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
         }
         final MessageAgent messageAgent = agent0;
+        if (messageAgent != null) prefix0 = ""; //开启MQ时,prefix字段失效
+        final String prefix = prefix0;
         final boolean autoload = restConf.getBoolValue("autoload", true);
         {  //加载RestService
             String userTypeStr = restConf.getValue("usertype");
