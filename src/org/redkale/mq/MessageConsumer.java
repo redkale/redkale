@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  */
 public abstract class MessageConsumer {
 
-    protected final String topic;
+    protected final String[] topics;
 
     protected final String consumerid;
 
@@ -33,13 +33,13 @@ public abstract class MessageConsumer {
 
     protected volatile boolean closed;
 
-    protected MessageConsumer(MessageAgent messageAgent, String topic,final String consumerid, MessageProcessor processor) {
+    protected MessageConsumer(MessageAgent messageAgent, String[] topics,final String consumerid, MessageProcessor processor) {
         Objects.requireNonNull(messageAgent);
-        Objects.requireNonNull(topic);
+        Objects.requireNonNull(topics);
         Objects.requireNonNull(consumerid);
         Objects.requireNonNull(processor);
         this.messageAgent = messageAgent;
-        this.topic = topic;
+        this.topics = topics;
         this.consumerid = consumerid;
         this.processor = processor;
     }
@@ -48,8 +48,8 @@ public abstract class MessageConsumer {
         return processor;
     }
 
-    public String getTopic() {
-        return topic;
+    public String[] getTopics() {
+        return topics;
     }
 
     public abstract CompletableFuture<Void> startup();

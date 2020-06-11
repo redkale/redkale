@@ -74,7 +74,7 @@ public class MessageClient {
                             if (node.getCounter() != null) node.getCounter().decrementAndGet();
                             node.future.complete(msg);
                         };
-                        this.consumer = messageAgent.createConsumer(respTopic, respConsumerid, processor);
+                        this.consumer = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
                         this.consumer.startup().join();
                     }
                 }
