@@ -10,7 +10,9 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
 import org.redkale.boot.*;
+import static org.redkale.boot.Application.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.net.http.WebSocketNode;
@@ -32,7 +34,14 @@ public abstract class ClusterAgent {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
+    @Resource(name = RESNAME_APP_NODEID)
     protected int nodeid;
+
+    @Resource(name = RESNAME_APP_NAME)
+    protected String appName = "";
+
+    @Resource(name = RESNAME_APP_ADDR)
+    protected InetSocketAddress appAddress;
 
     protected String name;
 
@@ -166,11 +175,11 @@ public abstract class ClusterAgent {
     }
 
     protected String generateApplicationServiceName() {
-        return "application.node." + this.nodeid;
+        return "application" + (appName == null || appName.isEmpty() ? "" : ("." + appName)) + ".node" + this.nodeid;
     }
 
     protected String generateApplicationServiceId() { //与servicename相同
-        return "application.node." + this.nodeid;
+        return generateApplicationServiceName();
     }
 
     protected String generateApplicationCheckName() {
@@ -212,14 +221,6 @@ public abstract class ClusterAgent {
     @Override
     public String toString() {
         return JsonConvert.root().convertTo(this);
-    }
-
-    public int getNodeid() {
-        return nodeid;
-    }
-
-    public void setNodeid(int nodeid) {
-        this.nodeid = nodeid;
     }
 
     public TransportFactory getTransportFactory() {

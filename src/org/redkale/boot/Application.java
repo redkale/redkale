@@ -59,6 +59,11 @@ public final class Application {
     public static final String RESNAME_APP_TIME = "APP_TIME";
 
     /**
+     * 当前进程的名称， 类型：String
+     */
+    public static final String RESNAME_APP_NAME = "APP_NAME";
+
+    /**
      * 当前进程的根目录， 类型：String、File、Path、URI
      */
     public static final String RESNAME_APP_HOME = "APP_HOME";
@@ -110,6 +115,9 @@ public final class Application {
 
     //本进程节点ID
     final int nodeid;
+
+    //本进程节点ID
+    final String name;
 
     //本地IP地址
     final InetSocketAddress localAddress;
@@ -219,6 +227,11 @@ public final class Application {
             this.nodeid = nid;
             this.resourceFactory.register(RESNAME_APP_NODEID, nid);
             System.setProperty(RESNAME_APP_NODEID, "" + nid);
+        }
+        {
+            this.name = checkName(config.getValue("name", ""));
+            this.resourceFactory.register(RESNAME_APP_NAME, name);
+            System.setProperty(RESNAME_APP_NAME, name);
         }
         //以下是初始化日志配置
         final URI logConfURI = "file".equals(confPath.getScheme()) ? new File(new File(confPath), "logging.properties").toURI()
@@ -433,10 +446,10 @@ public final class Application {
             .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.check.interval", "30"));
         this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
         if (cluster != null) {
-            cluster.setNodeid(this.nodeid);
             cluster.setTransportFactory(this.sncpTransportFactory);
             this.resourceFactory.inject(cluster);
             cluster.init(cluster.getConfig());
+            this.resourceFactory.register(ClusterAgent.class, cluster);
         }
         this.clusterAgent = cluster;
         if (mqs != null) {
@@ -451,6 +464,17 @@ public final class Application {
         this.messageAgents = mqs;
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
+    }
+
+    private String checkName(String name) {  //不能含特殊字符
+        if (name.isEmpty()) return name;
+        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+        for (char ch : name.toCharArray()) {
+            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+                throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+            }
+        }
+        return name;
     }
 
     public ResourceFactory getResourceFactory() {
@@ -499,6 +523,10 @@ public final class Application {
 
     public int getNodeid() {
         return nodeid;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public File getHome() {
