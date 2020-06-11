@@ -190,13 +190,16 @@ public abstract class MessageAgent {
     //格式: http.req.user
     protected String generateHttpReqTopic(Service service) {
         String resname = Sncp.getResourceName(service);
-        return "http.req." + Rest.getRestName(service).toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
+        String module = Rest.getRestModule(service).toLowerCase();
+        MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
+        if (mmc != null) return generateHttpReqTopic(mmc.module()) + (resname.isEmpty() ? "" : ("-" + resname));
+        return "http.req." + module + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: consumer-http.req.user
     protected String generateHttpConsumerid(String topic, Service service) {
         String resname = Sncp.getResourceName(service);
-        String key = Rest.getRestName(service).toLowerCase();
+        String key = Rest.getRestModule(service).toLowerCase();
         return "consumer-http.req." + key + (resname.isEmpty() ? "" : ("-" + resname));
 
     }

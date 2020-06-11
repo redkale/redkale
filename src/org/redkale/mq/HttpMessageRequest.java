@@ -26,4 +26,7 @@ public class HttpMessageRequest extends HttpRequest {
         this.currentUserid = message.getUserid();
     }
 
+    public void setRequestURI(String uri) {
+        this.requestURI = uri;
+    }
 }

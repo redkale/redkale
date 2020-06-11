@@ -31,19 +31,33 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final HttpServlet servlet;
 
+    protected final boolean multiconsumer;
+
+    protected final String restmodule; //  前后有/, 例如: /user/
+
+    protected final String multimodule; //  前后有/, 例如: /userstat/
+
     public HttpMessageProcessor(Logger logger, MessageProducer producer, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.producer = producer;
         this.server = server;
         this.service = service;
         this.servlet = servlet;
+        MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
+        this.multiconsumer = mmc != null;
+        this.restmodule = "/" + Rest.getRestModule(service) + "/";
+        this.multimodule = mmc != null ? ("/" + mmc.module() + "/") : null;
     }
 
     @Override
     public void process(MessageRecord message) {
         try {
+            if (multiconsumer) message.setResptopic(null); //不容许有响应
             HttpContext context = server.getHttpServer().getContext();
             HttpMessageRequest request = new HttpMessageRequest(context, message);
+            if (multiconsumer) {
+                request.setRequestURI(request.getRequestURI().replaceFirst(this.restmodule, this.multimodule));
+            }
             HttpMessageResponse response = new HttpMessageResponse(context, request, null, null, producer);
             servlet.execute(request, response);
         } catch (Exception ex) {

@@ -22,7 +22,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
-import org.redkale.mq.MessageAgent;
+import org.redkale.mq.*;
 import org.redkale.net.Cryptor;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
@@ -210,7 +210,7 @@ public final class Rest {
         }
     }
 
-    public static String getRestName(Service service) {
+    public static String getRestModule(Service service) {
         final RestService controller = service.getClass().getAnnotation(RestService.class);
         if (controller != null && !controller.name().isEmpty()) return controller.name();
         final Class serviceType = Sncp.getServiceType(service);
@@ -819,6 +819,10 @@ public final class Rest {
         //获取所有可以转换成HttpMapping的方法
         int methodidex = 0;
         final List<java.lang.reflect.Type[]> paramtypes = new ArrayList<>();
+        final MessageMultiConsumer mmc = serviceType.getAnnotation(MessageMultiConsumer.class);
+        if (mmc != null && (mmc.module() == null || mmc.module().isEmpty())) {
+            throw new RuntimeException("@" + MessageMultiConsumer.class.getSimpleName() + ".module can not empty in " + serviceType.getName());
+        }
         for (final Method method : serviceType.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) continue;
             if (method.isSynthetic()) continue;
@@ -846,6 +850,9 @@ public final class Rest {
                         throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with throws IOException");
                     }
                 }
+            }
+            if (mmc != null && method.getReturnType() != void.class) {
+                throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with return void by @" + MessageMultiConsumer.class.getSimpleName() + " Service");
             }
             paramtypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
