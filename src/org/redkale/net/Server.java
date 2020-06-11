@@ -285,7 +285,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         postStart();
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
-            + ", threads: " + threads + ", maxbody: " + formatLenth(context.maxbody) + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
+            + ", cpu: " + Runtime.getRuntime().availableProcessors() + ", threads: " + threads + ", maxbody: " + formatLenth(context.maxbody) + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
 
