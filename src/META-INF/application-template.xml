@@ -19,10 +19,9 @@
   serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2    
 -->
 <!--     
-    nodeid:         进程的节点ID，一个系统中进程节点ID最好不要重复。
+    nodeid: int     进程的节点ID，用于分布式环境，一个系统中节点ID必须全局唯一，使用cluster时框架会进行唯一性校验
     address:        本地局域网的IP地址， 默认值为默认网卡的ip，当不使用默认值需要指定值，如192.168.1.22
     port: required  程序的管理Server的端口，用于关闭或者与监管系统进行数据交互
-    nodeid: int     进程节点ID值，默认0，一般用于分布式环境
     lib:            加上额外的lib路径,多个路径用分号;隔开； 默认为空。  例如: ${APP_HOME}/lib/a.jar;${APP_HOME}/lib2/b.jar;
 -->
 <application nodeid="1000" port="6560" lib="">  

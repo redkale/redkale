@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
-import org.redkale.boot.NodeServer;
+import org.redkale.boot.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.net.http.WebSocketNode;
@@ -87,6 +87,10 @@ public abstract class ClusterAgent {
         return Utility.contains(ports, port);
     }
 
+    public abstract void register(Application application);
+
+    public abstract void deregister(Application application);
+
     //注册服务, 在NodeService调用Service.init方法之前调用
     public void register(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
         if (localServices.isEmpty()) return;
@@ -159,6 +163,22 @@ public abstract class ClusterAgent {
         if (service == null) return;
         Collection<InetSocketAddress> addrs = queryAddress(entry);
         Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netprotocol, entry.address, null, addrs);
+    }
+
+    protected String generateApplicationServiceName() {
+        return "application.node." + this.nodeid;
+    }
+
+    protected String generateApplicationServiceId() { //与servicename相同
+        return "application.node." + this.nodeid;
+    }
+
+    protected String generateApplicationCheckName() {
+        return "check-" + generateApplicationServiceName();
+    }
+
+    protected String generateApplicationCheckId() {
+        return "check-" + generateApplicationServiceId();
     }
 
     //格式: protocol:classtype-resourcename

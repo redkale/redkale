@@ -79,7 +79,7 @@ public final class Application {
     public static final String RESNAME_APP_NODEID = "APP_NODEID";
 
     /**
-     * 当前进程节点的IP地址， 类型：InetAddress、String
+     * 当前进程节点的IP地址， 类型：InetSocketAddress、InetAddress、String
      */
     public static final String RESNAME_APP_ADDR = "APP_ADDR";
 
@@ -112,7 +112,7 @@ public final class Application {
     final int nodeid;
 
     //本地IP地址
-    final InetAddress localAddress;
+    final InetSocketAddress localAddress;
 
     //CacheSource 资源
     final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
@@ -208,9 +208,12 @@ public final class Application {
             throw new RuntimeException(e);
         }
         String localaddr = config.getValue("address", "").trim();
-        this.localAddress = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
-        this.resourceFactory.register(RESNAME_APP_ADDR, this.localAddress.getHostAddress());
-        this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, this.localAddress);
+        InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
+        this.localAddress = new InetSocketAddress(addr, config.getIntValue("port"));
+        this.resourceFactory.register(RESNAME_APP_ADDR, addr.getHostAddress());
+        this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, addr);
+        this.resourceFactory.register(RESNAME_APP_ADDR, InetSocketAddress.class, this.localAddress);
+
         {
             int nid = config.getIntValue("nodeid", 0);
             this.nodeid = nid;
@@ -541,7 +544,7 @@ public final class Application {
             pidstr = "APP_PID  = " + pid + "\r\n";
         } catch (Throwable t) {
         }
-        logger.log(Level.INFO, pidstr + "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_NODEID + " = " + this.nodeid + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostAddress() + "\r\n" + RESNAME_APP_HOME + " = " + homepath + "\r\n" + RESNAME_APP_CONF + " = " + confpath);
+        logger.log(Level.INFO, pidstr + "APP_JAVA = " + System.getProperty("java.version") + "\r\n" + RESNAME_APP_NODEID + " = " + this.nodeid + "\r\n" + RESNAME_APP_ADDR + " = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n" + RESNAME_APP_HOME + " = " + homepath + "\r\n" + RESNAME_APP_CONF + " = " + confpath);
         String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
         lib = lib.isEmpty() ? confpath : (lib + ";" + confpath);
         Server.loadLib(classLoader, logger, lib);
@@ -802,6 +805,9 @@ public final class Application {
     }
 
     public void start() throws Exception {
+        if (!singletonrun && this.clusterAgent != null) {
+            this.clusterAgent.register(this);
+        }
         final AnyValue[] entrys = config.getAnyValues("server");
         CountDownLatch timecd = new CountDownLatch(entrys.length);
         final List<AnyValue> sncps = new ArrayList<>();
@@ -1081,6 +1087,7 @@ public final class Application {
             }
         });
         if (clusterAgent != null) {
+            clusterAgent.deregister(this);
             clusterAgent.destroy(clusterAgent.getConfig());
         }
         if (this.messageAgents != null) {

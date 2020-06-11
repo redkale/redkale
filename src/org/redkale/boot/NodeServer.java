@@ -123,7 +123,7 @@ public abstract class NodeServer {
         this.serverConf = config == null ? AnyValue.create() : config;
         if (isSNCP()) { // SNCP协议
             String host = this.serverConf.getValue("host", isWATCH() ? "127.0.0.1" : "0.0.0.0").replace("0.0.0.0", "");
-            this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getHostAddress() : host, this.serverConf.getIntValue("port"));
+            this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getAddress().getHostAddress() : host, this.serverConf.getIntValue("port"));
             this.sncpGroup = application.sncpTransportFactory.findGroupName(this.sncpAddress);
             //单向SNCP服务不需要对等group
             //if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
