@@ -137,8 +137,9 @@ public abstract class MessageAgent {
         if (this.sncpProducer == null) {
             synchronized (sncpProducerLock) {
                 if (this.sncpProducer == null) {
-                    this.sncpProducer = createProducer("SncpProducer");
-                    this.sncpProducer.startup().join();
+                    MessageProducer producer = createProducer("SncpProducer");
+                    producer.startup().join();
+                    this.sncpProducer = producer;
                 }
             }
         }
@@ -149,8 +150,9 @@ public abstract class MessageAgent {
         if (this.httpProducer == null) {
             synchronized (httpProducerLock) {
                 if (this.httpProducer == null) {
-                    this.httpProducer = createProducer("HttpProducer");
-                    this.httpProducer.startup().join();
+                    MessageProducer producer = createProducer("HttpProducer");
+                    producer.startup().join();
+                    this.httpProducer = producer;
                 }
             }
         }
