@@ -42,6 +42,10 @@ public abstract class MessageAgent {
 
     protected MessageProducer sncpProducer;
 
+    protected final Object httpProducerLock = new Object();
+
+    protected final Object sncpProducerLock = new Object();
+
     protected HttpMessageClient httpMessageClient;
 
     protected SncpMessageClient sncpMessageClient;
@@ -131,7 +135,7 @@ public abstract class MessageAgent {
     //获取指定topic的生产处理器
     public MessageProducer getSncpProducer() {
         if (this.sncpProducer == null) {
-            synchronized (this) {
+            synchronized (sncpProducerLock) {
                 if (this.sncpProducer == null) {
                     this.sncpProducer = createProducer("SncpProducer");
                     this.sncpProducer.startup().join();
@@ -143,7 +147,7 @@ public abstract class MessageAgent {
 
     public MessageProducer getHttpProducer() {
         if (this.httpProducer == null) {
-            synchronized (this) {
+            synchronized (httpProducerLock) {
                 if (this.httpProducer == null) {
                     this.httpProducer = createProducer("HttpProducer");
                     this.httpProducer.startup().join();
