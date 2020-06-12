@@ -16,5 +16,11 @@ package org.redkale.mq;
  */
 public interface MessageProcessor {
 
-    public void process(MessageRecord message);
+    default void begin(int size) {
+    }
+
+    public void process(MessageRecord message, Runnable callback);
+
+    default void commit() {
+    }
 }

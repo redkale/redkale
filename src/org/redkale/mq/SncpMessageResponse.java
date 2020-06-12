@@ -28,20 +28,25 @@ public class SncpMessageResponse extends SncpResponse {
 
     protected MessageProducer producer;
 
-    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, ObjectPool<Response> responsePool, MessageProducer producer) {
+    protected Runnable callback;
+
+    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, Runnable callback, ObjectPool<Response> responsePool, MessageProducer producer) {
         super(context, request, responsePool);
         this.message = request.message;
+        this.callback = callback;
         this.producer = producer;
     }
 
-    public SncpMessageResponse(SncpContext context, MessageRecord message, ObjectPool<Response> responsePool, MessageProducer producer) {
+    public SncpMessageResponse(SncpContext context, MessageRecord message, Runnable callback, ObjectPool<Response> responsePool, MessageProducer producer) {
         super(context, new SncpMessageRequest(context, message), responsePool);
         this.message = message;
+        this.callback = callback;
         this.producer = producer;
     }
 
     @Override
     public void finish(final int retcode, final BsonWriter out) {
+        if (callback != null) callback.run();
         if (out == null) {
             final byte[] result = new byte[SncpRequest.HEADER_SIZE];
             fillHeader(ByteBuffer.wrap(result), 0, retcode);

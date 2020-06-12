@@ -40,10 +40,10 @@ public class SncpMessageProcessor implements MessageProcessor {
     }
 
     @Override
-    public void process(MessageRecord message) {
+    public void process(MessageRecord message, Runnable callback) {
         SncpContext context = server.getSncpServer().getContext();
         SncpMessageRequest request = new SncpMessageRequest(context, message);
-        SncpMessageResponse response = new SncpMessageResponse(context, request, null, producer);
+        SncpMessageResponse response = new SncpMessageResponse(context, request, callback, null, producer);
         try {
             servlet.execute(request, response);
         } catch (Exception ex) {

@@ -27,24 +27,29 @@ public class HttpMessageResponse extends HttpResponse {
 
     protected MessageProducer producer;
 
-    public HttpMessageResponse(HttpContext context, HttpMessageRequest request,
+    protected Runnable callback;
+
+    public HttpMessageResponse(HttpContext context, HttpMessageRequest request, Runnable callback,
         ObjectPool<Response> responsePool, HttpResponseConfig config, MessageProducer producer) {
         super(context, request, responsePool, config);
         this.message = request.message;
+        this.callback = callback;
         this.producer = producer;
     }
 
-    public HttpMessageResponse(HttpContext context, MessageRecord message, HttpResponseConfig config, MessageProducer producer) {
+    public HttpMessageResponse(HttpContext context, MessageRecord message, Runnable callback, HttpResponseConfig config, MessageProducer producer) {
         super(context, new HttpMessageRequest(context, message), null, config);
         this.message = message;
+        this.callback = callback;
         this.producer = producer;
     }
 
     public void finishHttpResult(HttpResult result) {
-        finishHttpResult(this.message, this.producer, message.getResptopic(), result);
+        finishHttpResult(this.message, this.callback, this.producer, message.getResptopic(), result);
     }
 
-    public static void finishHttpResult(MessageRecord msg, MessageProducer producer, String resptopic, HttpResult result) {
+    public static void finishHttpResult(MessageRecord msg, Runnable callback, MessageProducer producer, String resptopic, HttpResult result) {
+        if(callback!=null) callback.run();
         if (resptopic == null || resptopic.isEmpty()) return;
         ConvertType format = result.convert() == null ? null : result.convert().getFactory().getConvertType();
         byte[] content = HttpResultCoder.getInstance().encode(result);

@@ -50,7 +50,7 @@ public class HttpMessageProcessor implements MessageProcessor {
     }
 
     @Override
-    public void process(MessageRecord message) {
+    public void process(MessageRecord message, Runnable callback) {
         try {
             if (multiconsumer) message.setResptopic(null); //不容许有响应
             HttpContext context = server.getHttpServer().getContext();
@@ -58,11 +58,11 @@ public class HttpMessageProcessor implements MessageProcessor {
             if (multiconsumer) {
                 request.setRequestURI(request.getRequestURI().replaceFirst(this.restmodule, this.multimodule));
             }
-            HttpMessageResponse response = new HttpMessageResponse(context, request, null, null, producer);
+            HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, producer);
             servlet.execute(request, response);
         } catch (Exception ex) {
             if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
-                HttpMessageResponse.finishHttpResult(message, producer, message.getResptopic(), new HttpResult().status(500));
+                HttpMessageResponse.finishHttpResult(message, callback, producer, message.getResptopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
         }
