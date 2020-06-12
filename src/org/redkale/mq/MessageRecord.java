@@ -12,7 +12,9 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Comment;
 
 /**
- * 存在MQ里面的数据结构
+ * 存在MQ里面的数据结构<p>
+ * groupid + userid 来确定partition， 优先使用 groupid
+ *
  *
  * <p>
  * 详情见: https://redkale.org
