@@ -17,11 +17,18 @@ import java.util.logging.Logger;
  *
  * @since 2.1.0
  */
-public abstract class MessageProducer  {
+public abstract class MessageProducer {
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+    protected final Logger logger;
+
+    protected final String name;
 
     protected volatile boolean closed;
+
+    protected MessageProducer(String name, Logger logger) {
+        this.name = name;
+        this.logger = logger;
+    }
 
     public abstract CompletableFuture<Void> apply(MessageRecord message);
 

@@ -445,22 +445,7 @@ public final class Application {
             .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.ping.interval", "30"))
             .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.check.interval", "30"));
         this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
-        if (cluster != null) {
-            cluster.setTransportFactory(this.sncpTransportFactory);
-            this.resourceFactory.inject(cluster);
-            cluster.init(cluster.getConfig());
-            this.resourceFactory.register(ClusterAgent.class, cluster);
-        }
         this.clusterAgent = cluster;
-        if (mqs != null) {
-            for (MessageAgent agent : mqs) {
-                this.resourceFactory.inject(agent);
-                agent.init(agent.getConfig());
-                this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
-                this.resourceFactory.register(agent.getName(), HttpMessageClient.class, agent.getHttpMessageClient());
-                this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient());
-            }
-        }
         this.messageAgents = mqs;
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
@@ -688,6 +673,29 @@ public final class Application {
 
         }, Application.class, ResourceFactory.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
         //--------------------------------------------------------------------------
+        if (this.clusterAgent != null) {
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent initing");
+            long s = System.currentTimeMillis();
+            clusterAgent.setTransportFactory(this.sncpTransportFactory);
+            this.resourceFactory.inject(clusterAgent);
+            clusterAgent.init(clusterAgent.getConfig());
+            this.resourceFactory.register(ClusterAgent.class, clusterAgent);
+            logger.info("ClusterAgent init in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (this.messageAgents != null) {
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent initing");
+            long s = System.currentTimeMillis();
+            for (MessageAgent agent : this.messageAgents) {
+                this.resourceFactory.inject(agent);
+                agent.init(agent.getConfig());
+                this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
+                this.resourceFactory.register(agent.getName(), HttpMessageClient.class, agent.getHttpMessageClient());
+                this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient());
+            }
+            logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
+
+        }
+
         initResources();
     }
 
@@ -859,6 +867,7 @@ public final class Application {
         timecd.await();
         if (this.clusterAgent != null) this.clusterAgent.start();
         if (this.messageAgents != null) {
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent starting");
             long s = System.currentTimeMillis();
             final StringBuffer sb = new StringBuffer();
             Set<String> names = new HashSet<>();
@@ -873,7 +882,7 @@ public final class Application {
                 );
             }
             if (sb.length() > 0) logger.info(sb.toString().trim());
-            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") init in " + (System.currentTimeMillis() - s) + " ms");
+            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") start in " + (System.currentTimeMillis() - s) + " ms");
         }
         //if (!singletonrun) signalHandle();
         //if (!singletonrun) clearPersistData();
@@ -1098,12 +1107,13 @@ public final class Application {
         Collections.reverse(localServers); //倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
         if (this.messageAgents != null) {
             Set<String> names = new HashSet<>();
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent stopping");
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 names.add(agent.getName());
                 agent.stop().join();
             }
-            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in " + (System.currentTimeMillis() - s) + " ms\r\n");
+            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in " + (System.currentTimeMillis() - s) + " ms");
         }
         localServers.stream().forEach((server) -> {
             try {
@@ -1115,17 +1125,21 @@ public final class Application {
             }
         });
         if (clusterAgent != null) {
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent destroying");
+            long s = System.currentTimeMillis();
             clusterAgent.deregister(this);
             clusterAgent.destroy(clusterAgent.getConfig());
+            logger.info("ClusterAgent destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
         if (this.messageAgents != null) {
             Set<String> names = new HashSet<>();
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent destroying");
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 names.add(agent.getName());
                 agent.destroy(agent.getConfig());
             }
-            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in " + (System.currentTimeMillis() - s) + " ms\r\n");
+            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
         for (DataSource source : dataSources) {
             if (source == null) continue;

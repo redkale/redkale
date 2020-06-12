@@ -93,6 +93,10 @@ public abstract class MessageAgent {
         if (this.httpProducer != null) this.httpProducer.shutdown().join();
     }
 
+    public Logger getLogger() {
+        return logger;
+    }
+
     public String getName() {
         return name;
     }
@@ -129,7 +133,7 @@ public abstract class MessageAgent {
         if (this.sncpProducer == null) {
             synchronized (this) {
                 if (this.sncpProducer == null) {
-                    this.sncpProducer = createProducer();
+                    this.sncpProducer = createProducer("SncpProducer");
                     this.sncpProducer.startup().join();
                 }
             }
@@ -141,7 +145,7 @@ public abstract class MessageAgent {
         if (this.httpProducer == null) {
             synchronized (this) {
                 if (this.httpProducer == null) {
-                    this.httpProducer = createProducer();
+                    this.httpProducer = createProducer("HttpProducer");
                     this.httpProducer.startup().join();
                 }
             }
@@ -150,7 +154,7 @@ public abstract class MessageAgent {
     }
 
     //创建指定topic的生产处理器
-    protected abstract MessageProducer createProducer();
+    protected abstract MessageProducer createProducer(String name);
 
     //创建topic，如果已存在则跳过
     public abstract boolean createTopic(String... topics);

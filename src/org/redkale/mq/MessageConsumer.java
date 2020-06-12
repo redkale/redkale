@@ -29,16 +29,17 @@ public abstract class MessageConsumer {
 
     protected final MessageProcessor processor;
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+    protected final Logger logger;
 
     protected volatile boolean closed;
 
-    protected MessageConsumer(MessageAgent messageAgent, String[] topics,final String consumerid, MessageProcessor processor) {
+    protected MessageConsumer(MessageAgent messageAgent, String[] topics, final String consumerid, MessageProcessor processor) {
         Objects.requireNonNull(messageAgent);
         Objects.requireNonNull(topics);
         Objects.requireNonNull(consumerid);
         Objects.requireNonNull(processor);
         this.messageAgent = messageAgent;
+        this.logger = messageAgent.logger;
         this.topics = topics;
         this.consumerid = consumerid;
         this.processor = processor;
