@@ -30,8 +30,8 @@ public class MessageRespFutureNode implements Runnable {
 
     protected final ConcurrentHashMap<Long, MessageRespFutureNode> respNodes;
 
-    public MessageRespFutureNode(long seqid, ConcurrentHashMap<Long, MessageRespFutureNode> respNodes, AtomicLong counter, CompletableFuture<MessageRecord> future) {
-        this.seqid = seqid;
+    public MessageRespFutureNode(MessageRecord message, ConcurrentHashMap<Long, MessageRespFutureNode> respNodes, AtomicLong counter, CompletableFuture<MessageRecord> future) {
+        this.seqid = message.getSeqid();
         this.respNodes = respNodes;
         this.counter = counter;
         this.future = future;
