@@ -66,7 +66,7 @@ public abstract class MessageClient {
                     if (this.respConsumerid == null) this.respConsumerid = "consumer-" + this.respTopic;
                     if (this.consumer == null) {
                         MessageProcessor processor = (msg, callback) -> {
-                            MessageRespFutureNode node = respNodes.get(msg.getSeqid());
+                            MessageRespFutureNode node = respNodes.remove(msg.getSeqid());
                             if (node == null) {
                                 messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found msgnode");
                                 return;
