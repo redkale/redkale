@@ -99,6 +99,8 @@ public interface CacheSource<V extends Object> {
 
     public long decr(final String key, long num);
 
+    public <T> Map<String, T> getMap(final Type componentType, final String... keys);
+
     public Collection<V> getCollection(final String key);
 
     public <T> Collection<T> getCollection(final String key, final Type componentType);
@@ -149,6 +151,8 @@ public interface CacheSource<V extends Object> {
 
     public void setString(final int expireSeconds, final String key, final String value);
 
+    public Map<String, String> getStringMap(final String... keys);
+
     public Collection<String> getStringCollection(final String key);
 
     public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys);
@@ -172,6 +176,8 @@ public interface CacheSource<V extends Object> {
     public void setLong(final String key, final long value);
 
     public void setLong(final int expireSeconds, final String key, final long value);
+
+    public Map<String, Long> getLongMap(final String... keys);
 
     public Collection<Long> getLongCollection(final String key);
 
@@ -256,6 +262,8 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Long> decrAsync(final String key, long num);
 
+    public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys);
+
     public CompletableFuture<Collection<V>> getCollectionAsync(final String key);
 
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(final String key, final Type componentType);
@@ -306,6 +314,8 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> setStringAsync(final int expireSeconds, final String key, final String value);
 
+    public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys);
+
     public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key);
 
     public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys);
@@ -329,6 +339,8 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Void> setLongAsync(final String key, long value);
 
     public CompletableFuture<Void> setLongAsync(final int expireSeconds, final String key, final long value);
+
+    public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys);
 
     public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key);
 

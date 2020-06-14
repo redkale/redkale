@@ -673,37 +673,31 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
-
     public CompletableFuture<Long> incrAsync(final String key, long num) {
         return CompletableFuture.supplyAsync(() -> incr(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-
     public long decr(final String key) {
         return incr(key, -1);
     }
 
     @Override
-
     public CompletableFuture<Long> decrAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> decr(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-
     public long decr(final String key, long num) {
         return incr(key, -num);
     }
 
     @Override
-
     public CompletableFuture<Long> decrAsync(final String key, long num) {
         return CompletableFuture.supplyAsync(() -> decr(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-
     public CompletableFuture<Void> removeAsync(final String key) {
         return CompletableFuture.runAsync(() -> remove(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
@@ -741,6 +735,50 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
             if (s != null) map.put(key, s);
         }
         return map;
+    }
+
+    @Override
+    public Map<String, Long> getLongMap(final String... keys) {
+        Map<String, Long> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            Number n = (Number) get(key);
+            map.put(key, n == null ? null : n.longValue());
+        }
+        return map;
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getLongMap(keys), getExecutor());
+    }
+
+    @Override
+    public Map<String, String> getStringMap(final String... keys) {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            Object n = get(key);
+            map.put(key, n == null ? null : n.toString());
+        }
+        return map;
+    }
+
+    @Override
+    public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getStringMap(keys), getExecutor());
+    }
+
+    @Override
+    public <T> Map<String, T> getMap(final Type componentType, final String... keys) {
+        Map<String, T> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            map.put(key, (T) get(key));
+        }
+        return map;
+    }
+
+    @Override
+    public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getMap(componentType, keys), getExecutor());
     }
 
     @Override
