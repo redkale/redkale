@@ -78,8 +78,9 @@ public class RetResult<T> {
         return c;
     }
 
-    public void convert(Convert convert) {
+    public RetResult convert(Convert convert) {
         this.convert = convert;
+        return this;
     }
 
     public static RetResult success() {
@@ -113,7 +114,7 @@ public class RetResult<T> {
      * @since 2.1.0
      */
     public <R> RetResult<R> mapTo(Function<T, R> mapper) {
-        return new RetResult<>(mapper.apply(this.result)).retcode(this.retcode).retinfo(this.retinfo).attach(this.attach);
+        return new RetResult<>(mapper.apply(this.result)).convert(this.convert).retcode(this.retcode).retinfo(this.retinfo).attach(this.attach);
     }
 
     /**
