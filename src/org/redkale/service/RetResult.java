@@ -7,6 +7,7 @@ package org.redkale.service;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.Utility;
@@ -99,6 +100,20 @@ public class RetResult<T> {
 
     public static <K, V> RetResult<Map<K, V>> map(Object... items) {
         return new RetResult(Utility.ofMap(items));
+    }
+
+    /**
+     * 将RetResult&#60;X&#62; 转换成 RetResult&#60;Y&#62;
+     *
+     * @param <R>    目标数据类型
+     * @param mapper 转换函数
+     *
+     * @return RetResult
+     *
+     * @since 2.1.0
+     */
+    public <R> RetResult<R> mapTo(Function<T, R> mapper) {
+        return new RetResult<>(mapper.apply(this.result));
     }
 
     /**
