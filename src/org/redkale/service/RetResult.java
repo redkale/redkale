@@ -103,7 +103,7 @@ public class RetResult<T> {
     }
 
     /**
-     * 将RetResult&#60;X&#62; 转换成 RetResult&#60;Y&#62;
+     * 将RetResult&#60;X&#62; 转换成一个新的 RetResult&#60;Y&#62;
      *
      * @param <R>    目标数据类型
      * @param mapper 转换函数
@@ -113,7 +113,7 @@ public class RetResult<T> {
      * @since 2.1.0
      */
     public <R> RetResult<R> mapTo(Function<T, R> mapper) {
-        return new RetResult<>(mapper.apply(this.result));
+        return new RetResult<>(mapper.apply(this.result)).retcode(this.retcode).retinfo(this.retinfo).attach(this.attach);
     }
 
     /**
