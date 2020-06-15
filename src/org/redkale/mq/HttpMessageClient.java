@@ -31,6 +31,11 @@ public class HttpMessageClient extends MessageClient {
         return messageAgent.generateHttpReqTopic(module);
     }
 
+    //格式: http.req.user-n10
+    public String generateHttpReqTopic(String module, String resname) {
+        return messageAgent.generateHttpReqTopic(module, resname);
+    }
+
     public String generateHttpReqTopic(HttpSimpleRequest request, String path) {
         String module = request.getRequestURI();
         if (path != null && !path.isEmpty() && module.startsWith(path)) module = module.substring(path.length());

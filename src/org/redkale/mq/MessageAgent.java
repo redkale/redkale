@@ -213,6 +213,11 @@ public abstract class MessageAgent {
         return "http.req." + module.toLowerCase();
     }
 
+    //格式: http.req.user
+    public String generateHttpReqTopic(String module, String resname) {
+        return "http.req." + module.toLowerCase() + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+    }
+
     //格式: sncp.resp.node10
     protected String generateSncpRespTopic() {
         return "sncp.resp.node" + nodeid;
