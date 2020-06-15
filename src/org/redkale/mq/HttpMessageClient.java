@@ -39,102 +39,104 @@ public class HttpMessageClient extends MessageClient {
         return messageAgent.generateHttpReqTopic(module);
     }
 
+    public final void produceMessage(HttpSimpleRequest request) {
+        produceMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, null);
+    }
+
+    public final void produceMessage(HttpSimpleRequest request, AtomicLong counter) {
+        produceMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, counter);
+    }
+
+    public final void produceMessage(int userid, String groupid, HttpSimpleRequest request) {
+        produceMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, null);
+    }
+
+    public final void produceMessage(int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+        produceMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, counter);
+    }
+
+    public final void produceMessage(String topic, HttpSimpleRequest request) {
+        produceMessage(topic, ConvertType.JSON, 0, null, request, null);
+    }
+
+    public final void produceMessage(String topic, HttpSimpleRequest request, AtomicLong counter) {
+        produceMessage(topic, ConvertType.JSON, 0, null, request, counter);
+    }
+
+    public final void produceMessage(String topic, ConvertType convertType, HttpSimpleRequest request) {
+        produceMessage(topic, convertType, 0, null, request, null);
+    }
+
+    public final void produceMessage(String topic, ConvertType convertType, HttpSimpleRequest request, AtomicLong counter) {
+        produceMessage(topic, convertType, 0, null, request, counter);
+    }
+
+    public final void produceMessage(String topic, int userid, String groupid, HttpSimpleRequest request) {
+        produceMessage(topic, ConvertType.JSON, userid, groupid, request, null);
+    }
+
+    public final void produceMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+        produceMessage(topic, ConvertType.JSON, userid, groupid, request, counter);
+    }
+
+    public final void produceMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request) {
+        produceMessage(topic, convertType, userid, groupid, request, null);
+    }
+
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request) {
-        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, true, null);
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, null);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, AtomicLong counter) {
-        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, true, counter);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, boolean needresp) {
-        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, needresp, null);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, boolean needresp, AtomicLong counter) {
-        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, needresp, counter);
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, counter);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request) {
-        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, true, null);
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, null);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, true, counter);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request, boolean needresp) {
-        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, needresp, null);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request, boolean needresp, AtomicLong counter) {
-        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, needresp, counter);
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, counter);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request) {
-        return sendMessage(topic, ConvertType.JSON, 0, null, request, true, null);
+        return sendMessage(topic, ConvertType.JSON, 0, null, request, null);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request, AtomicLong counter) {
-        return sendMessage(topic, ConvertType.JSON, 0, null, request, true, counter);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request, boolean needresp) {
-        return sendMessage(topic, ConvertType.JSON, 0, null, request, needresp, null);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request, boolean needresp, AtomicLong counter) {
-        return sendMessage(topic, ConvertType.JSON, 0, null, request, needresp, counter);
+        return sendMessage(topic, ConvertType.JSON, 0, null, request, counter);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, HttpSimpleRequest request) {
-        return sendMessage(topic, convertType, 0, null, request, true, null);
+        return sendMessage(topic, convertType, 0, null, request, null);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, HttpSimpleRequest request, AtomicLong counter) {
-        return sendMessage(topic, convertType, 0, null, request, true, counter);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, HttpSimpleRequest request, boolean needresp) {
-        return sendMessage(topic, convertType, 0, null, request, needresp, null);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, HttpSimpleRequest request, boolean needresp, AtomicLong counter) {
-        return sendMessage(topic, convertType, 0, null, request, needresp, counter);
+        return sendMessage(topic, convertType, 0, null, request, counter);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, int userid, String groupid, HttpSimpleRequest request) {
-        return sendMessage(topic, ConvertType.JSON, userid, groupid, request, true, null);
+        return sendMessage(topic, ConvertType.JSON, userid, groupid, request, null);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        return sendMessage(topic, ConvertType.JSON, userid, groupid, request, true, counter);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, int userid, String groupid, HttpSimpleRequest request, boolean needresp) {
-        return sendMessage(topic, ConvertType.JSON, userid, groupid, request, needresp, null);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, int userid, String groupid, HttpSimpleRequest request, boolean needresp, AtomicLong counter) {
-        return sendMessage(topic, ConvertType.JSON, userid, groupid, request, needresp, counter);
+        return sendMessage(topic, ConvertType.JSON, userid, groupid, request, counter);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request) {
-        return sendMessage(topic, convertType, userid, groupid, request, true, null);
+        return sendMessage(topic, convertType, userid, groupid, request, null);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        return sendMessage(topic, convertType, userid, groupid, request, true, counter);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, boolean needresp) {
-        return sendMessage(topic, convertType, userid, groupid, request, needresp, null);
-    }
-
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, boolean needresp, AtomicLong counter) {
         MessageRecord message = new MessageRecord(convertType, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
-        return sendMessage(message, needresp, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
+        return sendMessage(message, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
+    }
+
+    public final void produceMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+        MessageRecord message = new MessageRecord(convertType, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
+        message.userid(userid).groupid(groupid);
+        produceMessage(message, counter);
     }
 
     @Override
