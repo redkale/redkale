@@ -129,6 +129,17 @@ public abstract class AnyValue {
             return rs;
         }
 
+        //去重
+        public DefaultAnyValue addAllStringSet(final AnyValue av) {
+            if (av == null) return this;
+            final Entry<String>[] strings = av.getStringEntrys();
+            if (strings == null) return this;
+            for (Entry<String> en : strings) {
+                if (getValue(en.name) == null) this.addValue(en.name, en.value);
+            }
+            return this;
+        }
+
         public DefaultAnyValue addAll(final AnyValue av) {
             if (av == null) return this;
             if (av instanceof DefaultAnyValue) {

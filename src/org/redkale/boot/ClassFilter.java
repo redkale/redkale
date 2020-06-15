@@ -175,8 +175,9 @@ public final class ClassFilter<T> {
         }
         if (!r && ors != null) {
             for (ClassFilter filter : ors) {
-                if (filter.accept(property, clazzname)) {
+                if (filter.accept(filter.conf, clazzname)) {
                     cf = filter;
+                    property = cf.conf;
                     break;
                 }
             }
@@ -189,11 +190,11 @@ public final class ClassFilter<T> {
                 if (property == null) {
                     property = cf.conf;
                 } else if (property instanceof DefaultAnyValue) {
-                    ((DefaultAnyValue) property).addAll(cf.conf);
+                    ((DefaultAnyValue) property).addAllStringSet(cf.conf);
                 } else {
                     DefaultAnyValue dav = new DefaultAnyValue();
-                    dav.addAll(property);
-                    dav.addAll(cf.conf);
+                    dav.addAllStringSet(property);
+                    dav.addAllStringSet(cf.conf);
                     property = dav;
                 }
             }
@@ -243,7 +244,7 @@ public final class ClassFilter<T> {
         }
         if (!r && ors != null) {
             for (ClassFilter filter : ors) {
-                if (filter.accept(property, classname)) return true;
+                if (filter.accept(filter.conf, classname)) return true;
             }
         }
         return r;
