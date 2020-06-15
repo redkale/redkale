@@ -97,6 +97,14 @@ public class HttpResult<T> {
         return this;
     }
 
+    public String getHeader(String name) {
+        return headers == null ? null : headers.get(name);
+    }
+
+    public String getHeader(String name, String dfvalue) {
+        return headers == null ? null : headers.getOrDefault(name, dfvalue);
+    }
+
     public Map<String, String> getHeaders() {
         return headers;
     }
