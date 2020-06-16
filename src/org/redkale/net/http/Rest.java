@@ -827,9 +827,11 @@ public final class Rest {
             if (Modifier.isStatic(method.getModifiers())) continue;
             if (method.isSynthetic()) continue;
             if (EXCLUDERMETHODS.contains(method.getName())) continue;
-            if ("init".equals(method.getName())) continue;
-            if ("destroy".equals(method.getName())) continue;
-            if ("version".equals(method.getName())) continue;
+            if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == AnyValue.class) {
+                if ("init".equals(method.getName())) continue;
+                if ("stop".equals(method.getName())) continue;
+                if ("destroy".equals(method.getName())) continue;
+            }
             if (controller == null) continue;
 
             RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);

@@ -688,6 +688,12 @@ public abstract class Sncp {
             mv.visitMaxs(0, 2);
             mv.visitEnd();
         }
+        { //stop
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "stop", "(" + anyValueDesc + ")V", null, null));
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(0, 2);
+            mv.visitEnd();
+        }
         { //destroy
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "destroy", "(" + anyValueDesc + ")V", null, null));
             mv.visitInsn(RETURN);
