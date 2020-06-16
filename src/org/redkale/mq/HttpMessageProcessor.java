@@ -56,7 +56,7 @@ public class HttpMessageProcessor implements MessageProcessor {
             HttpContext context = server.getHttpServer().getContext();
             HttpMessageRequest request = new HttpMessageRequest(context, message);
             if (multiconsumer) {
-                request.setRequestURI(request.getRequestURI().replaceFirst(this.restmodule, this.multimodule));
+                request.setRequestURI(request.getRequestURI().replaceFirst(this.multimodule, this.restmodule));
             }
             HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, producer);
             servlet.execute(request, response);
