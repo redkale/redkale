@@ -86,9 +86,39 @@ public class HttpSimpleRequest implements java.io.Serializable {
         return this;
     }
 
+    public HttpSimpleRequest header(String key, JsonConvert convert, Object value) {
+        if (value == null) return this;
+        if (this.headers == null) this.headers = new HashMap<>();
+        if (convert == null) convert = JsonConvert.root();
+        this.headers.put(key, convert.convertTo(value));
+        return this;
+    }
+
+    public HttpSimpleRequest header(String key, Object value) {
+        if (value == null) return this;
+        if (this.headers == null) this.headers = new HashMap<>();
+        this.headers.put(key, JsonConvert.root().convertTo(value));
+        return this;
+    }
+
     public HttpSimpleRequest param(String key, String value) {
         if (this.params == null) this.params = new HashMap<>();
         this.params.put(key, value);
+        return this;
+    }
+
+    public HttpSimpleRequest param(String key, JsonConvert convert, Object value) {
+        if (value == null) return this;
+        if (this.params == null) this.params = new HashMap<>();
+        if (convert == null) convert = JsonConvert.root();
+        this.params.put(key, convert.convertTo(value));
+        return this;
+    }
+
+    public HttpSimpleRequest param(String key, Object value) {
+        if (value == null) return this;
+        if (this.params == null) this.params = new HashMap<>();
+        this.params.put(key, JsonConvert.root().convertTo(value));
         return this;
     }
 
