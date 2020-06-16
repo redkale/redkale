@@ -214,7 +214,7 @@ public final class Rest {
         final RestService controller = service.getClass().getAnnotation(RestService.class);
         if (controller != null && !controller.name().isEmpty()) return controller.name();
         final Class serviceType = Sncp.getServiceType(service);
-        return serviceType.getSimpleName().replaceAll("Service.*$", "");
+        return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
     //仅供Rest动态构建里 currentUserid() 使用
