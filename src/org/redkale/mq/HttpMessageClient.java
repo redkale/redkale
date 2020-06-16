@@ -52,6 +52,10 @@ public class HttpMessageClient extends MessageClient {
         produceMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, counter);
     }
 
+    public final void produceMessage(int userid, HttpSimpleRequest request) {
+        produceMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, null, request, null);
+    }
+
     public final void produceMessage(int userid, String groupid, HttpSimpleRequest request) {
         produceMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, null);
     }
