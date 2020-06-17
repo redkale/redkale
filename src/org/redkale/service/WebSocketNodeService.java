@@ -95,7 +95,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     public CompletableFuture<Void> connect(Serializable userid, WebSocketAddress wsaddr) {
         tryAcquireSemaphore();
         CompletableFuture<Void> future = source.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
-        future = future.thenAccept((a) -> source.appendSetItemAsync(SOURCE_SNCP_ADDRS_KEY, WebSocketAddress.class, wsaddr));
+        future = future.thenAccept((a) -> source.appendSetItemAsync(SOURCE_SNCP_NODES_KEY, WebSocketAddress.class, wsaddr));
         if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " connect from " + wsaddr);
         return future;
