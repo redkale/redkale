@@ -5,6 +5,7 @@
  */
 package org.redkale.mq;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.convert.ConvertType;
@@ -41,7 +42,9 @@ public class HttpMessageClient extends MessageClient {
         if (path != null && !path.isEmpty() && module.startsWith(path)) module = module.substring(path.length());
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
-        return messageAgent.generateHttpReqTopic(module);
+        Map<String, String> headers = request.getHeaders();
+        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
+        return messageAgent.generateHttpReqTopic(module, resname);
     }
 
     public final void produceMessage(HttpSimpleRequest request) {
