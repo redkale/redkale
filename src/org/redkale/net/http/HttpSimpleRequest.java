@@ -56,8 +56,9 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public static HttpSimpleRequest create(String requestURI, Object... params) {
         HttpSimpleRequest req = new HttpSimpleRequest().requestURI(requestURI);
-        for (Map.Entry en : Utility.ofMap(params).entrySet()) {
-            req.param(en.getKey().toString(), en.getValue());
+        int len = params.length / 2;
+        for (int i = 0; i < len; i++) {
+            req.param(params[i * 2].toString(), params[i * 2 + 1]);
         }
         return req;
     }
