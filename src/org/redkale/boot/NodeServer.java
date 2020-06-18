@@ -461,7 +461,7 @@ public abstract class NodeServer {
             final ResourceFactory.ResourceLoader resourceLoader = (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
                 try {
                     if (SncpClient.parseMethod(serviceImplClass).isEmpty() && serviceImplClass.getAnnotation(Priority.class) == null) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
-                        if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")){
+                        if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
                             logger.log(Level.FINE, serviceImplClass + " cannot load because not found less one public non-final method");
                         }
                         return;
@@ -535,8 +535,8 @@ public abstract class NodeServer {
         }
         if (isSNCP() && !sncpRemoteAgents.isEmpty()) {
             sncpRemoteAgents.values().forEach(agent -> {
-               // agent.putSncpResp((NodeSncpServer) this);
-              //  agent.startSncpRespConsumer();
+                // agent.putSncpResp((NodeSncpServer) this);
+                //  agent.startSncpRespConsumer();
             });
         }
         //----------------- init -----------------
@@ -771,6 +771,42 @@ public abstract class NodeServer {
         });
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
         server.shutdown();
+    }
+
+    public void command(String cmd) throws IOException {
+        final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
+        final boolean finest = logger.isLoggable(Level.FINEST);
+        localServices.forEach(y -> {
+            Set<Method> methods = new HashSet<>();
+            Class loop = y.getClass();
+            //do {   public方法不用递归
+            for (Method m : loop.getMethods()) {
+                Command c = m.getAnnotation(Command.class);
+                if (c == null) continue;
+                if (Modifier.isStatic(m.getModifiers())) continue;
+                if (m.getReturnType() != void.class) continue;
+                if (m.getParameterCount() != 1) continue;
+                if (m.getParameterTypes()[0] != String.class) continue;
+                methods.add(m);
+            }
+            //} while ((loop = loop.getSuperclass()) != Object.class);
+            if (methods.isEmpty()) return;
+            long s = System.currentTimeMillis();
+            Method one = null;
+            try {
+                for (Method method : methods) {
+                    one = method;
+                    method.invoke(y, cmd);
+                }
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, one + " run error, cmd = " + cmd, ex);
+            }
+            long e = System.currentTimeMillis() - s;
+            if (e > 10 && sb != null) {
+                sb.append(Sncp.toSimpleString(y, maxNameLength, maxClassNameLength)).append(" command (").append(cmd).append(") ").append(e).append("ms").append(LINE_SEPARATOR);
+            }
+        });
+        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 
     public <T extends Server> T getServer() {

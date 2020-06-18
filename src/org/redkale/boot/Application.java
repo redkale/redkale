@@ -764,7 +764,8 @@ public final class Application {
                         buffer.flip();
                         byte[] bytes = new byte[buffer.remaining()];
                         buffer.get(bytes);
-                        if ("SHUTDOWN".equalsIgnoreCase(new String(bytes))) {
+                        final String cmd = new String(bytes);
+                        if ("SHUTDOWN".equalsIgnoreCase(cmd)) {
                             try {
                                 long s = System.currentTimeMillis();
                                 logger.info(application.getClass().getSimpleName() + " shutdowning");
@@ -784,7 +785,7 @@ public final class Application {
                                 buffer.flip();
                                 channel.send(buffer, address);
                             }
-                        } else if ("APIDOC".equalsIgnoreCase(new String(bytes))) {
+                        } else if ("APIDOC".equalsIgnoreCase(cmd)) {
                             try {
                                 new ApiDocsService(application).run();
                                 buffer.clear();
@@ -797,6 +798,16 @@ public final class Application {
                                 buffer.flip();
                                 channel.send(buffer, address);
                             }
+                        } else {
+                            long s = System.currentTimeMillis();
+                            logger.info(application.getClass().getSimpleName() + " command " + cmd);
+                            application.command(cmd);
+                            buffer.clear();
+                            buffer.put("COMMAND OK".getBytes());
+                            buffer.flip();
+                            channel.send(buffer, address);
+                            long e = System.currentTimeMillis() - s;
+                            logger.info(application.getClass().getSimpleName() + " command in " + e + " ms");
                         }
                     }
                 } catch (Exception e) {
@@ -1093,6 +1104,17 @@ public final class Application {
             }
         }
         return null;
+    }
+
+    public void command(String cmd) {
+        List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs        
+        localServers.stream().forEach((server) -> {
+            try {
+                server.command(cmd);
+            } catch (Exception t) {
+                logger.log(Level.WARNING, " command server(" + server.getSocketAddress() + ") error", t);
+            }
+        });
     }
 
     public void shutdown() throws Exception {
