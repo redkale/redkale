@@ -153,6 +153,8 @@ public interface CacheSource<V extends Object> {
 
     public Map<String, String> getStringMap(final String... keys);
 
+    public String[] getStringArray(final String... keys);
+
     public Collection<String> getStringCollection(final String key);
 
     public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys);
@@ -178,6 +180,8 @@ public interface CacheSource<V extends Object> {
     public void setLong(final int expireSeconds, final String key, final long value);
 
     public Map<String, Long> getLongMap(final String... keys);
+
+    public Long[] getLongArray(final String... keys);
 
     public Collection<Long> getLongCollection(final String key);
 
@@ -316,6 +320,8 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys);
 
+    public CompletableFuture<String[]> getStringArrayAsync(final String... keys);
+
     public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key);
 
     public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys);
@@ -341,6 +347,8 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Void> setLongAsync(final int expireSeconds, final String key, final long value);
 
     public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys);
+
+    public CompletableFuture<Long[]> getLongArrayAsync(final String... keys);
 
     public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key);
 

@@ -748,8 +748,24 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public Long[] getLongArray(final String... keys) {
+        Long[] rs = new Long[keys.length];
+        int index = -1;
+        for (String key : keys) {
+            Number n = (Number) get(key);
+            rs[++index] = n == null ? null : n.longValue();
+        }
+        return rs;
+    }
+
+    @Override
     public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
         return CompletableFuture.supplyAsync(() -> getLongMap(keys), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Long[]> getLongArrayAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getLongArray(keys), getExecutor());
     }
 
     @Override
@@ -763,8 +779,24 @@ public class CacheMemorySource<V extends Object> extends AbstractService impleme
     }
 
     @Override
+    public String[] getStringArray(final String... keys) {
+        String[] rs = new String[keys.length];
+        int index = -1;
+        for (String key : keys) {
+            Object n = get(key);
+            rs[++index] = n == null ? null : n.toString();
+        }
+        return rs;
+    }
+
+    @Override
     public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys) {
         return CompletableFuture.supplyAsync(() -> getStringMap(keys), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<String[]> getStringArrayAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getStringArray(keys), getExecutor());
     }
 
     @Override
