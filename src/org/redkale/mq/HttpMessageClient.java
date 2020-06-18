@@ -5,10 +5,12 @@
  */
 package org.redkale.mq;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.convert.ConvertType;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 
 /**
@@ -95,12 +97,30 @@ public class HttpMessageClient extends MessageClient {
         produceMessage(topic, convertType, userid, groupid, request, null);
     }
 
+    public final <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, null).thenApply((HttpResult<byte[]> httbs) -> {
+            if (httbs == null || httbs.getResult() == null) return null;
+            return JsonConvert.root().convertFrom(type, httbs.getResult());
+        });
+    }
+
+    public final <T> CompletableFuture<T> sendMessage(int userid, HttpSimpleRequest request, Type type) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, null, request, null).thenApply((HttpResult<byte[]> httbs) -> {
+            if (httbs == null || httbs.getResult() == null) return null;
+            return JsonConvert.root().convertFrom(type, httbs.getResult());
+        });
+    }
+
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request) {
         return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, null);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, AtomicLong counter) {
         return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, counter);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, HttpSimpleRequest request) {
+        return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, null, request, null);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(int userid, String groupid, HttpSimpleRequest request) {

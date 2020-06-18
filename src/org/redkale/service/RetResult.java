@@ -5,12 +5,13 @@
  */
 package org.redkale.service;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
-import org.redkale.util.Utility;
+import org.redkale.util.*;
 
 /**
  * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。  <br>
@@ -26,6 +27,15 @@ import org.redkale.util.Utility;
  * @param <T> 结果对象的泛型
  */
 public class RetResult<T> {
+
+    public static final Type TYPE_RET_INTEGER = new TypeToken<RetResult<Integer>>() {
+    }.getType();
+
+    public static final Type TYPE_RET_LONG = new TypeToken<RetResult<Long>>() {
+    }.getType();
+
+    public static final Type TYPE_RET_STRING = new TypeToken<RetResult<String>>() {
+    }.getType();
 
     @ConvertColumn(index = 1)
     protected int retcode;
@@ -101,6 +111,18 @@ public class RetResult<T> {
 
     public static <K, V> RetResult<Map<K, V>> map(Object... items) {
         return new RetResult(Utility.ofMap(items));
+    }
+
+    /**
+     * 清空result
+     *
+     * @param <V> V
+     *
+     * @return RetResult
+     */
+    public <V> RetResult<V> clearResult() {
+        this.result = null;
+        return (RetResult) this;
     }
 
     /**

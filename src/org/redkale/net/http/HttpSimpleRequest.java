@@ -8,7 +8,7 @@ package org.redkale.net.http;
 import java.util.*;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.Comment;
+import org.redkale.util.*;
 
 /**
  * HttpRequest的缩减版, 只提供部分字段
@@ -49,6 +49,18 @@ public class HttpSimpleRequest implements java.io.Serializable {
     @ConvertColumn(index = 7)
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
+
+    public static HttpSimpleRequest create(String requestURI) {
+        return new HttpSimpleRequest().requestURI(requestURI);
+    }
+
+    public static HttpSimpleRequest create(String requestURI, Object... params) {
+        HttpSimpleRequest req = new HttpSimpleRequest().requestURI(requestURI);
+        for (Map.Entry en : Utility.ofMap(params).entrySet()) {
+            req.param(en.getKey().toString(), en.getValue());
+        }
+        return req;
+    }
 
     public HttpSimpleRequest requestURI(String requestURI) {
         this.requestURI = requestURI;
@@ -118,7 +130,7 @@ public class HttpSimpleRequest implements java.io.Serializable {
     public HttpSimpleRequest param(String key, Object value) {
         if (value == null) return this;
         if (this.params == null) this.params = new HashMap<>();
-        this.params.put(key, JsonConvert.root().convertTo(value));
+        this.params.put(key, value instanceof CharSequence ? value.toString() : JsonConvert.root().convertTo(value));
         return this;
     }
 
