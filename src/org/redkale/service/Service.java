@@ -47,18 +47,6 @@ public interface Service {
     }
 
     /**
-     * 进程退出前会进行stop动作
-     * 远程模式下该方法会重载成空方法
-     *
-     * @param config 配置参数
-     *
-     * @since 2.1.0
-     */
-    default void stop(AnyValue config) {
-
-    }
-
-    /**
      * 进程退出时，调用Service销毁
      * 远程模式下该方法会重载成空方法
      *
