@@ -83,6 +83,16 @@ public class HttpSimpleRequest implements java.io.Serializable {
         return this;
     }
 
+    public HttpSimpleRequest removeHeader(String name) {
+        if (this.headers != null) this.headers.remove(name);
+        return this;
+    }
+
+    public HttpSimpleRequest removeParam(String name) {
+        if (this.params != null) this.params.remove(name);
+        return this;
+    }
+
     public HttpSimpleRequest headers(Map<String, String> headers) {
         this.headers = headers;
         return this;
