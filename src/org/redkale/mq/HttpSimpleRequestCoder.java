@@ -36,10 +36,11 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         byte[] headers = MessageCoder.getBytes(data.getHeaders());
         byte[] params = MessageCoder.getBytes(data.getParams());
         byte[] body = MessageCoder.getBytes(data.getBody());
-        int count = 4 + requestURI.length + 2 + remoteAddr.length + 2 + sessionid.length
+        int count = 1 + 4 + requestURI.length + 2 + remoteAddr.length + 2 + sessionid.length
             + 2 + contentType.length + headers.length + params.length + 4 + body.length;
         byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
+        buffer.put((byte) (data.isRpc() ? 'T' : 'F'));
         buffer.putInt(requestURI.length);
         if (requestURI.length > 0) buffer.put(requestURI);
         buffer.putChar((char) remoteAddr.length);
@@ -60,6 +61,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         if (data == null) return null;
         ByteBuffer buffer = ByteBuffer.wrap(data);
         HttpSimpleRequest req = new HttpSimpleRequest();
+        req.setRpc(buffer.get() == 'T');
         req.setRequestURI(MessageCoder.getLongString(buffer));
         req.setRemoteAddr(MessageCoder.getShortString(buffer));
         req.setSessionid(MessageCoder.getShortString(buffer));

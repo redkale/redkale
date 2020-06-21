@@ -23,30 +23,34 @@ import org.redkale.util.*;
 public class HttpSimpleRequest implements java.io.Serializable {
 
     @ConvertColumn(index = 1)
+    @Comment("是否RPC请求, 该类通常是为RPC创建的，故默认是true")
+    protected boolean rpc = true;
+
+    @ConvertColumn(index = 2)
     @Comment("请求的URI")
     protected String requestURI;
 
-    @ConvertColumn(index = 2)
+    @ConvertColumn(index = 3)
     @Comment("客户端IP")
     protected String remoteAddr;
 
-    @ConvertColumn(index = 3)
+    @ConvertColumn(index = 4)
     @Comment("会话ID")
     protected String sessionid;
 
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 5)
     @Comment("Content-Type")
     protected String contentType;
 
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 6)
     @Comment("http header信息")
     protected Map<String, String> headers;
 
-    @ConvertColumn(index = 6)
+    @ConvertColumn(index = 7)
     @Comment("参数信息")
     protected Map<String, String> params;
 
-    @ConvertColumn(index = 7)
+    @ConvertColumn(index = 8)
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
@@ -61,6 +65,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
             req.param(params[i * 2].toString(), params[i * 2 + 1]);
         }
         return req;
+    }
+
+    public HttpSimpleRequest rpc(boolean rpc) {
+        this.rpc = rpc;
+        return this;
     }
 
     public HttpSimpleRequest requestURI(String requestURI) {
@@ -173,6 +182,14 @@ public class HttpSimpleRequest implements java.io.Serializable {
     public HttpSimpleRequest clearContentType() {
         this.contentType = null;
         return this;
+    }
+
+    public boolean isRpc() {
+        return rpc;
+    }
+
+    public void setRpc(boolean rpc) {
+        this.rpc = rpc;
     }
 
     public String getRequestURI() {

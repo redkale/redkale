@@ -781,6 +781,7 @@ public final class Rest {
         final String supDynName = baseServletType.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) throw new RuntimeException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
+        final boolean serrpconly = controller != null && controller.rpconly();
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         String stname = serviceType.getSimpleName();
         if (stname.startsWith("Service")) { //类似ServiceWatchService这样的类保留第一个Service字样 
@@ -858,12 +859,12 @@ public final class Rest {
             }
             paramtypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                MappingEntry entry = new MappingEntry(methodidex, null, bigmodulename, method);
+                MappingEntry entry = new MappingEntry(serrpconly, methodidex, null, bigmodulename, method);
                 if (entrys.contains(entry)) throw new RuntimeException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                 entrys.add(entry);
             } else {
                 for (RestMapping mapping : mappings) {
-                    MappingEntry entry = new MappingEntry(methodidex, mapping, defmodulename, method);
+                    MappingEntry entry = new MappingEntry(serrpconly, methodidex, mapping, defmodulename, method);
                     if (entrys.contains(entry)) throw new RuntimeException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                     entrys.add(entry);
                 }
@@ -1169,6 +1170,7 @@ public final class Rest {
                 av0 = mv.visitAnnotation(mappingDesc, true);
                 String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name + (reqpath ? "/" : "");
                 av0.visit("url", url);
+                av0.visit("rpconly", entry.rpconly);
                 av0.visit("auth", entry.auth);
                 av0.visit("cacheseconds", entry.cacheseconds);
                 av0.visit("actionid", entry.actionid);
@@ -1185,6 +1187,7 @@ public final class Rest {
 
                 av0.visitEnd();
                 mappingMap.put("url", url);
+                mappingMap.put("rpconly", entry.rpconly);
                 mappingMap.put("auth", entry.auth);
                 mappingMap.put("cacheseconds", entry.cacheseconds);
                 mappingMap.put("actionid", entry.actionid);
@@ -2134,7 +2137,7 @@ public final class Rest {
             }
         }
 
-        public MappingEntry(int methodidx, RestMapping mapping, final String defmodulename, Method method) {
+        public MappingEntry(final boolean serrpconly, int methodidx, RestMapping mapping, final String defmodulename, Method method) {
             if (mapping == null) mapping = DEFAULT__MAPPING;
             this.methodidx = methodidx;
             this.ignore = mapping.ignore();
@@ -2148,6 +2151,7 @@ public final class Rest {
             this.mappingMethod = method;
             this.methods = mapping.methods();
             this.auth = mapping.auth();
+            this.rpconly = serrpconly || mapping.rpconly();
             this.actionid = mapping.actionid();
             this.cacheseconds = mapping.cacheseconds();
             this.comment = mapping.comment();
@@ -2180,6 +2184,8 @@ public final class Rest {
         public final String comment;
 
         public final String[] methods;
+
+        public final boolean rpconly;
 
         public final boolean auth;
 

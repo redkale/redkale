@@ -36,6 +36,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     public static final String SESSIONID_NAME = "JSESSIONID";
 
+    protected boolean rpc;
+
     @Comment("Method GET/POST/...")
     protected String method;
 
@@ -97,6 +99,7 @@ public class HttpRequest extends Request<HttpContext> {
         super(context, null);
         this.remoteAddrHeader = null;
         if (req != null) {
+            this.rpc = req.rpc;
             if (req.getBody() != null) this.array.write(req.getBody());
             if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
             if (req.getParams() != null) this.params.putAll(req.getParams());
@@ -122,6 +125,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
         req.setRequestURI(uri);
         req.setSessionid(getSessionid(false));
+        req.setRpc(this.rpc);
         return req;
     }
 

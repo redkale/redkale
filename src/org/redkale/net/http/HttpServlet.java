@@ -44,6 +44,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
             InnerActionEntry entry = (InnerActionEntry) request.attachment;
+            if (entry.rpconly && !request.rpc) {
+                response.finish(503, null);
+                return;
+            }
             if (entry.cacheseconds > 0) {//有缓存设置
                 CacheEntry ce = entry.cache.get(request.getRequestURI());
                 if (ce != null && ce.time + entry.cacheseconds > System.currentTimeMillis()) { //缓存有效
@@ -216,18 +220,19 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     protected static final class InnerActionEntry {
 
         InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
-            this(moduleid, actionid, name, methods, method, auth(method), cacheseconds(method), servlet);
+            this(moduleid, actionid, name, methods, method, rpconly(method), auth(method), cacheseconds(method), servlet);
             this.annotations = annotations(method);
         }
 
         //供Rest类使用，参数不能随便更改
-        public InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean auth, int cacheseconds, HttpServlet servlet) {
+        public InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean rpconly, boolean auth, int cacheseconds, HttpServlet servlet) {
             this.moduleid = moduleid;
             this.actionid = actionid;
             this.name = name;
             this.methods = methods;
             this.method = method;  //rest构建会为null
             this.servlet = servlet;
+            this.rpconly = rpconly;
             this.auth = auth;
             this.cacheseconds = cacheseconds;
             this.cache = cacheseconds > 0 ? new ConcurrentHashMap<>() : null;
@@ -243,6 +248,11 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         protected static boolean auth(Method method) {
             HttpMapping mapping = method.getAnnotation(HttpMapping.class);
             return mapping == null || mapping.auth();
+        }
+
+        protected static boolean rpconly(Method method) {
+            HttpMapping mapping = method.getAnnotation(HttpMapping.class);
+            return mapping == null || mapping.rpconly();
         }
 
         protected static int cacheseconds(Method method) {
@@ -272,6 +282,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         final ConcurrentHashMap<String, CacheEntry> cache;
 
         final int cacheseconds;
+
+        final boolean rpconly;
 
         final boolean auth;
 

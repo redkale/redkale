@@ -30,6 +30,11 @@ public @interface HttpMapping {
      */
     int actionid() default 0;
 
+    /**
+     * 请求地址
+     *
+     * @return String
+     */
     String url();
 
     /**
@@ -40,6 +45,13 @@ public @interface HttpMapping {
      * @return int
      */
     int cacheseconds() default 0;
+
+    /**
+     * 是否只接受RPC请求， 默认为false
+     *
+     * @return 默认false
+     */
+    boolean rpconly() default false;
 
     /**
      * 是否鉴权，默认需要鉴权 <br>

@@ -44,6 +44,13 @@ public @interface RestService {
     int moduleid() default 0;
 
     /**
+     * 是否只接受RPC请求， 默认为false, 为true则覆盖所有&#64;RestMapping的方法的rpconly值，都转为true
+     *
+     * @return 默认false
+     */
+    boolean rpconly() default false;
+
+    /**
      * 没有标记&#64;RestMapping的方法是否转换， 默认为false
      *
      * @return 默认false
