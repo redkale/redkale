@@ -1941,8 +1941,8 @@ public final class Rest {
 
 //        HashMap<String, InnerActionEntry> _createRestInnerActionEntry() {
 //              HashMap<String, InnerActionEntry> map = new HashMap<>();
-//              map.put("asyncfind3", new InnerActionEntry(100000,200000,"asyncfind3", new String[]{},null,false,0, new _Dync_asyncfind3_HttpServlet()));
-//              map.put("asyncfind2", new InnerActionEntry(1,2,"asyncfind2", new String[]{"GET", "POST"},null,true,0, new _Dync_asyncfind2_HttpServlet()));
+//              map.put("asyncfind3", new InnerActionEntry(100000,200000,"asyncfind3", new String[]{},null,false,false,0, new _Dync_asyncfind3_HttpServlet()));
+//              map.put("asyncfind2", new InnerActionEntry(1,2,"asyncfind2", new String[]{"GET", "POST"},null,false,true,0, new _Dync_asyncfind2_HttpServlet()));
 //              return map;
 //          }
         Map<String, Method> mappingurlToMethod = new HashMap<>();
@@ -1971,14 +1971,15 @@ public final class Rest {
                     mv.visitLdcInsn(entry.methods[i]);
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitInsn(ACONST_NULL); //method          
+                mv.visitInsn(ACONST_NULL); //method    
+                mv.visitInsn(entry.rpconly ? ICONST_1 : ICONST_0); //rpconly      
                 mv.visitInsn(entry.auth ? ICONST_1 : ICONST_0); //auth
                 pushInt(mv, entry.cacheseconds); //cacheseconds      
                 mv.visitTypeInsn(NEW, newDynName + "$" + entry.newActionClassName);
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, newDynName + "$" + entry.newActionClassName, "<init>", "(L" + newDynName + ";)V", false);
-                mv.visitMethodInsn(INVOKESPECIAL, innerEntryName, "<init>", "(IILjava/lang/String;[Ljava/lang/String;Ljava/lang/reflect/Method;ZILorg/redkale/net/http/HttpServlet;)V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, innerEntryName, "<init>", "(IILjava/lang/String;[Ljava/lang/String;Ljava/lang/reflect/Method;ZZILorg/redkale/net/http/HttpServlet;)V", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false);
                 mv.visitInsn(POP);
             }
