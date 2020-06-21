@@ -21,6 +21,8 @@ import org.redkale.service.Service;
  */
 public class HttpMessageProcessor implements MessageProcessor {
 
+    protected final boolean finest;
+
     protected final Logger logger;
 
     protected final MessageProducer producer;
@@ -39,6 +41,7 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     public HttpMessageProcessor(Logger logger, MessageProducer producer, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
+        this.finest = logger.isLoggable(Level.FINEST);
         this.producer = producer;
         this.server = server;
         this.service = service;
@@ -52,6 +55,7 @@ public class HttpMessageProcessor implements MessageProcessor {
     @Override
     public void process(MessageRecord message, Runnable callback) {
         try {
+            if (finest) logger.log(Level.FINEST, "HttpMessageProcessor.process message: " + message);
             if (multiconsumer) message.setResptopic(null); //不容许有响应
             HttpContext context = server.getHttpServer().getContext();
             HttpMessageRequest request = new HttpMessageRequest(context, message);

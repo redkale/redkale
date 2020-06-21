@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.net.Response;
 import org.redkale.net.http.*;
@@ -27,6 +28,8 @@ public class HttpMessageResponse extends HttpResponse {
 
     protected MessageProducer producer;
 
+    protected boolean finest;
+
     protected Runnable callback;
 
     public HttpMessageResponse(HttpContext context, HttpMessageRequest request, Runnable callback,
@@ -35,6 +38,7 @@ public class HttpMessageResponse extends HttpResponse {
         this.message = request.message;
         this.callback = callback;
         this.producer = producer;
+        this.finest = producer.logger.isLoggable(Level.FINEST);
     }
 
     public HttpMessageResponse(HttpContext context, MessageRecord message, Runnable callback, HttpResponseConfig config, MessageProducer producer) {
@@ -81,6 +85,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(int status, String message) {
+        if (finest) producer.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
         if (this.message.isEmptyResptopic()) {
             if (callback != null) callback.run();
             return;

@@ -51,7 +51,7 @@ public @interface RestMapping {
      *
      * @return boolean
      */
-    boolean rpconly() default true;
+    boolean rpconly() default false;
 
     /**
      * 是否鉴权，默认需要鉴权, 对应&#64;HttpMapping.auth
