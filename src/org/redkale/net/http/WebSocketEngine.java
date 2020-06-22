@@ -152,6 +152,7 @@ public class WebSocketEngine {
     @Comment("从WebSocketEngine删除指定WebSocket")
     CompletableFuture<Void> removeLocalThenClose(WebSocket socket) {
         Serializable userid = socket._userid;
+        if (userid == null) return null; //尚未登录成功
         if (single) {
             currconns.decrementAndGet();
             websockets.remove(userid);
