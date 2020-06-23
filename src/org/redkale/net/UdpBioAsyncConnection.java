@@ -5,7 +5,7 @@
  */
 package org.redkale.net;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -142,10 +142,13 @@ public class UdpBioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public int read(ByteBuffer dst) throws IOException {
-        int rs = channel.read(dst);
-        this.readtime = System.currentTimeMillis();
-        return rs;
+    public final InputStream newInputStream() {
+        return Channels.newInputStream(this.channel);
+    }
+
+    @Override
+    public final OutputStream newOutputStream() {
+        return Channels.newOutputStream(this.channel);
     }
 
     @Override
@@ -157,13 +160,6 @@ public class UdpBioAsyncConnection extends AsyncConnection {
         } catch (IOException e) {
             if (handler != null) handler.failed(e, attachment);
         }
-    }
-
-    @Override
-    public int write(ByteBuffer src) throws IOException {
-        int rs = channel.send(src, remoteAddress);
-        this.writetime = System.currentTimeMillis();
-        return rs;
     }
 
     @Override

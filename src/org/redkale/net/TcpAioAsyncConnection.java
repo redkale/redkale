@@ -5,7 +5,7 @@
  */
 package org.redkale.net;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -25,7 +25,6 @@ import javax.net.ssl.SSLContext;
 public class TcpAioAsyncConnection extends AsyncConnection {
 
     //private final Semaphore semaphore = new Semaphore(1);
-
     private int readTimeoutSeconds;
 
     private int writeTimeoutSeconds;
@@ -132,7 +131,6 @@ public class TcpAioAsyncConnection extends AsyncConnection {
 //            semaphore.release();
 //        }
 //    }
-
     @Override
     public <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
         write(true, src, attachment, handler);
@@ -232,21 +230,13 @@ public class TcpAioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public final int read(ByteBuffer dst) throws IOException {
-        try {
-            return channel.read(dst).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new IOException(e);
-        }
+    public final InputStream newInputStream() {
+        return Channels.newInputStream(this.channel);
     }
 
     @Override
-    public final int write(ByteBuffer src) throws IOException {
-        try {
-            return channel.write(src).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new IOException(e);
-        }
+    public final OutputStream newOutputStream() {
+        return Channels.newOutputStream(this.channel);
     }
 
     @Override
@@ -318,13 +308,13 @@ public class TcpAioAsyncConnection extends AsyncConnection {
                     return;
                 }
 //                try {
-                    writeHandler.completed(writeCount, attachment);
+                writeHandler.completed(writeCount, attachment);
 //                } finally {
 //                    nextWrite(null, attachment);
 //                }
             } else {
 //                try {
-                    writeHandler.completed(result.intValue(), attachment);
+                writeHandler.completed(result.intValue(), attachment);
 //                } finally {
 //                    nextWrite(null, attachment);
 //                }
@@ -334,7 +324,7 @@ public class TcpAioAsyncConnection extends AsyncConnection {
         @Override
         public void failed(Throwable exc, A attachment) {
 //            try {
-                writeHandler.failed(exc, attachment);
+            writeHandler.failed(exc, attachment);
 //            } finally {
 //                nextWrite(exc, attachment);
 //            }
@@ -365,7 +355,7 @@ public class TcpAioAsyncConnection extends AsyncConnection {
                 return;
             }
 //            try {
-                writeHandler.completed(result, attachment);
+            writeHandler.completed(result, attachment);
 //            } finally {
 //                nextWrite(null, attachment);
 //            }
@@ -375,7 +365,7 @@ public class TcpAioAsyncConnection extends AsyncConnection {
         @Override
         public void failed(Throwable exc, A attachment) {
 //            try {
-                writeHandler.failed(exc, attachment);
+            writeHandler.failed(exc, attachment);
 //            } finally {
 //                nextWrite(exc, attachment);
 //            }

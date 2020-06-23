@@ -5,7 +5,7 @@
  */
 package org.redkale.net;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
@@ -23,7 +23,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public abstract class AsyncConnection implements ReadableByteChannel, WritableByteChannel, AutoCloseable {
+public abstract class AsyncConnection implements AutoCloseable {
 
     protected SSLContext sslContext;
 
@@ -88,7 +88,6 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
         return eventing.decrementAndGet();
     }
 
-    @Override
     public abstract boolean isOpen();
 
     public abstract boolean isTCP();
@@ -113,13 +112,11 @@ public abstract class AsyncConnection implements ReadableByteChannel, WritableBy
 
     public abstract void setWriteTimeoutSeconds(int writeTimeoutSeconds);
 
-    @Override
-    public abstract int read(ByteBuffer dst) throws IOException;
+    public abstract InputStream newInputStream();
 
     public abstract void read(CompletionHandler<Integer, ByteBuffer> handler);
 
-    @Override
-    public abstract int write(ByteBuffer src) throws IOException;
+    public abstract OutputStream newOutputStream();
 
     public abstract <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
 

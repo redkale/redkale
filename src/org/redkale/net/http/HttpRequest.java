@@ -10,7 +10,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -582,7 +581,7 @@ public class HttpRequest extends Request<HttpContext> {
     @ConvertDisabled
     public final MultiContext getMultiContext() {
         return new MultiContext(context.getCharset(), this.getContentType(), this.params,
-            new BufferedInputStream(Channels.newInputStream(this.channel), Math.max(array.size(), 8192)) {
+            new BufferedInputStream(this.channel.newInputStream(), Math.max(array.size(), 8192)) {
             {
                 array.copyTo(this.buf);
                 this.count = array.size();
