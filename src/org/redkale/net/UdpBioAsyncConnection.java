@@ -142,13 +142,13 @@ public class UdpBioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public final InputStream newInputStream() {
-        return Channels.newInputStream(this.channel);
+    public final ReadableByteChannel readableByteChannel() {
+        return this.channel;
     }
 
     @Override
-    public final OutputStream newOutputStream() {
-        return Channels.newOutputStream(this.channel);
+    public final WritableByteChannel rritableByteChannel() {
+        return this.channel;
     }
 
     @Override

@@ -112,11 +112,11 @@ public abstract class AsyncConnection implements AutoCloseable {
 
     public abstract void setWriteTimeoutSeconds(int writeTimeoutSeconds);
 
-    public abstract InputStream newInputStream();
+    public abstract ReadableByteChannel readableByteChannel();
 
     public abstract void read(CompletionHandler<Integer, ByteBuffer> handler);
 
-    public abstract OutputStream newOutputStream();
+    public abstract WritableByteChannel rritableByteChannel();
 
     public abstract <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
 

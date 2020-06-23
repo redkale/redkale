@@ -230,13 +230,55 @@ public class TcpAioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public final InputStream newInputStream() {
-        return Channels.newInputStream(this.channel);
+    public final ReadableByteChannel readableByteChannel() {
+        return new ReadableByteChannel() {
+            @Override
+            public int read(ByteBuffer dst) throws IOException {
+                try {
+                    return channel.read(dst).get(readTimeoutSeconds > 0 ? readTimeoutSeconds : 6, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    throw new IOException(e);
+                }
+            }
+
+            @Override
+            @SuppressWarnings("InfiniteRecursion")
+            public boolean isOpen() {
+                return isOpen();
+            }
+
+            @Override
+            @SuppressWarnings("InfiniteRecursion")
+            public void close() throws IOException {
+                close();
+            }
+        };
     }
 
     @Override
-    public final OutputStream newOutputStream() {
-        return Channels.newOutputStream(this.channel);
+    public final WritableByteChannel rritableByteChannel() {
+        return new WritableByteChannel() {
+            @Override
+            public int write(ByteBuffer src) throws IOException {
+                try {
+                    return channel.write(src).get(readTimeoutSeconds > 0 ? readTimeoutSeconds : 6, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    throw new IOException(e);
+                }
+            }
+
+            @Override
+            @SuppressWarnings("InfiniteRecursion")
+            public boolean isOpen() {
+                return isOpen();
+            }
+
+            @Override
+            @SuppressWarnings("InfiniteRecursion")
+            public void close() throws IOException {
+                close();
+            }
+        };
     }
 
     @Override
