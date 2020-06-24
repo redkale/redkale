@@ -22,7 +22,7 @@ import javax.net.ssl.SSLContext;
  *
  * @author zhangjx
  */
-public class TcpAioAsyncConnection extends AsyncConnection {
+class TcpAioAsyncConnection extends AsyncConnection {
 
     //private final Semaphore semaphore = new Semaphore(1);
     private int readTimeoutSeconds;

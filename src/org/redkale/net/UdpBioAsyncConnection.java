@@ -21,7 +21,7 @@ import javax.net.ssl.SSLContext;
  *
  * @author zhangjx
  */
-public class UdpBioAsyncConnection extends AsyncConnection {
+class UdpBioAsyncConnection extends AsyncConnection {
 
     private int readTimeoutSeconds;
 
