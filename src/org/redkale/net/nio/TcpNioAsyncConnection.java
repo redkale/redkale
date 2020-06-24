@@ -5,6 +5,7 @@
  */
 package org.redkale.net.nio;
 
+import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -20,82 +21,131 @@ import org.redkale.util.ObjectPool;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * 
+ *
  * @since 2.1.0
  */
 class TcpNioAsyncConnection extends AsyncConnection {
 
-    public TcpNioAsyncConnection(ObjectPool<ByteBuffer> bufferPool, SSLContext sslContext) {
+    private int readTimeoutSeconds;
+
+    private int writeTimeoutSeconds;
+
+    private final SocketChannel channel;
+
+    private final SocketAddress remoteAddress;
+
+    public TcpNioAsyncConnection(ObjectPool<ByteBuffer> bufferPool, SocketChannel ch,
+        SSLContext sslContext, final SocketAddress addr0) {
         super(bufferPool, sslContext);
+        this.channel = ch;
+        SocketAddress addr = addr0;
+        if (addr == null) {
+            try {
+                addr = ch.getRemoteAddress();
+            } catch (Exception e) {
+                //do nothing
+            }
+        }
+        this.remoteAddress = addr;
     }
 
-    public TcpNioAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer, SSLContext sslContext) {
+    public TcpNioAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+        SocketChannel ch, SSLContext sslContext, final SocketAddress addr0) {
         super(bufferSupplier, bufferConsumer, sslContext);
+        this.channel = ch;
+        SocketAddress addr = addr0;
+        if (addr == null) {
+            try {
+                addr = ch.getRemoteAddress();
+            } catch (Exception e) {
+                //do nothing
+            }
+        }
+        this.remoteAddress = addr;
     }
 
     @Override
     public boolean isOpen() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.channel.isOpen();
     }
 
     @Override
     public boolean isTCP() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return true;
     }
 
     @Override
     public boolean shutdownInput() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            this.channel.shutdownInput();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     @Override
     public boolean shutdownOutput() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            this.channel.shutdownOutput();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     @Override
     public <T> boolean setOption(SocketOption<T> name, T value) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            this.channel.setOption(name, value);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     @Override
     public Set<SocketOption<?>> supportedOptions() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.channel.supportedOptions();
     }
 
     @Override
     public SocketAddress getRemoteAddress() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return remoteAddress;
     }
 
     @Override
     public SocketAddress getLocalAddress() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public int getReadTimeoutSeconds() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public int getWriteTimeoutSeconds() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            return channel.getLocalAddress();
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     @Override
     public void setReadTimeoutSeconds(int readTimeoutSeconds) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.readTimeoutSeconds = readTimeoutSeconds;
     }
 
     @Override
     public void setWriteTimeoutSeconds(int writeTimeoutSeconds) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.writeTimeoutSeconds = writeTimeoutSeconds;
+    }
+
+    @Override
+    public int getReadTimeoutSeconds() {
+        return this.readTimeoutSeconds;
+    }
+
+    @Override
+    public int getWriteTimeoutSeconds() {
+        return this.writeTimeoutSeconds;
     }
 
     @Override
     public ReadableByteChannel readableByteChannel() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.channel;
     }
 
     @Override
@@ -105,7 +155,7 @@ class TcpNioAsyncConnection extends AsyncConnection {
 
     @Override
     public WritableByteChannel rritableByteChannel() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.channel;
     }
 
     @Override
