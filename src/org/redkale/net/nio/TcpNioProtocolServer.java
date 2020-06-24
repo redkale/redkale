@@ -7,6 +7,7 @@ package org.redkale.net.nio;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.channels.ServerSocketChannel;
 import java.util.Set;
 import org.redkale.net.*;
 import org.redkale.util.AnyValue;
@@ -22,6 +23,8 @@ import org.redkale.util.AnyValue;
  */
 public class TcpNioProtocolServer extends ProtocolServer {
 
+    private ServerSocketChannel serverChannel;
+
     public TcpNioProtocolServer(Context context) {
         super(context);
     }
@@ -33,17 +36,17 @@ public class TcpNioProtocolServer extends ProtocolServer {
 
     @Override
     public void bind(SocketAddress local, int backlog) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.serverChannel.bind(local, backlog);
     }
 
     @Override
     public <T> Set<SocketOption<?>> supportedOptions() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.serverChannel.supportedOptions();
     }
 
     @Override
     public <T> void setOption(SocketOption<T> name, T value) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.serverChannel.setOption(name, value);
     }
 
     @Override
@@ -53,9 +56,10 @@ public class TcpNioProtocolServer extends ProtocolServer {
 
     @Override
     public void close() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.serverChannel.close();
     }
 
     void doAccept() {
+        
     }
 }
