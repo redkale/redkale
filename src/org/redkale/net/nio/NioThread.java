@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.net;
+package org.redkale.net.nio;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
@@ -16,8 +16,10 @@ import org.redkale.util.*;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.1.0
  */
-public class IOThread extends Thread {
+public class NioThread extends Thread {
 
     protected Thread localThread;
 
@@ -25,7 +27,7 @@ public class IOThread extends Thread {
 
     protected ObjectPool<ByteBuffer> bufferPool;
 
-    public IOThread(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, Runnable runner) {
+    public NioThread(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, Runnable runner) {
         super(runner);
         this.executor = executor;
         this.bufferPool = bufferPool;

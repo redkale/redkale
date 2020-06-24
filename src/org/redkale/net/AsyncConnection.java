@@ -137,40 +137,23 @@ public abstract class AsyncConnection implements AutoCloseable {
             this.readBuffer = null;
             return rs;
         }
-//        Thread thread = Thread.currentThread();
-//        if (thread instanceof IOThread) {
-//            return ((IOThread) thread).getBufferPool().get();
-//        }
         return bufferSupplier.get();
     }
 
     public void offerBuffer(ByteBuffer buffer) {
         if (buffer == null) return;
-//        Thread thread = Thread.currentThread();
-//        if (thread instanceof IOThread) {
-//            ((IOThread) thread).getBufferPool().accept((ByteBuffer) buffer);
-//            return;
-//        }
         bufferConsumer.accept(buffer);
     }
 
     public void offerBuffer(ByteBuffer... buffers) {
         if (buffers == null) return;
         Consumer<ByteBuffer> consumer = this.bufferConsumer;
-//        Thread thread = Thread.currentThread();
-//        if (thread instanceof IOThread) {
-//            consumer = ((IOThread) thread).getBufferPool();
-//        }
         for (ByteBuffer buffer : buffers) {
             consumer.accept(buffer);
         }
     }
 
     public ByteBuffer pollWriteBuffer() {
-//        Thread thread = Thread.currentThread();
-//        if (thread instanceof IOThread) {
-//            return ((IOThread) thread).getBufferPool().get();
-//        }
         return bufferSupplier.get();
     }
 
