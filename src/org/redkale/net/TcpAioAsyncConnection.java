@@ -39,7 +39,7 @@ class TcpAioAsyncConnection extends AsyncConnection {
         final AsynchronousSocketChannel ch, final SSLContext sslContext, final SocketAddress addr0,
         final int readTimeoutSeconds, final int writeTimeoutSeconds,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        super(bufferSupplier, bufferConsumer, sslContext);
+        super(bufferSupplier, bufferConsumer, sslContext, livingCounter, closedCounter);
         this.channel = ch;
         this.readTimeoutSeconds = readTimeoutSeconds;
         this.writeTimeoutSeconds = writeTimeoutSeconds;
@@ -52,8 +52,6 @@ class TcpAioAsyncConnection extends AsyncConnection {
             }
         }
         this.remoteAddress = addr;
-        this.livingCounter = livingCounter;
-        this.closedCounter = closedCounter;
     }
 
     @Override

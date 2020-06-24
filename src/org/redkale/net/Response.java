@@ -223,7 +223,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     public void finish(final byte[] bs) {
         if (!this.inited) return; //避免重复关闭
         if (this.context.bufferCapacity == bs.length) {
-            ByteBuffer buffer = channel.bufferSupplier.get();
+            ByteBuffer buffer = channel.getBufferSupplier().get();
             buffer.put(bs);
             buffer.flip();
             this.finish(buffer);

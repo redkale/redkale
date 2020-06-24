@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.net.AsyncConnection;
@@ -67,9 +68,10 @@ class TcpNioAsyncConnection extends AsyncConnection {
 
     private SelectionKey writeKey;
 
-    public TcpNioAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, ExecutorService workExecutor, ObjectPool<ByteBuffer> bufferPool, SocketChannel ch,
-        SSLContext sslContext, final SocketAddress addr0) {
-        super(bufferPool, sslContext);
+    public TcpNioAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, ExecutorService workExecutor,
+        ObjectPool<ByteBuffer> bufferPool, SocketChannel ch,
+        SSLContext sslContext, final SocketAddress addr0, AtomicLong livingCounter, AtomicLong closedCounter) {
+        super(bufferPool, sslContext, livingCounter, closedCounter);
         this.ioGroup = ioGroup;
         this.ioThread = ioThread;
         this.workExecutor = workExecutor;
@@ -85,9 +87,11 @@ class TcpNioAsyncConnection extends AsyncConnection {
         this.remoteAddress = addr;
     }
 
-    public TcpNioAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, ExecutorService workExecutor, Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
-        SocketChannel ch, SSLContext sslContext, final SocketAddress addr0) {
-        super(bufferSupplier, bufferConsumer, sslContext);
+    public TcpNioAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, ExecutorService workExecutor,
+        Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+        SocketChannel ch, SSLContext sslContext, final SocketAddress addr0,
+        AtomicLong livingCounter, AtomicLong closedCounter) {
+        super(bufferSupplier, bufferConsumer, sslContext, livingCounter, closedCounter);
         this.ioGroup = ioGroup;
         this.ioThread = ioThread;
         this.workExecutor = workExecutor;

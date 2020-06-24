@@ -25,43 +25,47 @@ import org.redkale.util.*;
  */
 public abstract class AsyncConnection implements AutoCloseable {
 
-    protected SSLContext sslContext;
+    private SSLContext sslContext;
 
-    protected Map<String, Object> attributes; //用于存储绑定在Connection上的对象集合
+    private Map<String, Object> attributes; //用于存储绑定在Connection上的对象集合
 
-    protected Object subobject; //用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
+    private Object subobject; //用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
 
     protected volatile long readtime;
 
     protected volatile long writetime;
 
-    protected final Supplier<ByteBuffer> bufferSupplier;
+    private final Supplier<ByteBuffer> bufferSupplier;
 
-    protected final Consumer<ByteBuffer> bufferConsumer;
+    private final Consumer<ByteBuffer> bufferConsumer;
 
     private ByteBuffer readBuffer;
 
     //在线数
-    protected AtomicLong livingCounter;
+    private AtomicLong livingCounter;
 
     //关闭数
-    protected AtomicLong closedCounter;
+    private AtomicLong closedCounter;
 
-    protected Consumer<AsyncConnection> beforeCloseListener;
+    private Consumer<AsyncConnection> beforeCloseListener;
 
     //关联的事件数， 小于1表示没有事件
-    protected final AtomicInteger eventing = new AtomicInteger();
+    private final AtomicInteger eventing = new AtomicInteger();
 
-    protected AsyncConnection(ObjectPool<ByteBuffer> bufferPool, SSLContext sslContext) {
-        this(bufferPool, bufferPool, sslContext);
+    protected AsyncConnection(ObjectPool<ByteBuffer> bufferPool, SSLContext sslContext,
+        final AtomicLong livingCounter, final AtomicLong closedCounter) {
+        this(bufferPool, bufferPool, sslContext, livingCounter, closedCounter);
     }
 
-    protected AsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer, SSLContext sslContext) {
+    protected AsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer, SSLContext sslContext,
+        final AtomicLong livingCounter, final AtomicLong closedCounter) {
         Objects.requireNonNull(bufferSupplier);
         Objects.requireNonNull(bufferConsumer);
         this.bufferSupplier = bufferSupplier;
         this.bufferConsumer = bufferConsumer;
         this.sslContext = sslContext;
+        this.livingCounter = livingCounter;
+        this.closedCounter = closedCounter;
     }
 
     public Supplier<ByteBuffer> getBufferSupplier() {

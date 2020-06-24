@@ -37,7 +37,7 @@ class UdpBioAsyncConnection extends AsyncConnection {
         final DatagramChannel ch, final SSLContext sslContext, SocketAddress addr0, final boolean client0,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        super(bufferSupplier, bufferConsumer, sslContext);
+        super(bufferSupplier, bufferConsumer, sslContext, livingCounter, closedCounter);
         this.channel = ch;
         this.client = client0;
         this.readTimeoutSeconds = readTimeoutSeconds0;
@@ -51,8 +51,6 @@ class UdpBioAsyncConnection extends AsyncConnection {
             }
         }
         this.remoteAddress = addr;
-        this.livingCounter = livingCounter;
-        this.closedCounter = closedCounter;
     }
 
     @Override
