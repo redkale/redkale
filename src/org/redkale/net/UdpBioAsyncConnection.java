@@ -147,7 +147,7 @@ class UdpBioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public final WritableByteChannel rritableByteChannel() {
+    public final WritableByteChannel writableByteChannel() {
         return this.channel;
     }
 

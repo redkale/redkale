@@ -32,11 +32,21 @@ class NioCompletionHandler<A> implements CompletionHandler<Integer, A>, Runnable
 
     @Override
     public void completed(Integer result, A attach) {
+        ScheduledFuture future = this.timeoutFuture;
+        if (future != null) {
+            this.timeoutFuture = null;
+            future.cancel(true);
+        }
         handler.completed(result, attachment);
     }
 
     @Override
     public void failed(Throwable exc, A attach) {
+        ScheduledFuture future = this.timeoutFuture;
+        if (future != null) {
+            this.timeoutFuture = null;
+            future.cancel(true);
+        }
         handler.failed(exc, attachment);
     }
 

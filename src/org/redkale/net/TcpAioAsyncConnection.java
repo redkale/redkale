@@ -256,7 +256,7 @@ class TcpAioAsyncConnection extends AsyncConnection {
     }
 
     @Override
-    public final WritableByteChannel rritableByteChannel() {
+    public final WritableByteChannel writableByteChannel() {
         return new WritableByteChannel() {
             @Override
             public int write(ByteBuffer src) throws IOException {

@@ -6,7 +6,10 @@
 package org.redkale.net.nio;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutorService;
+import java.nio.channels.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 import org.redkale.util.*;
 
 /**
@@ -19,37 +22,71 @@ import org.redkale.util.*;
  *
  * @since 2.1.0
  */
-public class NioThread extends Thread {
+class NioThread extends Thread {
 
-    protected Thread localThread;
+    final Selector selector;
 
-    protected final ExecutorService executor;
+    private final ExecutorService executor;
 
-    protected ObjectPool<ByteBuffer> bufferPool;
+    private final ObjectPool<ByteBuffer> bufferPool;
 
-    public NioThread(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, Runnable runner) {
-        super(runner);
+    private final ConcurrentLinkedQueue<Consumer<Selector>> registers = new ConcurrentLinkedQueue<>();
+
+    private Thread localThread;
+
+    private boolean closed;
+
+    public NioThread(Selector selector, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool) {
+        super();
+        this.selector = selector;
         this.executor = executor;
         this.bufferPool = bufferPool;
         this.setDaemon(true);
     }
 
-    public void runAsync(Runnable runner) {
-        executor.execute(runner);
-    }
-
-    public ExecutorService getExecutor() {
-        return executor;
-    }
-
-    public ObjectPool<ByteBuffer> getBufferPool() {
-        return bufferPool;
+    void register(Consumer<Selector> consumer) {
+        registers.offer(consumer);
+        selector.wakeup();
     }
 
     @Override
     public void run() {
         this.localThread = Thread.currentThread();
-        super.run();
+        while (!this.closed) {
+            try {
+                Consumer<Selector> register;
+                while ((register = registers.poll()) != null) {
+                    register.accept(selector);
+                }
+                int count = selector.select();
+                if (count == 0) continue;
+                Set<SelectionKey> keys = selector.selectedKeys();
+                Iterator<SelectionKey> it = keys.iterator();
+                while (it.hasNext()) {
+                    SelectionKey key = it.next();
+                    try {
+                        if (key.isAcceptable()) {
+                            TcpNioProtocolServer sc = (TcpNioProtocolServer) key.attachment();
+                            sc.doAccept();
+                            continue;
+                        }
+                        TcpNioAsyncConnection conn = (TcpNioAsyncConnection) key.attachment();
+                        if (key.isWritable()) {
+                            key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+                            conn.doWrite();
+                        } else if (key.isReadable()) {
+                            conn.doRead();
+                        } else if (key.isConnectable()) {
+                            conn.doConnect();
+                        }
+                    } finally {
+                        it.remove();
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     public boolean inSameThread() {

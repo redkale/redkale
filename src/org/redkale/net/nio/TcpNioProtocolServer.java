@@ -17,7 +17,7 @@ import org.redkale.util.AnyValue;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * 
+ *
  * @since 2.1.0
  */
 public class TcpNioProtocolServer extends ProtocolServer {
@@ -56,4 +56,6 @@ public class TcpNioProtocolServer extends ProtocolServer {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    void doAccept() {
+    }
 }

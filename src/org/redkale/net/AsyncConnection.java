@@ -39,7 +39,7 @@ public abstract class AsyncConnection implements AutoCloseable {
 
     protected final Consumer<ByteBuffer> bufferConsumer;
 
-    protected ByteBuffer readBuffer;
+    private ByteBuffer readBuffer;
 
     //在线数
     protected AtomicLong livingCounter;
@@ -116,7 +116,7 @@ public abstract class AsyncConnection implements AutoCloseable {
 
     public abstract void read(CompletionHandler<Integer, ByteBuffer> handler);
 
-    public abstract WritableByteChannel rritableByteChannel();
+    public abstract WritableByteChannel writableByteChannel();
 
     public abstract <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
 
