@@ -5,8 +5,12 @@
  */
 package org.redkale.net.nio;
 
-import java.nio.channels.SelectionKey;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.util.ObjectPool;
 
 /**
  * 协议处理的IO线程组
@@ -18,11 +22,36 @@ import java.util.concurrent.*;
  *
  * @since 2.1.0
  */
-class NioThreadGroup {
+public class NioThreadGroup {
 
     private NioThread[] ioThreads;
 
+    private final AtomicInteger index = new AtomicInteger();
+
     private ScheduledThreadPoolExecutor timeoutExecutor;
+
+    public NioThreadGroup(int threads, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool) throws IOException {
+        this.ioThreads = new NioThread[Math.max(threads, 1)];
+        for (int i = 0; i < ioThreads.length; i++) {
+            this.ioThreads[i] = new NioThread(Selector.open(), executor, bufferPool);
+        }
+    }
+
+    public void start() {
+        for (int i = 0; i < ioThreads.length; i++) {
+            this.ioThreads[i].start();
+        }
+    }
+
+    public void close() {
+        for (int i = 0; i < ioThreads.length; i++) {
+            this.ioThreads[i].close();
+        }
+    }
+
+    public NioThread nextThread() {
+        return ioThreads[Math.abs(index.getAndIncrement()) % ioThreads.length];
+    }
 
     public ScheduledFuture scheduleTimeout(Runnable callable, long delay, TimeUnit unit) {
         return timeoutExecutor.schedule(callable, delay, unit);

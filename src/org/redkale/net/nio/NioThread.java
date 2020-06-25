@@ -10,6 +10,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
+import org.redkale.net.TcpNioAsyncConnection;
 import org.redkale.util.*;
 
 /**
@@ -22,7 +23,7 @@ import org.redkale.util.*;
  *
  * @since 2.1.0
  */
-class NioThread extends Thread {
+public class NioThread extends Thread {
 
     final Selector selector;
 
@@ -44,7 +45,7 @@ class NioThread extends Thread {
         this.setDaemon(true);
     }
 
-    void register(Consumer<Selector> consumer) {
+    public void register(Consumer<Selector> consumer) {
         registers.offer(consumer);
         selector.wakeup();
     }
@@ -89,4 +90,8 @@ class NioThread extends Thread {
         return this.localThread == thread;
     }
 
+    public void close() {
+        this.closed = true;
+        this.interrupt();
+    }
 }

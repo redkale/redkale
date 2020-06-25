@@ -73,7 +73,7 @@ public abstract class ProtocolServer {
             } else if ("aio".equalsIgnoreCase(netimpl)) {
                 return new TcpAioProtocolServer(context);
             } else if ("nio".equalsIgnoreCase(netimpl)) {
-                return null;//  return new TcpNioProtocolServer(context);
+                return new TcpNioProtocolServer(context);
             }
         } else if ("UDP".equalsIgnoreCase(protocol)) {
             if (netimpl == null || netimpl.isEmpty()) {

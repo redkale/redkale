@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.net.nio;
+package org.redkale.net;
 
 import java.io.IOException;
 import java.net.*;
@@ -15,6 +15,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.net.AsyncConnection;
+import org.redkale.net.nio.NioCompletionHandler;
+import org.redkale.net.nio.NioThread;
+import org.redkale.net.nio.NioThreadGroup;
 import org.redkale.util.ObjectPool;
 
 /**
@@ -26,7 +29,7 @@ import org.redkale.util.ObjectPool;
  *
  * @since 2.1.0
  */
-class TcpNioAsyncConnection extends AsyncConnection {
+public class TcpNioAsyncConnection extends AsyncConnection {
 
     private int readTimeoutSeconds;
 
@@ -304,7 +307,7 @@ class TcpNioAsyncConnection extends AsyncConnection {
         doWrite();
     }
 
-    void doConnect() {
+    public void doConnect() {
         try {
             boolean connected = channel.isConnectionPending();
             if (connected || channel.connect(remoteAddress)) {
@@ -372,7 +375,7 @@ class TcpNioAsyncConnection extends AsyncConnection {
         this.connectPending = false;//必须放最后
     }
 
-    void doRead() {
+    public void doRead() {
         try {
             final boolean invokeDirect = this.ioThread.inSameThread();
             int totalCount = 0;
@@ -440,7 +443,7 @@ class TcpNioAsyncConnection extends AsyncConnection {
         this.readPending = false; //必须放最后
     }
 
-    void doWrite() {
+    public void doWrite() {
         try {
             final boolean invokeDirect = this.ioThread.inSameThread();
             int totalCount = 0;

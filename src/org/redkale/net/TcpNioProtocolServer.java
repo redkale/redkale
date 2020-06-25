@@ -3,14 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.net.nio;
+package org.redkale.net;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.net.*;
-import org.redkale.util.AnyValue;
+import org.redkale.net.nio.*;
+import org.redkale.util.*;
 
 /**
  *
@@ -22,6 +25,10 @@ import org.redkale.util.AnyValue;
  * @since 2.1.0
  */
 public class TcpNioProtocolServer extends ProtocolServer {
+
+    private ObjectPool<ByteBuffer> bufferPool;
+
+    private ObjectPool<Response> responsePool;
 
     private ServerSocketChannel serverChannel;
 
@@ -78,6 +85,18 @@ public class TcpNioProtocolServer extends ProtocolServer {
     @Override
     public void accept(Server server) throws IOException {
         this.serverChannel.register(this.selector, SelectionKey.OP_ACCEPT);
+        
+        AtomicLong createBufferCounter = new AtomicLong();
+        AtomicLong cycleBufferCounter = new AtomicLong();
+        this.bufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        AtomicLong createResponseCounter = new AtomicLong();
+        AtomicLong cycleResponseCounter = new AtomicLong();
+        this.responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
+        this.responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
+        
+        this.ioGroup = new NioThreadGroup(Runtime.getRuntime().availableProcessors(), context.executor, bufferPool);
+        this.ioGroup.start();
+        
         this.acceptThread = new Thread() {
             @Override
             public void run() {
@@ -88,7 +107,6 @@ public class TcpNioProtocolServer extends ProtocolServer {
                         Set<SelectionKey> keys = selector.selectedKeys();
                         Iterator<SelectionKey> it = keys.iterator();
                         while (it.hasNext()) {
-                            // 获取事件
                             SelectionKey key = it.next();
                             it.remove();
                             if (key.isAcceptable()) accept(key);
@@ -105,13 +123,24 @@ public class TcpNioProtocolServer extends ProtocolServer {
     private void accept(SelectionKey key) throws IOException {
         SocketChannel channel = this.serverChannel.accept();
         channel.configureBlocking(false);
+        channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+        channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
+        NioThread ioThread = ioGroup.nextThread();
+        AsyncConnection conn = new TcpNioAsyncConnection(ioGroup, ioThread, context.executor, bufferPool, channel, context.getSSLContext(), null, livingCounter, closedCounter);
+        new PrepareRunner(context, responsePool, conn, null, null).run();
     }
 
     @Override
     public void close() throws IOException {
         if (this.closed) return;
         this.closed = true;
+        this.selector.wakeup();
+        this.ioGroup.close();
         this.serverChannel.close();
+        this.selector.close();
     }
 
 }

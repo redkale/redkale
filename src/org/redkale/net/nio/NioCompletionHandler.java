@@ -17,13 +17,13 @@ import java.util.concurrent.*;
  *
  * @since 2.1.0
  */
-class NioCompletionHandler<A> implements CompletionHandler<Integer, A>, Runnable {
+public class NioCompletionHandler<A> implements CompletionHandler<Integer, A>, Runnable {
 
     private final CompletionHandler<Integer, A> handler;
 
     private final A attachment;
 
-    ScheduledFuture timeoutFuture;
+    public ScheduledFuture timeoutFuture;
 
     public NioCompletionHandler(CompletionHandler<Integer, A> handler, A attachment) {
         this.handler = handler;
