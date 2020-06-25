@@ -390,6 +390,7 @@ public class TcpNioAsyncConnection extends AsyncConnection {
                 totalCount += readCount;
             }
             if (totalCount != 0 || !hasRemain) {
+                if (readKey != null) readKey.interestOps(readKey.interestOps() & ~SelectionKey.OP_READ);
                 CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
                 ByteBuffer attach = this.readByteBuffer;
                 clearRead();
@@ -401,7 +402,6 @@ public class TcpNioAsyncConnection extends AsyncConnection {
                         this.workExecutor.execute(() -> handler.completed(totalCount0, attach));
                     }
                 }
-                if (readKey != null) readKey.interestOps(readKey.interestOps() & ~SelectionKey.OP_READ);
             } else if (readKey == null) {
                 ioThread.register(selector -> {
                     try {
