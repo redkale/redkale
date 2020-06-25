@@ -64,23 +64,15 @@ class NioThread extends Thread {
                 Iterator<SelectionKey> it = keys.iterator();
                 while (it.hasNext()) {
                     SelectionKey key = it.next();
-                    try {
-                        if (key.isAcceptable()) {
-                            TcpNioProtocolServer sc = (TcpNioProtocolServer) key.attachment();
-                            sc.doAccept();
-                            continue;
-                        }
-                        TcpNioAsyncConnection conn = (TcpNioAsyncConnection) key.attachment();
-                        if (key.isWritable()) {
-                            key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
-                            conn.doWrite();
-                        } else if (key.isReadable()) {
-                            conn.doRead();
-                        } else if (key.isConnectable()) {
-                            conn.doConnect();
-                        }
-                    } finally {
-                        it.remove();
+                    it.remove();
+                    TcpNioAsyncConnection conn = (TcpNioAsyncConnection) key.attachment();
+                    if (key.isWritable()) {
+                        key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+                        conn.doWrite();
+                    } else if (key.isReadable()) {
+                        conn.doRead();
+                    } else if (key.isConnectable()) {
+                        conn.doConnect();
                     }
                 }
             } catch (Exception ex) {
