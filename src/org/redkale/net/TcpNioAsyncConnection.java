@@ -472,6 +472,7 @@ public class TcpNioAsyncConnection extends AsyncConnection {
             }
 
             if (totalCount > 0 || !hasRemain) {
+                if (writeKey != null) writeKey.interestOps(writeKey.interestOps() & ~SelectionKey.OP_WRITE);
                 CompletionHandler<Integer, Object> handler = this.writeCompletionHandler;
                 Object attach = this.writeAttachment;
                 clearWrite();
@@ -526,5 +527,11 @@ public class TcpNioAsyncConnection extends AsyncConnection {
         this.writeOffset = 0;
         this.writeLength = 0;
         this.writePending = false; //必须放最后
+    }
+
+    @Override
+    public final void close() throws IOException {
+        super.close();
+        channel.close();
     }
 }
