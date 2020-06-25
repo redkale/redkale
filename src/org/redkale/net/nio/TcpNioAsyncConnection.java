@@ -42,6 +42,15 @@ class TcpNioAsyncConnection extends AsyncConnection {
 
     final ExecutorService workExecutor;
 
+    //连
+    private Object connectAttachment;
+
+    private CompletionHandler<Void, Object> connectCompletionHandler;
+
+    private boolean connectPending;
+
+    private SelectionKey connectKey;
+
     //读操作
     private ByteBuffer readByteBuffer;
 
@@ -296,7 +305,71 @@ class TcpNioAsyncConnection extends AsyncConnection {
     }
 
     void doConnect() {
+        try {
+            boolean connected = channel.isConnectionPending();
+            if (connected || channel.connect(remoteAddress)) {
+                connected = channel.finishConnect();
+            }
+            if (connected) {
+                CompletionHandler handler = this.connectCompletionHandler;
+                Object attach = this.connectAttachment;
+                clearConnect();
+                if (handler != null) {
+                    if (this.workExecutor == null) {
+                        handler.completed(null, attach);
+                    } else {
+                        this.workExecutor.execute(() -> handler.completed(null, attach));
+                    }
+                }
+            } else if (connectKey == null) {
+                ioThread.register(selector -> {
+                    try {
+                        connectKey = channel.register(selector, SelectionKey.OP_CONNECT);
+                        connectKey.attach(this);
+                    } catch (ClosedChannelException e) {
+                        CompletionHandler handler = this.connectCompletionHandler;
+                        Object attach = this.connectAttachment;
+                        clearConnect();
+                        if (handler != null) {
+                            if (this.workExecutor == null) {
+                                handler.failed(e, attach);
+                            } else {
+                                this.workExecutor.execute(() -> handler.failed(e, attach));
+                            }
+                        }
+                    }
+                });
+            } else {
+                CompletionHandler handler = this.connectCompletionHandler;
+                Object attach = this.connectAttachment;
+                clearConnect();
+                if (handler != null) {
+                    IOException e = new IOException();
+                    if (this.workExecutor == null) {
+                        handler.failed(e, attach);
+                    } else {
+                        this.workExecutor.execute(() -> handler.failed(e, attach));
+                    }
+                }
+            }
+        } catch (IOException e) {
+            CompletionHandler handler = this.connectCompletionHandler;
+            Object attach = this.connectAttachment;
+            clearConnect();
+            if (handler != null) {
+                if (this.workExecutor == null) {
+                    handler.failed(e, attach);
+                } else {
+                    this.workExecutor.execute(() -> handler.failed(e, attach));
+                }
+            }
+        }
+    }
 
+    private void clearConnect() {
+        this.connectCompletionHandler = null;
+        this.connectAttachment = null;
+        this.connectPending = false;//必须放最后
     }
 
     void doRead() {
