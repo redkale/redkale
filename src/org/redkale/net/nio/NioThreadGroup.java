@@ -28,11 +28,13 @@ class NioThreadGroup {
         return timeoutExecutor.schedule(callable, delay, unit);
     }
 
-    public void interestOps(NioThread ioThread, SelectionKey key, int opt) {
+    public void interestOpsOr(NioThread ioThread, SelectionKey key, int opt) {
+        if (key == null) return;
         if ((key.interestOps() & opt) != 0) return;
         key.interestOps(key.interestOps() | opt);
         if (ioThread.inSameThread()) return;
         //非IO线程中
         key.selector().wakeup();
     }
+
 }

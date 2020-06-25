@@ -325,9 +325,7 @@ class TcpNioAsyncConnection extends AsyncConnection {
                         this.workExecutor.execute(() -> handler.completed(totalCount0, attach));
                     }
                 }
-                if (readKey != null) {
-                    readKey.interestOps(readKey.interestOps() & ~SelectionKey.OP_READ);
-                }
+                if (readKey != null) readKey.interestOps(readKey.interestOps() & ~SelectionKey.OP_READ);
             } else if (readKey == null) {
                 ioThread.register(selector -> {
                     try {
@@ -347,7 +345,7 @@ class TcpNioAsyncConnection extends AsyncConnection {
                     }
                 });
             } else {
-                ioGroup.interestOps(ioThread, readKey, SelectionKey.OP_READ);
+                ioGroup.interestOpsOr(ioThread, readKey, SelectionKey.OP_READ);
             }
         } catch (Exception e) {
             CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
@@ -428,7 +426,7 @@ class TcpNioAsyncConnection extends AsyncConnection {
                     }
                 });
             } else {
-                ioGroup.interestOps(ioThread, writeKey, SelectionKey.OP_WRITE);
+                ioGroup.interestOpsOr(ioThread, writeKey, SelectionKey.OP_WRITE);
             }
         } catch (IOException e) {
             CompletionHandler<Integer, Object> handler = this.writeCompletionHandler;

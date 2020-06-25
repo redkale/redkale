@@ -25,6 +25,8 @@ public class TcpNioProtocolServer extends ProtocolServer {
 
     private ServerSocketChannel serverChannel;
 
+    private NioThreadGroup ioGroup;
+
     public TcpNioProtocolServer(Context context) {
         super(context);
     }
@@ -60,6 +62,6 @@ public class TcpNioProtocolServer extends ProtocolServer {
     }
 
     void doAccept() {
-        
+
     }
 }
