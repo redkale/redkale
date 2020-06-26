@@ -532,6 +532,9 @@ public class TcpNioAsyncConnection extends AsyncConnection {
     @Override
     public final void close() throws IOException {
         super.close();
+        if (this.connectKey != null) this.connectKey.cancel();
+        if (this.readKey != null) this.readKey.cancel();
+        if (this.writeKey != null) this.writeKey.cancel();
         channel.close();
     }
 }
