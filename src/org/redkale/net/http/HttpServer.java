@@ -436,7 +436,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final HttpContextConfig contextConfig = new HttpContextConfig();
         contextConfig.serverStartTime = this.serverStartTime;
         contextConfig.logger = this.logger;
-        contextConfig.executor = this.executor;
+        contextConfig.executor = this.workExecutor;
         contextConfig.sslContext = this.sslContext;
         contextConfig.bufferCapacity = this.bufferCapacity;
         contextConfig.maxconns = this.maxconns;

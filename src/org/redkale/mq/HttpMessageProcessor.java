@@ -5,6 +5,7 @@
  */
 package org.redkale.mq;
 
+import java.util.concurrent.*;
 import java.util.logging.*;
 import org.redkale.boot.NodeHttpServer;
 import org.redkale.net.http.*;
@@ -29,6 +30,8 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final NodeHttpServer server;
 
+    protected final ThreadPoolExecutor workExecutor;
+
     protected final Service service;
 
     protected final HttpServlet servlet;
@@ -38,6 +41,8 @@ public class HttpMessageProcessor implements MessageProcessor {
     protected final String restmodule; //  前后有/, 例如: /user/
 
     protected final String multimodule; //  前后有/, 例如: /userstat/
+
+    protected CountDownLatch cdl;
 
     public HttpMessageProcessor(Logger logger, MessageProducer producer, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
@@ -50,10 +55,24 @@ public class HttpMessageProcessor implements MessageProcessor {
         this.multiconsumer = mmc != null;
         this.restmodule = "/" + Rest.getRestModule(service) + "/";
         this.multimodule = mmc != null ? ("/" + mmc.module() + "/") : null;
+        this.workExecutor = server.getServer().getWorkExecutor();
     }
 
     @Override
-    public void process(MessageRecord message, Runnable callback) {
+    public void begin(final int size) {
+        if (this.workExecutor != null) this.cdl = new CountDownLatch(size);
+    }
+
+    @Override
+    public void process(final MessageRecord message, final Runnable callback) {
+        if (this.workExecutor == null) {
+            execute(message, callback);
+        } else {
+            this.workExecutor.execute(() -> execute(message, callback));
+        }
+    }
+
+    private void execute(final MessageRecord message, final Runnable callback) {
         try {
             if (finest) logger.log(Level.FINEST, "HttpMessageProcessor.process message: " + message);
             if (multiconsumer) message.setResptopic(null); //不容许有响应
@@ -69,6 +88,18 @@ public class HttpMessageProcessor implements MessageProcessor {
                 HttpMessageResponse.finishHttpResult(message, callback, producer, message.getResptopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
+        } finally {
+            if (cdl != null) cdl.countDown();
+        }
+    }
+
+    @Override
+    public void commit() {
+        if (this.cdl != null) {
+            try {
+                this.cdl.await();
+            } catch (Exception ex) {
+            }
         }
     }
 

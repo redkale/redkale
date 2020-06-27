@@ -112,7 +112,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         final SncpContextConfig contextConfig = new SncpContextConfig();
         contextConfig.serverStartTime = this.serverStartTime;
         contextConfig.logger = this.logger;
-        contextConfig.executor = this.executor;
+        contextConfig.executor = this.workExecutor;
         contextConfig.sslContext = this.sslContext;
         contextConfig.bufferCapacity = this.bufferCapacity;
         contextConfig.maxconns = this.maxconns;

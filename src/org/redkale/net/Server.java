@@ -86,7 +86,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected int threads;
 
     //线程池
-    protected ThreadPoolExecutor executor;
+    protected ThreadPoolExecutor workExecutor;
 
     //ByteBuffer池大小
     protected int bufferPoolSize;
@@ -151,8 +151,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         final AtomicInteger counter = new AtomicInteger();
         final Format f = createFormat();
         final String n = name;
-        this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads, (Runnable r) -> {
-            Thread t = new WorkThread(executor, r);
+        this.workExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads, (Runnable r) -> {
+            Thread t = new WorkThread(workExecutor, r);
             t.setName("Redkale-" + n + "-ServletThread-" + f.format(counter.incrementAndGet()));
             return t;
         });
@@ -187,8 +187,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return resourceFactory;
     }
 
-    public ThreadPoolExecutor getExecutor() {
-        return executor;
+    public ThreadPoolExecutor getWorkExecutor() {
+        return workExecutor;
     }
 
     public InetSocketAddress getSocketAddress() {
