@@ -49,13 +49,14 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     public void finishHttpResult(HttpResult result) {
-        finishHttpResult(this.message, this.callback, this.producer, message.getResptopic(), result);
+        finishHttpResult(this.finest, this.message, this.callback, this.producer, message.getResptopic(), result);
     }
 
-    public static void finishHttpResult(MessageRecord msg, Runnable callback, MessageProducer producer, String resptopic, HttpResult result) {
+    public static void finishHttpResult(boolean finest, MessageRecord msg, Runnable callback, MessageProducer producer, String resptopic, HttpResult result) {
         if (callback != null) callback.run();
         if (resptopic == null || resptopic.isEmpty()) return;
         ConvertType format = result.convert() == null ? null : result.convert().getFactory().getConvertType();
+        if (finest) producer.logger.log(Level.FINEST, "HttpMessageProcessor.process seqid=" + msg.getSeqid() + ", result: " + result);
         byte[] content = HttpResultCoder.getInstance().encode(result);
         producer.apply(new MessageRecord(msg.getSeqid(), format, resptopic, null, content));
     }
