@@ -14,6 +14,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 
 /**
+ * 不依赖MessageRecord则可兼容RPC方式
  *
  * <p>
  * 详情见: https://redkale.org
@@ -31,15 +32,18 @@ public class HttpMessageClient extends MessageClient {
 
     //格式: http.req.user
     public String generateHttpReqTopic(String module) {
+        if (messageAgent == null) return null;  //RPC方式下无messageAgent
         return messageAgent.generateHttpReqTopic(module);
     }
 
     //格式: http.req.user-n10
     public String generateHttpReqTopic(String module, String resname) {
+        if (messageAgent == null) return null;  //RPC方式下无messageAgent
         return messageAgent.generateHttpReqTopic(module, resname);
     }
 
     public String generateHttpReqTopic(HttpSimpleRequest request, String path) {
+        if (messageAgent == null) return null;  //RPC方式下无messageAgent
         String module = request.getRequestURI();
         if (path != null && !path.isEmpty() && module.startsWith(path)) module = module.substring(path.length());
         module = module.substring(1); //去掉/
@@ -162,13 +166,13 @@ public class HttpMessageClient extends MessageClient {
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         MessageRecord message = new MessageRecord(convertType, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
-        return sendMessage(message, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
+        return sendMessage(message, true, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
     }
 
     public final void produceMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         MessageRecord message = new MessageRecord(convertType, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
-        produceMessage(message, counter);
+        sendMessage(message, false, counter);
     }
 
     @Override

@@ -42,31 +42,7 @@ public abstract class MessageClient {
         return this.consumer.shutdown();
     }
 
-    public String getRespTopic() {
-        return this.respTopic;
-    }
-
-    //只发送消息，不需要响应
-    public final void produceMessage(MessageRecord message) {
-        produceMessage(message, null);
-    }
-
-    //只发送消息，不需要响应
-    public final void produceMessage(MessageRecord message, AtomicLong counter) {
-        sendMessage(message, false, counter);
-    }
-
-    //发送消息，需要响应
-    public final CompletableFuture<MessageRecord> sendMessage(MessageRecord message) {
-        return sendMessage(message, null);
-    }
-
-    //发送消息，需要响应
-    public final CompletableFuture<MessageRecord> sendMessage(MessageRecord message, AtomicLong counter) {
-        return sendMessage(message, true, counter);
-    }
-
-    private CompletableFuture<MessageRecord> sendMessage(MessageRecord message, boolean needresp, AtomicLong counter) {
+    protected CompletableFuture<MessageRecord> sendMessage(MessageRecord message, boolean needresp, AtomicLong counter) {
         CompletableFuture<MessageRecord> future = new CompletableFuture<>();
         try {
             if (this.consumer == null) {
