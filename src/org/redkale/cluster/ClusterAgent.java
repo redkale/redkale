@@ -156,6 +156,8 @@ public abstract class ClusterAgent {
     public int intervalCheckSeconds() {
         return 10;
     }
+    //获取HTTP远程服务的可用ip列表
+    public abstract Collection<InetSocketAddress> queryHttpAddress(String protocol, String module, String resname);
 
     //获取远程服务的可用ip列表
     protected abstract Collection<InetSocketAddress> queryAddress(ClusterEntry entry);
