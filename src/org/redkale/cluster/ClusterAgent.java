@@ -190,6 +190,10 @@ public abstract class ClusterAgent {
         return "check-" + generateApplicationServiceId();
     }
 
+    protected String generateHttpServiceName(String protocol, String module, String resname) {
+        return protocol.toLowerCase() + ":" + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+    }
+
     //格式: protocol:classtype-resourcename
     protected String generateServiceName(NodeServer ns, String protocol, Service service) {
         if (protocol.toLowerCase().startsWith("http")) {  //HTTP使用RestService.name方式是为了与MessageClient中的module保持一致, 因为HTTP依靠的url中的module，无法知道Service类名

@@ -103,6 +103,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (req.getBody() != null) this.array.write(req.getBody());
             if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
             if (req.getParams() != null) this.params.putAll(req.getParams());
+            if (req.getCurrentUserid() != 0) this.currentUserid = req.getCurrentUserid();
             this.contentType = req.getContentType();
             this.remoteAddr = req.getRemoteAddr();
             this.requestURI = req.getRequestURI();

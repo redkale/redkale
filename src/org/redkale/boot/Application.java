@@ -690,7 +690,7 @@ public final class Application {
                 agent.init(agent.getConfig());
                 this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
                 this.resourceFactory.register(agent.getName(), HttpMessageClient.class, agent.getHttpMessageClient());
-                this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient());
+                //this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient()); //不需要给开发者使用
             }
             logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
 
