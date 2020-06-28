@@ -15,7 +15,7 @@ import org.redkale.boot.*;
 import static org.redkale.boot.Application.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
-import org.redkale.net.http.WebSocketNode;
+import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -192,6 +192,11 @@ public abstract class ClusterAgent {
 
     //格式: protocol:classtype-resourcename
     protected String generateServiceName(NodeServer ns, String protocol, Service service) {
+        if (protocol.toLowerCase().startsWith("http")) {  //HTTP使用RestService.name方式是为了与MessageClient中的module保持一致, 因为HTTP依靠的url中的module，无法知道Service类名
+            String resname = Sncp.getResourceName(service);
+            String module = Rest.getRestModule(service).toLowerCase();
+            return protocol.toLowerCase() + ":" + module + (resname.isEmpty() ? "" : ("-" + resname));
+        }
         if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + ":" + service.getClass().getName();
         String resname = Sncp.getResourceName(service);
         return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
