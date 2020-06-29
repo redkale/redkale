@@ -35,6 +35,12 @@ public class NioThreadGroup {
         for (int i = 0; i < ioThreads.length; i++) {
             this.ioThreads[i] = new NioThread(Selector.open(), executor, bufferPool);
         }
+        this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
+            Thread t = new Thread(r);
+            t.setName(this.getClass().getSimpleName() + "-Timeout-Thread");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     public void start() {
@@ -47,6 +53,7 @@ public class NioThreadGroup {
         for (int i = 0; i < ioThreads.length; i++) {
             this.ioThreads[i].close();
         }
+        this.timeoutExecutor.shutdownNow(); 
     }
 
     public NioThread nextThread() {
