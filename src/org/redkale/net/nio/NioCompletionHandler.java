@@ -21,12 +21,16 @@ public class NioCompletionHandler<A> implements CompletionHandler<Integer, A>, R
 
     private final CompletionHandler<Integer, A> handler;
 
-    private final A attachment;
+    private A attachment;
 
     public ScheduledFuture timeoutFuture;
 
     public NioCompletionHandler(CompletionHandler<Integer, A> handler, A attachment) {
         this.handler = handler;
+        this.attachment = attachment;
+    }
+
+    public void setAttachment(A attachment) {
         this.attachment = attachment;
     }
 

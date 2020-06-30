@@ -223,7 +223,6 @@ public class TcpNioAsyncConnection extends AsyncConnection {
             return;
         }
         this.readPending = true;
-        this.readByteBuffer = pollReadBuffer();
         if (this.readTimeoutSeconds > 0) {
             NioCompletionHandler newhandler = new NioCompletionHandler(handler, this.readByteBuffer);
             this.readCompletionHandler = newhandler;
@@ -380,6 +379,12 @@ public class TcpNioAsyncConnection extends AsyncConnection {
             final boolean invokeDirect = this.ioThread.inSameThread();
             int totalCount = 0;
             boolean hasRemain = true;
+            if (invokeDirect && this.readByteBuffer == null) {
+                this.readByteBuffer = pollReadBuffer();
+                if (this.readTimeoutSeconds > 0) {
+                    ((NioCompletionHandler) this.readCompletionHandler).setAttachment(this.readByteBuffer);
+                }
+            }
             while (invokeDirect && hasRemain) {
                 int readCount = this.channel.read(readByteBuffer);
                 hasRemain = readByteBuffer.hasRemaining();
