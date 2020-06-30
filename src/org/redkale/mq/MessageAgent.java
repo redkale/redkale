@@ -8,6 +8,7 @@ package org.redkale.mq;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
 import static org.redkale.boot.Application.RESNAME_APP_NODEID;
@@ -95,6 +96,27 @@ public abstract class MessageAgent {
         if (this.timeoutExecutor != null) this.timeoutExecutor.shutdown();
         if (this.sncpProducer != null) this.sncpProducer.shutdown().join();
         if (this.httpProducer != null) this.httpProducer.shutdown().join();
+    }
+
+    protected List<MessageConsumer> getAllMessageConsumer() {
+        List<MessageConsumer> consumers = new ArrayList<>();
+        MessageConsumer one = this.httpMessageClient == null ? null : this.httpMessageClient.consumer;
+        if (one != null) consumers.add(one);
+        one = this.sncpMessageClient == null ? null : this.sncpMessageClient.consumer;
+        if (one != null) consumers.add(one);
+        consumers.addAll(messageNodes.values().stream().map(mcn -> mcn.consumer).collect(Collectors.toList()));
+        return consumers;
+    }
+
+    protected List<MessageProducer> getAllMessageProducer() {
+        List<MessageProducer> producers = new ArrayList<>();
+        if (this.httpProducer != null) producers.add(this.httpProducer);
+        if (this.sncpProducer != null) producers.add(this.sncpProducer);
+        MessageProducer one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
+        if (one != null) producers.add(one);
+        one = this.sncpMessageClient == null ? null : this.sncpMessageClient.getProducer();
+        if (one != null) producers.add(one);
+        return producers;
     }
 
     public Logger getLogger() {
