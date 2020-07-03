@@ -10,11 +10,11 @@ import org.redkale.convert.json.*;
 
 /**
  * CREATE TABLE `LoginTestRecord` (
- * `sessionid` VARCHAR(64) NOT NULL COMMENT '登陆会话ID',
- * `userid` INT(11) NOT NULL COMMENT '登陆用户ID',
- * `loginagent` VARCHAR(128) NOT NULL COMMENT '登陆端信息',
- * `loginip` VARCHAR(255) NOT NULL COMMENT '登陆IP',
- * `logintime` BIGINT(20) NOT NULL COMMENT '登陆时间',
+ * `sessionid` VARCHAR(64) NOT NULL COMMENT '登录会话ID',
+ * `userid` INT(11) NOT NULL COMMENT '登录用户ID',
+ * `loginagent` VARCHAR(128) NOT NULL COMMENT '登录端信息',
+ * `loginip` VARCHAR(255) NOT NULL COMMENT '登录IP',
+ * `logintime` BIGINT(20) NOT NULL COMMENT '登录时间',
  * `logouttime` BIGINT(20) NOT NULL COMMENT '注销时间',
  * PRIMARY KEY (`sessionid`)
  * ) ENGINE=INNODB DEFAULT CHARSET=utf8;

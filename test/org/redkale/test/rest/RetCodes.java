@@ -66,7 +66,7 @@ public abstract class RetCodes {
     public static final int RET_UPLOAD_NOTIMAGE = 30010004;
 
     //------------------------------------- 用户模块 -----------------------------------------
-    @RetLabel("未登陆")
+    @RetLabel("未登录")
     public static final int RET_USER_UNLOGIN = 30020001;
 
     @RetLabel("用户登录失败")
