@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.net.Response;
 import org.redkale.net.http.*;
+import org.redkale.service.RetResult;
 import org.redkale.util.ObjectPool;
 
 /**
@@ -55,6 +56,10 @@ public class HttpMessageResponse extends HttpResponse {
     public static void finishHttpResult(boolean finest, MessageRecord msg, Runnable callback, MessageProducer producer, String resptopic, HttpResult result) {
         if (callback != null) callback.run();
         if (resptopic == null || resptopic.isEmpty()) return;
+        if (result.getResult() instanceof RetResult) {
+            RetResult ret = (RetResult) result.getResult();
+            if (!ret.isSuccess()) result.header("retcode", String.valueOf(ret.getRetcode()));
+        }
         ConvertType format = result.convert() == null ? null : result.convert().getFactory().getConvertType();
         if (finest) producer.logger.log(Level.FINEST, "HttpMessageProcessor.process seqid=" + msg.getSeqid() + ", result: " + result);
         byte[] content = HttpResultCoder.getInstance().encode(result);
