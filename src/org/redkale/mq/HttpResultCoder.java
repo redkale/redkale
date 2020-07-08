@@ -44,6 +44,8 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
             content = new byte[0]; //""
         } else if (data.getResult() instanceof CharSequence) {
             content = MessageCoder.getBytes(data.getResult().toString());
+        } else if (data.getResult() instanceof byte[]) {
+            content = (byte[]) data.getResult();
         } else {
             Convert cc = data.convert();
             if (cc == null || !(cc instanceof TextConvert)) cc = JsonConvert.root();
