@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.net.Response;
@@ -61,7 +62,11 @@ public class HttpMessageResponse extends HttpResponse {
             if (!ret.isSuccess()) result.header("retcode", String.valueOf(ret.getRetcode()));
         }
         ConvertType format = result.convert() == null ? null : result.convert().getFactory().getConvertType();
-        if (finest) producer.logger.log(Level.FINEST, "HttpMessageProcessor.process seqid=" + msg.getSeqid() + ", result: " + result);
+        if (finest) {
+            Object innerrs = result.getResult();
+            if (innerrs instanceof byte[]) innerrs = new String((byte[]) innerrs, StandardCharsets.UTF_8);
+            producer.logger.log(Level.FINEST, "HttpMessageProcessor.process seqid=" + msg.getSeqid() + ", content: " + innerrs + ", result: " + result);
+        }
         byte[] content = HttpResultCoder.getInstance().encode(result);
         producer.apply(new MessageRecord(msg.getSeqid(), format, resptopic, null, content));
     }
