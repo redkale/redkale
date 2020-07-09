@@ -315,6 +315,7 @@ public abstract class TypeToken<T> {
         };
     }
 
+    // 注意:  RetResult<Map<String, Long>[]> 这种泛型带[]的尚未实现支持
     private static Type createParameterizedType(final Class rawType, final Type... actualTypeArguments) {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         String newDynName = TypeToken.class.getName().replace('.', '/') + "_Dyn" + System.currentTimeMillis();
@@ -366,6 +367,7 @@ public abstract class TypeToken<T> {
     private static CharSequence getClassTypeDescriptor(Type type) {
         if (!isClassType(type)) throw new IllegalArgumentException(type + " not a class type");
         if (type instanceof Class) return org.redkale.asm.Type.getDescriptor((Class) type);
+        if (type instanceof GenericArrayType) return getClassTypeDescriptor(((GenericArrayType) type).getGenericComponentType()) + "[]";
         final ParameterizedType pt = (ParameterizedType) type;
         CharSequence rawTypeDesc = getClassTypeDescriptor(pt.getRawType());
         StringBuilder sb = new StringBuilder();
