@@ -59,6 +59,7 @@ public class HttpMessageResponse extends HttpResponse {
         if (resptopic == null || resptopic.isEmpty()) return;
         if (result.getResult() instanceof RetResult) {
             RetResult ret = (RetResult) result.getResult();
+            //必须要塞入retcode， 开发者可以无需反序列化ret便可确定操作是否返回成功
             if (!ret.isSuccess()) result.header("retcode", String.valueOf(ret.getRetcode()));
         }
         ConvertType format = result.convert() == null ? null : result.convert().getFactory().getConvertType();
