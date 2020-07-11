@@ -105,6 +105,10 @@ public class RetResult<T> {
         return CompletableFuture.completedFuture(new RetResult());
     }
 
+    public static <T> CompletableFuture<RetResult<T>> successFuture(T result) {
+        return CompletableFuture.completedFuture(new RetResult(result));
+    }
+
     public static RetResult<Map<String, String>> map(String... items) {
         return new RetResult(Utility.ofMap(items));
     }
