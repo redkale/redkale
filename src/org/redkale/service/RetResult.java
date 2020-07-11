@@ -7,7 +7,7 @@ package org.redkale.service;
 
 import java.lang.reflect.Type;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
@@ -93,6 +93,10 @@ public class RetResult<T> {
         return this;
     }
 
+    public CompletableFuture<RetResult<T>> toFuture() {
+        return CompletableFuture.completedFuture(this);
+    }
+
     public static RetResult success() {
         return new RetResult();
     }
@@ -107,6 +111,14 @@ public class RetResult<T> {
 
     public static <T> CompletableFuture<RetResult<T>> successFuture(T result) {
         return CompletableFuture.completedFuture(new RetResult(result));
+    }
+
+    public static <T> RetResult<T> get(CompletableFuture<RetResult<T>> future, long timeout, TimeUnit unit) {
+        try {
+            return future.get(timeout, unit);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public static RetResult<Map<String, String>> map(String... items) {
