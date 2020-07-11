@@ -97,6 +97,10 @@ public class RetResult<T> {
         return CompletableFuture.completedFuture(this);
     }
 
+    public CompletableFuture toAnyFuture() {
+        return CompletableFuture.completedFuture(this);
+    }
+
     public static RetResult success() {
         return new RetResult();
     }
