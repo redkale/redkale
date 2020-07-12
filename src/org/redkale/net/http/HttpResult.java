@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.io.Serializable;
 import java.net.HttpCookie;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 
@@ -103,6 +104,14 @@ public class HttpResult<T> {
 
     public String getHeader(String name, String dfvalue) {
         return headers == null ? null : headers.getOrDefault(name, dfvalue);
+    }
+
+    public CompletableFuture<HttpResult<T>> toFuture() {
+        return CompletableFuture.completedFuture(this);
+    }
+
+    public CompletableFuture toAnyFuture() {
+        return CompletableFuture.completedFuture(this);
     }
 
     public Map<String, String> getHeaders() {
