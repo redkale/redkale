@@ -53,10 +53,6 @@ public class HttpMessageClient extends MessageClient {
         return messageAgent.generateHttpReqTopic(module, resname);
     }
 
-    public boolean isRetSuccess(HttpResult<byte[]> result) {
-        return result != null && (result.getStatus() == 0 || result.getStatus() == 200) && result.getHeader("retcode") == null;
-    }
-
     public final void produceMessage(HttpSimpleRequest request) {
         produceMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, null);
     }
