@@ -27,30 +27,29 @@ public class HttpMessageClient extends MessageClient {
 
     protected HttpMessageClient(MessageAgent messageAgent) {
         super(messageAgent);
-        this.respTopic = messageAgent.generateHttpRespTopic();
+        if (messageAgent != null) { // //RPC方式下无messageAgent
+            this.respTopic = messageAgent.generateHttpRespTopic();
+        }
     }
 
     //格式: http.req.user
     public String generateHttpReqTopic(String module) {
-        if (messageAgent == null) return null;  //RPC方式下无messageAgent
-        return messageAgent.generateHttpReqTopic(module);
+        return MessageAgent.generateHttpReqTopic(module);
     }
 
     //格式: http.req.user-n10
     public String generateHttpReqTopic(String module, String resname) {
-        if (messageAgent == null) return null;  //RPC方式下无messageAgent
-        return messageAgent.generateHttpReqTopic(module, resname);
+        return MessageAgent.generateHttpReqTopic(module, resname);
     }
 
     public String generateHttpReqTopic(HttpSimpleRequest request, String path) {
-        if (messageAgent == null) return null;  //RPC方式下无messageAgent
         String module = request.getRequestURI();
         if (path != null && !path.isEmpty() && module.startsWith(path)) module = module.substring(path.length());
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         Map<String, String> headers = request.getHeaders();
         String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
-        return messageAgent.generateHttpReqTopic(module, resname);
+        return MessageAgent.generateHttpReqTopic(module, resname);
     }
 
     public final void produceMessage(HttpSimpleRequest request) {

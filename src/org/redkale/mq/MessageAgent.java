@@ -231,12 +231,12 @@ public abstract class MessageAgent {
     }
 
     //格式: http.req.user
-    public String generateHttpReqTopic(String module) {
+    public static String generateHttpReqTopic(String module) {
         return "http.req." + module.toLowerCase();
     }
 
     //格式: http.req.user
-    public String generateHttpReqTopic(String module, String resname) {
+    public static String generateHttpReqTopic(String module, String resname) {
         return "http.req." + module.toLowerCase() + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
