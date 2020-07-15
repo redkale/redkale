@@ -241,7 +241,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
 
     }
 
-    static class DefaultSncpAsyncHandler<V, A> implements SncpAsyncHandler<V, A> {
+    public static class DefaultSncpAsyncHandler<V, A> implements SncpAsyncHandler<V, A> {
 
         //为了在回调函数中调用_callParameter方法
         protected Object[] params;
