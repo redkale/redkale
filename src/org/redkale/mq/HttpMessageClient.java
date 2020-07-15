@@ -100,6 +100,54 @@ public class HttpMessageClient extends MessageClient {
         produceMessage(topic, convertType, userid, groupid, request, null);
     }
 
+    public final void broadcastMessage(HttpSimpleRequest request) {
+        broadcastMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, null);
+    }
+
+    public final void broadcastMessage(HttpSimpleRequest request, AtomicLong counter) {
+        broadcastMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, counter);
+    }
+
+    public final void broadcastMessage(int userid, HttpSimpleRequest request) {
+        broadcastMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, null, request, null);
+    }
+
+    public final void broadcastMessage(int userid, String groupid, HttpSimpleRequest request) {
+        broadcastMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, null);
+    }
+
+    public final void broadcastMessage(int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+        broadcastMessage(generateHttpReqTopic(request, null), ConvertType.JSON, userid, groupid, request, counter);
+    }
+
+    public final void broadcastMessage(String topic, HttpSimpleRequest request) {
+        broadcastMessage(topic, ConvertType.JSON, 0, null, request, null);
+    }
+
+    public final void broadcastMessage(String topic, HttpSimpleRequest request, AtomicLong counter) {
+        broadcastMessage(topic, ConvertType.JSON, 0, null, request, counter);
+    }
+
+    public final void broadcastMessage(String topic, ConvertType convertType, HttpSimpleRequest request) {
+        broadcastMessage(topic, convertType, 0, null, request, null);
+    }
+
+    public final void broadcastMessage(String topic, ConvertType convertType, HttpSimpleRequest request, AtomicLong counter) {
+        broadcastMessage(topic, convertType, 0, null, request, counter);
+    }
+
+    public final void broadcastMessage(String topic, int userid, String groupid, HttpSimpleRequest request) {
+        broadcastMessage(topic, ConvertType.JSON, userid, groupid, request, null);
+    }
+
+    public final void broadcastMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+        broadcastMessage(topic, ConvertType.JSON, userid, groupid, request, counter);
+    }
+
+    public final void broadcastMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request) {
+        broadcastMessage(topic, convertType, userid, groupid, request, null);
+    }
+
     public final <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), ConvertType.JSON, 0, null, request, null).thenApply((HttpResult<byte[]> httbs) -> {
             if (httbs == null || httbs.getResult() == null) return null;
@@ -166,6 +214,12 @@ public class HttpMessageClient extends MessageClient {
         MessageRecord message = new MessageRecord(convertType, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         return sendMessage(message, true, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
+    }
+
+    public void broadcastMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+        MessageRecord message = new MessageRecord(convertType, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
+        message.userid(userid).groupid(groupid);
+        sendMessage(message, false, counter);
     }
 
     public void produceMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {

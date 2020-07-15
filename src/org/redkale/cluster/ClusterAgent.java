@@ -14,6 +14,7 @@ import javax.annotation.Resource;
 import org.redkale.boot.*;
 import static org.redkale.boot.Application.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.mq.MessageMultiConsumer;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -109,6 +110,14 @@ public abstract class ClusterAgent {
             register(ns, protocol, service);
             ClusterEntry entry = new ClusterEntry(ns, protocol, service);
             localEntrys.put(entry.serviceid, entry);
+            if (protocol.toLowerCase().startsWith("http")) {
+                MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
+                if (mmc != null) {
+                    register(ns, "mqtp", service);
+                    ClusterEntry mqentry = new ClusterEntry(ns, "mqtp", service);
+                    localEntrys.put(entry.serviceid, mqentry);
+                }
+            }
         }
         //远程模式加载IP列表, 只支持SNCP协议    
         if (ns.isSNCP()) {
@@ -157,6 +166,9 @@ public abstract class ClusterAgent {
         return 10;
     }
 
+    //获取MQTP的HTTP远程服务的可用ip列表, key = servicename
+    public abstract CompletableFuture<Map<String, Collection<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname);
+
     //获取HTTP远程服务的可用ip列表
     public abstract CompletableFuture<Collection<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname);
 
@@ -173,7 +185,7 @@ public abstract class ClusterAgent {
     protected void updateSncpTransport(ClusterEntry entry) {
         Service service = entry.serviceref.get();
         if (service == null) return;
-        Collection<InetSocketAddress> addrs = queryAddress(entry).join();
+        Collection<InetSocketAddress> addrs = ClusterAgent.this.queryAddress(entry).join();
         Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netprotocol, entry.address, null, addrs);
     }
 
@@ -204,6 +216,12 @@ public abstract class ClusterAgent {
             String resname = Sncp.getResourceName(service);
             String module = Rest.getRestModule(service).toLowerCase();
             return protocol.toLowerCase() + ":" + module + (resname.isEmpty() ? "" : ("-" + resname));
+        }
+        if ("mqtp".equalsIgnoreCase(protocol)) {
+            MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
+            String resname = Sncp.getResourceName(service);
+            String selfmodule = Rest.getRestModule(service).toLowerCase();
+            return protocol.toLowerCase() + ":" + mmc.module() + ":" + selfmodule + (resname.isEmpty() ? "" : ("-" + resname));
         }
         if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + ":" + service.getClass().getName();
         String resname = Sncp.getResourceName(service);

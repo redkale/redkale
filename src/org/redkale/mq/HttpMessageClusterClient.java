@@ -44,21 +44,26 @@ public class HttpMessageClusterClient extends HttpMessageClient {
 
     @Override
     public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        return httpAsync(userid, request);
+        return httpAsync("http", userid, request);
     }
 
     @Override
     public void produceMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        httpAsync(userid, request);
+        httpAsync("http", userid, request);
     }
 
-    protected CompletableFuture<HttpResult<byte[]>> httpAsync(int userid, HttpSimpleRequest req) {
+    @Override
+    public void broadcastMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+        httpAsync("mqtp", userid, request);
+    }
+
+    private CompletableFuture<HttpResult<byte[]>> httpAsync(String protocol, int userid, HttpSimpleRequest req) {
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         Map<String, String> headers = req.getHeaders();
         String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
-        return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
+        return clusterAgent.queryHttpAddress(protocol, module, resname).thenCompose(addrs -> {
             if (addrs == null || addrs.isEmpty()) return new HttpResult().status(404).toAnyFuture();
             java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(6000));
             if (req.isRpc()) builder.header(Rest.REST_HEADER_RPC_NAME, "true");
