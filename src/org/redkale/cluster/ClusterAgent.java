@@ -219,9 +219,8 @@ public abstract class ClusterAgent {
         }
         if ("mqtp".equalsIgnoreCase(protocol)) {
             MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
-            String resname = Sncp.getResourceName(service);
             String selfmodule = Rest.getRestModule(service).toLowerCase();
-            return protocol.toLowerCase() + ":" + mmc.module() + ":" + selfmodule + (resname.isEmpty() ? "" : ("-" + resname));
+            return protocol.toLowerCase() + ":" + mmc.module() + ":" + selfmodule;
         }
         if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + ":" + service.getClass().getName();
         String resname = Sncp.getResourceName(service);
