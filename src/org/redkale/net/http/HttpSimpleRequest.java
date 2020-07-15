@@ -5,8 +5,11 @@
  */
 package org.redkale.net.http;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
-import org.redkale.convert.ConvertColumn;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
@@ -31,29 +34,33 @@ public class HttpSimpleRequest implements java.io.Serializable {
     protected String requestURI;
 
     @ConvertColumn(index = 3)
+    @Comment("请求的前缀")
+    protected String path;
+
+    @ConvertColumn(index = 4)
     @Comment("客户端IP")
     protected String remoteAddr;
 
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 5)
     @Comment("会话ID")
     protected String sessionid;
 
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 6)
     @Comment("Content-Type")
     protected String contentType;
 
-    @ConvertColumn(index = 6)
+    @ConvertColumn(index = 7)
     protected int currentUserid;
 
-    @ConvertColumn(index = 7)
+    @ConvertColumn(index = 8)
     @Comment("http header信息")
     protected Map<String, String> headers;
 
-    @ConvertColumn(index = 8)
+    @ConvertColumn(index = 9)
     @Comment("参数信息")
     protected Map<String, String> params;
 
-    @ConvertColumn(index = 9)
+    @ConvertColumn(index = 10)
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
@@ -70,6 +77,19 @@ public class HttpSimpleRequest implements java.io.Serializable {
         return req;
     }
 
+    @ConvertDisabled
+    public String getParametersToString() {
+        if (this.params == null || this.params.isEmpty()) return null;
+        final StringBuilder sb = new StringBuilder();
+        AtomicBoolean no2 = new AtomicBoolean(false);
+        this.params.forEach((n, v) -> {
+            if (no2.get()) sb.append('&');
+            sb.append(n).append('=').append(URLEncoder.encode(v, StandardCharsets.UTF_8));
+            no2.set(true);
+        });
+        return sb.toString();
+    }
+
     public HttpSimpleRequest rpc(boolean rpc) {
         this.rpc = rpc;
         return this;
@@ -77,6 +97,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public HttpSimpleRequest requestURI(String requestURI) {
         this.requestURI = requestURI;
+        return this;
+    }
+
+    public HttpSimpleRequest path(String path) {
+        this.path = path;
         return this;
     }
 
@@ -138,6 +163,18 @@ public class HttpSimpleRequest implements java.io.Serializable {
         if (value == null) return this;
         if (this.headers == null) this.headers = new HashMap<>();
         this.headers.put(key, JsonConvert.root().convertTo(value));
+        return this;
+    }
+
+    public HttpSimpleRequest header(String key, int value) {
+        if (this.headers == null) this.headers = new HashMap<>();
+        this.headers.put(key, String.valueOf(value));
+        return this;
+    }
+
+    public HttpSimpleRequest header(String key, long value) {
+        if (this.headers == null) this.headers = new HashMap<>();
+        this.headers.put(key, String.valueOf(value));
         return this;
     }
 
@@ -206,6 +243,14 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public void setRequestURI(String requestURI) {
         this.requestURI = requestURI;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public String getSessionid() {

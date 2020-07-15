@@ -156,11 +156,12 @@ public abstract class ClusterAgent {
     public int intervalCheckSeconds() {
         return 10;
     }
+
     //获取HTTP远程服务的可用ip列表
-    public abstract Collection<InetSocketAddress> queryHttpAddress(String protocol, String module, String resname);
+    public abstract CompletableFuture<Collection<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname);
 
     //获取远程服务的可用ip列表
-    protected abstract Collection<InetSocketAddress> queryAddress(ClusterEntry entry);
+    protected abstract CompletableFuture<Collection<InetSocketAddress>> queryAddress(ClusterEntry entry);
 
     //注册服务
     protected abstract void register(NodeServer ns, String protocol, Service service);
@@ -172,7 +173,7 @@ public abstract class ClusterAgent {
     protected void updateSncpTransport(ClusterEntry entry) {
         Service service = entry.serviceref.get();
         if (service == null) return;
-        Collection<InetSocketAddress> addrs = queryAddress(entry);
+        Collection<InetSocketAddress> addrs = queryAddress(entry).join();
         Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netprotocol, entry.address, null, addrs);
     }
 
@@ -192,7 +193,8 @@ public abstract class ClusterAgent {
         return "check-" + generateApplicationServiceId();
     }
 
-    protected String generateHttpServiceName(String protocol, String module, String resname) {
+    //也会提供给HttpMessageClusterAgent适用
+    public String generateHttpServiceName(String protocol, String module, String resname) {
         return protocol.toLowerCase() + ":" + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 

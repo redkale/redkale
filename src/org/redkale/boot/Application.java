@@ -695,7 +695,19 @@ public final class Application {
             logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
 
         }
-
+        //------------------------------------- 注册 DataSource --------------------------------------------------------        
+        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+            try {
+                if (field.getAnnotation(Resource.class) == null) return;
+                if (clusterAgent == null) return;
+                HttpMessageClient messageClient = new HttpMessageClusterClient(clusterAgent);
+                field.set(src, messageClient);
+                rf.inject(messageClient, null); // 给其可能包含@Resource的字段赋值;
+                rf.register(resourceName, HttpMessageClient.class, messageClient);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] DataSource inject error", e);
+            }
+        }, HttpMessageClient.class);
         initResources();
     }
 

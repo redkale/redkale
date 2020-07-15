@@ -30,19 +30,22 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
     @Override
     public byte[] encode(HttpSimpleRequest data) {
         byte[] requestURI = MessageCoder.getBytes(data.getRequestURI()); //long-string
+        byte[] path = MessageCoder.getBytes(data.getRequestURI()); //short-string
         byte[] remoteAddr = MessageCoder.getBytes(data.getRemoteAddr());//short-string
         byte[] sessionid = MessageCoder.getBytes(data.getSessionid());//short-string
         byte[] contentType = MessageCoder.getBytes(data.getContentType());//short-string
         byte[] headers = MessageCoder.getBytes(data.getHeaders());
         byte[] params = MessageCoder.getBytes(data.getParams());
         byte[] body = MessageCoder.getBytes(data.getBody());
-        int count = 1 + 4 + requestURI.length + 2 + remoteAddr.length + 2 + sessionid.length
+        int count = 1 + 4 + requestURI.length + 2 + path.length + 2 + remoteAddr.length + 2 + sessionid.length
             + 2 + contentType.length + 4 + headers.length + params.length + 4 + body.length;
         byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.put((byte) (data.isRpc() ? 'T' : 'F'));
         buffer.putInt(requestURI.length);
         if (requestURI.length > 0) buffer.put(requestURI);
+        buffer.putChar((char) path.length);
+        if (remoteAddr.length > 0) buffer.put(path);
         buffer.putChar((char) remoteAddr.length);
         if (remoteAddr.length > 0) buffer.put(remoteAddr);
         buffer.putChar((char) sessionid.length);
@@ -64,6 +67,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setRpc(buffer.get() == 'T');
         req.setRequestURI(MessageCoder.getLongString(buffer));
+        req.setPath(MessageCoder.getShortString(buffer));
         req.setRemoteAddr(MessageCoder.getShortString(buffer));
         req.setSessionid(MessageCoder.getShortString(buffer));
         req.setContentType(MessageCoder.getShortString(buffer));

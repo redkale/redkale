@@ -40,6 +40,10 @@ public final class Rest {
 
     public static final String REST_HEADER_RESOURCE_NAME = "rest-resource-name";
 
+    public static final String REST_HEADER_RPC_NAME = "rest-rpc-name";
+
+    public static final String REST_HEADER_CURRUSERID_NAME = "rest-curruserid-name";
+
     static final String REST_SERVICE_FIELD_NAME = "_redkale_service";
 
     static final String REST_TOSTRINGOBJ_FIELD_NAME = "_redkale_tostringsupplier";
@@ -1349,7 +1353,14 @@ public final class Rest {
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (userid != null) { //HttpRequest.currentUserid
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUserid", "()Ljava/io/Serializable;", false);
+                    if (ptype == int.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
+                    } else if (ptype == long.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
+                    } else {
+                        mv.visitLdcInsn(Type.getType(Type.getInternalName(ptype)));
+                    }
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUserid", "(Ljava/lang/Class;)Ljava/io/Serializable;", false);
                     if (ptype == int.class) {
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
                         mv.visitInsn(ICONST_0);

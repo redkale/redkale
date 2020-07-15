@@ -34,6 +34,9 @@ import org.redkale.util.*;
  */
 public class HttpRequest extends Request<HttpContext> {
 
+    protected static final Serializable CURRUSERID_NIL = new Serializable() {
+    };
+
     public static final String SESSIONID_NAME = "JSESSIONID";
 
     protected boolean rpc;
@@ -76,7 +79,7 @@ public class HttpRequest extends Request<HttpContext> {
     protected Annotation[] annotations;
 
     // @since 2.1.0
-    protected Serializable currentUserid;
+    protected Serializable currentUserid = CURRUSERID_NIL;
 
     protected Object currentUser;
 
@@ -116,10 +119,20 @@ public class HttpRequest extends Request<HttpContext> {
     public HttpSimpleRequest createSimpleRequest(String prefix) {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setBody(array.size() == 0 ? null : array.getBytes());
-        req.setHeaders(headers.isEmpty() ? null : headers);
+        if (!headers.isEmpty()) {
+            if (headers.containsKey(Rest.REST_HEADER_RPC_NAME)
+                || headers.containsKey(Rest.REST_HEADER_CURRUSERID_NAME)) { //外部request不能包含RPC的header信息
+                req.setHeaders(new HashMap<>(headers));
+                req.removeHeader(Rest.REST_HEADER_RPC_NAME);
+                req.removeHeader(Rest.REST_HEADER_CURRUSERID_NAME);
+            } else {
+                req.setHeaders(headers);
+            }
+        }
         req.setParams(params.isEmpty() ? null : params);
         req.setRemoteAddr(getRemoteAddr());
         req.setContentType(getContentType());
+        req.setPath(prefix);
         String uri = this.requestURI;
         if (prefix != null && !prefix.isEmpty() && uri.startsWith(prefix)) {
             uri = uri.substring(prefix.length());
@@ -220,6 +233,14 @@ public class HttpRequest extends Request<HttpContext> {
                     break;
                 case "user-agent":
                     headers.put("User-Agent", value);
+                    break;
+                case Rest.REST_HEADER_RPC_NAME:
+                    this.rpc = "true".equalsIgnoreCase(value);
+                    headers.put(name, value);
+                    break;
+                case Rest.REST_HEADER_CURRUSERID_NAME:
+                    this.currentUserid = value;
+                    headers.put(name, value);
                     break;
                 default:
                     headers.put(name, value);
@@ -334,14 +355,30 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取当前用户ID<br>
      *
-     * @param <T> 数据类型只能是int、long、String、JavaBean
+     * @param <T>  数据类型只能是int、long、String、JavaBean
+     * @param type 类型
      *
      * @return 用户ID
      *
      * @since 2.1.0
      */
     @SuppressWarnings("unchecked")
-    public <T extends Serializable> T currentUserid() {
+    public <T extends Serializable> T currentUserid(Class<T> type) {
+        if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
+            if (type == int.class) return (T) (Integer) (int) 0;
+            if (type == long.class) return (T) (Long) (long) 0;
+            return null;
+        }
+        if (type == int.class) {
+            if (this.currentUserid instanceof Number) return (T) (Integer) ((Number) this.currentUserid).intValue();
+            return (T) (Integer) Integer.parseInt(this.currentUserid.toString());
+        }
+        if (type == long.class) {
+            if (this.currentUserid instanceof Number) return (T) (Long) ((Number) this.currentUserid).longValue();
+            return (T) (Long) Long.parseLong(this.currentUserid.toString());
+        }
+        if (type == String.class) return (T) this.currentUserid.toString();
+        if (this.currentUserid instanceof CharSequence) return JsonConvert.root().convertFrom(type, this.currentUserid.toString());
         return (T) this.currentUserid;
     }
 
@@ -621,7 +658,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.moduleid = 0;
         this.actionid = 0;
         this.annotations = null;
-        this.currentUserid = null;
+        this.currentUserid = CURRUSERID_NIL;
         this.currentUser = null;
         this.remoteAddr = null;
 
