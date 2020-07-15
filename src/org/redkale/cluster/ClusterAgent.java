@@ -166,7 +166,7 @@ public abstract class ClusterAgent {
         return 10;
     }
 
-    //获取MQTP的HTTP远程服务的可用ip列表, key = servicename
+    //获取MQTP的HTTP远程服务的可用ip列表, key = servicename的后半段
     public abstract CompletableFuture<Map<String, Collection<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname);
 
     //获取HTTP远程服务的可用ip列表
