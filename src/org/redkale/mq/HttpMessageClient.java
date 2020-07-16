@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 import org.redkale.convert.ConvertType;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
@@ -24,6 +25,8 @@ import org.redkale.net.http.*;
  * @since 2.1.0
  */
 public class HttpMessageClient extends MessageClient {
+
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected HttpMessageClient(MessageAgent messageAgent) {
         super(messageAgent);
