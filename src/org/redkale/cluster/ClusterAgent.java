@@ -108,14 +108,14 @@ public abstract class ClusterAgent {
         for (Service service : localServices) {
             if (!canRegister(protocol, service)) continue;
             register(ns, protocol, service);
-            ClusterEntry entry = new ClusterEntry(ns, protocol, service);
-            localEntrys.put(entry.serviceid, entry);
+            ClusterEntry htentry = new ClusterEntry(ns, protocol, service);
+            localEntrys.put(htentry.serviceid, htentry);
             if (protocol.toLowerCase().startsWith("http")) {
                 MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
                 if (mmc != null) {
                     register(ns, "mqtp", service);
                     ClusterEntry mqentry = new ClusterEntry(ns, "mqtp", service);
-                    localEntrys.put(entry.serviceid, mqentry);
+                    localEntrys.put(mqentry.serviceid, mqentry);
                 }
             }
         }
