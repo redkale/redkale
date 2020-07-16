@@ -5,6 +5,7 @@
  */
 package org.redkale.source;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
@@ -68,6 +69,38 @@ public interface CacheSource<V extends Object> {
         }
         return rs;
     }
+
+    //----------- hxxx --------------
+    public long hincr(final String key, String field);
+
+    public long hincr(final String key, String field, long num);
+
+    public long hdecr(final String key, String field);
+
+    public long hdecr(final String key, String field, long num);
+
+    public boolean hexists(final String key, String field);
+
+    public <T> void hset(final String key, final String field, final Convert convert, final T value);
+
+    public <T> void hset(final String key, final String field, final Type type, final T value);
+
+    public <T> void hset(final String key, final String field, final Convert convert, final Type type, final T value);
+
+    public void hsetString(final String key, final String field, final String value);
+
+    public void hsetLong(final String key, final String field, final long value);
+
+    public void hmset(final String key, final Serializable... values);
+
+    public Serializable[] hmget(final String key, final String... fields);
+
+    public <T> T hget(final String key, final String field, final Type type);
+
+    public String hgetString(final String key, final String field);
+
+    public long hgetLong(final String key, final String field, long defValue);
+    //----------- hxxx --------------
 
     public void refresh(final String key, final int expireSeconds);
 
@@ -265,6 +298,38 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Long> decrAsync(final String key);
 
     public CompletableFuture<Long> decrAsync(final String key, long num);
+
+    //----------- hxxx --------------
+    public CompletableFuture<Long> hincrAsync(final String key, String field);
+
+    public CompletableFuture<Long> hincrAsync(final String key, String field, long num);
+
+    public CompletableFuture<Long> hdecrAsync(final String key, String field);
+
+    public CompletableFuture<Long> hdecrAsync(final String key, String field, long num);
+
+    public CompletableFuture<Boolean> hexistsAsync(final String key, String field);
+
+    public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Convert convert, final T value);
+
+    public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Type type, final T value);
+
+    public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Convert convert, final Type type, final T value);
+
+    public CompletableFuture<Void> hsetStringAsync(final String key, final String field, final String value);
+
+    public CompletableFuture<Void> hsetLongAsync(final String key, final String field, final long value);
+
+    public CompletableFuture<Void> hmsetAsync(final String key, final Serializable... values);
+
+    public CompletableFuture<Serializable[]> hmgetAsync(final String key, final String... fields);
+
+    public <T> CompletableFuture<T> hgetAsync(final String key, final String field, final Type type);
+
+    public CompletableFuture<String> hgetStringAsync(final String key, final String field);
+
+    public CompletableFuture<Long> hgetLongAsync(final String key, final String field, long defValue);
+    //----------- hxxx --------------
 
     public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys);
 
