@@ -454,6 +454,11 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
 
     @Override
     public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit) {
+        return hmap(key, type, offset, limit, null);
+    }
+
+    @Override
+    public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit, String pattern) {
         if (key == null) return new HashMap();
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired() || entry.mapValue == null) return new HashMap();
@@ -604,6 +609,11 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     @Override
     public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit) {
         return CompletableFuture.supplyAsync(() -> hmap(key, type, offset, limit), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit, String pattern) {
+        return CompletableFuture.supplyAsync(() -> hmap(key, type, offset, limit, pattern), getExecutor());
     }
 
     @Override
