@@ -45,7 +45,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         buffer.putInt(requestURI.length);
         if (requestURI.length > 0) buffer.put(requestURI);
         buffer.putChar((char) path.length);
-        if (remoteAddr.length > 0) buffer.put(path);
+        if (path.length > 0) buffer.put(path);
         buffer.putChar((char) remoteAddr.length);
         if (remoteAddr.length > 0) buffer.put(remoteAddr);
         buffer.putChar((char) sessionid.length);
