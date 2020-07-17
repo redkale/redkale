@@ -98,6 +98,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     public SncpDynServlet addSncpServlet(Service sncpService) {
+        if (!Sncp.isSncpDyn(sncpService)) return null;
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService),
             Sncp.getResourceType(sncpService), sncpService, maxClassNameLength, maxNameLength);
         this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));

@@ -353,7 +353,7 @@ public abstract class NodeServer {
                     final Class sourceType = sourceType0;
                     Object source = null;
                     if (CacheSource.class.isAssignableFrom(sourceType)) { // CacheSource
-                        source = (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, client == null ? null : client.getMessageAgent(), appResFactory, appSncpTranFactory, sncpAddr, null, Sncp.getConf(srcService));
+                        source = Modifier.isFinal(sourceType.getModifiers()) ? sourceType.getConstructor().newInstance() : (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, client == null ? null : client.getMessageAgent(), appResFactory, appSncpTranFactory, sncpAddr, null, Sncp.getConf(srcService));
                         Type genericType = field.getGenericType();
                         ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
                         Type valType = pt == null ? null : pt.getActualTypeArguments()[0];
