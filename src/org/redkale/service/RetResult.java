@@ -5,6 +5,7 @@
  */
 package org.redkale.service;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
@@ -26,7 +27,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @param <T> 结果对象的泛型
  */
-public class RetResult<T> {
+public class RetResult<T> implements Serializable{
 
     public static final Type TYPE_RET_INTEGER = new TypeToken<RetResult<Integer>>() {
     }.getType();
