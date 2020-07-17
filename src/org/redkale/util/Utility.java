@@ -207,7 +207,7 @@ public final class Utility {
      *
      * @return Map
      */
-    public static Map<String, String> ofMap(String... items) {
+    public static HashMap<String, String> ofMap(String... items) {
         HashMap<String, String> map = new LinkedHashMap<>(Math.max(1, items.length / 2));
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
@@ -226,7 +226,7 @@ public final class Utility {
      *
      * @return Map
      */
-    public static <K, V> Map<K, V> ofMap(Object... items) {
+    public static <K, V> HashMap<K, V> ofMap(Object... items) {
         HashMap<K, V> map = new LinkedHashMap<>(Math.max(1, items.length / 2));
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
