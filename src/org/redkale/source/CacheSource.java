@@ -71,6 +71,10 @@ public interface CacheSource<V extends Object> {
     }
 
     //----------- hxxx --------------
+    public int hremove(final String key, String... fields);
+
+    public List<String> hkeys(final String key);
+
     public long hincr(final String key, String field);
 
     public long hincr(final String key, String field, long num);
@@ -93,7 +97,7 @@ public interface CacheSource<V extends Object> {
 
     public void hmset(final String key, final Serializable... values);
 
-    public Serializable[] hmget(final String key, final String... fields);
+    public List<Serializable> hmget(final String key, final String... fields);
 
     public <T> T hget(final String key, final String field, final Type type);
 
@@ -300,6 +304,10 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Long> decrAsync(final String key, long num);
 
     //----------- hxxx --------------
+    public CompletableFuture<Integer> hremoveAsync(final String key, String... fields);
+
+    public CompletableFuture<List<String>> hkeysAsync(final String key);
+
     public CompletableFuture<Long> hincrAsync(final String key, String field);
 
     public CompletableFuture<Long> hincrAsync(final String key, String field, long num);
@@ -322,7 +330,7 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> hmsetAsync(final String key, final Serializable... values);
 
-    public CompletableFuture<Serializable[]> hmgetAsync(final String key, final String... fields);
+    public CompletableFuture<List<Serializable>> hmgetAsync(final String key, final String... fields);
 
     public <T> CompletableFuture<T> hgetAsync(final String key, final String field, final Type type);
 
@@ -436,7 +444,7 @@ public interface CacheSource<V extends Object> {
     }
 
     public static enum CacheEntryType {
-        LONG, STRING, OBJECT, ATOMIC,
+        LONG, STRING, OBJECT, ATOMIC, MAP,
         LONG_SET, STRING_SET, OBJECT_SET,
         LONG_LIST, STRING_LIST, OBJECT_LIST;
     }
@@ -454,20 +462,22 @@ public interface CacheSource<V extends Object> {
 
         T objectValue;
 
+        ConcurrentHashMap<String, Serializable> mapValue;
+
         CopyOnWriteArraySet<T> csetValue;
 
         ConcurrentLinkedQueue<T> listValue;
 
-        public CacheEntry(CacheEntryType cacheType, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue) {
-            this(cacheType, 0, key, objectValue, csetValue, listValue);
+        public CacheEntry(CacheEntryType cacheType, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
+            this(cacheType, 0, key, objectValue, csetValue, listValue, mapValue);
         }
 
-        public CacheEntry(CacheEntryType cacheType, int expireSeconds, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue) {
-            this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, objectValue, csetValue, listValue);
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
+            this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, objectValue, csetValue, listValue, mapValue);
         }
 
-        @ConstructorParameters({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "csetValue", "listValue"})
-        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue) {
+        @ConstructorParameters({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "csetValue", "listValue", "mapValue"})
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedQueue<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
             this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;
@@ -475,6 +485,7 @@ public interface CacheSource<V extends Object> {
             this.objectValue = objectValue;
             this.csetValue = csetValue;
             this.listValue = listValue;
+            this.mapValue = mapValue;
         }
 
         @Override
@@ -490,6 +501,11 @@ public interface CacheSource<V extends Object> {
         @ConvertColumn(ignore = true)
         public boolean isSetCacheType() {
             return cacheType == CacheEntryType.LONG_SET || cacheType == CacheEntryType.STRING_SET || cacheType == CacheEntryType.OBJECT_SET;
+        }
+
+        @ConvertColumn(ignore = true)
+        public boolean isMapCacheType() {
+            return cacheType == CacheEntryType.MAP;
         }
 
         @ConvertColumn(ignore = true)
@@ -525,5 +541,8 @@ public interface CacheSource<V extends Object> {
             return listValue;
         }
 
+        public ConcurrentHashMap<String, Serializable> getMapValue() {
+            return mapValue;
+        }
     }
 }
