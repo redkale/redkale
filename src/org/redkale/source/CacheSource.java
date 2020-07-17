@@ -99,6 +99,8 @@ public interface CacheSource<V extends Object> {
 
     public List<Serializable> hmget(final String key, final String... fields);
 
+    public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit);
+
     public <T> T hget(final String key, final String field, final Type type);
 
     public String hgetString(final String key, final String field);
@@ -331,6 +333,8 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Void> hmsetAsync(final String key, final Serializable... values);
 
     public CompletableFuture<List<Serializable>> hmgetAsync(final String key, final String... fields);
+
+    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit);
 
     public <T> CompletableFuture<T> hgetAsync(final String key, final String field, final Type type);
 
