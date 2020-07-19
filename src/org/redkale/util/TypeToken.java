@@ -185,6 +185,9 @@ public abstract class TypeToken<T> {
             }
             TypeVariable tv = (TypeVariable) type;
             if (tv.getBounds().length == 1) return tv.getBounds()[0];
+        } else if (type instanceof GenericArrayType) {
+            final Type rst = getGenericType(((GenericArrayType) type).getGenericComponentType(), declaringClass);
+            return (GenericArrayType) () -> rst;
         }
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
