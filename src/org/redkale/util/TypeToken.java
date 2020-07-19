@@ -153,7 +153,33 @@ public abstract class TypeToken<T> {
                 }
                 if (atas.length == asts.length) {
                     for (int i = 0; i < asts.length; i++) {
-                        if (asts[i] == type) {
+                        Type currt = asts[i];
+                        if (asts[i] != type && superPT.getRawType() instanceof Class) {
+                            if (asts[i] instanceof TypeVariable) {
+
+                                Class raw = (Class) superPT.getRawType();
+                                do {
+                                    Type rawsuper = raw.getGenericSuperclass();
+                                    if (!(rawsuper instanceof ParameterizedType)) break;
+                                    ParameterizedType rpt = (ParameterizedType) rawsuper;
+                                    Type supraw = rpt.getRawType();
+                                    if (!(supraw instanceof Class)) break;
+                                    Type[] tps = ((Class) supraw).getTypeParameters();
+                                    if (rpt.getActualTypeArguments().length == tps.length) {
+                                        for (int k = 0; k < rpt.getActualTypeArguments().length; k++) {
+                                            if (rpt.getActualTypeArguments()[k] == currt) {
+                                                currt = tps[k];
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    Type rtrt = rpt.getRawType();
+                                    if (!(rtrt instanceof Class)) break;
+                                    raw = (Class) rtrt;
+                                } while (raw != Object.class);
+                            }
+                        }
+                        if (currt == type) {
                             if (atas[i] instanceof Class
                                 && ((TypeVariable) type).getBounds().length == 1
                                 && ((TypeVariable) type).getBounds()[0] instanceof Class
