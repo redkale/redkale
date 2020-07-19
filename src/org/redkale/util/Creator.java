@@ -239,7 +239,9 @@ public interface Creator<T> {
             clazz = (Class<T>) HashSet.class;
         } else if (Map.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ConcurrentHashMap.class)) {
             clazz = (Class<T>) ConcurrentHashMap.class;
-        } else if (Collection.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ArrayList.class)) {
+        } else if (Deque.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(ArrayDeque.class) || clazz.getName().startsWith("java.util.Collections") || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
+            clazz = (Class<T>) ArrayDeque.class;
+        }  else if (Collection.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ArrayList.class)) {
             clazz = (Class<T>) ArrayList.class;
         } else if (Map.Entry.class.isAssignableFrom(clazz) && (Modifier.isInterface(clazz.getModifiers()) || Modifier.isAbstract(clazz.getModifiers()) || !Modifier.isPublic(clazz.getModifiers()))) {
             clazz = (Class<T>) AbstractMap.SimpleEntry.class;
