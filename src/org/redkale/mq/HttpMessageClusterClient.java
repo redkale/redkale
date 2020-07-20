@@ -126,6 +126,8 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 Map<String, List<String>> hm = hs.map();
                 if (hm != null) {
                     for (Map.Entry<String, List<String>> en : hm.entrySet()) {
+                        if ("date".equals(en.getKey()) || "content-type".equals(en.getKey())
+                            || "server".equals(en.getKey()) || "connection".equals(en.getKey())) continue;
                         List<String> val = en.getValue();
                         if (val != null && val.size() == 1) {
                             rs.header(en.getKey(), val.get(0));
