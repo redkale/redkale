@@ -264,7 +264,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         source.hincr("map", "key1");
         System.out.println("map.key1 值 : " + source.hgetLong("map", "key1", -1));
         source.hmset("map", "key2", "haha", "key3", 333);
-        System.out.println("map.[key1,key2,key3] 值 : " + source.hmget("map", "key1", "key2", "key3"));
+        System.out.println("map.[key1,key2,key3] 值 : " + source.hmget("map", String.class, "key1", "key2", "key3"));
 
         System.out.println("------------------------------------");
         source.destroy(null);
@@ -441,13 +441,18 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public List<Serializable> hmget(final String key, final String... fields) {
+    public <T> List<T> hmget(final String key, final Type type, final String... fields) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired() || entry.mapValue == null) return null;
-        List<Serializable> rs = new ArrayList<>(fields.length);
+        List<T> rs = new ArrayList<>(fields.length);
         for (int i = 0; i < fields.length; i++) {
-            rs.add((Serializable) entry.mapValue.get(fields[i]));
+            Serializable val = (Serializable) entry.mapValue.get(fields[i]);
+            if (type == String.class) {
+                rs.add(val == null ? null : (T)String.valueOf(val));
+            } else {
+                rs.add((T)val);
+            }
         }
         return rs;
     }
@@ -602,8 +607,8 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public CompletableFuture<List<Serializable>> hmgetAsync(final String key, final String... fields) {
-        return CompletableFuture.supplyAsync(() -> hmget(key, fields), getExecutor());
+    public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields) {
+        return CompletableFuture.supplyAsync(() -> hmget(key, type, fields), getExecutor());
     }
 
     @Override
