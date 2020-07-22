@@ -136,7 +136,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 }
             }
             rs.setResult(resp.body());
-            if (finest) logger.log(Level.FINEST, url + ", result = " + new String(resp.body(), StandardCharsets.UTF_8));
+            if (finest) logger.log(Level.FINEST, url + "?" + req.getParametersToString() + ", result = " + new String(resp.body(), StandardCharsets.UTF_8));
             return CompletableFuture.completedFuture(rs);
         });
     }
