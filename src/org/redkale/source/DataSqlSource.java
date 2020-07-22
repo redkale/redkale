@@ -510,7 +510,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Serializable... pks) {
         if (pks.length == 1) {
-            String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + " = " + info.formatSQLValue(info.getPrimarySQLColumn(), pks[0], sqlFormatter);
+            String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pks[0], sqlFormatter);
             return deleteDB(info, null, sql);
         }
         String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + " IN (";
@@ -786,11 +786,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
         if (colval instanceof byte[]) {
-            String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + " = " + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + " = " + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+            String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
             return updateDB(info, null, sql, true, colval);
         } else {
-            String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + " = "
-                + info.formatSQLValue(column, colval, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + " = " + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+            String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
+                + info.formatSQLValue(column, colval, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
             return updateDB(info, null, sql, false);
         }
     }
@@ -856,13 +856,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         String alias = "postgresql".equals(writePool.dbtype) ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
         if (colval instanceof byte[]) {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                + " SET " + info.getSQLColumn(alias, column) + " = " + prepareParamSign(1)
+                + " SET " + info.getSQLColumn(alias, column) + "=" + prepareParamSign(1)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             return updateDB(info, null, sql, true, colval);
         } else {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                + " SET " + info.getSQLColumn(alias, column) + " = " + info.formatSQLValue(colval, sqlFormatter)
+                + " SET " + info.getSQLColumn(alias, column) + "=" + info.formatSQLValue(colval, sqlFormatter)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             return updateDB(info, null, sql, false);
@@ -929,13 +929,13 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (col.getValue() instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) col.getValue());
-                setsql.append(sqlColumn).append(" = ").append(prepareParamSign(++index));
+                setsql.append(sqlColumn).append("=").append(prepareParamSign(++index));
             } else {
-                setsql.append(sqlColumn).append(" = ").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
+                setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
             }
         }
         if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
-        String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+        String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
         if (blobs == null) return updateDB(info, null, sql, false);
         return updateDB(info, null, sql, true, blobs.toArray());
     }
@@ -1011,9 +1011,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (col.getValue() instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) col.getValue());
-                setsql.append(sqlColumn).append(" = ").append(prepareParamSign(++index));
+                setsql.append(sqlColumn).append("=").append(prepareParamSign(++index));
             } else {
-                setsql.append(sqlColumn).append(" = ").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
+                setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
             }
         }
         if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
@@ -1146,11 +1146,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             if (val instanceof byte[]) {
                 if (blobs == null) blobs = new ArrayList<>();
                 blobs.add((byte[]) val);
-                setsql.append(" = ").append(prepareParamSign(++index));
+                setsql.append("=").append(prepareParamSign(++index));
             } else {
                 CharSequence sqlval = info.formatSQLValue(val, sqlFormatter);
                 if (sqlval == null && info.isNotNullJson(attr)) sqlval = "''";
-                setsql.append(" = ").append(sqlval);
+                setsql.append("=").append(sqlval);
             }
         }
         if (neednode) {
@@ -1171,7 +1171,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             return updateDB(info, null, sql, true, blobs.toArray());
         } else {
             final Serializable id = (Serializable) info.getSQLValue(info.getPrimary(), entity);
-            String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + " = " + info.formatSQLValue(id, sqlFormatter);
+            String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(id, sqlFormatter);
             if (blobs == null) return updateDB(info, null, sql, false);
             return updateDB(info, null, sql, true, blobs.toArray());
         }
@@ -1643,7 +1643,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected <T> CompletableFuture<T> findCompose(final EntityInfo<T> info, final SelectColumn selects, Serializable pk) {
         String column = info.getPrimarySQLColumn();
-        final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) + " WHERE " + column + " = " + info.formatSQLValue(column, pk, sqlFormatter);
+        final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) + " WHERE " + column + "=" + info.formatSQLValue(column, pk, sqlFormatter);
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         return findDB(info, sql, true, selects);
     }
@@ -1780,7 +1780,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     protected <T> CompletableFuture<Serializable> findColumnCompose(final EntityInfo<T> info, String column, final Serializable defValue, final Serializable pk) {
-        final String sql = "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+        final String sql = "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         return findColumnDB(info, sql, true, column, defValue);
     }
@@ -1842,7 +1842,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     protected <T> CompletableFuture<Boolean> existsCompose(final EntityInfo<T> info, Serializable pk) {
-        final String sql = "SELECT COUNT(*) FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + " = " + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+        final String sql = "SELECT COUNT(*) FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         return existsDB(info, sql, true);
     }
