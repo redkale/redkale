@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
 import org.redkale.cluster.ClusterAgent;
 import org.redkale.convert.ConvertType;
@@ -136,7 +136,14 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 }
             }
             rs.setResult(resp.body());
-            if (finest) logger.log(Level.FINEST, url + "?" + req.getParametersToString() + ", result = " + new String(resp.body(), StandardCharsets.UTF_8));
+            if (finest) {
+                StringBuilder sb = new StringBuilder();
+                Map<String, String> params = req.getParams();
+                if (params != null && !params.isEmpty()) {
+                    params.forEach((n, v) -> sb.append('&').append(n).append('=').append(v));
+                }
+                logger.log(Level.FINEST, url + sb + ", result = " + new String(resp.body(), StandardCharsets.UTF_8));
+            }
             return CompletableFuture.completedFuture(rs);
         });
     }
