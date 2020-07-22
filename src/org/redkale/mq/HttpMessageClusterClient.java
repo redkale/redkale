@@ -140,13 +140,9 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 StringBuilder sb = new StringBuilder();
                 Map<String, String> params = req.getParams();
                 if (params != null && !params.isEmpty()) {
-                    char ch = '?';
-                    for (Map.Entry<String, String> en : params.entrySet()) {
-                        sb.append(ch).append(en.getKey()).append('=').append(en.getValue());
-                        ch = '&';
-                    }
+                    params.forEach((n, v) -> sb.append('&').append(n).append('=').append(v));
                 }
-                logger.log(Level.FINEST, url + sb + ", result = " + new String(resp.body(), StandardCharsets.UTF_8));
+                logger.log(Level.FINEST, url + "?userid=" + userid + sb + ", result = " + new String(resp.body(), StandardCharsets.UTF_8));
             }
             return CompletableFuture.completedFuture(rs);
         });
