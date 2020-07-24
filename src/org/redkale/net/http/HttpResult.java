@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import java.io.Serializable;
 import java.net.HttpCookie;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.*;
@@ -156,6 +157,15 @@ public class HttpResult<T> {
 
     @Override
     public String toString() {
+        if (this.result instanceof byte[]) {
+            HttpResult tmp = new HttpResult();
+            tmp.contentType = this.contentType;
+            tmp.cookies = this.cookies;
+            tmp.headers = this.headers;
+            tmp.status = this.status;
+            tmp.result = new String((byte[]) this.result, StandardCharsets.UTF_8);
+            return JsonConvert.root().convertTo(tmp);
+        }
         return JsonConvert.root().convertTo(this);
     }
 }
