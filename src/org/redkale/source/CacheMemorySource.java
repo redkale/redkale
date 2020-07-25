@@ -449,9 +449,9 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         for (int i = 0; i < fields.length; i++) {
             Serializable val = (Serializable) entry.mapValue.get(fields[i]);
             if (type == String.class) {
-                rs.add(val == null ? null : (T)String.valueOf(val));
+                rs.add(val == null ? null : (T) String.valueOf(val));
             } else {
-                rs.add((T)val);
+                rs.add((T) val);
             }
         }
         return rs;
@@ -905,9 +905,9 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public void remove(String key) {
-        if (key == null) return;
-        container.remove(key);
+    public int remove(String key) {
+        if (key == null) return 0;
+        return container.remove(key) == null ? 0 : 1;
     }
 
     @Override
@@ -961,8 +961,8 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public CompletableFuture<Void> removeAsync(final String key) {
-        return CompletableFuture.runAsync(() -> remove(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> removeAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> remove(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1276,55 +1276,56 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public void removeListItem(String key, V value) {
-        if (key == null) return;
+    public int removeListItem(String key, V value) {
+        if (key == null) return 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) return;
-        entry.listValue.remove(value);
+        if (entry == null || entry.listValue == null) return 0;
+        return entry.listValue.remove(value) ? 1 : 0;
+
     }
 
     @Override
-    public <T> void removeListItem(String key, final Type componentType, T value) {
-        if (key == null) return;
+    public <T> int removeListItem(String key, final Type componentType, T value) {
+        if (key == null) return 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) return;
-        entry.listValue.remove(value);
+        if (entry == null || entry.listValue == null) return 0;
+        return entry.listValue.remove(value) ? 1 : 0;
     }
 
     @Override
-    public void removeStringListItem(String key, String value) {
-        if (key == null) return;
+    public int removeStringListItem(String key, String value) {
+        if (key == null) return 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) return;
-        entry.listValue.remove(value);
+        if (entry == null || entry.listValue == null) return 0;
+        return entry.listValue.remove(value) ? 1 : 0;
     }
 
     @Override
-    public void removeLongListItem(String key, long value) {
-        if (key == null) return;
+    public int removeLongListItem(String key, long value) {
+        if (key == null) return 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) return;
-        entry.listValue.remove(value);
+        if (entry == null || entry.listValue == null) return 0;
+        return entry.listValue.remove(value) ? 1 : 0;
     }
 
     @Override
-    public CompletableFuture<Void> removeListItemAsync(final String key, final V value) {
-        return CompletableFuture.runAsync(() -> removeListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> removeListItemAsync(final String key, final V value) {
+        return CompletableFuture.supplyAsync(() -> removeListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public <T> CompletableFuture<Void> removeListItemAsync(final String key, final Type componentType, T value) {
-        return CompletableFuture.runAsync(() -> removeListItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Integer> removeListItemAsync(final String key, final Type componentType, T value) {
+        return CompletableFuture.supplyAsync(() -> removeListItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> removeStringListItemAsync(final String key, final String value) {
-        return CompletableFuture.runAsync(() -> removeStringListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> removeStringListItemAsync(final String key, final String value) {
+        return CompletableFuture.supplyAsync(() -> removeStringListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> removeLongListItemAsync(final String key, final long value) {
-        return CompletableFuture.runAsync(() -> removeLongListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> removeLongListItemAsync(final String key, final long value) {
+        return CompletableFuture.supplyAsync(() -> removeLongListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     protected void appendSetItem(CacheEntryType cacheType, String key, Object value) {
@@ -1382,56 +1383,55 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public void removeSetItem(String key, V value) {
-        if (key == null) return;
+    public int removeSetItem(String key, V value) {
+        if (key == null) return 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) return;
-        entry.csetValue.remove(value);
+        if (entry == null || entry.csetValue == null) return 0;
+        return entry.csetValue.remove(value) ? 1 : 0;
     }
 
     @Override
-    public <T> void removeSetItem(String key, Type type, T value) {
-        if (key == null) return;
+    public <T> int removeSetItem(String key, Type type, T value) {
+        if (key == null) return 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) return;
-        entry.csetValue.remove(value);
+        if (entry == null || entry.csetValue == null) return 0;
+        return entry.csetValue.remove(value) ? 1 : 0;
     }
 
     @Override
-    public void removeStringSetItem(String key, String value) {
-        if (key == null) return;
+    public int removeStringSetItem(String key, String value) {
+        if (key == null) return 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) return;
-        entry.csetValue.remove(value);
+        if (entry == null || entry.csetValue == null) return 0;
+        return entry.csetValue.remove(value) ? 1 : 0;
     }
 
     @Override
-
-    public void removeLongSetItem(String key, long value) {
-        if (key == null) return;
+    public int removeLongSetItem(String key, long value) {
+        if (key == null) return 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) return;
-        entry.csetValue.remove(value);
+        if (entry == null || entry.csetValue == null) return 0;
+        return entry.csetValue.remove(value) ? 1 : 0;
     }
 
     @Override
-    public CompletableFuture<Void> removeSetItemAsync(final String key, final V value) {
-        return CompletableFuture.runAsync(() -> removeSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> removeSetItemAsync(final String key, final V value) {
+        return CompletableFuture.supplyAsync(() -> removeSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public <T> CompletableFuture<Void> removeSetItemAsync(final String key, final Type componentType, final T value) {
-        return CompletableFuture.runAsync(() -> removeSetItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Integer> removeSetItemAsync(final String key, final Type componentType, final T value) {
+        return CompletableFuture.supplyAsync(() -> removeSetItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> removeStringSetItemAsync(final String key, final String value) {
-        return CompletableFuture.runAsync(() -> removeStringSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> removeStringSetItemAsync(final String key, final String value) {
+        return CompletableFuture.supplyAsync(() -> removeStringSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> removeLongSetItemAsync(final String key, final long value) {
-        return CompletableFuture.runAsync(() -> removeLongSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> removeLongSetItemAsync(final String key, final long value) {
+        return CompletableFuture.supplyAsync(() -> removeLongSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

@@ -112,10 +112,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Void> disconnect(Serializable userid, WebSocketAddress wsaddr) {
         tryAcquireSemaphore();
-        CompletableFuture<Void> future = source.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
+        CompletableFuture<Integer> future = source.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
         if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " disconnect from " + wsaddr);
-        return future;
+        return future.thenApply(v -> null);
     }
 
     /**

@@ -130,7 +130,7 @@ public interface CacheSource<V extends Object> {
 
     public void setExpireSeconds(final String key, final int expireSeconds);
 
-    public void remove(final String key);
+    public int remove(final String key);
 
     public long incr(final String key);
 
@@ -156,23 +156,23 @@ public interface CacheSource<V extends Object> {
 
     public void appendListItem(final String key, final V value);
 
-    public void removeListItem(final String key, final V value);
+    public int removeListItem(final String key, final V value);
 
     public boolean existsSetItem(final String key, final V value);
 
     public void appendSetItem(final String key, final V value);
 
-    public void removeSetItem(final String key, final V value);
+    public int removeSetItem(final String key, final V value);
 
     public <T> void appendListItem(final String key, final Type componentType, final T value);
 
-    public <T> void removeListItem(final String key, final Type componentType, final T value);
+    public <T> int removeListItem(final String key, final Type componentType, final T value);
 
     public <T> boolean existsSetItem(final String key, final Type componentType, final T value);
 
     public <T> void appendSetItem(final String key, final Type componentType, final T value);
 
-    public <T> void removeSetItem(final String key, final Type componentType, final T value);
+    public <T> int removeSetItem(final String key, final Type componentType, final T value);
 
     public List<String> queryKeys();
 
@@ -204,13 +204,13 @@ public interface CacheSource<V extends Object> {
 
     public void appendStringListItem(final String key, final String value);
 
-    public void removeStringListItem(final String key, final String value);
+    public int removeStringListItem(final String key, final String value);
 
     public boolean existsStringSetItem(final String key, final String value);
 
     public void appendStringSetItem(final String key, final String value);
 
-    public void removeStringSetItem(final String key, final String value);
+    public int removeStringSetItem(final String key, final String value);
 
     public long getLong(final String key, long defValue);
 
@@ -232,13 +232,13 @@ public interface CacheSource<V extends Object> {
 
     public void appendLongListItem(final String key, final long value);
 
-    public void removeLongListItem(final String key, final long value);
+    public int removeLongListItem(final String key, final long value);
 
     public boolean existsLongSetItem(final String key, final long value);
 
     public void appendLongSetItem(final String key, final long value);
 
-    public void removeLongSetItem(final String key, final long value);
+    public int removeLongSetItem(final String key, final long value);
 
     //---------------------- CompletableFuture 异步版 ---------------------------------
     public CompletableFuture<Boolean> existsAsync(final String key);
@@ -297,7 +297,7 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds);
 
-    public CompletableFuture<Void> removeAsync(final String key);
+    public CompletableFuture<Integer> removeAsync(final String key);
 
     public CompletableFuture<Long> incrAsync(final String key);
 
@@ -363,23 +363,23 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> appendListItemAsync(final String key, final V value);
 
-    public CompletableFuture<Void> removeListItemAsync(final String key, final V value);
+    public CompletableFuture<Integer> removeListItemAsync(final String key, final V value);
 
     public CompletableFuture<Boolean> existsSetItemAsync(final String key, final V value);
 
     public CompletableFuture<Void> appendSetItemAsync(final String key, final V value);
 
-    public CompletableFuture<Void> removeSetItemAsync(final String key, final V value);
+    public CompletableFuture<Integer> removeSetItemAsync(final String key, final V value);
 
     public <T> CompletableFuture<Void> appendListItemAsync(final String key, final Type componentType, final T value);
 
-    public <T> CompletableFuture<Void> removeListItemAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Integer> removeListItemAsync(final String key, final Type componentType, final T value);
 
     public <T> CompletableFuture<Boolean> existsSetItemAsync(final String key, final Type componentType, final T value);
 
     public <T> CompletableFuture<Void> appendSetItemAsync(final String key, final Type componentType, final T value);
 
-    public <T> CompletableFuture<Void> removeSetItemAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Integer> removeSetItemAsync(final String key, final Type componentType, final T value);
 
     public CompletableFuture<List<String>> queryKeysAsync();
 
@@ -411,13 +411,13 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> appendStringListItemAsync(final String key, final String value);
 
-    public CompletableFuture<Void> removeStringListItemAsync(final String key, final String value);
+    public CompletableFuture<Integer> removeStringListItemAsync(final String key, final String value);
 
     public CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value);
 
     public CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value);
 
-    public CompletableFuture<Void> removeStringSetItemAsync(final String key, final String value);
+    public CompletableFuture<Integer> removeStringSetItemAsync(final String key, final String value);
 
     public CompletableFuture<Long> getLongAsync(final String key, long defValue);
 
@@ -439,13 +439,13 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> appendLongListItemAsync(final String key, final long value);
 
-    public CompletableFuture<Void> removeLongListItemAsync(final String key, final long value);
+    public CompletableFuture<Integer> removeLongListItemAsync(final String key, final long value);
 
     public CompletableFuture<Boolean> existsLongSetItemAsync(final String key, final long value);
 
     public CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value);
 
-    public CompletableFuture<Void> removeLongSetItemAsync(final String key, final long value);
+    public CompletableFuture<Integer> removeLongSetItemAsync(final String key, final long value);
 
     default CompletableFuture<Boolean> isOpenAsync() {
         return CompletableFuture.completedFuture(isOpen());
