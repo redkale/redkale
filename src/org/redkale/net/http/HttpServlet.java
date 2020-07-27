@@ -50,7 +50,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             }
             if (entry.cacheseconds > 0) {//有缓存设置
                 CacheEntry ce = entry.cache.get(request.getRequestURI());
-                if (ce != null && ce.time + entry.cacheseconds > System.currentTimeMillis()) { //缓存有效
+                if (ce != null && ce.time + entry.cacheseconds * 1000 > System.currentTimeMillis()) { //缓存有效
                     response.setStatus(ce.status);
                     response.setContentType(ce.contentType);
                     response.finish(ce.getBuffers());
