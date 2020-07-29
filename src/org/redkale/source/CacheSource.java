@@ -174,6 +174,10 @@ public interface CacheSource<V extends Object> {
 
     public <T> int removeSetItem(final String key, final Type componentType, final T value);
 
+    public <T> T spopSetItem(final String key, final Type componentType);
+
+    public <T> List<T> spopSetItem(final String key, final int count, final Type componentType);
+
     public List<String> queryKeys();
 
     public List<String> queryKeysStartsWith(String startsWith);
@@ -204,6 +208,10 @@ public interface CacheSource<V extends Object> {
 
     public void appendStringListItem(final String key, final String value);
 
+    public String spopStringSetItem(final String key);
+
+    public List<String> spopStringSetItem(final String key, final int count);
+
     public int removeStringListItem(final String key, final String value);
 
     public boolean existsStringSetItem(final String key, final String value);
@@ -231,6 +239,10 @@ public interface CacheSource<V extends Object> {
     public Collection<Long> getLongCollectionAndRefresh(final String key, final int expireSeconds);
 
     public void appendLongListItem(final String key, final long value);
+
+    public long spopLongSetItem(final String key);
+
+    public List<Long> spopLongSetItem(final String key, final int count);
 
     public int removeLongListItem(final String key, final long value);
 
@@ -363,6 +375,10 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> appendListItemAsync(final String key, final V value);
 
+    public <T> CompletableFuture<T> spopSetItemAsync(final String key, final Type componentType);
+
+    public <T> CompletableFuture<List<T>> spopSetItemAsync(final String key, final int count, final Type componentType);
+
     public CompletableFuture<Integer> removeListItemAsync(final String key, final V value);
 
     public CompletableFuture<Boolean> existsSetItemAsync(final String key, final V value);
@@ -411,6 +427,10 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> appendStringListItemAsync(final String key, final String value);
 
+    public CompletableFuture<String> spopStringSetItemAsync(final String key);
+
+    public CompletableFuture<List<String>> spopStringSetItemAsync(final String key, final int count);
+
     public CompletableFuture<Integer> removeStringListItemAsync(final String key, final String value);
 
     public CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value);
@@ -438,6 +458,10 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Collection<Long>> getLongCollectionAndRefreshAsync(final String key, final int expireSeconds);
 
     public CompletableFuture<Void> appendLongListItemAsync(final String key, final long value);
+
+    public CompletableFuture<Long> spopLongSetItemAsync(final String key);
+
+    public CompletableFuture<List<Long>> spopLongSetItemAsync(final String key, final int count);
 
     public CompletableFuture<Integer> removeLongListItemAsync(final String key, final long value);
 

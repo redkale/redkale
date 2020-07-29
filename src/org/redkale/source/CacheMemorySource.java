@@ -1328,6 +1328,65 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         return CompletableFuture.supplyAsync(() -> removeLongListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
+    @Override
+    public String spopStringSetItem(final String key) {
+        return (String) spopSetItem(key, String.class);
+    }
+
+    @Override
+    public List<String> spopStringSetItem(final String key, int count) {
+        return (List) spopSetItem(key, count, String.class);
+    }
+
+    @Override
+    public long spopLongSetItem(final String key) {
+        return (Long) spopSetItem(key, long.class);
+    }
+
+    @Override
+    public List<Long> spopLongSetItem(final String key, int count) {
+        return (List) spopSetItem(key, count, long.class);
+    }
+
+    @Override
+    public <T> T spopSetItem(final String key, final Type componentType) {
+        if (key == null) return null;
+        CacheEntry entry = container.get(key);
+        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+            return null;
+        }
+        if (entry.csetValue.isEmpty()) return null;
+        Iterator it = entry.csetValue.iterator();
+        if (it.hasNext()) {
+            Object obj = it.next();
+            if (obj != null && componentType == long.class) obj = ((Number) obj).longValue();
+            it.remove();
+            return (T) obj;
+        }
+        return null;
+    }
+
+    @Override
+    public <T> List<T> spopSetItem(final String key, final int count, final Type componentType) {
+        if (key == null) return new ArrayList<>();
+        CacheEntry entry = container.get(key);
+        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+            return new ArrayList<>();
+        }
+        if (entry.csetValue.isEmpty()) return new ArrayList<>();
+        Iterator it = entry.csetValue.iterator();
+        List<T> list = new ArrayList<>();
+        int index = 0;
+        while (it.hasNext()) {
+            Object obj = it.next();
+            if (obj != null && componentType == long.class) obj = ((Number) obj).longValue();
+            list.add((T) obj);
+            it.remove();
+            if (++index >= count) break;
+        }
+        return list;
+    }
+
     protected void appendSetItem(CacheEntryType cacheType, String key, Object value) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
@@ -1488,5 +1547,35 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     @Override
     public CompletableFuture<Integer> getKeySizeAsync() {
         return CompletableFuture.completedFuture(container.size());
+    }
+
+    @Override
+    public <T> CompletableFuture<T> spopSetItemAsync(String key, Type componentType) {
+        return CompletableFuture.supplyAsync(() -> spopSetItem(key, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<List<T>> spopSetItemAsync(String key, int count, Type componentType) {
+        return CompletableFuture.supplyAsync(() -> spopSetItem(key, count, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<String> spopStringSetItemAsync(String key) {
+        return CompletableFuture.supplyAsync(() -> spopStringSetItem(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<List<String>> spopStringSetItemAsync(String key, int count) {
+        return CompletableFuture.supplyAsync(() -> spopStringSetItem(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Long> spopLongSetItemAsync(String key) {
+        return CompletableFuture.supplyAsync(() -> spopLongSetItem(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<List<Long>> spopLongSetItemAsync(String key, int count) {
+        return CompletableFuture.supplyAsync(() -> spopLongSetItem(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 }
