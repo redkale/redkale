@@ -1339,7 +1339,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public long spopLongSetItem(final String key) {
+    public Long spopLongSetItem(final String key) {
         return (Long) spopSetItem(key, long.class);
     }
 

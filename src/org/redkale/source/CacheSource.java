@@ -240,7 +240,7 @@ public interface CacheSource<V extends Object> {
 
     public void appendLongListItem(final String key, final long value);
 
-    public long spopLongSetItem(final String key);
+    public Long spopLongSetItem(final String key);
 
     public List<Long> spopLongSetItem(final String key, final int count);
 
