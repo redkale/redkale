@@ -188,7 +188,7 @@ public class NodeHttpServer extends NodeServer {
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null) continue;
             if (ws.value().length == 0) {
-                logger.log(Level.INFO, "not found WebServlet.value in " + clazz.getName());
+                logger.log(Level.INFO, "not found @WebServlet.value in " + clazz.getName());
                 continue;
             }
             final HttpServlet servlet = clazz.getDeclaredConstructor().newInstance();
