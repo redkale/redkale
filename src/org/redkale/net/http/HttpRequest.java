@@ -110,6 +110,7 @@ public class HttpRequest extends Request<HttpContext> {
             this.contentType = req.getContentType();
             this.remoteAddr = req.getRemoteAddr();
             this.requestURI = req.getRequestURI();
+            this.method = "POST";
             if (req.getSessionid() != null && !req.getSessionid().isEmpty()) {
                 this.cookies = new HttpCookie[]{new HttpCookie(SESSIONID_NAME, req.getSessionid())};
             }
