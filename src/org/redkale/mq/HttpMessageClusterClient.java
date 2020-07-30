@@ -68,7 +68,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
         return clusterAgent.queryMqtpAddress("mqtp", module, resname).thenCompose(addrmap -> {
             if (addrmap == null || addrmap.isEmpty()) return new HttpResult().status(404).toAnyFuture();
-            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(6000));
+            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(30000));
             if (req.isRpc()) builder.header(Rest.REST_HEADER_RPC_NAME, "true");
             if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
             if (headers != null) headers.forEach((n, v) -> {
@@ -101,7 +101,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
         return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
             if (addrs == null || addrs.isEmpty()) return new HttpResult().status(404).toAnyFuture();
-            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(6000));
+            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(30000));
             if (req.isRpc()) builder.header(Rest.REST_HEADER_RPC_NAME, "true");
             if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
             if (headers != null) headers.forEach((n, v) -> {

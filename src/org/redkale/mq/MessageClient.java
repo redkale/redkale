@@ -74,7 +74,7 @@ public abstract class MessageClient {
                 MessageRespFutureNode node = new MessageRespFutureNode(message, respNodes, counter, future);
                 respNodes.put(message.getSeqid(), node);
                 ScheduledThreadPoolExecutor executor = messageAgent.timeoutExecutor;
-                if (executor != null) executor.schedule(node, 6, TimeUnit.SECONDS);
+                if (executor != null) executor.schedule(node, 30, TimeUnit.SECONDS);
             } else {
                 future.complete(null);
             }
