@@ -10,7 +10,6 @@ import java.lang.ref.WeakReference;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -225,7 +224,7 @@ public final class Transport {
     protected CompletableFuture<AsyncConnection> pollAsync(TransportNode node, SocketAddress addr, Supplier<CompletableFuture<AsyncConnection>> func, final int count) {
         if (count >= 5) {
             CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
-            future.completeExceptionally(new SQLException("create AsyncConnection error"));
+            future.completeExceptionally(new RuntimeException("create AsyncConnection error"));
             return future;
         }
         final BlockingQueue<AsyncConnection> queue = node.conns;
