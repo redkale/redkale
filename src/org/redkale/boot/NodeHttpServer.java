@@ -186,7 +186,11 @@ public class NodeHttpServer extends NodeServer {
             Class<HttpServlet> clazz = (Class<HttpServlet>) en.getType();
             if (Modifier.isAbstract(clazz.getModifiers())) continue;
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
-            if (ws == null || ws.value().length == 0) continue;
+            if (ws == null) continue;
+            if (ws.value().length == 0) {
+                logger.log(Level.INFO, "not found WebServlet.value in " + clazz.getName());
+                continue;
+            }
             final HttpServlet servlet = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(servlet, this);
             final String[] mappings = ws.value();
