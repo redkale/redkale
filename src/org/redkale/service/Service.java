@@ -49,6 +49,7 @@ public interface Service {
     /**
      * 进程退出时，调用Service销毁
      * 远程模式下该方法会重载成空方法
+     * 注意： 在此方法内不能调用MessageClient.sendMessage 方法，因为Application关闭时会先destroy掉MessageClient
      *
      * @param config 配置参数
      */
