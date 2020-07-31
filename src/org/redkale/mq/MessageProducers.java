@@ -28,14 +28,11 @@ public class MessageProducers {
     }
 
     public MessageProducer getProducer(MessageRecord message) {
-        int hash = message.hash();
-        if (hash == 0) {
-            hash = index.incrementAndGet();
-            if (index.get() > 1000 * producers.length) {
-                synchronized (index) {
-                    if (index.get() > 1000 * producers.length) {
-                        index.addAndGet(-1000 * producers.length);
-                    }
+        int hash = index.incrementAndGet();
+        if (index.get() > 1000 * producers.length) {
+            synchronized (index) {
+                if (index.get() > 1000 * producers.length) {
+                    index.addAndGet(-1000 * producers.length);
                 }
             }
         }
