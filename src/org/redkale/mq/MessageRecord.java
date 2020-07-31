@@ -156,6 +156,16 @@ public class MessageRecord implements Serializable {
         return this;
     }
 
+    public int hash() {
+        if (groupid != null && !groupid.isEmpty()) {
+            return groupid.hashCode();
+        } else if (userid > 0) {
+            return userid;
+        } else {
+            return 0;
+        }
+    }
+
     public MessageRecord version(int version) {
         this.version = version;
         return this;
