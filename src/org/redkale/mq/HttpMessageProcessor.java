@@ -26,7 +26,7 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
-    protected final MessageProducer producer;
+    protected final MessageProducers producer;
 
     protected final NodeHttpServer server;
 
@@ -48,7 +48,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         if (cdl != null) cdl.countDown();
     };
 
-    public HttpMessageProcessor(Logger logger, MessageProducer producer, NodeHttpServer server, Service service, HttpServlet servlet) {
+    public HttpMessageProcessor(Logger logger, MessageProducers producer, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
         this.producer = producer;
@@ -85,11 +85,11 @@ public class HttpMessageProcessor implements MessageProcessor {
             if (multiconsumer) {
                 request.setRequestURI(request.getRequestURI().replaceFirst(this.multimodule, this.restmodule));
             }
-            HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, producer);
+            HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, producer.getProducer(message));
             servlet.execute(request, response);
         } catch (Throwable ex) {
             if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
-                HttpMessageResponse.finishHttpResult(finest, message, callback, producer, message.getResptopic(), new HttpResult().status(500));
+                HttpMessageResponse.finishHttpResult(finest, message, callback,  producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
         }
@@ -105,7 +105,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         }
     }
 
-    public MessageProducer getProducer() {
+    public MessageProducers getProducer() {
         return producer;
     }
 

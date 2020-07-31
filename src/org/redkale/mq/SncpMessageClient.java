@@ -27,7 +27,7 @@ public class SncpMessageClient extends MessageClient {
     }
 
     @Override
-    protected MessageProducer getProducer() {
+    protected MessageProducers getProducer() {
         return messageAgent.getSncpProducer();
     }
 

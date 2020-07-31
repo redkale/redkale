@@ -39,9 +39,9 @@ public abstract class MessageAgent {
 
     protected AnyValue config;
 
-    protected MessageProducer httpProducer;
+    protected MessageProducers httpProducer;
 
-    protected MessageProducer sncpProducer;
+    protected MessageProducers sncpProducer;
 
     protected final Object httpProducerLock = new Object();
 
@@ -110,12 +110,12 @@ public abstract class MessageAgent {
 
     protected List<MessageProducer> getAllMessageProducer() {
         List<MessageProducer> producers = new ArrayList<>();
-        if (this.httpProducer != null) producers.add(this.httpProducer);
-        if (this.sncpProducer != null) producers.add(this.sncpProducer);
-        MessageProducer one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
-        if (one != null) producers.add(one);
+        if (this.httpProducer != null) producers.addAll(List.of(this.httpProducer.producers));
+        if (this.sncpProducer != null) producers.addAll(List.of(this.sncpProducer.producers));
+        MessageProducers one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
+        if (one != null) producers.addAll(List.of(one.producers));
         one = this.sncpMessageClient == null ? null : this.sncpMessageClient.getProducer();
-        if (one != null) producers.add(one);
+        if (one != null) producers.addAll(List.of(one.producers));
         return producers;
     }
 
@@ -155,26 +155,34 @@ public abstract class MessageAgent {
     }
 
     //获取指定topic的生产处理器
-    public MessageProducer getSncpProducer() {
+    public MessageProducers getSncpProducer() {
         if (this.sncpProducer == null) {
             synchronized (sncpProducerLock) {
                 if (this.sncpProducer == null) {
-                    MessageProducer producer = createProducer("SncpProducer");
-                    producer.startup().join();
-                    this.sncpProducer = producer;
+                    MessageProducer[] producers = new MessageProducer[Runtime.getRuntime().availableProcessors()];
+                    for (int i = 0; i < producers.length; i++) {
+                        MessageProducer producer = createProducer("SncpProducer");
+                        producer.startup().join();
+                        producers[i] = producer;
+                    }
+                    this.sncpProducer = new MessageProducers(producers);
                 }
             }
         }
         return this.sncpProducer;
     }
 
-    public MessageProducer getHttpProducer() {
+    public MessageProducers getHttpProducer() {
         if (this.httpProducer == null) {
             synchronized (httpProducerLock) {
                 if (this.httpProducer == null) {
-                    MessageProducer producer = createProducer("HttpProducer");
-                    producer.startup().join();
-                    this.httpProducer = producer;
+                    MessageProducer[] producers = new MessageProducer[Runtime.getRuntime().availableProcessors()];
+                    for (int i = 0; i < producers.length; i++) {
+                        MessageProducer producer = createProducer("HttpProducer");
+                        producer.startup().join();
+                        producers[i] = producer;
+                    }
+                    this.httpProducer = new MessageProducers(producers);
                 }
             }
         }

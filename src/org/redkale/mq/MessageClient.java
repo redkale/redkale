@@ -85,5 +85,5 @@ public abstract class MessageClient {
         }
     }
 
-    protected abstract MessageProducer getProducer();
+    protected abstract MessageProducers getProducer();
 }

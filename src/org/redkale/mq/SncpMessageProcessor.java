@@ -24,7 +24,7 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
-    protected final MessageProducer producer;
+    protected final MessageProducers producer;
 
     protected final NodeSncpServer server;
 
@@ -40,7 +40,7 @@ public class SncpMessageProcessor implements MessageProcessor {
         if (cdl != null) cdl.countDown();
     };
 
-    public SncpMessageProcessor(Logger logger, MessageProducer producer, NodeSncpServer server, Service service, SncpServlet servlet) {
+    public SncpMessageProcessor(Logger logger, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
         this.producer = producer;
         this.server = server;
@@ -68,8 +68,8 @@ public class SncpMessageProcessor implements MessageProcessor {
         try {
             SncpContext context = server.getSncpServer().getContext();
             SncpMessageRequest request = new SncpMessageRequest(context, message);
-            response = new SncpMessageResponse(context, request, callback, null, producer);
-            servlet.execute(request, response);
+            response = new SncpMessageResponse(context, request, callback, null, producer.getProducer(message));
+            servlet.execute(request, response); 
         } catch (Throwable ex) {
             if (response != null) response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
             logger.log(Level.SEVERE, SncpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
@@ -86,7 +86,7 @@ public class SncpMessageProcessor implements MessageProcessor {
         }
     }
 
-    public MessageProducer getProducer() {
+    public MessageProducers getProducer() {
         return producer;
     }
 
