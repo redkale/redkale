@@ -89,7 +89,7 @@ public class HttpMessageProcessor implements MessageProcessor {
             servlet.execute(request, response);
         } catch (Throwable ex) {
             if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
-                HttpMessageResponse.finishHttpResult(finest, message, callback,  producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
+                HttpMessageResponse.finishHttpResult(finest, message, callback, producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
         }
@@ -102,6 +102,7 @@ public class HttpMessageProcessor implements MessageProcessor {
                 this.cdl.await(30, TimeUnit.SECONDS);
             } catch (Exception ex) {
             }
+            this.cdl = null;
         }
     }
 

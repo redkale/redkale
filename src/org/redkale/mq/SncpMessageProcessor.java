@@ -83,6 +83,7 @@ public class SncpMessageProcessor implements MessageProcessor {
                 this.cdl.await(30, TimeUnit.SECONDS);
             } catch (Exception ex) {
             }
+            this.cdl = null;
         }
     }
 
