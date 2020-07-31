@@ -36,6 +36,10 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     protected CountDownLatch cdl;
 
+    protected final Runnable innerCallback = () -> {
+        if (cdl != null) cdl.countDown();
+    };
+
     public SncpMessageProcessor(Logger logger, MessageProducer producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
         this.producer = producer;
@@ -53,9 +57,9 @@ public class SncpMessageProcessor implements MessageProcessor {
     @Override
     public void process(final MessageRecord message, final Runnable callback) {
         if (this.workExecutor == null) {
-            execute(message, callback);
+            execute(message, innerCallback);
         } else {
-            this.workExecutor.execute(() -> execute(message, callback));
+            this.workExecutor.execute(() -> execute(message, innerCallback));
         }
     }
 
@@ -66,11 +70,9 @@ public class SncpMessageProcessor implements MessageProcessor {
             SncpMessageRequest request = new SncpMessageRequest(context, message);
             response = new SncpMessageResponse(context, request, callback, null, producer);
             servlet.execute(request, response);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             if (response != null) response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
             logger.log(Level.SEVERE, SncpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
-        } finally {
-            if (cdl != null) cdl.countDown();
         }
     }
 
@@ -78,7 +80,7 @@ public class SncpMessageProcessor implements MessageProcessor {
     public void commit() {
         if (this.cdl != null) {
             try {
-                this.cdl.await();
+                this.cdl.await(30, TimeUnit.SECONDS);
             } catch (Exception ex) {
             }
         }
