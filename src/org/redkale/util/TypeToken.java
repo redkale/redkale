@@ -151,6 +151,7 @@ public abstract class TypeToken<T> {
                     ss = ss.getSuperclass();
                     asts = ss.getTypeParameters();
                 }
+                
                 if (atas.length == asts.length) {
                     for (int i = 0; i < asts.length; i++) {
                         Type currt = asts[i];
@@ -185,6 +186,14 @@ public abstract class TypeToken<T> {
                                 && ((TypeVariable) type).getBounds()[0] instanceof Class
                                 && ((Class) ((TypeVariable) type).getBounds()[0]).isAssignableFrom((Class) atas[i]))
                                 return atas[i];
+                            if (atas[i] instanceof Class
+                                && ((TypeVariable) type).getBounds().length == 1
+                                && ((TypeVariable) type).getBounds()[0] instanceof ParameterizedType) {
+                                ParameterizedType pt = (ParameterizedType) ((TypeVariable) type).getBounds()[0];
+                                if (pt.getRawType() instanceof Class && ((Class) pt.getRawType()).isAssignableFrom((Class) atas[i])) {
+                                    return atas[i];
+                                }
+                            }
                             if (atas[i] instanceof ParameterizedType
                                 && ((TypeVariable) type).getBounds().length == 1
                                 && ((TypeVariable) type).getBounds()[0] == Object.class)

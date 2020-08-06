@@ -1158,7 +1158,8 @@ public final class Rest {
                         }
                     } while ((loop = loop.getSuperclass()) != Object.class);
                 }
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, userid, annheaders, param.getParameterizedType()});
+                java.lang.reflect.Type paramtype = TypeToken.getGenericType( param.getParameterizedType(),serviceType);
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, userid, annheaders, paramtype});
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
