@@ -35,6 +35,14 @@ public class WebSocketAction implements Serializable {
         this.attach = attach;
     }
 
+    public String findAttach(String name) {
+        return attach == null ? null : attach.get(name);
+    }
+
+    public String findAttach(String name, String defvalue) {
+        return attach == null ? defvalue : attach.getOrDefault(name, defvalue);
+    }
+
     public String getAction() {
         return action;
     }
