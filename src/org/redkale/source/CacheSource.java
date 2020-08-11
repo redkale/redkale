@@ -75,6 +75,8 @@ public interface CacheSource<V extends Object> {
 
     public List<String> hkeys(final String key);
 
+    public int hsize(final String key);
+
     public long hincr(final String key, String field);
 
     public long hincr(final String key, String field, long num);
@@ -323,6 +325,8 @@ public interface CacheSource<V extends Object> {
     public CompletableFuture<Integer> hremoveAsync(final String key, String... fields);
 
     public CompletableFuture<List<String>> hkeysAsync(final String key);
+
+    public CompletableFuture<Integer> hsizeAsync(final String key);
 
     public CompletableFuture<Long> hincrAsync(final String key, String field);
 

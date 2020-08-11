@@ -356,6 +356,13 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
+    public int hsize(final String key) {
+        CacheEntry entry = container.get(key);
+        if (entry == null || entry.mapValue == null) return 0;
+        return entry.mapValue.keySet().size();
+    }
+
+    @Override
     public long hincr(final String key, String field) {
         return hincr(key, field, 1);
     }
@@ -549,6 +556,11 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     @Override
     public CompletableFuture<List<String>> hkeysAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> hkeys(key), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Integer> hsizeAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> hsize(key), getExecutor());
     }
 
     @Override
