@@ -31,8 +31,10 @@ public interface CacheSource<V extends Object> {
 
     public String getType();
 
+    @Deprecated
     public void initValueType(Type valueType);
 
+    @Deprecated
     public void initTransient(boolean flag);
 
     //ServiceLoader时判断配置是否符合当前实现类
@@ -44,10 +46,12 @@ public interface CacheSource<V extends Object> {
 
     public boolean exists(final String key);
 
+    @Deprecated
     public V get(final String key);
 
     public <T> T get(final String key, final Type type);
 
+    @Deprecated
     default V getIfAbsent(final String key, Function<String, ? extends V> mappingFunction) {
         V rs = get(key);
         if (rs == null) {
@@ -57,10 +61,12 @@ public interface CacheSource<V extends Object> {
         return rs;
     }
 
+    @Deprecated
     public V getAndRefresh(final String key, final int expireSeconds);
 
     public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type);
 
+    @Deprecated
     default V getAndRefreshIfAbsent(final String key, final int expireSeconds, Function<String, ? extends V> mappingFunction) {
         V rs = getAndRefresh(key, expireSeconds);
         if (rs == null) {
@@ -114,6 +120,7 @@ public interface CacheSource<V extends Object> {
 
     public void refresh(final String key, final int expireSeconds);
 
+    @Deprecated
     public void set(final String key, final V value);
 
     public <T> void set(final String key, final Convert convert, final T value);
@@ -122,6 +129,7 @@ public interface CacheSource<V extends Object> {
 
     public <T> void set(final String key, final Convert convert, final Type type, final T value);
 
+    @Deprecated
     public void set(final int expireSeconds, final String key, final V value);
 
     public <T> void set(final int expireSeconds, final String key, final Convert convert, final T value);
@@ -144,6 +152,7 @@ public interface CacheSource<V extends Object> {
 
     public <T> Map<String, T> getMap(final Type componentType, final String... keys);
 
+    @Deprecated
     public Collection<V> getCollection(final String key);
 
     public <T> Collection<T> getCollection(final String key, final Type componentType);
@@ -152,18 +161,24 @@ public interface CacheSource<V extends Object> {
 
     public int getCollectionSize(final String key);
 
+    @Deprecated
     public Collection<V> getCollectionAndRefresh(final String key, final int expireSeconds);
 
     public <T> Collection<T> getCollectionAndRefresh(final String key, final int expireSeconds, final Type componentType);
 
+    @Deprecated
     public void appendListItem(final String key, final V value);
 
+    @Deprecated
     public int removeListItem(final String key, final V value);
 
+    @Deprecated
     public boolean existsSetItem(final String key, final V value);
 
+    @Deprecated
     public void appendSetItem(final String key, final V value);
 
+    @Deprecated
     public int removeSetItem(final String key, final V value);
 
     public <T> void appendListItem(final String key, final Type componentType, final T value);
@@ -259,8 +274,12 @@ public interface CacheSource<V extends Object> {
 
     public <T> CompletableFuture<T> getAsync(final String key, final Type type);
 
+    public <T> CompletableFuture<T> getAndRefreshAsync(final String key, final int expireSeconds, final Type type);
+
+    @Deprecated
     public CompletableFuture<V> getAsync(final String key);
 
+    @Deprecated
     default CompletableFuture<V> getIfAbsentAsync(final String key, Function<String, ? extends V> mappingFunction) {
         return getAsync(key).thenCompose((V rs) -> {
             if (rs == null) {
@@ -274,10 +293,10 @@ public interface CacheSource<V extends Object> {
         });
     }
 
+    @Deprecated
     public CompletableFuture<V> getAndRefreshAsync(final String key, final int expireSeconds);
 
-    public <T> CompletableFuture<T> getAndRefreshAsync(final String key, final int expireSeconds, final Type type);
-
+    @Deprecated
     default CompletableFuture<V> getAndRefreshIfAbsentAsync(final String key, final int expireSeconds, Function<String, ? extends V> mappingFunction) {
         return getAndRefreshAsync(key, expireSeconds).thenCompose((V rs) -> {
             if (rs == null) {
@@ -293,6 +312,7 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds);
 
+    @Deprecated
     public CompletableFuture<Void> setAsync(final String key, final V value);
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final T value);
@@ -301,6 +321,7 @@ public interface CacheSource<V extends Object> {
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final Type type, final T value);
 
+    @Deprecated
     public CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final V value);
 
     public <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final T value);
@@ -365,6 +386,7 @@ public interface CacheSource<V extends Object> {
 
     public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys);
 
+    @Deprecated
     public CompletableFuture<Collection<V>> getCollectionAsync(final String key);
 
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(final String key, final Type componentType);
@@ -373,18 +395,22 @@ public interface CacheSource<V extends Object> {
 
     public CompletableFuture<Integer> getCollectionSizeAsync(final String key);
 
+    @Deprecated
     public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final String key, final int expireSeconds);
 
     public <T> CompletableFuture<Collection<T>> getCollectionAndRefreshAsync(final String key, final int expireSeconds, final Type componentType);
 
+    @Deprecated
     public CompletableFuture<Void> appendListItemAsync(final String key, final V value);
 
     public <T> CompletableFuture<T> spopSetItemAsync(final String key, final Type componentType);
 
     public <T> CompletableFuture<List<T>> spopSetItemAsync(final String key, final int count, final Type componentType);
 
+    @Deprecated
     public CompletableFuture<Integer> removeListItemAsync(final String key, final V value);
 
+    @Deprecated
     public CompletableFuture<Boolean> existsSetItemAsync(final String key, final V value);
 
     public CompletableFuture<Void> appendSetItemAsync(final String key, final V value);
