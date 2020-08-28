@@ -62,7 +62,7 @@ public abstract class MessageAgent {
         this.name = checkName(config.getValue("name", ""));
         this.httpMessageClient = new HttpMessageClient(this);
         this.sncpMessageClient = new SncpMessageClient(this);
-        this.workExecutor = new ThreadHashExecutor(Math.max(4, Runtime.getRuntime().availableProcessors()));
+        this.workExecutor = new ThreadHashExecutor(Math.max(4, config.getIntValue("threads", Runtime.getRuntime().availableProcessors())));
         // application (it doesn't execute completion handlers).
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
             Thread t = new Thread(r);
