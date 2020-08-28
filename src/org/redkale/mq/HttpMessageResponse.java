@@ -66,7 +66,7 @@ public class HttpMessageResponse extends HttpResponse {
         if (finest) {
             Object innerrs = result.getResult();
             if (innerrs instanceof byte[]) innerrs = new String((byte[]) innerrs, StandardCharsets.UTF_8);
-            producer.logger.log(Level.FINEST, "HttpMessageProcessor.process seqid=" + msg.getSeqid() + ", content: " + innerrs + ", result: " + result);
+            producer.logger.log(Level.FINEST, "HttpMessageProcessor.process seqid=" + msg.getSeqid() + ", content: " + innerrs + ", status: " + result.getStatus() + ", headers: " + result.getHeaders());
         }
         byte[] content = HttpResultCoder.getInstance().encode(result);
         producer.apply(new MessageRecord(msg.getSeqid(), format, resptopic, null, content));
