@@ -10,6 +10,7 @@ import java.util.logging.*;
 import org.redkale.boot.NodeHttpServer;
 import org.redkale.net.http.*;
 import org.redkale.service.Service;
+import org.redkale.util.ThreadHashExecutor;
 
 /**
  *
@@ -30,7 +31,7 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final NodeHttpServer server;
 
-    protected final ThreadPoolExecutor workExecutor;
+    protected final ThreadHashExecutor workExecutor;
 
     protected final Service service;
 
@@ -48,7 +49,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         if (cdl != null) cdl.countDown();
     };
 
-    public HttpMessageProcessor(Logger logger, MessageProducers producer, NodeHttpServer server, Service service, HttpServlet servlet) {
+    public HttpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageProducers producer, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
         this.producer = producer;
@@ -59,7 +60,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         this.multiconsumer = mmc != null;
         this.restmodule = "/" + Rest.getRestModule(service) + "/";
         this.multimodule = mmc != null ? ("/" + mmc.module() + "/") : null;
-        this.workExecutor = server.getServer().getWorkExecutor();
+        this.workExecutor = workExecutor;
     }
 
     @Override
@@ -72,7 +73,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         if (this.workExecutor == null) {
             execute(message, innerCallback);
         } else {
-            this.workExecutor.execute(() -> execute(message, innerCallback));
+            this.workExecutor.execute(message.hash(), () -> execute(message, innerCallback));
         }
     }
 

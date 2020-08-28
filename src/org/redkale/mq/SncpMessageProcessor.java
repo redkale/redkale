@@ -10,6 +10,7 @@ import java.util.logging.*;
 import org.redkale.boot.NodeSncpServer;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
+import org.redkale.util.ThreadHashExecutor;
 
 /**
  *
@@ -28,7 +29,7 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     protected final NodeSncpServer server;
 
-    protected final ThreadPoolExecutor workExecutor;
+    protected final ThreadHashExecutor workExecutor;
 
     protected final Service service;
 
@@ -40,13 +41,13 @@ public class SncpMessageProcessor implements MessageProcessor {
         if (cdl != null) cdl.countDown();
     };
 
-    public SncpMessageProcessor(Logger logger, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
+    public SncpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
         this.producer = producer;
         this.server = server;
         this.service = service;
         this.servlet = servlet;
-        this.workExecutor = server.getServer().getWorkExecutor();
+        this.workExecutor = workExecutor;
     }
 
     @Override
@@ -59,7 +60,7 @@ public class SncpMessageProcessor implements MessageProcessor {
         if (this.workExecutor == null) {
             execute(message, innerCallback);
         } else {
-            this.workExecutor.execute(() -> execute(message, innerCallback));
+            this.workExecutor.execute(message.hash(), () -> execute(message, innerCallback));
         }
     }
 
@@ -69,7 +70,7 @@ public class SncpMessageProcessor implements MessageProcessor {
             SncpContext context = server.getSncpServer().getContext();
             SncpMessageRequest request = new SncpMessageRequest(context, message);
             response = new SncpMessageResponse(context, request, callback, null, producer.getProducer(message));
-            servlet.execute(request, response); 
+            servlet.execute(request, response);
         } catch (Throwable ex) {
             if (response != null) response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
             logger.log(Level.SEVERE, SncpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
