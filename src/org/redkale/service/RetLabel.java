@@ -10,6 +10,7 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * 用于定义错误码的注解  <br>
@@ -42,10 +43,16 @@ public @interface RetLabel {
         RetLabel[] value();
     }
 
+    public static interface RetInfoTransfer extends BiFunction<Integer, String, String> {
+
+    }
+
     public static abstract class RetLoader {
 
         public static Map<String, Map<Integer, String>> loadMap(Class clazz) {
             final Map<String, Map<Integer, String>> rets = new HashMap<>();
+            ServiceLoader<RetInfoTransfer> loader = ServiceLoader.load(RetInfoTransfer.class);
+            RetInfoTransfer func = loader.findFirst().orElse(null);
             for (Field field : clazz.getFields()) {
                 if (!Modifier.isStatic(field.getModifiers())) continue;
                 if (field.getType() != int.class) continue;
@@ -59,7 +66,7 @@ public @interface RetLabel {
                     continue;
                 }
                 for (RetLabel info : infos) {
-                    rets.computeIfAbsent(info.locale(), (k) -> new HashMap<>()).put(value, info.value());
+                    rets.computeIfAbsent(info.locale(), (k) -> new HashMap<>()).put(value, func == null ? info.value() : func.apply(value, info.value()));
                 }
             }
             return rets;
