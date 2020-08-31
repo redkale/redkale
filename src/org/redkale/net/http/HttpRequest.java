@@ -384,7 +384,6 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * @Deprecated
      * 建议使用 setCurrentUserid, 通过userid从Service或缓存中获取用户信息<br>
      * 设置当前用户信息, 通常在HttpServlet.preExecute方法里设置currentUser <br>
      * 数据类型由&#64;HttpUserType指定
@@ -401,7 +400,6 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * @Deprecated
      * 建议使用 currentUserid, 通过userid从Service或缓存中获取用户信息<br>
      * 获取当前用户信息<br>
      * 数据类型由&#64;HttpUserType指定

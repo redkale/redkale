@@ -77,7 +77,7 @@ class Attribute {
     byte[] value;
 
     /**
-     * The next attribute in this attribute list. May be <tt>null</tt>.
+     * The next attribute in this attribute list. May be <code>null</code>.
      */
     Attribute next;
 
@@ -92,19 +92,19 @@ class Attribute {
     }
 
     /**
-     * Returns <tt>true</tt> if this type of attribute is unknown. The default
-     * implementation of this method always returns <tt>true</tt>.
+     * Returns <code>true</code> if this type of attribute is unknown. The default
+     * implementation of this method always returns <code>true</code>.
      *
-     * @return <tt>true</tt> if this type of attribute is unknown.
+     * @return <code>true</code> if this type of attribute is unknown.
      */
     public boolean isUnknown() {
         return true;
     }
 
     /**
-     * Returns <tt>true</tt> if this type of attribute is a code attribute.
+     * Returns <code>true</code> if this type of attribute is a code attribute.
      *
-     * @return <tt>true</tt> if this type of attribute is a code attribute.
+     * @return <code>true</code> if this type of attribute is a code attribute.
      */
     public boolean isCodeAttribute() {
         return false;
@@ -113,7 +113,7 @@ class Attribute {
     /**
      * Returns the labels corresponding to this attribute.
      *
-     * @return the labels corresponding to this attribute, or <tt>null</tt> if
+     * @return the labels corresponding to this attribute, or <code>null</code> if
      *         this attribute is not a code attribute that contains labels.
      */
     protected Label[] getLabels() {
@@ -123,7 +123,7 @@ class Attribute {
     /**
      * Reads a {@link #type type} attribute. This method must return a
      * <i>new</i> {@link Attribute} object, of type {@link #type type},
-     * corresponding to the <tt>len</tt> bytes starting at the given offset, in
+     * corresponding to the <code>len</code> bytes starting at the given offset, in
      * the given class reader.
      *
      * @param cr
@@ -146,7 +146,7 @@ class Attribute {
      *            containing the type and the length of the attribute, are not
      *            taken into account here.
      * @param labels
-     *            the labels of the method's code, or <tt>null</tt> if the
+     *            the labels of the method's code, or <code>null</code> if the
      *            attribute to be read is not a code attribute.
      * @return a <i>new</i> {@link Attribute} object corresponding to the given
      *         bytes.
@@ -169,11 +169,11 @@ class Attribute {
      *            class the items that corresponds to this attribute.
      * @param code
      *            the bytecode of the method corresponding to this code
-     *            attribute, or <tt>null</tt> if this attribute is not a code
+     *            attribute, or <code>null</code> if this attribute is not a code
      *            attributes.
      * @param len
      *            the length of the bytecode of the method corresponding to this
-     *            code attribute, or <tt>null</tt> if this attribute is not a
+     *            code attribute, or <code>null</code> if this attribute is not a
      *            code attribute.
      * @param maxStack
      *            the maximum stack size of the method corresponding to this
@@ -216,11 +216,11 @@ class Attribute {
      *            byte arrays, with the {@link #write write} method.
      * @param code
      *            the bytecode of the method corresponding to these code
-     *            attributes, or <tt>null</tt> if these attributes are not code
+     *            attributes, or <code>null</code> if these attributes are not code
      *            attributes.
      * @param len
      *            the length of the bytecode of the method corresponding to
-     *            these code attributes, or <tt>null</tt> if these attributes
+     *            these code attributes, or <code>null</code> if these attributes
      *            are not code attributes.
      * @param maxStack
      *            the maximum stack size of the method corresponding to these
@@ -254,11 +254,11 @@ class Attribute {
      *            byte arrays, with the {@link #write write} method.
      * @param code
      *            the bytecode of the method corresponding to these code
-     *            attributes, or <tt>null</tt> if these attributes are not code
+     *            attributes, or <code>null</code> if these attributes are not code
      *            attributes.
      * @param len
      *            the length of the bytecode of the method corresponding to
-     *            these code attributes, or <tt>null</tt> if these attributes
+     *            these code attributes, or <code>null</code> if these attributes
      *            are not code attributes.
      * @param maxStack
      *            the maximum stack size of the method corresponding to these

@@ -60,24 +60,24 @@ package org.redkale.asm;
 
 /**
  * A visitor to visit a Java method. The methods of this class must be called in
- * the following order: ( <tt>visitParameter</tt> )* [
- * <tt>visitAnnotationDefault</tt> ] ( <tt>visitAnnotation</tt> |
- * <tt>visitParameterAnnotation</tt> <tt>visitTypeAnnotation</tt> |
- * <tt>visitAttribute</tt> )* [ <tt>visitCode</tt> ( <tt>visitFrame</tt> |
- * <tt>visit<i>X</i>Insn</tt> | <tt>visitLabel</tt> |
- * <tt>visitInsnAnnotation</tt> | <tt>visitTryCatchBlock</tt> |
- * <tt>visitTryCatchAnnotation</tt> | <tt>visitLocalVariable</tt> |
- * <tt>visitLocalVariableAnnotation</tt> | <tt>visitLineNumber</tt> )*
- * <tt>visitMaxs</tt> ] <tt>visitEnd</tt>. In addition, the
- * <tt>visit<i>X</i>Insn</tt> and <tt>visitLabel</tt> methods must be called in
+ * the following order: ( <code>visitParameter</code> )* [
+ * <code>visitAnnotationDefault</code> ] ( <code>visitAnnotation</code> |
+ * <code>visitParameterAnnotation</code> <code>visitTypeAnnotation</code> |
+ * <code>visitAttribute</code> )* [ <code>visitCode</code> ( <code>visitFrame</code> |
+ * <code>visit<i>X</i>Insn</code> | <code>visitLabel</code> |
+ * <code>visitInsnAnnotation</code> | <code>visitTryCatchBlock</code> |
+ * <code>visitTryCatchAnnotation</code> | <code>visitLocalVariable</code> |
+ * <code>visitLocalVariableAnnotation</code> | <code>visitLineNumber</code> )*
+ * <code>visitMaxs</code> ] <code>visitEnd</code>. In addition, the
+ * <code>visit<i>X</i>Insn</code> and <code>visitLabel</code> methods must be called in
  * the sequential order of the bytecode instructions of the visited code,
- * <tt>visitInsnAnnotation</tt> must be called <i>after</i> the annotated
- * instruction, <tt>visitTryCatchBlock</tt> must be called <i>before</i> the
+ * <code>visitInsnAnnotation</code> must be called <i>after</i> the annotated
+ * instruction, <code>visitTryCatchBlock</code> must be called <i>before</i> the
  * labels passed as arguments have been visited,
- * <tt>visitTryCatchBlockAnnotation</tt> must be called <i>after</i> the
+ * <code>visitTryCatchBlockAnnotation</code> must be called <i>after</i> the
  * corresponding try catch block has been visited, and the
- * <tt>visitLocalVariable</tt>, <tt>visitLocalVariableAnnotation</tt> and
- * <tt>visitLineNumber</tt> methods must be called <i>after</i> the labels
+ * <code>visitLocalVariable</code>, <code>visitLocalVariableAnnotation</code> and
+ * <code>visitLineNumber</code> methods must be called <i>after</i> the labels
  * passed as arguments have been visited.
  *
  * @author Eric Bruneton
@@ -132,8 +132,8 @@ public abstract class MethodVisitor {
      * @param name
      *            parameter name or null if none is provided.
      * @param access
-     *            the parameter's access flags, only <tt>ACC_FINAL</tt>,
-     *            <tt>ACC_SYNTHETIC</tt> or/and <tt>ACC_MANDATED</tt> are
+     *            the parameter's access flags, only <code>ACC_FINAL</code>,
+     *            <code>ACC_SYNTHETIC</code> or/and <code>ACC_MANDATED</code> are
      *            allowed (see {@link Opcodes}).
      */
     public void visitParameter(String name, int access) {
@@ -146,7 +146,7 @@ public abstract class MethodVisitor {
      * Visits the default value of this annotation interface method.
      *
      * @return a visitor to the visit the actual default value of this
-     *         annotation interface method, or <tt>null</tt> if this visitor is
+     *         annotation interface method, or <code>null</code> if this visitor is
      *         not interested in visiting this default value. The 'name'
      *         parameters passed to the methods of this annotation visitor are
      *         ignored. Moreover, exacly one visit method must be called on this
@@ -165,8 +165,8 @@ public abstract class MethodVisitor {
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <tt>true</tt> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <tt>null</tt> if
+     *            <code>true</code> if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or <code>null</code> if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
@@ -193,12 +193,12 @@ public abstract class MethodVisitor {
      * @param typePath
      *            the path to the annotated type argument, wildcard bound, array
      *            element type, or static inner type within 'typeRef'. May be
-     *            <tt>null</tt> if the annotation targets 'typeRef' as a whole.
+     *            <code>null</code> if the annotation targets 'typeRef' as a whole.
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <tt>true</tt> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <tt>null</tt> if
+     *            <code>true</code> if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or <code>null</code> if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitTypeAnnotation(int typeRef,
@@ -217,8 +217,8 @@ public abstract class MethodVisitor {
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <tt>true</tt> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <tt>null</tt> if
+     *            <code>true</code> if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or <code>null</code> if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitParameterAnnotation(int parameter,
@@ -569,7 +569,7 @@ public abstract class MethodVisitor {
      *            the constant to be loaded on the stack. This parameter must be
      *            a non null {@link Integer}, a {@link Float}, a {@link Long}, a
      *            {@link Double}, a {@link String}, a {@link Type} of OBJECT or
-     *            ARRAY sort for <tt>.class</tt> constants, for classes whose
+     *            ARRAY sort for <code>.class</code> constants, for classes whose
      *            version is 49.0, a {@link Type} of METHOD sort or a
      *            {@link Handle} for MethodType and MethodHandle constants, for
      *            classes whose version is 51.0.
@@ -604,8 +604,8 @@ public abstract class MethodVisitor {
      * @param dflt
      *            beginning of the default handler block.
      * @param labels
-     *            beginnings of the handler blocks. <tt>labels[i]</tt> is the
-     *            beginning of the handler block for the <tt>min + i</tt> key.
+     *            beginnings of the handler blocks. <code>labels[i]</code> is the
+     *            beginning of the handler block for the <code>min + i</code> key.
      */
     public void visitTableSwitchInsn(int min, int max, Label dflt,
             Label... labels) {
@@ -622,8 +622,8 @@ public abstract class MethodVisitor {
      * @param keys
      *            the values of the keys.
      * @param labels
-     *            beginnings of the handler blocks. <tt>labels[i]</tt> is the
-     *            beginning of the handler block for the <tt>keys[i]</tt> key.
+     *            beginnings of the handler blocks. <code>labels[i]</code> is the
+     *            beginning of the handler block for the <code>keys[i]</code> key.
      */
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
         if (mv != null) {
@@ -668,12 +668,12 @@ public abstract class MethodVisitor {
      * @param typePath
      *            the path to the annotated type argument, wildcard bound, array
      *            element type, or static inner type within 'typeRef'. May be
-     *            <tt>null</tt> if the annotation targets 'typeRef' as a whole.
+     *            <code>null</code> if the annotation targets 'typeRef' as a whole.
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <tt>true</tt> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <tt>null</tt> if
+     *            <code>true</code> if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or <code>null</code> if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitInsnAnnotation(int typeRef,
@@ -699,7 +699,7 @@ public abstract class MethodVisitor {
      *            beginning of the exception handler's code.
      * @param type
      *            internal name of the type of exceptions handled by the
-     *            handler, or <tt>null</tt> to catch any exceptions (for
+     *            handler, or <code>null</code> to catch any exceptions (for
      *            "finally" blocks).
      * @throws IllegalArgumentException
      *             if one of the labels has already been visited by this visitor
@@ -725,12 +725,12 @@ public abstract class MethodVisitor {
      * @param typePath
      *            the path to the annotated type argument, wildcard bound, array
      *            element type, or static inner type within 'typeRef'. May be
-     *            <tt>null</tt> if the annotation targets 'typeRef' as a whole.
+     *            <code>null</code> if the annotation targets 'typeRef' as a whole.
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <tt>true</tt> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <tt>null</tt> if
+     *            <code>true</code> if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or <code>null</code> if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitTryCatchAnnotation(int typeRef,
@@ -750,7 +750,7 @@ public abstract class MethodVisitor {
      *            the type descriptor of this local variable.
      * @param signature
      *            the type signature of this local variable. May be
-     *            <tt>null</tt> if the local variable type does not use generic
+     *            <code>null</code> if the local variable type does not use generic
      *            types.
      * @param start
      *            the first instruction corresponding to the scope of this local
@@ -782,7 +782,7 @@ public abstract class MethodVisitor {
      * @param typePath
      *            the path to the annotated type argument, wildcard bound, array
      *            element type, or static inner type within 'typeRef'. May be
-     *            <tt>null</tt> if the annotation targets 'typeRef' as a whole.
+     *            <code>null</code> if the annotation targets 'typeRef' as a whole.
      * @param start
      *            the fist instructions corresponding to the continuous ranges
      *            that make the scope of this local variable (inclusive).
@@ -796,8 +796,8 @@ public abstract class MethodVisitor {
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <tt>true</tt> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <tt>null</tt> if
+     *            <code>true</code> if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or <code>null</code> if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitLocalVariableAnnotation(int typeRef,
@@ -819,7 +819,7 @@ public abstract class MethodVisitor {
      * @param start
      *            the first instruction corresponding to this line number.
      * @throws IllegalArgumentException
-     *             if <tt>start</tt> has not already been visited by this
+     *             if <code>start</code> has not already been visited by this
      *             visitor (by the {@link #visitLabel visitLabel} method).
      */
     public void visitLineNumber(int line, Label start) {

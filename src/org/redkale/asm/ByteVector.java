@@ -332,7 +332,7 @@ public class ByteVector {
      * automatically enlarged if necessary.
      *
      * @param b
-     *            an array of bytes. May be <tt>null</tt> to put <tt>len</tt>
+     *            an array of bytes. May be <code>null</code> to put <code>len</code>
      *            null bytes into this byte vector.
      * @param off
      *            index of the fist byte of b that must be copied.

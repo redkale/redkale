@@ -60,8 +60,8 @@ package org.redkale.asm;
 
 /**
  * A visitor to visit a Java field. The methods of this class must be called in
- * the following order: ( <tt>visitAnnotation</tt> |
- * <tt>visitTypeAnnotation</tt> | <tt>visitAttribute</tt> )* <tt>visitEnd</tt>.
+ * the following order: ( <code>visitAnnotation</code> |
+ * <code>visitTypeAnnotation</code> | <code>visitAttribute</code> )* <code>visitEnd</code>.
  *
  * @author Eric Bruneton
  */
@@ -111,8 +111,8 @@ public abstract class FieldVisitor {
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <tt>true</tt> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <tt>null</tt> if
+     *            <code>true</code> if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or <code>null</code> if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
@@ -132,12 +132,12 @@ public abstract class FieldVisitor {
      * @param typePath
      *            the path to the annotated type argument, wildcard bound, array
      *            element type, or static inner type within 'typeRef'. May be
-     *            <tt>null</tt> if the annotation targets 'typeRef' as a whole.
+     *            <code>null</code> if the annotation targets 'typeRef' as a whole.
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <tt>true</tt> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <tt>null</tt> if
+     *            <code>true</code> if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or <code>null</code> if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitTypeAnnotation(int typeRef,

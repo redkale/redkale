@@ -218,41 +218,41 @@ class MethodWriter extends MethodVisitor {
     int[] exceptions;
 
     /**
-     * The annotation default attribute of this method. May be <tt>null</tt>.
+     * The annotation default attribute of this method. May be <code>null</code>.
      */
     private ByteVector annd;
 
     /**
-     * The runtime visible annotations of this method. May be <tt>null</tt>.
+     * The runtime visible annotations of this method. May be <code>null</code>.
      */
     private AnnotationWriter anns;
 
     /**
-     * The runtime invisible annotations of this method. May be <tt>null</tt>.
+     * The runtime invisible annotations of this method. May be <code>null</code>.
      */
     private AnnotationWriter ianns;
 
     /**
-     * The runtime visible type annotations of this method. May be <tt>null</tt>
+     * The runtime visible type annotations of this method. May be <code>null</code>
      * .
      */
     private AnnotationWriter tanns;
 
     /**
      * The runtime invisible type annotations of this method. May be
-     * <tt>null</tt>.
+     * <code>null</code>.
      */
     private AnnotationWriter itanns;
 
     /**
      * The runtime visible parameter annotations of this method. May be
-     * <tt>null</tt>.
+     * <code>null</code>.
      */
     private AnnotationWriter[] panns;
 
     /**
      * The runtime invisible parameter annotations of this method. May be
-     * <tt>null</tt>.
+     * <code>null</code>.
      */
     private AnnotationWriter[] ipanns;
 
@@ -381,12 +381,12 @@ class MethodWriter extends MethodVisitor {
     private int lastCodeOffset;
 
     /**
-     * The runtime visible type annotations of the code. May be <tt>null</tt>.
+     * The runtime visible type annotations of the code. May be <code>null</code>.
      */
     private AnnotationWriter ctanns;
 
     /**
-     * The runtime invisible type annotations of the code. May be <tt>null</tt>.
+     * The runtime invisible type annotations of the code. May be <code>null</code>.
      */
     private AnnotationWriter ictanns;
 
@@ -446,7 +446,7 @@ class MethodWriter extends MethodVisitor {
      * is relative to the beginning of the current basic block, i.e., the true
      * stack size after the last visited instruction is equal to the
      * {@link Label#inputStackTop beginStackSize} of the current basic block
-     * plus <tt>stackSize</tt>.
+     * plus <code>stackSize</code>.
      */
     private int stackSize;
 
@@ -455,7 +455,7 @@ class MethodWriter extends MethodVisitor {
      * This size is relative to the beginning of the current basic block, i.e.,
      * the true maximum stack size after the last visited instruction is equal
      * to the {@link Label#inputStackTop beginStackSize} of the current basic
-     * block plus <tt>stackSize</tt>.
+     * block plus <code>stackSize</code>.
      */
     private int maxStackSize;
 
@@ -475,10 +475,10 @@ class MethodWriter extends MethodVisitor {
      * @param desc
      *            the method's descriptor (see {@link Type}).
      * @param signature
-     *            the method's signature. May be <tt>null</tt>.
+     *            the method's signature. May be <code>null</code>.
      * @param exceptions
      *            the internal names of the method's exceptions. May be
-     *            <tt>null</tt>.
+     *            <code>null</code>.
      * @param compute
      *            Indicates what must be automatically computed (see #compute).
      */

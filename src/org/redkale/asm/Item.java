@@ -306,8 +306,8 @@ final class Item {
      * @param i
      *            the item to be compared to this one. Both items must have the
      *            same {@link #type}.
-     * @return <tt>true</tt> if the given item if equal to this one,
-     *         <tt>false</tt> otherwise.
+     * @return <code>true</code> if the given item if equal to this one,
+     *         <code>false</code> otherwise.
      */
     boolean isEqualTo(final Item i) {
         switch (type) {

@@ -71,47 +71,47 @@ import java.lang.reflect.Method;
 public class Type {
 
     /**
-     * The sort of the <tt>void</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>void</code> type. See {@link #getSort getSort}.
      */
     public static final int VOID = 0;
 
     /**
-     * The sort of the <tt>boolean</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>boolean</code> type. See {@link #getSort getSort}.
      */
     public static final int BOOLEAN = 1;
 
     /**
-     * The sort of the <tt>char</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>char</code> type. See {@link #getSort getSort}.
      */
     public static final int CHAR = 2;
 
     /**
-     * The sort of the <tt>byte</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>byte</code> type. See {@link #getSort getSort}.
      */
     public static final int BYTE = 3;
 
     /**
-     * The sort of the <tt>short</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>short</code> type. See {@link #getSort getSort}.
      */
     public static final int SHORT = 4;
 
     /**
-     * The sort of the <tt>int</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>int</code> type. See {@link #getSort getSort}.
      */
     public static final int INT = 5;
 
     /**
-     * The sort of the <tt>float</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>float</code> type. See {@link #getSort getSort}.
      */
     public static final int FLOAT = 6;
 
     /**
-     * The sort of the <tt>long</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>long</code> type. See {@link #getSort getSort}.
      */
     public static final int LONG = 7;
 
     /**
-     * The sort of the <tt>double</tt> type. See {@link #getSort getSort}.
+     * The sort of the <code>double</code> type. See {@link #getSort getSort}.
      */
     public static final int DOUBLE = 8;
 
@@ -131,55 +131,55 @@ public class Type {
     public static final int METHOD = 11;
 
     /**
-     * The <tt>void</tt> type.
+     * The <code>void</code> type.
      */
     public static final Type VOID_TYPE = new Type(VOID, null, ('V' << 24)
             | (5 << 16) | (0 << 8) | 0, 1);
 
     /**
-     * The <tt>boolean</tt> type.
+     * The <code>boolean</code> type.
      */
     public static final Type BOOLEAN_TYPE = new Type(BOOLEAN, null, ('Z' << 24)
             | (0 << 16) | (5 << 8) | 1, 1);
 
     /**
-     * The <tt>char</tt> type.
+     * The <code>char</code> type.
      */
     public static final Type CHAR_TYPE = new Type(CHAR, null, ('C' << 24)
             | (0 << 16) | (6 << 8) | 1, 1);
 
     /**
-     * The <tt>byte</tt> type.
+     * The <code>byte</code> type.
      */
     public static final Type BYTE_TYPE = new Type(BYTE, null, ('B' << 24)
             | (0 << 16) | (5 << 8) | 1, 1);
 
     /**
-     * The <tt>short</tt> type.
+     * The <code>short</code> type.
      */
     public static final Type SHORT_TYPE = new Type(SHORT, null, ('S' << 24)
             | (0 << 16) | (7 << 8) | 1, 1);
 
     /**
-     * The <tt>int</tt> type.
+     * The <code>int</code> type.
      */
     public static final Type INT_TYPE = new Type(INT, null, ('I' << 24)
             | (0 << 16) | (0 << 8) | 1, 1);
 
     /**
-     * The <tt>float</tt> type.
+     * The <code>float</code> type.
      */
     public static final Type FLOAT_TYPE = new Type(FLOAT, null, ('F' << 24)
             | (2 << 16) | (2 << 8) | 1, 1);
 
     /**
-     * The <tt>long</tt> type.
+     * The <code>long</code> type.
      */
     public static final Type LONG_TYPE = new Type(LONG, null, ('J' << 24)
             | (1 << 16) | (1 << 8) | 2, 1);
 
     /**
-     * The <tt>double</tt> type.
+     * The <code>double</code> type.
      */
     public static final Type DOUBLE_TYPE = new Type(DOUBLE, null, ('D' << 24)
             | (3 << 16) | (3 << 8) | 2, 1);
@@ -439,8 +439,8 @@ public class Type {
      * @return the size of the arguments of the method (plus one for the
      *         implicit this argument), argSize, and the size of its return
      *         value, retSize, packed into a single int i =
-     *         <tt>(argSize &lt;&lt; 2) | retSize</tt> (argSize is therefore equal to
-     *         <tt>i &gt;&gt; 2</tt>, and retSize to <tt>i &amp; 0x03</tt>).
+     *         <code>(argSize &lt;&lt; 2) | retSize</code> (argSize is therefore equal to
+     *         <code>i &gt;&gt; 2</code>, and retSize to <code>i &amp; 0x03</code>).
      */
     public static int getArgumentsAndReturnSizes(final String desc) {
         int n = 1;
@@ -645,9 +645,9 @@ public class Type {
      * @return the size of the arguments (plus one for the implicit this
      *         argument), argSize, and the size of the return value, retSize,
      *         packed into a single
-     *         int i = <tt>(argSize &lt;&lt; 2) | retSize</tt>
-     *         (argSize is therefore equal to <tt>i &gt;&gt; 2</tt>,
-     *         and retSize to <tt>i &amp; 0x03</tt>).
+     *         int i = <code>(argSize &lt;&lt; 2) | retSize</code>
+     *         (argSize is therefore equal to <code>i &gt;&gt; 2</code>,
+     *         and retSize to <code>i &amp; 0x03</code>).
      */
     public int getArgumentsAndReturnSizes() {
         return getArgumentsAndReturnSizes(getDescriptor());
@@ -838,8 +838,8 @@ public class Type {
      * Returns the size of values of this type. This method must not be used for
      * method types.
      *
-     * @return the size of values of this type, i.e., 2 for <tt>long</tt> and
-     *         <tt>double</tt>, 0 for <tt>void</tt> and 1 otherwise.
+     * @return the size of values of this type, i.e., 2 for <code>long</code> and
+     *         <code>double</code>, 0 for <code>void</code> and 1 otherwise.
      */
     public int getSize() {
         // the size is in byte 0 of 'off' for primitive types (buf == null)
@@ -855,8 +855,8 @@ public class Type {
      *            ISTORE, IALOAD, IASTORE, IADD, ISUB, IMUL, IDIV, IREM, INEG,
      *            ISHL, ISHR, IUSHR, IAND, IOR, IXOR and IRETURN.
      * @return an opcode that is similar to the given opcode, but adapted to
-     *         this Java type. For example, if this type is <tt>float</tt> and
-     *         <tt>opcode</tt> is IRETURN, this method returns FRETURN.
+     *         this Java type. For example, if this type is <code>float</code> and
+     *         <code>opcode</code> is IRETURN, this method returns FRETURN.
      */
     public int getOpcode(final int opcode) {
         if (opcode == Opcodes.IALOAD || opcode == Opcodes.IASTORE) {
@@ -879,7 +879,7 @@ public class Type {
      *
      * @param o
      *            the object to be compared to this type.
-     * @return <tt>true</tt> if the given object is equal to this type.
+     * @return <code>true</code> if the given object is equal to this type.
      */
     @Override
     public boolean equals(final Object o) {

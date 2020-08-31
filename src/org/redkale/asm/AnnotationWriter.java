@@ -77,7 +77,7 @@ final class AnnotationWriter extends AnnotationVisitor {
     private int size;
 
     /**
-     * <tt>true<tt> if values are named, <tt>false</tt> otherwise. Annotation
+     * <code>true<code> if values are named, <code>false</code> otherwise. Annotation
      * writers used for annotation default and annotation arrays use unnamed
      * values.
      */
@@ -122,13 +122,13 @@ final class AnnotationWriter extends AnnotationVisitor {
      * @param cw
      *            the class writer to which this annotation must be added.
      * @param named
-     *            <tt>true<tt> if values are named, <tt>false</tt> otherwise.
+     *            <code>true<code> if values are named, <code>false</code> otherwise.
      * @param bv
      *            where the annotation values must be stored.
      * @param parent
      *            where the number of annotation values must be stored.
      * @param offset
-     *            where in <tt>parent</tt> the number of annotation values must
+     *            where in <code>parent</code> the number of annotation values must
      *            be stored.
      */
     AnnotationWriter(final ClassWriter cw, final boolean named,
@@ -354,7 +354,7 @@ final class AnnotationWriter extends AnnotationVisitor {
      * @param typePath
      *            the path to the annotated type argument, wildcard bound, array
      *            element type, or static inner type within 'typeRef'. May be
-     *            <tt>null</tt> if the annotation targets 'typeRef' as a whole.
+     *            <code>null</code> if the annotation targets 'typeRef' as a whole.
      * @param out
      *            where the type reference and type path must be put.
      */

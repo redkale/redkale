@@ -100,28 +100,28 @@ final class FieldWriter extends FieldVisitor {
     private int value;
 
     /**
-     * The runtime visible annotations of this field. May be <tt>null</tt>.
+     * The runtime visible annotations of this field. May be <code>null</code>.
      */
     private AnnotationWriter anns;
 
     /**
-     * The runtime invisible annotations of this field. May be <tt>null</tt>.
+     * The runtime invisible annotations of this field. May be <code>null</code>.
      */
     private AnnotationWriter ianns;
 
     /**
-     * The runtime visible type annotations of this field. May be <tt>null</tt>.
+     * The runtime visible type annotations of this field. May be <code>null</code>.
      */
     private AnnotationWriter tanns;
 
     /**
      * The runtime invisible type annotations of this field. May be
-     * <tt>null</tt>.
+     * <code>null</code>.
      */
     private AnnotationWriter itanns;
 
     /**
-     * The non standard attributes of this field. May be <tt>null</tt>.
+     * The non standard attributes of this field. May be <code>null</code>.
      */
     private Attribute attrs;
 
@@ -141,9 +141,9 @@ final class FieldWriter extends FieldVisitor {
      * @param desc
      *            the field's descriptor (see {@link Type}).
      * @param signature
-     *            the field's signature. May be <tt>null</tt>.
+     *            the field's signature. May be <code>null</code>.
      * @param value
-     *            the field's constant value. May be <tt>null</tt>.
+     *            the field's constant value. May be <code>null</code>.
      */
     FieldWriter(final ClassWriter cw, final int access, final String name,
             final String desc, final String signature, final Object value) {
