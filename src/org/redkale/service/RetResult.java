@@ -27,7 +27,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @param <T> 结果对象的泛型
  */
-public class RetResult<T> implements Serializable{
+public class RetResult<T> implements Serializable {
 
     public static final Type TYPE_RET_INTEGER = new TypeToken<RetResult<Integer>>() {
     }.getType();
@@ -121,6 +121,8 @@ public class RetResult<T> implements Serializable{
     public static <T> RetResult<T> get(CompletableFuture<RetResult<T>> future, long timeout, TimeUnit unit) {
         try {
             return future.get(timeout, unit);
+        } catch (ExecutionException ex) {
+            throw new RuntimeException(ex.getCause());
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
