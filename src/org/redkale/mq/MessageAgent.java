@@ -55,7 +55,7 @@ public abstract class MessageAgent {
 
     protected ThreadHashExecutor workExecutor;
 
-    //本地Service消息接收处理器， key:respConsumer
+    //本地Service消息接收处理器， key:consumer
     protected HashMap<String, MessageConsumerNode> messageNodes = new LinkedHashMap<>();
 
     public void init(AnyValue config) {
@@ -237,7 +237,7 @@ public abstract class MessageAgent {
         return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
-    //格式: respConsumer-sncp.req.user  不提供外部使用
+    //格式: consumer-sncp.req.user  不提供外部使用
     protected final String generateSncpConsumerid(String topic, Service service) {
         return "consumer-" + topic;
     }
@@ -271,7 +271,7 @@ public abstract class MessageAgent {
         return new String[]{"http.req." + module + (resname.isEmpty() ? "" : ("-" + resname))};
     }
 
-    //格式: respConsumer-http.req.user
+    //格式: consumer-http.req.user
     protected String generateHttpConsumerid(String[] topics, Service service) {
         String resname = Sncp.getResourceName(service);
         String key = Rest.getRestModule(service).toLowerCase();
