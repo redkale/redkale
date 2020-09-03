@@ -27,8 +27,14 @@ public class ThreadHashExecutor {
 
     public ThreadHashExecutor(int size) {
         ExecutorService[] array = new ExecutorService[size];
+        final AtomicInteger counter = new AtomicInteger();
         for (int i = 0; i < array.length; i++) {
-            array[i] = Executors.newSingleThreadExecutor();
+            array[i] = Executors.newSingleThreadExecutor((Runnable r) -> {
+                Thread t = new Thread(r);
+                t.setDaemon(true);
+                t.setName("Redkale-HashThread-" + counter.incrementAndGet());
+                return t;
+            });
         }
         this.executors = array;
     }
