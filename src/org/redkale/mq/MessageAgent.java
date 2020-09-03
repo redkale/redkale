@@ -55,7 +55,7 @@ public abstract class MessageAgent {
 
     protected ThreadHashExecutor workExecutor;
 
-    //本地Service消息接收处理器， key:consumer
+    //本地Service消息接收处理器， key:respConsumer
     protected HashMap<String, MessageConsumerNode> messageNodes = new LinkedHashMap<>();
 
     public void init(AnyValue config) {
@@ -104,9 +104,9 @@ public abstract class MessageAgent {
 
     protected List<MessageConsumer> getAllMessageConsumer() {
         List<MessageConsumer> consumers = new ArrayList<>();
-        MessageConsumer one = this.httpMessageClient == null ? null : this.httpMessageClient.consumer;
+        MessageConsumer one = this.httpMessageClient == null ? null : this.httpMessageClient.respConsumer;
         if (one != null) consumers.add(one);
-        one = this.sncpMessageClient == null ? null : this.sncpMessageClient.consumer;
+        one = this.sncpMessageClient == null ? null : this.sncpMessageClient.respConsumer;
         if (one != null) consumers.add(one);
         consumers.addAll(messageNodes.values().stream().map(mcn -> mcn.consumer).collect(Collectors.toList()));
         return consumers;
@@ -237,7 +237,7 @@ public abstract class MessageAgent {
         return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
-    //格式: consumer-sncp.req.user  不提供外部使用
+    //格式: respConsumer-sncp.req.user  不提供外部使用
     protected final String generateSncpConsumerid(String topic, Service service) {
         return "consumer-" + topic;
     }
@@ -271,7 +271,7 @@ public abstract class MessageAgent {
         return new String[]{"http.req." + module + (resname.isEmpty() ? "" : ("-" + resname))};
     }
 
-    //格式: consumer-http.req.user
+    //格式: respConsumer-http.req.user
     protected String generateHttpConsumerid(String[] topics, Service service) {
         String resname = Sncp.getResourceName(service);
         String key = Rest.getRestModule(service).toLowerCase();

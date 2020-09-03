@@ -25,7 +25,7 @@ public abstract class MessageClient {
 
     protected final MessageAgent messageAgent;
 
-    protected MessageConsumer consumer;
+    protected MessageConsumer respConsumer;
 
     protected String respTopic;
 
@@ -38,29 +38,30 @@ public abstract class MessageClient {
     }
 
     protected CompletableFuture<Void> close() {
-        if (this.consumer == null) return CompletableFuture.completedFuture(null);
-        return this.consumer.shutdown();
+        if (this.respConsumer == null) return CompletableFuture.completedFuture(null);
+        return this.respConsumer.shutdown();
     }
 
     protected CompletableFuture<MessageRecord> sendMessage(MessageRecord message, boolean needresp, AtomicLong counter) {
         CompletableFuture<MessageRecord> future = new CompletableFuture<>();
         try {
-            if (this.consumer == null) {
+            if (this.respConsumer == null) {
                 synchronized (this) {
                     if (this.respConsumerid == null) this.respConsumerid = "consumer-" + this.respTopic;
-                    if (this.consumer == null) {
+                    if (this.respConsumer == null) {
                         MessageProcessor processor = (msg, callback) -> {
                             MessageRespFutureNode node = respNodes.remove(msg.getSeqid());
                             if (node == null) {
                                 messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found msgnode");
                                 return;
                             }
-                            if (node.getCounter() != null) node.getCounter().decrementAndGet();
+                            AtomicLong ncer = node.getCounter();
+                            if (ncer != null) ncer.decrementAndGet();
                             node.future.complete(msg);
                         };
                         MessageConsumer one = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
                         one.startup().join();
-                        this.consumer = one;
+                        this.respConsumer = one;
                     }
                 }
             }
