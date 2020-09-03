@@ -92,7 +92,7 @@ public class HttpMessageProcessor implements MessageProcessor {
             if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
                 HttpMessageResponse.finishHttpResult(finest, message, callback, producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
             }
-            logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex);
+            logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }
     }
 
