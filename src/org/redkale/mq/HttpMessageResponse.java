@@ -62,7 +62,7 @@ public class HttpMessageResponse extends HttpResponse {
             //必须要塞入retcode， 开发者可以无需反序列化ret便可确定操作是否返回成功
             if (!ret.isSuccess()) result.header("retcode", String.valueOf(ret.getRetcode()));
         }
-        //if (msg.format == ConvertType.PROTOBUF && result.convert() == null) result.convert(ProtobufConvert.root());
+        if (msg.format == ConvertType.PROTOBUF && result.convert() == null) result.convert(ConvertFactory.findConvert(msg.format));
         ConvertType format = result.convert() == null ? null : result.convert().getFactory().getConvertType();
         if (finest) {
             Object innerrs = result.getResult();
