@@ -130,6 +130,7 @@ public class HttpRequest extends Request<HttpContext> {
                 req.setHeaders(headers);
             }
         }
+        parseBody();
         req.setParams(params.isEmpty() ? null : params);
         req.setRemoteAddr(getRemoteAddr());
         req.setContentType(getContentType());
