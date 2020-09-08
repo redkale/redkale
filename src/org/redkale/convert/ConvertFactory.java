@@ -16,7 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.*;
 import java.util.regex.Pattern;
 import java.util.stream.*;
+import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.ext.*;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
 /**
@@ -31,6 +33,10 @@ import org.redkale.util.*;
  */
 @SuppressWarnings("unchecked")
 public abstract class ConvertFactory<R extends Reader, W extends Writer> {
+
+    private static final AtomicBoolean loaderInited = new AtomicBoolean();
+
+    private static Convert defProtobufConvert;
 
     private final ConvertFactory parent;
 
@@ -139,7 +145,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
                     @Override
                     public void convertTo(W out, java.sql.Date value) {
-                         out.writeSmallString(value == null ? null : value.toString());
+                        out.writeSmallString(value == null ? null : value.toString());
                     }
 
                     @Override
@@ -186,6 +192,25 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public ConvertFactory parent() {
         return this.parent;
+    }
+
+    public static Convert findConvert(ConvertType type) {
+        if (type == ConvertType.JSON) return JsonConvert.root();
+        if (type == ConvertType.BSON) return BsonConvert.root();
+        if (loaderInited.get()) {
+            if (type == ConvertType.PROTOBUF) return defProtobufConvert;
+        }
+        synchronized (loaderInited) {
+            if (!loaderInited.get()) {
+                Iterator<ConvertLoader> it = ServiceLoader.load(ConvertLoader.class).iterator();
+                while (it.hasNext()) {
+                    ConvertLoader cl = it.next();
+                    if (cl.type() == ConvertType.PROTOBUF) defProtobufConvert = cl.convert();
+                }
+                loaderInited.set(true);
+            }
+        }
+        return null;
     }
 
     public abstract ConvertType getConvertType();
