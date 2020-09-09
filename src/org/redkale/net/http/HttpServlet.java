@@ -39,6 +39,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     private Map.Entry<String, InnerActionEntry>[] mappings; //字段名Rest有用到
 
+    private Map<String, InnerActionEntry> mappingMap;
+
     //这里不能直接使用HttpServlet，会造成死循环初始化HttpServlet
     private final Servlet<HttpContext, HttpRequest, HttpResponse> authSuccessServlet = new Servlet<HttpContext, HttpRequest, HttpResponse>() {
         @Override
@@ -66,28 +68,34 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     private final Servlet<HttpContext, HttpRequest, HttpResponse> preSuccessServlet = new Servlet<HttpContext, HttpRequest, HttpResponse>() {
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
-            for (Map.Entry<String, InnerActionEntry> en : mappings) {
-                if (request.getRequestURI().startsWith(en.getKey())) {
-                    InnerActionEntry entry = en.getValue();
-                    if (!entry.checkMethod(request.getMethod())) {
-                        response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
-                        return;
+            InnerActionEntry entry = mappingMap.get(request.getRequestURI());
+            if (entry == null) {
+                for (Map.Entry<String, InnerActionEntry> en : mappings) {
+                    if (request.getRequestURI().startsWith(en.getKey() + "/")) {
+                        entry = en.getValue();
+                        break;
                     }
-                    request.attachment = entry;
-                    request.moduleid = entry.moduleid;
-                    request.actionid = entry.actionid;
-                    request.annotations = entry.annotations;
-                    if (entry.auth) {
-                        response.thenEvent(authSuccessServlet);
-                        authenticate(request, response);
-                    } else {
-                        authSuccessServlet.execute(request, response);
-                    }
-                    return;
                 }
             }
-            response.finish404();
-            //throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
+            if (entry == null) {
+                response.finish404();
+                //throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
+                return;
+            }
+            if (!entry.checkMethod(request.getMethod())) {
+                response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
+                return;
+            }
+            request.attachment = entry;
+            request.moduleid = entry.moduleid;
+            request.actionid = entry.actionid;
+            request.annotations = entry.annotations;
+            if (entry.auth) {
+                response.thenEvent(authSuccessServlet);
+                authenticate(request, response);
+            } else {
+                authSuccessServlet.execute(request, response);
+            }
         }
     };
 
@@ -98,6 +106,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
         if (ws != null && !ws.repair()) path = "";
         HashMap<String, InnerActionEntry> map = this._tmpentrys != null ? this._tmpentrys : loadActionEntry();
+        this.mappingMap = map;
         this.mappings = new Map.Entry[map.size()];
         int i = -1;
         for (Map.Entry<String, InnerActionEntry> en : map.entrySet()) {
