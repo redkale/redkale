@@ -14,7 +14,7 @@ import java.nio.channels.Channels;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.logging.Level;
-import org.redkale.convert.ConvertDisabled;
+import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -559,16 +559,15 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取请求内容的JavaBean对象
      *
      * @param <T>     泛型
-     * @param convert JsonConvert
+     * @param convert Convert
      * @param type    类型
      *
      * @return 内容
      */
-    public <T> T getBodyJson(JsonConvert convert, java.lang.reflect.Type type) {
-        String str = array.toString(StandardCharsets.UTF_8);
-        if (str == null || str.isEmpty()) return null;
-        return convert.convertFrom(type, str);
-    }
+    public <T> T getBodyJson(Convert convert, java.lang.reflect.Type type) {
+        if (array.size() < 1) return null;
+        return (T) convert.convertFrom(type, array.directBytes());
+    } 
 
     /**
      * 获取请求内容的byte[]
