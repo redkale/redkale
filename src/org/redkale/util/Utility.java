@@ -1506,6 +1506,17 @@ public final class Utility {
     }
 
     /**
+     * 获取当天20151231235959格式的int值
+     *
+     * @return 20151231235959格式的int值
+     */
+    public static long todayYYYYMMDDHHmmss() {
+        java.time.LocalDateTime today = java.time.LocalDateTime.now();
+        return today.getYear() * 100_00_00_00_00L + today.getMonthValue() * 100_00_00_00 + today.getDayOfMonth() * 100_00_00
+            + today.getHour() * 100_00 + today.getMinute() * 100 + today.getSecond();
+    }
+
+    /**
      * 获取当天151231235959格式的int值
      *
      * @return 151231235959格式的int值
