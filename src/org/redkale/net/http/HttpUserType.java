@@ -19,6 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author zhangjx
  */
+@Deprecated
 @Inherited
 @Documented
 @Target({TYPE})
