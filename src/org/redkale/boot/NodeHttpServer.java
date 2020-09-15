@@ -124,7 +124,7 @@ public class NodeHttpServer extends NodeServer {
                     if (nodeService == null) {
                         MessageAgent messageAgent = null;
                         try {
-                            Field c = src.getClass().getDeclaredField("messageAgent");
+                            Field c = WebSocketServlet.class.getDeclaredField("messageAgent");
                             c.setAccessible(true);
                             messageAgent = (MessageAgent) c.get(src);
                         } catch (Exception ex) {
