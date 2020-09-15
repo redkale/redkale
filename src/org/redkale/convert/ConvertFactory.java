@@ -195,6 +195,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     }
 
     public static Convert findConvert(ConvertType type) {
+        if (type == null) return null;
         if (type == ConvertType.JSON) return JsonConvert.root();
         if (type == ConvertType.BSON) return BsonConvert.root();
         if (loaderInited.get()) {
