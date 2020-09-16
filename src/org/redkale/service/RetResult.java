@@ -45,10 +45,10 @@ public class RetResult<T> implements Serializable {
     protected String retinfo;
 
     @ConvertColumn(index = 3)
-    protected Map<String, String> attach;
+    protected T result;
 
     @ConvertColumn(index = 4)
-    protected T result;
+    protected Map<String, String> attach;
 
     protected Convert convert;
 
