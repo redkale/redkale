@@ -110,6 +110,12 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return convertFrom(type, new String(bytes, StandardCharsets.UTF_8));
     }
 
+    @Override
+    public <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int length) {
+        if (bytes == null) return null;
+        return convertFrom(type, new String(bytes, offset, length, StandardCharsets.UTF_8));
+    }
+
     public <T> T convertFrom(final Type type, final String text) {
         if (text == null) return null;
         return convertFrom(type, Utility.charArray(text));
@@ -120,10 +126,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return convertFrom(type, text, 0, text.length);
     }
 
-    public <T> T convertFrom(final Type type, final char[] text, final int start, final int len) {
+    public <T> T convertFrom(final Type type, final char[] text, final int offset, final int length) {
         if (text == null || type == null) return null;
         final JsonReader in = readerPool.get();
-        in.setText(text, start, len);
+        in.setText(text, offset, length);
         T rs = (T) factory.loadDecoder(type).convertFrom(in);
         readerPool.accept(in);
         return rs;
@@ -166,10 +172,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
-    public <V> V convertFrom(final char[] text, final int start, final int len) {
+    public <V> V convertFrom(final char[] text, final int offset, final int length) {
         if (text == null) return null;
         final JsonReader in = readerPool.get();
-        in.setText(text, start, len);
+        in.setText(text, offset, length);
         Object rs = new AnyDecoder(factory).convertFrom(in);
         readerPool.accept(in);
         return (V) rs;

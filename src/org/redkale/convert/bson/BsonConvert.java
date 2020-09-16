@@ -115,11 +115,12 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         return convertFrom(type, bytes, 0, bytes.length);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
-    public <T> T convertFrom(final Type type, final byte[] bytes, final int start, final int len) {
+    public <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int len) {
         if (type == null) return null;
         final BsonReader in = readerPool.get();
-        in.setBytes(bytes, start, len);
+        in.setBytes(bytes, offset, len);
         @SuppressWarnings("unchecked")
         T rs = (T) factory.loadDecoder(type).convertFrom(in);
         readerPool.accept(in);
