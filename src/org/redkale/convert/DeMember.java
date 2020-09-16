@@ -106,6 +106,6 @@ public final class DeMember<R extends Reader, T, F> {
 
     @Override
     public String toString() {
-        return "DeMember{" + "attribute=" + attribute.field() + ", decoder=" + (decoder == null ? null : decoder.getClass().getName()) + '}';
+        return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position + ", decoder=" + (decoder == null ? null : decoder.getClass().getName()) + '}';
     }
 }

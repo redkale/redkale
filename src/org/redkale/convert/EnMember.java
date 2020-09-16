@@ -111,6 +111,6 @@ public final class EnMember<W extends Writer, T, F> {
 
     @Override
     public String toString() {
-        return "EnMember{" + "attribute=" + attribute.field() + ", encoder=" + (encoder == null ? null : encoder.getClass().getName()) + '}';
+        return "EnMember{" + "attribute=" + attribute.field() + ", position=" + position + ", encoder=" + (encoder == null ? null : encoder.getClass().getName()) + '}';
     }
 }
