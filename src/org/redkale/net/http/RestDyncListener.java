@@ -47,7 +47,8 @@ public interface RestDyncListener {
      * @param baseServletType Rest的Servlet基类
      * @param serviceType     Service类
      * @param method          Service的RestMapping方法
+     * @param mappingurl      HttpMapping对应的url
      */
     public void invoke(final ClassLoader classLoader, final Class baseServletType,
-        final Class<? extends Service> serviceType, final Method method);
+        final Class<? extends Service> serviceType, final Method method, final String mappingurl);
 }

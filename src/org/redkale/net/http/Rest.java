@@ -1952,7 +1952,7 @@ public final class Rest {
             }
             if (listeners != null && !listeners.isEmpty()) {
                 for (RestDyncListener listener : listeners) {
-                    listener.invoke(classLoader, userType, serviceType, method);
+                    listener.invoke(classLoader, userType, serviceType, method, entry.mappingurl);
                 }
             }
         } // end  for each 
