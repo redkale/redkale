@@ -737,6 +737,7 @@ public final class Application {
                 Class clazz = classLoader.loadClass(listenClass);
                 if (RestDyncListener.class.isAssignableFrom(clazz)) {
                     RestDyncListener listener = (RestDyncListener) clazz.getDeclaredConstructor().newInstance();
+                    listener.init(config);
                     this.restListeners.add(listener);
                     continue;
                 }
@@ -917,6 +918,9 @@ public final class Application {
         //if (!singletonrun) signalHandle();
         //if (!singletonrun) clearPersistData();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
+        for (RestDyncListener listener : this.restListeners) {
+            listener.postApplicationStarted(this);
+        }
         if (!singletonrun) this.serversLatch.await();
     }
 
