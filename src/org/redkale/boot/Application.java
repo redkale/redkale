@@ -27,7 +27,7 @@ import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
 import org.redkale.net.*;
-import org.redkale.net.http.MimeType;
+import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.source.*;
@@ -174,6 +174,8 @@ public final class Application {
 
     //监听事件
     private final List<ApplicationListener> listeners = new CopyOnWriteArrayList<>();
+
+    final List<RestDyncListener> restListeners = new CopyOnWriteArrayList<>();
 
     //服务启动时间
     private final long startTime = System.currentTimeMillis();
@@ -733,6 +735,11 @@ public final class Application {
                 final String listenClass = conf.getValue("value", "");
                 if (listenClass.isEmpty()) continue;
                 Class clazz = classLoader.loadClass(listenClass);
+                if (RestDyncListener.class.isAssignableFrom(clazz)) {
+                    RestDyncListener listener = (RestDyncListener) clazz.getDeclaredConstructor().newInstance();
+                    this.restListeners.add(listener);
+                    continue;
+                }
                 if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
                 @SuppressWarnings("unchecked")
                 ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();

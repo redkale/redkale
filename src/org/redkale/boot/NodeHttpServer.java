@@ -284,7 +284,7 @@ public class NodeHttpServer extends NodeServer {
                         }
                         restedObjects.add(service); //避免重复创建Rest对象
                     }
-                    HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
+                    HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix, application.restListeners);
                     if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
                     String prefix2 = prefix;
                     WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
