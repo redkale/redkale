@@ -96,6 +96,11 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
         return type;
     }
 
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "{componentType:" + this.type + ", encoder:" + this.componentEncoder + "}";
+    }
+
     public Encodeable<Writer, Object> getComponentEncoder() {
         return componentEncoder;
     }
