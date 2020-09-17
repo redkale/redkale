@@ -737,7 +737,8 @@ public final class Application {
                 Class clazz = classLoader.loadClass(listenClass);
                 if (RestDyncListener.class.isAssignableFrom(clazz)) {
                     RestDyncListener listener = (RestDyncListener) clazz.getDeclaredConstructor().newInstance();
-                    listener.init(config);
+                    resourceFactory.inject(listener);
+                    listener.init(this, config);
                     this.restListeners.add(listener);
                     continue;
                 }

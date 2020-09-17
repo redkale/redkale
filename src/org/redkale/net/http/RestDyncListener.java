@@ -25,9 +25,10 @@ public interface RestDyncListener {
     /**
      * 初始化方法
      *
-     * @param config 配置参数
+     * @param application Application
+     * @param config      配置参数
      */
-    default void init(AnyValue config) {
+    default void init(Application application, AnyValue config) {
 
     }
 
