@@ -116,7 +116,6 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     list.add(member);
                 }
                 this.members = list.toArray(new EnMember[list.size()]);
-                Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
                 Set<Integer> pos = new HashSet<>();
                 for (int i = 0; i < this.members.length; i++) {
                     if (this.members[i].index > 0) pos.add(this.members[i].index);
@@ -130,6 +129,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         member.position = pidx;
                     }
                 }
+                Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
 
             } catch (Exception ex) {
                 throw new ConvertException(ex);

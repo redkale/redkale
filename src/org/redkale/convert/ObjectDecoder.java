@@ -166,7 +166,6 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     }
                 }
                 this.members = list.toArray(new DeMember[list.size()]);
-                Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
                 Set<Integer> pos = new HashSet<>();
                 for (int i = 0; i < this.members.length; i++) {
                     if (this.members[i].index > 0) pos.add(this.members[i].index);
@@ -180,6 +179,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         member.position = pidx;
                     }
                 }
+                Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
 
                 if (cps != null) {
                     final String[] fields = cps;
