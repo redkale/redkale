@@ -736,6 +736,7 @@ public final class Application {
                 if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
                 @SuppressWarnings("unchecked")
                 ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
+                resourceFactory.inject(listener);
                 listener.init(config);
                 this.listeners.add(listener);
             }
