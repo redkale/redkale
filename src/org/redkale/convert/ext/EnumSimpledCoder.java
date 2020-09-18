@@ -22,8 +22,6 @@ import org.redkale.convert.Writer;
  */
 public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extends Enum> extends SimpledCoder<R, W, E> {
 
-    private final Class<E> type;
-
     public EnumSimpledCoder(Class<E> type) {
         this.type = type;
     }
@@ -42,11 +40,11 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
     public E convertFrom(final R in) {
         String value = in.readSmallString();
         if (value == null) return null;
-        return (E) Enum.valueOf(type, value);
+        return (E) Enum.valueOf((Class<E>) type, value);
     }
 
     @Override
     public Class<E> getType() {
-        return type;
+        return (Class<E>) type;
     }
 }
