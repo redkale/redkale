@@ -741,8 +741,7 @@ public final class Rest {
         }
     }
 
-    public static <T extends HttpServlet> T createRestServlet(final ClassLoader classLoader, final Class userType0, final Class<T> baseServletType,
-        final Class<? extends Service> serviceType, final List<RestDyncListener> listeners) {
+    public static <T extends HttpServlet> T createRestServlet(final ClassLoader classLoader, final Class userType0, final Class<T> baseServletType, final Class<? extends Service> serviceType) {
         if (baseServletType == null || serviceType == null) throw new RuntimeException(" Servlet or Service is null Class on createRestServlet");
         if (!HttpServlet.class.isAssignableFrom(baseServletType)) throw new RuntimeException(baseServletType + " is not HttpServlet Class on createRestServlet");
         int mod = baseServletType.getModifiers();
@@ -1949,11 +1948,6 @@ public final class Rest {
                 }
                 cw2.visitEnd();
                 newLoader.addClass((newDynName + "$" + entry.newActionClassName).replace('/', '.'), cw2.toByteArray());
-            }
-            if (listeners != null && !listeners.isEmpty()) {
-                for (RestDyncListener listener : listeners) {
-                    listener.invoke(classLoader, userType, serviceType, method, entry.mappingurl);
-                }
             }
         } // end  for each 
 

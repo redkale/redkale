@@ -238,12 +238,11 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @param userType        用户数据类型
      * @param baseServletType RestServlet基类
      * @param prefix          url前缀
-     * @param listeners       RestDyncListener列表
      *
      * @return RestServlet
      */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final S service, final Class userType, final Class<T> baseServletType, final String prefix, final List<RestDyncListener> listeners) {
-        return addRestServlet(classLoader, null, service, userType, baseServletType, prefix, listeners);
+    public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
+        return addRestServlet(classLoader, null, service, userType, baseServletType, prefix);
     }
 
     /**
@@ -257,13 +256,11 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @param userType        用户数据类型
      * @param baseServletType RestServlet基类
      * @param prefix          url前缀
-     * @param listeners       RestDyncListener列表
      *
      * @return RestServlet
      */
     @SuppressWarnings("unchecked")
-    public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final String name, final S service,
-        final Class userType, final Class<T> baseServletType, final String prefix, final List<RestDyncListener> listeners) {
+    public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final String name, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
         T servlet = null;
         final boolean sncp = Sncp.isSncpDyn(service);
         final String resname = name == null ? (sncp ? Sncp.getResourceName(service) : "") : name;
@@ -284,7 +281,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             }
         }
         final boolean first = servlet == null;
-        if (servlet == null) servlet = Rest.createRestServlet(classLoader, userType, baseServletType, serviceType, listeners);
+        if (servlet == null) servlet = Rest.createRestServlet(classLoader, userType, baseServletType, serviceType);
         if (servlet == null) return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
         try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
             Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);

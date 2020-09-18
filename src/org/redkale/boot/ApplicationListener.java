@@ -36,6 +36,14 @@ public interface ApplicationListener {
     }
 
     /**
+     * Application 在运行start后调用
+     *
+     * @param application Application
+     */
+    default void postStart(Application application) {
+    }
+
+    /**
      * Application 在运行shutdown前调用
      *
      * @param application Application

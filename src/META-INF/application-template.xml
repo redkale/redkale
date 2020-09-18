@@ -116,7 +116,7 @@
         
         <!--
            Application启动的监听事件,可配置多个节点
-           value: 类名，必须是ApplicationListener或RestDyncListener的子类
+           value: 类名，必须是ApplicationListener的子类
         -->
         <listener value="org.redkalex.xxx.XXXApplicationListener"/>
         

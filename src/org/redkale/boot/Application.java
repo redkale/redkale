@@ -175,8 +175,6 @@ public final class Application {
     //监听事件
     private final List<ApplicationListener> listeners = new CopyOnWriteArrayList<>();
 
-    final List<RestDyncListener> restListeners = new CopyOnWriteArrayList<>();
-
     //服务启动时间
     private final long startTime = System.currentTimeMillis();
 
@@ -735,13 +733,6 @@ public final class Application {
                 final String listenClass = conf.getValue("value", "");
                 if (listenClass.isEmpty()) continue;
                 Class clazz = classLoader.loadClass(listenClass);
-                if (RestDyncListener.class.isAssignableFrom(clazz)) {
-                    RestDyncListener listener = (RestDyncListener) clazz.getDeclaredConstructor().newInstance();
-                    resourceFactory.inject(listener);
-                    listener.init(this, config);
-                    this.restListeners.add(listener);
-                    continue;
-                }
                 if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
                 @SuppressWarnings("unchecked")
                 ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
@@ -919,8 +910,8 @@ public final class Application {
         //if (!singletonrun) signalHandle();
         //if (!singletonrun) clearPersistData();
         logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
-        for (RestDyncListener listener : this.restListeners) {
-            listener.postApplicationStarted(this);
+        for (ApplicationListener listener : this.listeners) {
+            listener.postStart(this);
         }
         if (!singletonrun) this.serversLatch.await();
     }
