@@ -46,8 +46,9 @@ public class RetResult<T> implements Serializable {
 
     @ConvertColumn(index = 3)
     protected T result;
-
-    @ConvertColumn(index = 4)
+    
+    //success index = 4
+    @ConvertColumn(index = 5)
     protected Map<String, String> attach;
 
     protected Convert convert;
@@ -320,7 +321,7 @@ public class RetResult<T> implements Serializable {
      *
      * @return 是否成功
      */
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 4)
     public boolean isSuccess() {
         return retcode == 0;
     }

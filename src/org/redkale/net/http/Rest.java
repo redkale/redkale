@@ -188,12 +188,27 @@ public final class Rest {
         return (!controller.name().isEmpty()) ? controller.name().trim() : serviceType.getSimpleName().replaceAll("Service.*$", "");
     }
 
-    static boolean isRestDyn(HttpServlet servlet) {
+    /**
+     * 判断HttpServlet是否为Rest动态生成的
+     *
+     * @param servlet 检测的HttpServlet
+     *
+     * @return 是否是动态生成的RestHttpServlet
+     */
+    public static boolean isRestDyn(HttpServlet servlet) {
         return servlet.getClass().getAnnotation(RestDyn.class) != null;
     }
 
-    static Service getService(HttpServlet servlet) {
+    /**
+     * 获取Rest动态生成HttpServlet里的Service对象，若不是Rest动态生成的HttpServlet，返回null
+     *
+     * @param servlet HttpServlet
+     *
+     * @return Service
+     */
+    public static Service getService(HttpServlet servlet) {
         if (servlet == null) return null;
+        if (!isRestDyn(servlet)) return null;
         try {
             Field ts = servlet.getClass().getDeclaredField(REST_SERVICE_FIELD_NAME);
             ts.setAccessible(true);
