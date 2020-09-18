@@ -6,7 +6,6 @@ import javax.annotation.Resource;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 
-@HttpUserType(UserInfo.class)
 public class SimpleRestServlet extends HttpServlet {
 
     protected static final RetResult RET_UNLOGIN = RetCodes.retResult(RetCodes.RET_USER_UNLOGIN);
@@ -19,19 +18,19 @@ public class SimpleRestServlet extends HttpServlet {
     @Override
     public void preExecute(HttpRequest request, HttpResponse response) throws IOException {
         final String sessionid = request.getSessionid(true);
-        if (sessionid != null) request.setCurrentUser(userService.current(sessionid));
+        if (sessionid != null) {
+            UserInfo user = userService.current(sessionid);
+            if (user != null) request.setCurrentUserid(user.getUserid());
+        }
         response.nextEvent();
     }
 
     //普通鉴权
     @Override
     public void authenticate(HttpRequest request, HttpResponse response) throws IOException {
-        UserInfo info = request.currentUser();
-        if (info == null) {
+        int userid = request.currentUserid(int.class);
+        if (userid < 1) {
             response.finishJson(RET_UNLOGIN);
-            return;
-        } else if (!info.checkAuth(request.getModuleid(), request.getActionid())) {
-            response.finishJson(RET_AUTHILLEGAL);
             return;
         }
         response.nextEvent();
