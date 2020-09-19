@@ -407,7 +407,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             this.header.addValue("retinfo", ret.getRetinfo());
         }
         Convert convert = ret == null ? null : ret.convert();
-        if (convert == null || !(convert instanceof TextConvert)) convert = request.getJsonConvert();
+        if (convert == null) convert = request.getJsonConvert();
         finish(convert.convertTo(getBodyBufferSupplier(), ret));
     }
 
@@ -445,7 +445,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             finish(result.getResult().toString());
         } else {
             Convert cc = result.convert();
-            if (cc == null || !(cc instanceof TextConvert)) cc = convert;
+            if (cc == null) cc = convert;
             finish(cc, result.getResult());
         }
     }
