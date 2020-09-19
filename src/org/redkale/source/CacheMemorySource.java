@@ -319,6 +319,8 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
                     convertType = storeListType;
                 } else if (entry.cacheType == CacheEntryType.OBJECT_SET) {
                     convertType = storeSetType;
+                } else if (entry.cacheType == CacheEntryType.BYTES) {
+                    convertType = byte[].class;
                 }
                 try {
                     stream.println(convert.convertTo(convertType, entry));
@@ -1503,6 +1505,74 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     @Override
     public CompletableFuture<Integer> removeLongSetItemAsync(final String key, final long value) {
         return CompletableFuture.supplyAsync(() -> removeLongSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public byte[] getBytes(final String key) {
+        if (key == null) return null;
+        CacheEntry entry = container.get(key);
+        if (entry == null || entry.isExpired()) return null;
+        return (byte[]) entry.objectValue;
+    }
+
+    @Override
+    public CompletableFuture<byte[]> getBytesAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> getBytes(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public byte[] getBytesAndRefresh(String key, final int expireSeconds) {
+        if (key == null) return null;
+        CacheEntry entry = container.get(key);
+        if (entry == null || entry.isExpired()) return null;
+        entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
+        entry.expireSeconds = expireSeconds;
+        return (byte[]) entry.objectValue;
+    }
+
+    @Override
+    public CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds) {
+        return CompletableFuture.supplyAsync(() -> getBytesAndRefresh(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public void setBytes(String key, byte[] value) {
+        set(CacheEntryType.BYTES, key, value);
+    }
+
+    @Override
+    public CompletableFuture<Void> setBytesAsync(final String key, byte[] value) {
+        return CompletableFuture.runAsync(() -> setBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public void setBytes(final int expireSeconds, final String key, final byte[] value) {
+        set(CacheEntryType.BYTES, expireSeconds, key, value);
+    }
+
+    @Override
+    public CompletableFuture<Void> setBytesAsync(final int expireSeconds, final String key, byte[] value) {
+        return CompletableFuture.runAsync(() -> setBytes(expireSeconds, key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> void setBytes(final String key, final Convert convert, final Type type, final T value) {
+        set(CacheEntryType.BYTES, key, convert.convertToBytes(type, value));
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> setBytesAsync(final String key, final Convert convert, final Type type, final T value) {
+        return CompletableFuture.runAsync(() -> setBytes(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> void setBytes(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
+        set(CacheEntryType.BYTES, expireSeconds, key, convert.convertToBytes(type, value));
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> setBytesAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
+        return CompletableFuture.runAsync(() -> setBytes(expireSeconds, key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

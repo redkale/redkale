@@ -195,6 +195,18 @@ public interface CacheSource<V extends Object> {
 
     public <T> List<T> spopSetItem(final String key, final int count, final Type componentType);
 
+    public byte[] getBytes(final String key);
+
+    public byte[] getBytesAndRefresh(final String key, final int expireSeconds);
+
+    public void setBytes(final String key, final byte[] value);
+
+    public void setBytes(final int expireSeconds, final String key, final byte[] value);
+
+    public <T> void setBytes(final String key, final Convert convert, final Type type, final T value);
+
+    public <T> void setBytes(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
+
     public List<String> queryKeys();
 
     public List<String> queryKeysStartsWith(String startsWith);
@@ -427,6 +439,18 @@ public interface CacheSource<V extends Object> {
 
     public <T> CompletableFuture<Integer> removeSetItemAsync(final String key, final Type componentType, final T value);
 
+    public CompletableFuture<byte[]> getBytesAsync(final String key);
+
+    public CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds);
+
+    public CompletableFuture<Void> setBytesAsync(final String key, final byte[] value);
+
+    public CompletableFuture<Void> setBytesAsync(final int expireSeconds, final String key, final byte[] value);
+
+    public <T> CompletableFuture<Void> setBytesAsync(final String key, final Convert convert, final Type type, final T value);
+
+    public <T> CompletableFuture<Void> setBytesAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
+
     public CompletableFuture<List<String>> queryKeysAsync();
 
     public CompletableFuture<List<String>> queryKeysStartsWithAsync(String startsWith);
@@ -506,7 +530,7 @@ public interface CacheSource<V extends Object> {
     }
 
     public static enum CacheEntryType {
-        LONG, STRING, OBJECT, ATOMIC, MAP,
+        LONG, STRING, OBJECT, BYTES, ATOMIC, MAP,
         LONG_SET, STRING_SET, OBJECT_SET,
         LONG_LIST, STRING_LIST, OBJECT_LIST;
     }
