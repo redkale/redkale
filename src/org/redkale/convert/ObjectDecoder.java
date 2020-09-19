@@ -178,6 +178,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         while (pos.contains(++pidx));
                         member.position = pidx;
                     }
+                    initForEachDeMember(factory, member);
                 }
                 Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
 
@@ -203,6 +204,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 lock.notifyAll();
             }
         }
+    }
+
+    protected void initForEachDeMember(ConvertFactory factory, DeMember member) {
+    }
+
+    protected void setTag(DeMember member, int tag) {
+        member.tag = tag;
     }
 
     /**
