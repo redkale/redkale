@@ -29,7 +29,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected Creator<T> creator;
 
-    protected DeMember<R, T, ?>[] creatorConstructorMembers = new DeMember[0];
+    protected DeMember<R, T, ?>[] creatorConstructorMembers = null;
 
     protected DeMember[] members;
 
