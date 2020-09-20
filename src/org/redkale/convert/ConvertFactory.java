@@ -211,7 +211,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 loaderInited.set(true);
             }
         }
-        return null;
+        return type == ConvertType.PROTOBUF ? defProtobufConvert : null;
     }
 
     public abstract ConvertType getConvertType();
