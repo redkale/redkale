@@ -44,6 +44,8 @@ public final class Rest {
 
     public static final String REST_HEADER_CURRUSERID_NAME = "rest-curruserid-name";
 
+    public static final String REST_HEADER_CONVERT_TYPE = "rest-convert-type";
+
     static final String REST_SERVICE_FIELD_NAME = "_redkale_service";
 
     static final String REST_TOSTRINGOBJ_FIELD_NAME = "_redkale_tostringsupplier";

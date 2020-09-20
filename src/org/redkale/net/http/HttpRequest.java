@@ -106,7 +106,12 @@ public class HttpRequest extends Request<HttpContext> {
         if (req != null) {
             this.rpc = req.rpc;
             if (req.getBody() != null) this.array.write(req.getBody());
-            if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
+            if (req.getHeaders() != null) {
+                this.headers.putAll(req.getHeaders());
+                if (this.headers.containsKey(Rest.REST_HEADER_CONVERT_TYPE)) {
+                    this.respConvert = ConvertFactory.findConvert(ConvertType.valueOf(this.headers.get(Rest.REST_HEADER_CONVERT_TYPE)));
+                }
+            }
             if (req.getParams() != null) this.params.putAll(req.getParams());
             if (req.getCurrentUserid() != 0) this.currentUserid = req.getCurrentUserid();
             this.contentType = req.getContentType();
@@ -216,9 +221,6 @@ public class HttpRequest extends Request<HttpContext> {
                 case "content-length":
                     this.contentLength = Long.decode(value);
                     break;
-                case "convert-type": //redkale特有的
-                    respConvert = ConvertFactory.findConvert(ConvertType.valueOf(value));
-                    break;
                 case "Host":
                 case "host":
                     this.host = value;
@@ -247,6 +249,10 @@ public class HttpRequest extends Request<HttpContext> {
                     break;
                 case Rest.REST_HEADER_CURRUSERID_NAME:
                     this.currentUserid = value;
+                    headers.put(name, value);
+                    break;
+                case Rest.REST_HEADER_CONVERT_TYPE:
+                    respConvert = ConvertFactory.findConvert(ConvertType.valueOf(value));
                     headers.put(name, value);
                     break;
                 default:
