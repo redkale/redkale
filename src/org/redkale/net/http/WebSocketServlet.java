@@ -143,7 +143,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Override
     final void preInit(HttpContext context, AnyValue conf) {
         if (this.textConvert == null) this.textConvert = jsonConvert;
-        if (this.binaryConvert == null) this.binaryConvert = jsonConvert;
         if (this.sendConvert == null) this.sendConvert = jsonConvert;
         InetSocketAddress addr = context.getServerAddress();
         if (this.node == null) this.node = createWebSocketNode();
