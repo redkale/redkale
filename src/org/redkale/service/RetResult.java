@@ -38,13 +38,13 @@ public class RetResult<T> implements Serializable {
     public static final Type TYPE_RET_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
 
-    @ConvertColumn(index = 1)
+    //success index = 1
+    @ConvertColumn(index = 2)
     protected int retcode;
 
-    @ConvertColumn(index = 2)
+    @ConvertColumn(index = 3)
     protected String retinfo;
 
-    //success index = 3    
     @ConvertColumn(index = 4)
     protected T result;
 
@@ -321,7 +321,7 @@ public class RetResult<T> implements Serializable {
      *
      * @return 是否成功
      */
-    @ConvertColumn(index = 3)
+    @ConvertColumn(index = 1)
     public boolean isSuccess() {
         return retcode == 0;
     }
