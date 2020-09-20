@@ -126,9 +126,9 @@ public abstract class Writer {
         }
         if (value == null) return;
         if (tiny()) {
-            if (member.istring) {
+            if (member.string) {
                 if (((CharSequence) value).length() == 0) return;
-            } else if (member.isbool) {
+            } else if (member.bool) {
                 if (!((Boolean) value)) return;
             }
         }

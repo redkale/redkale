@@ -39,9 +39,9 @@ import org.redkale.util.*;
  */
 public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
-    private static final ObjectPool<BsonReader> readerPool = BsonReader.createPool(Integer.getInteger("convert.bson.pool.size", 16));
+    private static final ObjectPool<BsonReader> readerPool = BsonReader.createPool(Integer.getInteger("convert.bson.pool.size", Integer.getInteger("convert.pool.size", 16)));
 
-    private static final ObjectPool<BsonWriter> writerPool = BsonWriter.createPool(Integer.getInteger("convert.bson.pool.size", 16));
+    private static final ObjectPool<BsonWriter> writerPool = BsonWriter.createPool(Integer.getInteger("convert.bson.pool.size", Integer.getInteger("convert.pool.size", 16)));
 
     private final boolean tiny;
 

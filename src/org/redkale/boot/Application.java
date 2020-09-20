@@ -534,12 +534,9 @@ public final class Application {
         System.setProperty("net.transport.poolmaxconns", "100");
         System.setProperty("net.transport.pinginterval", "30");
         System.setProperty("net.transport.checkinterval", "30");
-        System.setProperty("convert.bson.tiny", "true");
-        System.setProperty("convert.json.tiny", "true");
-        System.setProperty("convert.bson.pool.size", "128");
-        System.setProperty("convert.json.pool.size", "128");
-        System.setProperty("convert.bson.writer.buffer.defsize", "4096");
-        System.setProperty("convert.json.writer.buffer.defsize", "4096");
+        System.setProperty("convert.tiny", "true");
+        System.setProperty("convert.pool.size", "128");
+        System.setProperty("convert.writer.buffer.defsize", "4096");
 
         final String confpath = this.confPath.toString();
         final String homepath = this.home.getCanonicalPath();

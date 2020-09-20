@@ -24,7 +24,7 @@ public class JsonWriter extends Writer {
 
     private static final char[] CHARS_FALSEVALUE = "false".toCharArray();
 
-    private static final int defaultSize = Integer.getInteger("convert.json.writer.buffer.defsize", 1024);
+    private static final int defaultSize = Integer.getInteger("convert.json.writer.buffer.defsize", Integer.getInteger("convert.writer.buffer.defsize", 1024));
 
     private int count;
 

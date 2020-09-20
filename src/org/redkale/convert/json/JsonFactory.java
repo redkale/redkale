@@ -23,7 +23,7 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
-    private static final JsonFactory instance = new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));
+    private static final JsonFactory instance = new JsonFactory(null, getSystemPropertyBoolean("convert.json.tiny", "convert.tiny", true));
 
     static {
 
@@ -60,7 +60,7 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     }
 
     public static JsonFactory create() {
-        return new JsonFactory(null, Boolean.getBoolean("convert.json.tiny"));
+        return new JsonFactory(null, getSystemPropertyBoolean("convert.json.tiny", "convert.tiny", true));
     }
 
     @Override

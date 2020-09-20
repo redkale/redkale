@@ -30,9 +30,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public static final Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
 
-    private static final ObjectPool<JsonReader> readerPool = JsonReader.createPool(Integer.getInteger("convert.json.pool.size", 16));
+    private static final ObjectPool<JsonReader> readerPool = JsonReader.createPool(Integer.getInteger("convert.json.pool.size", Integer.getInteger("convert.pool.size", 16)));
 
-    private static final ObjectPool<JsonWriter> writerPool = JsonWriter.createPool(Integer.getInteger("convert.json.pool.size", 16));
+    private static final ObjectPool<JsonWriter> writerPool = JsonWriter.createPool(Integer.getInteger("convert.json.pool.size", Integer.getInteger("convert.pool.size", 16)));
 
     private final boolean tiny;
 

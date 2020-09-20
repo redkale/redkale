@@ -214,6 +214,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return type == ConvertType.PROTOBUF ? defProtobufConvert : null;
     }
 
+    protected static boolean getSystemPropertyBoolean(String key, String parentkey, boolean defvalue) {
+        return Boolean.parseBoolean(System.getProperty(key, System.getProperty(parentkey, String.valueOf(defvalue))));
+    }
+
     public abstract ConvertType getConvertType();
 
     public abstract boolean isReversible(); //是否可逆的

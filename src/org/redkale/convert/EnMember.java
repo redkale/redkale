@@ -26,10 +26,10 @@ public final class EnMember<W extends Writer, T, F> {
 
     final Encodeable<W, F> encoder;
 
-    final boolean istring;
+    final boolean string;
 
     //final boolean isnumber;
-    final boolean isbool;
+    final boolean bool;
 
     protected int index;
 
@@ -39,8 +39,8 @@ public final class EnMember<W extends Writer, T, F> {
         this.attribute = attribute;
         this.encoder = encoder;
         Class t = attribute.type();
-        this.istring = CharSequence.class.isAssignableFrom(t);
-        this.isbool = t == Boolean.class || t == boolean.class;
+        this.string = CharSequence.class.isAssignableFrom(t);
+        this.bool = t == Boolean.class || t == boolean.class;
         //this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
     }
 
@@ -74,11 +74,11 @@ public final class EnMember<W extends Writer, T, F> {
     }
 
     public boolean isStringType() {
-        return istring;
+        return string;
     }
 
     public boolean isBoolType() {
-        return isbool;
+        return bool;
     }
 
     public int getIndex() {

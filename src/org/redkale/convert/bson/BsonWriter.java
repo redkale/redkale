@@ -20,7 +20,7 @@ import org.redkale.util.*;
  */
 public class BsonWriter extends Writer {
 
-    private static final int defaultSize = Integer.getInteger("convert.bson.writer.buffer.defsize", 1024);
+    private static final int defaultSize = Integer.getInteger("convert.bson.writer.buffer.defsize", Integer.getInteger("convert.writer.buffer.defsize", 1024));
 
     private byte[] content;
 

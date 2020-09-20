@@ -130,12 +130,9 @@
                System.setProperty("net.transport.poolmaxconns", "100");
                System.setProperty("net.transport.pinginterval", "30");
                System.setProperty("net.transport.checkinterval", "30");
-               System.setProperty("convert.json.tiny", "true");
-               System.setProperty("convert.bson.tiny", "true");
-               System.setProperty("convert.json.pool.size", "128");
-               System.setProperty("convert.bson.pool.size", "128");
-               System.setProperty("convert.json.writer.buffer.defsize", "4096");
-               System.setProperty("convert.bson.writer.buffer.defsize", "4096");
+               System.setProperty("convert.tiny", "true");
+               System.setProperty("convert.pool.size", "128");
+               System.setProperty("convert.writer.buffer.defsize", "4096");
                
             <properties>节点下也可包含非<property>节点.
             非<property>其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]
