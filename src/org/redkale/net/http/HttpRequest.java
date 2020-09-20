@@ -41,7 +41,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected boolean rpc;
 
-    protected Convert currConvert;
+    protected Convert respConvert;
 
     @Comment("Method GET/POST/...")
     protected String method;
@@ -163,8 +163,8 @@ public class HttpRequest extends Request<HttpContext> {
         return this.channel;
     }
 
-    protected Convert getCurrConvert() {
-        return this.currConvert == null ? this.jsonConvert : this.currConvert;
+    protected Convert getRespConvert() {
+        return this.respConvert == null ? this.jsonConvert : this.respConvert;
     }
 
     @Override
@@ -215,6 +215,9 @@ public class HttpRequest extends Request<HttpContext> {
                 case "Content-Length":
                 case "content-length":
                     this.contentLength = Long.decode(value);
+                    break;
+                case "convert-type": //redkale特有的
+                    respConvert = ConvertFactory.findConvert(ConvertType.valueOf(value));
                     break;
                 case "Host":
                 case "host":
@@ -664,7 +667,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.remoteAddr = null;
 
         this.attachment = null;
-        this.currConvert = jsonConvert;
+        this.respConvert = jsonConvert;
 
         this.headers.clear();
         this.params.clear();

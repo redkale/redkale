@@ -315,7 +315,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final Object obj) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = obj;
-        finish(request.getCurrConvert().convertTo(getBodyBufferSupplier(), obj));
+        finish(request.getRespConvert().convertTo(getBodyBufferSupplier(), obj));
     }
 
     /**
@@ -327,7 +327,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishMapJson(final Object... objs) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = objs;
-        finish(request.getCurrConvert().convertMapTo(getBodyBufferSupplier(), objs));
+        finish(request.getRespConvert().convertMapTo(getBodyBufferSupplier(), objs));
     }
 
     /**
@@ -364,7 +364,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final Type type, final Object obj) {
         this.contentType = this.jsonContentType;
         this.output = obj;
-        finish(request.getCurrConvert().convertTo(getBodyBufferSupplier(), type, obj));
+        finish(request.getRespConvert().convertTo(getBodyBufferSupplier(), type, obj));
     }
 
     /**
@@ -388,7 +388,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final Object... objs) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = objs;
-        finish(request.getCurrConvert().convertTo(getBodyBufferSupplier(), objs));
+        finish(request.getRespConvert().convertTo(getBodyBufferSupplier(), objs));
     }
 
     /**
@@ -407,7 +407,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             this.header.addValue("retinfo", ret.getRetinfo());
         }
         Convert convert = ret == null ? null : ret.convert();
-        if (convert == null) convert = request.getCurrConvert();
+        if (convert == null) convert = request.getRespConvert();
         finish(convert.convertTo(getBodyBufferSupplier(), ret));
     }
 
@@ -456,7 +456,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param future 输出对象的句柄
      */
     public void finishJson(final CompletableFuture future) {
-        finish(request.getCurrConvert(), (Type) null, future);
+        finish(request.getRespConvert(), (Type) null, future);
     }
 
     /**
@@ -489,7 +489,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @SuppressWarnings("unchecked")
     public void finish(final Object obj) {
-        finish(request.getCurrConvert(), (Type) null, obj);
+        finish(request.getRespConvert(), (Type) null, obj);
     }
 
     /**
