@@ -41,6 +41,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected boolean rpc;
 
+    protected Convert currConvert;
+
     @Comment("Method GET/POST/...")
     protected String method;
 
@@ -161,8 +163,8 @@ public class HttpRequest extends Request<HttpContext> {
         return this.channel;
     }
 
-    protected JsonConvert getJsonConvert() {
-        return this.jsonConvert;
+    protected Convert getCurrConvert() {
+        return this.currConvert == null ? this.jsonConvert : this.currConvert;
     }
 
     @Override
@@ -567,7 +569,7 @@ public class HttpRequest extends Request<HttpContext> {
     public <T> T getBodyJson(Convert convert, java.lang.reflect.Type type) {
         if (array.size() < 1) return null;
         return (T) convert.convertFrom(type, array.directBytes());
-    } 
+    }
 
     /**
      * 获取请求内容的byte[]
@@ -662,6 +664,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.remoteAddr = null;
 
         this.attachment = null;
+        this.currConvert = jsonConvert;
 
         this.headers.clear();
         this.params.clear();
