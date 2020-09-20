@@ -8,6 +8,7 @@ package org.redkale.util;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
+import org.redkale.convert.ConvertColumn;
 
 /**
  * 页集合。 结构由一个total总数和一个List列表组合而成。
@@ -21,8 +22,10 @@ import java.util.stream.*;
 @SuppressWarnings("unchecked")
 public class Sheet<T> implements java.io.Serializable, Iterable<T> {
 
+    @ConvertColumn(index = 1)
     private long total = -1;
 
+    @ConvertColumn(index = 2)
     private Collection<T> rows;
 
     public Sheet() {
@@ -62,6 +65,7 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
      *
      * @return 是否为空
      */
+    @ConvertColumn(index = 3)
     public boolean isEmpty() {
         return this.rows == null || this.rows.isEmpty();
     }
