@@ -163,25 +163,30 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             factory.loadEncoder(clz).convertTo(out, value);
             return;
         }
-        if (out.writeObjectB(value) < 0) {
+        W objout = objectWriter(out, value);
+        if (objout.writeObjectB(value) < 0) {
             int maxPosition = 0;
             for (EnMember member : members) {
                 maxPosition = member.getPosition();
-                out.writeObjectField(member, value);
+                objout.writeObjectField(member, value);
             }
-            if (out.objExtFunc != null) {
-                ConvertField[] extFields = out.objExtFunc.apply(value);
+            if (objout.objExtFunc != null) {
+                ConvertField[] extFields = objout.objExtFunc.apply(value);
                 if (extFields != null) {
                     Encodeable<W, ?> anyEncoder = factory.getAnyEncoder();
                     for (ConvertField en : extFields) {
                         if (en == null) continue;
                         maxPosition++;
-                        out.writeObjectField(en.getName(), en.getType(), Math.max(en.getPosition(), maxPosition), anyEncoder, en.getValue());
+                        objout.writeObjectField(en.getName(), en.getType(), Math.max(en.getPosition(), maxPosition), anyEncoder, en.getValue());
                     }
                 }
             }
         }
-        out.writeObjectE(value);
+        objout.writeObjectE(value);
+    }
+
+    protected W objectWriter(W out, T value) {
+        return out;
     }
 
     @Override
