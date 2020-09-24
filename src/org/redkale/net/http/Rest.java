@@ -224,7 +224,7 @@ public final class Rest {
         }
     }
 
-    static Map<String, Service> getServiceMap(HttpServlet servlet) {
+    public static Map<String, Service> getServiceMap(HttpServlet servlet) {
         if (servlet == null) return null;
         try {
             Field ts = servlet.getClass().getDeclaredField(REST_SERVICEMAP_FIELD_NAME);
