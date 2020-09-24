@@ -75,8 +75,20 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                     if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) builder.header(n, v);
                 });
             builder.header("Content-Type", "x-www-form-urlencoded");
-            String paramstr = req.getParametersToString();
-            if (paramstr != null) builder.POST(java.net.http.HttpRequest.BodyPublishers.ofString(paramstr));
+            if (req.getBody() != null && req.getBody().length > 0) {
+                String paramstr = req.getParametersToString();
+                if (paramstr != null) {
+                    if (req.getRequestURI().indexOf('?') > 0) {
+                        req.setRequestURI(req.getRequestURI() + "&" + paramstr);
+                    } else {
+                        req.setRequestURI(req.getRequestURI() + "?" + paramstr);
+                    }
+                }
+                builder.POST(java.net.http.HttpRequest.BodyPublishers.ofByteArray(req.getBody()));
+            } else {
+                String paramstr = req.getParametersToString();
+                if (paramstr != null) builder.POST(java.net.http.HttpRequest.BodyPublishers.ofString(paramstr));
+            }
             List<CompletableFuture> futures = new ArrayList<>();
             for (Map.Entry<String, Collection<InetSocketAddress>> en : addrmap.entrySet()) {
                 String realmodule = en.getKey();
@@ -108,8 +120,20 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                     if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) builder.header(n, v);
                 });
             builder.header("Content-Type", "x-www-form-urlencoded");
-            String paramstr = req.getParametersToString();
-            if (paramstr != null) builder.POST(java.net.http.HttpRequest.BodyPublishers.ofString(paramstr));
+            if (req.getBody() != null && req.getBody().length > 0) {
+                String paramstr = req.getParametersToString();
+                if (paramstr != null) {
+                    if (req.getRequestURI().indexOf('?') > 0) {
+                        req.setRequestURI(req.getRequestURI() + "&" + paramstr);
+                    } else {
+                        req.setRequestURI(req.getRequestURI() + "?" + paramstr);
+                    }
+                }
+                builder.POST(java.net.http.HttpRequest.BodyPublishers.ofByteArray(req.getBody()));
+            } else {
+                String paramstr = req.getParametersToString();
+                if (paramstr != null) builder.POST(java.net.http.HttpRequest.BodyPublishers.ofString(paramstr));
+            }
             return forEachCollectionFuture(finest, userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(), builder, addrs.iterator());
         });
     }
