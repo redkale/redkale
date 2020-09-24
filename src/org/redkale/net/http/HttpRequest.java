@@ -41,6 +41,10 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected boolean rpc;
 
+    protected boolean frombody;
+
+    protected Convert reqConvert;
+
     protected Convert respConvert;
 
     @Comment("Method GET/POST/...")
@@ -108,8 +112,14 @@ public class HttpRequest extends Request<HttpContext> {
             if (req.getBody() != null) this.array.write(req.getBody());
             if (req.getHeaders() != null) {
                 this.headers.putAll(req.getHeaders());
-                if (this.headers.containsKey(Rest.REST_HEADER_CONVERT_TYPE)) {
-                    this.respConvert = ConvertFactory.findConvert(ConvertType.valueOf(this.headers.get(Rest.REST_HEADER_CONVERT_TYPE)));
+                if (this.headers.containsKey(Rest.REST_HEADER_PARAM_FROM_BODY)) {
+                    this.frombody = "true".equals(this.headers.get(Rest.REST_HEADER_RESP_CONVERT_TYPE));
+                }
+                if (this.headers.containsKey(Rest.REST_HEADER_RESP_CONVERT_TYPE)) {
+                    this.respConvert = ConvertFactory.findConvert(ConvertType.valueOf(this.headers.get(Rest.REST_HEADER_RESP_CONVERT_TYPE)));
+                }
+                if (this.headers.containsKey(Rest.REST_HEADER_REQ_CONVERT_TYPE)) {
+                    this.reqConvert = ConvertFactory.findConvert(ConvertType.valueOf(this.headers.get(Rest.REST_HEADER_REQ_CONVERT_TYPE)));
                 }
             }
             if (req.getParams() != null) this.params.putAll(req.getParams());
@@ -251,7 +261,15 @@ public class HttpRequest extends Request<HttpContext> {
                     this.currentUserid = value;
                     headers.put(name, value);
                     break;
-                case Rest.REST_HEADER_CONVERT_TYPE:
+                case Rest.REST_HEADER_PARAM_FROM_BODY:
+                    this.frombody = "true".equalsIgnoreCase(value);
+                    headers.put(name, value);
+                    break;
+                case Rest.REST_HEADER_REQ_CONVERT_TYPE:
+                    reqConvert = ConvertFactory.findConvert(ConvertType.valueOf(value));
+                    headers.put(name, value);
+                    break;
+                case Rest.REST_HEADER_RESP_CONVERT_TYPE:
                     respConvert = ConvertFactory.findConvert(ConvertType.valueOf(value));
                     headers.put(name, value);
                     break;
@@ -561,9 +579,10 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(java.lang.reflect.Type type) {
-        String str = array.toString(StandardCharsets.UTF_8);
-        if (str == null || str.isEmpty()) return null;
-        return context.getJsonConvert().convertFrom(type, str);
+        if (array == null || array.isEmpty()) return null;
+        Convert convert = this.reqConvert;
+        if (convert == null) convert = context.getJsonConvert();
+        return (T) convert.convertFrom(type, array.directBytes());
     }
 
     /**
@@ -576,7 +595,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(Convert convert, java.lang.reflect.Type type) {
-        if (array.size() < 1) return null;
+        if (array.isEmpty()) return null;
         return (T) convert.convertFrom(type, array.directBytes());
     }
 
@@ -665,6 +684,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.contentLength = -1;
         this.boundary = false;
         this.bodyparsed = false;
+        this.frombody = false;
         this.moduleid = 0;
         this.actionid = 0;
         this.annotations = null;
@@ -673,6 +693,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.remoteAddr = null;
 
         this.attachment = null;
+        this.reqConvert = null;
         this.respConvert = jsonConvert;
 
         this.headers.clear();
@@ -1572,6 +1593,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public String getParameter(String name) {
+        if (this.frombody) {
+            if (array.isEmpty()) return null;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (String) convert.convertFrom(String.class, array.directBytes());
+        }
         parseBody();
         return params.get(name);
     }
@@ -1585,6 +1612,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public String getParameter(String name, String defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (String) convert.convertFrom(String.class, array.directBytes());
+        }
         parseBody();
         return params.getOrDefault(name, defaultValue);
     }
@@ -1599,6 +1632,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public <T> T getJsonParameter(java.lang.reflect.Type type, String name) {
+        if (this.frombody) {
+            if (array.isEmpty()) return null;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (T) convert.convertFrom(type, array.directBytes());
+        }
         String v = getParameter(name);
         return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(type, v);
     }
