@@ -96,6 +96,78 @@ public abstract class TypeToken<T> {
         }
         return newTypes;
     }
+//
+//    public static void main(String[] args) throws Throwable {
+//        Method tt0 = C.class.getMethod("getValue");
+//        System.out.println("tt0.type=" + tt0.getReturnType() + "======" + tt0.getGenericReturnType() + "======" + getGenericType(tt0.getGenericReturnType(), C.class));
+//
+//        Method tt3 = C.class.getMethod("getValue3");
+//        System.out.println("tt3.type=" + tt3.getReturnType() + "======" + tt3.getGenericReturnType() + "======" + getGenericType(tt3.getGenericReturnType(), C.class));
+//
+//        Method ttr = AGameService.class.getMethod("getResult");
+//        System.out.println("ttr.type=" + ttr.getReturnType() + "======" + ttr.getGenericReturnType() + "======" + getGenericType(ttr.getGenericReturnType(), AGameService.class));
+//        System.out.println("ttr.应该是: List<AGameTable>, 结果是: " + getGenericType(ttr.getGenericReturnType(), AGameService.class));
+//    }
+//
+//    public static class GamePlayer {
+//    }
+//
+//    public static class GameTable<P extends GamePlayer> {
+//    }
+//
+//    public static class GameService<GT extends GameTable, P extends GamePlayer> {
+//
+//    }
+//
+//    public static class AbstractGamePlayer extends GamePlayer {
+//    }
+//
+//    public static class AbstractGameTable<P extends AbstractGamePlayer> extends GameTable<P> {
+//    }
+//
+//    public static class AbstractGameService<GT extends AbstractGameTable<P>, P extends AbstractGamePlayer> extends GameService<GT, P> {
+//
+//        public List<GT> getResult() {
+//            return null;
+//        }
+//    }
+//
+//    public static class IGamePlayer extends AbstractGamePlayer {
+//    }
+//
+//    public static class IGameTable<P extends IGamePlayer> extends AbstractGameTable<P> {
+//    }
+//
+//    public static class IGameService<GT extends IGameTable<P>, P extends IGamePlayer> extends AbstractGameService<GT, P> {
+//
+//    }
+//
+//    public static class AGamePlayer extends IGamePlayer {
+//    }
+//
+//    public static class AGameTable extends IGameTable<AGamePlayer> {
+//    }
+//
+//    public static class AGameService extends IGameService<AGameTable, AGamePlayer> {
+//
+//    }
+//
+//    public static class A<V, T> {
+//
+//        public List<T> getValue() {
+//            return null;
+//        }
+//
+//        public T getValue3() {
+//            return null;
+//        }
+//    }
+//
+//    public static class B<V, W> extends A<W, V> {
+//    }
+//
+//    public static class C extends B<String, Integer> {
+//    }
 
     /**
      * 获取TypeVariable对应的实际Type, 如果type不是TypeVariable 直接返回type。
@@ -151,7 +223,7 @@ public abstract class TypeToken<T> {
                     ss = ss.getSuperclass();
                     asts = ss.getTypeParameters();
                 }
-                
+
                 if (atas.length == asts.length) {
                     for (int i = 0; i < asts.length; i++) {
                         Type currt = asts[i];
