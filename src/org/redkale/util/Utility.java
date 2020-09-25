@@ -1657,6 +1657,22 @@ public final class Utility {
     }
 
     /**
+     * 将int[]强制转换成byte[]
+     *
+     * @param value int[]
+     *
+     * @return byte[]
+     */
+    public static byte[] intsToBytes(int[] value) {
+        if (value == null) return null;
+        byte[] bs = new byte[value.length];
+        for (int i = 0; i < bs.length; i++) {
+            bs[i] = (byte) value[i];
+        }
+        return bs;
+    }
+
+    /**
      * MD5加密
      *
      * @param bs 待加密数据
