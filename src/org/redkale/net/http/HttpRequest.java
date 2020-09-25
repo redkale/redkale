@@ -582,6 +582,7 @@ public class HttpRequest extends Request<HttpContext> {
         if (array == null || array.isEmpty()) return null;
         Convert convert = this.reqConvert;
         if (convert == null) convert = context.getJsonConvert();
+        if (type == byte[].class) return (T) array.getBytes();
         return (T) convert.convertFrom(type, array.directBytes());
     }
 
@@ -596,6 +597,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public <T> T getBodyJson(Convert convert, java.lang.reflect.Type type) {
         if (array.isEmpty()) return null;
+        if (type == byte[].class) return (T) array.getBytes();
         return (T) convert.convertFrom(type, array.directBytes());
     }
 
@@ -1636,6 +1638,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (array.isEmpty()) return null;
             Convert convert = this.reqConvert;
             if (convert == null) convert = jsonConvert;
+            if (type == byte[].class) return (T) array.getBytes();
             return (T) convert.convertFrom(type, array.directBytes());
         }
         String v = getParameter(name);
