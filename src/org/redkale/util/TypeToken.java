@@ -208,6 +208,12 @@ public abstract class TypeToken<T> {
             if (declaringClass instanceof Class) {
                 declaringClass0 = (Class) declaringClass;
                 superType = declaringClass0.getGenericSuperclass();
+                if (superType instanceof ParameterizedType) {
+                    Map<Type, Type> map = new HashMap<>();
+                    parseType(map, declaringClass0);
+                    Type rstype = getType(map, type);
+                    if (rstype instanceof Class) return rstype;
+                }
                 while (superType instanceof Class && superType != Object.class) superType = ((Class) superType).getGenericSuperclass();
             } else if (declaringClass instanceof ParameterizedType) {
                 superType = declaringClass;
@@ -303,6 +309,30 @@ public abstract class TypeToken<T> {
                 getGenericType(pt.getActualTypeArguments(), declaringClass));
         }
         return type;
+    }
+
+    private static Type getType(Map<Type, Type> map, Type type) {
+        Type one = map.get(type);
+        if (one == null) return type;
+        return getType(map, one);
+    }
+
+    private static Map<Type, Type> parseType(Map<Type, Type> map, Class clzz) {
+        if (clzz == Object.class) return map;
+        Type superType = clzz.getGenericSuperclass();
+        if (!(superType instanceof ParameterizedType)) return map;
+        ParameterizedType pt = (ParameterizedType) superType;
+        Type[] ptt = pt.getActualTypeArguments();
+        Type superRaw = pt.getRawType();
+        if (!(superRaw instanceof Class)) return map;
+        Class superClazz = (Class) superRaw;
+        TypeVariable[] scs = superClazz.getTypeParameters();
+        if (scs.length != ptt.length) return map;
+        for (int i = 0; i < scs.length; i++) {
+            if (scs[i] == ptt[i]) continue;
+            map.put(scs[i], ptt[i]);
+        }
+        return parseType(map, clzz.getSuperclass());
     }
 
     /**
