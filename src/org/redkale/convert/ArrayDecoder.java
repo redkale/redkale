@@ -119,6 +119,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
     }
 
     protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
+        if (in == null) return null;
         return decoder.convertFrom(in);
     }
 

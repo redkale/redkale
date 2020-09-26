@@ -129,6 +129,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
     }
 
     protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
+        if (in == null) return null;
         return decoder.convertFrom(in);
     }
 
