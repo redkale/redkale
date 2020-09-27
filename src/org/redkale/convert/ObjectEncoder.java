@@ -130,6 +130,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         while (pos.contains(++pidx));
                         member.position = pidx;
                     }
+                    initForEachEnMember(factory, member);
                 }
                 Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
 
@@ -142,6 +143,13 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 lock.notifyAll();
             }
         }
+    }
+
+    protected void initForEachEnMember(ConvertFactory factory, EnMember member) {
+    }
+
+    protected void setTag(EnMember member, int tag) {
+        member.tag = tag;
     }
 
     @Override

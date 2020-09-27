@@ -35,6 +35,8 @@ public final class EnMember<W extends Writer, T, F> {
 
     protected int position; //从1开始
 
+    protected int tag; //主要给protobuf使用
+
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder) {
         this.attribute = attribute;
         this.encoder = encoder;
@@ -87,6 +89,10 @@ public final class EnMember<W extends Writer, T, F> {
 
     public int getPosition() {
         return this.position;
+    }
+
+    public int getTag() {
+        return this.tag;
     }
 
     public int compareTo(boolean fieldSort, EnMember<W, T, F> o) {
