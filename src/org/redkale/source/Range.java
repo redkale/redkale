@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.util.function.*;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.util.Utility;
 
 /**
@@ -54,8 +55,10 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
     public static final class ByteRange implements Range<Byte> {
 
+        @ConvertColumn(index = 1)
         private Byte min = Byte.MIN_VALUE;
 
+        @ConvertColumn(index = 2)
         private Byte max = Byte.MAX_VALUE;
 
         public ByteRange() {
@@ -99,8 +102,10 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
     public static final class ShortRange implements Range<Short> {
 
+        @ConvertColumn(index = 1)
         private Short min = Short.MIN_VALUE;
 
+        @ConvertColumn(index = 2)
         private Short max = Short.MAX_VALUE;
 
         public ShortRange() {
@@ -143,8 +148,10 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
     public static final class IntRange implements Range<Integer> {
 
+        @ConvertColumn(index = 1)
         private Integer min = Integer.MIN_VALUE;
 
+        @ConvertColumn(index = 2)
         private Integer max = Integer.MAX_VALUE;
 
         public IntRange() {
@@ -187,8 +194,10 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
     public static final class LongRange implements Range<Long> {
 
+        @ConvertColumn(index = 1)
         private Long min = Long.MIN_VALUE;
 
+        @ConvertColumn(index = 2)
         private Long max = Long.MAX_VALUE;
 
         public LongRange() {
@@ -241,8 +250,10 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
     public static final class FloatRange implements Range<Float> {
 
+        @ConvertColumn(index = 1)
         private Float min = Float.MIN_VALUE;
 
+        @ConvertColumn(index = 2)
         private Float max = Float.MAX_VALUE;
 
         public FloatRange() {
@@ -285,8 +296,10 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
     public static final class DoubleRange implements Range<Double> {
 
+        @ConvertColumn(index = 1)
         private Double min = Double.MIN_VALUE;
 
+        @ConvertColumn(index = 2)
         private Double max = Double.MAX_VALUE;
 
         public DoubleRange() {
@@ -329,8 +342,10 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
 
     public static final class StringRange implements Range<String> {
 
+        @ConvertColumn(index = 1)
         private String min = "";
 
+        @ConvertColumn(index = 2)
         private String max = "";
 
         public StringRange() {
