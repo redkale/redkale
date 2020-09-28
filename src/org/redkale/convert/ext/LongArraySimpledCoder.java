@@ -30,7 +30,7 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
             out.writeNull();
             return;
         }
-        if (out.writeArrayB(values.length, LongSimpledCoder.instance, values) < 0) {
+        if (out.writeArrayB(values.length, this, LongSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (long v : values) {
                 if (flag) out.writeArrayMark();

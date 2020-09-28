@@ -27,7 +27,7 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
             out.writeNull();
             return;
         }
-        if (out.writeArrayB(values.length, StringSimpledCoder.instance, values) < 0) {
+        if (out.writeArrayB(values.length, this, StringSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (String v : values) {
                 if (flag) out.writeArrayMark();

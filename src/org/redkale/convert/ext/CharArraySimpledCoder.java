@@ -29,7 +29,7 @@ public final class CharArraySimpledCoder<R extends Reader, W extends Writer> ext
             out.writeNull();
             return;
         }
-        if (out.writeArrayB(values.length, CharSimpledCoder.instance, values) < 0) {
+        if (out.writeArrayB(values.length, this, CharSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (char v : values) {
                 if (flag) out.writeArrayMark();

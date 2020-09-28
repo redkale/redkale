@@ -62,7 +62,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
         }
         Object[] array = value.toArray();
         if (array.length == 0) {
-            out.writeArrayB(0, componentEncoder, array);
+            out.writeArrayB(0, this, componentEncoder, array);
             out.writeArrayE();
             return;
         }
@@ -77,7 +77,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
                 }
             }
         }
-        if (out.writeArrayB(array.length, componentEncoder, array) < 0) {
+        if (out.writeArrayB(array.length, this, componentEncoder, array) < 0) {
             boolean first = true;
             for (Object v : array) {
                 if (!first) out.writeArrayMark();

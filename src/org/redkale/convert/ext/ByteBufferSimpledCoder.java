@@ -30,7 +30,7 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
             out.writeNull();
             return;
         }
-        if (out.writeArrayB(value.remaining(), ByteSimpledCoder.instance, value) < 0) {
+        if (out.writeArrayB(value.remaining(), this, ByteSimpledCoder.instance, value) < 0) {
             boolean flag = false;
             for (byte v : value.array()) {
                 if (flag) out.writeArrayMark();

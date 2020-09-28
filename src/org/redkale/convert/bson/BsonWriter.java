@@ -135,7 +135,7 @@ public class BsonWriter extends Writer {
             writeNull();
             return;
         }
-        writeArrayB(values.length, null, values);
+        writeArrayB(values.length, null, null, values);
         boolean flag = false;
         for (byte v : values) {
             if (flag) writeArrayMark();
@@ -254,7 +254,7 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final int writeArrayB(int size, Encodeable<Writer, Object> componentEncoder, Object obj) {
+    public final int writeArrayB(int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
         writeInt(size);
         if (componentEncoder != null && componentEncoder != ByteSimpledCoder.instance) {
             writeByte(BsonFactory.typeEnum(componentEncoder.getType()));

@@ -61,7 +61,7 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
             return;
         }
         if (value.isEmpty()) {
-            out.writeArrayB(0, componentEncoder, value);
+            out.writeArrayB(0, this, componentEncoder, value);
             out.writeArrayE();
             return;
         }
@@ -76,18 +76,18 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
                 }
             }
         }
-        if (out.writeArrayB(value.size(), componentEncoder, value) < 0) {
+        if (out.writeArrayB(value.size(), this, componentEncoder, value) < 0) {
             boolean first = true;
             for (Object v : value) {
                 if (!first) out.writeArrayMark();
-                writeValue(out, member, v);
+                writeMemberValue(out, member, v, first);
                 if (first) first = false;
             }
         }
         out.writeArrayE();
     }
 
-    protected void writeValue(Writer out, EnMember member, Object value) {
+    protected void writeMemberValue(Writer out, EnMember member, Object value, boolean first) {
         componentEncoder.convertTo(out, value);
     }
 

@@ -29,7 +29,7 @@ public final class ShortArraySimpledCoder<R extends Reader, W extends Writer> ex
             out.writeNull();
             return;
         }
-        if (out.writeArrayB(values.length, ShortSimpledCoder.instance, values) < 0) {
+        if (out.writeArrayB(values.length, this, ShortSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (short v : values) {
                 if (flag) out.writeArrayMark();

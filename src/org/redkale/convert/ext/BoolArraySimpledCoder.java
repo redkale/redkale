@@ -29,7 +29,7 @@ public final class BoolArraySimpledCoder<R extends Reader, W extends Writer> ext
             out.writeNull();
             return;
         }
-        if (out.writeArrayB(values.length, BoolSimpledCoder.instance, values) < 0) {
+        if (out.writeArrayB(values.length, this, BoolSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (boolean v : values) {
                 if (flag) out.writeArrayMark();

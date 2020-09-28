@@ -197,7 +197,7 @@ public class JsonWriter extends Writer {
             writeNull();
             return;
         }
-        writeArrayB(values.length, null, values);
+        writeArrayB(values.length, null, null, values);
         boolean flag = false;
         for (byte v : values) {
             if (flag) writeArrayMark();
@@ -354,7 +354,7 @@ public class JsonWriter extends Writer {
     }
 
     @Override
-    public final int writeArrayB(int size, Encodeable<Writer, Object> componentEncoder, Object obj) {
+    public final int writeArrayB(int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
         writeTo('[');
         return -1;
     }

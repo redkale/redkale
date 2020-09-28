@@ -30,7 +30,7 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
             out.writeNull();
             return;
         }
-        if (out.writeArrayB(values.length, IntSimpledCoder.instance, values) < 0) {
+        if (out.writeArrayB(values.length, this, IntSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (int v : values) {
                 if (flag) out.writeArrayMark();

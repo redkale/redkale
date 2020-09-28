@@ -29,7 +29,7 @@ public final class FloatArraySimpledCoder<R extends Reader, W extends Writer> ex
             out.writeNull();
             return;
         }
-        if (out.writeArrayB(values.length, FloatSimpledCoder.instance, values) < 0) {
+        if (out.writeArrayB(values.length, this, FloatSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (float v : values) {
                 if (flag) out.writeArrayMark();
