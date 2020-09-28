@@ -1669,6 +1669,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public boolean getBooleanParameter(String name, boolean defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (boolean) convert.convertFrom(boolean.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         return value == null || value.length() == 0 ? defaultValue : Boolean.parseBoolean(value);
@@ -1683,6 +1689,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public short getShortParameter(String name, short defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (short) convert.convertFrom(short.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -1703,6 +1715,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public short getShortParameter(int radix, String name, short defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return (short) defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (short) convert.convertFrom(short.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -1722,6 +1740,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public short getShortParameter(String name, int defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return (short) defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (short) convert.convertFrom(short.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return (short) defaultValue;
@@ -1741,6 +1765,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public int getIntParameter(String name, int defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (int) convert.convertFrom(int.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -1761,6 +1791,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public int getIntParameter(int radix, String name, int defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (int) convert.convertFrom(int.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -1780,6 +1816,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public long getLongParameter(String name, long defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (long) convert.convertFrom(long.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -1800,6 +1842,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public long getLongParameter(int radix, String name, long defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (long) convert.convertFrom(long.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -1819,6 +1867,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public float getFloatParameter(String name, float defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (float) convert.convertFrom(float.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -1838,6 +1892,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public double getDoubleParameter(String name, double defaultValue) {
+        if (this.frombody) {
+            if (array.isEmpty()) return defaultValue;
+            Convert convert = this.reqConvert;
+            if (convert == null) convert = jsonConvert;
+            return (double) convert.convertFrom(double.class, array.directBytes());
+        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) return defaultValue;
