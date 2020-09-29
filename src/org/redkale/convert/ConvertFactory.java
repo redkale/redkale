@@ -312,10 +312,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             final Method method = (Method) element;
             fieldName = readGetSetFieldName(method);
             if (fieldName != null) {
-                try {
-                    ccs = method.getDeclaringClass().getDeclaredField(fieldName).getAnnotationsByType(ConvertColumn.class);
-                } catch (Exception e) { //说明没有该字段，忽略异常
-                }
+                Class mclz = method.getDeclaringClass();
+                do {
+                    try {
+                        ccs = mclz.getDeclaredField(fieldName).getAnnotationsByType(ConvertColumn.class);
+                        break;
+                    } catch (Exception e) { //说明没有该字段，忽略异常
+                    }
+                } while (mclz != Object.class && (mclz = mclz.getSuperclass()) != Object.class);
             }
         }
         if (onlyColumns != null && fieldName == null) {
