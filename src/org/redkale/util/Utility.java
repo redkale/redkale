@@ -1598,6 +1598,19 @@ public final class Utility {
     }
 
     /**
+     * 获取当天16020223格式的int值
+     *
+     * @param time 指定时间
+     *
+     * @return 16020223格式的int值
+     */
+    public static int yyMMDDHHmm(long time) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(time);
+        return cal.get(Calendar.YEAR) % 100 * 100_00_00 + (cal.get(Calendar.MONTH) + 1) * 100_00 + cal.get(Calendar.DAY_OF_MONTH) * 100 + cal.get(Calendar.HOUR_OF_DAY);
+    }
+
+    /**
      * 获取时间点所在星期的周一
      *
      * @param time 指定时间
