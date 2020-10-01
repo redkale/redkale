@@ -7,7 +7,6 @@ package org.redkale.mq;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import org.redkale.convert.ConvertType;
 
 /**
  *
@@ -23,7 +22,6 @@ public class SncpMessageClient extends MessageClient {
     protected SncpMessageClient(MessageAgent messageAgent) {
         super(messageAgent);
         this.respTopic = messageAgent.generateSncpRespTopic();
-        this.convertType = ConvertType.BSON;
     }
 
     @Override

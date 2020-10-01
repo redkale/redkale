@@ -6,7 +6,6 @@
 package org.redkale.mq;
 
 import java.nio.ByteBuffer;
-import org.redkale.convert.ConvertType;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
 import org.redkale.net.sncp.*;
@@ -50,12 +49,12 @@ public class SncpMessageResponse extends SncpResponse {
         if (out == null) {
             final byte[] result = new byte[SncpRequest.HEADER_SIZE];
             fillHeader(ByteBuffer.wrap(result), 0, retcode);
-            producer.apply(new MessageRecord(message.getSeqid(), ConvertType.BSON, message.getResptopic(), null, (byte[]) null));
+            producer.apply(new MessageRecord(message.getSeqid(), message.getResptopic(), null, (byte[]) null));
             return;
         }
         final int respBodyLength = out.count(); //body总长度
         final byte[] result = out.toArray();
         fillHeader(ByteBuffer.wrap(result), respBodyLength - HEADER_SIZE, retcode);
-        producer.apply(new MessageRecord(message.getSeqid(), ConvertType.BSON, message.getResptopic(), null, result));
+        producer.apply(new MessageRecord(message.getSeqid(), message.getResptopic(), null, result));
     }
 }

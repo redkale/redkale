@@ -15,7 +15,6 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.logging.*;
 import javax.annotation.Resource;
-import org.redkale.convert.ConvertType;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
@@ -288,7 +287,7 @@ public final class SncpClient {
             fillHeader(ByteBuffer.wrap(reqbytes), seqid, actionid, reqBodyLength);
             String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
             if (targetTopic == null) targetTopic = this.topic;
-            MessageRecord message = new MessageRecord(ConvertType.BSON, targetTopic, null, reqbytes);
+            MessageRecord message = new MessageRecord(targetTopic, null, reqbytes);
             return messageClient.sendMessage(message).thenApply(msg -> {
                 ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
                 checkResult(seqid, action, buffer);

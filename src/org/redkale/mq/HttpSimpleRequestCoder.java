@@ -7,6 +7,7 @@ package org.redkale.mq;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import org.redkale.convert.ConvertType;
 import org.redkale.net.http.HttpSimpleRequest;
 
 /**
@@ -37,11 +38,18 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         byte[] headers = MessageCoder.getBytes(data.getHeaders());
         byte[] params = MessageCoder.getBytes(data.getParams());
         byte[] body = MessageCoder.getBytes(data.getBody());
-        int count = 1 + 4 + requestURI.length + 2 + path.length + 2 + remoteAddr.length + 2 + sessionid.length
+        int count = 1 //rpc
+            + 1 //frombody
+            + 4 //reqConvertType
+            + 4 //respConvertType
+            + 4 + requestURI.length + 2 + path.length + 2 + remoteAddr.length + 2 + sessionid.length
             + 2 + contentType.length + 4 + headers.length + params.length + 4 + body.length;
         byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.put((byte) (data.isRpc() ? 'T' : 'F'));
+        buffer.put((byte) (data.isFrombody() ? 'T' : 'F'));
+        buffer.putInt(data.getReqConvertType() == null ? 0 : data.getReqConvertType().getValue());
+        buffer.putInt(data.getRespConvertType() == null ? 0 : data.getRespConvertType().getValue());
         buffer.putInt(requestURI.length);
         if (requestURI.length > 0) buffer.put(requestURI);
         buffer.putChar((char) path.length);
@@ -66,6 +74,11 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setRpc(buffer.get() == 'T');
+        req.setFrombody(buffer.get() == 'T');
+        int reqformat = buffer.getInt();
+        int respformat = buffer.getInt();
+        if (reqformat != 0) req.setReqConvertType(ConvertType.find(reqformat));
+        if (respformat != 0) req.setRespConvertType(ConvertType.find(respformat));
         req.setRequestURI(MessageCoder.getLongString(buffer));
         req.setPath(MessageCoder.getShortString(buffer));
         req.setRemoteAddr(MessageCoder.getShortString(buffer));

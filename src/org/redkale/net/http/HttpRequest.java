@@ -110,18 +110,10 @@ public class HttpRequest extends Request<HttpContext> {
         if (req != null) {
             this.rpc = req.rpc;
             if (req.getBody() != null) this.array.write(req.getBody());
-            if (req.getHeaders() != null) {
-                this.headers.putAll(req.getHeaders());
-                if (this.headers.containsKey(Rest.REST_HEADER_PARAM_FROM_BODY)) {
-                    this.frombody = "true".equals(this.headers.get(Rest.REST_HEADER_RESP_CONVERT_TYPE));
-                }
-                if (this.headers.containsKey(Rest.REST_HEADER_RESP_CONVERT_TYPE)) {
-                    this.respConvert = ConvertFactory.findConvert(ConvertType.valueOf(this.headers.get(Rest.REST_HEADER_RESP_CONVERT_TYPE)));
-                }
-                if (this.headers.containsKey(Rest.REST_HEADER_REQ_CONVERT_TYPE)) {
-                    this.reqConvert = ConvertFactory.findConvert(ConvertType.valueOf(this.headers.get(Rest.REST_HEADER_REQ_CONVERT_TYPE)));
-                }
-            }
+            if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
+            this.frombody = req.isFrombody();
+            this.reqConvert = req.getReqConvertType() == null ? null : ConvertFactory.findConvert(req.getReqConvertType());
+            this.respConvert = req.getRespConvertType() == null ? null : ConvertFactory.findConvert(req.getRespConvertType());
             if (req.getParams() != null) this.params.putAll(req.getParams());
             if (req.getCurrentUserid() != 0) this.currentUserid = req.getCurrentUserid();
             this.contentType = req.getContentType();

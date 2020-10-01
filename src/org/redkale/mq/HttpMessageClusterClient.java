@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
 import org.redkale.cluster.ClusterAgent;
-import org.redkale.convert.ConvertType;
 import org.redkale.net.http.*;
 
 /**
@@ -45,17 +44,17 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     }
 
     @Override
-    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         return httpAsync(userid, request);
     }
 
     @Override
-    public void produceMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public void produceMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         httpAsync(userid, request);
     }
 
     @Override
-    public void broadcastMessage(String topic, ConvertType convertType, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public void broadcastMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         mqtpAsync(userid, request);
     }
 
@@ -70,6 +69,9 @@ public class HttpMessageClusterClient extends HttpMessageClient {
             if (addrmap == null || addrmap.isEmpty()) return new HttpResult().status(404).toAnyFuture();
             java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(30000));
             if (req.isRpc()) builder.header(Rest.REST_HEADER_RPC_NAME, "true");
+            if (req.isFrombody()) builder.header(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
+            if (req.getReqConvertType() != null) builder.header(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
+            if (req.getRespConvertType() != null) builder.header(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
             if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
             if (headers != null) headers.forEach((n, v) -> {
                     if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) builder.header(n, v);
@@ -115,6 +117,9 @@ public class HttpMessageClusterClient extends HttpMessageClient {
             if (addrs == null || addrs.isEmpty()) return new HttpResult().status(404).toAnyFuture();
             java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(30000));
             if (req.isRpc()) builder.header(Rest.REST_HEADER_RPC_NAME, "true");
+            if (req.isFrombody()) builder.header(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
+            if (req.getReqConvertType() != null) builder.header(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
+            if (req.getRespConvertType() != null) builder.header(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
             if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
             if (headers != null) headers.forEach((n, v) -> {
                     if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) builder.header(n, v);

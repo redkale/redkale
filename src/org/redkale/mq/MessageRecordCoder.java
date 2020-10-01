@@ -6,7 +6,6 @@
 package org.redkale.mq;
 
 import java.nio.ByteBuffer;
-import org.redkale.convert.ConvertType;
 
 /**
  * MessageRecord的MessageCoder实现
@@ -32,12 +31,11 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         byte[] stopics = MessageCoder.getBytes(data.getTopic());
         byte[] dtopics = MessageCoder.getBytes(data.getResptopic());
         byte[] groupid = MessageCoder.getBytes(data.getGroupid());
-        int count = 8 + 4 + 4 + 4 + 8 + 4 + 2 + stopics.length + 2 + dtopics.length + 2 + groupid.length + 4 + (data.getContent() == null ? 0 : data.getContent().length);
+        int count = 8 + 4 + 4 + 8 + 4 + 2 + stopics.length + 2 + dtopics.length + 2 + groupid.length + 4 + (data.getContent() == null ? 0 : data.getContent().length);
         final byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.putLong(data.getSeqid());
         buffer.putInt(data.getVersion());
-        buffer.putInt(data.getFormat() == null ? 0 : data.getFormat().getValue());
         buffer.putInt(data.getFlag());
         buffer.putLong(data.getCreatetime());
         buffer.putInt(data.getUserid());
@@ -62,7 +60,6 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         long seqid = buffer.getLong();
         int version = buffer.getInt();
-        ConvertType format = ConvertType.find(buffer.getInt());
         int flag = buffer.getInt();
         long createtime = buffer.getLong();
         int userid = buffer.getInt();
@@ -77,8 +74,7 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
             content = new byte[contentlen];
             buffer.get(content);
         }
-        return new MessageRecord(seqid, version, format, flag,
-            createtime, userid, groupid, topic, resptopic, content);
+        return new MessageRecord(seqid, version, flag, createtime, userid, groupid, topic, resptopic, content);
     }
 
 }

@@ -8,7 +8,6 @@ package org.redkale.mq;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
-import org.redkale.convert.ConvertType;
 
 /**
  *
@@ -30,8 +29,6 @@ public abstract class MessageClient {
     protected String respTopic;
 
     protected String respConsumerid;
-
-    protected ConvertType convertType;
 
     protected MessageClient(MessageAgent messageAgent) {
         this.messageAgent = messageAgent;
@@ -65,7 +62,6 @@ public abstract class MessageClient {
                     }
                 }
             }
-            if (convertType != null) message.setFormat(convertType);
             if (needresp && (message.getResptopic() == null || message.getResptopic().isEmpty())) {
                 message.setResptopic(respTopic);
             }

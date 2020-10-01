@@ -30,37 +30,49 @@ public class HttpSimpleRequest implements java.io.Serializable {
     protected boolean rpc = true;
 
     @ConvertColumn(index = 2)
+    @Comment("是否从body中获取参数，比如protobuf数据格式")
+    protected boolean frombody;
+
+    @ConvertColumn(index = 3)
+    @Comment("请求参数的ConvertType")
+    protected ConvertType reqConvertType;
+
+    @ConvertColumn(index = 4)
+    @Comment("输出结果的ConvertType")
+    protected ConvertType respConvertType;
+
+    @ConvertColumn(index = 5)
     @Comment("请求的URI")
     protected String requestURI;
 
-    @ConvertColumn(index = 3)
+    @ConvertColumn(index = 6)
     @Comment("请求的前缀")
     protected String path;
 
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 7)
     @Comment("客户端IP")
     protected String remoteAddr;
 
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 8)
     @Comment("会话ID")
     protected String sessionid;
 
-    @ConvertColumn(index = 6)
+    @ConvertColumn(index = 9)
     @Comment("Content-Type")
     protected String contentType;
 
-    @ConvertColumn(index = 7)
+    @ConvertColumn(index = 10)
     protected int currentUserid;
 
-    @ConvertColumn(index = 8)
+    @ConvertColumn(index = 11)
     @Comment("http header信息")
     protected Map<String, String> headers;
 
-    @ConvertColumn(index = 9)
+    @ConvertColumn(index = 12)
     @Comment("参数信息")
     protected Map<String, String> params;
 
-    @ConvertColumn(index = 10)
+    @ConvertColumn(index = 13)
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
@@ -102,6 +114,32 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public HttpSimpleRequest path(String path) {
         this.path = path;
+        return this;
+    }
+
+    public HttpSimpleRequest requestURI(boolean frombody) {
+        this.frombody = frombody;
+        return this;
+    }
+
+    public HttpSimpleRequest frombody(boolean frombody) {
+        this.frombody = frombody;
+        return this;
+    }
+
+    public HttpSimpleRequest bothConvertType(ConvertType convertType) {
+        this.reqConvertType = convertType;
+        this.respConvertType = convertType;
+        return this;
+    }
+
+    public HttpSimpleRequest reqConvertType(ConvertType reqConvertType) {
+        this.reqConvertType = reqConvertType;
+        return this;
+    }
+
+    public HttpSimpleRequest respConvertType(ConvertType respConvertType) {
+        this.respConvertType = respConvertType;
         return this;
     }
 
@@ -307,6 +345,30 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public void setBody(byte[] body) {
         this.body = body;
+    }
+
+    public boolean isFrombody() {
+        return frombody;
+    }
+
+    public void setFrombody(boolean frombody) {
+        this.frombody = frombody;
+    }
+
+    public ConvertType getReqConvertType() {
+        return reqConvertType;
+    }
+
+    public void setReqConvertType(ConvertType reqConvertType) {
+        this.reqConvertType = reqConvertType;
+    }
+
+    public ConvertType getRespConvertType() {
+        return respConvertType;
+    }
+
+    public void setRespConvertType(ConvertType respConvertType) {
+        this.respConvertType = respConvertType;
     }
 
     @Override
