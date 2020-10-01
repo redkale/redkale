@@ -616,6 +616,9 @@ public class HttpRequest extends Request<HttpContext> {
     public String toString() {
         parseBody();
         return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    requestURI: " + this.requestURI
+            + (this.frombody ? (", \r\n    frombody: " + this.frombody) : "")
+            + (this.reqConvert != null ? (", \r\n    reqConvert: " + this.reqConvert.getClass().getSimpleName()) : "")
+            + (this.respConvert != null ? (", \r\n    respConvert: " + this.respConvert.getClass().getSimpleName()) : "")
             + ", \r\n    remoteAddr: " + this.getRemoteAddr() + ", \r\n    cookies: " + this.cookie + ", \r\n    contentType: " + this.contentType
             + ", \r\n    connection: " + this.connection + ", \r\n    protocol: " + this.protocol + ", \r\n    host: " + this.host
             + ", \r\n    contentLength: " + this.contentLength + ", \r\n    bodyLength: " + this.array.size() + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + this.getBodyUTF8()))

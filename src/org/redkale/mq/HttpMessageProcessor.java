@@ -78,11 +78,12 @@ public class HttpMessageProcessor implements MessageProcessor {
     }
 
     private void execute(final MessageRecord message, final Runnable callback) {
+        HttpMessageRequest request = null;
         try {
             if (finest) logger.log(Level.FINEST, "HttpMessageProcessor.process message: " + message);
             if (multiconsumer) message.setResptopic(null); //不容许有响应
             HttpContext context = server.getHttpServer().getContext();
-            HttpMessageRequest request = new HttpMessageRequest(context, message);
+            request = new HttpMessageRequest(context, message);
             if (multiconsumer) {
                 request.setRequestURI(request.getRequestURI().replaceFirst(this.multimodule, this.restmodule));
             }
@@ -90,7 +91,8 @@ public class HttpMessageProcessor implements MessageProcessor {
             servlet.execute(request, response);
         } catch (Throwable ex) {
             if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
-                HttpMessageResponse.finishHttpResult(finest, message, callback, producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
+                HttpMessageResponse.finishHttpResult(finest, request == null ? null : request.getRespConvert(),
+                    message, callback, producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }

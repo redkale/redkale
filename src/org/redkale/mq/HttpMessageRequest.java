@@ -5,6 +5,7 @@
  */
 package org.redkale.mq;
 
+import org.redkale.convert.Convert;
 import org.redkale.net.http.*;
 
 /**
@@ -30,4 +31,8 @@ public class HttpMessageRequest extends HttpRequest {
         this.requestURI = uri;
     }
 
+    @Override
+    public Convert getRespConvert() {
+        return this.respConvert;
+    }
 }

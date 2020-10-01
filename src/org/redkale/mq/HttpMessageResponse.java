@@ -51,10 +51,10 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     public void finishHttpResult(HttpResult result) {
-        finishHttpResult(this.finest, this.message, this.callback, this.producer, message.getResptopic(), result);
+        finishHttpResult(this.finest, ((HttpMessageRequest) this.request).getRespConvert(), this.message, this.callback, this.producer, message.getResptopic(), result);
     }
 
-    public static void finishHttpResult(boolean finest, MessageRecord msg, Runnable callback, MessageProducer producer, String resptopic, HttpResult result) {
+    public static void finishHttpResult(boolean finest, Convert respConvert, MessageRecord msg, Runnable callback, MessageProducer producer, String resptopic, HttpResult result) {
         if (callback != null) callback.run();
         if (resptopic == null || resptopic.isEmpty()) return;
         if (result.getResult() instanceof RetResult) {
@@ -62,6 +62,7 @@ public class HttpMessageResponse extends HttpResponse {
             //必须要塞入retcode， 开发者可以无需反序列化ret便可确定操作是否返回成功
             if (!ret.isSuccess()) result.header("retcode", String.valueOf(ret.getRetcode()));
         }
+        if (result.convert() == null && respConvert != null) result.convert(respConvert);
         if (finest) {
             Object innerrs = result.getResult();
             if (innerrs instanceof byte[]) innerrs = new String((byte[]) innerrs, StandardCharsets.UTF_8);
