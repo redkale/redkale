@@ -48,7 +48,7 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
             content = MessageCoder.getBytes(data.getResult().toString());
         } else {
             Convert cc = data.convert();
-            if (cc == null || !(cc instanceof TextConvert)) cc = JsonConvert.root();
+            if (cc == null) cc = JsonConvert.root();
             content = cc.convertToBytes(data.getResult());
         }
         int count = 4 + 2 + contentType.length + headers.length + cookies.length + 4 + (content == null ? 0 : content.length);
