@@ -43,7 +43,11 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected boolean frombody;
 
+    protected ConvertType reqConvertType;
+
     protected Convert reqConvert;
+
+    protected ConvertType respConvertType;
 
     protected Convert respConvert;
 
@@ -112,7 +116,9 @@ public class HttpRequest extends Request<HttpContext> {
             if (req.getBody() != null) this.array.write(req.getBody());
             if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
             this.frombody = req.isFrombody();
+            this.reqConvertType = req.getReqConvertType();
             this.reqConvert = req.getReqConvertType() == null ? null : ConvertFactory.findConvert(req.getReqConvertType());
+            this.respConvertType = req.getRespConvertType();
             this.respConvert = req.getRespConvertType() == null ? null : ConvertFactory.findConvert(req.getRespConvertType());
             if (req.getParams() != null) this.params.putAll(req.getParams());
             if (req.getCurrentUserid() != 0) this.currentUserid = req.getCurrentUserid();
@@ -168,6 +174,10 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected AsyncConnection getChannel() {
         return this.channel;
+    }
+
+    protected ConvertType getRespConvertType() {
+        return this.respConvertType;
     }
 
     protected Convert getRespConvert() {
@@ -258,11 +268,13 @@ public class HttpRequest extends Request<HttpContext> {
                     headers.put(name, value);
                     break;
                 case Rest.REST_HEADER_REQ_CONVERT_TYPE:
-                    reqConvert = ConvertFactory.findConvert(ConvertType.valueOf(value));
+                    reqConvertType = ConvertType.valueOf(value);
+                    reqConvert = ConvertFactory.findConvert(reqConvertType);
                     headers.put(name, value);
                     break;
                 case Rest.REST_HEADER_RESP_CONVERT_TYPE:
-                    respConvert = ConvertFactory.findConvert(ConvertType.valueOf(value));
+                    respConvertType = ConvertType.valueOf(value);
+                    respConvert = ConvertFactory.findConvert(respConvertType);
                     headers.put(name, value);
                     break;
                 default:
@@ -617,11 +629,12 @@ public class HttpRequest extends Request<HttpContext> {
         parseBody();
         return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    requestURI: " + this.requestURI
             + (this.frombody ? (", \r\n    frombody: " + this.frombody) : "")
-            + (this.reqConvert != null ? (", \r\n    reqConvert: " + this.reqConvert.getClass().getSimpleName()) : "")
-            + (this.respConvert != null ? (", \r\n    respConvert: " + this.respConvert.getClass().getSimpleName()) : "")
+            + (this.reqConvertType != null ? (", \r\n    reqConvertType: " + this.reqConvertType) : "")
+            + (this.respConvertType != null ? (", \r\n    respConvertType: " + this.respConvertType) : "")
             + ", \r\n    remoteAddr: " + this.getRemoteAddr() + ", \r\n    cookies: " + this.cookie + ", \r\n    contentType: " + this.contentType
             + ", \r\n    connection: " + this.connection + ", \r\n    protocol: " + this.protocol + ", \r\n    host: " + this.host
-            + ", \r\n    contentLength: " + this.contentLength + ", \r\n    bodyLength: " + this.array.size() + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + this.getBodyUTF8()))
+            + ", \r\n    contentLength: " + this.contentLength + ", \r\n    bodyLength: " + this.array.size()
+            + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + (this.respConvertType == null || this.respConvertType == ConvertType.JSON ? this.getBodyUTF8() : Arrays.toString(getBody()))))
             + ", \r\n    params: " + toMapString(this.params, 4) + ", \r\n    header: " + toMapString(this.headers, 4) + "\r\n}"; //this.headers.toString(4)
     }
 
