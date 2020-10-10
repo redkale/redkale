@@ -31,8 +31,10 @@ public final class Utility {
 
     private static final int zoneRawOffset = TimeZone.getDefault().getRawOffset();
 
-    //static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS";
-    //static final String format = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%1$tL";
+    static final String format1 = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS";   //yyyy-MM-dd HH:mm:ss
+
+    static final String format2 = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%1$tL";  //yyyy-MM-dd HH:mm:ss.fff
+
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     /**
@@ -1379,7 +1381,7 @@ public final class Utility {
      * @return 格式为yyyy-MM-dd HH:mm:ss的时间值
      */
     public static String now() {
-        return formatTime(19, -1);
+        return String.format(format1, System.currentTimeMillis());
     }
 
     /**
@@ -1388,7 +1390,7 @@ public final class Utility {
      * @return 格式为yyyy-MM-dd HH:mm:ss.fff的时间值
      */
     public static String nowMillis() {
-        return formatTime(23, -1);
+        return String.format(format2, System.currentTimeMillis());
     }
 
     /**
@@ -1399,59 +1401,18 @@ public final class Utility {
      * @return 格式为yyyy-MM-dd HH:mm:ss的时间值
      */
     public static String formatTime(long time) {
-        return formatTime(19, time);
+        return String.format(format1, time);
     }
 
     /**
-     * 将指定时间格式化为 yyyy-MM-dd HH:mm:ss
-     *
-     * @param time 待格式化的时间
-     *
-     * @return 格式为yyyy-MM-dd HH:mm:ss的时间值
-     */
-    private static String formatTime(int length, long time) {
-        Calendar cal = Calendar.getInstance();
-        if (time > -1) cal.setTimeInMillis(time);
-        StringBuilder sb = new StringBuilder(length);
-        int month = cal.get(Calendar.MONTH) + 1;
-        int day = cal.get(Calendar.DAY_OF_MONTH);
-        int hour = cal.get(Calendar.HOUR_OF_DAY);
-        int minute = cal.get(Calendar.MINUTE);
-        int seconds = cal.get(Calendar.SECOND);
-        sb.append(cal.get(Calendar.YEAR)).append('-');
-        if (month < 10) sb.append('0');
-        sb.append(month).append('-');
-        if (day < 10) sb.append('0');
-        sb.append(day).append(' ');
-        if (hour < 10) sb.append('0');
-        sb.append(hour).append(':');
-        if (minute < 10) sb.append('0');
-        sb.append(minute).append(':');
-        if (seconds < 10) sb.append('0');
-        sb.append(seconds);
-        if (length > 20) {
-            int millis = cal.get(Calendar.MILLISECOND);
-            sb.append('.');
-            if (millis < 10) {
-                sb.append("00");
-            } else if (millis < 100) {
-                sb.append('0');
-            }
-            sb.append(millis);
-        }
-        return sb.toString();
-    }
-
-    /**
-     * 将时间值转换为长度为9的36进制值，8位的前面补充0
+     * 将时间值转换为长度为9的36进制值
      *
      * @param time 时间值
      *
      * @return 36进制时间值
      */
     public static String format36time(long time) {
-        String time36 = Long.toString(time, 36);
-        return time36.length() < 9 ? ("0" + time36) : time36;
+        return Long.toString(time, 36);
     }
 
     /**
