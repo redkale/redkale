@@ -6,6 +6,7 @@
 package org.redkale.util;
 
 import java.io.Serializable;
+import org.redkale.convert.ConvertColumn;
 
 /**
  * 主要供 JsonConvert.writeWrapper 使用
@@ -17,6 +18,7 @@ import java.io.Serializable;
  */
 public class StringWrapper implements Serializable {
 
+    @ConvertColumn(index = 1)
     protected String value;
 
     public StringWrapper() {
