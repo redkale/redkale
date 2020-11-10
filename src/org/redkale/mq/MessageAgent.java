@@ -75,6 +75,10 @@ public abstract class MessageAgent {
         this.timeoutExecutor.setRemoveOnCancelPolicy(true);
     }
 
+    public boolean isHashPool() {
+        return this.workExecutor != null;
+    }
+
     public CompletableFuture<Map<String, Long>> start() {
         final LinkedHashMap<String, Long> map = new LinkedHashMap<>();
         final List<CompletableFuture> futures = new ArrayList<>();
