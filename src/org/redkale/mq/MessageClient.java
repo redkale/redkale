@@ -30,8 +30,11 @@ public abstract class MessageClient {
 
     protected String respConsumerid;
 
+    protected boolean finest;
+
     protected MessageClient(MessageAgent messageAgent) {
         this.messageAgent = messageAgent;
+        this.finest = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINEST);
     }
 
     protected CompletableFuture<Void> close() {
@@ -47,6 +50,7 @@ public abstract class MessageClient {
                     if (this.respConsumerid == null) this.respConsumerid = "consumer-" + this.respTopic;
                     if (this.respConsumer == null) {
                         MessageProcessor processor = (msg, callback) -> {
+                            long now = System.currentTimeMillis();
                             MessageRespFutureNode node = respNodes.remove(msg.getSeqid());
                             if (node == null) {
                                 messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found msgnode");
@@ -55,6 +59,8 @@ public abstract class MessageClient {
                             AtomicLong ncer = node.getCounter();
                             if (ncer != null) ncer.decrementAndGet();
                             node.future.complete(msg);
+                            if (finest) messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process(mq.delay=" + (now - msg.createtime) + "ms) message: " + message);
+
                         };
                         MessageConsumer one = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
                         one.startup().join();
