@@ -80,7 +80,7 @@ public class HttpMessageProcessor implements MessageProcessor {
     private void execute(final MessageRecord message, final Runnable callback) {
         HttpMessageRequest request = null;
         try {
-            if (finest) logger.log(Level.FINEST, "HttpMessageProcessor.process(mq.delay=" + (System.currentTimeMillis() - message.createtime) + "ms) message: " + message);
+            if (finest) logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + (System.currentTimeMillis() - message.createtime) + " ms) message: " + message);
             if (multiconsumer) message.setResptopic(null); //不容许有响应
             HttpContext context = server.getHttpServer().getContext();
             request = new HttpMessageRequest(context, message);

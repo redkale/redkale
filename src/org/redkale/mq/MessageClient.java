@@ -59,7 +59,7 @@ public abstract class MessageClient {
                             AtomicLong ncer = node.getCounter();
                             if (ncer != null) ncer.decrementAndGet();
                             node.future.complete(msg);
-                            if (finest) messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process(mq.delay=" + (now - msg.createtime) + "ms) message: " + message);
+                            if (finest) messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process (mq.delay = " + (now - msg.createtime) + "ms) message: " + message);
 
                         };
                         MessageConsumer one = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
