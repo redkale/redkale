@@ -25,6 +25,8 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final boolean finest;
 
+    protected final boolean finer;
+
     protected final Logger logger;
 
     protected final MessageProducers producer;
@@ -52,6 +54,7 @@ public class HttpMessageProcessor implements MessageProcessor {
     public HttpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageProducers producer, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
+        this.finer = logger.isLoggable(Level.FINER);
         this.producer = producer;
         this.server = server;
         this.service = service;
@@ -80,7 +83,12 @@ public class HttpMessageProcessor implements MessageProcessor {
     private void execute(final MessageRecord message, final Runnable callback) {
         HttpMessageRequest request = null;
         try {
-            if (finest) logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + (System.currentTimeMillis() - message.createtime) + " ms) message: " + message);
+            long cha = System.currentTimeMillis() - message.createtime;
+            if (cha > 50 || finer) {
+                logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delay = " + cha + " ms) message: " + message);
+            } else if (finest) {
+                logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms) message: " + message);
+            }
             if (multiconsumer) message.setResptopic(null); //不容许有响应
             HttpContext context = server.getHttpServer().getContext();
             request = new HttpMessageRequest(context, message);
