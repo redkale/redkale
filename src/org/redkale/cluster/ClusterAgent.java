@@ -311,7 +311,7 @@ public abstract class ClusterAgent {
 
         public InetSocketAddress address;
 
-        public ScheduledFuture checkScheduledFuture;
+        public boolean canceled;
 
         public ClusterEntry(NodeServer ns, String protocol, Service service) {
             this.serviceid = generateServiceId(ns, protocol, service);
