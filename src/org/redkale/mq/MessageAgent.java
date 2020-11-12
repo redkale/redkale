@@ -64,7 +64,7 @@ public abstract class MessageAgent {
         this.name = checkName(config.getValue("name", ""));
         this.httpMessageClient = new HttpMessageClient(this);
         this.sncpMessageClient = new SncpMessageClient(this);
-        this.producerCount = config.getIntValue("producers", 1);
+        this.producerCount = config.getIntValue("producers", Runtime.getRuntime().availableProcessors());
         if ("hash".equalsIgnoreCase(config.getValue("pool", "hash"))) {
             this.workExecutor = new ThreadHashExecutor(Math.max(4, config.getIntValue("threads", Runtime.getRuntime().availableProcessors())));
         }
