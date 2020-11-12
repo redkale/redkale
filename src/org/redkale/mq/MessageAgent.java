@@ -169,7 +169,7 @@ public abstract class MessageAgent {
         if (this.sncpProducer == null) {
             synchronized (sncpProducerLock) {
                 if (this.sncpProducer == null) {
-                    MessageProducer[] producers = new MessageProducer[Runtime.getRuntime().availableProcessors()];
+                    MessageProducer[] producers = new MessageProducer[2];
                     for (int i = 0; i < producers.length; i++) {
                         MessageProducer producer = createProducer("SncpProducer");
                         producer.startup().join();
@@ -186,7 +186,7 @@ public abstract class MessageAgent {
         if (this.httpProducer == null) {
             synchronized (httpProducerLock) {
                 if (this.httpProducer == null) {
-                    MessageProducer[] producers = new MessageProducer[Runtime.getRuntime().availableProcessors()];
+                    MessageProducer[] producers = new MessageProducer[2];
                     for (int i = 0; i < producers.length; i++) {
                         MessageProducer producer = createProducer("HttpProducer");
                         producer.startup().join();
