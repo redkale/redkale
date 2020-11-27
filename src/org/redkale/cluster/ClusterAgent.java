@@ -324,5 +324,10 @@ public abstract class ClusterAgent {
             Server server = ns.getServer();
             this.netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
         }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
     }
 }
