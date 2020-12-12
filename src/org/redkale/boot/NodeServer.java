@@ -375,7 +375,7 @@ public abstract class NodeServer {
                         sncpServer.getSncpServer().addSncpServlet((Service) source);
                         //logger.info("[" + Thread.currentThread().getName() + "] Load Service " + source);
                     }
-                    logger.info("[" + Thread.currentThread().getName() + "] Load Source " + source);
+                    logger.info("[" + Thread.currentThread().getName() + "] Load Source resourceName = " + resourceName + ", source = " + source);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "DataSource inject error", e);
                 }
