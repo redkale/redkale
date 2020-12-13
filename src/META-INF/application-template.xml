@@ -71,6 +71,7 @@
         <!--
             MQ管理接口配置
             不同MQ节点所配置的MQ集群不能重复。
+            MQ跟着协议走，所以mq的属性值需要被赋值在rest节点上, 由于SncpServlet是自动生成的，故SNCP协议下，mq属性值被赋值在service/services节点上
             name:   服务的名称，用于监控识别，多个mq节点时只能有一个name为空的节点，mq.name不能重复,命名规则: 字母、数字、下划线
             value： 实现类名，必须是org.redkale.mq.MessageAgent的子类
             MQ节点下的子节点配置没有固定格式, 根据MessageAgent实现方的定义来配置
@@ -199,6 +200,7 @@
             <service value="com.xxx.XXX1Service"/>
             <!-- 
                name:   显式指定name，覆盖默认的空字符串值。 注意: name不能包含$符号。
+               mq:     所属的MQ管理器，当 protocol == SNCP 时该值才有效, 存在该属性表示Service的SNCP协议采用消息总线代理模式
                groups: 显式指定groups，覆盖<services>节点的groups默认值。
                ignore: 是否禁用， 默认为false。
             -->
