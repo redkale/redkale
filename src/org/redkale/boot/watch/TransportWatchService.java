@@ -81,7 +81,7 @@ public class TransportWatchService extends AbstractWatchService {
                     break;
                 }
             }
-            application.restoreConfig();
+            //application.restoreConfig();
         }
         return RetResult.success();
     }
@@ -113,7 +113,7 @@ public class TransportWatchService extends AbstractWatchService {
                     break;
                 }
             }
-            application.restoreConfig();
+            //application.restoreConfig();
         }
         return RetResult.success();
     }
