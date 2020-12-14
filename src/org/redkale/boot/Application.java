@@ -1071,6 +1071,52 @@ public final class Application {
         return new Application(singleton, loadAppXml());
     }
 
+    public void reloadConfig() throws IOException {
+        AnyValue newconfig = loadAppXml();
+        final String confpath = this.confPath.toString();
+        final String homepath = this.home.getCanonicalPath();
+        final AnyValue resources = newconfig.getAnyValue("resources");
+        if (resources != null) {
+            resourceFactory.register(RESNAME_APP_GRES, AnyValue.class, resources);
+            final AnyValue properties = resources.getAnyValue("properties");
+            if (properties != null) {
+                String dfloads = properties.getValue("load");
+                if (dfloads != null) {
+                    for (String dfload : dfloads.split(";")) {
+                        if (dfload.trim().isEmpty()) continue;
+                        final URI df = (dfload.indexOf('/') < 0) ? URI.create(confpath + (confpath.endsWith("/") ? "" : "/") + dfload) : new File(dfload).toURI();
+                        if (!"file".equals(df.getScheme()) || new File(df).isFile()) {
+                            Properties ps = new Properties();
+                            try {
+                                InputStream in = df.toURL().openStream();
+                                ps.load(in);
+                                in.close();
+                                ps.forEach((x, y) -> resourceFactory.register("property." + x, y.toString().replace("${APP_HOME}", homepath)));
+                            } catch (Exception e) {
+                                logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
+                            }
+                        }
+                    }
+                }
+                for (AnyValue prop : properties.getAnyValues("property")) {
+                    String name = prop.getValue("name");
+                    String value = prop.getValue("value");
+                    if (name == null || value == null) continue;
+                    value = value.replace("${APP_HOME}", homepath);
+                    if (name.startsWith("system.property.")) {
+                        System.setProperty(name.substring("system.property.".length()), value);
+                    } else if (name.startsWith("mimetype.property.")) {
+                        MimeType.add(name.substring("mimetype.property.".length()), value);
+                    } else if (name.startsWith("property.")) {
+                        resourceFactory.register(name, value);
+                    } else {
+                        resourceFactory.register("property." + name, value);
+                    }
+                }
+            }
+        }
+    }
+
     private static AnyValue loadAppXml() throws IOException {
         final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/');
         System.setProperty(RESNAME_APP_HOME, home);
