@@ -64,7 +64,7 @@ public abstract class MessageClient {
                             node.future.complete(msg);
                             long cha = now - msg.createtime;
                             if (cha > 50 || finer) {
-                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mq.delay = " + cha + "ms) message: " + msg);
+                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mq.delays = " + cha + "ms) message: " + msg);
                             } else if (finest) {
                                 messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process (mq.delay = " + cha + "ms) message: " + msg);
                             }

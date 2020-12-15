@@ -85,7 +85,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         try {
             long cha = System.currentTimeMillis() - message.createtime;
             if (cha > 50 || finer) {
-                logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delay = " + cha + " ms) message: " + message);
+                logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delays = " + cha + " ms) message: " + message);
             } else if (finest) {
                 logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms) message: " + message);
             }
