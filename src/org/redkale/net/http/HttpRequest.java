@@ -161,7 +161,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     protected boolean isWebSocket() {
-        return connection != null && connection.contains("Upgrade") && "GET".equalsIgnoreCase(method) && "websocket".equalsIgnoreCase(getHeader("Upgrade"));
+        return "websocket".equalsIgnoreCase(getHeader("Upgrade")) && "Upgrade".equalsIgnoreCase(connection) && "GET".equalsIgnoreCase(method);
     }
 
     protected void setKeepAlive(boolean keepAlive) {
