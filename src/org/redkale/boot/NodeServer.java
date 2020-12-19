@@ -271,6 +271,34 @@ public abstract class NodeServer {
             }
         }, AnyValue.class, AnyValue[].class);
 
+        //------------------------------------- 注册 Local AutoLoad(false) Service --------------------------------------------------------        
+        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+            Class<Service> resServiceType = Service.class;
+            try {
+                if (field.getAnnotation(Resource.class) == null) return;
+                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 AutoLoad Service
+                if (!Service.class.isAssignableFrom(field.getType())) return;
+                resServiceType = (Class) field.getType();
+                if (resServiceType.getAnnotation(Local.class) == null) return;
+                AutoLoad al = resServiceType.getAnnotation(AutoLoad.class);
+                if (al == null || al.value()) return;
+
+                //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
+                SncpClient client = src instanceof Service ? Sncp.getSncpClient((Service) src) : null;
+                final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
+                final Set<String> groups = new HashSet<>();
+                Service service = Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, null, appResFactory, appSncpTranFactory, sncpAddr, groups, null);
+                appResFactory.register(resourceName, resServiceType, service);
+
+                field.set(src, service);
+                rf.inject(service, self); // 给其可能包含@Resource的字段赋值;
+                service.init(null);
+                logger.info("[" + Thread.currentThread().getName() + "] Load Service(@Local @AutoLoad) resourceName = " + resourceName + ", service = " + service);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] Load @Local @AutoLoad(false) Service inject " + resServiceType + " to " + src + " error", e);
+            }
+        }, Service.class);
+
         //------------------------------------- 注册 DataSource --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
