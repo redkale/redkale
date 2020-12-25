@@ -48,7 +48,7 @@ public abstract class MessageClient {
         return this.respConsumer.shutdown();
     }
 
-    protected CompletableFuture<MessageRecord> sendMessage(MessageRecord message, boolean needresp, AtomicLong counter) {
+    protected CompletableFuture<MessageRecord> sendMessage(final MessageRecord message, boolean needresp, AtomicLong counter) {
         CompletableFuture<MessageRecord> future = new CompletableFuture<>();
         try {
             if (this.respConsumer == null) {
@@ -59,7 +59,7 @@ public abstract class MessageClient {
                             long now = System.currentTimeMillis();
                             MessageRespFutureNode node = respNodes.remove(msg.getSeqid());
                             if (node == null) {
-                                messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found msgnode");
+                                messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found mqmsg.respnode");
                                 return;
                             }
                             AtomicLong ncer = node.getCounter();
