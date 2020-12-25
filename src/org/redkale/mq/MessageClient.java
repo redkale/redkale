@@ -66,6 +66,7 @@ public abstract class MessageClient {
                                 messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found mqmsg.respnode");
                                 return;
                             }
+                            if (node.scheduledFuture != null) node.scheduledFuture.cancel(true);
                             AtomicLong ncer = node.getCounter();
                             if (ncer != null) ncer.decrementAndGet();
                             node.future.complete(msg);
@@ -91,10 +92,12 @@ public abstract class MessageClient {
             if (counter != null) counter.incrementAndGet();
             getProducer().apply(message);
             if (needresp) {
-                MessageRespFutureNode node = new MessageRespFutureNode(message, respNodes, counter, future);
+                MessageRespFutureNode node = new MessageRespFutureNode(messageAgent.logger, message, respNodes, counter, future);
                 respNodes.put(message.getSeqid(), node);
                 ScheduledThreadPoolExecutor executor = messageAgent.timeoutExecutor;
-                if (executor != null) executor.schedule(node, 30, TimeUnit.SECONDS);
+                if (executor != null) {
+                    node.scheduledFuture = executor.schedule(node, 30, TimeUnit.SECONDS);
+                }
             } else {
                 future.complete(null);
             }
