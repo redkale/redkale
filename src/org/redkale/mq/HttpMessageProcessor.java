@@ -89,11 +89,6 @@ public class HttpMessageProcessor implements MessageProcessor {
             long now = System.currentTimeMillis();
             long cha = now - message.createtime;
             long e = now - starttime;
-            if (cha > 50 || e > 10 || finer) {
-                logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms) message: " + message);
-            } else if (finest) {
-                logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms, mq.blocks = " + e + " ms) message: " + message);
-            }
             if (multiconsumer) message.setResptopic(null); //不容许有响应
             HttpContext context = server.getHttpServer().getContext();
             request = new HttpMessageRequest(context, message);
@@ -102,6 +97,12 @@ public class HttpMessageProcessor implements MessageProcessor {
             }
             HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, producer.getProducer(message));
             servlet.execute(request, response);
+            long o = System.currentTimeMillis() - now;
+            if (cha > 50 || e > 10 || o > 50 || finer) {
+                logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
+            } else if (finest) {
+                logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
+            }
         } catch (Throwable ex) {
             if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
                 HttpMessageResponse.finishHttpResult(finest, request == null ? null : request.getRespConvert(),

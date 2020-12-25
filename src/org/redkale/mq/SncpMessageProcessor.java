@@ -79,15 +79,16 @@ public class SncpMessageProcessor implements MessageProcessor {
             long now = System.currentTimeMillis();
             long cha = now - message.createtime;
             long e = now - starttime;
-            if (cha > 50 || e > 10 || finer) {
-                logger.log(Level.FINER, "SncpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms) message: " + message);
-            } else if (finest) {
-                logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.blocks = " + e + " ms) message: " + message);
-            }
             SncpContext context = server.getSncpServer().getContext();
             SncpMessageRequest request = new SncpMessageRequest(context, message);
             response = new SncpMessageResponse(context, request, callback, null, producer.getProducer(message));
             servlet.execute(request, response);
+            long o = System.currentTimeMillis() - now;
+            if (cha > 50 || e > 10 || o > 50 || finer) {
+                logger.log(Level.FINER, "SncpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
+            } else if (finest) {
+                logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
+            }
         } catch (Throwable ex) {
             if (response != null) response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
             logger.log(Level.SEVERE, SncpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
