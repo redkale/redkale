@@ -47,6 +47,8 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected CountDownLatch cdl;
 
+    protected long starttime;
+
     protected final Runnable innerCallback = () -> {
         if (cdl != null) cdl.countDown();
     };
@@ -67,7 +69,8 @@ public class HttpMessageProcessor implements MessageProcessor {
     }
 
     @Override
-    public void begin(final int size) {
+    public void begin(final int size, long starttime) {
+        this.starttime = starttime;
         if (this.workExecutor != null) this.cdl = new CountDownLatch(size);
     }
 
@@ -83,11 +86,13 @@ public class HttpMessageProcessor implements MessageProcessor {
     private void execute(final MessageRecord message, final Runnable callback) {
         HttpMessageRequest request = null;
         try {
-            long cha = System.currentTimeMillis() - message.createtime;
-            if (cha > 50 || finer) {
-                logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delays = " + cha + " ms) message: " + message);
+            long now = System.currentTimeMillis();
+            long cha = now - message.createtime;
+            long e = now - starttime;
+            if (cha > 50 || e > 10 || finer) {
+                logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms) message: " + message);
             } else if (finest) {
-                logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms) message: " + message);
+                logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms, mq.blocks = " + e + " ms) message: " + message);
             }
             if (multiconsumer) message.setResptopic(null); //不容许有响应
             HttpContext context = server.getHttpServer().getContext();

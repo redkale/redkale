@@ -16,7 +16,7 @@ package org.redkale.mq;
  */
 public interface MessageProcessor {
 
-    default void begin(int size) {
+    default void begin(int size, long starttime) {
     }
 
     public void process(MessageRecord message, Runnable callback);

@@ -23,6 +23,10 @@ import org.redkale.util.ThreadHashExecutor;
  */
 public class SncpMessageProcessor implements MessageProcessor {
 
+    protected final boolean finest;
+
+    protected final boolean finer;
+
     protected final Logger logger;
 
     protected final MessageProducers producer;
@@ -37,12 +41,16 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     protected CountDownLatch cdl;
 
+    protected long starttime;
+
     protected final Runnable innerCallback = () -> {
         if (cdl != null) cdl.countDown();
     };
 
     public SncpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
+        this.finest = logger.isLoggable(Level.FINEST);
+        this.finer = logger.isLoggable(Level.FINER);
         this.producer = producer;
         this.server = server;
         this.service = service;
@@ -51,7 +59,8 @@ public class SncpMessageProcessor implements MessageProcessor {
     }
 
     @Override
-    public void begin(final int size) {
+    public void begin(final int size, long starttime) {
+        this.starttime = starttime;
         if (this.workExecutor != null) this.cdl = new CountDownLatch(size);
     }
 
@@ -67,6 +76,14 @@ public class SncpMessageProcessor implements MessageProcessor {
     private void execute(final MessageRecord message, final Runnable callback) {
         SncpMessageResponse response = null;
         try {
+            long now = System.currentTimeMillis();
+            long cha = now - message.createtime;
+            long e = now - starttime;
+            if (cha > 50 || e > 10 || finer) {
+                logger.log(Level.FINER, "SncpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms) message: " + message);
+            } else if (finest) {
+                logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.blocks = " + e + " ms) message: " + message);
+            }
             SncpContext context = server.getSncpServer().getContext();
             SncpMessageRequest request = new SncpMessageRequest(context, message);
             response = new SncpMessageResponse(context, request, callback, null, producer.getProducer(message));
