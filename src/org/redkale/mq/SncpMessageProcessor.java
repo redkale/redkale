@@ -31,6 +31,8 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
+    protected MessageClient messageClient;
+
     protected final MessageProducers producer;
 
     protected final NodeSncpServer server;
@@ -49,11 +51,12 @@ public class SncpMessageProcessor implements MessageProcessor {
         if (cdl != null) cdl.countDown();
     };
 
-    public SncpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
+    public SncpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageClient messageClient, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
         this.finer = logger.isLoggable(Level.FINER);
         this.fine = logger.isLoggable(Level.FINE);
+        this.messageClient = messageClient;
         this.producer = producer;
         this.server = server;
         this.service = service;
@@ -84,7 +87,7 @@ public class SncpMessageProcessor implements MessageProcessor {
             long e = now - starttime;
             SncpContext context = server.getSncpServer().getContext();
             SncpMessageRequest request = new SncpMessageRequest(context, message);
-            response = new SncpMessageResponse(context, request, callback, null, producer.getProducer(message));
+            response = new SncpMessageResponse(context, request, callback, null, messageClient, producer.getProducer(message));
             servlet.execute(request, response);
             long o = System.currentTimeMillis() - now;
             if ((cha > 1000 || e > 100 || o > 1000) && fine) {

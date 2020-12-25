@@ -26,6 +26,8 @@ import org.redkale.util.ObjectPool;
  */
 public class HttpMessageResponse extends HttpResponse {
 
+    protected MessageClient messageClient;
+
     protected MessageRecord message;
 
     protected MessageProducer producer;
@@ -35,26 +37,28 @@ public class HttpMessageResponse extends HttpResponse {
     protected Runnable callback;
 
     public HttpMessageResponse(HttpContext context, HttpMessageRequest request, Runnable callback,
-        ObjectPool<Response> responsePool, HttpResponseConfig config, MessageProducer producer) {
+        ObjectPool<Response> responsePool, HttpResponseConfig config, MessageClient messageClient, MessageProducer producer) {
         super(context, request, responsePool, config);
         this.message = request.message;
         this.callback = callback;
+        this.messageClient = messageClient;
         this.producer = producer;
         this.finest = producer.logger.isLoggable(Level.FINEST);
     }
 
-    public HttpMessageResponse(HttpContext context, MessageRecord message, Runnable callback, HttpResponseConfig config, MessageProducer producer) {
+    public HttpMessageResponse(HttpContext context, MessageRecord message, Runnable callback, HttpResponseConfig config, MessageClient messageClient, MessageProducer producer) {
         super(context, new HttpMessageRequest(context, message), null, config);
         this.message = message;
         this.callback = callback;
+        this.messageClient = messageClient;
         this.producer = producer;
     }
 
     public void finishHttpResult(HttpResult result) {
-        finishHttpResult(this.finest, ((HttpMessageRequest) this.request).getRespConvert(), this.message, this.callback, this.producer, message.getResptopic(), result);
+        finishHttpResult(this.finest, ((HttpMessageRequest) this.request).getRespConvert(), this.message, this.callback, this.messageClient, this.producer, message.getResptopic(), result);
     }
 
-    public static void finishHttpResult(boolean finest, Convert respConvert, MessageRecord msg, Runnable callback, MessageProducer producer, String resptopic, HttpResult result) {
+    public static void finishHttpResult(boolean finest, Convert respConvert, MessageRecord msg, Runnable callback, MessageClient messageClient, MessageProducer producer, String resptopic, HttpResult result) {
         if (callback != null) callback.run();
         if (resptopic == null || resptopic.isEmpty()) return;
         if (result.getResult() instanceof RetResult) {
@@ -66,10 +70,10 @@ public class HttpMessageResponse extends HttpResponse {
         if (finest) {
             Object innerrs = result.getResult();
             if (innerrs instanceof byte[]) innerrs = new String((byte[]) innerrs, StandardCharsets.UTF_8);
-            producer.logger.log(Level.FINEST, "HttpMessageProcessor.process seqid=" + msg.getSeqid() + ", content: " + innerrs + ", status: " + result.getStatus() + ", headers: " + result.getHeaders());
+            producer.logger.log(Level.FINEST, "HttpMessageResponse.finishHttpResult seqid=" + msg.getSeqid() + ", content: " + innerrs + ", status: " + result.getStatus() + ", headers: " + result.getHeaders());
         }
         byte[] content = HttpResultCoder.getInstance().encode(result);
-        producer.apply(new MessageRecord(msg.getSeqid(), resptopic, null, content));
+        producer.apply(messageClient.createMessageRecord(msg.getSeqid(), resptopic, null, content));
     }
 
     @Override

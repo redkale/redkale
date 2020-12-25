@@ -224,7 +224,7 @@ public abstract class MessageAgent {
         String[] topics = generateHttpReqTopics(service);
         String consumerid = generateHttpConsumerid(topics, service);
         if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
-        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, this.workExecutor, getHttpProducer(), ns, service, servlet);
+        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, this.workExecutor, httpMessageClient, getHttpProducer(), ns, service, servlet);
         this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topics, consumerid, processor)));
     }
 
@@ -232,7 +232,7 @@ public abstract class MessageAgent {
         String topic = generateSncpReqTopic(service);
         String consumerid = generateSncpConsumerid(topic, service);
         if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
-        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, this.workExecutor, getSncpProducer(), ns, service, servlet);
+        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, this.workExecutor, sncpMessageClient, getSncpProducer(), ns, service, servlet);
         this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(new String[]{topic}, consumerid, processor)));
     }
 

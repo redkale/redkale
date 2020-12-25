@@ -31,6 +31,8 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
+    protected MessageClient messageClient;
+
     protected final MessageProducers producer;
 
     protected final NodeHttpServer server;
@@ -55,11 +57,12 @@ public class HttpMessageProcessor implements MessageProcessor {
         if (cdl != null) cdl.countDown();
     };
 
-    public HttpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageProducers producer, NodeHttpServer server, Service service, HttpServlet servlet) {
+    public HttpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageClient messageClient, MessageProducers producer, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
         this.finer = logger.isLoggable(Level.FINER);
         this.fine = logger.isLoggable(Level.FINE);
+        this.messageClient = messageClient;
         this.producer = producer;
         this.server = server;
         this.service = service;
@@ -98,7 +101,7 @@ public class HttpMessageProcessor implements MessageProcessor {
             if (multiconsumer) {
                 request.setRequestURI(request.getRequestURI().replaceFirst(this.multimodule, this.restmodule));
             }
-            HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, producer.getProducer(message));
+            HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, messageClient, producer.getProducer(message));
             servlet.execute(request, response);
             long o = System.currentTimeMillis() - now;
             if ((cha > 1000 || e > 100 || o > 1000) && fine) {
@@ -111,7 +114,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         } catch (Throwable ex) {
             if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
                 HttpMessageResponse.finishHttpResult(finest, request == null ? null : request.getRespConvert(),
-                    message, callback, producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
+                    message, callback, messageClient, producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }

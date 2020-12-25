@@ -65,47 +65,15 @@ public class MessageRecord implements Serializable {
     public MessageRecord() {
     }
 
-    public MessageRecord(String resptopic, String content) {
-        this(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, null, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public MessageRecord(String topic, String resptopic, String content) {
-        this(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public MessageRecord(int userid, String topic, String resptopic, String content) {
-        this(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public MessageRecord(String topic, String resptopic, Convert convert, Object bean) {
-        this(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, convert.convertToBytes(bean));
-    }
-
-    public MessageRecord(int userid, String topic, String resptopic, Convert convert, Object bean) {
-        this(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, convert.convertToBytes(bean));
-    }
-
-    public MessageRecord(int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
-        this(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
-    }
-
-    public MessageRecord(int flag, int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
-        this(System.nanoTime(), 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
-    }
-
-    public MessageRecord(String topic, String resptopic, byte[] content) {
-        this(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content);
-    }
-
-    public MessageRecord(long seqid, String topic, String resptopic, byte[] content) {
+    protected MessageRecord(long seqid, String topic, String resptopic, byte[] content) {
         this(seqid, 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content);
     }
 
-    public MessageRecord(long seqid, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
+    protected MessageRecord(long seqid, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
         this(seqid, 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, content);
     }
 
-    public MessageRecord(long seqid, int version, int flag, long createtime, int userid, String groupid, String topic, String resptopic, byte[] content) {
+    protected MessageRecord(long seqid, int version, int flag, long createtime, int userid, String groupid, String topic, String resptopic, byte[] content) {
         this.seqid = seqid;
         this.version = version;
         this.flag = flag;

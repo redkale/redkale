@@ -287,7 +287,7 @@ public final class SncpClient {
             fillHeader(ByteBuffer.wrap(reqbytes), seqid, actionid, reqBodyLength);
             String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
             if (targetTopic == null) targetTopic = this.topic;
-            MessageRecord message = new MessageRecord(targetTopic, null, reqbytes);
+            MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes);
             return messageClient.sendMessage(message).thenApply(msg -> {
                 ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
                 checkResult(seqid, action, buffer);

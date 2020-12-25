@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
+import java.util.logging.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 
@@ -165,19 +165,20 @@ public class HttpMessageClient extends MessageClient {
     }
 
     public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        MessageRecord message = new MessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
+        MessageRecord message = createMessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
+        //if (finest) logger.log(Level.FINEST, "HttpMessageClient.sendMessage: " + message);
         return sendMessage(message, true, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
     }
 
     public void broadcastMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        MessageRecord message = new MessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
+        MessageRecord message = createMessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         sendMessage(message, false, counter);
     }
 
     public void produceMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        MessageRecord message = new MessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
+        MessageRecord message = createMessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         sendMessage(message, false, counter);
     }
