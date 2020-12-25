@@ -117,6 +117,7 @@ public class HttpMessageProcessor implements MessageProcessor {
             try {
                 this.cdl.await(30, TimeUnit.SECONDS);
             } catch (Exception ex) {
+                logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " commit error, restmodule=" + this.restmodule, ex);
             }
             this.cdl = null;
         }
