@@ -27,6 +27,8 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final boolean finer;
 
+    protected final boolean fine;
+
     protected final Logger logger;
 
     protected final MessageProducers producer;
@@ -57,6 +59,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
         this.finer = logger.isLoggable(Level.FINER);
+        this.fine = logger.isLoggable(Level.FINE);
         this.producer = producer;
         this.server = server;
         this.service = service;
@@ -98,7 +101,9 @@ public class HttpMessageProcessor implements MessageProcessor {
             HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, producer.getProducer(message));
             servlet.execute(request, response);
             long o = System.currentTimeMillis() - now;
-            if (cha > 50 || e > 10 || o > 50 || finer) {
+            if (cha > 1000 || e > 100 || o > 1000 || fine) {
+                logger.log(Level.FINE, "HttpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms) message: " + message);
+            } else if (cha > 50 || e > 10 || o > 50 || finer) {
                 logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
             } else if (finest) {
                 logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
