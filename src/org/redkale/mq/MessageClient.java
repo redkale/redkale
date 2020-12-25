@@ -34,10 +34,13 @@ public abstract class MessageClient {
 
     protected boolean finer;
 
+    protected boolean fine;
+
     protected MessageClient(MessageAgent messageAgent) {
         this.messageAgent = messageAgent;
         this.finest = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINEST);
         this.finer = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINER);
+        this.fine = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINE);
     }
 
     protected CompletableFuture<Void> close() {
@@ -63,7 +66,9 @@ public abstract class MessageClient {
                             if (ncer != null) ncer.decrementAndGet();
                             node.future.complete(msg);
                             long cha = now - msg.createtime;
-                            if (cha > 50 || finer) {
+                            if (cha > 1000 && fine) {
+                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mqs.delays = " + cha + "ms) message: " + msg);
+                            } else if (cha > 50 && finer) {
                                 messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mq.delays = " + cha + "ms) message: " + msg);
                             } else if (finest) {
                                 messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process (mq.delay = " + cha + "ms) message: " + msg);

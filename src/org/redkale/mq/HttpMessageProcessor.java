@@ -101,9 +101,9 @@ public class HttpMessageProcessor implements MessageProcessor {
             HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, producer.getProducer(message));
             servlet.execute(request, response);
             long o = System.currentTimeMillis() - now;
-            if (cha > 1000 || e > 100 || o > 1000 || fine) {
+            if ((cha > 1000 || e > 100 || o > 1000) && fine) {
                 logger.log(Level.FINE, "HttpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms) message: " + message);
-            } else if (cha > 50 || e > 10 || o > 50 || finer) {
+            } else if ((cha > 50 || e > 10 || o > 50) && finer) {
                 logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
             } else if (finest) {
                 logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
