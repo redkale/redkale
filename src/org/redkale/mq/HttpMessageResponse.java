@@ -100,13 +100,17 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finish(int status, String message) {
-        if (finest) producer.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
+    public void finish(int status, String msg) {
+        if (status > 400) {
+            producer.logger.log(Level.INFO, "HttpMessageResponse.finish status: " + status + ", message: " + this.message);
+        } else if (finest) {
+            producer.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
+        }
         if (this.message.isEmptyResptopic()) {
             if (callback != null) callback.run();
             return;
         }
-        finishHttpResult(new HttpResult(message == null ? "" : message).status(status));
+        finishHttpResult(new HttpResult(msg == null ? "" : msg).status(status));
     }
 
     @Override
