@@ -63,7 +63,7 @@ public abstract class MessageClient {
                             long now = System.currentTimeMillis();
                             MessageRespFutureNode node = respNodes.remove(msg.getSeqid());
                             if (node == null) {
-                                messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found mqmsg.respnode");
+                                messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found mqresp.futurenode");
                                 return;
                             }
                             if (node.scheduledFuture != null) node.scheduledFuture.cancel(true);
@@ -72,11 +72,11 @@ public abstract class MessageClient {
                             node.future.complete(msg);
                             long cha = now - msg.createtime;
                             if (cha > 1000 && fine) {
-                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mqs.delays = " + cha + "ms) message: " + msg);
+                                messageAgent.logger.log(Level.FINE, "MessageRespFutureNode.process (mqs.delays = " + cha + "ms) mqresp.msg: " + msg);
                             } else if (cha > 50 && finer) {
-                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mq.delays = " + cha + "ms) message: " + msg);
+                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mq.delays = " + cha + "ms) mqresp.msg: " + msg);
                             } else if (finest) {
-                                messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process (mq.delay = " + cha + "ms) message: " + msg);
+                                messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process (mq.delay = " + cha + "ms) mqresp.msg: " + msg);
                             }
 
                         };
