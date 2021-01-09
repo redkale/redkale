@@ -302,9 +302,9 @@ class WebSocketRunner implements Runnable {
             if (t != null && context.getLogger().isLoggable(Level.FINER)) {
                 context.getLogger().log(Level.FINER, "WebSocket sendMessage abort, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", t);
             }
-
         }
-        return futureResult.whenComplete((r, t) -> {
+        int ts = webSocket._channel.getWriteTimeoutSeconds();
+        return futureResult.orTimeout(ts > 0 ? ts : 6, TimeUnit.SECONDS).whenComplete((r, t) -> {
             WriteEntry entry = writeQueue.poll();
             if (entry != null) {
                 webSocket._channel.write(entry.writeBuffers, entry.writeBuffers, entry.writeHandler);
