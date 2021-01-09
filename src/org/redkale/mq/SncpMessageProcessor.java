@@ -91,11 +91,11 @@ public class SncpMessageProcessor implements MessageProcessor {
             servlet.execute(request, response);
             long o = System.currentTimeMillis() - now;
             if ((cha > 1000 || e > 100 || o > 1000) && fine) {
-                logger.log(Level.FINE, "SncpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms) message: " + message);
+                logger.log(Level.FINE, "SncpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms, works=" + (workExecutor != null ? workExecutor.size() : 0) + ") message: " + message);
             } else if ((cha > 50 || e > 10 || o > 50) && finer) {
-                logger.log(Level.FINER, "SncpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
+                logger.log(Level.FINER, "SncpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms, works=" + (workExecutor != null ? workExecutor.size() : 0) + ") message: " + message);
             } else if (finest) {
-                logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
+                logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms, works=" + (workExecutor != null ? workExecutor.size() : 0) + ") message: " + message);
             }
         } catch (Throwable ex) {
             if (response != null) response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
