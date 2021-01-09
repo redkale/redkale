@@ -80,4 +80,8 @@ public class ThreadHashExecutor {
     public boolean isShutdown() {
         return this.executors[0].isShutdown();
     }
+
+    public int size() {
+        return executors.length;
+    }
 }
