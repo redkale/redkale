@@ -51,7 +51,7 @@ public class MessageRespFutureNode implements Runnable {
     public void run() { //timeout
         respNodes.remove(this.seqid);
         future.completeExceptionally(new TimeoutException());
-        logger.log(Level.WARNING, getClass().getSimpleName() + " wait msg: " + message + " timeout");
+        logger.log(Level.WARNING, getClass().getSimpleName() + " wait msg: " + message + " timeout " + (System.currentTimeMillis() - createtime) + "ms");
     }
 
     public long getSeqid() {
