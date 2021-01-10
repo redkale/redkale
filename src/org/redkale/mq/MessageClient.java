@@ -72,11 +72,11 @@ public abstract class MessageClient {
                             node.future.complete(msg);
                             long cha = now - msg.createtime;
                             if (cha > 1000 && fine) {
-                                messageAgent.logger.log(Level.FINE, "MessageRespFutureNode.process (mqs.delays = " + cha + "ms) mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINE, "MessageRespFutureNode.process (mqs.delays = " + cha + "ms, mqs.counter = " + (ncer == null ? -1 : ncer.get()) + ") mqresp.msg: " + msg);
                             } else if (cha > 50 && finer) {
-                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mq.delays = " + cha + "ms) mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mq.delays = " + cha + "ms, mqs.counter = " + (ncer == null ? -1 : ncer.get()) + ") mqresp.msg: " + msg);
                             } else if (finest) {
-                                messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process (mq.delay = " + cha + "ms) mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process (mq.delay = " + cha + "ms, mqs.counter = " + (ncer == null ? -1 : ncer.get()) + ") mqresp.msg: " + msg);
                             }
 
                         };
