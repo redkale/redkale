@@ -40,11 +40,14 @@ public abstract class MessageClient {
 
     protected boolean fine;
 
+    private final String clazzName;
+
     protected MessageClient(MessageAgent messageAgent) {
         this.messageAgent = messageAgent;
         this.finest = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINEST);
         this.finer = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINER);
         this.fine = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINE);
+        this.clazzName = getClass().getSimpleName();
     }
 
     protected CompletableFuture<Void> close() {
@@ -72,13 +75,12 @@ public abstract class MessageClient {
                             node.future.complete(msg);
                             long cha = now - msg.createtime;
                             if (cha > 1000 && fine) {
-                                messageAgent.logger.log(Level.FINE, "MessageRespFutureNode.process (mqs.delays = " + cha + "ms, mqs.counter = " + (ncer == null ? -1 : ncer.get()) + ") mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINE, clazzName + ".MessageRespFutureNode.process (mqs.delays = " + cha + "ms, mqs.counters = " + ncer + ") mqresp.msg: " + msg);
                             } else if (cha > 50 && finer) {
-                                messageAgent.logger.log(Level.FINER, "MessageRespFutureNode.process (mq.delays = " + cha + "ms, mqs.counter = " + (ncer == null ? -1 : ncer.get()) + ") mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINER, clazzName + ".MessageRespFutureNode.process (mq.delays = " + cha + "ms, mq.counters = " + ncer + ") mqresp.msg: " + msg);
                             } else if (finest) {
-                                messageAgent.logger.log(Level.FINEST, "MessageRespFutureNode.process (mq.delay = " + cha + "ms, mqs.counter = " + (ncer == null ? -1 : ncer.get()) + ") mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.process (mq.delay = " + cha + "ms, mq.counter = " + ncer + ") mqresp.msg: " + msg);
                             }
-
                         };
                         MessageConsumer one = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
                         one.startup().join();
