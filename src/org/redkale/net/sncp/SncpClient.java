@@ -186,7 +186,7 @@ public final class SncpClient {
                 if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) continue;
             }
             //if (onlySncpDyn && method.getAnnotation(SncpDyn.class) == null) continue;
-            
+
             DLong actionid = Sncp.hash(method);
             Method old = actionids.get(actionid);
             if (old != null) {
@@ -288,7 +288,12 @@ public final class SncpClient {
             String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
             if (targetTopic == null) targetTopic = this.topic;
             MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes);
+            final String tt = targetTopic;
             return messageClient.sendMessage(message).thenApply(msg -> {
+                if (msg == null) {
+                    logger.log(Level.SEVERE, action.method + " sncp mq(params: " + convert.convertTo(params) + ", message: " + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt + ", result = null");
+                    return null;
+                }
                 ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
                 checkResult(seqid, action, buffer);
 
