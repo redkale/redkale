@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
+import static org.redkale.mq.MessageRecord.CTYPE_HTTP_REQUEST;
 
 /**
  * 不依赖MessageRecord则可兼容RPC方式
@@ -172,20 +173,20 @@ public class HttpMessageClient extends MessageClient {
     }
 
     public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        MessageRecord message = createMessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
+        MessageRecord message = createMessageRecord(CTYPE_HTTP_REQUEST, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         //if (finest) logger.log(Level.FINEST, "HttpMessageClient.sendMessage: " + message);
         return sendMessage(message, true, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
     }
 
     public void broadcastMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        MessageRecord message = createMessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
+        MessageRecord message = createMessageRecord(CTYPE_HTTP_REQUEST, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         sendMessage(message, false, counter);
     }
 
     public void produceMessage(String topic, int userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        MessageRecord message = createMessageRecord(topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
+        MessageRecord message = createMessageRecord(CTYPE_HTTP_REQUEST, topic, null, HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         sendMessage(message, false, counter);
     }

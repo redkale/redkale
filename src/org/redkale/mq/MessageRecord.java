@@ -26,6 +26,12 @@ public class MessageRecord implements Serializable {
 
     static final byte[] EMPTY_BYTES = new byte[0];
 
+    protected static final byte CTYPE_STRING = 1;
+
+    protected static final byte CTYPE_HTTP_REQUEST = 2;
+
+    protected static final byte CTYPE_HTTP_RESULT = 3;
+
     @ConvertColumn(index = 1)
     @Comment("消息序列号")
     protected long seqid;
@@ -62,19 +68,24 @@ public class MessageRecord implements Serializable {
     @Comment("消息内容")
     protected byte[] content;
 
+    @ConvertColumn(index = 10)
+    @Comment("消息内容的类型")
+    protected byte ctype;
+
     public MessageRecord() {
     }
 
-    protected MessageRecord(long seqid, String topic, String resptopic, byte[] content) {
-        this(seqid, 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content);
+    protected MessageRecord(long seqid, byte ctype, String topic, String resptopic, byte[] content) {
+        this(seqid, ctype, 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content);
     }
 
-    protected MessageRecord(long seqid, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
-        this(seqid, 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, content);
+    protected MessageRecord(long seqid, byte ctype, int flag, int userid, String groupid, String topic, String resptopic, byte[] content) {
+        this(seqid, ctype, 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, content);
     }
 
-    protected MessageRecord(long seqid, int version, int flag, long createtime, int userid, String groupid, String topic, String resptopic, byte[] content) {
+    protected MessageRecord(long seqid, byte ctype, int version, int flag, long createtime, int userid, String groupid, String topic, String resptopic, byte[] content) {
         this.seqid = seqid;
+        this.ctype = ctype;
         this.version = version;
         this.flag = flag;
         this.createtime = createtime;
@@ -253,7 +264,15 @@ public class MessageRecord implements Serializable {
         if (this.groupid != null) sb.append(",\"groupid\":\"").append(this.groupid).append("\"");
         if (this.topic != null) sb.append(",\"topic\":\"").append(this.topic).append("\"");
         if (this.resptopic != null) sb.append(",\"resptopic\":\"").append(this.resptopic).append("\"");
-        if (this.content != null) sb.append(",\"content\":").append(new String(this.content, StandardCharsets.UTF_8)).append("\"");
+        if (this.content != null) {
+            if (this.ctype == CTYPE_HTTP_REQUEST) {
+                sb.append(",\"content\":").append(HttpSimpleRequestCoder.getInstance().decode(this.content)).append("\"");
+            } else if (this.ctype == CTYPE_HTTP_RESULT) {
+                sb.append(",\"content\":").append(HttpResultCoder.getInstance().decode(this.content)).append("\"");
+            } else {
+                sb.append(",\"content\":").append(new String(this.content, StandardCharsets.UTF_8)).append("\"");
+            }
+        }
         sb.append("}");
         return sb.toString();
     }

@@ -10,6 +10,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import org.redkale.convert.Convert;
+import org.redkale.convert.json.JsonConvert;
+import static org.redkale.mq.MessageRecord.*;
+import org.redkale.net.http.*;
 
 /**
  *
@@ -111,38 +114,58 @@ public abstract class MessageClient {
     protected abstract MessageProducers getProducer();
 
     public MessageRecord createMessageRecord(String resptopic, String content) {
-        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, null, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        return new MessageRecord(System.nanoTime(), CTYPE_STRING, 1, 0, System.currentTimeMillis(), 0, null, null, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, String content) {
-        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        return new MessageRecord(System.nanoTime(), CTYPE_STRING, 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(int userid, String topic, String resptopic, String content) {
-        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        return new MessageRecord(System.nanoTime(), CTYPE_STRING, 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, Convert convert, Object bean) {
-        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, convert.convertToBytes(bean));
+        return new MessageRecord(System.nanoTime(), ctype(convert, bean), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(int userid, String topic, String resptopic, Convert convert, Object bean) {
-        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, convert.convertToBytes(bean));
+        return new MessageRecord(System.nanoTime(), ctype(convert, bean), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
-        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
+        return new MessageRecord(System.nanoTime(), ctype(convert, bean), 1, 0, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(int flag, int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
-        return new MessageRecord(System.nanoTime(), 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
+        return new MessageRecord(System.nanoTime(), ctype(convert, bean), 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, byte[] content) {
-        return new MessageRecord(System.nanoTime(), topic, resptopic, content);
+        return new MessageRecord(System.nanoTime(), (byte) 0, topic, resptopic, content);
     }
 
     public MessageRecord createMessageRecord(long seqid, String topic, String resptopic, byte[] content) {
-        return new MessageRecord(seqid, topic, resptopic, content);
+        return new MessageRecord(seqid, (byte) 0, topic, resptopic, content);
+    }
+
+    protected MessageRecord createMessageRecord(byte ctype, String topic, String resptopic, byte[] content) {
+        return new MessageRecord(System.nanoTime(), ctype, topic, resptopic, content);
+    }
+
+    protected MessageRecord createMessageRecord(long seqid, byte ctype, String topic, String resptopic, byte[] content) {
+        return new MessageRecord(seqid, ctype, topic, resptopic, content);
+    }
+
+    private byte ctype(Convert convert, Object bean) {
+        byte ctype = 0;
+        if (convert instanceof JsonConvert) {
+            if (bean instanceof HttpSimpleRequest) {
+                ctype = CTYPE_HTTP_REQUEST;
+            } else if (bean instanceof HttpResult) {
+                ctype = CTYPE_HTTP_RESULT;
+            }
+        }
+        return ctype;
     }
 }

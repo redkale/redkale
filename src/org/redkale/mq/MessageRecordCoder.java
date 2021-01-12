@@ -31,10 +31,11 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         byte[] stopics = MessageCoder.getBytes(data.getTopic());
         byte[] dtopics = MessageCoder.getBytes(data.getResptopic());
         byte[] groupid = MessageCoder.getBytes(data.getGroupid());
-        int count = 8 + 4 + 4 + 8 + 4 + 2 + stopics.length + 2 + dtopics.length + 2 + groupid.length + 4 + (data.getContent() == null ? 0 : data.getContent().length);
+        int count = 8 + 1 + 4 + 4 + 8 + 4 + 2 + stopics.length + 2 + dtopics.length + 2 + groupid.length + 4 + (data.getContent() == null ? 0 : data.getContent().length);
         final byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.putLong(data.getSeqid());
+        buffer.put(data.ctype);
         buffer.putInt(data.getVersion());
         buffer.putInt(data.getFlag());
         buffer.putLong(data.getCreatetime());
@@ -59,6 +60,7 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         if (data == null) return null;
         ByteBuffer buffer = ByteBuffer.wrap(data);
         long seqid = buffer.getLong();
+        byte ctype = buffer.get();
         int version = buffer.getInt();
         int flag = buffer.getInt();
         long createtime = buffer.getLong();
@@ -74,7 +76,7 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
             content = new byte[contentlen];
             buffer.get(content);
         }
-        return new MessageRecord(seqid, version, flag, createtime, userid, groupid, topic, resptopic, content);
+        return new MessageRecord(seqid, ctype, version, flag, createtime, userid, groupid, topic, resptopic, content);
     }
 
 }

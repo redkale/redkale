@@ -13,6 +13,7 @@ import org.redkale.net.Response;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import org.redkale.util.ObjectPool;
+import static org.redkale.mq.MessageRecord.CTYPE_HTTP_RESULT;
 
 /**
  *
@@ -73,7 +74,7 @@ public class HttpMessageResponse extends HttpResponse {
             producer.logger.log(Level.FINEST, "HttpMessageResponse.finishHttpResult seqid=" + msg.getSeqid() + ", content: " + innerrs + ", status: " + result.getStatus() + ", headers: " + result.getHeaders());
         }
         byte[] content = HttpResultCoder.getInstance().encode(result);
-        producer.apply(messageClient.createMessageRecord(msg.getSeqid(), resptopic, null, content));
+        producer.apply(messageClient.createMessageRecord(msg.getSeqid(), CTYPE_HTTP_RESULT, resptopic, null, content));
     }
 
     @Override
