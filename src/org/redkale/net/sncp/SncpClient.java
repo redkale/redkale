@@ -290,8 +290,8 @@ public final class SncpClient {
             MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes);
             final String tt = targetTopic;
             return messageClient.sendMessage(message).thenApply(msg -> {
-                if (msg == null) {
-                    logger.log(Level.SEVERE, action.method + " sncp mq(params: " + convert.convertTo(params) + ", message: " + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt + ", result = null");
+                if (msg == null || msg.getContent() == null) {
+                    logger.log(Level.SEVERE, action.method + " sncp mq(params: " + convert.convertTo(params) + ", message: " + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt + ", result = " + msg);
                     return null;
                 }
                 ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
