@@ -8,6 +8,7 @@ package org.redkale.mq;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Comment;
 
 /**
@@ -72,6 +73,9 @@ public class MessageRecord implements Serializable {
     @Comment("消息内容的类型")
     protected byte ctype;
 
+    @Comment("本地附加对象，不会被序列化")
+    protected Object localattach;
+
     public MessageRecord() {
     }
 
@@ -98,6 +102,11 @@ public class MessageRecord implements Serializable {
 
     public String contentString() {
         return content == null ? null : new String(content, StandardCharsets.UTF_8);
+    }
+
+    public MessageRecord attach(Object attach) {
+        this.localattach = attach;
+        return this;
     }
 
     @ConvertDisabled
@@ -266,11 +275,13 @@ public class MessageRecord implements Serializable {
         if (this.resptopic != null) sb.append(",\"resptopic\":\"").append(this.resptopic).append("\"");
         if (this.content != null) {
             if (this.ctype == CTYPE_HTTP_REQUEST) {
-                sb.append(",\"content\":").append(HttpSimpleRequestCoder.getInstance().decode(this.content)).append("\"");
+                sb.append(",\"content\":").append(HttpSimpleRequestCoder.getInstance().decode(this.content));
             } else if (this.ctype == CTYPE_HTTP_RESULT) {
-                sb.append(",\"content\":").append(HttpResultCoder.getInstance().decode(this.content)).append("\"");
+                sb.append(",\"content\":").append(HttpResultCoder.getInstance().decode(this.content));
+            } else if (localattach != null) {
+                sb.append(",\"attach\":").append(JsonConvert.root().convertTo(localattach));
             } else {
-                sb.append(",\"content\":").append(new String(this.content, StandardCharsets.UTF_8)).append("\"");
+                sb.append(",\"content\":\"").append(new String(this.content, StandardCharsets.UTF_8)).append("\"");
             }
         }
         sb.append("}");

@@ -289,6 +289,12 @@ public final class SncpClient {
             if (targetTopic == null) targetTopic = this.topic;
             MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes);
             final String tt = targetTopic;
+            if (logger.isLoggable(Level.FINER)) {
+                Object n = action.method.getDeclaringClass().getSimpleName() + "." + action.method.getName();
+                message.attach(Utility.append(new Object[]{n}, params));
+            } else {
+                message.attach(params);
+            }
             return messageClient.sendMessage(message).thenApply(msg -> {
                 if (msg == null || msg.getContent() == null) {
                     logger.log(Level.SEVERE, action.method + " sncp mq(params: " + convert.convertTo(params) + ", message: " + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt + ", result = " + msg);
