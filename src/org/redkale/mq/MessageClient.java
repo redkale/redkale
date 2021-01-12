@@ -24,8 +24,6 @@ public abstract class MessageClient {
 
     protected final ConcurrentHashMap<Long, MessageRespFutureNode> respNodes = new ConcurrentHashMap<>();
 
-    protected final AtomicLong msgSeqno = new AtomicLong(System.nanoTime());
-
     protected final MessageAgent messageAgent;
 
     protected MessageConsumer respConsumer;
@@ -113,35 +111,35 @@ public abstract class MessageClient {
     protected abstract MessageProducers getProducer();
 
     public MessageRecord createMessageRecord(String resptopic, String content) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), 1, 0, System.currentTimeMillis(), 0, null, null, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, null, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, String content) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(int userid, String topic, String resptopic, String content) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, Convert convert, Object bean) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, convert.convertToBytes(bean));
+        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(int userid, String topic, String resptopic, Convert convert, Object bean) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, convert.convertToBytes(bean));
+        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, null, topic, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), 1, 0, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
+        return new MessageRecord(System.nanoTime(), 1, 0, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(int flag, int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
+        return new MessageRecord(System.nanoTime(), 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, byte[] content) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), topic, resptopic, content);
+        return new MessageRecord(System.nanoTime(), topic, resptopic, content);
     }
 
     public MessageRecord createMessageRecord(long seqid, String topic, String resptopic, byte[] content) {
