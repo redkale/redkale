@@ -31,7 +31,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
     @Override
     public byte[] encode(HttpSimpleRequest data) {
         byte[] requestURI = MessageCoder.getBytes(data.getRequestURI()); //long-string
-        byte[] path = MessageCoder.getBytes(data.getRequestURI()); //short-string
+        byte[] path = MessageCoder.getBytes(data.getPath()); //short-string
         byte[] remoteAddr = MessageCoder.getBytes(data.getRemoteAddr());//short-string
         byte[] sessionid = MessageCoder.getBytes(data.getSessionid());//short-string
         byte[] contentType = MessageCoder.getBytes(data.getContentType());//short-string
