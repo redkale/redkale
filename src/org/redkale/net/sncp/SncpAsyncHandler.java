@@ -8,6 +8,7 @@ package org.redkale.net.sncp;
 import org.redkale.asm.MethodDebugVisitor;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 import java.util.logging.Level;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -258,7 +259,10 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
 
         protected CompletableFuture future;
 
-        public DefaultSncpAsyncHandler(SncpServletAction action, BsonReader in, BsonWriter out, SncpRequest request, SncpResponse response) {
+        protected Logger logger;
+
+        public DefaultSncpAsyncHandler(Logger logger, SncpServletAction action, BsonReader in, BsonWriter out, SncpRequest request, SncpResponse response) {
+            this.logger = logger;
             this.action = action;
             this.in = in;
             this.out = out;
@@ -294,6 +298,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
         @Override
         public void sncp_setParams(Object... params) {
             this.params = params;
+            this.request.sncp_setParams(this.action, this.logger, params);
         }
 
         @Override

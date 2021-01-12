@@ -8,6 +8,7 @@ package org.redkale.net.sncp;
 import java.net.*;
 import java.nio.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -96,6 +97,10 @@ public class SncpRequest extends Request<SncpContext> {
     @Override
     protected void prepare() {
         this.keepAlive = true;
+    }
+
+    //被SncpAsyncHandler.sncp_setParams调用
+    protected void sncp_setParams(SncpDynServlet.SncpServletAction action, Logger logger, Object... params) {
     }
 
     @Override

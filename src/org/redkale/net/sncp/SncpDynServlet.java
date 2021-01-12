@@ -128,17 +128,17 @@ public final class SncpDynServlet extends SncpServlet {
             try {
                 if (action.handlerFuncParamIndex >= 0) {
                     if (action.handlerFuncParamClass == CompletionHandler.class) {
-                        handler = new DefaultSncpAsyncHandler(action, in, out, request, response);
+                        handler = new DefaultSncpAsyncHandler(logger, action, in, out, request, response);
                     } else {
                         Creator<SncpAsyncHandler> creator = action.handlerCreator;
                         if (creator == null) {
                             creator = SncpAsyncHandler.Factory.createCreator(action.handlerFuncParamClass);
                             action.handlerCreator = creator;
                         }
-                        handler = creator.create(new DefaultSncpAsyncHandler(action, in, out, request, response));
+                        handler = creator.create(new DefaultSncpAsyncHandler(logger, action, in, out, request, response));
                     }
                 } else if (action.boolReturnTypeFuture) {
-                    handler = new DefaultSncpAsyncHandler(action, in, out, request, response);
+                    handler = new DefaultSncpAsyncHandler(logger, action, in, out, request, response);
                 }
                 in.setBytes(request.getBody());
                 action.action(in, out, handler);
@@ -206,6 +206,10 @@ public final class SncpDynServlet extends SncpServlet {
                 }
             }
             out.writeByte((byte) 0);
+        }
+
+        public String actionName() {
+            return method.getDeclaringClass().getSimpleName() + "." + method.getName();
         }
 
         /**

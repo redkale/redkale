@@ -6,7 +6,10 @@
 package org.redkale.mq;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.redkale.net.sncp.*;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -28,4 +31,13 @@ public class SncpMessageRequest extends SncpRequest {
         readHeader(ByteBuffer.wrap(message.getContent()));
     }
 
+    @Override //被SncpAsyncHandler.sncp_setParams调用
+    protected void sncp_setParams(SncpDynServlet.SncpServletAction action, Logger logger, Object... params) {
+        if (message.localattach != null) return;
+        if (logger.isLoggable(Level.FINER)) {
+            message.attach(Utility.append(new Object[]{action.actionName()}, params));
+        } else {
+            message.attach(params);
+        }
+    }
 }
