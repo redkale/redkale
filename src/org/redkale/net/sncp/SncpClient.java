@@ -290,8 +290,7 @@ public final class SncpClient {
             MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes);
             final String tt = targetTopic;
             if (logger.isLoggable(Level.FINER)) {
-                Object n = action.method.getDeclaringClass().getSimpleName() + "." + action.method.getName();
-                message.attach(Utility.append(new Object[]{n}, params));
+                message.attach(Utility.append(new Object[]{action.actionName()}, params));
             } else {
                 message.attach(params);
             }
@@ -606,6 +605,10 @@ public final class SncpClient {
             if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) {
                 throw new RuntimeException(method + " have CompletionHandler type parameter but return type is not void");
             }
+        }
+
+        public String actionName() {
+            return method.getDeclaringClass().getSimpleName() + "." + method.getName();
         }
 
         @Override
