@@ -307,6 +307,9 @@ class WebSocketRunner implements Runnable {
         int ts = webSocket._channel.getWriteTimeoutSeconds();
         return futureResult.orTimeout(ts > 0 ? ts : 6, TimeUnit.SECONDS).whenComplete((r, t) -> {
             nextWrite();
+            if (t != null && context.getLogger().isLoggable(Level.FINER)) {
+                context.getLogger().log(Level.FINER, "WebSocket sendMessage " + packet + " timeout ", t);
+            }
         });
     }
 
