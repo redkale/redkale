@@ -290,12 +290,13 @@ class WebSocketRunner implements Runnable {
                 }
             };
             this.lastSendTime = System.currentTimeMillis();
-            if (writeSemaphore.tryAcquire()) {
-                webSocket._channel.write(buffers, buffers, handler);
-            } else {
-                writeQueue.add(new WriteEntry(buffers, handler));
+            synchronized (this) {
+                if (writeSemaphore.tryAcquire()) {
+                    webSocket._channel.write(buffers, buffers, handler);
+                } else {
+                    writeQueue.add(new WriteEntry(buffers, handler));
+                }
             }
-
         } catch (Exception t) {
             futureResult.complete(RETCODE_SENDEXCEPTION);
             closeRunner(RETCODE_SENDEXCEPTION, "websocket send message failed on channel.write");
@@ -305,13 +306,19 @@ class WebSocketRunner implements Runnable {
         }
         int ts = webSocket._channel.getWriteTimeoutSeconds();
         return futureResult.orTimeout(ts > 0 ? ts : 6, TimeUnit.SECONDS).whenComplete((r, t) -> {
+            nextWrite();
+        });
+    }
+
+    private void nextWrite() {
+        synchronized (this) {
             WriteEntry entry = writeQueue.poll();
             if (entry != null) {
                 webSocket._channel.write(entry.writeBuffers, entry.writeBuffers, entry.writeHandler);
             } else {
                 writeSemaphore.release();
             }
-        });
+        }
     }
 
     public boolean isClosed() {
