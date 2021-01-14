@@ -47,7 +47,7 @@ public abstract class MessageClient {
 
     protected MessageClient(MessageAgent messageAgent) {
         this.messageAgent = messageAgent;
-        this.msgSeqno = messageAgent.msgSeqno;
+        this.msgSeqno = messageAgent == null ? new AtomicLong() : messageAgent.msgSeqno;
         this.finest = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINEST);
         this.finer = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINER);
         this.fine = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINE);

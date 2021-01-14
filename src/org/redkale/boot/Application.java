@@ -22,6 +22,7 @@ import javax.annotation.Resource;
 import javax.net.ssl.SSLContext;
 import javax.xml.parsers.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.cluster.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
@@ -356,6 +357,13 @@ public final class Application {
                                 break;
                             }
                         }
+                        if (cluster == null) {
+                            ClusterAgent cacheClusterAgent = new CacheClusterAgent();
+                            if (cacheClusterAgent.match(clusterConf)) {
+                                cluster = cacheClusterAgent;
+                                cluster.setConfig(clusterConf);
+                            }
+                        }
                         if (cluster == null) logger.log(Level.SEVERE, "load application cluster resource, but not found name='value' value error: " + clusterConf);
                     } else {
                         Class type = classLoader.loadClass(clusterConf.getValue("value"));
@@ -673,6 +681,10 @@ public final class Application {
         if (this.clusterAgent != null) {
             if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent initing");
             long s = System.currentTimeMillis();
+            if (this.clusterAgent instanceof CacheClusterAgent) {
+                String sourceName = ((CacheClusterAgent) clusterAgent).getSourceName(); //必须在inject前调用，需要赋值Resourcable.name
+                loadCacheSource(sourceName);
+            }
             clusterAgent.setTransportFactory(this.sncpTransportFactory);
             this.resourceFactory.inject(clusterAgent);
             clusterAgent.init(clusterAgent.getConfig());
@@ -692,7 +704,7 @@ public final class Application {
             logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
 
         }
-        //------------------------------------- 注册 DataSource --------------------------------------------------------        
+        //------------------------------------- 注册 HttpMessageClient --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
@@ -702,10 +714,42 @@ public final class Application {
                 rf.inject(messageClient, null); // 给其可能包含@Resource的字段赋值;
                 rf.register(resourceName, HttpMessageClient.class, messageClient);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] DataSource inject error", e);
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpMessageClient inject error", e);
             }
         }, HttpMessageClient.class);
         initResources();
+    }
+
+    private void loadCacheSource(final String sourceName) {
+        final AnyValue resources = config.getAnyValue("resources");
+        for (AnyValue sourceConf : resources.getAnyValues("source")) {
+            if (!sourceName.equals(sourceConf.getValue("name"))) continue;
+            String classval = sourceConf.getValue("value");
+            try {
+                Class sourceType = CacheMemorySource.class;
+                if (classval == null || classval.isEmpty()) {
+                    Iterator<CacheSource> it = ServiceLoader.load(CacheSource.class, serverClassLoader).iterator();
+                    while (it.hasNext()) {
+                        CacheSource s = it.next();
+                        if (s.match(sourceConf)) {
+                            sourceType = s.getClass();
+                            break;
+                        }
+                    }
+                } else {
+                    sourceType = serverClassLoader.loadClass(classval);
+                }
+                CacheSource source = Modifier.isFinal(sourceType.getModifiers()) ? (CacheSource) sourceType.getConstructor().newInstance() : (CacheSource) Sncp.createLocalService(serverClassLoader, sourceName, sourceType, null, resourceFactory, sncpTransportFactory, null, null, sourceConf);
+                cacheSources.add((CacheSource) source);
+                resourceFactory.register(sourceName, CacheSource.class, source);
+                resourceFactory.inject(source);
+                if (source instanceof Service) ((Service) source).init(sourceConf);
+                logger.info("[" + Thread.currentThread().getName() + "] Load Source resourceName = " + sourceName + ", source = " + source);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "load application source resource error: " + sourceConf, e);
+            }
+            return;
+        }
     }
 
     private void initResources() throws Exception {
