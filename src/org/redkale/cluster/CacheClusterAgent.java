@@ -272,6 +272,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         }
         source.hremove(servicename, serviceid);
         if (realcanceled && currEntry != null) currEntry.canceled = true;
+        if (!"mqtp".equals(protocol) && currEntry != null && currEntry.submqtp) {
+            deregister(ns, "mqtp", service, realcanceled);
+        }
     }
 
     @Override

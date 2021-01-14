@@ -116,6 +116,7 @@ public abstract class ClusterAgent {
                     register(ns, "mqtp", service);
                     ClusterEntry mqentry = new ClusterEntry(ns, "mqtp", service);
                     localEntrys.put(mqentry.serviceid, mqentry);
+                    htentry.submqtp = true;
                 }
             }
         }
@@ -312,6 +313,8 @@ public abstract class ClusterAgent {
         public InetSocketAddress address;
 
         public boolean canceled;
+
+        public boolean submqtp;
 
         public ClusterEntry(NodeServer ns, String protocol, Service service) {
             this.serviceid = generateServiceId(ns, protocol, service);
