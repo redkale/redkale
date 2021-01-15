@@ -63,6 +63,14 @@ public class ThreadHashExecutor {
         }
     }
 
+    public int waitingSize() {
+        int wsize = queues[0].size();
+        for (int i = 1; i < queues.length; i++) {
+            wsize += queues[i].size();
+        }
+        return wsize;
+    }
+
     public void shutdown() {
         for (ExecutorService executor : this.executors) {
             executor.shutdown();
