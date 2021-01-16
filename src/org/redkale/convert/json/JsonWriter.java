@@ -32,9 +32,9 @@ public class JsonWriter extends Writer {
 
     protected boolean tiny;
 
-    public static ObjectPool<JsonWriter> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new JsonWriter(), null, JsonWriter::recycle);
-    }
+//    public static ObjectPool<JsonWriter> createPool(int max) {
+//        return new ObjectPool<>(max, (Object... params) -> new JsonWriter(), null, JsonWriter::recycle);
+//    }
 
     public JsonWriter() {
         this(defaultSize);

@@ -25,9 +25,9 @@ public class JsonReader extends Reader {
 
     private int limit;
 
-    public static ObjectPool<JsonReader> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), null, JsonReader::recycle);
-    }
+//    public static ObjectPool<JsonReader> createPool(int max) {
+//        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), null, JsonReader::recycle);
+//    }
 
     public JsonReader() {
     }

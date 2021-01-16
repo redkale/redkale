@@ -30,9 +30,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public static final Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
 
-    private static final ObjectPool<JsonReader> readerPool = JsonReader.createPool(Integer.getInteger("convert.json.pool.size", Integer.getInteger("convert.pool.size", 16)));
-
-    private static final ObjectPool<JsonWriter> writerPool = JsonWriter.createPool(Integer.getInteger("convert.json.pool.size", Integer.getInteger("convert.pool.size", 16)));
+    //private static final ObjectPool<JsonReader> readerPool = JsonReader.createPool(Integer.getInteger("convert.json.pool.size", Integer.getInteger("convert.pool.size", 16)));
+    //private static final ObjectPool<JsonWriter> writerPool = JsonWriter.createPool(Integer.getInteger("convert.json.pool.size", Integer.getInteger("convert.pool.size", 16)));
+    //
+    private static final ThreadLocal<JsonWriter> writerPool = ThreadLocal.withInitial(JsonWriter::new);
 
     private final boolean tiny;
 
@@ -66,43 +67,41 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     //------------------------------ reader -----------------------------------------------------------
-    public JsonReader pollJsonReader(final ByteBuffer... buffers) {
-        return new JsonByteBufferReader((ConvertMask) null, buffers);
-    }
-
-    public JsonReader pollJsonReader(final InputStream in) {
-        return new JsonStreamReader(in);
-    }
-
-    public JsonReader pollJsonReader() {
-        return readerPool.get();
-    }
-
-    public void offerJsonReader(final JsonReader in) {
-        if (in != null) readerPool.accept(in);
-    }
-
+//    public JsonReader pollJsonReader(final ByteBuffer... buffers) {
+//        return new JsonByteBufferReader((ConvertMask) null, buffers);
+//    }
+//
+//    public JsonReader pollJsonReader(final InputStream in) {
+//        return new JsonStreamReader(in);
+//    }
+//
+//    public JsonReader pollJsonReader() {
+//        return readerPool.get();
+//    }
+//
+//    public void offerJsonReader(final JsonReader in) {
+//        if (in != null) readerPool.accept(in);
+//    }
     //------------------------------ writer -----------------------------------------------------------
-    public JsonByteBufferWriter pollJsonWriter(final Supplier<ByteBuffer> supplier) {
+    private JsonByteBufferWriter pollJsonWriter(final Supplier<ByteBuffer> supplier) {
         return configWrite(new JsonByteBufferWriter(tiny, supplier));
     }
 
-    public JsonWriter pollJsonWriter(final OutputStream out) {
+    private JsonWriter pollJsonWriter(final OutputStream out) {
         return configWrite(new JsonStreamWriter(tiny, out));
     }
-
-    public JsonWriter pollJsonWriter(final Charset charset, final OutputStream out) {
-        return configWrite(new JsonStreamWriter(tiny, charset, out));
-    }
-
-    public JsonWriter pollJsonWriter() {
-        return configWrite(writerPool.get().tiny(tiny));
-    }
-
-    public void offerJsonWriter(final JsonWriter writer) {
-        if (writer != null) writerPool.accept(writer);
-    }
-
+//
+//    public JsonWriter pollJsonWriter(final Charset charset, final OutputStream out) {
+//        return configWrite(new JsonStreamWriter(tiny, charset, out));
+//    }
+//
+//    public JsonWriter pollJsonWriter() {
+//        return configWrite(writerPool.get().tiny(tiny));
+//    }
+//
+//    public void offerJsonWriter(final JsonWriter writer) {
+//        if (writer != null) writerPool.accept(writer);
+//    }
     //------------------------------ convertFrom -----------------------------------------------------------
     @Override
     public <T> T convertFrom(final Type type, final byte[] bytes) {
@@ -128,10 +127,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public <T> T convertFrom(final Type type, final char[] text, final int offset, final int length) {
         if (text == null || type == null) return null;
-        final JsonReader in = readerPool.get();
-        in.setText(text, offset, length);
-        T rs = (T) factory.loadDecoder(type).convertFrom(in);
-        readerPool.accept(in);
+        //final JsonReader in = readerPool.get();
+        //in.setText(text, offset, length);
+        T rs = (T) factory.loadDecoder(type).convertFrom(new JsonReader(text, offset, length));
+        //readerPool.accept(in);
         return rs;
     }
 
@@ -174,10 +173,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final char[] text, final int offset, final int length) {
         if (text == null) return null;
-        final JsonReader in = readerPool.get();
-        in.setText(text, offset, length);
-        Object rs = new AnyDecoder(factory).convertFrom(in);
-        readerPool.accept(in);
+        //final JsonReader in = readerPool.get();
+        //in.setText(text, offset, length);
+        Object rs = new AnyDecoder(factory).convertFrom(new JsonReader(text, offset, length));
+        //readerPool.accept(in);
         return (V) rs;
     }
 
@@ -216,11 +215,20 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public String convertTo(final Type type, final Object value) {
         if (type == null) return null;
         if (value == null) return "null";
-        final JsonWriter writer = pollJsonWriter();
+        JsonWriter writer = writerPool.get();// pollJsonWriter();
+        if (writer == null) {
+            writer = new JsonWriter();
+        } else {
+            writerPool.set(null);
+        }
         writer.specify(type);
         factory.loadEncoder(type).convertTo(writer, value);
         String result = writer.toString();
-        writerPool.accept(writer);
+        //writerPool.accept(writer);        
+        if (writerPool.get() == null) {
+            writer.recycle();
+            writerPool.set(writer);
+        }
         return result;
     }
 
@@ -235,21 +243,39 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public byte[] convertToBytes(final Type type, final Object value) {
         if (type == null) return null;
         if (value == null) return null;
-        final JsonWriter writer = pollJsonWriter();
+        JsonWriter writer = writerPool.get();// pollJsonWriter();
+        if (writer == null) {
+            writer = new JsonWriter();
+        } else {
+            writerPool.set(null);
+        }
         writer.specify(type);
         factory.loadEncoder(type).convertTo(writer, value);
         String result = writer.toString();
-        writerPool.accept(writer);
+        //writerPool.accept(writer);        
+        if (writerPool.get() == null) {
+            writer.recycle();
+            writerPool.set(writer);
+        }
         return result == null ? null : result.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
     public String convertMapTo(final Object... values) {
         if (values == null) return "null";
-        final JsonWriter writer = pollJsonWriter();
+        JsonWriter writer = writerPool.get();// pollJsonWriter();
+        if (writer == null) {
+            writer = new JsonWriter();
+        } else {
+            writerPool.set(null);
+        }
         ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
         String result = writer.toString();
-        writerPool.accept(writer);
+        //writerPool.accept(writer);        
+        if (writerPool.get() == null) {
+            writer.recycle();
+            writerPool.set(writer);
+        }
         return result;
     }
 
@@ -266,11 +292,20 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             pollJsonWriter(out).writeNull();
         } else {
-            final JsonWriter writer = pollJsonWriter();
+            JsonWriter writer = writerPool.get();// pollJsonWriter();
+            if (writer == null) {
+                writer = new JsonWriter();
+            } else {
+                writerPool.set(null);
+            }
             writer.specify(type);
             factory.loadEncoder(type).convertTo(writer, value);
             byte[] bs = writer.toBytes();
-            writerPool.accept(writer);
+            //writerPool.accept(writer);        
+            if (writerPool.get() == null) {
+                writer.recycle();
+                writerPool.set(writer);
+            }
             try {
                 out.write(bs);
             } catch (IOException e) {
@@ -283,10 +318,19 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (values == null) {
             pollJsonWriter(out).writeNull();
         } else {
-            final JsonWriter writer = pollJsonWriter();
+            JsonWriter writer = writerPool.get();// pollJsonWriter();
+            if (writer == null) {
+                writer = new JsonWriter();
+            } else {
+                writerPool.set(null);
+            }
             ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
             byte[] bs = writer.toBytes();
-            writerPool.accept(writer);
+            //writerPool.accept(writer);        
+            if (writerPool.get() == null) {
+                writer.recycle();
+                writerPool.set(writer);
+            }
             try {
                 out.write(bs);
             } catch (IOException e) {
@@ -358,22 +402,32 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         }
     }
 
-    public JsonWriter convertToWriter(final Object value) {
-        if (value == null) return null;
-        return convertToWriter(value.getClass(), value);
-    }
-
-    public JsonWriter convertToWriter(final Type type, final Object value) {
-        if (type == null) return null;
-        final JsonWriter writer = pollJsonWriter();
-        writer.specify(type);
-        factory.loadEncoder(type).convertTo(writer, value);
-        return writer;
-    }
-
-    public JsonWriter convertMapToWriter(final Object... values) {
-        final JsonWriter writer = pollJsonWriter();
-        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
-        return writer;
-    }
+//    public JsonWriter convertToWriter(final Object value) {
+//        if (value == null) return null;
+//        return convertToWriter(value.getClass(), value);
+//    }
+//
+//    public JsonWriter convertToWriter(final Type type, final Object value) {
+//        if (type == null) return null;
+//        JsonWriter writer = writerPool.get();// pollJsonWriter();
+//        if (writer == null) {
+//            writer = new JsonWriter();
+//        } else {
+//            writerPool.set(null);
+//        }
+//        writer.specify(type);
+//        factory.loadEncoder(type).convertTo(writer, value);
+//        return writer;
+//    }
+//
+//    public JsonWriter convertMapToWriter(final Object... values) {
+//        JsonWriter writer = writerPool.get();// pollJsonWriter();
+//        if (writer == null) {
+//            writer = new JsonWriter();
+//        } else {
+//            writerPool.set(null);
+//        }
+//        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
+//        return writer;
+//    }
 }
