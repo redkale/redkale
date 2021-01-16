@@ -38,7 +38,8 @@ public class JsonTestMain {
         SimpleChildEntity entry = SimpleChildEntity.create();
         String json = convert.convertTo(SimpleEntity.class, entry);
         System.out.println("长度: " + json.length());
-        JsonByteBufferWriter writer = convert.pollJsonWriter(() -> ByteBuffer.allocate(1));
+        JsonByteBufferWriter writer = new JsonByteBufferWriter(false, ()->ByteBuffer.allocate(1)) {
+        };
         convert.convertTo(writer, SimpleEntity.class, entry);
         ByteBuffer[] buffers = writer.toBuffers();
         int len = 0;
