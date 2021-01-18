@@ -95,14 +95,16 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 //        return configWrite(new JsonStreamWriter(tiny, charset, out));
 //    }
 //
-//    public JsonWriter pollJsonWriter() {
-//        return configWrite(writerPool.get().tiny(tiny));
-//    }
+
+    private JsonWriter pollJsonWriter() {
+        return configWrite(writerPool.get().tiny(tiny));
+    }
 //
 //    public void offerJsonWriter(final JsonWriter writer) {
 //        if (writer != null) writerPool.accept(writer);
 //    }
     //------------------------------ convertFrom -----------------------------------------------------------
+
     @Override
     public <T> T convertFrom(final Type type, final byte[] bytes) {
         if (bytes == null) return null;
@@ -215,7 +217,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public String convertTo(final Type type, final Object value) {
         if (type == null) return null;
         if (value == null) return "null";
-        JsonWriter writer = writerPool.get();// pollJsonWriter();
+        JsonWriter writer = pollJsonWriter();
         if (writer == null) {
             writer = new JsonWriter();
         } else {
@@ -243,7 +245,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public byte[] convertToBytes(final Type type, final Object value) {
         if (type == null) return null;
         if (value == null) return null;
-        JsonWriter writer = writerPool.get();// pollJsonWriter();
+        JsonWriter writer = pollJsonWriter();
         if (writer == null) {
             writer = new JsonWriter();
         } else {
@@ -263,7 +265,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     @Override
     public String convertMapTo(final Object... values) {
         if (values == null) return "null";
-        JsonWriter writer = writerPool.get();// pollJsonWriter();
+        JsonWriter writer = pollJsonWriter();
         if (writer == null) {
             writer = new JsonWriter();
         } else {
@@ -292,7 +294,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             pollJsonWriter(out).writeNull();
         } else {
-            JsonWriter writer = writerPool.get();// pollJsonWriter();
+            JsonWriter writer = pollJsonWriter();
             if (writer == null) {
                 writer = new JsonWriter();
             } else {
@@ -318,7 +320,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (values == null) {
             pollJsonWriter(out).writeNull();
         } else {
-            JsonWriter writer = writerPool.get();// pollJsonWriter();
+            JsonWriter writer = pollJsonWriter();
             if (writer == null) {
                 writer = new JsonWriter();
             } else {
