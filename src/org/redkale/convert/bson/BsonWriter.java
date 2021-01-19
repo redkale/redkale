@@ -29,7 +29,7 @@ public class BsonWriter extends Writer {
     protected boolean tiny;
 
     public static ObjectPool<BsonWriter> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new BsonWriter(), null, (t) -> t.recycle());
+        return ObjectPool.createSafePool(max, (Object... params) -> new BsonWriter(), null, (t) -> t.recycle());
     }
 
     public byte[] toArray() {

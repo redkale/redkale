@@ -317,7 +317,7 @@ public final class Application {
                 final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Runtime.getRuntime().availableProcessors() * 2);
                 bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), threads * 4);
                 final int capacity = bufferCapacity;
-                transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
+                transportPool = ObjectPool.createSafePool(createBufferCounter, cycleBufferCounter, bufferPoolSize,
                     (Object... params) -> ByteBuffer.allocateDirect(capacity), null, (e) -> {
                         if (e == null || e.isReadOnly() || e.capacity() != capacity) return false;
                         e.clear();
@@ -440,7 +440,7 @@ public final class Application {
         }
         if (transportPool == null) {
             final int capacity = bufferCapacity;
-            transportPool = new ObjectPool<>(createBufferCounter, cycleBufferCounter, bufferPoolSize,
+            transportPool = ObjectPool.createSafePool(createBufferCounter, cycleBufferCounter, bufferPoolSize,
                 (Object... params) -> ByteBuffer.allocateDirect(capacity), null, (e) -> {
                     if (e == null || e.isReadOnly() || e.capacity() != capacity) return false;
                     e.clear();

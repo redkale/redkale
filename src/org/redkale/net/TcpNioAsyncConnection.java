@@ -14,7 +14,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
 import javax.net.ssl.SSLContext;
-import org.redkale.net.AsyncConnection;
 import org.redkale.net.nio.NioCompletionHandler;
 import org.redkale.net.nio.NioThread;
 import org.redkale.net.nio.NioThreadGroup;

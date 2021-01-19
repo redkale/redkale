@@ -92,7 +92,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             return t;
         });
         final int bufferCapacity = Math.max(8 * 1024, Integer.decode(readprop.getProperty(JDBC_CONNECTIONSCAPACITY, "" + 8 * 1024)));
-        this.bufferPool = new ObjectPool<>(new AtomicLong(), new AtomicLong(), Math.max(maxconns, this.threads * 2),
+        this.bufferPool = ObjectPool.createSafePool(new AtomicLong(), new AtomicLong(), Math.max(maxconns, this.threads * 2),
             (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
                 e.clear();

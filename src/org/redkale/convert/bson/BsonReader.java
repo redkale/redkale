@@ -42,7 +42,7 @@ public class BsonReader extends Reader {
     }
 
     public static ObjectPool<BsonReader> createPool(int max) {
-        return new ObjectPool<>(max, (Object... params) -> new BsonReader(), null, (t) -> t.recycle());
+        return ObjectPool.createSafePool(max, (Object... params) -> new BsonReader(), null, (t) -> t.recycle());
     }
 
     public BsonReader(byte[] bytes) {

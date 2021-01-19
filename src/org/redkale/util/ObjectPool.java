@@ -5,7 +5,7 @@
 package org.redkale.util;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
@@ -39,44 +39,87 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     protected final Queue<T> queue;
 
-    public ObjectPool(Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
-        this(2, clazz, prepare, recycler);
-    }
-
-    public ObjectPool(int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
-        this(max, Creator.create(clazz), prepare, recycler);
-    }
-
-    public ObjectPool(Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        this(2, creator, prepare, recycler);
-    }
-
-    public ObjectPool(int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        this(null, null, max, creator, prepare, recycler);
-    }
-
-    public ObjectPool(int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        this(null, null, max, creator, prepare, recycler);
-    }
-
-    public ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        this(creatCounter, cycleCounter, max, c -> creator.get(), prepare, recycler);
-    }
-
-    public ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        this(creatCounter, cycleCounter, Math.max(Runtime.getRuntime().availableProcessors() * 2, max),
-            creator, prepare, recycler, new LinkedBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors() * 2, max)));
-    }
-
     protected ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler, Queue<T> queue) {
         this.creatCounter = creatCounter;
         this.cycleCounter = cycleCounter;
         this.creator = creator;
         this.prepare = prepare;
         this.recycler = recycler;
-        this.queue = queue;
         this.max = max;
         this.debug = logger.isLoggable(Level.FINEST);
+        this.queue = queue;
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(2, clazz, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(max, Creator.create(clazz), prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(2, creator, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(null, null, max, creator, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(null, null, max, creator, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(creatCounter, cycleCounter, max, c -> creator.get(), prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return new ObjectPool(creatCounter, cycleCounter, Math.max(Runtime.getRuntime().availableProcessors(), max),
+            creator, prepare, recycler, new ArrayDeque<>(Math.max(Runtime.getRuntime().availableProcessors(), max)));
+    }
+
+    //线程安全版
+    public static <T> ObjectPool<T> createSafePool(Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+        return createSafePool(2, clazz, prepare, recycler);
+    }
+
+    //线程安全版
+    public static <T> ObjectPool<T> createSafePool(int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+        return createSafePool(max, Creator.create(clazz), prepare, recycler);
+    }
+
+    //线程安全版
+    public static <T> ObjectPool<T> createSafePool(Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createSafePool(2, creator, prepare, recycler);
+    }
+
+    //线程安全版
+    public static <T> ObjectPool<T> createSafePool(int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createSafePool(null, null, max, creator, prepare, recycler);
+    }
+
+    //线程安全版
+    public static <T> ObjectPool<T> createSafePool(int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createSafePool(null, null, max, creator, prepare, recycler);
+    }
+
+    //线程安全版
+    public static <T> ObjectPool<T> createSafePool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createSafePool(creatCounter, cycleCounter, max, c -> creator.get(), prepare, recycler);
+    }
+
+    //线程安全版
+    public static <T> ObjectPool<T> createSafePool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return new ObjectPool(creatCounter, cycleCounter, Math.max(Runtime.getRuntime().availableProcessors(), max),
+            creator, prepare, recycler, new LinkedBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors(), max)));
     }
 
     public void setCreator(Creator<T> creator) {
@@ -125,4 +168,5 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
     public long getCycleCount() {
         return cycleCounter.longValue();
     }
+
 }

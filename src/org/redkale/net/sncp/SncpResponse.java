@@ -30,7 +30,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     public static final int RETCODE_THROWEXCEPTION = (1 << 4); //内部异常
 
     public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
-        return new ObjectPool<>(creatCounter, cycleCounter, max, creator, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
+        return ObjectPool.createSafePool(creatCounter, cycleCounter, max, creator, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
     }
 
     private final byte[] addrBytes;

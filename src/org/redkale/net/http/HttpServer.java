@@ -458,7 +458,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         if (createCounter == null) createCounter = new AtomicLong();
         if (cycleCounter == null) cycleCounter = new AtomicLong();
         final int rcapacity = this.bufferCapacity;
-        ObjectPool<ByteBuffer> bufferPool = new ObjectPool<>(createCounter, cycleCounter, bufferPoolSize,
+        ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
                 e.clear();

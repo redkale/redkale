@@ -66,7 +66,7 @@ public class SncpTest {
     }
 
     public static ObjectPool<ByteBuffer> newBufferPool() {
-        return new ObjectPool<>(new AtomicLong(), new AtomicLong(), 16,
+        return ObjectPool.createSafePool(new AtomicLong(), new AtomicLong(), 16,
             (Object... params) -> ByteBuffer.allocateDirect(8192), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != 8192) return false;
                 e.clear();

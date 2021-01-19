@@ -152,7 +152,7 @@ public class TransportFactory {
     }
 
     public static TransportFactory create(int threads, int bufferPoolSize, int bufferCapacity, int readTimeoutSeconds, int writeTimeoutSeconds) {
-        final ObjectPool<ByteBuffer> transportPool = new ObjectPool<>(new AtomicLong(), new AtomicLong(), bufferPoolSize,
+        final ObjectPool<ByteBuffer> transportPool = ObjectPool.createSafePool(new AtomicLong(), new AtomicLong(), bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
                 e.clear();
