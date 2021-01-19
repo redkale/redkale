@@ -35,7 +35,7 @@ public class TcpNioAsyncConnection extends AsyncConnection {
 
     private int writeTimeoutSeconds;
 
-    private final SocketAddress remoteAddress;
+    private SocketAddress remoteAddress;
 
     final SocketChannel channel;
 
@@ -203,6 +203,20 @@ public class TcpNioAsyncConnection extends AsyncConnection {
         return this.channel;
     }
 
+    public <A> void connect(SocketAddress remote, A attachment, CompletionHandler<Void, ? super A> handler) {
+        if (channel.isConnected()) {
+            throw new AlreadyConnectedException();
+        }
+        if (connectPending) {
+            throw new ConnectionPendingException();
+        }
+        connectPending = true;
+        this.connectAttachment = attachment;
+        this.connectCompletionHandler = (CompletionHandler<Void, Object>) handler;
+        this.remoteAddress = remote;
+        doConnect();
+    }
+
     @Override
     public void read(CompletionHandler<Integer, ByteBuffer> handler) {
         Objects.requireNonNull(handler);
@@ -313,56 +327,40 @@ public class TcpNioAsyncConnection extends AsyncConnection {
                 connected = channel.finishConnect();
             }
             if (connected) {
-                CompletionHandler handler = this.connectCompletionHandler;
-                Object attach = this.connectAttachment;
-                clearConnect();
-                if (handler != null) {
-                    if (this.workExecutor == null) {
-                        handler.completed(null, attach);
-                    } else {
-                        this.workExecutor.execute(() -> handler.completed(null, attach));
-                    }
-                }
+                handleConnect(null);
             } else if (connectKey == null) {
                 ioThread.register(selector -> {
                     try {
                         connectKey = channel.register(selector, SelectionKey.OP_CONNECT);
                         connectKey.attach(this);
                     } catch (ClosedChannelException e) {
-                        CompletionHandler handler = this.connectCompletionHandler;
-                        Object attach = this.connectAttachment;
-                        clearConnect();
-                        if (handler != null) {
-                            if (this.workExecutor == null) {
-                                handler.failed(e, attach);
-                            } else {
-                                this.workExecutor.execute(() -> handler.failed(e, attach));
-                            }
-                        }
+                        handleConnect(e);
                     }
                 });
             } else {
-                CompletionHandler handler = this.connectCompletionHandler;
-                Object attach = this.connectAttachment;
-                clearConnect();
-                if (handler != null) {
-                    IOException e = new IOException();
-                    if (this.workExecutor == null) {
-                        handler.failed(e, attach);
-                    } else {
-                        this.workExecutor.execute(() -> handler.failed(e, attach));
-                    }
-                }
+                handleConnect(new IOException());
             }
         } catch (IOException e) {
-            CompletionHandler handler = this.connectCompletionHandler;
-            Object attach = this.connectAttachment;
-            clearConnect();
-            if (handler != null) {
+            handleConnect(e);
+        }
+    }
+
+    private void handleConnect(Throwable t) {
+        CompletionHandler handler = this.connectCompletionHandler;
+        Object attach = this.connectAttachment;
+        clearConnect();
+        if (handler != null) {
+            if (t == null) {
                 if (this.workExecutor == null) {
-                    handler.failed(e, attach);
+                    handler.completed(null, attach);
                 } else {
-                    this.workExecutor.execute(() -> handler.failed(e, attach));
+                    this.workExecutor.execute(() -> handler.completed(null, attach));
+                }
+            } else {
+                if (this.workExecutor == null) {
+                    handler.failed(t, attach);
+                } else {
+                    this.workExecutor.execute(() -> handler.failed(t, attach));
                 }
             }
         }
@@ -395,48 +393,41 @@ public class TcpNioAsyncConnection extends AsyncConnection {
                 totalCount += readCount;
             }
             if (totalCount != 0 || !hasRemain) {
-                if (readKey != null) readKey.interestOps(readKey.interestOps() & ~SelectionKey.OP_READ);
-                CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
-                ByteBuffer attach = this.readByteBuffer;
-                clearRead();
-                if (handler != null) {
-                    if (this.workExecutor == null) {
-                        handler.completed(totalCount, attach);
-                    } else {
-                        final int totalCount0 = totalCount;
-                        this.workExecutor.execute(() -> handler.completed(totalCount0, attach));
-                    }
-                }
+                if (!readPending && readKey != null) readKey.interestOps(readKey.interestOps() & ~SelectionKey.OP_READ);
+                handleRead(totalCount, null);
             } else if (readKey == null) {
                 ioThread.register(selector -> {
                     try {
                         readKey = channel.register(selector, SelectionKey.OP_READ);
                         readKey.attach(this);
                     } catch (ClosedChannelException e) {
-                        CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
-                        ByteBuffer attach = this.readByteBuffer;
-                        clearRead();
-                        if (handler != null) {
-                            if (this.workExecutor == null) {
-                                handler.failed(e, attach);
-                            } else {
-                                this.workExecutor.execute(() -> handler.failed(e, attach));
-                            }
-                        }
+                        handleRead(0, e);
                     }
                 });
             } else {
                 ioGroup.interestOpsOr(ioThread, readKey, SelectionKey.OP_READ);
             }
         } catch (Exception e) {
-            CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
-            ByteBuffer attach = this.readByteBuffer;
-            clearRead();
-            if (handler != null) {
+            handleRead(0, e);
+        }
+    }
+
+    private void handleRead(final int totalCount, Throwable t) {
+        CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
+        ByteBuffer attach = this.readByteBuffer;
+        clearRead();
+        if (handler != null) {
+            if (t == null) {
                 if (this.workExecutor == null) {
-                    handler.failed(e, attach);
+                    handler.completed(totalCount, attach);
                 } else {
-                    this.workExecutor.execute(() -> handler.failed(e, attach));
+                    this.workExecutor.execute(() -> handler.completed(totalCount, attach));
+                }
+            } else {
+                if (this.workExecutor == null) {
+                    handler.failed(t, attach);
+                } else {
+                    this.workExecutor.execute(() -> handler.failed(t, attach));
                 }
             }
         }

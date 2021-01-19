@@ -66,6 +66,7 @@ public class NioThread extends Thread {
                 while (it.hasNext()) {
                     SelectionKey key = it.next();
                     it.remove();
+                    if (!key.isValid()) continue;
                     TcpNioAsyncConnection conn = (TcpNioAsyncConnection) key.attachment();
                     if (key.isWritable()) {
                         //key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);

@@ -24,16 +24,16 @@ import org.redkale.util.ObjectPool;
  */
 public class NioThreadGroup {
 
-    private NioThread[] ioThreads;
+    private NioThread[] threads;
 
     private final AtomicInteger index = new AtomicInteger();
 
     private ScheduledThreadPoolExecutor timeoutExecutor;
 
     public NioThreadGroup(int threads, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool) throws IOException {
-        this.ioThreads = new NioThread[Math.max(threads, 1)];
-        for (int i = 0; i < ioThreads.length; i++) {
-            this.ioThreads[i] = new NioThread(Selector.open(), executor, bufferPool);
+        this.threads = new NioThread[Math.max(threads, 1)];
+        for (int i = 0; i < this.threads.length; i++) {
+            this.threads[i] = new NioThread(Selector.open(), executor, bufferPool);
         }
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
             Thread t = new Thread(r);
@@ -44,31 +44,32 @@ public class NioThreadGroup {
     }
 
     public void start() {
-        for (int i = 0; i < ioThreads.length; i++) {
-            this.ioThreads[i].start();
+        for (NioThread thread : threads) {
+            thread.start();
         }
     }
 
     public void close() {
-        for (int i = 0; i < ioThreads.length; i++) {
-            this.ioThreads[i].close();
+        for (NioThread thread : threads) {
+            thread.close();
         }
-        this.timeoutExecutor.shutdownNow(); 
+        this.timeoutExecutor.shutdownNow();
     }
 
     public NioThread nextThread() {
-        return ioThreads[Math.abs(index.getAndIncrement()) % ioThreads.length];
+        return threads[Math.abs(index.getAndIncrement()) % threads.length];
     }
 
     public ScheduledFuture scheduleTimeout(Runnable callable, long delay, TimeUnit unit) {
         return timeoutExecutor.schedule(callable, delay, unit);
     }
 
-    public void interestOpsOr(NioThread ioThread, SelectionKey key, int opt) {
+    public void interestOpsOr(NioThread thread, SelectionKey key, int opt) {
         if (key == null) return;
+        if (key.selector() != thread.selector) throw new RuntimeException("NioThread.selector not the same to SelectionKey.selector");
         if ((key.interestOps() & opt) != 0) return;
         key.interestOps(key.interestOps() | opt);
-        if (ioThread.inSameThread()) return;
+        if (thread.inSameThread()) return;
         //非IO线程中
         key.selector().wakeup();
     }
