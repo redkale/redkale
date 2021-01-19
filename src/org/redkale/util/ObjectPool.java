@@ -130,8 +130,24 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         return this.creator;
     }
 
-    public Predicate<T> getRecyclerPredicate() {
+    public int getMax() {
+        return max;
+    }
+
+    public Consumer<T> getPrepare() {
+        return prepare;
+    }
+
+    public Predicate<T> getRecycler() {
         return recycler;
+    }
+
+    public AtomicLong getCreatCounter() {
+        return creatCounter;
+    }
+
+    public AtomicLong getCycleCounter() {
+        return cycleCounter;
     }
 
     @Override

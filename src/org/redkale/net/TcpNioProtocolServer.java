@@ -94,7 +94,7 @@ public class TcpNioProtocolServer extends ProtocolServer {
         this.responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         this.responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
 
-        this.ioGroup = new NioThreadGroup(Runtime.getRuntime().availableProcessors(), context.executor, bufferPool);
+        this.ioGroup = new NioThreadGroup(Runtime.getRuntime().availableProcessors(), bufferPool);
         this.ioGroup.start();
 
         this.acceptThread = new Thread() {

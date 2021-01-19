@@ -27,8 +27,6 @@ public class NioThread extends Thread {
 
     final Selector selector;
 
-    private final ExecutorService executor;
-
     private final ObjectPool<ByteBuffer> bufferPool;
 
     private final ConcurrentLinkedQueue<Consumer<Selector>> registers = new ConcurrentLinkedQueue<>();
@@ -37,10 +35,9 @@ public class NioThread extends Thread {
 
     private boolean closed;
 
-    public NioThread(Selector selector, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool) {
+    public NioThread(Selector selector, ObjectPool<ByteBuffer> bufferPool) {
         super();
         this.selector = selector;
-        this.executor = executor;
         this.bufferPool = bufferPool;
         this.setDaemon(true);
     }

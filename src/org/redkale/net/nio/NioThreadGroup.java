@@ -30,10 +30,13 @@ public class NioThreadGroup {
 
     private ScheduledThreadPoolExecutor timeoutExecutor;
 
-    public NioThreadGroup(int threads, ExecutorService executor, ObjectPool<ByteBuffer> bufferPool) throws IOException {
+    public NioThreadGroup(int threads, ObjectPool<ByteBuffer> bufferPool) throws IOException {
         this.threads = new NioThread[Math.max(threads, 1)];
         for (int i = 0; i < this.threads.length; i++) {
-            this.threads[i] = new NioThread(Selector.open(), executor, bufferPool);
+            ObjectPool<ByteBuffer> threadBufferPool = ObjectPool.createUnsafePool(bufferPool.getCreatCounter(),
+                bufferPool.getCycleCounter(), 8,
+                bufferPool.getCreator(), bufferPool.getPrepare(), bufferPool.getRecycler());
+            this.threads[i] = new NioThread(Selector.open(), threadBufferPool);
         }
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
             Thread t = new Thread(r);
