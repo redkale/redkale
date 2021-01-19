@@ -372,7 +372,7 @@ public class TcpNioAsyncConnection extends AsyncConnection {
 
     public void doRead() {
         try {
-            final boolean invokeDirect = this.ioThread.inSameThread();
+            final boolean invokeDirect = this.ioThread.inCurrThread();
             int totalCount = 0;
             boolean hasRemain = true;
             if (invokeDirect && this.readByteBuffer == null) {
@@ -439,7 +439,7 @@ public class TcpNioAsyncConnection extends AsyncConnection {
 
     public void doWrite() {
         try {
-            final boolean invokeDirect = this.ioThread.inSameThread();
+            final boolean invokeDirect = this.ioThread.inCurrThread();
             int totalCount = 0;
             boolean hasRemain = true;
             while (invokeDirect && hasRemain) {

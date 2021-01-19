@@ -72,7 +72,7 @@ public class NioThreadGroup {
         if (key.selector() != thread.selector) throw new RuntimeException("NioThread.selector not the same to SelectionKey.selector");
         if ((key.interestOps() & opt) != 0) return;
         key.interestOps(key.interestOps() | opt);
-        if (thread.inSameThread()) return;
+        if (thread.inCurrThread()) return;
         //非IO线程中
         key.selector().wakeup();
     }

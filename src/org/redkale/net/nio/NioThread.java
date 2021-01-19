@@ -84,7 +84,7 @@ public class NioThread extends Thread {
         }
     }
 
-    public boolean inSameThread() {
+    public boolean inCurrThread() {
         return this.localThread == Thread.currentThread();
     }
 
