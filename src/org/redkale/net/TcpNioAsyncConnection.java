@@ -18,7 +18,6 @@ import org.redkale.net.AsyncConnection;
 import org.redkale.net.nio.NioCompletionHandler;
 import org.redkale.net.nio.NioThread;
 import org.redkale.net.nio.NioThreadGroup;
-import org.redkale.util.ObjectPool;
 
 /**
  *
@@ -81,9 +80,9 @@ public class TcpNioAsyncConnection extends AsyncConnection {
     private SelectionKey writeKey;
 
     public TcpNioAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, ExecutorService workExecutor,
-        ObjectPool<ByteBuffer> bufferPool, SocketChannel ch,
+        SocketChannel ch,
         SSLContext sslContext, final SocketAddress addr0, AtomicLong livingCounter, AtomicLong closedCounter) {
-        super(bufferPool, sslContext, livingCounter, closedCounter);
+        super(ioThread.getBufferPool(), sslContext, livingCounter, closedCounter);
         this.ioGroup = ioGroup;
         this.ioThread = ioThread;
         this.workExecutor = workExecutor;

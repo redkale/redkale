@@ -85,7 +85,7 @@ public class TcpNioProtocolServer extends ProtocolServer {
     @Override
     public void accept(Server server) throws IOException {
         this.serverChannel.register(this.selector, SelectionKey.OP_ACCEPT);
-        
+
         AtomicLong createBufferCounter = new AtomicLong();
         AtomicLong cycleBufferCounter = new AtomicLong();
         this.bufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
@@ -93,10 +93,10 @@ public class TcpNioProtocolServer extends ProtocolServer {
         AtomicLong cycleResponseCounter = new AtomicLong();
         this.responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         this.responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
-        
+
         this.ioGroup = new NioThreadGroup(Runtime.getRuntime().availableProcessors(), context.executor, bufferPool);
         this.ioGroup.start();
-        
+
         this.acceptThread = new Thread() {
             @Override
             public void run() {
@@ -129,7 +129,7 @@ public class TcpNioProtocolServer extends ProtocolServer {
         channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
         channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
         NioThread ioThread = ioGroup.nextThread();
-        AsyncConnection conn = new TcpNioAsyncConnection(ioGroup, ioThread, context.executor, bufferPool, channel, context.getSSLContext(), null, livingCounter, closedCounter);
+        AsyncConnection conn = new TcpNioAsyncConnection(ioGroup, ioThread, context.executor, channel, context.getSSLContext(), null, livingCounter, closedCounter);
         new PrepareRunner(context, responsePool, conn, null, null).run();
     }
 

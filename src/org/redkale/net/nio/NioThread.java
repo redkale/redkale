@@ -50,6 +50,10 @@ public class NioThread extends Thread {
         selector.wakeup();
     }
 
+    public ObjectPool<ByteBuffer> getBufferPool() {
+        return bufferPool;
+    }
+
     @Override
     public void run() {
         this.localThread = Thread.currentThread();
