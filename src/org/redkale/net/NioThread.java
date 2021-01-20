@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Consumer;
+import java.util.function.*;
 import org.redkale.util.*;
 
 /**
@@ -26,21 +26,40 @@ public class NioThread extends WorkThread {
 
     final Selector selector;
 
-    private final ObjectPool<ByteBuffer> bufferPool;
+    private final Supplier<ByteBuffer> bufferSupplier;
 
-    private final ObjectPool<Response> responsePool;
+    private final Consumer<ByteBuffer> bufferConsumer;
+
+    private final Supplier<Response> responseSupplier;
+
+    private final Consumer<Response> responseConsumer;
 
     private final ConcurrentLinkedQueue<Consumer<Selector>> registers = new ConcurrentLinkedQueue<>();
 
     private boolean closed;
 
     public NioThread(String name, ExecutorService workExecutor, Selector selector,
-        ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool) {
+        ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool,
+        ObjectPool<Response> unsafeResponsePool, ObjectPool<Response> safeResponsePool) {
         super(name, workExecutor, null);
         this.selector = selector;
-        this.bufferPool = bufferPool;
-        this.responsePool = responsePool;
         this.setDaemon(true);
+        this.bufferSupplier = () -> inCurrThread() ? unsafeBufferPool.get() : safeBufferPool.get();
+        this.bufferConsumer = (v) -> {
+            if (inCurrThread()) {
+                unsafeBufferPool.accept(v);
+            } else {
+                safeBufferPool.accept(v);
+            }
+        };
+        this.responseSupplier = () -> inCurrThread() ? unsafeResponsePool.get() : safeResponsePool.get();
+        this.responseConsumer = (v) -> {
+            if (inCurrThread()) {
+                unsafeResponsePool.accept(v);
+            } else {
+                safeResponsePool.accept(v);
+            }
+        };
     }
 
     public void register(Consumer<Selector> consumer) {
@@ -48,12 +67,20 @@ public class NioThread extends WorkThread {
         selector.wakeup();
     }
 
-    public ObjectPool<ByteBuffer> getBufferPool() {
-        return bufferPool;
+    public Supplier<ByteBuffer> getBufferSupplier() {
+        return bufferSupplier;
     }
 
-    public ObjectPool<Response> getResponsePool() {
-        return responsePool;
+    public Consumer<ByteBuffer> getBufferConsumer() {
+        return bufferConsumer;
+    }
+
+    public Supplier<Response> getResponseSupplier() {
+        return responseSupplier;
+    }
+
+    public Consumer<Response> getResponseConsumer() {
+        return responseConsumer;
     }
 
     @Override

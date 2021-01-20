@@ -42,7 +42,7 @@ public class NioTcpPrepareRunner implements Runnable {
             channel.read(new CompletionHandler<Integer, ByteBuffer>() {
                 @Override
                 public void completed(Integer count, ByteBuffer buffer) {
-                    if (response == null) response = ((NioThread) Thread.currentThread()).getResponsePool().get();
+                    if (response == null) response = ((NioThread) Thread.currentThread()).getResponseSupplier().get();
                     if (count < 1) {
                         buffer.clear();
                         channel.setReadBuffer(buffer);

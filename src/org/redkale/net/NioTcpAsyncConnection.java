@@ -75,7 +75,7 @@ public class NioTcpAsyncConnection extends AsyncConnection {
 
     public NioTcpAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, SocketChannel ch,
         SSLContext sslContext, final SocketAddress addr0, AtomicLong livingCounter, AtomicLong closedCounter) {
-        super(ioThread.getBufferPool(), sslContext, livingCounter, closedCounter);
+        super(ioThread.getBufferSupplier(), ioThread.getBufferConsumer(), sslContext, livingCounter, closedCounter);
         this.ioGroup = ioGroup;
         this.ioThread = ioThread;
         this.channel = ch;
