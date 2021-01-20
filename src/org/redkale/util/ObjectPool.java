@@ -39,7 +39,10 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     protected final Queue<T> queue;
 
-    protected ObjectPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler, Queue<T> queue) {
+    protected final ObjectPool<T> parent;
+
+    protected ObjectPool(ObjectPool<T> parent, AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler, Queue<T> queue) {
+        this.parent = parent;
         this.creatCounter = creatCounter;
         this.cycleCounter = cycleCounter;
         this.creator = creator;
@@ -82,7 +85,42 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     //非线程安全版
     public static <T> ObjectPool<T> createUnsafePool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        return new ObjectPool(creatCounter, cycleCounter, Math.max(Runtime.getRuntime().availableProcessors(), max),
+        return createUnsafePool(null, creatCounter, cycleCounter, max, creator, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(parent, 2, clazz, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(parent, max, Creator.create(clazz), prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(parent, 2, creator, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(parent, null, null, max, creator, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(parent, null, null, max, creator, prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, AtomicLong creatCounter, AtomicLong cycleCounter, int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return createUnsafePool(parent, creatCounter, cycleCounter, max, c -> creator.get(), prepare, recycler);
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return new ObjectPool(parent, creatCounter, cycleCounter, Math.max(Runtime.getRuntime().availableProcessors(), max),
             creator, prepare, recycler, new ArrayDeque<>(Math.max(Runtime.getRuntime().availableProcessors(), max)));
     }
 
@@ -118,7 +156,7 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     //线程安全版
     public static <T> ObjectPool<T> createSafePool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        return new ObjectPool(creatCounter, cycleCounter, Math.max(Runtime.getRuntime().availableProcessors(), max),
+        return new ObjectPool(null, creatCounter, cycleCounter, Math.max(Runtime.getRuntime().availableProcessors(), max),
             creator, prepare, recycler, new LinkedBlockingQueue<>(Math.max(Runtime.getRuntime().availableProcessors(), max)));
     }
 
@@ -155,7 +193,8 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         T result = queue.poll();
         if (result == null) {
             if (creatCounter != null) creatCounter.incrementAndGet();
-            result = this.creator.create();
+            if (parent != null) result = parent.queue.poll();
+            if (result == null) result = this.creator.create();
         }
         if (prepare != null) prepare.accept(result);
         return result;
@@ -163,7 +202,8 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     @Override
     public void accept(final T e) {
-        if (e != null && recycler.test(e)) {
+        if (e == null) return;
+        if (recycler.test(e)) {
             if (cycleCounter != null) cycleCounter.incrementAndGet();
 //            if (debug) {
 //                for (T t : queue) {
@@ -173,7 +213,7 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 //                    }
 //                }
 //            }
-            queue.offer(e);
+            if (!queue.offer(e) && parent != null) parent.accept(e);
         }
     }
 
