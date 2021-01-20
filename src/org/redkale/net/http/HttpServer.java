@@ -469,7 +469,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     @Override
     protected ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize) {
-        ObjectPool<Response> pool = HttpResponse.createPool(createCounter, cycleCounter, responsePoolSize, null);
+        ObjectPool<Response> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize,(Creator)null, (x) ->((HttpResponse)x).prepare(),(x) -> ((HttpResponse)x).recycle());
         pool.setCreator((Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context), pool, this.respConfig));
         return pool;
     }

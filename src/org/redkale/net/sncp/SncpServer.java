@@ -145,7 +145,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
 
     @Override
     protected ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize) {
-        ObjectPool<Response> pool = SncpResponse.createPool(createCounter, cycleCounter, responsePoolSize, null);
+        ObjectPool<Response> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, (Creator) null, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
         pool.setCreator((Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context), pool));
         return pool;
     }

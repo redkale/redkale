@@ -7,7 +7,6 @@ package org.redkale.net.sncp;
 
 import static org.redkale.net.sncp.SncpRequest.HEADER_SIZE;
 import java.nio.*;
-import java.util.concurrent.atomic.*;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -29,10 +28,6 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public static final int RETCODE_THROWEXCEPTION = (1 << 4); //内部异常
 
-    public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
-        return ObjectPool.createSafePool(creatCounter, cycleCounter, max, creator, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
-    }
-
     private final byte[] addrBytes;
 
     private final int addrPort;
@@ -50,6 +45,16 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         this.addrBytes = context.getServerAddress().getAddress().getAddress();
         this.addrPort = context.getServerAddress().getPort();
         if (this.addrBytes.length != 4) throw new RuntimeException("SNCP serverAddress only support IPv4");
+    }
+
+    @Override
+    protected void prepare() {
+        super.prepare();
+    }
+
+    @Override
+    protected boolean recycle() {
+        return super.recycle();
     }
 
     @Override

@@ -15,7 +15,6 @@ import java.time.ZoneId;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.convert.*;
@@ -153,10 +152,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     private final boolean hasRender;
 
     private final HttpRender onlyoneHttpRender;
-
-    public static ObjectPool<Response> createPool(AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<Response> creator) {
-        return ObjectPool.createSafePool(creatCounter, cycleCounter, max, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
-    }
 
     public HttpResponse(HttpContext context, HttpRequest request, ObjectPool<Response> responsePool, HttpResponseConfig config) {
         super(context, request, responsePool);
