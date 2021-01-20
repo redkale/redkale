@@ -10,12 +10,10 @@ import static org.redkale.net.sncp.SncpRequest.DEFAULT_HEADER;
 import java.io.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
-import java.nio.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
 import org.redkale.asm.*;
@@ -47,7 +45,6 @@ public final class SncpDynServlet extends SncpServlet {
 
     private final HashMap<DLong, SncpServletAction> actions = new HashMap<>();
 
-    private Supplier<ByteBuffer> bufferSupplier;
 
     public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class serviceOrSourceType, final Service service,
         final AtomicInteger maxClassNameLength, AtomicInteger maxNameLength) {
@@ -113,15 +110,12 @@ public final class SncpDynServlet extends SncpServlet {
     @Override
     @SuppressWarnings("unchecked")
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
-        if (bufferSupplier == null) {
-            bufferSupplier = request.getBufferPool();
-        }
         final SncpServletAction action = actions.get(request.getActionid());
         //logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
-            BsonWriter out = bufferSupplier == null ? action.convert.pollBsonWriter() : action.convert.pollBsonWriter(bufferSupplier);
+            BsonWriter out = action.convert.pollBsonWriter();
             out.writeTo(DEFAULT_HEADER);
             BsonReader in = action.convert.pollBsonReader();
             SncpAsyncHandler handler = null;

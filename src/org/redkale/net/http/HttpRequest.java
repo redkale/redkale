@@ -103,13 +103,13 @@ public class HttpRequest extends Request<HttpContext> {
 
     Object attachment; //仅供HttpServlet传递Entry使用
 
-    public HttpRequest(HttpContext context, ObjectPool<ByteBuffer> bufferPool) {
-        super(context, bufferPool);
+    public HttpRequest(HttpContext context) {
+        super(context);
         this.remoteAddrHeader = context.remoteAddrHeader;
     }
 
     public HttpRequest(HttpContext context, HttpSimpleRequest req) {
-        super(context, null);
+        super(context);
         this.remoteAddrHeader = null;
         if (req != null) {
             this.rpc = req.rpc;

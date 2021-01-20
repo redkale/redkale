@@ -78,7 +78,6 @@ public class BioUdpProtocolServer extends ProtocolServer {
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
-        responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
         final DatagramChannel serchannel = this.serverChannel;
         final int readTimeoutSeconds = this.context.readTimeoutSeconds;
         final int writeTimeoutSeconds = this.context.writeTimeoutSeconds;

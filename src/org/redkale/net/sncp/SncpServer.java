@@ -145,12 +145,9 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
 
     @Override
     protected ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize) {
-        return SncpResponse.createPool(createCounter, cycleCounter, responsePoolSize, null);
-    }
-
-    @Override
-    protected Creator<Response> createResponseCreator(ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool) {
-        return (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context, bufferPool), responsePool);
+        ObjectPool<Response> pool = SncpResponse.createPool(createCounter, cycleCounter, responsePoolSize, null);
+        pool.setCreator((Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context), pool));
+        return pool;
     }
 
 }

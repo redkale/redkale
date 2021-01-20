@@ -91,7 +91,6 @@ public class NioTcpProtocolServer extends ProtocolServer {
         AtomicLong cycleResponseCounter = new AtomicLong();
 
         this.responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
-        this.responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
         this.ioGroup = new NioThreadGroup(server.name, null, Runtime.getRuntime().availableProcessors(), bufferPool, responsePool);
         this.ioGroup.start();
 

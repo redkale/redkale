@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.ObjectPool;
 
 /**
  * 协议请求对象
@@ -23,8 +22,6 @@ import org.redkale.util.ObjectPool;
 public abstract class Request<C extends Context> {
 
     protected final C context;
-
-    protected final ObjectPool<ByteBuffer> bufferPool;
 
     protected final BsonConvert bsonConvert;
 
@@ -48,9 +45,8 @@ public abstract class Request<C extends Context> {
 
     protected final Map<String, Object> attributes = new HashMap<>();
 
-    protected Request(C context, ObjectPool<ByteBuffer> bufferPool) {
+    protected Request(C context) {
         this.context = context;
-        this.bufferPool = bufferPool;
         this.bsonConvert = context.getBsonConvert();
         this.jsonConvert = context.getJsonConvert();
     }

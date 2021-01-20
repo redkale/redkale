@@ -368,9 +368,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //必须在 createContext()之后调用
     protected abstract ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize);
 
-    //必须在 createResponsePool()之后调用
-    protected abstract Creator<Response> createResponseCreator(ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool);
-
     public void shutdown() throws IOException {
         long s = System.currentTimeMillis();
         logger.info(this.getClass().getSimpleName() + "-" + this.protocol + " shutdowning");

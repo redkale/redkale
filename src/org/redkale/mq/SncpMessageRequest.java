@@ -26,7 +26,7 @@ public class SncpMessageRequest extends SncpRequest {
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public SncpMessageRequest(SncpContext context, MessageRecord message) {
-        super(context, null);
+        super(context);
         this.message = message;
         readHeader(ByteBuffer.wrap(message.getContent()));
     }

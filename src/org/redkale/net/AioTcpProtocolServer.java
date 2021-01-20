@@ -79,7 +79,6 @@ public class AioTcpProtocolServer extends ProtocolServer {
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
         ObjectPool<Response> responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
-        responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
         final AsynchronousServerSocketChannel serchannel = this.serverChannel;
         serchannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
 
