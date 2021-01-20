@@ -107,14 +107,12 @@ public abstract class ClusterAgent {
         //注册本地模式
         for (Service service : localServices) {
             if (!canRegister(protocol, service)) continue;
-            register(ns, protocol, service);
-            ClusterEntry htentry = new ClusterEntry(ns, protocol, service);
+            ClusterEntry htentry = register(ns, protocol, service);
             localEntrys.put(htentry.serviceid, htentry);
             if (protocol.toLowerCase().startsWith("http")) {
                 MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
                 if (mmc != null) {
-                    register(ns, "mqtp", service);
-                    ClusterEntry mqentry = new ClusterEntry(ns, "mqtp", service);
+                    ClusterEntry mqentry = register(ns, "mqtp", service);
                     localEntrys.put(mqentry.serviceid, mqentry);
                     htentry.submqtp = true;
                 }
@@ -177,7 +175,7 @@ public abstract class ClusterAgent {
     protected abstract CompletableFuture<Collection<InetSocketAddress>> queryAddress(ClusterEntry entry);
 
     //注册服务
-    protected abstract void register(NodeServer ns, String protocol, Service service);
+    protected abstract ClusterEntry register(NodeServer ns, String protocol, Service service);
 
     //注销服务
     protected abstract void deregister(NodeServer ns, String protocol, Service service);
@@ -322,7 +320,13 @@ public abstract class ClusterAgent {
             this.checkid = generateCheckId(ns, protocol, service);
             this.checkname = generateCheckName(ns, protocol, service);
             this.protocol = protocol;
-            this.address = ns.getSocketAddress();
+            InetSocketAddress addr = ns.getSocketAddress();
+            String host = addr.getHostString();
+            if ("0.0.0.0".equals(host)) {
+                host = appAddress.getHostString();
+                addr = new InetSocketAddress(host, addr.getPort());
+            }
+            this.address = addr;
             this.serviceref = new WeakReference(service);
             Server server = ns.getServer();
             this.netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
