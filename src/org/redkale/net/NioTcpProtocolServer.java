@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import org.redkale.net.*;
 import org.redkale.net.nio.*;
 import org.redkale.util.*;
 
@@ -24,7 +23,7 @@ import org.redkale.util.*;
  *
  * @since 2.1.0
  */
-public class TcpNioProtocolServer extends ProtocolServer {
+public class NioTcpProtocolServer extends ProtocolServer {
 
     private ObjectPool<ByteBuffer> bufferPool;
 
@@ -40,7 +39,7 @@ public class TcpNioProtocolServer extends ProtocolServer {
 
     private boolean closed;
 
-    public TcpNioProtocolServer(Context context) {
+    public NioTcpProtocolServer(Context context) {
         super(context);
     }
 
@@ -91,10 +90,10 @@ public class TcpNioProtocolServer extends ProtocolServer {
         this.bufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
         AtomicLong createResponseCounter = new AtomicLong();
         AtomicLong cycleResponseCounter = new AtomicLong();
+
         this.responsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         this.responsePool.setCreator(server.createResponseCreator(bufferPool, responsePool));
-
-        this.ioGroup = new NioThreadGroup(Runtime.getRuntime().availableProcessors(), bufferPool);
+        this.ioGroup = new NioThreadGroup(server.name, null, Runtime.getRuntime().availableProcessors(), bufferPool, responsePool);
         this.ioGroup.start();
 
         this.acceptThread = new Thread() {
@@ -129,8 +128,8 @@ public class TcpNioProtocolServer extends ProtocolServer {
         channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
         channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
         NioThread ioThread = ioGroup.nextThread();
-        AsyncConnection conn = new TcpNioAsyncConnection(ioGroup, ioThread, context.executor, channel, context.getSSLContext(), null, livingCounter, closedCounter);
-        new PrepareRunner(context, responsePool, conn, null, null).run();
+        AsyncConnection conn = new NioTcpAsyncConnection(ioGroup, ioThread, channel, context.getSSLContext(), null, livingCounter, closedCounter);
+        new NioTcpPrepareRunner(context, responsePool, conn, null, null).run();
     }
 
     @Override

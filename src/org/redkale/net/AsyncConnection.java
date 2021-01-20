@@ -298,7 +298,7 @@ public abstract class AsyncConnection implements AutoCloseable {
             channel.connect(address, null, new CompletionHandler<Void, Void>() {
                 @Override
                 public void completed(Void result, Void attachment) {
-                    future.complete(new TcpAioAsyncConnection(bufferSupplier, bufferConsumer, channel, sslContext, address, readTimeoutSeconds, writeTimeoutSeconds, null, null));
+                    future.complete(new AioTcpAsyncConnection(bufferSupplier, bufferConsumer, channel, sslContext, address, readTimeoutSeconds, writeTimeoutSeconds, null, null));
                 }
 
                 @Override
@@ -341,27 +341,27 @@ public abstract class AsyncConnection implements AutoCloseable {
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final DatagramChannel ch,
         SocketAddress addr, final boolean client0,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
-        return new UdpBioAsyncConnection(bufferPool, bufferPool, ch, null, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
+        return new BioUdpAsyncConnection(bufferPool, bufferPool, ch, null, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
     }
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final DatagramChannel ch,
         SocketAddress addr, final boolean client0,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new UdpBioAsyncConnection(bufferPool, bufferPool, ch, null, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
+        return new BioUdpAsyncConnection(bufferPool, bufferPool, ch, null, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
     }
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final DatagramChannel ch, SSLContext sslContext,
         SocketAddress addr, final boolean client0,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
-        return new UdpBioAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
+        return new BioUdpAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
     }
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final DatagramChannel ch, SSLContext sslContext,
         SocketAddress addr, final boolean client0,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new UdpBioAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
+        return new BioUdpAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
     }
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch) {
@@ -370,22 +370,22 @@ public abstract class AsyncConnection implements AutoCloseable {
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch,
         final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return new TcpAioAsyncConnection(bufferPool, bufferPool, ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
+        return new AioTcpAsyncConnection(bufferPool, bufferPool, ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
     }
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch, SSLContext sslContext,
         final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return new TcpAioAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
+        return new AioTcpAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
     }
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch,
         final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds, final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new TcpAioAsyncConnection(bufferPool, bufferPool, ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
+        return new AioTcpAsyncConnection(bufferPool, bufferPool, ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
     }
 
     public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch, SSLContext sslContext,
         final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds, final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new TcpAioAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
+        return new AioTcpAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
     }
 
 }

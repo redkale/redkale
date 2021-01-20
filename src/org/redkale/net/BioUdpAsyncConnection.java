@@ -21,7 +21,7 @@ import javax.net.ssl.SSLContext;
  *
  * @author zhangjx
  */
-class UdpBioAsyncConnection extends AsyncConnection {
+class BioUdpAsyncConnection extends AsyncConnection {
 
     private int readTimeoutSeconds;
 
@@ -33,7 +33,7 @@ class UdpBioAsyncConnection extends AsyncConnection {
 
     private final boolean client;
 
-    public UdpBioAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+    public BioUdpAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
         final DatagramChannel ch, final SSLContext sslContext, SocketAddress addr0, final boolean client0,
         final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {

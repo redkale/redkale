@@ -22,13 +22,13 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class TcpAioProtocolServer extends ProtocolServer {
+public class AioTcpProtocolServer extends ProtocolServer {
 
     private AsynchronousChannelGroup group;
 
     private AsynchronousServerSocketChannel serverChannel;
 
-    public TcpAioProtocolServer(Context context) {
+    public AioTcpProtocolServer(Context context) {
         super(context);
     }
 
@@ -102,7 +102,7 @@ public class TcpAioProtocolServer extends ProtocolServer {
                     channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
                     channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
 
-                    AsyncConnection conn = new TcpAioAsyncConnection(bufferPool, bufferPool, channel,
+                    AsyncConnection conn = new AioTcpAsyncConnection(bufferPool, bufferPool, channel,
                         context.getSSLContext(), null, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
                     //context.runAsync(new PrepareRunner(context, responsePool, conn, null, null));
                     new PrepareRunner(context, responsePool, conn, null, null).run();

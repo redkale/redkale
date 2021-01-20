@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.net.Response;
 import org.redkale.util.ObjectPool;
 
 /**
@@ -30,17 +31,23 @@ public class NioThreadGroup {
 
     private ScheduledThreadPoolExecutor timeoutExecutor;
 
-    public NioThreadGroup(int threads, ObjectPool<ByteBuffer> bufferPool) throws IOException {
-        this.threads = new NioThread[Math.max(threads, 1)];
+    public NioThreadGroup(final String serverName, ExecutorService workExecutor, int iothreads,
+        ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool) throws IOException {
+        this.threads = new NioThread[Math.max(iothreads, 1)];
         for (int i = 0; i < this.threads.length; i++) {
             ObjectPool<ByteBuffer> threadBufferPool = ObjectPool.createUnsafePool(bufferPool.getCreatCounter(),
                 bufferPool.getCycleCounter(), 8,
                 bufferPool.getCreator(), bufferPool.getPrepare(), bufferPool.getRecycler());
-            this.threads[i] = new NioThread(Selector.open(), threadBufferPool);
+
+            ObjectPool<Response> threadResponsePool = ObjectPool.createUnsafePool(responsePool.getCreatCounter(),
+                responsePool.getCycleCounter(), 8,
+                responsePool.getCreator(), responsePool.getPrepare(), responsePool.getRecycler());
+            String name = "Redkale-" + serverName + "-ServletThread" + "-" + (i >= 9 ? (i + 1) : ("0" + (i + 1)));
+            this.threads[i] = new NioThread(name, workExecutor, Selector.open(), threadBufferPool, threadResponsePool);
         }
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
             Thread t = new Thread(r);
-            t.setName(this.getClass().getSimpleName() + "-Timeout-Thread");
+            t.setName("Redkale-" + serverName + "-IOTimeoutThread");
             t.setDaemon(true);
             return t;
         });

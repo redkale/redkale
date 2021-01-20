@@ -22,7 +22,7 @@ import javax.net.ssl.SSLContext;
  *
  * @author zhangjx
  */
-class TcpAioAsyncConnection extends AsyncConnection {
+class AioTcpAsyncConnection extends AsyncConnection {
 
     //private final Semaphore semaphore = new Semaphore(1);
     private int readTimeoutSeconds;
@@ -35,7 +35,7 @@ class TcpAioAsyncConnection extends AsyncConnection {
 
     private BlockingQueue<WriteEntry> writeQueue;
 
-    public TcpAioAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+    public AioTcpAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
         final AsynchronousSocketChannel ch, final SSLContext sslContext, final SocketAddress addr0,
         final int readTimeoutSeconds, final int writeTimeoutSeconds,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {

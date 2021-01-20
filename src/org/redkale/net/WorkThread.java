@@ -19,20 +19,21 @@ public class WorkThread extends Thread {
 
     protected Thread localThread;
 
-    private final ExecutorService executor;
+    protected final ExecutorService workExecutor;
 
-    public WorkThread(ExecutorService executor, Runnable runner) {
-        super(runner);
-        this.executor = executor;
+    public WorkThread(String name, ExecutorService workExecutor, Runnable target) {
+        super(target);
+        if (name != null) setName(name);
+        this.workExecutor = workExecutor;
         this.setDaemon(true);
     }
 
     public void runAsync(Runnable runner) {
-        executor.execute(runner);
+        workExecutor.execute(runner);
     }
 
-    public ExecutorService getExecutor() {
-        return executor;
+    public ExecutorService getWorkExecutor() {
+        return workExecutor;
     }
 
     @Override
@@ -41,11 +42,11 @@ public class WorkThread extends Thread {
         super.run();
     }
 
-    public boolean inSameThread() {
+    public boolean inCurrThread() {
         return this.localThread == Thread.currentThread();
     }
 
-    public boolean inSameThread(Thread thread) {
+    public boolean inCurrThread(Thread thread) {
         return this.localThread == thread;
     }
 

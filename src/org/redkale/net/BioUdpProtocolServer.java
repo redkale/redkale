@@ -22,13 +22,13 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class UdpBioProtocolServer extends ProtocolServer {
+public class BioUdpProtocolServer extends ProtocolServer {
 
     private boolean running;
 
     private DatagramChannel serverChannel;
 
-    public UdpBioProtocolServer(Context context) {
+    public BioUdpProtocolServer(Context context) {
         super(context);
     }
 
@@ -93,7 +93,7 @@ public class UdpBioProtocolServer extends ProtocolServer {
                     try {
                         SocketAddress address = serchannel.receive(buffer);
                         buffer.flip();
-                        AsyncConnection conn = new UdpBioAsyncConnection(bufferPool, bufferPool, serchannel,
+                        AsyncConnection conn = new BioUdpAsyncConnection(bufferPool, bufferPool, serchannel,
                             context.getSSLContext(), address, false, readTimeoutSeconds, writeTimeoutSeconds, null, null);
                         context.runAsync(new PrepareRunner(context, responsePool, conn, buffer, null));
                     } catch (Exception e) {

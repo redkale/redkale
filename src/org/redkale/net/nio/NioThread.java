@@ -10,7 +10,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
-import org.redkale.net.TcpNioAsyncConnection;
+import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
@@ -23,22 +23,24 @@ import org.redkale.util.*;
  *
  * @since 2.1.0
  */
-public class NioThread extends Thread {
+public class NioThread extends WorkThread {
 
     final Selector selector;
 
     private final ObjectPool<ByteBuffer> bufferPool;
 
-    private final ConcurrentLinkedQueue<Consumer<Selector>> registers = new ConcurrentLinkedQueue<>();
+    private final ObjectPool<Response> responsePool;
 
-    private Thread localThread;
+    private final ConcurrentLinkedQueue<Consumer<Selector>> registers = new ConcurrentLinkedQueue<>();
 
     private boolean closed;
 
-    public NioThread(Selector selector, ObjectPool<ByteBuffer> bufferPool) {
-        super();
+    public NioThread(String name, ExecutorService workExecutor, Selector selector,
+        ObjectPool<ByteBuffer> bufferPool, ObjectPool<Response> responsePool) {
+        super(name, workExecutor, null);
         this.selector = selector;
         this.bufferPool = bufferPool;
+        this.responsePool = responsePool;
         this.setDaemon(true);
     }
 
@@ -49,6 +51,10 @@ public class NioThread extends Thread {
 
     public ObjectPool<ByteBuffer> getBufferPool() {
         return bufferPool;
+    }
+
+    public ObjectPool<Response> getResponsePool() {
+        return responsePool;
     }
 
     @Override
@@ -68,7 +74,7 @@ public class NioThread extends Thread {
                     SelectionKey key = it.next();
                     it.remove();
                     if (!key.isValid()) continue;
-                    TcpNioAsyncConnection conn = (TcpNioAsyncConnection) key.attachment();
+                    NioTcpAsyncConnection conn = (NioTcpAsyncConnection) key.attachment();
                     if (key.isWritable()) {
                         //key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
                         conn.doWrite();
@@ -82,14 +88,6 @@ public class NioThread extends Thread {
                 ex.printStackTrace();
             }
         }
-    }
-
-    public boolean inCurrThread() {
-        return this.localThread == Thread.currentThread();
-    }
-
-    public boolean inSameThread(Thread thread) {
-        return this.localThread == thread;
     }
 
     public void close() {

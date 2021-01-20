@@ -17,11 +17,11 @@ public abstract class AbstractService implements Service {
 
     //如果开启了SNCP，此处线程池为SncpServer的线程池
     @Resource(name = Server.RESNAME_SERVER_EXECUTOR)
-    private ExecutorService serverExecutor;
+    private ExecutorService serverWorkExecutor;
 
     protected void runAsync(Runnable runner) {
-        if (serverExecutor != null) {
-            serverExecutor.execute(runner);
+        if (serverWorkExecutor != null) {
+            serverWorkExecutor.execute(runner);
         } else {
             Thread thread = Thread.currentThread();
             if (thread instanceof WorkThread) {
@@ -33,10 +33,10 @@ public abstract class AbstractService implements Service {
     }
 
     protected ExecutorService getExecutor() {
-        if (serverExecutor != null) return serverExecutor;
+        if (serverWorkExecutor != null) return serverWorkExecutor;
         Thread thread = Thread.currentThread();
         if (thread instanceof WorkThread) {
-            return ((WorkThread) thread).getExecutor();
+            return ((WorkThread) thread).getWorkExecutor();
         }
         return ForkJoinPool.commonPool();
     }

@@ -49,7 +49,7 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
     protected ExecutorService getExecutor() {
         Thread thread = Thread.currentThread();
         if (thread instanceof WorkThread) {
-            return ((WorkThread) thread).getExecutor();
+            return ((WorkThread) thread).getWorkExecutor();
         }
         return ForkJoinPool.commonPool();
     }

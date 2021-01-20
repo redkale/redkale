@@ -27,7 +27,7 @@ import org.redkale.net.nio.NioThreadGroup;
  *
  * @since 2.1.0
  */
-public class TcpNioAsyncConnection extends AsyncConnection {
+public class NioTcpAsyncConnection extends AsyncConnection {
 
     private int readTimeoutSeconds;
 
@@ -40,8 +40,6 @@ public class TcpNioAsyncConnection extends AsyncConnection {
     final NioThread ioThread;
 
     final NioThreadGroup ioGroup;
-
-    final ExecutorService workExecutor;
 
     //连
     private Object connectAttachment;
@@ -78,13 +76,11 @@ public class TcpNioAsyncConnection extends AsyncConnection {
 
     private SelectionKey writeKey;
 
-    public TcpNioAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, ExecutorService workExecutor,
-        SocketChannel ch,
+    public NioTcpAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, SocketChannel ch,
         SSLContext sslContext, final SocketAddress addr0, AtomicLong livingCounter, AtomicLong closedCounter) {
         super(ioThread.getBufferPool(), sslContext, livingCounter, closedCounter);
         this.ioGroup = ioGroup;
         this.ioThread = ioThread;
-        this.workExecutor = workExecutor;
         this.channel = ch;
         SocketAddress addr = addr0;
         if (addr == null) {
@@ -97,14 +93,13 @@ public class TcpNioAsyncConnection extends AsyncConnection {
         this.remoteAddress = addr;
     }
 
-    public TcpNioAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread, ExecutorService workExecutor,
+    public NioTcpAsyncConnection(NioThreadGroup ioGroup, NioThread ioThread,
         Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
         SocketChannel ch, SSLContext sslContext, final SocketAddress addr0,
         AtomicLong livingCounter, AtomicLong closedCounter) {
         super(bufferSupplier, bufferConsumer, sslContext, livingCounter, closedCounter);
         this.ioGroup = ioGroup;
         this.ioThread = ioThread;
-        this.workExecutor = workExecutor;
         this.channel = ch;
         SocketAddress addr = addr0;
         if (addr == null) {
@@ -219,19 +214,11 @@ public class TcpNioAsyncConnection extends AsyncConnection {
     public void read(CompletionHandler<Integer, ByteBuffer> handler) {
         Objects.requireNonNull(handler);
         if (!this.channel.isConnected()) {
-            if (this.workExecutor == null) {
-                handler.failed(new NotYetConnectedException(), pollReadBuffer());
-            } else {
-                this.workExecutor.execute(() -> handler.failed(new NotYetConnectedException(), pollReadBuffer()));
-            }
+            handler.failed(new NotYetConnectedException(), pollReadBuffer());
             return;
         }
         if (this.readPending) {
-            if (this.workExecutor == null) {
-                handler.failed(new ReadPendingException(), pollReadBuffer());
-            } else {
-                this.workExecutor.execute(() -> handler.failed(new ReadPendingException(), pollReadBuffer()));
-            }
+            handler.failed(new ReadPendingException(), pollReadBuffer());
             return;
         }
         this.readPending = true;
@@ -255,19 +242,11 @@ public class TcpNioAsyncConnection extends AsyncConnection {
         Objects.requireNonNull(src);
         Objects.requireNonNull(handler);
         if (!this.channel.isConnected()) {
-            if (this.workExecutor == null) {
-                handler.failed(new NotYetConnectedException(), attachment);
-            } else {
-                this.workExecutor.execute(() -> handler.failed(new NotYetConnectedException(), attachment));
-            }
+            handler.failed(new NotYetConnectedException(), attachment);
             return;
         }
         if (this.writePending) {
-            if (this.workExecutor == null) {
-                handler.failed(new WritePendingException(), attachment);
-            } else {
-                this.workExecutor.execute(() -> handler.failed(new WritePendingException(), attachment));
-            }
+            handler.failed(new WritePendingException(), attachment);
             return;
         }
         this.writePending = true;
@@ -288,19 +267,11 @@ public class TcpNioAsyncConnection extends AsyncConnection {
         Objects.requireNonNull(srcs);
         Objects.requireNonNull(handler);
         if (!this.channel.isConnected()) {
-            if (this.workExecutor == null) {
-                handler.failed(new NotYetConnectedException(), attachment);
-            } else {
-                this.workExecutor.execute(() -> handler.failed(new NotYetConnectedException(), attachment));
-            }
+            handler.failed(new NotYetConnectedException(), attachment);
             return;
         }
         if (this.writePending) {
-            if (this.workExecutor == null) {
-                handler.failed(new WritePendingException(), attachment);
-            } else {
-                this.workExecutor.execute(() -> handler.failed(new WritePendingException(), attachment));
-            }
+            handler.failed(new WritePendingException(), attachment);
             return;
         }
         this.writePending = true;
@@ -349,17 +320,9 @@ public class TcpNioAsyncConnection extends AsyncConnection {
         clearConnect();
         if (handler != null) {
             if (t == null) {
-                if (this.workExecutor == null) {
-                    handler.completed(null, attach);
-                } else {
-                    this.workExecutor.execute(() -> handler.completed(null, attach));
-                }
+                handler.completed(null, attach);
             } else {
-                if (this.workExecutor == null) {
-                    handler.failed(t, attach);
-                } else {
-                    this.workExecutor.execute(() -> handler.failed(t, attach));
-                }
+                handler.failed(t, attach);
             }
         }
     }
@@ -416,17 +379,9 @@ public class TcpNioAsyncConnection extends AsyncConnection {
         clearRead();
         if (handler != null) {
             if (t == null) {
-                if (this.workExecutor == null) {
-                    handler.completed(totalCount, attach);
-                } else {
-                    this.workExecutor.execute(() -> handler.completed(totalCount, attach));
-                }
+                handler.completed(totalCount, attach);
             } else {
-                if (this.workExecutor == null) {
-                    handler.failed(t, attach);
-                } else {
-                    this.workExecutor.execute(() -> handler.failed(t, attach));
-                }
+                handler.failed(t, attach);
             }
         }
     }
@@ -471,12 +426,7 @@ public class TcpNioAsyncConnection extends AsyncConnection {
                 Object attach = this.writeAttachment;
                 clearWrite();
                 if (handler != null) {
-                    if (this.workExecutor == null) {
-                        handler.completed(totalCount, attach);
-                    } else {
-                        final int totalCount0 = totalCount;
-                        this.workExecutor.execute(() -> handler.completed(totalCount0, attach));
-                    }
+                    handler.completed(totalCount, attach);
                 }
             } else if (writeKey == null) {
                 ioThread.register(selector -> {
@@ -488,11 +438,7 @@ public class TcpNioAsyncConnection extends AsyncConnection {
                         Object attach = this.writeAttachment;
                         clearWrite();
                         if (handler != null) {
-                            if (this.workExecutor == null) {
-                                handler.failed(e, attach);
-                            } else {
-                                this.workExecutor.execute(() -> handler.failed(e, attach));
-                            }
+                            handler.failed(e, attach);
                         }
                     }
                 });
@@ -504,11 +450,7 @@ public class TcpNioAsyncConnection extends AsyncConnection {
             Object attach = this.writeAttachment;
             clearWrite();
             if (handler != null) {
-                if (this.workExecutor == null) {
-                    handler.failed(e, attach);
-                } else {
-                    this.workExecutor.execute(() -> handler.failed(e, attach));
-                }
+                handler.failed(e, attach);
             }
         }
     }
