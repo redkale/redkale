@@ -231,6 +231,11 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         String serviceid = generateServiceId(ns, protocol, service);
         String servicename = generateServiceName(ns, protocol, service);
         InetSocketAddress address = ns.isSNCP() ? ns.getSncpAddress() : ns.getServer().getSocketAddress();
+        String host = address.getHostString();
+        if ("0.0.0.0".equals(host)) {
+            host = this.appAddress.getHostString();
+            address = new InetSocketAddress(host, address.getPort());
+        }
         AddressEntry entry = new AddressEntry();
         entry.addr = address;
         entry.nodeid = this.nodeid;
