@@ -10,7 +10,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
-import org.redkale.net.nio.NioThread;
 import org.redkale.util.ObjectPool;
 
 /**
