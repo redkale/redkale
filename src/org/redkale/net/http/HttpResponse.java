@@ -327,7 +327,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishMapJson(final Object... objs) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = objs;
-        finish(request.getRespConvert().convertMapTo(getBodyBufferSupplier(), objs));
+        if (respConvertByBuffer) {
+            finish(request.getRespConvert().convertMapTo(getBodyBufferSupplier(), objs));
+        } else {
+            finish(request.getRespConvert().convertMapToBytes(objs));
+        }
     }
 
     /**
@@ -339,7 +343,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final JsonConvert convert, final Object obj) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = obj;
-        finish(convert.convertTo(getBodyBufferSupplier(), obj));
+        if (respConvertByBuffer) {
+            finish(convert.convertTo(getBodyBufferSupplier(), obj));
+        } else {
+            finish(convert.convertToBytes(obj));
+        }
     }
 
     /**
@@ -352,7 +360,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishMapJson(final JsonConvert convert, final Object... objs) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = objs;
-        finish(convert.convertMapTo(getBodyBufferSupplier(), objs));
+        if (respConvertByBuffer) {
+            finish(convert.convertMapTo(getBodyBufferSupplier(), objs));
+        } else {
+            finish(convert.convertMapToBytes(objs));
+        }
     }
 
     /**
@@ -364,7 +376,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final Type type, final Object obj) {
         this.contentType = this.jsonContentType;
         this.output = obj;
-        finish(request.getRespConvert().convertTo(getBodyBufferSupplier(), type, obj));
+        if (respConvertByBuffer) {
+            finish(request.getRespConvert().convertTo(getBodyBufferSupplier(), type, obj));
+        } else {
+            finish(request.getRespConvert().convertToBytes(type, obj));
+        }
     }
 
     /**
@@ -377,7 +393,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = obj;
-        finish(convert.convertTo(getBodyBufferSupplier(), type, obj));
+        if (respConvertByBuffer) {
+            finish(convert.convertTo(getBodyBufferSupplier(), type, obj));
+        } else {
+            finish(convert.convertToBytes(type, obj));
+        }
     }
 
     /**
@@ -388,7 +408,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJson(final Object... objs) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) this.output = objs;
-        finish(request.getRespConvert().convertTo(getBodyBufferSupplier(), objs));
+        if (respConvertByBuffer) {
+            finish(request.getRespConvert().convertTo(getBodyBufferSupplier(), objs));
+        } else {
+            finish(request.getRespConvert().convertToBytes(objs));
+        }
     }
 
     /**
@@ -408,7 +432,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         Convert convert = ret == null ? null : ret.convert();
         if (convert == null) convert = request.getRespConvert();
-        finish(convert.convertTo(getBodyBufferSupplier(), ret));
+        if (respConvertByBuffer) {
+            finish(convert.convertTo(getBodyBufferSupplier(), ret));
+        } else {
+            finish(convert.convertToBytes(ret));
+        }
     }
 
     /**
@@ -427,7 +455,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
             this.header.addValue("retinfo", ret.getRetinfo());
         }
-        finish(convert.convertTo(getBodyBufferSupplier(), ret));
+        if (respConvertByBuffer) {
+            finish(convert.convertTo(getBodyBufferSupplier(), ret));
+        } else {
+            finish(convert.convertToBytes(ret));
+        }
     }
 
     /**
@@ -575,13 +607,19 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                     this.header.addValue("retcode", String.valueOf(ret.getRetcode())).addValue("retinfo", ret.getRetinfo());
                 }
             }
+
             if (this.channel == null) { //虚拟的HttpResponse
                 finish(type == null ? convert.convertToBytes(obj) : convert.convertToBytes(type, obj));
                 return;
             }
-            ByteBuffer[] buffers = type == null ? convert.convertTo(getBodyBufferSupplier(), obj)
-                : convert.convertTo(getBodyBufferSupplier(), type, obj);
-            finish(buffers);
+            if (respConvertByBuffer) {
+                ByteBuffer[] buffers = type == null ? convert.convertTo(getBodyBufferSupplier(), obj)
+                    : convert.convertTo(getBodyBufferSupplier(), type, obj);
+                finish(buffers);
+            } else {
+                byte[] bs = type == null ? convert.convertToBytes(obj) : convert.convertToBytes(type, obj);
+                finish(bs);
+            }
         }
     }
 

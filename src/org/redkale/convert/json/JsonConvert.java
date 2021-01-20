@@ -367,6 +367,17 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
+    public byte[] convertMapToBytes(final Object... values) {
+        JsonWriter out = pollJsonWriter();
+        if (values == null) {
+            out.writeNull();
+        } else {
+            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
+        }
+        return out.toBytes();
+    } 
+
+    @Override
     public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values) {
         if (supplier == null) return null;
         JsonByteBufferWriter out = pollJsonWriter(supplier);

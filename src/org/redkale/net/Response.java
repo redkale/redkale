@@ -25,6 +25,8 @@ import org.redkale.util.ObjectPool;
 @SuppressWarnings("unchecked")
 public abstract class Response<C extends Context, R extends Request<C>> {
 
+    protected static final boolean respConvertByBuffer = Boolean.getBoolean("resp.convert.bytebuffer");
+
     protected final C context;
 
     protected final ObjectPool<Response> responsePool; //虚拟构建的Response可能不存在responsePool
