@@ -8,6 +8,7 @@ package org.redkale.convert;
 import org.redkale.util.Creator;
 import java.lang.reflect.*;
 import java.util.*;
+import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
 /**
@@ -96,7 +97,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     if (factory.isConvertDisabled(field)) continue;
                     ref = factory.findRef(clazz, field);
                     if (ref != null && ref.ignore()) continue;
-                    Decodeable<R, ?> fieldCoder = factory.findFieldCoder(clazz, field.getName());
+                    ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
+                    Decodeable<R, ?> fieldCoder;
+                    if (small != null && field.getType() == String.class) {
+                        fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
+                    } else {
+                        fieldCoder = factory.findFieldCoder(clazz, field.getName());
+                    }
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
                         fieldCoder = factory.loadDecoder(t);
@@ -126,7 +133,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     ref = factory.findRef(clazz, method);
                     if (ref != null && ref.ignore()) continue;
 
-                    Decodeable<R, ?> fieldCoder = factory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
+                    ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
+                    Decodeable<R, ?> fieldCoder;
+                    if (small != null && method.getReturnType() == String.class) {
+                        fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
+                    } else {
+                        fieldCoder = factory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
+                    }
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericParameterTypes()[0], this.type), this.type);
                         fieldCoder = factory.loadDecoder(t);

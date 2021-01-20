@@ -57,8 +57,8 @@ public abstract class AsyncConnection implements AutoCloseable {
         this(bufferPool, bufferPool, sslContext, livingCounter, closedCounter);
     }
 
-    protected AsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer, SSLContext sslContext,
-        final AtomicLong livingCounter, final AtomicLong closedCounter) {
+    protected AsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+        SSLContext sslContext, final AtomicLong livingCounter, final AtomicLong closedCounter) {
         Objects.requireNonNull(bufferSupplier);
         Objects.requireNonNull(bufferConsumer);
         this.bufferSupplier = bufferSupplier;
@@ -133,6 +133,14 @@ public abstract class AsyncConnection implements AutoCloseable {
     public void setReadBuffer(ByteBuffer buffer) {
         if (this.readBuffer != null) throw new RuntimeException("repeat AsyncConnection.setReadBuffer");
         this.readBuffer = buffer;
+    }
+
+    public static class Message {
+
+        public String value;
+
+        public Message() {
+        }
     }
 
     public ByteBuffer pollReadBuffer() {
