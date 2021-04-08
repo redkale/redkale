@@ -28,4 +28,9 @@ public interface Encodeable<W extends Writer, T> {
      */
     public Type getType();
 
+    //是否需要检查Writer.specify
+    default boolean specifyable() {
+        return true;
+    }
+
 }

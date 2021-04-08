@@ -10,8 +10,9 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
+import org.redkale.boot.Application;
 import org.redkale.util.*;
 
 /**
@@ -22,20 +23,36 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class AioTcpProtocolServer extends ProtocolServer {
+@Deprecated //@since 2.3.0
+class AsyncAioTcpProtocolServer extends ProtocolServer {
+
+    //创建数
+    private final AtomicLong createCounter = new AtomicLong();
+
+    //关闭数
+    private final AtomicLong closedCounter = new AtomicLong();
+
+    //在线数
+    private final AtomicLong livingCounter = new AtomicLong();
 
     private AsynchronousChannelGroup group;
 
     private AsynchronousServerSocketChannel serverChannel;
 
-    public AioTcpProtocolServer(Context context) {
+    public AsyncAioTcpProtocolServer(Context context) {
         super(context);
     }
 
     @Override
     public void open(AnyValue config) throws IOException {
         //group = AsynchronousChannelGroup.withThreadPool(context.executor);
-        group = AsynchronousChannelGroup.withFixedThreadPool(context.executor.getCorePoolSize(), context.executor.getThreadFactory());
+        final AtomicInteger workcounter = new AtomicInteger();
+        group = AsynchronousChannelGroup.withFixedThreadPool(Runtime.getRuntime().availableProcessors(), (Runnable r) -> {
+            int c = workcounter.incrementAndGet();
+            String threadname = "Redkale-AioThread-" + (c > 9 ? c : ("0" + c));
+            Thread t = new WorkThread(threadname, application.getWorkExecutor(), r);
+            return t;
+        });
         this.serverChannel = AsynchronousServerSocketChannel.open(group);
 
         final Set<SocketOption<?>> options = this.serverChannel.supportedOptions();
@@ -72,7 +89,7 @@ public class AioTcpProtocolServer extends ProtocolServer {
     }
 
     @Override
-    public void accept(Server server) throws IOException {
+    public void accept(Application application, Server server) throws IOException {
         AtomicLong createBufferCounter = new AtomicLong();
         AtomicLong cycleBufferCounter = new AtomicLong();
         ObjectPool<ByteBuffer> bufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
@@ -101,10 +118,9 @@ public class AioTcpProtocolServer extends ProtocolServer {
                     channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
                     channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
 
-                    AsyncConnection conn = new AioTcpAsyncConnection(bufferPool, bufferPool, channel,
+                    AsyncConnection conn = new AsyncAioTcpConnection(server.bufferCapacity, bufferPool, bufferPool, channel,
                         context.getSSLContext(), null, context.readTimeoutSeconds, context.writeTimeoutSeconds, livingCounter, closedCounter);
-                    //context.runAsync(new PrepareRunner(context, responsePool, conn, null, null));
-                    new PrepareRunner(context, responsePool, conn, null, null).run();
+                    new ProtocolCodec(context, responsePool, responsePool, conn).run(null);
                 } catch (Throwable e) {
                     context.logger.log(Level.INFO, channel + " accept error", e);
                 }
@@ -116,6 +132,21 @@ public class AioTcpProtocolServer extends ProtocolServer {
                 //if (exc != null) context.logger.log(Level.FINEST, AsynchronousServerSocketChannel.class.getSimpleName() + " accept erroneous", exc);
             }
         });
+    }
+
+    @Override
+    public long getCreateConnectionCount() {
+        return this.createCounter.get();
+    }
+
+    @Override
+    public long getClosedConnectionCount() {
+        return this.closedCounter.get();
+    }
+
+    @Override
+    public long getLivingConnectionCount() {
+        return this.livingCounter.get();
     }
 
     @Override

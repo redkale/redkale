@@ -391,8 +391,8 @@ public class ClassWriter extends ClassVisitor {
      * A type table used to temporarily store internal names that will not
      * necessarily be stored in the constant pool. This type table is used by
      * the control flow and data flow analysis algorithm used to compute stack
-     * map frames from scratch. This array associates to each index <code>i</code>
-     * the Item whose index is <code>i</code>. All Item objects stored in this array
+     * map frames from scratch. This array associates to each index &#60;tt&#62;i&#60;/tt&#62;
+     * the Item whose index is &#60;tt&#62;i&#60;/tt&#62;. All Item objects stored in this array
      * are also stored in the {@link #items} hash table. These two arrays allow
      * to retrieve an Item from its index or, conversely, to get the index of an
      * Item from its value. Each Item stores an internal name in its
@@ -556,7 +556,7 @@ public class ClassWriter extends ClassVisitor {
     private int compute;
 
     /**
-     * <code>true</code> if some methods have wide forward jumps using ASM pseudo
+     * &#60;tt&#62;true&#60;/tt&#62; if some methods have wide forward jumps using ASM pseudo
      * instructions, which need to be expanded into sequences of standard
      * bytecode instructions. In this case the class is re-read and re-written
      * with a ClassReader -> ClassWriter chain to perform this transformation.
@@ -1317,6 +1317,38 @@ public class ClassWriter extends ClassVisitor {
      *            the name of the field or method.
      * @param desc
      *            the descriptor of the field or method.
+     * @return the index of a new or already existing method type reference
+     *         item.
+     *
+     * @deprecated this method is superseded by
+     *             {@link #newHandle(int, String, String, String, boolean)}.
+     */
+    @Deprecated
+    public int newHandle(final int tag, final String owner, final String name,
+            final String desc) {
+        return newHandle(tag, owner, name, desc, tag == Opcodes.H_INVOKEINTERFACE);
+    }
+
+    /**
+     * Adds a handle to the constant pool of the class being build. Does nothing
+     * if the constant pool already contains a similar item. <i>This method is
+     * intended for {@link Attribute} sub classes, and is normally not needed by
+     * class generators or adapters.</i>
+     *
+     * @param tag
+     *            the kind of this handle. Must be {@link Opcodes#H_GETFIELD},
+     *            {@link Opcodes#H_GETSTATIC}, {@link Opcodes#H_PUTFIELD},
+     *            {@link Opcodes#H_PUTSTATIC}, {@link Opcodes#H_INVOKEVIRTUAL},
+     *            {@link Opcodes#H_INVOKESTATIC},
+     *            {@link Opcodes#H_INVOKESPECIAL},
+     *            {@link Opcodes#H_NEWINVOKESPECIAL} or
+     *            {@link Opcodes#H_INVOKEINTERFACE}.
+     * @param owner
+     *            the internal name of the field or method owner class.
+     * @param name
+     *            the name of the field or method.
+     * @param desc
+     *            the descriptor of the field or method.
      * @param itf
      *            true if the owner is an interface.
      * @return the index of a new or already existing method type reference
@@ -1486,7 +1518,7 @@ public class ClassWriter extends ClassVisitor {
      * @param desc
      *            the method's descriptor.
      * @param itf
-     *            <code>true</code> if <code>owner</code> is an interface.
+     *            &#60;tt&#62;true&#60;/tt&#62; if &#60;tt&#62;owner&#60;/tt&#62; is an interface.
      * @return a new or already existing method reference item.
      */
     Item newMethodItem(final String owner, final String name,
@@ -1515,7 +1547,7 @@ public class ClassWriter extends ClassVisitor {
      * @param desc
      *            the method's descriptor.
      * @param itf
-     *            <code>true</code> if <code>owner</code> is an interface.
+     *            &#60;tt&#62;true&#60;/tt&#62; if &#60;tt&#62;owner&#60;/tt&#62; is an interface.
      * @return the index of a new or already existing method reference item.
      */
     public int newMethod(final String owner, final String name,
@@ -1778,7 +1810,7 @@ public class ClassWriter extends ClassVisitor {
      * @param key
      *            a constant pool item.
      * @return the constant pool's hash table item which is equal to the given
-     *         item, or <code>null</code> if there is no such item.
+     *         item, or &#60;tt&#62;null&#60;/tt&#62; if there is no such item.
      */
     private Item get(final Item key) {
         Item i = items[key.hashCode % items.length];

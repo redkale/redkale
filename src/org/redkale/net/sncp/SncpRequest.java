@@ -26,9 +26,19 @@ public class SncpRequest extends Request<SncpContext> {
 
     public static final byte[] DEFAULT_HEADER = new byte[HEADER_SIZE];
 
+    protected static final int READ_STATE_ROUTE = 1;
+
+    protected static final int READ_STATE_HEADER = 2;
+
+    protected static final int READ_STATE_BODY = 3;
+
+    protected static final int READ_STATE_END = 4;
+
     protected final BsonConvert convert;
 
     private long seqid;
+
+    protected int readState = READ_STATE_ROUTE;
 
     private int serviceversion;
 
@@ -52,44 +62,54 @@ public class SncpRequest extends Request<SncpContext> {
     }
 
     @Override
-    protected int readHeader(ByteBuffer buffer) {
-        if (buffer.remaining() < HEADER_SIZE) {
+    protected int readHeader(ByteBuffer buffer, Request last) {
+        if (buffer.remaining() == Sncp.PING_BUFFER.remaining()) {
             if (buffer.hasRemaining()) buffer.get(new byte[buffer.remaining()]);
-            this.ping = true;
+            this.ping = true;  //Sncp.PING_BUFFER
+            this.readState = READ_STATE_END;
             return 0;
         }
         //---------------------head----------------------------------
-        this.seqid = buffer.getLong();
-        if (buffer.getChar() != HEADER_SIZE) {
-            if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
-            return -1;
-        }
-        this.serviceid = DLong.read(buffer);
-        this.serviceversion = buffer.getInt();
-        this.actionid = DLong.read(buffer);
-        buffer.get(addrbytes); //ipaddr
-        this.bodylength = buffer.getInt();
+        if (this.readState == READ_STATE_ROUTE) {
+            if (buffer.remaining() < HEADER_SIZE) return 1; //小于60
+            this.seqid = buffer.getLong(); //8
+            if (buffer.getChar() != HEADER_SIZE) { //2
+                if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
+                return -1;
+            }
+            this.serviceid = DLong.read(buffer); //16
+            this.serviceversion = buffer.getInt(); //4
+            this.actionid = DLong.read(buffer); //16
+            buffer.get(addrbytes); //ipaddr   //6
+            this.bodylength = buffer.getInt(); //4
 
-        if (buffer.getInt() != 0) {
-            if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.retcode not 0");
-            return -1;
+            if (buffer.getInt() != 0) { //4
+                if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.retcode not 0");
+                return -1;
+            }
+            this.body = new byte[this.bodylength];
+            this.readState = READ_STATE_BODY;
         }
         //---------------------body----------------------------------
-        this.body = new byte[this.bodylength];
-        int len = Math.min(this.bodylength, buffer.remaining());
-        buffer.get(body, 0, len);
-        this.bodyoffset = len;
-        return bodylength - len;
+        if (this.readState == READ_STATE_BODY) {
+            int len = Math.min(this.bodylength, buffer.remaining());
+            buffer.get(body, 0, len);
+            this.bodyoffset = len;
+            int rs = bodylength - len;
+            if (rs == 0) this.readState = READ_STATE_END;
+            return rs;
+        }
+        return 0;
     }
 
-    @Override
-    protected int readBody(ByteBuffer buffer) {
-        final int framelen = buffer.remaining();
-        buffer.get(this.body, this.bodyoffset, framelen);
-        this.bodyoffset += framelen;
-        return framelen;
-    }
-
+//    @Override
+//    protected int readBody(ByteBuffer buffer, int length) {
+//        final int framelen = buffer.remaining();
+//        int len = Math.min(framelen, length);
+//        buffer.get(this.body, this.bodyoffset, len);
+//        this.bodyoffset += len;
+//        return len;
+//    }
     @Override
     protected void prepare() {
         this.keepAlive = true;
@@ -110,6 +130,7 @@ public class SncpRequest extends Request<SncpContext> {
     @Override
     protected void recycle() {
         this.seqid = 0;
+        this.readState = READ_STATE_ROUTE;
         this.serviceid = null;
         this.serviceversion = 0;
         this.actionid = null;

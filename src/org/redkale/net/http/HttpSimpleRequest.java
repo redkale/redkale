@@ -5,8 +5,8 @@
  */
 package org.redkale.net.http;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.redkale.convert.*;
@@ -62,17 +62,20 @@ public class HttpSimpleRequest implements java.io.Serializable {
     protected String contentType;
 
     @ConvertColumn(index = 10)
-    protected int currentUserid;
+    protected int hashid;
 
     @ConvertColumn(index = 11)
+    protected int currentUserid;
+
+    @ConvertColumn(index = 12)
     @Comment("http header信息")
     protected Map<String, String> headers;
 
-    @ConvertColumn(index = 12)
+    @ConvertColumn(index = 13)
     @Comment("参数信息")
     protected Map<String, String> params;
 
-    @ConvertColumn(index = 13)
+    @ConvertColumn(index = 14)
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
@@ -95,8 +98,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
         final StringBuilder sb = new StringBuilder();
         AtomicBoolean no2 = new AtomicBoolean(false);
         this.params.forEach((n, v) -> {
-            if (no2.get()) sb.append('&');
-            sb.append(n).append('=').append(URLEncoder.encode(v, StandardCharsets.UTF_8));
+            if (no2.get()) sb.append('&'); //JDK9+ 可直接用 URLEncoder.encode(v, StandardCharsets.UTF_8)
+            try {
+                sb.append(n).append('=').append(URLEncoder.encode(v, "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+            }
             no2.set(true);
         });
         return sb.toString();
@@ -155,6 +161,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public HttpSimpleRequest contentType(String contentType) {
         this.contentType = contentType;
+        return this;
+    }
+
+    public HttpSimpleRequest hashid(int hashid) {
+        this.hashid = hashid;
         return this;
     }
 
@@ -305,6 +316,14 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public void setRemoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
+    }
+
+    public int getHashid() {
+        return hashid;
+    }
+
+    public void setHashid(int hashid) {
+        this.hashid = hashid;
     }
 
     public int getCurrentUserid() {

@@ -13,6 +13,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.Level;
+import org.redkale.net.AsyncGroup;
 import org.redkale.service.Local;
 import org.redkale.util.*;
 
@@ -45,7 +46,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected PoolSource<Connection> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
+    protected PoolSource<Connection> createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
         return new PoolJdbcSource(this.name, this.persistxml, rwtype, queue, semaphore, prop, this.logger);
     }
 

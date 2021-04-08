@@ -7,13 +7,14 @@ package org.redkale.mq;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.convert.*;
-import org.redkale.net.Response;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
-import org.redkale.util.ObjectPool;
 import static org.redkale.mq.MessageRecord.CTYPE_HTTP_RESULT;
+import org.redkale.net.Response;
 
 /**
  *
@@ -27,7 +28,7 @@ import static org.redkale.mq.MessageRecord.CTYPE_HTTP_RESULT;
  */
 public class HttpMessageResponse extends HttpResponse {
 
-    protected MessageClient messageClient;
+    protected final HttpMessageClient messageClient;
 
     protected MessageRecord message;
 
@@ -37,22 +38,33 @@ public class HttpMessageResponse extends HttpResponse {
 
     protected Runnable callback;
 
-    public HttpMessageResponse(HttpContext context, HttpMessageRequest request, Runnable callback,
-        ObjectPool<Response> responsePool, HttpResponseConfig config, MessageClient messageClient, MessageProducer producer) {
-        super(context, request, responsePool, config);
-        this.message = request.message;
-        this.callback = callback;
+    public HttpMessageResponse(HttpContext context, HttpMessageClient messageClient, final Supplier<HttpMessageResponse> respSupplier, final Consumer<HttpMessageResponse> respConsumer) {
+        super(context, new HttpMessageRequest(context), null);
+        this.responseSupplier = (Supplier) respSupplier;
+        this.responseConsumer = (Consumer) respConsumer;
         this.messageClient = messageClient;
+    }
+
+//    public HttpMessageResponse(HttpContext context, HttpMessageRequest request, Runnable callback,
+//        HttpResponseConfig config, HttpMessageClient messageClient, MessageProducer producer) {
+//        super(context, request, config);
+//        this.message = request.message;
+//        this.callback = callback;
+//        this.messageClient = messageClient;
+//        this.producer = producer;
+//        this.finest = producer.logger.isLoggable(Level.FINEST);
+//    }
+
+    public void prepare(MessageRecord message, Runnable callback, MessageProducer producer) {
+        ((HttpMessageRequest)request).prepare(message);
+        this.message = message;
+        this.callback = callback;
         this.producer = producer;
         this.finest = producer.logger.isLoggable(Level.FINEST);
     }
 
-    public HttpMessageResponse(HttpContext context, MessageRecord message, Runnable callback, HttpResponseConfig config, MessageClient messageClient, MessageProducer producer) {
-        super(context, new HttpMessageRequest(context, message), null, config);
-        this.message = message;
-        this.callback = callback;
-        this.messageClient = messageClient;
-        this.producer = producer;
+    public HttpMessageRequest request() {
+        return (HttpMessageRequest) request;
     }
 
     public void finishHttpResult(HttpResult result) {
@@ -75,6 +87,25 @@ public class HttpMessageResponse extends HttpResponse {
         }
         byte[] content = HttpResultCoder.getInstance().encode(result);
         producer.apply(messageClient.createMessageRecord(msg.getSeqid(), CTYPE_HTTP_RESULT, resptopic, null, content));
+    }
+
+    @Override
+    protected void prepare() {
+        super.prepare();
+    }
+
+    @Override
+    protected boolean recycle() {
+        Supplier<Response> respSupplier = this.responseSupplier;
+        Consumer<Response> respConsumer = this.responseConsumer;
+        boolean rs = super.recycle();
+        this.responseSupplier = respSupplier;
+        this.responseConsumer = respConsumer;
+        this.message = null;
+        this.producer = null;
+        this.callback = null;
+        this.finest = false;
+        return rs;
     }
 
     @Override
@@ -103,7 +134,7 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(int status, String msg) {
         if (status > 400) {
-            producer.logger.log(Level.INFO, "HttpMessageResponse.finish status: " + status + ", message: " + this.message);
+            producer.logger.log(Level.WARNING, "HttpMessageResponse.finish status: " + status + ", message: " + this.message);
         } else if (finest) {
             producer.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
         }
@@ -125,21 +156,26 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finish(final byte[] bs) {
+    public void finish(boolean kill, final byte[] bs, int offset, int length) {
         if (message.isEmptyResptopic()) {
             if (callback != null) callback.run();
             return;
         }
-        finishHttpResult(new HttpResult(bs));
+        if (offset == 0 && bs.length == length) {
+            finishHttpResult(new HttpResult(bs));
+        } else {
+            finishHttpResult(new HttpResult(Arrays.copyOfRange(bs, offset, offset + length)));
+        }
     }
 
     @Override
-    public void finish(final String contentType, final byte[] bs) {
+    public void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length) {
         if (message.isEmptyResptopic()) {
             if (callback != null) callback.run();
             return;
         }
-        finishHttpResult(new HttpResult(bs).contentType(contentType));
+        byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
+        finishHttpResult(new HttpResult(rs).contentType(contentType));
     }
 
     @Override

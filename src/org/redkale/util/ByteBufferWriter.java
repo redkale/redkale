@@ -24,6 +24,8 @@ public class ByteBufferWriter {
 
     private int position;
 
+    private int writeBytesCounter = 0; //put(byte[] src, int offset, int length) 调用的次数
+
     private boolean bigEndian = true;
 
     protected ByteBufferWriter(Supplier<ByteBuffer> supplier) {
@@ -34,12 +36,23 @@ public class ByteBufferWriter {
         return new ByteBufferWriter(supplier);
     }
 
+    public static ByteBufferWriter create(Supplier<ByteBuffer> supplier, ByteBuffer one) {
+        ByteBufferWriter writer = new ByteBufferWriter(supplier);
+        writer.bigEndian = one.order() == ByteOrder.BIG_ENDIAN;
+        writer.buffers = new ByteBuffer[]{one};
+        return writer;
+    }
+
     public static ByteBuffer[] toBuffers(Supplier<ByteBuffer> supplier, byte[] content) {
-        return new ByteBufferWriter(supplier).put(content, 0, content.length).toBuffers();
+        ByteBufferWriter writer = new ByteBufferWriter(supplier);
+        writer.put(false, content, 0, content.length);
+        return writer.toBuffers();
     }
 
     public static ByteBuffer[] toBuffers(Supplier<ByteBuffer> supplier, byte[] content, int offset, int length) {
-        return new ByteBufferWriter(supplier).put(content, offset, length).toBuffers();
+        ByteBufferWriter writer = new ByteBufferWriter(supplier);
+        writer.put(false, content, offset, length);
+        return writer.toBuffers();
     }
 
     private ByteBuffer getLastBuffer(int size) {
@@ -163,11 +176,30 @@ public class ByteBufferWriter {
         return this;
     }
 
-    public ByteBufferWriter put(byte[] src) {
-        return put(src, 0, src.length);
+    public int put(byte[] src) {
+        return put(true, src, 0, src.length);
     }
 
-    public ByteBufferWriter put(byte[] src, int offset, int length) {
+    public int put(byte[] src, int offset, int length) {
+        return put(true, src, offset, length);
+    }
+
+    public int put(byte[] src, int offset, int length, byte[] src2, int offset2, int length2) {
+        ByteBuffer buf = getLastBuffer(1);
+        int remain = buf.remaining();
+        if (remain >= length + length2) {
+            buf.put(src, offset, length);
+            if (src2 != null) buf.put(src2, offset2, length2);
+            position += length + length2;
+            this.writeBytesCounter++;
+        } else {
+            put(true, src, offset, length);
+            if (src2 != null) put(false, src2, offset2, length2);
+        }
+        return writeBytesCounter;
+    }
+
+    private int put(boolean outside, byte[] src, int offset, int length) {
         ByteBuffer buf = getLastBuffer(1);
         int remain = buf.remaining();
         if (remain >= length) {
@@ -176,9 +208,13 @@ public class ByteBufferWriter {
         } else {
             buf.put(src, offset, remain);
             position += remain;
-            put(src, offset + remain, length - remain);
+            put(false, src, offset + remain, length - remain);
         }
-        return this;
+        if (outside) this.writeBytesCounter++;
+        return writeBytesCounter;
     }
 
+    public int getWriteBytesCounter() {
+        return this.writeBytesCounter;
+    }
 }

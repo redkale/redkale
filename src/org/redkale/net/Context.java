@@ -28,7 +28,9 @@ public class Context {
     protected final long serverStartTime;
 
     //Server的线程池
-    protected final ThreadPoolExecutor executor;
+    protected final ExecutorService workExecutor;
+
+    protected final ThreadHashExecutor workHashExecutor;
 
     //SSL
     protected final SSLContext sslContext;
@@ -73,17 +75,17 @@ public class Context {
     protected Charset charset;
 
     public Context(ContextConfig config) {
-        this(config.serverStartTime, config.logger, config.executor, config.sslContext,
+        this(config.serverStartTime, config.logger, config.workExecutor, config.sslContext,
             config.bufferCapacity, config.maxconns, config.maxbody, config.charset, config.address, config.resourceFactory,
             config.prepare, config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
     }
 
-    public Context(long serverStartTime, Logger logger, ThreadPoolExecutor executor, SSLContext sslContext,
+    public Context(long serverStartTime, Logger logger, ExecutorService workExecutor, SSLContext sslContext,
         int bufferCapacity, final int maxconns, final int maxbody, Charset charset, InetSocketAddress address,
         ResourceFactory resourceFactory, PrepareServlet prepare, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
-        this.executor = executor;
+        this.workExecutor = workExecutor;
         this.sslContext = sslContext;
         this.bufferCapacity = bufferCapacity;
         this.maxconns = maxconns;
@@ -97,6 +99,57 @@ public class Context {
         this.writeTimeoutSeconds = writeTimeoutSeconds;
         this.jsonFactory = JsonFactory.root();
         this.bsonFactory = BsonFactory.root();
+        if (workExecutor instanceof ThreadHashExecutor) {
+            this.workHashExecutor = (ThreadHashExecutor) workExecutor;
+        } else {
+            this.workHashExecutor = null;
+        }
+    }
+
+    protected void executePrepareServlet(Request request, Response response) {
+        if (workHashExecutor != null) {
+            workHashExecutor.execute(request.getHashid(), () -> prepare.prepare(request, response));
+        } else if (workExecutor != null) {
+            workExecutor.execute(() -> prepare.prepare(request, response));
+        } else {
+            prepare.prepare(request, response);
+        }
+    }
+
+    public void execute(Servlet servlet, Request request, Response response) {
+        if (workHashExecutor != null) {
+            workHashExecutor.execute(request.getHashid(), () -> {
+                try {
+                    long cha = System.currentTimeMillis() - request.getCreatetime();
+                    servlet.execute(request, response);
+                    if (cha > 1000 && response.context.logger.isLoggable(Level.WARNING)) {
+                        response.context.logger.log(Level.WARNING, "hash execute servlet delays=" + cha + "ms, request=" + request);
+                    } else if (cha > 100 && response.context.logger.isLoggable(Level.FINE)) {
+                        response.context.logger.log(Level.FINE, "hash execute servlet delay=" + cha + "ms, request=" + request);
+                    }
+                } catch (Throwable t) {
+                    response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
+                    response.finish(true);
+                }
+            });
+        } else if (workExecutor != null) {
+            workExecutor.execute(() -> {
+                try {
+                    servlet.execute(request, response);
+                } catch (Throwable t) {
+                    response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
+                    response.finish(true);
+                }
+            });
+        } else {
+            try {
+                servlet.execute(request, response);
+            } catch (Throwable t) {
+                response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
+                response.finish(true);
+            }
+        }
+
     }
 
     public ResourceFactory getResourceFactory() {
@@ -125,22 +178,6 @@ public class Context {
 
     public Charset getCharset() {
         return charset;
-    }
-
-    public Future<?> submitAsync(Runnable r) {
-        return executor.submit(r);
-    }
-
-    public void runAsync(Runnable r) {
-        executor.execute(r);
-    }
-
-    public int getCorePoolSize() {
-        return executor.getCorePoolSize();
-    }
-
-    public ThreadFactory getThreadFactory() {
-        return executor.getThreadFactory();
     }
 
     public int getBufferCapacity() {
@@ -177,7 +214,7 @@ public class Context {
         public long serverStartTime;
 
         //Server的线程池
-        public ThreadPoolExecutor executor;
+        public ExecutorService workExecutor;
 
         //SSL
         public SSLContext sslContext;

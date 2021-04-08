@@ -10,7 +10,6 @@ import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import javax.net.ssl.SSLContext;
@@ -35,9 +34,17 @@ public abstract class AsyncConnection implements AutoCloseable {
 
     protected volatile long writetime;
 
+    protected final boolean client;
+
+    protected final int bufferCapacity;
+
     private final Supplier<ByteBuffer> bufferSupplier;
 
     private final Consumer<ByteBuffer> bufferConsumer;
+
+    private ByteBufferWriter pipelineWriter;
+
+    private PipelineDataNode pipelineDataNode;
 
     private ByteBuffer readBuffer;
 
@@ -52,15 +59,20 @@ public abstract class AsyncConnection implements AutoCloseable {
     //关联的事件数， 小于1表示没有事件
     private final AtomicInteger eventing = new AtomicInteger();
 
-    protected AsyncConnection(ObjectPool<ByteBuffer> bufferPool, SSLContext sslContext,
+    //用于服务端的Socket, 等同于一直存在的readCompletionHandler
+    ProtocolCodec protocolCodec;
+
+    protected AsyncConnection(boolean client, final int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, SSLContext sslContext,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        this(bufferPool, bufferPool, sslContext, livingCounter, closedCounter);
+        this(client, bufferCapacity, bufferPool, bufferPool, sslContext, livingCounter, closedCounter);
     }
 
-    protected AsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+    protected AsyncConnection(boolean client, final int bufferCapacity, Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
         SSLContext sslContext, final AtomicLong livingCounter, final AtomicLong closedCounter) {
         Objects.requireNonNull(bufferSupplier);
         Objects.requireNonNull(bufferConsumer);
+        this.client = client;
+        this.bufferCapacity = bufferCapacity;
         this.bufferSupplier = bufferSupplier;
         this.bufferConsumer = bufferConsumer;
         this.sslContext = sslContext;
@@ -92,6 +104,8 @@ public abstract class AsyncConnection implements AutoCloseable {
         return eventing.decrementAndGet();
     }
 
+    protected abstract void continueRead();
+
     public abstract boolean isOpen();
 
     public abstract boolean isTCP();
@@ -118,16 +132,77 @@ public abstract class AsyncConnection implements AutoCloseable {
 
     public abstract ReadableByteChannel readableByteChannel();
 
-    public abstract void read(CompletionHandler<Integer, ByteBuffer> handler);
-
     public abstract WritableByteChannel writableByteChannel();
 
+    public abstract void read(CompletionHandler<Integer, ByteBuffer> handler);
+
+    //src会写完才会回调
     public abstract <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
 
+    //srcs会写完才会回调
     public final <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
         write(srcs, 0, srcs.length, attachment, handler);
     }
 
+    public final void write(byte[] bytes, CompletionHandler<Integer, Void> handler) {
+        write(bytes, 0, bytes.length, null, 0, 0, handler);
+    }
+
+    public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
+        write(array.content(), array.offset(), array.length(), null, 0, 0, handler);
+    }
+
+    public final void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
+        write(bytes, offset, length, null, 0, 0, handler);
+    }
+
+    public final void write(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
+        write(header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length(), handler);
+    }
+
+    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, CompletionHandler<Integer, Void> handler) {
+        final ByteBuffer buffer = pollWriteBuffer();
+        if (buffer.remaining() >= headerLength + bodyLength) {
+            buffer.put(headerContent, headerOffset, headerLength);
+            if (bodyLength > 0) buffer.put(bodyContent, bodyOffset, bodyLength);
+            buffer.flip();
+            CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    offerBuffer(buffer);
+                    handler.completed(result, attachment);
+                }
+
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    offerBuffer(buffer);
+                    handler.failed(exc, attachment);
+                }
+            };
+            write(buffer, null, newhandler);
+        } else {
+            ByteBufferWriter writer = ByteBufferWriter.create(bufferSupplier, buffer);
+            writer.put(headerContent, headerOffset, headerLength);
+            if (bodyLength > 0) writer.put(bodyContent, bodyOffset, bodyLength);
+            final ByteBuffer[] buffers = writer.toBuffers();
+            CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    offerBuffer(buffers);
+                    handler.completed(result, attachment);
+                }
+
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    offerBuffer(buffers);
+                    handler.failed(exc, attachment);
+                }
+            };
+            write(buffers, null, newhandler);
+        }
+    }
+
+    //srcs会写完才会回调
     public abstract <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
     public void setReadBuffer(ByteBuffer buffer) {
@@ -135,11 +210,139 @@ public abstract class AsyncConnection implements AutoCloseable {
         this.readBuffer = buffer;
     }
 
-    public static class Message {
+    public boolean hasPipelineData() {
+        ByteBufferWriter writer = this.pipelineWriter;
+        return writer != null && writer.position() > 0;
+    }
 
-        public String value;
+    public final void flushPipelineData(CompletionHandler<Integer, Void> handler) {
+        flushPipelineData(null, handler);
+    }
 
-        public Message() {
+    public <A> void flushPipelineData(A attachment, CompletionHandler<Integer, ? super A> handler) {
+        ByteBufferWriter writer = this.pipelineWriter;
+        this.pipelineWriter = null;
+        if (writer == null) {
+            handler.completed(0, attachment);
+        } else {
+            ByteBuffer[] srcs = writer.toBuffers();
+            CompletionHandler<Integer, ? super A> newhandler = new CompletionHandler<Integer, A>() {
+                @Override
+                public void completed(Integer result, A attachment) {
+                    offerBuffer(srcs);
+                    handler.completed(result, attachment);
+                }
+
+                @Override
+                public void failed(Throwable exc, A attachment) {
+                    offerBuffer(srcs);
+                    handler.failed(exc, attachment);
+                }
+            };
+            if (srcs.length == 1) {
+                write(srcs[0], attachment, newhandler);
+            } else {
+                write(srcs, attachment, newhandler);
+            }
+        }
+    }
+
+    //返回 是否over
+    public final boolean writePipelineData(int pipelineIndex, int pipelineCount, ByteTuple array) {
+        return writePipelineData(pipelineIndex, pipelineCount, array.content(), array.offset(), array.length());
+    }
+
+    //返回 是否over
+    public boolean writePipelineData(int pipelineIndex, int pipelineCount, byte[] bs, int offset, int length) {
+        synchronized (this) {
+            ByteBufferWriter writer = this.pipelineWriter;
+            if (writer == null) {
+                writer = ByteBufferWriter.create(getBufferSupplier());
+                this.pipelineWriter = writer;
+            }
+            if (this.pipelineDataNode == null && pipelineIndex == writer.getWriteBytesCounter() + 1) {
+                writer.put(bs, offset, length);
+                return (pipelineIndex == pipelineCount);
+            } else {
+                PipelineDataNode dataNode = this.pipelineDataNode;
+                if (dataNode == null) {
+                    dataNode = new PipelineDataNode();
+                    this.pipelineDataNode = dataNode;
+                }
+                if (pipelineIndex == pipelineCount) { //此时pipelineCount为最大值
+                    dataNode.pipelineCount = pipelineCount;
+                }
+                dataNode.put(pipelineIndex, bs, offset, length);
+                if (writer.getWriteBytesCounter() + dataNode.itemsize == dataNode.pipelineCount) {
+                    for (PipelineDataItem item : dataNode.arrayItems()) {
+                        writer.put(item.data);
+                    }
+                    this.pipelineDataNode = null;
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
+
+    private static class PipelineDataNode {
+
+        public int pipelineCount;
+
+        public int itemsize;
+
+        private PipelineDataItem head;
+
+        private PipelineDataItem tail;
+
+        public PipelineDataItem[] arrayItems() {
+            PipelineDataItem[] items = new PipelineDataItem[itemsize];
+            PipelineDataItem item = head;
+            int i = 0;
+            while (item != null) {
+                items[i] = item;
+                item = item.next;
+                items[i].next = null;
+                i++;
+            }
+            Arrays.sort(items);
+            return items;
+        }
+
+        public void put(int pipelineIndex, byte[] bs, int offset, int length) {
+            if (tail == null) {
+                head = new PipelineDataItem(pipelineIndex, bs, offset, length);
+                tail = head;
+            } else {
+                PipelineDataItem item = new PipelineDataItem(pipelineIndex, bs, offset, length);
+                tail.next = item;
+                tail = item;
+            }
+            itemsize++;
+        }
+    }
+
+    private static class PipelineDataItem implements Comparable<PipelineDataItem> {
+
+        final byte[] data;
+
+        final int index;
+
+        public PipelineDataItem next;
+
+        public PipelineDataItem(int index, byte[] bs, int offset, int length) {
+            this.index = index;
+            this.data = Arrays.copyOfRange(bs, offset, offset + length);
+        }
+
+        @Override
+        public int compareTo(PipelineDataItem o) {
+            return this.index - o.index;
+        }
+
+        @Override
+        public String toString() {
+            return "{\"index\":" + index + "}";
         }
     }
 
@@ -199,11 +402,7 @@ public abstract class AsyncConnection implements AutoCloseable {
         }
         if (this.readBuffer != null) {
             Consumer<ByteBuffer> consumer = this.bufferConsumer;
-//            Thread thread = Thread.currentThread();
-//            if (thread instanceof IOThread) {
-//                consumer = ((IOThread) thread).getBufferPool();
-//            }
-            consumer.accept(this.readBuffer);
+            if (consumer != null) consumer.accept(this.readBuffer);
         }
         if (attributes == null) return;
         try {
@@ -243,157 +442,6 @@ public abstract class AsyncConnection implements AutoCloseable {
 
     public final void clearAttribute() {
         if (this.attributes != null) this.attributes.clear();
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------
-    /**
-     * 创建TCP协议客户端连接
-     *
-     * @param bufferPool          ByteBuffer对象池
-     * @param address             连接点子
-     * @param group               连接AsynchronousChannelGroup
-     * @param readTimeoutSeconds  读取超时秒数
-     * @param writeTimeoutSeconds 写入超时秒数
-     *
-     * @return 连接CompletableFuture
-     */
-    public static CompletableFuture<AsyncConnection> createTCP(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousChannelGroup group,
-        final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return createTCP(bufferPool, group, null, address, readTimeoutSeconds, writeTimeoutSeconds);
-    }
-
-    /**
-     * 创建TCP协议客户端连接
-     *
-     * @param bufferPool          ByteBuffer对象池
-     * @param address             连接点子
-     * @param sslContext          SSLContext
-     * @param group               连接AsynchronousChannelGroup
-     * @param readTimeoutSeconds  读取超时秒数
-     * @param writeTimeoutSeconds 写入超时秒数
-     *
-     * @return 连接CompletableFuture
-     */
-    public static CompletableFuture<AsyncConnection> createTCP(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousChannelGroup group, final SSLContext sslContext,
-        final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return createTCP(bufferPool, bufferPool, group, sslContext, address, readTimeoutSeconds, writeTimeoutSeconds);
-    }
-
-    /**
-     * 创建TCP协议客户端连接
-     *
-     * @param bufferSupplier      ByteBuffer生产器
-     * @param bufferConsumer      ByteBuffer回收器
-     * @param address             连接点子
-     * @param sslContext          SSLContext
-     * @param group               连接AsynchronousChannelGroup
-     * @param readTimeoutSeconds  读取超时秒数
-     * @param writeTimeoutSeconds 写入超时秒数
-     *
-     * @return 连接CompletableFuture
-     */
-    public static CompletableFuture<AsyncConnection> createTCP(final Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer, final AsynchronousChannelGroup group, final SSLContext sslContext,
-        final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        final CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
-        try {
-            final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
-            try {
-                channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-            } catch (IOException e) {
-            }
-            channel.connect(address, null, new CompletionHandler<Void, Void>() {
-                @Override
-                public void completed(Void result, Void attachment) {
-                    future.complete(new AioTcpAsyncConnection(bufferSupplier, bufferConsumer, channel, sslContext, address, readTimeoutSeconds, writeTimeoutSeconds, null, null));
-                }
-
-                @Override
-                public void failed(Throwable exc, Void attachment) {
-                    future.completeExceptionally(exc);
-                }
-            });
-        } catch (IOException e) {
-            future.completeExceptionally(e);
-        }
-        return future;
-    }
-
-//    public static AsyncConnection create(final Socket socket) {
-//        return create(socket, null, 0, 0);
-//    }
-//    public static AsyncConnection create(final Socket socket, final SocketAddress addr0, final int readTimeoutSecond0, final int writeTimeoutSecond0) {
-//        return new TcpBioAsyncConnection(socket, addr0, readTimeoutSecond0, writeTimeoutSecond0, null, null);
-//    }
-//
-//    public static AsyncConnection create(final Socket socket, final SocketAddress addr0, final int readTimeoutSecond0,
-//        final int writeTimeoutSecond0, final AtomicLong livingCounter, final AtomicLong closedCounter) {
-//        return new TcpBioAsyncConnection(socket, addr0, readTimeoutSecond0, writeTimeoutSecond0, livingCounter, closedCounter);
-//    }
-//
-//    public static AsyncConnection create(final SocketChannel ch, SocketAddress addr, final Selector selector,
-//        final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
-//        return new TcpNioAsyncConnection(ch, addr, selector, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
-//    }
-//
-//    public static AsyncConnection create(final SocketChannel ch, final SocketAddress addr0, final Selector selector, final Context context) {
-//        return new TcpNioAsyncConnection(ch, addr0, selector, context.readTimeoutSeconds, context.writeTimeoutSeconds, null, null);
-//    }
-//
-//    public static AsyncConnection create(final SocketChannel ch, SocketAddress addr, final Selector selector,
-//        final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
-//        final AtomicLong livingCounter, final AtomicLong closedCounter) {
-//        return new TcpNioAsyncConnection(ch, addr, selector, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
-//    }
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final DatagramChannel ch,
-        SocketAddress addr, final boolean client0,
-        final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
-        return new BioUdpAsyncConnection(bufferPool, bufferPool, ch, null, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
-    }
-
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final DatagramChannel ch,
-        SocketAddress addr, final boolean client0,
-        final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
-        final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new BioUdpAsyncConnection(bufferPool, bufferPool, ch, null, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
-    }
-
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final DatagramChannel ch, SSLContext sslContext,
-        SocketAddress addr, final boolean client0,
-        final int readTimeoutSeconds0, final int writeTimeoutSeconds0) {
-        return new BioUdpAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, null, null);
-    }
-
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final DatagramChannel ch, SSLContext sslContext,
-        SocketAddress addr, final boolean client0,
-        final int readTimeoutSeconds0, final int writeTimeoutSeconds0,
-        final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new BioUdpAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr, client0, readTimeoutSeconds0, writeTimeoutSeconds0, livingCounter, closedCounter);
-    }
-
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch) {
-        return create(bufferPool, ch, null, 0, 0);
-    }
-
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return new AioTcpAsyncConnection(bufferPool, bufferPool, ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
-    }
-
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch, SSLContext sslContext,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return new AioTcpAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, null, null);
-    }
-
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds, final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new AioTcpAsyncConnection(bufferPool, bufferPool, ch, null, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
-    }
-
-    public static AsyncConnection create(final ObjectPool<ByteBuffer> bufferPool, final AsynchronousSocketChannel ch, SSLContext sslContext,
-        final SocketAddress addr0, final int readTimeoutSeconds, final int writeTimeoutSeconds, final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        return new AioTcpAsyncConnection(bufferPool, bufferPool, ch, sslContext, addr0, readTimeoutSeconds, writeTimeoutSeconds, livingCounter, closedCounter);
     }
 
 }

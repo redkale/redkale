@@ -52,7 +52,8 @@ public @interface RetLabel {
         public static Map<String, Map<Integer, String>> loadMap(Class clazz) {
             final Map<String, Map<Integer, String>> rets = new HashMap<>();
             ServiceLoader<RetInfoTransfer> loader = ServiceLoader.load(RetInfoTransfer.class);
-            RetInfoTransfer func = loader.findFirst().orElse(null);
+            Iterator<RetInfoTransfer> it = loader.iterator();
+            RetInfoTransfer func = it.hasNext() ? it.next() : null;
             for (Field field : clazz.getFields()) {
                 if (!Modifier.isStatic(field.getModifiers())) continue;
                 if (field.getType() != int.class) continue;

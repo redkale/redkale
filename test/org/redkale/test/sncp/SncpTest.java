@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.LogManager;
 import org.redkale.convert.bson.*;
-import org.redkale.net.TransportFactory;
+import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -32,6 +32,8 @@ public class SncpTest {
     private static final int port = 4040;
 
     private static final int port2 = 4240;
+
+    private static final String protocol = "SNCP.UDP";
 
     public static void main(String[] args) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -79,7 +81,9 @@ public class SncpTest {
         Set<InetSocketAddress> set = new LinkedHashSet<>();
         set.add(addr);
         if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-        final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        asyncGroup.start();
+        final TransportFactory transFactory = TransportFactory.create(asyncGroup, protocol.endsWith(".UDP") ? "UDP" : "TCP", 0, 0);
         transFactory.addGroupInfo("client", set);
         final SncpTestIService service = Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, addr, "client");
         ResourceFactory.root().inject(service);
@@ -146,6 +150,8 @@ public class SncpTest {
     private static void runServer() throws Exception {
         InetSocketAddress addr = new InetSocketAddress(myhost, port);
         final CountDownLatch cdl = new CountDownLatch(1);
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        asyncGroup.start();
         new Thread() {
             {
                 setName("Thread-Server-01");
@@ -154,20 +160,21 @@ public class SncpTest {
             @Override
             public void run() {
                 try {
-                    SncpServer server = new SncpServer();
+                    AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
+                    conf.addValue("host", "0.0.0.0");
+                    conf.addValue("port", "" + port);
+                    conf.addValue("protocol", protocol);
+                    SncpServer server = new SncpServer(null, System.currentTimeMillis(), conf, ResourceFactory.root());
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     if (port2 > 0) set.add(new InetSocketAddress(myhost, port2));
-                    final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+                    final TransportFactory transFactory = TransportFactory.create(asyncGroup, protocol.endsWith(".UDP") ? "UDP" : "TCP", 0, 0);
                     transFactory.addGroupInfo("server", set);
                     SncpTestIService service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, transFactory, addr, "server");
                     ResourceFactory.root().inject(service);
                     server.addSncpServlet(service);
                     System.out.println(service);
-                    AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
-                    conf.addValue("host", "0.0.0.0");
-                    conf.addValue("port", "" + port);
                     server.init(conf);
-                    server.start();
+                    server.start(null);
                     cdl.countDown();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -180,6 +187,8 @@ public class SncpTest {
     private static void runServer2() throws Exception {
         InetSocketAddress addr = new InetSocketAddress(myhost, port2);
         final CountDownLatch cdl = new CountDownLatch(1);
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        asyncGroup.start();
         new Thread() {
             {
                 setName("Thread-Server-02");
@@ -188,19 +197,20 @@ public class SncpTest {
             @Override
             public void run() {
                 try {
-                    SncpServer server = new SncpServer();
-                    Set<InetSocketAddress> set = new LinkedHashSet<>();
-                    set.add(new InetSocketAddress(myhost, port));
-
-                    final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
-                    transFactory.addGroupInfo("server", set);
-                    Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, transFactory, addr, "server");
-                    server.addSncpServlet(service);
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port2);
+                    conf.addValue("protocol", protocol);
+                    SncpServer server = new SncpServer(null, System.currentTimeMillis(), conf, ResourceFactory.root());
+                    Set<InetSocketAddress> set = new LinkedHashSet<>();
+                    set.add(new InetSocketAddress(myhost, port));
+
+                    final TransportFactory transFactory = TransportFactory.create(asyncGroup, protocol.endsWith(".UDP") ? "UDP" : "TCP", 0, 0);
+                    transFactory.addGroupInfo("server", set);
+                    Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, transFactory, addr, "server");
+                    server.addSncpServlet(service);
                     server.init(conf);
-                    server.start();
+                    server.start(null);
                     cdl.countDown();
                 } catch (Exception e) {
                     e.printStackTrace();

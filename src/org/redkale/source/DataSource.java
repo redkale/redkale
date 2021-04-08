@@ -1321,6 +1321,56 @@ public interface DataSource {
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final Serializable pk);
 
     /**
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param pks   主键值集合
+     *
+     * @return Entity对象
+     */
+    //public <T> T[] finds(final Class<T> clazz, final Serializable... pks);
+
+    /**
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param pks   主键值集合
+     *
+     * @return Entity对象 CompletableFuture
+     */
+    //public <T> CompletableFuture<T[]> findsAsync(final Class<T> clazz, final Serializable... pks);
+
+    /**
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param pks     主键值集合
+     *
+     * @return Entity对象
+     */
+    //public <T> T[] finds(final Class<T> clazz, final SelectColumn selects, final Serializable... pks);
+
+    /**
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param selects 指定字段
+     * @param pks     主键值集合
+     *
+     * @return Entity对象CompletableFuture
+     */
+    //public <T> CompletableFuture<T[]> findsAsync(final Class<T> clazz, final SelectColumn selects, final Serializable... pks);
+
+    /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
      *

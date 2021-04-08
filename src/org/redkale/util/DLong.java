@@ -57,6 +57,16 @@ public final class DLong extends Number implements Comparable<DLong> {
         return buffer;
     }
 
+    public static ByteArray write(ByteArray array, DLong dlong) {
+        array.put(dlong.value);
+        return array;
+    }
+
+    public static ByteArray write(ByteArray array, int offset, DLong dlong) {
+        array.put(offset, dlong.value);
+        return array;
+    }
+
     public boolean equals(byte[] bytes) {
         return Arrays.equals(this.value, bytes);
     }
@@ -88,13 +98,13 @@ public final class DLong extends Number implements Comparable<DLong> {
     @Override
     public long longValue() {
         return ((((long) value[8] & 0xff) << 56)
-                | (((long) value[9] & 0xff) << 48)
-                | (((long) value[10] & 0xff) << 40)
-                | (((long) value[11] & 0xff) << 32)
-                | (((long) value[12] & 0xff) << 24)
-                | (((long) value[13] & 0xff) << 16)
-                | (((long) value[14] & 0xff) << 8)
-                | (((long) value[15] & 0xff)));
+            | (((long) value[9] & 0xff) << 48)
+            | (((long) value[10] & 0xff) << 40)
+            | (((long) value[11] & 0xff) << 32)
+            | (((long) value[12] & 0xff) << 24)
+            | (((long) value[13] & 0xff) << 16)
+            | (((long) value[14] & 0xff) << 8)
+            | (((long) value[15] & 0xff)));
     }
 
     @Override

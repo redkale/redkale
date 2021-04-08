@@ -39,9 +39,9 @@ import org.redkale.util.*;
  */
 public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
-    private static final ObjectPool<BsonReader> readerPool = BsonReader.createPool(Integer.getInteger("convert.bson.pool.size", Integer.getInteger("convert.pool.size", 16)));
+    private final ThreadLocal<BsonWriter> writerPool = ThreadLocal.withInitial(BsonWriter::new);
 
-    private static final ObjectPool<BsonWriter> writerPool = BsonWriter.createPool(Integer.getInteger("convert.bson.pool.size", Integer.getInteger("convert.pool.size", 16)));
+    private final Consumer<BsonWriter> offerConsumer = w -> offerBsonWriter(w);
 
     private final boolean tiny;
 
@@ -84,11 +84,11 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     }
 
     public BsonReader pollBsonReader() {
-        return readerPool.get();
+        return new BsonReader();
     }
 
     public void offerBsonReader(final BsonReader in) {
-        if (in != null) readerPool.accept(in);
+        //无需回收
     }
 
     //------------------------------ writer -----------------------------------------------------------
@@ -96,16 +96,25 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         return configWrite(new BsonByteBufferWriter(tiny, supplier));
     }
 
-    public BsonWriter pollBsonWriter(final OutputStream out) {
+    protected BsonWriter pollBsonWriter(final OutputStream out) {
         return configWrite(new BsonStreamWriter(tiny, out));
     }
 
     public BsonWriter pollBsonWriter() {
-        return writerPool.get().tiny(tiny);
+        BsonWriter writer = writerPool.get();
+        if (writer == null) {
+            writer = new BsonWriter();
+        } else {
+            writerPool.set(null);
+        }
+        return configWrite(writer.tiny(tiny));
     }
 
     public void offerBsonWriter(final BsonWriter out) {
-        if (out != null) writerPool.accept(out);
+        if (out != null) {
+            out.recycle();
+            writerPool.set(out);
+        }
     }
 
     //------------------------------ convertFrom -----------------------------------------------------------
@@ -119,11 +128,9 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int len) {
         if (type == null) return null;
-        final BsonReader in = readerPool.get();
-        in.setBytes(bytes, offset, len);
+        final BsonReader in = new BsonReader(bytes, offset, len);
         @SuppressWarnings("unchecked")
         T rs = (T) factory.loadDecoder(type).convertFrom(in);
-        readerPool.accept(in);
         return rs;
     }
 
@@ -159,10 +166,10 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @Override
     public byte[] convertTo(final Object value) {
         if (value == null) {
-            final BsonWriter out = writerPool.get().tiny(tiny);
+            final BsonWriter out = pollBsonWriter();
             out.writeNull();
             byte[] result = out.toArray();
-            writerPool.accept(out);
+            offerBsonWriter(out);
             return result;
         }
         return convertTo(value.getClass(), value);
@@ -171,10 +178,10 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @Override
     public byte[] convertTo(final Type type, final Object value) {
         if (type == null) return null;
-        final BsonWriter out = writerPool.get().tiny(tiny);
-        factory.loadEncoder(type).convertTo(out, value);
-        byte[] result = out.toArray();
-        writerPool.accept(out);
+        final BsonWriter writer = pollBsonWriter();
+        factory.loadEncoder(type).convertTo(writer, value);
+        byte[] result = writer.toArray();
+        offerBsonWriter(writer);
         return result;
     }
 
@@ -189,13 +196,35 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     }
 
     @Override
-    public byte[] convertMapTo(final Object... values) {
-        if (values == null) return null;
-        final BsonWriter out = writerPool.get().tiny(tiny);
-        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
-        byte[] result = out.toArray();
-        writerPool.accept(out);
-        return result;
+    public void convertToBytes(final Object value, final ConvertBytesHandler handler) {
+        convertToBytes(value == null ? null : value.getClass(), value, handler);
+    }
+
+    @Override
+    public void convertToBytes(final Type type, final Object value, final ConvertBytesHandler handler) {
+        final BsonWriter writer = pollBsonWriter();
+        if (type == null) {
+            writer.writeNull();
+        } else {
+            factory.loadEncoder(type).convertTo(writer, value);
+        }
+        writer.completed(handler, offerConsumer);
+    }
+
+    @Override
+    public void convertToBytes(final ByteArray array, final Object value) {
+        convertToBytes(array, value == null ? null : value.getClass(), value);
+    }
+
+    @Override
+    public void convertToBytes(final ByteArray array, final Type type, final Object value) {
+        final BsonWriter writer = configWrite(new BsonWriter(array).tiny(tiny));
+        if (type == null) {
+            writer.writeNull();
+        } else {
+            factory.loadEncoder(type).convertTo(writer, value);
+        }
+        writer.directTo(array);
     }
 
     public void convertTo(final OutputStream out, final Object value) {
@@ -215,14 +244,6 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         }
     }
 
-    public void convertMapTo(final OutputStream out, final Object... values) {
-        if (values == null) {
-            pollBsonWriter(out).writeNull();
-        } else {
-            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(pollBsonWriter(out), values);
-        }
-    }
-
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
         if (supplier == null) return null;
@@ -238,36 +259,13 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
         if (supplier == null || type == null) return null;
-        BsonByteBufferWriter out = pollBsonWriter(supplier);
+        BsonByteBufferWriter writer = pollBsonWriter(supplier);
         if (value == null) {
-            out.writeNull();
+            writer.writeNull();
         } else {
-            factory.loadEncoder(type).convertTo(out, value);
+            factory.loadEncoder(type).convertTo(writer, value);
         }
-        return out.toBuffers();
-    }
-
-    @Override
-    public byte[] convertMapToBytes(final Object... values) {
-        BsonWriter out = pollBsonWriter();
-        if (values == null) {
-            out.writeNull();
-        } else {
-            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
-        }
-        return out.toArray();
-    }
-
-    @Override
-    public ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values) {
-        if (supplier == null) return null;
-        BsonByteBufferWriter out = pollBsonWriter(supplier);
-        if (values == null) {
-            out.writeNull();
-        } else {
-            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
-        }
-        return out.toBuffers();
+        return writer.toBuffers();
     }
 
     public void convertTo(final BsonWriter writer, final Object value) {
@@ -283,14 +281,6 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         factory.loadEncoder(type).convertTo(writer, value);
     }
 
-    public void convertMapTo(final BsonWriter writer, final Object... values) {
-        if (values == null) {
-            writer.writeNull();
-        } else {
-            ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(writer, values);
-        }
-    }
-
     public BsonWriter convertToWriter(final Object value) {
         if (value == null) return null;
         return convertToWriter(value.getClass(), value);
@@ -298,14 +288,8 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     public BsonWriter convertToWriter(final Type type, final Object value) {
         if (type == null) return null;
-        final BsonWriter out = writerPool.get().tiny(tiny);
-        factory.loadEncoder(type).convertTo(out, value);
-        return out;
-    }
-
-    public BsonWriter convertMapToWriter(final Object... values) {
-        final BsonWriter out = writerPool.get().tiny(tiny);
-        ((AnyEncoder) factory.getAnyEncoder()).convertMapTo(out, values);
-        return out;
+        final BsonWriter writer = writerPool.get().tiny(tiny);
+        factory.loadEncoder(type).convertTo(writer, value);
+        return writer;
     }
 }

@@ -32,5 +32,4 @@ public abstract class BinaryConvert<R extends Reader, W extends Writer> extends 
 
     public abstract byte[] convertTo(final Type type, final Object value);
 
-    public abstract byte[] convertMapTo(final Object... values);
 }

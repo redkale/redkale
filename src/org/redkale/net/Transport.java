@@ -30,7 +30,7 @@ import org.redkale.util.*;
  */
 public final class Transport {
 
-    public static final String DEFAULT_PROTOCOL = "TCP";
+    public static final String DEFAULT_NETPROTOCOL = "TCP";
 
     protected final AtomicInteger seq = new AtomicInteger(-1);
 
@@ -40,16 +40,15 @@ public final class Transport {
 
     protected final boolean tcp;
 
-    protected final String protocol;
+    protected final String netprotocol;
 
-    protected final AsynchronousChannelGroup group;
+    //传输端的AsyncGroup
+    protected final AsyncGroup asyncGroup;
 
     protected final InetSocketAddress clientAddress;
 
     //不可能为null
     protected TransportNode[] transportNodes = new TransportNode[0];
-
-    protected final ObjectPool<ByteBuffer> bufferPool;
 
     protected final SSLContext sslContext;
 
@@ -59,23 +58,20 @@ public final class Transport {
     //连接上限， 为null表示无限制
     protected Semaphore semaphore;
 
-    protected Transport(String name, TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
-        final AsynchronousChannelGroup transportChannelGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
+    protected Transport(String name, TransportFactory factory, final AsyncGroup asyncGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
         final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
-        this(name, DEFAULT_PROTOCOL, factory, transportBufferPool, transportChannelGroup, sslContext, clientAddress, addresses, strategy);
+        this(name, DEFAULT_NETPROTOCOL, factory, asyncGroup, sslContext, clientAddress, addresses, strategy);
     }
 
-    protected Transport(String name, String protocol, final TransportFactory factory, final ObjectPool<ByteBuffer> transportBufferPool,
-        final AsynchronousChannelGroup transportChannelGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
+    protected Transport(String name, String netprotocol, final TransportFactory factory, final AsyncGroup asyncGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
         final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
         this.name = name;
-        this.protocol = protocol;
+        this.netprotocol = netprotocol;
         this.factory = factory;
         factory.transportReferences.add(new WeakReference<>(this));
-        this.tcp = "TCP".equalsIgnoreCase(protocol);
-        this.group = transportChannelGroup;
+        this.tcp = "TCP".equalsIgnoreCase(netprotocol);
+        this.asyncGroup = asyncGroup;
         this.sslContext = sslContext;
-        this.bufferPool = transportBufferPool;
         this.clientAddress = clientAddress;
         this.strategy = strategy;
         updateRemoteAddresses(addresses);
@@ -190,44 +186,19 @@ public final class Transport {
 
     @Override
     public String toString() {
-        return Transport.class.getSimpleName() + "{name = " + name + ", protocol = " + protocol + ", clientAddress = " + clientAddress + ", remoteNodes = " + Arrays.toString(transportNodes) + "}";
+        return Transport.class.getSimpleName() + "{name = " + name + ", protocol = " + netprotocol + ", clientAddress = " + clientAddress + ", remoteNodes = " + Arrays.toString(transportNodes) + "}";
     }
 
-    public ByteBuffer pollBuffer() {
-        return bufferPool.get();
-    }
-
-    public Supplier<ByteBuffer> getBufferSupplier() {
-        return bufferPool;
-    }
-
-    public void offerBuffer(ByteBuffer buffer) {
-        bufferPool.accept(buffer);
-    }
-
-    public void offerBuffer(ByteBuffer... buffers) {
-        for (ByteBuffer buffer : buffers) offerBuffer(buffer);
-    }
-
-    public AsynchronousChannelGroup getTransportChannelGroup() {
-        return group;
-    }
-
-    public String getProtocol() {
-        return protocol;
+    public String getNetprotocol() {
+        return netprotocol;
     }
 
     public boolean isTCP() {
         return tcp;
     }
 
-    protected CompletableFuture<AsyncConnection> pollAsync(TransportNode node, SocketAddress addr, Supplier<CompletableFuture<AsyncConnection>> func, final int count) {
-        if (count >= 5) {
-            CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
-            future.completeExceptionally(new RuntimeException("create AsyncConnection error"));
-            return future;
-        }
-        final BlockingQueue<AsyncConnection> queue = node.conns;
+    protected CompletableFuture<AsyncConnection> pollAsync(TransportNode node, SocketAddress addr, Supplier<CompletableFuture<AsyncConnection>> func) {
+        final BlockingQueue<AsyncConnection> queue = node.connQueue;
         if (!queue.isEmpty()) {
             AsyncConnection conn;
             while ((conn = queue.poll()) != null) {
@@ -239,24 +210,16 @@ public final class Transport {
             }
         }
         if (semaphore != null && !semaphore.tryAcquire()) {
-            return CompletableFuture.supplyAsync(() -> {
-                try {
-                    return queue.poll(1, TimeUnit.SECONDS);
-                } catch (Exception t) {
-                    return null;
-                }
-            }, factory.executor).thenCompose((conn2) -> {
-                if (conn2 != null && conn2.isOpen()) {
-                    return CompletableFuture.completedFuture(conn2);
-                }
-                return pollAsync(node, addr, func, count + 1);
-            });
+            final CompletableFuture<AsyncConnection> future = Utility.orTimeout(new CompletableFuture<>(), 10, TimeUnit.SECONDS);
+            future.whenComplete((r, t) -> node.pollQueue.remove(future));
+            if (node.pollQueue.offer(future)) return future;
+            future.completeExceptionally(new IOException("create transport connection error"));
+            return future;
         }
         return func.get().thenApply(conn -> {
             if (conn != null && semaphore != null) conn.beforeCloseListener((c) -> semaphore.release());
             return conn;
         });
-
     }
 
     public CompletableFuture<AsyncConnection> pollConnection(SocketAddress addr0) {
@@ -269,17 +232,12 @@ public final class Transport {
         try {
             if (!tcp) { // UDP
                 SocketAddress udpaddr = rand ? nodes[0].address : addr;
-                DatagramChannel channel = DatagramChannel.open();
-                channel.configureBlocking(true);
-                channel.connect(udpaddr);
-                return CompletableFuture.completedFuture(AsyncConnection.create(bufferPool, channel, sslContext, udpaddr, true, factory.readTimeoutSeconds, factory.writeTimeoutSeconds));
+                return asyncGroup.createUDP(udpaddr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
             }
             if (!rand) { //指定地址
                 TransportNode node = findTransportNode(addr);
-                if (node == null) {
-                    return AsyncConnection.createTCP(bufferPool, group, sslContext, addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
-                }
-                return pollAsync(node, addr, () -> AsyncConnection.createTCP(bufferPool, group, sslContext, addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds), 1);
+                if (node == null) return asyncGroup.createTCP(addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
+                return pollAsync(node, addr, () -> asyncGroup.createTCP(addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds));
             }
 
             //---------------------随机取地址------------------------
@@ -292,7 +250,7 @@ public final class Transport {
             final long now = System.currentTimeMillis();
             if (enablecount > 0) { //存在可用的地址
                 final TransportNode one = newnodes[Math.abs(seq.incrementAndGet()) % enablecount];
-                final BlockingQueue<AsyncConnection> queue = one.conns;
+                final BlockingQueue<AsyncConnection> queue = one.connQueue;
                 if (!queue.isEmpty()) {
                     AsyncConnection conn;
                     while ((conn = queue.poll()) != null) {
@@ -304,52 +262,11 @@ public final class Transport {
                     }
                 }
                 return pollAsync(one, one.getAddress(), () -> {
-                    CompletableFuture future = new CompletableFuture();
-                    AsynchronousSocketChannel channel0 = null;
-                    try {
-                        channel0 = AsynchronousSocketChannel.open(group);
-                        channel0.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                        channel0.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                        channel0.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                    final AsynchronousSocketChannel channel = channel0;
-                    channel.connect(one.address, one, new CompletionHandler<Void, TransportNode>() {
-                        @Override
-                        public void completed(Void result, TransportNode attachment) {
-                            attachment.disabletime = 0;
-                            AsyncConnection asyncConn = AsyncConnection.create(bufferPool, channel, attachment.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
-                            if (future.isDone()) {
-                                if (!attachment.conns.offer(asyncConn)) asyncConn.dispose();
-                            } else {
-                                future.complete(asyncConn);
-                            }
-                        }
-
-                        @Override
-                        public void failed(Throwable exc, TransportNode attachment) {
-                            attachment.disabletime = now;
-                            try {
-                                channel.close();
-                            } catch (Exception e) {
-                            }
-                            try {
-                                pollConnection0(nodes, one, now).whenComplete((r, t) -> {
-                                    if (t != null) {
-                                        future.completeExceptionally(t);
-                                    } else {
-                                        future.complete(r);
-                                    }
-                                });
-
-                            } catch (Exception e) {
-                                future.completeExceptionally(e);
-                            }
-                        }
-                    });
-                    return future;
-                }, 1);
+                    return asyncGroup.createTCP(one.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
+                        .whenComplete((c, t) -> {
+                            one.disabletime = t == null ? 0 : System.currentTimeMillis();
+                        });
+                });
             }
             return pollConnection0(nodes, null, now);
         } catch (Exception ex) {
@@ -359,43 +276,15 @@ public final class Transport {
 
     private CompletableFuture<AsyncConnection> pollConnection0(TransportNode[] nodes, TransportNode exclude, long now) throws IOException {
         //从可用/不可用的地址列表中创建连接
-        AtomicInteger count = new AtomicInteger(nodes.length);
         CompletableFuture future = new CompletableFuture();
         for (final TransportNode node : nodes) {
             if (node == exclude) continue;
             if (future.isDone()) return future;
-            final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
-            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-            channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-            channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-            channel.connect(node.address, node, new CompletionHandler<Void, TransportNode>() {
-                @Override
-                public void completed(Void result, TransportNode attachment) {
-                    try {
-                        attachment.disabletime = 0;
-                        AsyncConnection asyncConn = AsyncConnection.create(bufferPool, channel, attachment.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
-                        if (future.isDone()) {
-                            if (!attachment.conns.offer(asyncConn)) asyncConn.dispose();
-                        } else {
-                            future.complete(asyncConn);
-                        }
-                    } catch (Exception e) {
-                        failed(e, attachment);
-                    }
-                }
-
-                @Override
-                public void failed(Throwable exc, TransportNode attachment) {
-                    attachment.disabletime = now;
-                    if (count.decrementAndGet() < 1) {
-                        future.completeExceptionally(exc);
-                    }
-                    try {
-                        channel.close();
-                    } catch (Exception e) {
-                    }
-                }
-            });
+            asyncGroup.createTCP(node.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
+                .whenComplete((c, t) -> {
+                    if (c != null && !future.complete(c)) node.connQueue.offer(c);
+                    node.disabletime = t == null ? 0 : System.currentTimeMillis();
+                });
         }
         return future;
     }
@@ -405,7 +294,7 @@ public final class Transport {
         if (!forceClose && conn.isTCP()) {
             if (conn.isOpen()) {
                 TransportNode node = findTransportNode(conn.getRemoteAddress());
-                if (node == null || !node.conns.offer(conn)) conn.dispose();
+                if (node == null || !node.connQueue.offer(conn)) conn.dispose();
             } else {
                 conn.dispose();
             }
@@ -459,25 +348,29 @@ public final class Transport {
 
         protected volatile long disabletime; //不可用时的时间, 为0表示可用
 
-        protected final BlockingQueue<AsyncConnection> conns;
+        protected final BlockingQueue<AsyncConnection> connQueue;
+
+        protected final ArrayBlockingQueue<CompletableFuture<AsyncConnection>> pollQueue;
 
         protected final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
 
         public TransportNode(int poolmaxconns, InetSocketAddress address) {
             this.address = address;
             this.disabletime = 0;
-            this.conns = new ArrayBlockingQueue<>(poolmaxconns);
+            this.connQueue = new ArrayBlockingQueue<>(poolmaxconns);
+            this.pollQueue = new ArrayBlockingQueue(this.connQueue.remainingCapacity() * 100);
         }
 
         @ConstructorParameters({"poolmaxconns", "address", "disabletime"})
         public TransportNode(int poolmaxconns, InetSocketAddress address, long disabletime) {
             this.address = address;
             this.disabletime = disabletime;
-            this.conns = new LinkedBlockingQueue<>(poolmaxconns);
+            this.connQueue = new LinkedBlockingQueue<>(poolmaxconns);
+            this.pollQueue = new ArrayBlockingQueue(this.connQueue.remainingCapacity() * 100);
         }
 
         public int getPoolmaxconns() {
-            return this.conns.remainingCapacity() + this.conns.size();
+            return this.connQueue.remainingCapacity() + this.connQueue.size();
         }
 
         public <T> T setAttribute(String name, T value) {
@@ -518,13 +411,13 @@ public final class Transport {
         }
 
         @ConvertDisabled
-        public BlockingQueue<AsyncConnection> getConns() {
-            return conns;
+        public BlockingQueue<AsyncConnection> getConnQueue() {
+            return connQueue;
         }
 
         public void dispose() {
             AsyncConnection conn;
-            while ((conn = conns.poll()) != null) {
+            while ((conn = connQueue.poll()) != null) {
                 conn.dispose();
             }
         }

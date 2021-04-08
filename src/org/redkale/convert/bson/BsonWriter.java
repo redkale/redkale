@@ -7,6 +7,7 @@ package org.redkale.convert.bson;
 
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.util.function.Consumer;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.ByteSimpledCoder;
 import org.redkale.util.*;
@@ -18,7 +19,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class BsonWriter extends Writer {
+public class BsonWriter extends Writer implements ByteTuple {
 
     private static final int defaultSize = Integer.getInteger("convert.bson.writer.buffer.defsize", Integer.getInteger("convert.writer.buffer.defsize", 1024));
 
@@ -30,6 +31,47 @@ public class BsonWriter extends Writer {
 
     public static ObjectPool<BsonWriter> createPool(int max) {
         return ObjectPool.createSafePool(max, (Object... params) -> new BsonWriter(), null, (t) -> t.recycle());
+    }
+
+    @Override
+    public byte[] content() {
+        return content;
+    }
+
+    @Override
+    public int offset() {
+        return 0;
+    }
+
+    @Override
+    public int length() {
+        return count;
+    }
+
+    /**
+     * 直接获取全部数据, 实际数据需要根据count长度来截取
+     *
+     * @return byte[]
+     */
+    public byte[] directBytes() {
+        return content;
+    }
+
+    /**
+     * 将本对象的内容引用复制给array
+     *
+     * @param array ByteArray
+     */
+    public void directTo(ByteArray array) {
+        array.directFrom(content, count);
+    }
+
+    public void completed(ConvertBytesHandler handler, Consumer<BsonWriter> callback) {
+        handler.completed(content, 0, count, callback, this);
+    }
+
+    public ByteArray toByteArray() {
+        return new ByteArray(this);
     }
 
     public byte[] toArray() {
@@ -53,6 +95,11 @@ public class BsonWriter extends Writer {
 
     public BsonWriter(int size) {
         this.content = new byte[size > 128 ? size : 128];
+    }
+
+    public BsonWriter(ByteArray array) {
+        this.content = array.content();
+        this.count = array.length();
     }
 
     @Override
@@ -201,7 +248,7 @@ public class BsonWriter extends Writer {
     }
 
     @Override
-    public final void writeFieldName(String fieldName, Type fieldType, int fieldPos) {
+    public final void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         writeByte(BsonReader.SIGN_HASNEXT);
         writeSmallString(fieldName);
         writeByte(BsonFactory.typeEnum(fieldType));

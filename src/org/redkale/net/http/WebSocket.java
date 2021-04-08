@@ -9,6 +9,7 @@ import org.redkale.net.http.WebSocketPacket.FrameType;
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
@@ -80,9 +81,12 @@ public abstract class WebSocket<G extends Serializable, T> {
     @Comment("WebSocket将延迟发送")
     public static final int RETCODE_DEAYSEND = 1 << 9; //512
 
-    WebSocketRunner _runner; //不可能为空 
-
     WebSocketEngine _engine; //不可能为空 
+
+    //WebSocketRunner _runner; //不可能为空 
+    WebSocketReadHandler _readHandler;
+
+    WebSocketWriteHandler _writeHandler;
 
     InetSocketAddress _sncpAddress; //分布式下不可为空
 
@@ -110,24 +114,33 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     long createtime = System.currentTimeMillis();
 
-    private long pingtime;
+    List<WebSocketPacket> delayPackets;
 
     private Map<String, Object> attributes = new HashMap<>(); //非线程安全
 
-    List<WebSocketPacket> delayPackets;
+    private long lastPingTime;
+
+    long lastReadTime;
+
+    long lastSendTime;
+
+    boolean initiateClosed; //收到客户端发送的CLOSE消息
+
+    private boolean closed = false;
 
     protected WebSocket() {
     }
 
     //----------------------------------------------------------------
     public final CompletableFuture<Integer> sendPing() {
-        this.pingtime = System.currentTimeMillis();
+        this.lastPingTime = System.currentTimeMillis();
         //if (_engine.finest) _engine.logger.finest(this + " on "+_engine.getEngineid()+" ping...");
         return sendPacket(WebSocketPacket.DEFAULT_PING_PACKET);
     }
 
     public final CompletableFuture<Integer> sendPing(byte[] data) {
-        this.pingtime = System.currentTimeMillis();
+        if (data == null) return sendPing();
+        this.lastPingTime = System.currentTimeMillis();
         return sendPacket(new WebSocketPacket(FrameType.PING, data));
     }
 
@@ -147,18 +160,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     public final CompletableFuture<Integer> send(Object message) {
-        return send(false, message, true);
-    }
-
-    /**
-     * 给自身发送消息, 消息类型是key-value键值对
-     *
-     * @param messages key-value键值对
-     *
-     * @return 0表示成功， 非0表示错误码
-     */
-    public final CompletableFuture<Integer> sendMap(Object... messages) {
-        return send(true, messages, true);
+        return send(message, true);
     }
 
     /**
@@ -170,48 +172,30 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     public final CompletableFuture<Integer> send(Object message, boolean last) {
-        return send(false, message, last);
-    }
-
-    /**
-     * 给自身发送消息, 消息类型是key-value键值对
-     *
-     * @param last     是否最后一条
-     * @param messages key-value键值对
-     *
-     * @return 0表示成功， 非0表示错误码
-     */
-    public final CompletableFuture<Integer> sendMap(boolean last, Object... messages) {
-        return send(true, messages, last);
-    }
-
-    /**
-     * 给自身发送消息, 消息类型是Object[]
-     *
-     * @param mapconvable 是否convertMapTo
-     * @param message     不可为空, 只能是String或byte[]或可JavaBean对象，或Object[]
-     * @param last        是否最后一条
-     *
-     * @return 0表示成功， 非0表示错误码
-     */
-    private CompletableFuture<Integer> send(boolean mapconvable, Object message, boolean last) {
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> {
-                if (json == null || json instanceof CharSequence || json instanceof byte[]) {
-                    return sendPacket(new WebSocketPacket((Serializable) json, last));
+                if (json instanceof CharSequence) {
+                    return sendPacket(new WebSocketPacket(json.toString(), last));
+                } else if (json == null || json instanceof byte[]) {
+                    return sendPacket(new WebSocketPacket((byte[]) json, last));
                 } else if (message instanceof WebSocketPacket) {
                     return sendPacket((WebSocketPacket) message);
                 } else {
-                    return sendPacket(new WebSocketPacket(getSendConvert(), mapconvable, json, last));
+                    Convert convert = getSendConvert();
+                    return sendPacket(new WebSocketPacket(convert.isBinary() ? FrameType.BINARY : FrameType.TEXT, convert.convertToBytes(json), last));
                 }
             });
         }
-        if (message == null || message instanceof CharSequence || message instanceof byte[]) {
-            return sendPacket(new WebSocketPacket((Serializable) message, last));
+        Object json = message;
+        if (json instanceof CharSequence) {
+            return sendPacket(new WebSocketPacket(FrameType.TEXT, json.toString().getBytes(StandardCharsets.UTF_8), last));
+        } else if (json == null || json instanceof byte[]) {
+            return sendPacket(new WebSocketPacket(FrameType.BINARY, (byte[]) json, last));
         } else if (message instanceof WebSocketPacket) {
             return sendPacket((WebSocketPacket) message);
         } else {
-            return sendPacket(new WebSocketPacket(getSendConvert(), mapconvable, message, last));
+            Convert convert = getSendConvert();
+            return sendPacket(new WebSocketPacket(convert.isBinary() ? FrameType.BINARY : FrameType.TEXT, convert.convertToBytes(json), last));
         }
     }
 
@@ -237,10 +221,11 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     public final CompletableFuture<Integer> send(Convert convert, Object message, boolean last) {
+        final Convert c = convert == null ? getSendConvert() : convert;
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(convert == null ? getSendConvert() : convert, false, json, last)));
+            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(c.isBinary() ? FrameType.BINARY : FrameType.TEXT, c.convertToBytes(json), last)));
         }
-        return sendPacket(new WebSocketPacket(convert == null ? getSendConvert() : convert, false, message, last));
+        return sendPacket(new WebSocketPacket(c.isBinary() ? FrameType.BINARY : FrameType.TEXT, c.convertToBytes(message), last));
     }
 
     /**
@@ -251,12 +236,12 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
-        if (this._runner == null) {
+        if (this._writeHandler == null) {
             if (delayPackets == null) delayPackets = new ArrayList<>();
             delayPackets.add(packet);
             return CompletableFuture.completedFuture(RETCODE_DEAYSEND);
         }
-        CompletableFuture<Integer> rs = this._runner.sendMessage(packet);
+        CompletableFuture<Integer> rs = this._writeHandler.send(packet);
         if (_engine.logger.isLoggable(Level.FINER) && packet != WebSocketPacket.DEFAULT_PING_PACKET) {
             _engine.logger.finer("userid:" + getUserid() + " send websocket message(" + packet + ")" + " on " + this);
         }
@@ -874,7 +859,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return long
      */
     public long getLastSendTime() {
-        return this._runner == null ? 0 : this._runner.lastSendTime;
+        return this.lastSendTime;
     }
 
     /**
@@ -883,7 +868,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return long
      */
     public long getLastReadTime() {
-        return this._runner == null ? 0 : this._runner.lastReadTime;
+        return this.lastReadTime;
     }
 
     /**
@@ -892,7 +877,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return long
      */
     public long getLastPingTime() {
-        return this.pingtime;
+        return this.lastPingTime;
     }
 
     /**
@@ -901,9 +886,22 @@ public abstract class WebSocket<G extends Serializable, T> {
     public final void close() {
         if (this.deflater != null) this.deflater.end();
         if (this.inflater != null) this.inflater.end();
-        if (this._runner != null) {
-            CompletableFuture<Void> future = this._runner.closeRunner(CLOSECODE_SERVERCLOSE, "user close");
-            if (future != null) future.join();
+        CompletableFuture<Void> future = kill(CLOSECODE_SERVERCLOSE, "user close");
+        if (future != null) future.join();
+    }
+
+    //closeRunner
+    CompletableFuture<Void> kill(int code, String reason) {
+        if (closed) return null;
+        synchronized (this) {
+            if (closed) return null;
+            closed = true;
+            if (_channel == null) return null;
+            CompletableFuture<Void> future = _engine.removeLocalThenDisconnect(this);
+            _channel.dispose();
+            CompletableFuture closeFuture = onClose(code, reason);
+            if (closeFuture == null) return future;
+            return CompletableFuture.allOf(future, closeFuture);
         }
     }
 
@@ -913,11 +911,11 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return boolean
      */
     public final boolean isClosed() {
-        return this._runner != null ? this._runner.closed : true;
+        return this.closed;
     }
 
     @Override
     public String toString() {
-        return this.getUserid() + "@" + _remoteAddr;
+        return this.getUserid() + "@" + _remoteAddr + "@" + Objects.hashCode(this);
     }
 }

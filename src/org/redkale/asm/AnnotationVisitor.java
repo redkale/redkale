@@ -60,8 +60,8 @@ package org.redkale.asm;
 
 /**
  * A visitor to visit a Java annotation. The methods of this class must be
- * called in the following order: ( <code>visit</code> | <code>visitEnum</code> |
- * <code>visitAnnotation</code> | <code>visitArray</code> )* <code>visitEnd</code>.
+ * called in the following order: ( &#60;tt&#62;visit&#60;/tt&#62; | &#60;tt&#62;visitEnum&#60;/tt&#62; |
+ * &#60;tt&#62;visitAnnotation&#60;/tt&#62; | &#60;tt&#62;visitArray&#60;/tt&#62; )* &#60;tt&#62;visitEnd&#60;/tt&#62;.
  *
  * @author Eric Bruneton
  * @author Eugene Kuleshov
@@ -102,6 +102,9 @@ public abstract class AnnotationVisitor {
      *            method calls. May be null.
      */
     public AnnotationVisitor(final int api, final AnnotationVisitor av) {
+        if (api < Opcodes.ASM4 || api > Opcodes.ASM6) {
+            throw new IllegalArgumentException();
+        }
         this.api = api;
         this.av = av;
     }
@@ -151,7 +154,7 @@ public abstract class AnnotationVisitor {
      * @param desc
      *            the class descriptor of the nested annotation class.
      * @return a visitor to visit the actual nested annotation value, or
-     *         <code>null</code> if this visitor is not interested in visiting this
+     *         &#60;tt&#62;null&#60;/tt&#62; if this visitor is not interested in visiting this
      *         nested annotation. <i>The nested annotation value must be fully
      *         visited before calling other methods on this annotation
      *         visitor</i>.
@@ -172,7 +175,7 @@ public abstract class AnnotationVisitor {
      * @param name
      *            the value name.
      * @return a visitor to visit the actual array value elements, or
-     *         <code>null</code> if this visitor is not interested in visiting these
+     *         &#60;tt&#62;null&#60;/tt&#62; if this visitor is not interested in visiting these
      *         values. The 'name' parameters passed to the methods of this
      *         visitor are ignored. <i>All the array values must be visited
      *         before calling other methods on this annotation visitor</i>.

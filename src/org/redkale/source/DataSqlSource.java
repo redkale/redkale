@@ -7,17 +7,18 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
+import javax.annotation.Resource;
+import org.redkale.net.AsyncGroup;
 import org.redkale.service.*;
 import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
+import static org.redkale.boot.Application.RESNAME_APP_GROUP;
 
 /**
  * DataSource的SQL抽象实现类 <br>
@@ -43,11 +44,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected URL persistxml;
 
-    protected int threads;
+    protected Properties readprop;
 
-    protected ObjectPool<ByteBuffer> bufferPool;
-
-    protected ThreadPoolExecutor executor;
+    protected Properties writeprop;
 
     protected boolean cacheForbidden;
 
@@ -55,57 +54,65 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected PoolSource<DBChannel> writePool;
 
+    @Resource(name = RESNAME_APP_GROUP)
+    protected AsyncGroup asyncGroup;
+
     protected final BiFunction<EntityInfo, Object, CharSequence> sqlFormatter;
 
     protected final BiConsumer futureCompleteConsumer = (r, t) -> {
-        if (t != null) logger.log(Level.SEVERE, "CompletableFuture complete error", (Throwable) t);
+        if (t != null) logger.log(Level.INFO, "CompletableFuture complete error", (Throwable) t);
     };
 
-    protected final BiFunction<DataSource, Class, List> fullloader = (s, t) -> ((Sheet) querySheetCompose(false, false, false, t, null, null, (FilterNode) null).join()).list(true);
+    protected final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, i)
+        -> ((CompletableFuture<Sheet>) querySheetDB(i, false, false, false, null, null, (FilterNode) null)).thenApply(e -> e == null ? new ArrayList() : e.list(true));
 
     @SuppressWarnings({"OverridableMethodCallInConstructor", "LeakingThisInConstructor"})
     public DataSqlSource(String unitName, URL persistxml, Properties readprop, Properties writeprop) {
         if (readprop == null) readprop = new Properties();
         if (writeprop == null) writeprop = readprop;
-        final AtomicInteger counter = new AtomicInteger();
-        this.threads = Integer.decode(readprop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors() * 16));
-        int maxconns = Math.max(8, Integer.decode(readprop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Math.min(1000, Runtime.getRuntime().availableProcessors() * 200))));
-        if (readprop != writeprop) {
-            this.threads += Integer.decode(writeprop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors() * 16));
-            maxconns = 0;
-        }
-        final String cname = this.getClass().getSimpleName();
-        final Thread.UncaughtExceptionHandler ueh = (t, e) -> {
-            logger.log(Level.SEVERE, cname + " error", e);
-        };
-        this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads, (Runnable r) -> {
-            Thread t = new Thread(r);
-            t.setDaemon(true);
-            String s = "" + counter.incrementAndGet();
-            if (s.length() == 1) {
-                s = "00" + s;
-            } else if (s.length() == 2) {
-                s = "0" + s;
-            }
-            t.setName("Redkale-" + cname + "-Thread-" + s);
-            t.setUncaughtExceptionHandler(ueh);
-            return t;
-        });
-        final int bufferCapacity = Math.max(8 * 1024, Integer.decode(readprop.getProperty(JDBC_CONNECTIONSCAPACITY, "" + 8 * 1024)));
-        this.bufferPool = ObjectPool.createSafePool(new AtomicLong(), new AtomicLong(), Math.max(maxconns, this.threads * 2),
-            (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
-                e.clear();
-                return true;
-            });
         this.name = unitName;
         this.persistxml = persistxml;
+        this.readprop = readprop;
+        this.writeprop = writeprop;
+        this.sqlFormatter = (info, val) -> formatValueToString(info, val);
+    }
+
+    @Override
+    public void init(AnyValue conf) {
+        int maxconns = Math.max(8, Integer.decode(readprop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors() * 32)));
+        if (readprop != writeprop) maxconns = 0;
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
         ArrayBlockingQueue<DBChannel> queue = maxconns > 0 ? new ArrayBlockingQueue(maxconns) : null;
         Semaphore semaphore = maxconns > 0 ? new Semaphore(maxconns) : null;
-        this.readPool = createPoolSource(this, "read", queue, semaphore, readprop);
-        this.writePool = createPoolSource(this, "write", queue, semaphore, writeprop);
-        this.sqlFormatter = (info, val) -> formatValueToString(info, val);
+        this.readPool = createPoolSource(this, this.asyncGroup, "read", queue, semaphore, readprop);
+        this.writePool = createPoolSource(this, this.asyncGroup, "write", queue, semaphore, writeprop);
+    }
+
+    public void updateMaxconns(int maxconns) {
+        if (readprop == writeprop) {
+            Semaphore semaphore = new Semaphore(maxconns);
+            this.readPool.setSemaphore(semaphore);
+            this.writePool.setSemaphore(semaphore);
+            if (readPool instanceof PoolTcpSource) {
+                ArrayBlockingQueue connQueue = new ArrayBlockingQueue(maxconns);
+                ((PoolTcpSource) readPool).updateConnQueue(connQueue);
+                ((PoolTcpSource) writePool).updateConnQueue(connQueue);
+            }
+        } else {
+            int onemax = maxconns / 2;
+            this.readPool.setSemaphore(new Semaphore(onemax));
+            this.writePool.setSemaphore(new Semaphore(onemax));
+            if (readPool instanceof PoolTcpSource) {
+                ((PoolTcpSource) readPool).updateConnQueue(new ArrayBlockingQueue(onemax));
+                ((PoolTcpSource) writePool).updateConnQueue(new ArrayBlockingQueue(onemax));
+            }
+        }
+    }
+
+    @Override
+    public void destroy(AnyValue config) {
+        if (readPool != null) readPool.close();
+        if (writePool != null) writePool.close();
     }
 
     @Local
@@ -124,7 +131,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract String prepareParamSign(int index);
 
     //创建连接池
-    protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop);
+    protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop);
 
     //插入纪录
     protected abstract <T> CompletableFuture<Integer> insertDB(final EntityInfo<T> info, T... entitys);
@@ -196,22 +203,6 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return node == null ? null : node.createSQLExpress(info, joinTabalis);
     }
 
-    @Override
-    protected ExecutorService getExecutor() {
-        return executor;
-    }
-
-    @Override
-    public void init(AnyValue config) {
-    }
-
-    @Override
-    public void destroy(AnyValue config) {
-        if (this.executor != null) this.executor.shutdownNow();
-        if (readPool != null) readPool.close();
-        if (writePool != null) writePool.close();
-    }
-
     @Local
     @Override
     public String getType() {
@@ -254,6 +245,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         return info.isVirtualEntity();
     }
 
+    public <T> EntityCache<T> loadCache(Class<T> clazz) {
+        EntityInfo<T> info = loadEntityInfo(clazz);
+        return info.getCache();
+    }
+
     /**
      * 将entity的对象全部加载到Cache中去，如果clazz没有被@javax.persistence.Cacheable注解则不做任何事
      *
@@ -264,7 +260,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         EntityInfo<T> info = loadEntityInfo(clazz);
         EntityCache<T> cache = info.getCache();
         if (cache == null) return;
-        cache.fullLoad();
+        cache.fullLoadAsync();
     }
     ////检查对象是否都是同一个Entity类
 
@@ -346,7 +342,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (future != null) return future;
         final EntityInfo<T> info = loadEntityInfo((Class<T>) entitys[0].getClass());
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> insertCache(info, entitys), getExecutor());
+            return CompletableFuture.completedFuture(insertCache(info, entitys));
         }
         if (isAsync()) return insertDB(info, entitys).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -445,7 +441,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (pks.length == 0) return CompletableFuture.completedFuture(-1);
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> deleteCache(info, -1, pks), getExecutor());
+            return CompletableFuture.completedFuture(deleteCache(info, -1, pks));
         }
         if (isAsync()) return deleteCompose(info, pks).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -490,7 +486,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final Flipper flipper, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> deleteCache(info, -1, flipper, node), getExecutor());
+            return CompletableFuture.completedFuture(deleteCache(info, -1, flipper, node));
         }
         if (isAsync()) return this.deleteCompose(info, flipper, node).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -571,7 +567,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> clearTableCache(info, node), getExecutor());
+            return CompletableFuture.completedFuture(clearTableCache(info, node));
         }
         if (isAsync()) return this.clearTableCompose(info, node).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -624,7 +620,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> dropTableCache(info, node), getExecutor());
+            return CompletableFuture.completedFuture(dropTableCache(info, node));
         }
         if (isAsync()) return this.dropTableCompose(info, node).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -721,7 +717,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (future != null) return future;
         final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return CompletableFuture.supplyAsync(() -> updateCache(info, -1, entitys), getExecutor());
+        if (isOnlyCache(info)) {
+            return CompletableFuture.completedFuture(updateCache(info, -1, entitys));
+        }
         if (isAsync()) return updateDB(info, entitys).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
@@ -766,7 +764,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, final String column, final Serializable colval) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, pk, column, colval), getExecutor());
+            return CompletableFuture.completedFuture(updateCache(info, -1, pk, column, colval));
         }
         if (isAsync()) return updateColumnCompose(info, pk, column, colval).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -823,7 +821,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final String column, final Serializable colval, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, column, colval, node), getExecutor());
+            return CompletableFuture.completedFuture(updateCache(info, -1, column, colval, node));
         }
         if (isAsync()) return this.updateColumnCompose(info, column, colval, node).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -898,7 +896,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (values == null || values.length < 1) return CompletableFuture.completedFuture(-1);
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, pk, values), getExecutor());
+            return CompletableFuture.completedFuture(updateCache(info, -1, pk, values));
         }
         if (isAsync()) return this.updateColumnCompose(info, pk, values).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -979,7 +977,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (values == null || values.length < 1) return CompletableFuture.completedFuture(-1);
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, node, flipper, values), getExecutor());
+            return CompletableFuture.completedFuture(updateCache(info, -1, node, flipper, values));
         }
         if (isAsync()) return this.updateColumnCompose(info, node, flipper, values).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1076,7 +1074,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, false, entity, null, selects), getExecutor());
+            return CompletableFuture.completedFuture(updateCache(info, -1, false, entity, null, selects));
         }
         if (isAsync()) return this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1115,7 +1113,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
-            return CompletableFuture.supplyAsync(() -> updateCache(info, -1, true, entity, node, selects), getExecutor());
+            return CompletableFuture.completedFuture(updateCache(info, -1, true, entity, node, selects));
         }
         if (isAsync()) return this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1623,7 +1621,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache != null) {
-            T rs = cache.find(selects, pk);
+            T rs = selects == null ? cache.find(pk) : cache.find(selects, pk);
             if (cache.isFullLoaded() || rs != null) return rs;
         }
         return findCompose(info, selects, pk).join();
@@ -1634,7 +1632,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache != null) {
-            T rs = cache.find(selects, pk);
+            T rs = selects == null ? cache.find(pk) : cache.find(selects, pk);
             if (cache.isFullLoaded() || rs != null) return CompletableFuture.completedFuture(rs);
         }
         if (isAsync()) return findCompose(info, selects, pk);

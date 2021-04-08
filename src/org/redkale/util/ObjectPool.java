@@ -39,6 +39,8 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     protected final Queue<T> queue;
 
+    protected final boolean unsafeDequeable;
+
     protected final ObjectPool<T> parent;
 
     protected ObjectPool(ObjectPool<T> parent, AtomicLong creatCounter, AtomicLong cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler, Queue<T> queue) {
@@ -51,6 +53,7 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         this.max = max;
         this.debug = logger.isLoggable(Level.FINEST);
         this.queue = queue;
+        this.unsafeDequeable = queue instanceof ArrayDeque;
     }
 
     //非线程安全版
@@ -192,9 +195,11 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
     public T get() {
         T result = queue.poll();
         if (result == null) {
-            if (creatCounter != null) creatCounter.incrementAndGet();
             if (parent != null) result = parent.queue.poll();
-            if (result == null) result = this.creator.create();
+            if (result == null) {
+                if (creatCounter != null) creatCounter.incrementAndGet();
+                result = this.creator.create();
+            }
         }
         if (prepare != null) prepare.accept(result);
         return result;
@@ -213,7 +218,8 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 //                    }
 //                }
 //            }
-            if (!queue.offer(e) && parent != null) parent.accept(e);
+            boolean rs = unsafeDequeable ? queue.size() < max && queue.offer(e) : queue.offer(e);
+            if (!rs && parent != null) parent.accept(e);
         }
     }
 

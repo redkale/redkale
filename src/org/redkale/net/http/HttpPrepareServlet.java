@@ -319,62 +319,66 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     /**
      * 添加HttpServlet
      *
-     * @param servlet  HttpServlet
-     * @param prefix   url前缀
-     * @param conf     配置信息
-     * @param mappings 匹配规则
+     * @param servlet      HttpServlet
+     * @param prefix       url前缀
+     * @param conf         配置信息
+     * @param mappingpaths 匹配规则
      */
     @Override
-    public void addServlet(HttpServlet servlet, Object prefix, AnyValue conf, String... mappings) {
+    public void addServlet(HttpServlet servlet, Object prefix, AnyValue conf, String... mappingpaths) {
         if (prefix == null) prefix = "";
-        if (mappings.length < 1) {
+        if (mappingpaths.length < 1) {
             WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
             if (ws != null) {
-                mappings = ws.value();
+                mappingpaths = ws.value();
                 if (!ws.repair()) prefix = "";//被设置为不自动追加前缀则清空prefix
             }
         }
         synchronized (allMapStrings) {  //需要整段锁住
-            for (String mapping : mappings) {
-                if (mapping == null) continue;
-                if (!prefix.toString().isEmpty()) mapping = prefix + mapping;
+            for (String mappingpath : mappingpaths) {
+                if (mappingpath == null) continue;
+                if (!prefix.toString().isEmpty()) mappingpath = prefix + mappingpath;
 
-                if (Utility.contains(mapping, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
-                    if (mapping.charAt(0) != '^') mapping = '^' + mapping;
-                    if (mapping.endsWith("/*")) {
-                        mapping = mapping.substring(0, mapping.length() - 1) + ".*";
+                if (Utility.contains(mappingpath, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+                    if (mappingpath.charAt(0) != '^') mappingpath = '^' + mappingpath;
+                    if (mappingpath.endsWith("/*")) {
+                        mappingpath = mappingpath.substring(0, mappingpath.length() - 1) + ".*";
                     } else {
-                        mapping = mapping + "$";
+                        mappingpath = mappingpath + "$";
                     }
                     if (regArray == null) {
                         regArray = new MappingEntry[1];
-                        regArray[0] = new MappingEntry(mapping, Pattern.compile(mapping).asPredicate(), servlet);
+                        regArray[0] = new MappingEntry(mappingpath, Pattern.compile(mappingpath).asPredicate(), servlet);
                     } else {
                         regArray = Arrays.copyOf(regArray, regArray.length + 1);
-                        regArray[regArray.length - 1] = new MappingEntry(mapping, Pattern.compile(mapping).asPredicate(), servlet);
+                        regArray[regArray.length - 1] = new MappingEntry(mappingpath, Pattern.compile(mappingpath).asPredicate(), servlet);
                     }
                     if (servlet instanceof WebSocketServlet) {
                         if (regWsArray == null) {
                             regWsArray = new MappingEntry[1];
-                            regWsArray[0] = new MappingEntry(mapping, Pattern.compile(mapping).asPredicate(), (WebSocketServlet) servlet);
+                            regWsArray[0] = new MappingEntry(mappingpath, Pattern.compile(mappingpath).asPredicate(), (WebSocketServlet) servlet);
                         } else {
                             regWsArray = Arrays.copyOf(regWsArray, regWsArray.length + 1);
-                            regWsArray[regWsArray.length - 1] = new MappingEntry(mapping, Pattern.compile(mapping).asPredicate(), (WebSocketServlet) servlet);
+                            regWsArray[regWsArray.length - 1] = new MappingEntry(mappingpath, Pattern.compile(mappingpath).asPredicate(), (WebSocketServlet) servlet);
                         }
                     }
-                } else if (mapping != null && !mapping.isEmpty()) {
-                    putMapping(mapping, servlet);
+                } else if (mappingpath != null && !mappingpath.isEmpty()) {
+                    if (servlet._actionmap != null && servlet._actionmap.containsKey(mappingpath)) {
+                        putMapping(mappingpath, new HttpServlet.HttpActionServlet(servlet._actionmap.get(mappingpath), servlet));
+                    } else {
+                        putMapping(mappingpath, servlet);
+                    }
                     if (servlet instanceof WebSocketServlet) {
                         Map<String, WebSocketServlet> newmappings = new HashMap<>(wsmappings);
-                        newmappings.put(mapping, (WebSocketServlet) servlet);
+                        newmappings.put(mappingpath, (WebSocketServlet) servlet);
                         this.wsmappings = newmappings;
                     }
                 }
-                if (this.allMapStrings.containsKey(mapping)) {
-                    Class old = this.allMapStrings.get(mapping);
-                    throw new RuntimeException("mapping [" + mapping + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
+                if (this.allMapStrings.containsKey(mappingpath)) {
+                    Class old = this.allMapStrings.get(mappingpath);
+                    throw new RuntimeException("mapping [" + mappingpath + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
                 }
-                this.allMapStrings.put(mapping, servlet.getClass());
+                this.allMapStrings.put(mappingpath, servlet.getClass());
             }
             setServletConf(servlet, conf);
             servlet._prefix = prefix.toString();

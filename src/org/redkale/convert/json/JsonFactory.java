@@ -6,6 +6,7 @@
 package org.redkale.convert.json;
 
 import java.io.Serializable;
+import java.lang.reflect.*;
 import java.math.BigInteger;
 import java.net.*;
 import org.redkale.convert.*;
@@ -26,7 +27,6 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     private static final JsonFactory instance = new JsonFactory(null, getSystemPropertyBoolean("convert.json.tiny", "convert.tiny", true));
 
     static {
-
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
 
         instance.register(AnyValue.class, instance.loadDecoder(AnyValue.DefaultAnyValue.class));
@@ -61,6 +61,20 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     public static JsonFactory create() {
         return new JsonFactory(null, getSystemPropertyBoolean("convert.json.tiny", "convert.tiny", true));
+    }
+
+    @Override
+    protected <E> Encodeable<JsonWriter, E> createDyncEncoder(Type type) {
+        return JsonDynEncoder.createDyncEncoder(this, type);
+    }
+
+    @Override
+    protected <E> ObjectEncoder<JsonWriter, E> createObjectEncoder(Type type) {
+        return super.createObjectEncoder(type);
+    }
+
+    protected boolean tiny() {
+        return this.tiny;
     }
 
     @Override

@@ -10,9 +10,9 @@ import java.util.logging.*;
 import org.redkale.boot.NodeSncpServer;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
-import org.redkale.util.ThreadHashExecutor;
 
 /**
+ * 一个Service对应一个MessageProcessor
  *
  * <p>
  * 详情见: https://redkale.org
@@ -37,8 +37,6 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     protected final NodeSncpServer server;
 
-    protected final ThreadHashExecutor workExecutor;
-
     protected final Service service;
 
     protected final SncpServlet servlet;
@@ -51,7 +49,7 @@ public class SncpMessageProcessor implements MessageProcessor {
         if (cdl != null) cdl.countDown();
     };
 
-    public SncpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageClient messageClient, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
+    public SncpMessageProcessor(Logger logger, SncpMessageClient messageClient, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
         this.finer = logger.isLoggable(Level.FINER);
@@ -61,22 +59,17 @@ public class SncpMessageProcessor implements MessageProcessor {
         this.server = server;
         this.service = service;
         this.servlet = servlet;
-        this.workExecutor = workExecutor;
     }
 
     @Override
     public void begin(final int size, long starttime) {
         this.starttime = starttime;
-        if (this.workExecutor != null) this.cdl = new CountDownLatch(size);
+        this.cdl = new CountDownLatch(size);
     }
 
     @Override
     public void process(final MessageRecord message, final Runnable callback) {
-        if (this.workExecutor == null) {
-            execute(message, innerCallback);
-        } else {
-            this.workExecutor.execute(message.hash(), () -> execute(message, innerCallback));
-        }
+        execute(message, innerCallback);
     }
 
     private void execute(final MessageRecord message, final Runnable callback) {
@@ -87,15 +80,16 @@ public class SncpMessageProcessor implements MessageProcessor {
             long e = now - starttime;
             SncpContext context = server.getSncpServer().getContext();
             SncpMessageRequest request = new SncpMessageRequest(context, message);
-            response = new SncpMessageResponse(context, request, callback, null, messageClient, producer.getProducer(message));
-            servlet.execute(request, response);
+            response = new SncpMessageResponse(context, request, callback, messageClient, producer.getProducer(message));
+
+            context.execute(servlet, request, response);
             long o = System.currentTimeMillis() - now;
             if ((cha > 1000 || e > 100 || o > 1000) && fine) {
-                logger.log(Level.FINE, "SncpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms, works=" + (workExecutor != null ? workExecutor.size() : 0) + ") message: " + message);
+                logger.log(Level.FINE, "SncpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms) message: " + message);
             } else if ((cha > 50 || e > 10 || o > 50) && finer) {
-                logger.log(Level.FINER, "SncpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms, works=" + (workExecutor != null ? workExecutor.size() : 0) + ") message: " + message);
+                logger.log(Level.FINER, "SncpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
             } else if (finest) {
-                logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms, works=" + (workExecutor != null ? workExecutor.size() : 0) + ") message: " + message);
+                logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
             }
         } catch (Throwable ex) {
             if (response != null) response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);

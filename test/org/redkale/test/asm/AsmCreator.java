@@ -16,7 +16,7 @@ public class AsmCreator {
 
     public static void main(String[] args) throws Throwable {
         boolean realasm = false; //从http://forge.ow2.org/projects/asm/ 下载最新asm的src放在 srcasmroot 目录下
-        File srcasmroot = new File("D:/JAVA/JDK源码/jdk/internal/org/objectweb/asm");
+        File srcasmroot = new File("D:/JAVA/JDK源码/JDK11源码/java.base/jdk/internal/org/objectweb/asm");
         if (realasm) srcasmroot = new File("D:/JAVA/JDK源码/org/objectweb/asm");
         File destasmroot = new File("D:/Java-Projects/RedkaleProject/src/org/redkale/asm");
         String line = null;
@@ -29,7 +29,9 @@ public class AsmCreator {
             File destfile = new File(destasmroot, line);
             String content = Utility.readThenClose(new FileInputStream(srcfile));
             FileOutputStream out = new FileOutputStream(destfile);
-            out.write(content.replace("jdk.internal.org.objectweb", "org.redkale").replace("org.objectweb", "org.redkale").getBytes());
+            out.write(content.replace("jdk.internal.org.objectweb", "org.redkale").replace("org.objectweb", "org.redkale")
+                .replace("<tt>", "&#60;tt&#62;").replace("</tt>", "&#60;/tt&#62;")
+                .replace("{@link org.redkale.asm.tree.MethodNode#getLabelNode} method.", "").getBytes());
             out.close();
         }
         //需要屏蔽ClassReader中判断checks the class version的部分

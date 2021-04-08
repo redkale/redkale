@@ -340,15 +340,15 @@ public final class MultiContext {
             int b = in.read();
             c++;
             if (b == -1 || (lasted == '\r' && b == '\n')) break;
-            if (lasted != '\r') buf.write(lasted);
+            if (lasted != '\r') buf.put(lasted);
             lasted = (byte) b;
             if (bd && bc == c) {
-                buf.write(lasted);
+                buf.put(lasted);
                 if (buf.equal(this.endboundarray)) break;
                 buf.removeLastByte();
             }
         }
-        if (buf.size() == 0) return "";
+        if (buf.length() == 0) return "";
         return buf.toString(this.charset).trim();
     }
 

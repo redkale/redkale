@@ -5,16 +5,15 @@
  */
 package org.redkale.source;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.CompletionHandler;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import org.redkale.net.AsyncConnection;
+import org.redkale.net.*;
 import static org.redkale.source.DataSources.*;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.*;
 
 /**
  *
@@ -22,44 +21,38 @@ import org.redkale.util.ObjectPool;
  */
 public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
 
-    //ByteBuffer池
-    protected ObjectPool<ByteBuffer> bufferPool;
-
-    //线程池
-    protected ThreadPoolExecutor executor;
-
-    //供supplyAsync->poll使用的线程池
-    protected ExecutorService pollExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4, (r) -> {
-        Thread t = new Thread(r);
-        t.setDaemon(true);
-        return t;
-    });
-
-    //TCP Channel组
-    protected AsynchronousChannelGroup group;
+    protected AsyncGroup asyncGroup;
 
     protected ScheduledThreadPoolExecutor scheduler;
 
-    protected final ArrayBlockingQueue<AsyncConnection> connQueue;
+    protected ArrayBlockingQueue<CompletableFuture<AsyncConnection>> pollQueue;
 
-    public PoolTcpSource(String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop, Logger logger, ObjectPool<ByteBuffer> bufferPool, ThreadPoolExecutor executor) {
+    protected ArrayBlockingQueue<AsyncConnection> connQueue;
+
+    public PoolTcpSource(AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop, Logger logger) {
         super(rwtype, semaphore, prop, logger);
-        this.bufferPool = bufferPool;
-        this.executor = executor;
-        try {
-            this.group = AsynchronousChannelGroup.withThreadPool(executor);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.asyncGroup = asyncGroup;
         this.connQueue = queue == null ? new ArrayBlockingQueue<>(this.maxconns) : queue;
+        this.pollQueue = new ArrayBlockingQueue(this.connQueue.remainingCapacity() * 1000);
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-            final Thread t = new Thread(r, "PoolSource-Scheduled-Thread");
+            final Thread t = new Thread(r, "Redkale-PoolSource-Scheduled-Thread");
             t.setDaemon(true);
             return t;
         });
         this.scheduler.scheduleAtFixedRate(() -> {
             runPingTask();
         }, 60, 30, TimeUnit.SECONDS);
+    }
+
+    public void updateConnQueue(ArrayBlockingQueue queue) {
+        ArrayBlockingQueue<AsyncConnection> old = this.connQueue;
+        this.connQueue = queue;
+        AsyncConnection conn;
+        final Semaphore localSemaphore = this.semaphore;
+        while ((conn = old.poll()) != null) {
+            queue.offer(conn);
+            if (localSemaphore != null) localSemaphore.tryAcquire();
+        }
     }
 
     private void runPingTask() {
@@ -93,23 +86,28 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     @Override
     public void offerConnection(final AsyncConnection conn) {
         if (conn == null) return;
-        if (conn.isOpen() && connQueue.offer(conn)) {
-            saveCounter.incrementAndGet();
-            usingCounter.decrementAndGet();
+        if (conn.isOpen()) {
+            CompletableFuture<AsyncConnection> future = pollQueue.poll();
+            if (future != null && future.complete(conn)) return;
+
+            if (connQueue.offer(conn)) {
+                saveCounter.incrementAndGet();
+                usingCounter.decrementAndGet();
+                return;
+            }
+        }
+        //usingCounter 会在close方法中执行
+        CompletableFuture<AsyncConnection> closefuture = null;
+        try {
+            closefuture = sendCloseCommand(conn);
+        } catch (Exception e) {
+        }
+        if (closefuture == null) {
+            conn.dispose();
         } else {
-            //usingCounter 会在close方法中执行
-            CompletableFuture<AsyncConnection> future = null;
-            try {
-                future = sendCloseCommand(conn);
-            } catch (Exception e) {
-            }
-            if (future == null) {
-                conn.dispose();
-            } else {
-                future.whenComplete((c, t) -> {
-                    if (c != null) c.dispose();
-                });
-            }
+            closefuture.whenComplete((c, t) -> {
+                if (c != null) c.dispose();
+            });
         }
     }
 
@@ -130,22 +128,12 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
         return pollAsync().join();
     }
 
-    protected abstract ByteBuffer reqConnectBuffer(AsyncConnection conn);
+    protected abstract ByteArray reqConnectBuffer(AsyncConnection conn);
 
     protected abstract void respConnectBuffer(final ByteBuffer buffer, CompletableFuture<AsyncConnection> future, AsyncConnection conn);
 
     @Override
     public CompletableFuture<AsyncConnection> pollAsync() {
-        return pollAsync(0);
-    }
-
-    protected CompletableFuture<AsyncConnection> pollAsync(final int count) {
-        if (count >= 5) {
-            logger.log(Level.WARNING, "create datasource connection error");
-            CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
-            future.completeExceptionally(new SQLException("create datasource connection error"));
-            return future;
-        }
 
         AsyncConnection conn0 = connQueue.poll();
         if (conn0 != null && conn0.isOpen()) {
@@ -153,34 +141,24 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             usingCounter.incrementAndGet();
             return CompletableFuture.completedFuture(conn0);
         }
-
-        if (!semaphore.tryAcquire()) {
-            return CompletableFuture.supplyAsync(() -> {
-                try {
-                    return connQueue.poll(1, TimeUnit.SECONDS);
-                } catch (Exception t) {
-                    return null;
-                }
-            }, pollExecutor).thenCompose((conn2) -> {
-                if (conn2 != null && conn2.isOpen()) {
-                    cycleCounter.incrementAndGet();
-                    usingCounter.incrementAndGet();
-                    return CompletableFuture.completedFuture(conn2);
-                }
-                return pollAsync(count + 1);
-            });
+        final Semaphore localSemaphore = this.semaphore;
+        if (!localSemaphore.tryAcquire()) {
+            final CompletableFuture<AsyncConnection> future = Utility.orTimeout(new CompletableFuture<>(), 10, TimeUnit.SECONDS);
+            future.whenComplete((r, t) -> pollQueue.remove(future));
+            if (pollQueue.offer(future)) return future;
+            future.completeExceptionally(new SQLException("create datasource connection error"));
+            return future;
         }
-
-        return AsyncConnection.createTCP(bufferPool, group, this.servaddr, this.readTimeoutSeconds, this.writeTimeoutSeconds).thenCompose(conn -> {
+        return asyncGroup.createTCP(this.servaddr, this.readTimeoutSeconds, this.writeTimeoutSeconds).thenCompose(conn -> {
             conn.beforeCloseListener((c) -> {
-                semaphore.release();
+                localSemaphore.release();
                 closeCounter.incrementAndGet();
                 usingCounter.decrementAndGet();
             });
             CompletableFuture<AsyncConnection> future = new CompletableFuture();
-            final ByteBuffer buffer = reqConnectBuffer(conn);
-
-            if (buffer == null) {
+            if (conn.getSubobject() == null) conn.setSubobject(new ByteArray());
+            final ByteArray array = reqConnectBuffer(conn);
+            if (array == null) {
                 conn.read(new CompletionHandler<Integer, ByteBuffer>() {
                     @Override
                     public void completed(Integer result, ByteBuffer rbuffer) {
@@ -200,19 +178,13 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                     }
                 });
             } else {
-                conn.write(buffer, null, new CompletionHandler<Integer, Void>() {
+                conn.write(array, new CompletionHandler<Integer, Void>() {
                     @Override
-                    public void completed(Integer result, Void attachment1) {
-                        if (result < 0) {
-                            failed(new SQLException("Write Buffer Error"), attachment1);
+                    public void completed(Integer result0, Void attachment0) {
+                        if (result0 < 0) {
+                            failed(new SQLException("Write Buffer Error"), attachment0);
                             return;
                         }
-                        if (buffer.hasRemaining()) {
-                            conn.write(buffer, attachment1, this);
-                            return;
-                        }
-                        buffer.clear();
-                        conn.setReadBuffer(buffer);
                         conn.read(new CompletionHandler<Integer, ByteBuffer>() {
                             @Override
                             public void completed(Integer result, ByteBuffer rbuffer) {
@@ -220,8 +192,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                                     failed(new SQLException("Read Buffer Error"), rbuffer);
                                     return;
                                 }
-                                buffer.flip();
-                                respConnectBuffer(buffer, future, conn);
+                                rbuffer.flip();
+                                respConnectBuffer(rbuffer, future, conn);
                             }
 
                             @Override
@@ -234,8 +206,7 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                     }
 
                     @Override
-                    public void failed(Throwable exc, Void attachment1) {
-                        bufferPool.accept(buffer);
+                    public void failed(Throwable exc, Void attachment0) {
                         future.completeExceptionally(exc);
                         conn.dispose();
                     }
@@ -247,14 +218,31 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
                 creatCounter.incrementAndGet();
                 usingCounter.incrementAndGet();
             } else {
-                semaphore.release();
+                localSemaphore.release();
             }
         });
+    }
+
+    public ArrayBlockingQueue<CompletableFuture<AsyncConnection>> getPollQueue() {
+        return pollQueue;
+    }
+
+    public void setPollQueue(ArrayBlockingQueue<CompletableFuture<AsyncConnection>> pollQueue) {
+        this.pollQueue = pollQueue;
+    }
+
+    public ArrayBlockingQueue<AsyncConnection> getConnQueue() {
+        return connQueue;
+    }
+
+    public void setConnQueue(ArrayBlockingQueue<AsyncConnection> connQueue) {
+        this.connQueue = connQueue;
     }
 
     @Override
     public void close() {
         this.scheduler.shutdownNow();
+        final List<CompletableFuture> futures = new ArrayList<>();
         connQueue.stream().forEach(x -> {
             CompletableFuture<AsyncConnection> future = null;
             try {
@@ -264,11 +252,14 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
             if (future == null) {
                 x.dispose();
             } else {
-                future.whenComplete((c, t) -> {
+                futures.add(future.whenComplete((c, t) -> {
                     if (c != null) c.dispose();
-                });
+                }));
             }
         });
+        if (!futures.isEmpty()) {
+            CompletableFuture.allOf(new CompletableFuture[futures.size()]).join();
+        }
     }
 
     protected abstract CompletableFuture<AsyncConnection> sendPingCommand(final AsyncConnection conn);

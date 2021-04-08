@@ -8,6 +8,7 @@ package org.redkale.net.sncp;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.atomic.*;
+import org.redkale.boot.Application;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.net.*;
 import org.redkale.net.sncp.SncpContext.SncpContextConfig;
@@ -29,28 +30,28 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
 
     private final AtomicInteger maxNameLength = new AtomicInteger();
 
-    //协议层协议名
-    protected static final String netprotocol = "TCP";
-
     public SncpServer() {
-        this(System.currentTimeMillis(), ResourceFactory.root());
+        this(null, System.currentTimeMillis(), null, ResourceFactory.root());
     }
 
     public SncpServer(ResourceFactory resourceFactory) {
-        this(System.currentTimeMillis(), resourceFactory);
+        this(null, System.currentTimeMillis(), null, resourceFactory);
     }
 
-    public SncpServer(long serverStartTime, ResourceFactory resourceFactory) {
-        super(serverStartTime, netprotocol, resourceFactory, new SncpPrepareServlet());
+    public SncpServer(Application application, long serverStartTime, AnyValue serconf, ResourceFactory resourceFactory) {
+        super(application, serverStartTime, netprotocol(serconf), resourceFactory, new SncpPrepareServlet());
+    }
+
+    private static String netprotocol(AnyValue serconf) {
+        if (serconf == null) return "TCP";
+        String protocol = serconf.getValue("protocol", "").toUpperCase();
+        if (protocol.endsWith(".UDP")) return "UDP";
+        return "TCP";
     }
 
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
-    }
-
-    public String getNetprotocol() {
-        return netprotocol;
     }
 
     public List<SncpServlet> getSncpServlets() {
@@ -107,13 +108,13 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
 
     @Override
     @SuppressWarnings("unchecked")
-    protected SncpContext createContext() {
+    protected SncpContext createContext(Application application) {
         this.bufferCapacity = Math.max(this.bufferCapacity, 8 * 1024);
 
         final SncpContextConfig contextConfig = new SncpContextConfig();
+        if (application != null) contextConfig.workExecutor = application.getWorkExecutor();
         contextConfig.serverStartTime = this.serverStartTime;
         contextConfig.logger = this.logger;
-        contextConfig.executor = this.workExecutor;
         contextConfig.sslContext = this.sslContext;
         contextConfig.bufferCapacity = this.bufferCapacity;
         contextConfig.maxconns = this.maxconns;
@@ -145,8 +146,8 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
 
     @Override
     protected ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize) {
-        ObjectPool<Response> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, (Creator) null, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
-        pool.setCreator((Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context), pool));
+        Creator<Response> creator = (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context));
+        ObjectPool<Response> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
         return pool;
     }
 

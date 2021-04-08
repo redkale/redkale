@@ -28,7 +28,9 @@ public class SncpMessageRequest extends SncpRequest {
     public SncpMessageRequest(SncpContext context, MessageRecord message) {
         super(context);
         this.message = message;
-        readHeader(ByteBuffer.wrap(message.getContent()));
+        this.hashid = this.message.hash();
+        this.createtime = System.currentTimeMillis();
+        readHeader(ByteBuffer.wrap(message.getContent()), null);
     }
 
     @Override //被SncpAsyncHandler.sncp_setParams调用

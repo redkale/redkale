@@ -8,7 +8,10 @@ package org.redkale.mq;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
+import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.net.http.HttpSimpleRequest;
+import org.redkale.net.sncp.SncpRequest;
 import org.redkale.util.Comment;
 
 /**
@@ -32,6 +35,8 @@ public class MessageRecord implements Serializable {
     protected static final byte CTYPE_HTTP_REQUEST = 2;
 
     protected static final byte CTYPE_HTTP_RESULT = 3;
+
+    protected static final byte CTYPE_BSON_RESULT = 4;
 
     @ConvertColumn(index = 1)
     @Comment("消息序列号")
@@ -274,8 +279,17 @@ public class MessageRecord implements Serializable {
         if (this.topic != null) sb.append(",\"topic\":\"").append(this.topic).append("\"");
         if (this.resptopic != null) sb.append(",\"resptopic\":\"").append(this.resptopic).append("\"");
         if (this.content != null) {
-            if (this.ctype == CTYPE_HTTP_REQUEST) {
-                sb.append(",\"content\":").append(HttpSimpleRequestCoder.getInstance().decode(this.content));
+            if (this.ctype == CTYPE_BSON_RESULT && this.content.length > SncpRequest.HEADER_SIZE) {
+                int offset = SncpRequest.HEADER_SIZE + 1; //循环占位符
+                Object rs = BsonConvert.root().convertFrom(Object.class, this.content, offset, this.content.length - offset);
+                sb.append(",\"content\":").append(rs);
+            } else if (this.ctype == CTYPE_HTTP_REQUEST) {
+                HttpSimpleRequest req = HttpSimpleRequestCoder.getInstance().decode(this.content);
+                if (req != null) {
+                    if (req.getCurrentUserid() == 0) req.setCurrentUserid(this.userid);
+                    if (req.getHashid() == 0) req.setHashid(this.hash());
+                }
+                sb.append(",\"content\":").append(req);
             } else if (this.ctype == CTYPE_HTTP_RESULT) {
                 sb.append(",\"content\":").append(HttpResultCoder.getInstance().decode(this.content));
             } else if (localattach != null) {

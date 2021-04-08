@@ -9,10 +9,9 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
-import org.redkale.net.TransportFactory;
+import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
-import static org.redkale.test.sncp.SncpTest.*;
 import org.redkale.util.*;
 
 /**
@@ -109,7 +108,9 @@ public class SncpTestServiceImpl implements SncpTestIService {
 
     public static void main(String[] args) throws Exception {
 
-        final TransportFactory transFactory = TransportFactory.create(Executors.newSingleThreadExecutor(), newBufferPool(), newChannelGroup());
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        asyncGroup.start();
+        final TransportFactory transFactory = TransportFactory.create(asyncGroup, 0, 0);
 
         transFactory.addGroupInfo("g70", new InetSocketAddress("127.0.0.1", 7070));
         Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");

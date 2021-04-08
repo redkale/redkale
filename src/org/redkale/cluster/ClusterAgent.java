@@ -140,6 +140,8 @@ public abstract class ClusterAgent {
 
     protected boolean canRegister(String protocol, Service service) {
         if ("SNCP".equalsIgnoreCase(protocol) && service.getClass().getAnnotation(Local.class) != null) return false;
+        AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
+        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return false;
         if (service instanceof WebSocketNode) {
             if (((WebSocketNode) service).getLocalWebSocketEngine() == null) return false;
         }
@@ -329,7 +331,7 @@ public abstract class ClusterAgent {
             this.address = addr;
             this.serviceref = new WeakReference(service);
             Server server = ns.getServer();
-            this.netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_PROTOCOL;
+            this.netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_NETPROTOCOL;
         }
 
         @Override

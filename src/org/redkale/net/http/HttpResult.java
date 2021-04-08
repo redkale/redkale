@@ -69,6 +69,12 @@ public class HttpResult<T> {
         return cookie(new HttpCookie(name, String.valueOf(value)));
     }
 
+    public HttpResult<T> cookie(String name, Serializable value, boolean httpOnly) {
+        HttpCookie c = new HttpCookie(name, String.valueOf(value));
+        c.setHttpOnly(httpOnly);
+        return cookie(c);
+    }
+
     public HttpResult<T> cookie(HttpCookie cookie) {
         if (this.cookies == null) this.cookies = new ArrayList<>();
         this.cookies.add(cookie);

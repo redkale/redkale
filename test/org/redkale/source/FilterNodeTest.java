@@ -8,6 +8,7 @@ package org.redkale.source;
 import org.redkale.util.AutoLoad;
 import static org.redkale.source.FilterExpress.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import javax.persistence.*;
 import org.redkale.convert.json.*;
@@ -20,11 +21,11 @@ public class FilterNodeTest {
 
     public static void main(String[] args) throws Exception {
         final Properties props = new Properties();
-        final BiFunction<DataSource, Class, List> fullloader = (s, t) -> new ArrayList();
+        final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, t) -> CompletableFuture.completedFuture(new ArrayList());
         final Function<Class, EntityInfo> func = (Class t) -> EntityInfo.load(t, false, props, null, fullloader);
-        final EntityInfo<CarTestTable> carEntity = EntityInfo.load(CarTestTable.class, false, props, null, (s, t) -> CarTestTable.createList());
-        final EntityInfo<UserTestTable> userEntity = EntityInfo.load(UserTestTable.class, false, props, null, (s, t) -> UserTestTable.createList());
-        final EntityInfo<CarTypeTestTable> typeEntity = EntityInfo.load(CarTypeTestTable.class, false, props, null, (s, t) -> CarTypeTestTable.createList());
+        final EntityInfo<CarTestTable> carEntity = EntityInfo.load(CarTestTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(CarTestTable.createList()));
+        final EntityInfo<UserTestTable> userEntity = EntityInfo.load(UserTestTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(UserTestTable.createList()));
+        final EntityInfo<CarTypeTestTable> typeEntity = EntityInfo.load(CarTypeTestTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(CarTypeTestTable.createList()));
 
         final CarTestBean bean = new CarTestBean();
         bean.carid = 70002;
@@ -47,10 +48,10 @@ public class FilterNodeTest {
         System.out.println("node.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (nodeJoinsql == null ? "" : nodeJoinsql) + " WHERE " + nodeWhere);
         System.out.println("bean.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (beanJoinsql == null ? "" : beanJoinsql) + " WHERE " + beanWhere);
         boolean r1 = node.isCacheUseable(func);
-        if(!r1) System.err.println("node.isCacheUseable 应该是true");
+        if (!r1) System.err.println("node.isCacheUseable 应该是true");
         boolean r2 = beanNode.isCacheUseable(func);
-        if(!r2) System.err.println("beanNode.isCacheUseable 应该是true");
-        
+        if (!r2) System.err.println("beanNode.isCacheUseable 应该是true");
+
         System.out.println("node.Predicate = " + node.createPredicate(carEntity.getCache()));
         System.out.println("bean.Predicate = " + beanNode.createPredicate(carEntity.getCache()));
         System.out.println("node.sheet = " + carEntity.getCache().querySheet(null, new Flipper(), node));

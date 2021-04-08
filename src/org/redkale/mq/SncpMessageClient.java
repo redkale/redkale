@@ -53,4 +53,9 @@ public class SncpMessageClient extends MessageClient {
         return sendMessage(message, true, counter);
     }
 
+    @Override
+    protected MessageRecord formatRespMessage(MessageRecord message) {
+        if (message != null) message.ctype = MessageRecord.CTYPE_BSON_RESULT;
+        return message;
+    }
 }

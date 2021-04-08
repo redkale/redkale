@@ -7,6 +7,7 @@ package org.redkale.test.source;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import javax.persistence.Id;
 import org.redkale.convert.json.JsonConvert;
@@ -31,7 +32,7 @@ public class CacheTestBean {
         method.setAccessible(true);
         final EntityInfo<CacheTestBean> info = (EntityInfo<CacheTestBean>) method.invoke(null, CacheTestBean.class, true, new Properties(), null, new CacheTestBean.DefaultBeanLoader());
         EntityCache<CacheTestBean> cache = new EntityCache(info, null);
-        cache.fullLoad();
+        cache.fullLoadAsync();
 
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.COUNT, "name", null));
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.DISTINCTCOUNT, "name", null));
@@ -83,16 +84,16 @@ public class CacheTestBean {
         return JsonConvert.root().convertTo(this);
     }
 
-    public static class DefaultBeanLoader implements BiFunction<DataSource, Class, List> {
+    public static class DefaultBeanLoader implements BiFunction<DataSource, EntityInfo, CompletableFuture<List>> {
 
         @Override
-        public List apply(DataSource t, Class u) {
+        public CompletableFuture<List> apply(DataSource t, EntityInfo u) {
             final List<CacheTestBean> list = new ArrayList<>();
             list.add(new CacheTestBean(1, "a", 12));
             list.add(new CacheTestBean(1, "a", 18));
             list.add(new CacheTestBean(2, "b", 20));
             list.add(new CacheTestBean(2, "bb", 60));
-            return list;
+            return CompletableFuture.completedFuture(list);
         }
 
     }

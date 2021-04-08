@@ -93,6 +93,11 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         return "memory";
     }
 
+    @Override
+    public String toString() {
+        return "CacheMemorySource(type=memory)";
+    }
+
     @Override //ServiceLoader时判断配置是否符合当前实现类
     public boolean match(AnyValue config) {
         return false;
@@ -126,7 +131,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         }
         if (scheduler == null) {
             this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-                final Thread t = new Thread(r, self.getClass().getSimpleName() + "-Expirer-Thread");
+                final Thread t = new Thread(r, "Redkale-" + self.getClass().getSimpleName() + "-Expirer-Thread");
                 t.setDaemon(true);
                 return t;
             });

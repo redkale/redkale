@@ -22,7 +22,6 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
 
     private final Object sncplock = new Object();
 
-
     @Override
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, DLong... mappings) {
         synchronized (sncplock) {
@@ -67,7 +66,7 @@ public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpR
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         if (request.isPing()) {
-            response.finish(Sncp.PONG_BUFFER.duplicate());
+            response.finish(false, Sncp.PONG_BUFFER.duplicate());
             return;
         }
         SncpServlet servlet = (SncpServlet) mappingServlet(request.getServiceid());

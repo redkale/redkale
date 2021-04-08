@@ -7,13 +7,14 @@ package org.redkale.util;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.security.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.zip.GZIPInputStream;
 import javax.net.ssl.*;
@@ -37,145 +38,252 @@ public final class Utility {
 
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
+    private static final boolean greatejdk8;
+
+    private static final ScheduledThreadPoolExecutor futureDelayer;
+
+    //复制JDK9+ java.util.concurrent.CompletableFuture.Canceller
+    private static final class FutureCanceller implements BiConsumer<Object, Throwable> {
+
+        final Future<?> f;
+
+        FutureCanceller(Future<?> f) {
+            this.f = f;
+        }
+
+        public void accept(Object ignore, Throwable ex) {
+            if (ex == null && f != null && !f.isDone())
+                f.cancel(false);
+        }
+    }
+    //复制JDK9+ java.util.concurrent.CompletableFuture.Timeout
+
+    private static final class FutureTimeout implements Runnable {
+
+        final CompletableFuture<?> f;
+
+        FutureTimeout(CompletableFuture<?> f) {
+            this.f = f;
+        }
+
+        @Override
+        public void run() {
+            if (f != null && !f.isDone())
+                f.completeExceptionally(new TimeoutException());
+        }
+    }
+
     /**
      * <blockquote><pre>
-     * public final class AnonymousCharArrayFunction implements java.util.function.Function&lt;Object, char[]&gt; {
+     * public final class AnonymousUnsafeObjectFunction implements java.util.function.Function&lt;Object, Object&gt; {
      *
-     *      final sun.misc.Unsafe unsafe;
+     *      private final sun.misc.Unsafe unsafe;
      *
-     *      final long fd;
+     *      private final long fd;
      *
-     *      public AnonymousCharArrayFunction(Object obj, long fd) {
+     *      public AnonymousUnsafeObjectFunction(Object obj, long fd) {
      *          this.unsafe = (sun.misc.Unsafe) obj;
      *          this.fd = fd;
      *      }
      *
      *      &#64;Override
-     *      public char[] apply(Object t) {
-     *          return (char[]) unsafe.getObject(t, fd);
+     *      public Object apply(Object t) {
+     *          return unsafe.getObject(t, fd);
      *      }
      *
      * }
      * </pre></blockquote>
      */
-    private static final String functionCharClassBinary = "cafebabe00000034002d0a00090020070021090008002209000800230a00020024070025"
-        + "0a00080026070027070028070029010006756e736166650100114c73756e2f6d6973632f556e736166653b01000266640100014a0100063c696e69743e0"
-        + "10016284c6a6176612f6c616e672f4f626a6563743b4a2956010004436f646501000f4c696e654e756d6265725461626c650100124c6f63616c56617269"
-        + "61626c655461626c650100047468697301002d4c6f72672f7265646b616c652f7574696c2f416e6f6e796d6f757343686172417272617946756e6374696"
-        + "f6e3b0100036f626a0100124c6a6176612f6c616e672f4f626a6563743b0100056170706c79010016284c6a6176612f6c616e672f4f626a6563743b295b"
-        + "4301000174010026284c6a6176612f6c616e672f4f626a6563743b294c6a6176612f6c616e672f4f626a6563743b0100095369676e61747572650100454"
-        + "c6a6176612f6c616e672f4f626a6563743b4c6a6176612f7574696c2f66756e6374696f6e2f46756e6374696f6e3c4c6a6176612f6c616e672f4f626a65"
-        + "63743b5b433e3b01000a536f7572636546696c6501001f416e6f6e796d6f757343686172417272617946756e6374696f6e2e6a6176610c000f002a01000"
-        + "f73756e2f6d6973632f556e736166650c000b000c0c000d000e0c002b002c0100025b430c0018001901002b6f72672f7265646b616c652f7574696c2f41"
-        + "6e6f6e796d6f757343686172417272617946756e6374696f6e0100106a6176612f6c616e672f4f626a65637401001b6a6176612f7574696c2f66756e637"
-        + "4696f6e2f46756e6374696f6e0100032829560100096765744f626a656374010027284c6a6176612f6c616e672f4f626a6563743b4a294c6a6176612f6c"
-        + "616e672f4f626a6563743b0021000800090001000a00020010000b000c00000010000d000e000000030001000f0010000100110000005c0003000400000"
-        + "0122ab700012a2bc00002b500032a20b50004b10000000200120000001200040000001200040013000c0014001100150013000000200003000000120014"
-        + "001500000000001200160017000100000012000d000e0002000100180019000100110000004700040002000000132ab400032b2ab40004b60005c00006c"
-        + "00006b00000000200120000000600010000001900130000001600020000001300140015000000000013001a0017000110410018001b0001001100000030"
-        + "00020002000000062a2bb60007b00000000200120000000600010000000c00130000000c0001000000060014001500000002001c00000002001d001e000"
-        + "00002001f";
-
-    private static final Function<Object, char[]> strCharFunction;
-
-    private static final Function<Object, char[]> sbCharFunction;
+    private static final String functionUnsafeObjectBinary = "cafebabe0000003400280a0007001d07001e090006001f09000600"
+        + "200a00020021070022070023070024010006756e736166650100114c73756e2f6d6973632f556e736166653b01000266640"
+        + "100014a0100063c696e69743e010016284c6a6176612f6c616e672f4f626a6563743b4a2956010004436f646501000f4c69"
+        + "6e654e756d6265725461626c650100124c6f63616c5661726961626c655461626c65010004746869730100304c6f72672f7"
+        + "265646b616c652f7574696c2f416e6f6e796d6f7573556e736166654f626a65637446756e6374696f6e3b0100036f626a01"
+        + "00124c6a6176612f6c616e672f4f626a6563743b0100056170706c79010026284c6a6176612f6c616e672f4f626a6563743"
+        + "b294c6a6176612f6c616e672f4f626a6563743b010001740100095369676e61747572650100554c6a6176612f6c616e672f"
+        + "4f626a6563743b4c6a6176612f7574696c2f66756e6374696f6e2f46756e6374696f6e3c4c6a6176612f6c616e672f4f626"
+        + "a6563743b4c6a6176612f6c616e672f4f626a6563743b3e3b01000a536f7572636546696c65010022416e6f6e796d6f7573"
+        + "556e736166654f626a65637446756e6374696f6e2e6a6176610c000d002501000f73756e2f6d6973632f556e736166650c0"
+        + "009000a0c000b000c0c0026002701002e6f72672f7265646b616c652f7574696c2f416e6f6e796d6f7573556e736166654f"
+        + "626a65637446756e6374696f6e0100106a6176612f6c616e672f4f626a65637401001b6a6176612f7574696c2f66756e637"
+        + "4696f6e2f46756e6374696f6e0100032829560100096765744f626a656374010027284c6a6176612f6c616e672f4f626a65"
+        + "63743b4a294c6a6176612f6c616e672f4f626a6563743b00210006000700010008000200120009000a00000012000b000c0"
+        + "00000020001000d000e0001000f0000005c00030004000000122ab700012a2bc00002b500032a20b50004b1000000020010"
+        + "0000001200040000001200040013000c0014001100150011000000200003000000120012001300000000001200140015000"
+        + "100000012000b000c00020001001600170001000f00000041000400020000000d2ab400032b2ab40004b60005b000000002"
+        + "00100000000600010000001900110000001600020000000d0012001300000000000d0018001500010002001900000002001"
+        + "a001b00000002001c";
 
     /**
      * <blockquote><pre>
-     * public final class AnonymousByteArrayFunction implements java.util.function.Function&lt;Object, byte[]&gt; {
+     * public final class AnonymousUnsafeLongFunction implements java.util.function.ToLongFunction&lt;Object&gt; {
      *
-     *      final sun.misc.Unsafe unsafe;
+     *      private final sun.misc.Unsafe unsafe;
      *
-     *      final long fd;
+     *      private final long fd;
      *
-     *      public AnonymousByteArrayFunction(Object obj, long fd) {
+     *      public AnonymousUnsafeLongFunction(Object obj, long fd) {
      *          this.unsafe = (sun.misc.Unsafe) obj;
      *          this.fd = fd;
      *      }
      *
      *      &#64;Override
-     *      public byte[] apply(Object t) {
-     *          return (byte[]) unsafe.getObject(t, fd);
+     *      public long applyAsLong(Object t) {
+     *          return unsafe.getLong(t, fd);
      *      }
      *
      * }
      * </pre></blockquote>
      */
-    private static final String functionByteClassBinary = "cafebabe00000034002d0a00090020070021090008002209000800230a00020024070025"
-        + "0a00080026070027070028070029010006756e736166650100114c73756e2f6d6973632f556e736166653b01000266640100014a0100063c696e69743e0"
-        + "10016284c6a6176612f6c616e672f4f626a6563743b4a2956010004436f646501000f4c696e654e756d6265725461626c650100124c6f63616c56617269"
-        + "61626c655461626c650100047468697301002d4c6f72672f7265646b616c652f7574696c2f416e6f6e796d6f757342797465417272617946756e6374696"
-        + "f6e3b0100036f626a0100124c6a6176612f6c616e672f4f626a6563743b0100056170706c79010016284c6a6176612f6c616e672f4f626a6563743b295b"
-        + "4201000174010026284c6a6176612f6c616e672f4f626a6563743b294c6a6176612f6c616e672f4f626a6563743b0100095369676e61747572650100454"
-        + "c6a6176612f6c616e672f4f626a6563743b4c6a6176612f7574696c2f66756e6374696f6e2f46756e6374696f6e3c4c6a6176612f6c616e672f4f626a65"
-        + "63743b5b423e3b01000a536f7572636546696c6501001f416e6f6e796d6f757342797465417272617946756e6374696f6e2e6a6176610c000f002a01000"
-        + "f73756e2f6d6973632f556e736166650c000b000c0c000d000e0c002b002c0100025b420c0018001901002b6f72672f7265646b616c652f7574696c2f41"
-        + "6e6f6e796d6f757342797465417272617946756e6374696f6e0100106a6176612f6c616e672f4f626a65637401001b6a6176612f7574696c2f66756e637"
-        + "4696f6e2f46756e6374696f6e0100032829560100096765744f626a656374010027284c6a6176612f6c616e672f4f626a6563743b4a294c6a6176612f6c"
-        + "616e672f4f626a6563743b0021000800090001000a00020010000b000c00000010000d000e000000030001000f0010000100110000005c0003000400000"
-        + "0122ab700012a2bc00002b500032a20b50004b10000000200120000001200040000001200040013000c0014001100150013000000200003000000120014"
-        + "001500000000001200160017000100000012000d000e0002000100180019000100110000004700040002000000132ab400032b2ab40004b60005c00006c"
-        + "00006b00000000200120000000600010000001900130000001600020000001300140015000000000013001a0017000110410018001b0001001100000030"
-        + "00020002000000062a2bb60007b00000000200120000000600010000000c00130000000c0001000000060014001500000002001c00000002001d001e000"
-        + "00002001f";
+    private static final String functionUnsafeLongBinary = "cafebabe0000003400280a0007001d07001e090006001f0900"
+        + "0600200a00020021070022070023070024010006756e736166650100114c73756e2f6d6973632f556e736166653b0100026"
+        + "6640100014a0100063c696e69743e010016284c6a6176612f6c616e672f4f626a6563743b4a2956010004436f646501000f"
+        + "4c696e654e756d6265725461626c650100124c6f63616c5661726961626c655461626c650100047468697301002e4c6f726"
+        + "72f7265646b616c652f7574696c2f416e6f6e796d6f7573556e736166654c6f6e6746756e6374696f6e3b0100036f626a01"
+        + "00124c6a6176612f6c616e672f4f626a6563743b01000b6170706c7941734c6f6e67010015284c6a6176612f6c616e672f4"
+        + "f626a6563743b294a010001740100095369676e61747572650100494c6a6176612f6c616e672f4f626a6563743b4c6a6176"
+        + "612f7574696c2f66756e6374696f6e2f546f4c6f6e6746756e6374696f6e3c4c6a6176612f6c616e672f4f626a6563743b3"
+        + "e3b01000a536f7572636546696c65010020416e6f6e796d6f7573556e736166654c6f6e6746756e6374696f6e2e6a617661"
+        + "0c000d002501000f73756e2f6d6973632f556e736166650c0009000a0c000b000c0c0026002701002c6f72672f7265646b6"
+        + "16c652f7574696c2f416e6f6e796d6f7573556e736166654c6f6e6746756e6374696f6e0100106a6176612f6c616e672f4f"
+        + "626a6563740100216a6176612f7574696c2f66756e6374696f6e2f546f4c6f6e6746756e6374696f6e01000328295601000"
+        + "76765744c6f6e67010016284c6a6176612f6c616e672f4f626a6563743b4a294a0021000600070001000800020012000900"
+        + "0a00000012000b000c000000020001000d000e0001000f0000005c00030004000000122ab700012a2bc00002b500032a20b"
+        + "50004b10000000200100000001200040000001200040013000c001400110015001100000020000300000012001200130000"
+        + "0000001200140015000100000012000b000c00020001001600170001000f00000041000400020000000d2ab400032b2ab40"
+        + "004b60005ad0000000200100000000600010000001900110000001600020000000d0012001300000000000d001800150001"
+        + "0002001900000002001a001b00000002001c";
 
-    private static final Function<Object, byte[]> strByteFunction;
+    /**
+     * <blockquote><pre>
+     * public final class AnonymousUnsafeByteBooleanFunction implements java.util.function.Predicate&lt;Object&gt; {
+     *
+     *      private final sun.misc.Unsafe unsafe;
+     *
+     *      private final long fd;
+     *
+     *      public AnonymousUnsafeByteBooleanFunction(Object obj, long fd) {
+     *          this.unsafe = (sun.misc.Unsafe) obj;
+     *          this.fd = fd;
+     *      }
+     *
+     *      &#64;Override
+     *      public boolean test(Object t) {
+     *          return unsafe.getByte(t, fd) == 0; //LATIN1:0  UTF16:1
+     *      }
+     *
+     * }
+     * </pre></blockquote>
+     */
+    private static final String functionUnsafeByteBooleanBinary = "cafebabe0000003400290a0007001e07001f09000600"
+        + "2009000600210a00020022070023070024070025010006756e736166650100114c73756e2f6d6973632f556e736166653b01"
+        + "000266640100014a0100063c696e69743e010016284c6a6176612f6c616e672f4f626a6563743b4a2956010004436f646501"
+        + "000f4c696e654e756d6265725461626c650100124c6f63616c5661726961626c655461626c65010004746869730100354c6f"
+        + "72672f7265646b616c652f7574696c2f416e6f6e796d6f7573556e7361666542797465426f6f6c65616e46756e6374696f6e"
+        + "3b0100036f626a0100124c6a6176612f6c616e672f4f626a6563743b01000474657374010015284c6a6176612f6c616e672f"
+        + "4f626a6563743b295a0100017401000d537461636b4d61705461626c650100095369676e61747572650100444c6a6176612f"
+        + "6c616e672f4f626a6563743b4c6a6176612f7574696c2f66756e6374696f6e2f5072656469636174653c4c6a6176612f6c61"
+        + "6e672f4f626a6563743b3e3b01000a536f7572636546696c65010027416e6f6e796d6f7573556e7361666542797465426f6f"
+        + "6c65616e46756e6374696f6e2e6a6176610c000d002601000f73756e2f6d6973632f556e736166650c0009000a0c000b000c"
+        + "0c002700280100336f72672f7265646b616c652f7574696c2f416e6f6e796d6f7573556e7361666542797465426f6f6c6561"
+        + "6e46756e6374696f6e0100106a6176612f6c616e672f4f626a65637401001c6a6176612f7574696c2f66756e6374696f6e2f"
+        + "50726564696361746501000328295601000767657442797465010016284c6a6176612f6c616e672f4f626a6563743b4a2942"
+        + "00210006000700010008000200120009000a00000012000b000c000000020001000d000e0001000f0000005c000300040000"
+        + "00122ab700012a2bc00002b500032a20b50004b10000000200100000001200040000001200040013000c0014001100150011"
+        + "000000200003000000120012001300000000001200140015000100000012000b000c00020001001600170001000f00000054"
+        + "00040002000000152ab400032b2ab40004b600059a000704a7000403ac000000030010000000060001000000190011000000"
+        + "160002000000150012001300000000001500180015000100190000000500021340010002001a00000002001b001c00000002"
+        + "001d";
 
-    private static final Function<Object, byte[]> sbByteFunction;
+    private static final Function<Object, Object> strByteFunction;
+
+    private static final Function<Object, Object> sbByteFunction;
+
+    private static final Function<Object, Object> strCharFunction;
+
+    private static final Function<Object, Object> sbCharFunction;
+
+    private static final Predicate<Object> strLatin1Function;
+
+    private static final ToLongFunction<Object> bufferAddrFunction;
 
     private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
 
     private static final javax.net.ssl.HostnameVerifier defaultVerifier = (s, ss) -> true;
 
     static {
-        Function<Object, char[]> strCharFunction0 = null;
-        Function<Object, char[]> sbCharFunction0 = null;
-        Function<Object, byte[]> strByteFunction0 = null;
-        Function<Object, byte[]> sbByteFunction0 = null;
+
+        (futureDelayer = new ScheduledThreadPoolExecutor(1, r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            t.setName("Redkale-CompletableFutureDelayScheduler");
+            return t;
+        })).setRemoveOnCancelPolicy(true);
+
+        Function<Object, Object> strCharFunction0 = null;
+        Function<Object, Object> sbCharFunction0 = null;
+        Function<Object, Object> strByteFunction0 = null;
+        Function<Object, Object> sbByteFunction0 = null;
+        Predicate<Object> strLatin1Function0 = null;
+        ToLongFunction<Object> bufferAddrFunction0 = null;
+        boolean big8 = true;
         try {
             Field f = String.class.getDeclaredField("value");
-            if (f.getType() == char[].class) { //JDK9及以上不再是char[]
-                Class unsafeClass = Class.forName("sun.misc.Unsafe");
-                Field safeField = unsafeClass.getDeclaredField("theUnsafe");
-                safeField.setAccessible(true);
-                final Object usafe = safeField.get(null);
-                final Method fm = usafe.getClass().getMethod("objectFieldOffset", Field.class);
+            final Class unsafeClass = Class.forName("sun.misc.Unsafe");
+            final Field safeField = unsafeClass.getDeclaredField("theUnsafe");
+            safeField.setAccessible(true);
+            final Object usafe = safeField.get(null);
+            final Method fm = usafe.getClass().getMethod("objectFieldOffset", Field.class);
+            if (f.getType() == char[].class) { //JDK8及以下还是char[]
+                big8 = false;
                 final long fd1 = (Long) fm.invoke(usafe, f);
                 final long fd2 = (Long) fm.invoke(usafe, StringBuilder.class.getSuperclass().getDeclaredField("value"));
-                byte[] bytes = hexToBin(functionCharClassBinary);
                 Class<Attribute> creatorClazz = (Class<Attribute>) new ClassLoader() {
                     public final Class<?> loadClass(String name, byte[] b) {
                         return defineClass(name, b, 0, b.length);
                     }
-                }.loadClass("org.re" + "dkale.util.AnonymousCharArrayFunction", bytes);
-
-                strCharFunction0 = (Function<Object, char[]>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd1);
-                sbCharFunction0 = (Function<Object, char[]>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd2);
+                }.loadClass("org.re" + "dkale.util.AnonymousUnsafeObjectFunction", hexToBin(functionUnsafeObjectBinary));
+                strCharFunction0 = (Function<Object, Object>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd1);
+                sbCharFunction0 = (Function<Object, Object>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd2);
             } else {
-                Class unsafeClass = Class.forName("sun.misc.Unsafe");
-                Field safeField = unsafeClass.getDeclaredField("theUnsafe");
-                safeField.setAccessible(true);
-                final Object usafe = safeField.get(null);
-                final Method fm = usafe.getClass().getMethod("objectFieldOffset", Field.class);
                 final long fd1 = (Long) fm.invoke(usafe, f);
                 final long fd2 = (Long) fm.invoke(usafe, StringBuilder.class.getSuperclass().getDeclaredField("value"));
-                byte[] bytes = hexToBin(functionByteClassBinary);
+                final long fd3 = (Long) fm.invoke(usafe, String.class.getDeclaredField("coder"));
+                final long fd4 = (Long) fm.invoke(usafe, Buffer.class.getDeclaredField("address"));
+
                 Class<Attribute> creatorClazz = (Class<Attribute>) new ClassLoader() {
                     public final Class<?> loadClass(String name, byte[] b) {
                         return defineClass(name, b, 0, b.length);
                     }
-                }.loadClass("org.re" + "dkale.util.AnonymousByteArrayFunction", bytes);
+                }.loadClass("org.re" + "dkale.util.AnonymousUnsafeObjectFunction", hexToBin(functionUnsafeObjectBinary));
 
-                strByteFunction0 = (Function<Object, byte[]>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd1);
-                sbByteFunction0 = (Function<Object, byte[]>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd2);
+                Class<Attribute> creatorClazz2 = (Class<Attribute>) new ClassLoader() {
+                    public final Class<?> loadClass(String name, byte[] b) {
+                        return defineClass(name, b, 0, b.length);
+                    }
+                }.loadClass("org.re" + "dkale.util.AnonymousUnsafeByteBooleanFunction", hexToBin(functionUnsafeByteBooleanBinary));
+
+                Class<Attribute> creatorClazz3 = (Class<Attribute>) new ClassLoader() {
+                    public final Class<?> loadClass(String name, byte[] b) {
+                        return defineClass(name, b, 0, b.length);
+                    }
+                }.loadClass("org.re" + "dkale.util.AnonymousUnsafeLongFunction", hexToBin(functionUnsafeLongBinary));
+
+                strByteFunction0 = (Function<Object, Object>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd1);
+                sbByteFunction0 = (Function<Object, Object>) creatorClazz.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd2);
+                strLatin1Function0 = (Predicate<Object>) creatorClazz2.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd3);
+                bufferAddrFunction0 = (ToLongFunction<Object>) creatorClazz3.getDeclaredConstructor(Object.class, long.class).newInstance(usafe, fd4);
             }
         } catch (Throwable e) { //不会发生
-            //e.printStackTrace();
+            e.printStackTrace();
         }
+        greatejdk8 = big8;
         strCharFunction = strCharFunction0;
         sbCharFunction = sbCharFunction0;
         strByteFunction = strByteFunction0;
         sbByteFunction = sbByteFunction0;
+        strLatin1Function = strLatin1Function0;
+        bufferAddrFunction = bufferAddrFunction0;
 
         try {
             DEFAULTSSL_CONTEXT = javax.net.ssl.SSLContext.getInstance("SSL");
@@ -199,6 +307,21 @@ public final class Utility {
     }
 
     private Utility() {
+    }
+
+    //是否JDK9+
+    public static boolean greaterJDK8() {
+        return greatejdk8;
+    }
+
+    public static <T> CompletableFuture orTimeout(CompletableFuture future, long timeout, TimeUnit unit) {
+        //if (greatejdk8) return future.orTimeout(timeout, unit);
+        return future.whenComplete(new FutureCanceller(futureDelayer.schedule(new FutureTimeout(future), timeout, unit)));
+    }
+
+    public static void main(String[] args) throws Throwable {
+        byte[] bs = readBytes(new FileInputStream("D:\\Java-Projects\\JavaApplication20\\dist\\AnonymousUnsafeByteBooleanFunction.class"));
+        System.out.println(binToHex(bs));
     }
 
     /**
@@ -273,7 +396,8 @@ public final class Utility {
     }
 
     /**
-     * 将多个元素组合成一个List
+     * 将多个元素组合成一个List <br>
+     * 类似 JDK9中的 List.of 方法
      *
      * @param <T>   泛型
      * @param items 元素
@@ -567,6 +691,30 @@ public final class Utility {
         final byte[] news = new byte[array.length + objs.length];
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
+        return news;
+    }
+
+    /**
+     * 将一个或多个byte新元素添加到byte数组结尾
+     *
+     * @param array  原数组
+     * @param objs   待追加数据
+     * @param offset 待追加数据偏移量
+     * @param length 待追加数据的长度
+     *
+     * @return 新数组
+     */
+    public static byte[] append(final byte[] array, final byte[] objs, int offset, int length) {
+        if (array == null || array.length == 0) {
+            if (objs != null && offset == 0 && objs.length == length) return objs;
+            final byte[] news = new byte[length];
+            System.arraycopy(objs, 0, news, 0, length);
+            return news;
+        }
+        if (objs == null || length == 0) return array;
+        final byte[] news = new byte[array.length + length];
+        System.arraycopy(array, 0, news, 0, array.length);
+        System.arraycopy(objs, offset, news, array.length, length);
         return news;
     }
 
@@ -2008,30 +2156,46 @@ public final class Utility {
         return bytes;
     }
 
+    public static long getAddress(ByteBuffer buffer) {
+        return bufferAddrFunction.applyAsLong(buffer);
+    }
+
+    public static boolean isLatin1(String value) {
+        if (value == null) return true;
+        if (strLatin1Function != null) {
+            return strLatin1Function.test(value); //LATIN1:0  UTF16:1
+        }
+        char[] chs = charArray(value);
+        for (char ch : chs) {
+            if (ch >= 0x80) return false;
+        }
+        return true;
+    }
+
     public static char[] charArray(String value) {
         if (value == null) return null;
         if (strCharFunction == null) return value.toCharArray();
-        return strCharFunction.apply(value);
+        return (char[]) strCharFunction.apply(value);
     }
 
     public static char[] charArray(StringBuilder value) {
         if (value == null) return null;
         if (sbCharFunction == null) return value.toString().toCharArray();
-        return sbCharFunction.apply(value);
+        return (char[]) sbCharFunction.apply(value);
     }
 
     //只能是单字节字符串
     public static byte[] byteArray(String latin1Value) {
         if (latin1Value == null) return null;
         if (strByteFunction == null) return latin1Value.getBytes();
-        return strByteFunction.apply(latin1Value);
+        return (byte[]) strByteFunction.apply(latin1Value);
     }
 
     //只能是单字节字符串
     public static byte[] byteArray(StringBuilder latin1Value) {
         if (latin1Value == null) return null;
         if (sbByteFunction == null) return latin1Value.toString().getBytes();
-        return sbByteFunction.apply(latin1Value);
+        return (byte[]) sbByteFunction.apply(latin1Value);
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {
@@ -2045,7 +2209,7 @@ public final class Utility {
     public static int encodeUTF8Length(String value) {
         if (value == null) return -1;
         if (strCharFunction == null) return encodeUTF8Length(value.toCharArray());
-        return encodeUTF8Length(strCharFunction.apply(value));
+        return encodeUTF8Length((char[]) strCharFunction.apply(value));
     }
 
     public static int encodeUTF8Length(final char[] text) {

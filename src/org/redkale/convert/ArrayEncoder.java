@@ -29,6 +29,8 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     protected final Encodeable<Writer, Object> componentEncoder;
 
+    protected final boolean subtypefinal;
+
     protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
@@ -47,6 +49,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             factory.register(type, this);
             this.componentEncoder = factory.loadEncoder(this.componentType);
             this.anyEncoder = factory.getAnyEncoder();
+            this.subtypefinal = (this.componentType instanceof Class) && Modifier.isFinal(((Class) this.componentType).getModifiers());
         } finally {
             inited = true;
             synchronized (lock) {
@@ -66,7 +69,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             return;
         }
         if (value.length == 0) {
-            out.writeArrayB(0, this, componentEncoder, value); 
+            out.writeArrayB(0, this, componentEncoder, value);
             out.writeArrayE();
             return;
         }
@@ -81,13 +84,25 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 }
             }
         }
-        if (out.writeArrayB(value.length, this, componentEncoder, value) < 0) { 
-            final Type comp = this.componentType;
-            boolean first = true;
-            for (Object v : value) {
-                if (!first) out.writeArrayMark();
-                writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? componentEncoder : anyEncoder), v, first);
-                if (first) first = false;
+        Encodeable<Writer, Object> itemEncoder = this.componentEncoder;
+        if (subtypefinal) {
+            if (out.writeArrayB(value.length, this, itemEncoder, value) < 0) {
+                boolean first = true;
+                for (Object v : value) {
+                    if (!first) out.writeArrayMark();
+                    writeMemberValue(out, member, itemEncoder, v, first);
+                    if (first) first = false;
+                }
+            }
+        } else {
+            if (out.writeArrayB(value.length, this, itemEncoder, value) < 0) {
+                final Type comp = this.componentType;
+                boolean first = true;
+                for (Object v : value) {
+                    if (!first) out.writeArrayMark();
+                    writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? itemEncoder : anyEncoder), v, first);
+                    if (first) first = false;
+                }
             }
         }
         out.writeArrayE();

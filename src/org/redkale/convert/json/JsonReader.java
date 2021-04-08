@@ -28,7 +28,6 @@ public class JsonReader extends Reader {
 //    public static ObjectPool<JsonReader> createPool(int max) {
 //        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), null, JsonReader::recycle);
 //    }
-
     public JsonReader() {
     }
 
@@ -395,13 +394,21 @@ public class JsonReader extends Reader {
             if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
             value = firstchar - '0';
         }
+        boolean dot = false;
         for (;;) {
             if (currpos == eof) break;
             char ch = text0[++currpos];
             int val = digits[ch];
             if (quote && val == -3) continue;
             if (val <= -3) break;
-            if (val == -1) throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+            if (dot) continue;
+            if (val == -1) {
+                if (ch == '.') {
+                    dot = true;
+                    continue;
+                }
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+            }
             if (val != -2) value = value * 10 + val;
         }
         this.position = currpos - 1;
@@ -446,13 +453,21 @@ public class JsonReader extends Reader {
             if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
             value = firstchar - '0';
         }
+        boolean dot = false;
         for (;;) {
             if (currpos == eof) break;
             char ch = text0[++currpos];
             int val = digits[ch];
             if (quote && val == -3) continue;
             if (val <= -3) break;
-            if (val == -1) throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+            if (dot) continue;
+            if (val == -1) {
+                if (ch == '.') {
+                    dot = true;
+                    continue;
+                }
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+            }
             if (val != -2) value = value * 10 + val;
         }
         this.position = currpos - 1;

@@ -8,7 +8,7 @@ package org.redkale.convert;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.function.*;
-import org.redkale.util.Attribute;
+import org.redkale.util.*;
 
 /**
  * 序列化/反序列化操作类
@@ -61,12 +61,16 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract byte[] convertToBytes(final Type type, final Object value);
 
+    public abstract void convertToBytes(final Object value, final ConvertBytesHandler handler);
+
+    public abstract void convertToBytes(final Type type, final Object value, final ConvertBytesHandler handler);
+
+    public abstract void convertToBytes(final ByteArray array, final Object value);
+
+    public abstract void convertToBytes(final ByteArray array, final Type type, final Object value);
+
     public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value);
 
     public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value);
-
-    public abstract byte[] convertMapToBytes(final Object... values);
-
-    public abstract ByteBuffer[] convertMapTo(final Supplier<ByteBuffer> supplier, final Object... values);
 
 }

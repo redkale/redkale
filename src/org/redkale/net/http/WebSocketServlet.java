@@ -233,6 +233,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 response.finish(true);
                 return;
             }
+            //onOpen成功或者存在delayPackets
             webSocket._sessionid = sessionid;
             request.setKeepAlive(true);
             byte[] bytes = (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes();
@@ -245,14 +246,12 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             response.addHeader("Sec-WebSocket-Accept", Base64.getEncoder().encodeToString(bytes));
             if (webSocket.deflater != null) response.addHeader("Sec-WebSocket-Extensions", "permessage-deflate");
 
-            response.sendBody((ByteBuffer) null, null, new CompletionHandler<Integer, Void>() {
-
-                WebSocketRunner temprunner = null;
+            response.sendBody((ByteBuffer) null, new CompletionHandler<Integer, Void>() {
 
                 @Override
                 public void completed(Integer result, Void attachment) {
-                    HttpContext context = response.getContext();
-
+                    webSocket._readHandler = new WebSocketReadHandler(response.getContext(), webSocket, restMessageConsumer);
+                    webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket);
                     Runnable createUseridHandler = () -> {
                         CompletableFuture<Serializable> userFuture = webSocket.createUserid();
                         if (userFuture == null) {
@@ -267,7 +266,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 return;
                             }
                             Runnable runHandler = () -> {
-                                temprunner = null;
                                 webSocket._userid = userid;
                                 if (single && !anyuser) {
                                     WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, nex) -> {
@@ -277,9 +275,10 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                                 if (oldkilled) {
                                                     WebSocketServlet.this.node.localEngine.addLocal(webSocket);
                                                     response.removeChannel();
-                                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
-                                                    webSocket._runner = runner;
-                                                    context.runAsync(runner);
+                                                    webSocket._readHandler.startRead();
+//                                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
+//                                                    webSocket._runner = runner;
+//                                                    runner.run(); //context.runAsync(runner);
                                                     response.finish(true);
                                                 } else { //关闭新连接
                                                     response.finish(true);
@@ -299,35 +298,29 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                         } else {
                                             WebSocketServlet.this.node.localEngine.addLocal(webSocket);
                                             response.removeChannel();
-                                            WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
-                                            webSocket._runner = runner;
-                                            context.runAsync(runner);
+                                            webSocket._readHandler.startRead();
+//                                            WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
+//                                            webSocket._runner = runner;
+//                                            runner.run(); //context.runAsync(runner);
                                             response.finish(true);
                                         }
                                     });
                                 } else {
                                     WebSocketServlet.this.node.localEngine.addLocal(webSocket);
                                     response.removeChannel();
-                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
-                                    webSocket._runner = runner;
-                                    context.runAsync(runner);
+                                    webSocket._readHandler.startRead();
+//                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
+//                                    webSocket._runner = runner;
+//                                    runner.run(); //context.runAsync(runner);
                                     response.finish(true);
                                 }
                             };
                             if (webSocket.delayPackets != null) { //存在待发送的消息
-                                if (temprunner == null) temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer);
                                 List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                                 webSocket.delayPackets = null;
-                                CompletableFuture<Integer> cf = null;
-                                for (WebSocketPacket packet : delayPackets) {
-                                    if (cf == null) {
-                                        cf = temprunner.sendMessage(packet);
-                                    } else {
-                                        cf = cf.thenCombine(temprunner.sendMessage(packet), (a, b) -> a | b);
-                                    }
-                                }
+                                CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                                 cf.whenComplete((Integer v, Throwable t) -> {
-                                    if (userid == null || t != null || (temprunner != null && temprunner.isClosed())) {
+                                    if (userid == null || t != null) {
                                         if (t != null) logger.log(Level.FINEST, "WebSocket connect abort, Response send delayPackets abort. request = " + request, t);
                                         response.finish(true);
                                     } else {
@@ -340,19 +333,11 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         });
                     };
                     if (webSocket.delayPackets != null) { //存在待发送的消息
-                        if (temprunner == null) temprunner = new WebSocketRunner(context, webSocket, restMessageConsumer);
                         List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                         webSocket.delayPackets = null;
-                        CompletableFuture<Integer> cf = null;
-                        for (WebSocketPacket packet : delayPackets) {
-                            if (cf == null) {
-                                cf = temprunner.sendMessage(packet);
-                            } else {
-                                cf = cf.thenCombine(temprunner.sendMessage(packet), (a, b) -> a | b);
-                            }
-                        }
+                        CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                         cf.whenComplete((Integer v, Throwable t) -> {
-                            if (sessionid == null || t != null || (temprunner != null && temprunner.isClosed())) {
+                            if (sessionid == null || t != null) {
                                 if (t != null) logger.log(Level.FINEST, "WebSocket connect abort, Response send delayPackets abort. request = " + request, t);
                                 response.finish(true);
                             } else {

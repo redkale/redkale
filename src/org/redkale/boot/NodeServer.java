@@ -19,7 +19,6 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
-import javax.persistence.Transient;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.net.Filter;
@@ -154,9 +153,10 @@ public abstract class NodeServer {
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
         server.init(this.serverConf);
         //init之后才有Executor
-        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, Executor.class, server.getWorkExecutor());
-        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, ExecutorService.class, server.getWorkExecutor());
-        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, ThreadPoolExecutor.class, server.getWorkExecutor());
+        //废弃 @since 2.3.0 
+//        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, Executor.class, server.getWorkExecutor());
+//        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, ExecutorService.class, server.getWorkExecutor());
+//        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, ThreadPoolExecutor.class, server.getWorkExecutor());
 
         initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
         String interceptorClass = this.serverConf.getValue("interceptor", "");
@@ -307,7 +307,6 @@ public abstract class NodeServer {
                 SimpleEntry<Class, AnyValue> resEntry = dataResources.get(resourceName);
                 AnyValue sourceConf = resEntry == null ? null : resEntry.getValue();
                 DataSource source = null;
-                boolean needinit = true;
                 if (sourceConf != null) {
                     final Class sourceType = resEntry.getKey();
                     if (sourceType == DataJdbcSource.class) {
@@ -331,15 +330,15 @@ public abstract class NodeServer {
                 }
                 if (source == null) {
                     source = DataSources.createDataSource(resourceName); //从persistence.xml配置中创建
-                    needinit = false;
                 }
+
                 application.dataSources.add(source);
                 appResFactory.register(resourceName, DataSource.class, source);
 
                 field.set(src, source);
-                rf.inject(source, self); // 给其可能包含@Resource的字段赋值;
+                rf.inject(source, self); // 给AsyncGroup和其他@Resource的字段赋值;
                 //NodeServer.this.watchFactory.inject(src);
-                if (source instanceof Service && needinit) ((Service) source).init(sourceConf);
+                if (source instanceof Service) ((Service) source).init(sourceConf);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] DataSource inject to " + src + " error", e);
             }
@@ -383,16 +382,11 @@ public abstract class NodeServer {
                     if (CacheSource.class.isAssignableFrom(sourceType)) { // CacheSource
                         source = Modifier.isFinal(sourceType.getModifiers()) ? sourceType.getConstructor().newInstance() : (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, client == null ? null : client.getMessageAgent(), appResFactory, appSncpTranFactory, sncpAddr, null, Sncp.getConf(srcService));
                         Type genericType = field.getGenericType();
-                        ParameterizedType pt = (genericType instanceof ParameterizedType) ? (ParameterizedType) genericType : null;
-                        Type valType = pt == null ? null : pt.getActualTypeArguments()[0];
-                        if (CacheSource.class.isAssignableFrom(sourceType)) {
-                            CacheSource cacheSource = (CacheSource) source;
-                            cacheSource.initValueType(valType instanceof Class ? (Class) valType : Object.class);
-                            cacheSource.initTransient(field.getAnnotation(Transient.class) != null); //必须在initValueType之后
-                        }
                         application.cacheSources.add((CacheSource) source);
-                        appResFactory.register(resourceName, genericType, source);
                         appResFactory.register(resourceName, CacheSource.class, source);
+                        if (genericType != CacheSource.class) {
+                            appResFactory.register(resourceName, genericType, source);
+                        }
                     }
                     field.set(src, source);
                     rf.inject(source, self); //
@@ -778,7 +772,7 @@ public abstract class NodeServer {
 
     public void start() throws IOException {
         if (interceptor != null) interceptor.preStart(this);
-        server.start();
+        server.start(application);
         postStartServer(localServices, remoteServices);
     }
 

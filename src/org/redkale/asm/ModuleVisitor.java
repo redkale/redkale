@@ -60,9 +60,9 @@ package org.redkale.asm;
 
 /**
  * A visitor to visit a Java module. The methods of this class must be called in
- * the following order: <code>visitMainClass</code> | ( <code>visitPackage</code> |
- * <code>visitRequire</code> | <code>visitExport</code> | <code>visitOpen</code> |
- * <code>visitUse</code> | <code>visitProvide</code> )* <code>visitEnd</code>.
+ * the following order: &#60;tt&#62;visitMainClass&#60;/tt&#62; | ( &#60;tt&#62;visitPackage&#60;/tt&#62; |
+ * &#60;tt&#62;visitRequire&#60;/tt&#62; | &#60;tt&#62;visitExport&#60;/tt&#62; | &#60;tt&#62;visitOpen&#60;/tt&#62; |
+ * &#60;tt&#62;visitUse&#60;/tt&#62; | &#60;tt&#62;visitProvide&#60;/tt&#62; )* &#60;tt&#62;visitEnd&#60;/tt&#62;.
  *
  * The methods {@link #visitRequire(String, int, String)}, {@link #visitExport(String, int, String...)},
  * {@link #visitOpen(String, int, String...)} and {@link #visitPackage(String)}
@@ -157,7 +157,7 @@ public abstract class ModuleVisitor {
      *        {@code ACC_MANDATED}.
      * @param modules the qualified names of the modules that can access to
      *        the public classes of the exported package or
-     *        <code>null</code>.
+     *        &#60;tt&#62;null&#60;/tt&#62;.
      */
     public void visitExport(String packaze, int access, String... modules) {
         if (mv != null) {
@@ -174,7 +174,7 @@ public abstract class ModuleVisitor {
      *        {@code ACC_MANDATED}.
      * @param modules the qualified names of the modules that can use deep
      *        reflection to the classes of the open package or
-     *        <code>null</code>.
+     *        &#60;tt&#62;null&#60;/tt&#62;.
      */
     public void visitOpen(String packaze, int access, String... modules) {
         if (mv != null) {

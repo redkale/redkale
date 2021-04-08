@@ -22,6 +22,10 @@ import org.redkale.util.*;
  */
 public class JsonByteBufferWriter extends JsonWriter {
 
+    private static final char[] CHARS_TUREVALUE = "true".toCharArray();
+
+    private static final char[] CHARS_FALSEVALUE = "false".toCharArray();
+
     protected Charset charset;
 
     private final Supplier<ByteBuffer> supplier;
@@ -36,7 +40,7 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     protected JsonByteBufferWriter(boolean tiny, Charset charset, Supplier<ByteBuffer> supplier) {
         this.tiny = tiny;
-        this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
+        this.charset = charset;
         this.supplier = supplier;
     }
 
@@ -56,7 +60,6 @@ public class JsonByteBufferWriter extends JsonWriter {
         return false;
     }
 
-    @Override
     public ByteBuffer[] toBuffers() {
         if (buffers == null) return new ByteBuffer[0];
         for (int i = index; i < this.buffers.length; i++) {
@@ -66,7 +69,6 @@ public class JsonByteBufferWriter extends JsonWriter {
         return this.buffers;
     }
 
-    @Override
     public int count() {
         if (this.buffers == null) return 0;
         int len = 0;
@@ -109,6 +111,32 @@ public class JsonByteBufferWriter extends JsonWriter {
     @Override
     public void writeTo(final char[] chs, final int start, final int len) {
         writeTo(-1, false, chs, start, len);
+    }
+
+    @Override
+    public void writeTo(final byte ch) { //只能是 0 - 127 的字符
+        expand(1);
+        this.buffers[index].put(ch);
+    }
+
+    @Override
+    public void writeTo(final byte[] chs, final int start, final int len) { //只能是 0 - 127 的字符
+        int expandsize = expand(len);
+        if (expandsize == 0) { // 只需要一个buffer 
+            this.buffers[index].put(chs, start, len);
+        } else {
+            ByteBuffer buffer = this.buffers[index];
+            int remain = len;
+            int offset = start;
+            while (remain > 0) {
+                int bsize = Math.min(buffer.remaining(), remain);
+                buffer.put(chs, offset, bsize);
+                offset += bsize;
+                remain -= bsize;
+                if (remain < 1) break;
+                buffer = nextByteBuffer();
+            }
+        }
     }
 
     private void writeTo(int expandsize, final boolean quote, final char[] chs, final int start, final int len) {
@@ -264,6 +292,11 @@ public class JsonByteBufferWriter extends JsonWriter {
                 buffer.put((byte) '"');
             }
         }
+    }
+
+    @Override
+    public void writeBoolean(boolean value) {
+        writeTo(value ? CHARS_TUREVALUE : CHARS_FALSEVALUE);
     }
 
     @Override

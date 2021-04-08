@@ -64,6 +64,16 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         };
     }
 
+    public static boolean checkSource(Properties property) {
+        final String source = sourceImpl(property.getProperty(JDBC_SOURCE, property.getProperty(JDBC_DRIVER)), property.getProperty(JDBC_URL));
+        try {
+            Thread.currentThread().getContextClassLoader().loadClass(source);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
     private static ConnectionPoolDataSource createDataSource(Properties property) {
         try {
             return createDataSource(property.getProperty(JDBC_SOURCE, property.getProperty(JDBC_DRIVER)),
@@ -73,7 +83,7 @@ public class PoolJdbcSource extends PoolSource<Connection> {
         }
     }
 
-    private static ConnectionPoolDataSource createDataSource(String source0, String url, String user, String password) throws Exception {
+    private static String sourceImpl(String source0, String url) {
         String source = source0;
         if (source0 == null || source0.isEmpty()) {
             if (url.startsWith("jdbc:mysql:")) {
@@ -98,12 +108,12 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                 case "com.mysql.cj.jdbc.Driver":
                 case "com.mysql.jdbc.Driver":
                     try {
-                        Thread.currentThread().getContextClassLoader().loadClass("com.mysql.cj.jdbc.MysqlConnectionPoolDataSource");
-                        source = "com.mysql.cj.jdbc.MysqlConnectionPoolDataSource";
-                    } catch (Throwable e) {
-                        source = "com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource";
-                    }
-                    break;
+                    Thread.currentThread().getContextClassLoader().loadClass("com.mysql.cj.jdbc.MysqlConnectionPoolDataSource");
+                    source = "com.mysql.cj.jdbc.MysqlConnectionPoolDataSource";
+                } catch (Throwable e) {
+                    source = "com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource";
+                }
+                break;
                 case "oracle.jdbc.driver.OracleDriver":
                     source = "oracle.jdbc.pool.OracleConnectionPoolDataSource";
                     break;
@@ -118,6 +128,11 @@ public class PoolJdbcSource extends PoolSource<Connection> {
                     break;
             }
         }
+        return source;
+    }
+
+    private static ConnectionPoolDataSource createDataSource(String source0, String url, String user, String password) throws Exception {
+        final String source = sourceImpl(source0, url);
         final Class clazz = Thread.currentThread().getContextClassLoader().loadClass(source);
         Object pdsource = clazz.getDeclaredConstructor().newInstance();
         if (source.contains(".postgresql.")) {

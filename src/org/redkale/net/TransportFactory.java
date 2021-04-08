@@ -5,15 +5,12 @@
  */
 package org.redkale.net;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.function.Supplier;
 import java.util.logging.*;
 import java.util.stream.Collectors;
 import javax.net.ssl.SSLContext;
@@ -45,14 +42,8 @@ public class TransportFactory {
 
     protected static final Logger logger = Logger.getLogger(TransportFactory.class.getSimpleName());
 
-    //传输端的线程池
-    protected final ExecutorService executor;
-
-    //传输端的ByteBuffer对象池
-    protected final ObjectPool<ByteBuffer> bufferPool;
-
-    //传输端的ChannelGroup
-    protected final AsynchronousChannelGroup channelGroup;
+    //传输端的AsyncGroup
+    protected final AsyncGroup asyncGroup;
 
     //每个地址对应的Group名
     protected final Map<InetSocketAddress, String> groupAddrs = new HashMap<>();
@@ -90,23 +81,25 @@ public class TransportFactory {
     //pong的数据长度, 小于0表示不进行判断
     protected int pongLength;
 
+    //是否TCP
+    protected String netprotocol = "TCP";
+
     //负载均衡策略
     protected final TransportStrategy strategy;
 
-    protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
-        this.executor = executor;
-        this.bufferPool = bufferPool;
-        this.channelGroup = channelGroup;
+    protected TransportFactory(AsyncGroup asyncGroup, SSLContext sslContext, String netprotocol,
+        int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
+        this.asyncGroup = asyncGroup;
         this.sslContext = sslContext;
+        this.netprotocol = netprotocol;
         this.readTimeoutSeconds = readTimeoutSeconds;
         this.writeTimeoutSeconds = writeTimeoutSeconds;
         this.strategy = strategy;
     }
 
-    protected TransportFactory(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds) {
-        this(executor, bufferPool, channelGroup, sslContext, readTimeoutSeconds, writeTimeoutSeconds, null);
+    protected TransportFactory(AsyncGroup asyncGroup, SSLContext sslContext, String netprotocol,
+        int readTimeoutSeconds, int writeTimeoutSeconds) {
+        this(asyncGroup, sslContext, netprotocol, readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
     public void init(AnyValue conf, ByteBuffer pingBuffer, int pongLength) {
@@ -143,71 +136,28 @@ public class TransportFactory {
         }
     }
 
-    public static TransportFactory create(int threads) {
-        return create(threads, threads * 2, 8 * 1024, DEFAULT_READTIMEOUTSECONDS, DEFAULT_WRITETIMEOUTSECONDS);
+    public static TransportFactory create(AsyncGroup asyncGroup, int readTimeoutSeconds, int writeTimeoutSeconds) {
+        return new TransportFactory(asyncGroup, null, "TCP", readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
-    public static TransportFactory create(int threads, int bufferPoolSize, int bufferCapacity) {
-        return create(threads, bufferPoolSize, bufferCapacity, DEFAULT_READTIMEOUTSECONDS, DEFAULT_WRITETIMEOUTSECONDS);
+    public static TransportFactory create(AsyncGroup asyncGroup, SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
+        return new TransportFactory(asyncGroup, sslContext, "TCP", readTimeoutSeconds, writeTimeoutSeconds, strategy);
     }
 
-    public static TransportFactory create(int threads, int bufferPoolSize, int bufferCapacity, int readTimeoutSeconds, int writeTimeoutSeconds) {
-        final ObjectPool<ByteBuffer> transportPool = ObjectPool.createSafePool(new AtomicLong(), new AtomicLong(), bufferPoolSize,
-            (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
-                e.clear();
-                return true;
-            });
-        final AtomicInteger counter = new AtomicInteger();
-        ExecutorService transportExec = Executors.newFixedThreadPool(threads, (Runnable r) -> {
-            Thread t = new Thread(r);
-            t.setDaemon(true);
-            t.setName("Redkale-Transport-Thread-" + counter.incrementAndGet());
-            return t;
-        });
-        AsynchronousChannelGroup transportGroup = null;
-        try {
-            transportGroup = AsynchronousChannelGroup.withCachedThreadPool(transportExec, 1);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return create(transportExec, transportPool, transportGroup, readTimeoutSeconds, writeTimeoutSeconds);
+    public static TransportFactory create(AsyncGroup asyncGroup, String netprotocol, int readTimeoutSeconds, int writeTimeoutSeconds) {
+        return new TransportFactory(asyncGroup, null, netprotocol, readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
-    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup) {
-        return new TransportFactory(executor, bufferPool, channelGroup, null, DEFAULT_READTIMEOUTSECONDS, DEFAULT_WRITETIMEOUTSECONDS, null);
-    }
-
-    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        int readTimeoutSeconds, int writeTimeoutSeconds) {
-        return new TransportFactory(executor, bufferPool, channelGroup, null, readTimeoutSeconds, writeTimeoutSeconds, null);
-    }
-
-    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
-        return new TransportFactory(executor, bufferPool, channelGroup, null, readTimeoutSeconds, writeTimeoutSeconds, strategy);
-    }
-
-    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup, SSLContext sslContext) {
-        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, DEFAULT_READTIMEOUTSECONDS, DEFAULT_WRITETIMEOUTSECONDS, null);
-    }
-
-    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds) {
-        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, readTimeoutSeconds, writeTimeoutSeconds, null);
-    }
-
-    public static TransportFactory create(ExecutorService executor, ObjectPool<ByteBuffer> bufferPool, AsynchronousChannelGroup channelGroup,
-        SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
-        return new TransportFactory(executor, bufferPool, channelGroup, sslContext, readTimeoutSeconds, writeTimeoutSeconds, strategy);
+    public static TransportFactory create(AsyncGroup asyncGroup, SSLContext sslContext, String netprotocol, int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
+        return new TransportFactory(asyncGroup, sslContext, netprotocol, readTimeoutSeconds, writeTimeoutSeconds, strategy);
     }
 
     public Transport createTransportTCP(String name, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, "TCP", this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
+        return new Transport(name, "TCP", this, this.asyncGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
-    public Transport createTransport(String name, String protocol, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, protocol, this, this.bufferPool, this.channelGroup, this.sslContext, clientAddress, addresses, strategy);
+    public Transport createTransport(String name, String netprotocol, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+        return new Transport(name, netprotocol, this, this.asyncGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
     public String findGroupName(InetSocketAddress addr) {
@@ -269,17 +219,13 @@ public class TransportFactory {
             if (info == null) continue;
             addresses.addAll(info.addresses);
         }
-        if (info == null) info = new TransportGroupInfo("TCP");
+        if (info == null) {
+            info = new TransportGroupInfo(netprotocol);
+        } else {
+            info.protocol = netprotocol;
+        }
         if (sncpAddress != null) addresses.remove(sncpAddress);
-        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, this, this.bufferPool, this.channelGroup, this.sslContext, sncpAddress, addresses, this.strategy);
-    }
-
-    public ExecutorService getExecutor() {
-        return executor;
-    }
-
-    public Supplier<ByteBuffer> getBufferSupplier() {
-        return bufferPool;
+        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, this, this.asyncGroup, this.sslContext, sncpAddress, addresses, this.strategy);
     }
 
     public List<TransportGroupInfo> getGroupInfos() {
@@ -306,11 +252,6 @@ public class TransportFactory {
 
     public void shutdownNow() {
         if (this.scheduler != null) this.scheduler.shutdownNow();
-        try {
-            this.channelGroup.shutdownNow();
-        } catch (Exception e) {
-            logger.log(Level.FINER, "close transportChannelGroup erroneous", e);
-        }
     }
 
     private void checks() {
@@ -324,21 +265,11 @@ public class TransportFactory {
             Transport.TransportNode[] nodes = transport.getTransportNodes();
             for (final Transport.TransportNode node : nodes) {
                 if (node.disabletime < 1) continue; //可用
-                try {
-                    final AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(transport.group);
-                    channel.connect(node.address, node, new CompletionHandler<Void, Transport.TransportNode>() {
-                        @Override
-                        public void completed(Void result, Transport.TransportNode attachment) {
-                            attachment.disabletime = 0;
-                        }
-
-                        @Override
-                        public void failed(Throwable exc, Transport.TransportNode attachment) {
-                            attachment.disabletime = System.currentTimeMillis();
-                        }
-                    });
-                } catch (Exception e) {
-                }
+                CompletableFuture<AsyncConnection> future = Utility.orTimeout(asyncGroup.createTCP(node.address), 2, TimeUnit.SECONDS);
+                future.whenComplete((r, t) -> {
+                    node.disabletime = t == null ? 0 : System.currentTimeMillis();
+                    if (r != null) r.dispose();
+                });
             }
         }
         for (WeakReference ref : nulllist) {
@@ -353,7 +284,7 @@ public class TransportFactory {
             if (transport == null) continue;
             Transport.TransportNode[] nodes = transport.getTransportNodes();
             for (final Transport.TransportNode node : nodes) {
-                final BlockingQueue<AsyncConnection> queue = node.conns;
+                final BlockingQueue<AsyncConnection> queue = node.connQueue;
                 AsyncConnection conn;
                 while ((conn = queue.poll()) != null) {
                     if (conn.getLastWriteTime() > timex && false) { //最近几秒内已经进行过IO操作
@@ -365,10 +296,6 @@ public class TransportFactory {
                         localconn.write(sendBuffer, sendBuffer, new CompletionHandler<Integer, ByteBuffer>() {
                             @Override
                             public void completed(Integer result, ByteBuffer wbuffer) {
-                                if (wbuffer.hasRemaining()) {
-                                    localconn.write(wbuffer, wbuffer, this);
-                                    return;
-                                }
                                 localconn.read(new CompletionHandler<Integer, ByteBuffer>() {
                                     int counter = 0;
 

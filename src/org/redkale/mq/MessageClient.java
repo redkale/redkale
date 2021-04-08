@@ -79,11 +79,11 @@ public abstract class MessageClient {
                             node.future.complete(msg);
                             long cha = now - msg.createtime;
                             if (cha > 1000 && fine) {
-                                messageAgent.logger.log(Level.FINE, clazzName + ".MessageRespFutureNode.process (mqs.delays = " + cha + "ms, mqs.counters = " + ncer + ") mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINE, clazzName + ".MessageRespFutureNode.process (mqs.delays = " + cha + "ms, mqs.counters = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
                             } else if (cha > 50 && finer) {
-                                messageAgent.logger.log(Level.FINER, clazzName + ".MessageRespFutureNode.process (mq.delays = " + cha + "ms, mq.counters = " + ncer + ") mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINER, clazzName + ".MessageRespFutureNode.process (mq.delays = " + cha + "ms, mq.counters = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
                             } else if (finest) {
-                                messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.process (mq.delay = " + cha + "ms, mq.counter = " + ncer + ") mqresp.msg: " + msg);
+                                messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.process (mq.delay = " + cha + "ms, mq.counter = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
                             }
                         };
                         MessageConsumer one = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
@@ -112,6 +112,10 @@ public abstract class MessageClient {
         } finally {
             return future;
         }
+    }
+
+    protected MessageRecord formatRespMessage(MessageRecord message) {
+        return message;
     }
 
     protected abstract MessageProducers getProducer();

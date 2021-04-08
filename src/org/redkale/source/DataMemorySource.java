@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+import org.redkale.net.AsyncGroup;
 import org.redkale.service.Local;
 import org.redkale.util.*;
 
@@ -79,7 +80,7 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
-    protected PoolSource<Void> createPoolSource(DataSource source, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
+    protected PoolSource<Void> createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
         return null;
     }
 

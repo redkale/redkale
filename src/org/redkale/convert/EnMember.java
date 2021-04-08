@@ -31,6 +31,10 @@ public final class EnMember<W extends Writer, T, F> {
     //final boolean isnumber;
     final boolean bool;
 
+    final char[] jsonFieldNameChars;
+
+    final byte[] jsonFieldNameBytes;
+
     protected int index;
 
     protected int position; //从1开始
@@ -43,6 +47,8 @@ public final class EnMember<W extends Writer, T, F> {
         Class t = attribute.type();
         this.string = CharSequence.class.isAssignableFrom(t);
         this.bool = t == Boolean.class || t == boolean.class;
+        this.jsonFieldNameChars = ('"' + attribute.field() + "\":").toCharArray();
+        this.jsonFieldNameBytes = ('"' + attribute.field() + "\":").getBytes();
         //this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
     }
 
@@ -69,6 +75,14 @@ public final class EnMember<W extends Writer, T, F> {
 
     public Attribute<T, F> getAttribute() {
         return attribute;
+    }
+
+    public char[] getJsonFieldNameChars() {
+        return jsonFieldNameChars;
+    }
+
+    public byte[] getJsonFieldNameBytes() {
+        return jsonFieldNameBytes;
     }
 
     public Encodeable<W, F> getEncoder() {

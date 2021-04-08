@@ -40,6 +40,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         byte[] body = MessageCoder.getBytes(data.getBody());
         int count = 1 //rpc
             + 1 //frombody
+            + 4 //hashid
             + 4 //reqConvertType
             + 4 //respConvertType
             + 4 + requestURI.length + 2 + path.length + 2 + remoteAddr.length + 2 + sessionid.length
@@ -48,6 +49,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.put((byte) (data.isRpc() ? 'T' : 'F'));
         buffer.put((byte) (data.isFrombody() ? 'T' : 'F'));
+        buffer.putInt(data.getHashid());
         buffer.putInt(data.getReqConvertType() == null ? 0 : data.getReqConvertType().getValue());
         buffer.putInt(data.getRespConvertType() == null ? 0 : data.getRespConvertType().getValue());
         buffer.putInt(requestURI.length);
@@ -75,6 +77,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setRpc(buffer.get() == 'T');
         req.setFrombody(buffer.get() == 'T');
+        req.setHashid(buffer.getInt());
         int reqformat = buffer.getInt();
         int respformat = buffer.getInt();
         if (reqformat != 0) req.setReqConvertType(ConvertType.find(reqformat));

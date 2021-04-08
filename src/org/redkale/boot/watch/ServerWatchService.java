@@ -61,7 +61,7 @@ public class ServerWatchService extends AbstractWatchService {
         final Server server = node.getServer();
         InetSocketAddress newAddr = new InetSocketAddress(newhost == null || newhost.isEmpty() ? server.getSocketAddress().getHostString() : newhost, newport);
         try {
-            server.changeAddress(newAddr);
+            server.changeAddress(application, newAddr);
         } catch (IOException e) {
             e.printStackTrace();
             return new RetResult(RET_SERVER_CHANGEPORT_ERROR, "changeaddress error");
@@ -72,7 +72,7 @@ public class ServerWatchService extends AbstractWatchService {
     private Map<String, Object> formatToMap(NodeServer node) {
         Server server = node.getServer();
         Map<String, Object> rs = new LinkedHashMap<>();
-        String protocol = server.getProtocol();
+        String protocol = server.getNetprotocol();
         if (node instanceof NodeSncpServer) {
             protocol += "/SNCP";
         } else if (node instanceof NodeWatchServer) {
@@ -86,7 +86,6 @@ public class ServerWatchService extends AbstractWatchService {
         rs.put("name", server.getName());
         rs.put("protocol", protocol);
         rs.put("address", server.getSocketAddress());
-        rs.put("threads", server.getThreads());
         rs.put("backlog", server.getBacklog());
         rs.put("bufferCapacity", server.getBufferCapacity());
         rs.put("bufferPoolSize", server.getBufferPoolSize());

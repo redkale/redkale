@@ -82,7 +82,7 @@ class Handler {
 
     /**
      * Internal name of the type of exceptions handled by this handler, or
-     * <code>null</code> to catch any exceptions.
+     * &#60;tt&#62;null&#60;/tt&#62; to catch any exceptions.
      */
     String desc;
 

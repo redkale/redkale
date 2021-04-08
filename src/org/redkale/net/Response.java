@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.function.*;
 import java.util.logging.Level;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.ByteTuple;
 
 /**
  * 协议响应对象
@@ -25,11 +25,11 @@ import org.redkale.util.ObjectPool;
 @SuppressWarnings("unchecked")
 public abstract class Response<C extends Context, R extends Request<C>> {
 
-    protected static final boolean respConvertByBuffer = Boolean.getBoolean("resp.convert.bytebuffer");
-
     protected final C context;
 
-    protected final ObjectPool<Response> responsePool; //虚拟构建的Response可能不存在responsePool
+    protected Supplier<Response> responseSupplier; //虚拟构建的Response可能不存在responseSupplier
+
+    protected Consumer<Response> responseConsumer; //虚拟构建的Response可能不存在responseConsumer
 
     protected final R request;
 
@@ -45,20 +45,26 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected Servlet<C, R, ? extends Response<C, R>> servlet;
 
-    private final CompletionHandler finishHandler = new CompletionHandler<Integer, ByteBuffer>() {
+    private final CompletionHandler finishBytesHandler = new CompletionHandler<Integer, Void>() {
+
+        @Override
+        public void completed(Integer result, Void attachment) {
+            finish();
+        }
+
+        @Override
+        public void failed(Throwable exc, Void attachment) {
+            finish(true);
+        }
+
+    };
+
+    private final CompletionHandler finishBufferHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
         @Override
         public void completed(Integer result, ByteBuffer attachment) {
-            if (attachment.hasRemaining()) {
-                channel.write(attachment, attachment, this);
-            } else {
-                channel.offerBuffer(attachment);
-                ByteBuffer data = request.removeMoredata();
-                final boolean more = data != null && request.keepAlive;
-                request.more = more;
-                finish();
-                if (more) new PrepareRunner(context, responsePool, request.channel, null, Response.this).run();
-            }
+            channel.offerBuffer(attachment);
+            finish();
         }
 
         @Override
@@ -69,51 +75,33 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     };
 
-    private final CompletionHandler finishHandler2 = new CompletionHandler<Integer, ByteBuffer[]>() {
+    private final CompletionHandler finishBuffersHandler = new CompletionHandler<Integer, ByteBuffer[]>() {
 
         @Override
         public void completed(final Integer result, final ByteBuffer[] attachments) {
-            int index = -1;
-            for (int i = 0; i < attachments.length; i++) {
-                if (attachments[i].hasRemaining()) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index >= 0) {
-                channel.write(attachments, index, attachments.length - index, attachments, this);
-            } else {
+            if (attachments != null) {
                 for (ByteBuffer attachment : attachments) {
                     channel.offerBuffer(attachment);
                 }
-                ByteBuffer data = request.removeMoredata();
-                final boolean more = data != null && request.keepAlive;
-                request.more = more;
-                finish();
-                if (more) new PrepareRunner(context, responsePool, request.channel, null, Response.this).run();
             }
+            finish();
         }
 
         @Override
         public void failed(Throwable exc, final ByteBuffer[] attachments) {
-            for (ByteBuffer attachment : attachments) {
-                channel.offerBuffer(attachment);
+            if (attachments != null) {
+                for (ByteBuffer attachment : attachments) {
+                    channel.offerBuffer(attachment);
+                }
             }
             finish(true);
         }
 
     };
 
-    protected Response(C context, final R request, ObjectPool<Response> responsePool) {
+    protected Response(C context, final R request) {
         this.context = context;
         this.request = request;
-        this.responsePool = responsePool;
-    }
-
-    protected void offerBuffer(ByteBuffer... buffers) {
-        for (ByteBuffer buffer : buffers) {
-            channel.offerBuffer(buffer);
-        }
     }
 
     protected AsyncConnection removeChannel() {
@@ -125,6 +113,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected void prepare() {
         inited = true;
+        request.prepare();
     }
 
     protected boolean recycle() {
@@ -132,11 +121,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.output = null;
         this.filter = null;
         this.servlet = null;
+        boolean notpipeline = request.pipelineIndex == 0 || request.pipelineOver;
         request.recycle();
         if (channel != null) {
-            channel.dispose();
+            if (notpipeline) channel.dispose();
             channel = null;
         }
+        this.responseSupplier = null;
+        this.responseConsumer = null;
         this.inited = false;
         return true;
     }
@@ -207,73 +199,127 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             this.recycleListener = null;
         }
-        if (request.more) removeChannel();
-        if (request.keepAlive && !request.more && channel != null) {
-            if (channel.isOpen()) {
-                AsyncConnection conn = removeChannel();
-                this.recycle();
-                this.prepare();
-                new PrepareRunner(context, this.responsePool, conn, null, this).run();
+        if (request.keepAlive && (request.pipelineIndex == 0 || request.pipelineOver)) {
+            AsyncConnection conn = removeChannel();
+            if (conn != null && conn.protocolCodec != null) {
+                this.responseConsumer.accept(this);
+                conn.read(conn.protocolCodec);
             } else {
-                channel.dispose();
+                Supplier<Response> poolSupplier = this.responseSupplier;
+                Consumer<Response> poolConsumer = this.responseConsumer;
+                this.recycle();
+                new ProtocolCodec(context, poolSupplier, poolConsumer, conn).response(this).run(null);
             }
         } else {
-            this.responsePool.accept(this);
+            this.responseConsumer.accept(this);
         }
     }
 
-    public void finish(final byte[] bs) {
+    public final void finish(final byte[] bs) {
+        finish(false, bs, 0, bs.length);
+    }
+
+    public final void finish(final byte[] bs, int offset, int length) {
+        finish(false, bs, offset, length);
+    }
+
+    public final void finish(final ByteTuple array) {
+        finish(false, array.content(), array.offset(), array.length());
+    }
+
+    public final void finish(boolean kill, final byte[] bs) {
+        finish(kill, bs, 0, bs.length);
+    }
+
+    public final void finish(boolean kill, final ByteTuple array) {
+        finish(kill, array.content(), array.offset(), array.length());
+    }
+
+    public void finish(boolean kill, final byte[] bs, int offset, int length) {
         if (!this.inited) return; //避免重复关闭
-        if (this.context.bufferCapacity == bs.length) {
-            ByteBuffer buffer = channel.getBufferSupplier().get();
-            buffer.put(bs);
-            buffer.flip();
-            this.finish(buffer);
+        if (kill) refuseAlive();
+        if (this.channel.hasPipelineData()) {
+            this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
+
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    channel.write(bs, offset, length, finishBytesHandler);
+                }
+
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    finishBytesHandler.failed(exc, attachment);
+                }
+            });
         } else {
-            this.finish(ByteBuffer.wrap(bs));
+            this.channel.write(bs, offset, length, finishBytesHandler);
         }
     }
 
-    public void finish(ByteBuffer buffer) {
-        if (!this.inited) return; //避免重复关闭
-        final AsyncConnection conn = this.channel;
-//        ByteBuffer data = this.request.removeMoredata();
-//        final boolean more = data != null && this.request.keepAlive;
-//        this.request.more = more;
-        conn.write(buffer, buffer, finishHandler);
-//        if (more) new PrepareRunner(this.context, this.responsePool, conn, data, null).run();
+    protected final void finish(ByteBuffer buffer) {
+        finish(false, buffer);
     }
 
-    public void finish(boolean kill, ByteBuffer buffer) {
+    protected final void finish(ByteBuffer... buffers) {
+        finish(false, buffers);
+    }
+
+    protected void finish(boolean kill, ByteBuffer buffer) {
         if (!this.inited) return; //避免重复关闭
         if (kill) refuseAlive();
-        final AsyncConnection conn = this.channel;
-//        ByteBuffer data = this.request.removeMoredata();
-//        final boolean more = data != null && this.request.keepAlive;
-//        this.request.more = more;
-        conn.write(buffer, buffer, finishHandler);
-//        if (more) new PrepareRunner(this.context, this.responsePool, conn, data, null).run();
+        if (this.channel.hasPipelineData()) {
+            this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
+
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    channel.write(buffer, buffer, finishBufferHandler);
+                }
+
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    finishBufferHandler.failed(exc, buffer);
+                }
+            });
+        } else {
+            this.channel.write(buffer, buffer, finishBufferHandler);
+        }
     }
 
-    public void finish(ByteBuffer... buffers) {
-        if (!this.inited) return; //避免重复关闭
-        final AsyncConnection conn = this.channel;
-//        ByteBuffer data = this.request.removeMoredata();
-//        final boolean more = data != null && this.request.keepAlive;
-//        this.request.more = more;
-        conn.write(buffers, buffers, finishHandler2);
-//        if (more) new PrepareRunner(this.context, this.responsePool, conn, data, null).run();
-    }
-
-    public void finish(boolean kill, ByteBuffer... buffers) {
+    protected void finish(boolean kill, ByteBuffer... buffers) {
         if (!this.inited) return; //避免重复关闭
         if (kill) refuseAlive();
-        final AsyncConnection conn = this.channel;
-        ByteBuffer data = this.request.removeMoredata();
-        final boolean more = data != null && this.request.keepAlive;
-        this.request.more = more;
-        conn.write(buffers, buffers, finishHandler2);
-        if (more) new PrepareRunner(this.context, this.responsePool, conn, data, null).run();
+        if (this.channel.hasPipelineData()) {
+            this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
+
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    channel.write(buffers, buffers, finishBuffersHandler);
+                }
+
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    finishBuffersHandler.failed(exc, buffers);
+                }
+            });
+        } else {
+            this.channel.write(buffers, buffers, finishBuffersHandler);
+        }
+    }
+
+    protected <A> void send(final ByteTuple array, final CompletionHandler<Integer, Void> handler) {
+        this.channel.write(array, new CompletionHandler<Integer, Void>() {
+
+            @Override
+            public void completed(Integer result, Void attachment) {
+                if (handler != null) handler.completed(result, attachment);
+            }
+
+            @Override
+            public void failed(Throwable exc, Void attachment) {
+                if (handler != null) handler.failed(exc, attachment);
+            }
+
+        });
     }
 
     protected <A> void send(final ByteBuffer buffer, final A attachment, final CompletionHandler<Integer, A> handler) {
@@ -281,12 +327,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
             @Override
             public void completed(Integer result, A attachment) {
-                if (buffer.hasRemaining()) {
-                    channel.write(buffer, attachment, this);
-                } else {
-                    channel.offerBuffer(buffer);
-                    if (handler != null) handler.completed(result, attachment);
-                }
+                channel.offerBuffer(buffer);
+                if (handler != null) handler.completed(result, attachment);
             }
 
             @Override
@@ -303,21 +345,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
             @Override
             public void completed(Integer result, A attachment) {
-                int index = -1;
-                for (int i = 0; i < buffers.length; i++) {
-                    if (buffers[i].hasRemaining()) {
-                        index = i;
-                        break;
-                    }
-                    channel.offerBuffer(buffers[i]);
-                }
-                if (index == 0) {
-                    channel.write(buffers, attachment, this);
-                } else if (index > 0) {
-                    ByteBuffer[] newattachs = new ByteBuffer[buffers.length - index];
-                    System.arraycopy(buffers, index, newattachs, 0, newattachs.length);
-                    channel.write(newattachs, attachment, this);
-                } else if (handler != null) handler.completed(result, attachment);
+                channel.offerBuffer(buffers);
+                if (handler != null) handler.completed(result, attachment);
             }
 
             @Override

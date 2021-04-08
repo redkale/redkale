@@ -21,10 +21,17 @@ public class HttpMessageRequest extends HttpRequest {
 
     protected MessageRecord message;
 
-    public HttpMessageRequest(HttpContext context, MessageRecord message) {
-        super(context, message.decodeContent(HttpSimpleRequestCoder.getInstance()));
+    public HttpMessageRequest(HttpContext context) {
+        super(context, (HttpSimpleRequest) null);
+    }
+
+    protected HttpMessageRequest prepare(MessageRecord message) {
+        super.initSimpleRequest(message.decodeContent(HttpSimpleRequestCoder.getInstance()));
         this.message = message;
+        this.hashid = this.message.hash();
         this.currentUserid = message.getUserid();
+        this.createtime = System.currentTimeMillis();
+        return this;
     }
 
     public void setRequestURI(String uri) {
@@ -34,5 +41,17 @@ public class HttpMessageRequest extends HttpRequest {
     @Override
     public Convert getRespConvert() {
         return this.respConvert;
+    }
+
+    @Override
+    protected void prepare() {
+        super.prepare();
+        this.keepAlive = false;
+    }
+
+    @Override
+    protected void recycle() {
+        super.recycle();
+        this.message = null;
     }
 }

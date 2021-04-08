@@ -16,7 +16,7 @@ import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.net.Servlet;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
@@ -56,8 +56,6 @@ public abstract class MessageAgent {
 
     protected ScheduledThreadPoolExecutor timeoutExecutor;
 
-    protected ThreadHashExecutor workExecutor;
-
     protected int producerCount = 1;
 
     //本地Service消息接收处理器， key:consumer
@@ -68,21 +66,14 @@ public abstract class MessageAgent {
         this.httpMessageClient = new HttpMessageClient(this);
         this.sncpMessageClient = new SncpMessageClient(this);
         this.producerCount = config.getIntValue("producers", Runtime.getRuntime().availableProcessors());
-        if ("hash".equalsIgnoreCase(config.getValue("pool", "hash"))) {
-            this.workExecutor = new ThreadHashExecutor(Math.max(4, config.getIntValue("threads", Runtime.getRuntime().availableProcessors())));
-        }
         // application (it doesn't execute completion handlers).
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
             Thread t = new Thread(r);
-            t.setName("MessageAgent-Timeout-Thread");
+            t.setName("Redkale-MessageAgent-Timeout-Thread");
             t.setDaemon(true);
             return t;
         });
         this.timeoutExecutor.setRemoveOnCancelPolicy(true);
-    }
-
-    public boolean isHashPool() {
-        return this.workExecutor != null;
     }
 
     public CompletableFuture<Map<String, Long>> start() {
@@ -108,7 +99,6 @@ public abstract class MessageAgent {
     public void destroy(AnyValue config) {
         this.httpMessageClient.close().join();
         this.sncpMessageClient.close().join();
-        this.workExecutor.shutdown();
         if (this.timeoutExecutor != null) this.timeoutExecutor.shutdown();
         if (this.sncpProducer != null) this.sncpProducer.shutdown().join();
         if (this.httpProducer != null) this.httpProducer.shutdown().join();
@@ -126,12 +116,12 @@ public abstract class MessageAgent {
 
     protected List<MessageProducer> getAllMessageProducer() {
         List<MessageProducer> producers = new ArrayList<>();
-        if (this.httpProducer != null) producers.addAll(List.of(this.httpProducer.producers));
-        if (this.sncpProducer != null) producers.addAll(List.of(this.sncpProducer.producers));
+        if (this.httpProducer != null) producers.addAll(Utility.ofList(this.httpProducer.producers));
+        if (this.sncpProducer != null) producers.addAll(Utility.ofList(this.sncpProducer.producers));
         MessageProducers one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
-        if (one != null) producers.addAll(List.of(one.producers));
+        if (one != null) producers.addAll(Utility.ofList(one.producers));
         one = this.sncpMessageClient == null ? null : this.sncpMessageClient.getProducer();
-        if (one != null) producers.addAll(List.of(one.producers));
+        if (one != null) producers.addAll(Utility.ofList(one.producers));
         return producers;
     }
 
@@ -224,18 +214,22 @@ public abstract class MessageAgent {
     public abstract MessageConsumer createConsumer(String[] topics, String group, MessageProcessor processor);
 
     public final synchronized void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
+        AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
+        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return;
         String[] topics = generateHttpReqTopics(service);
         String consumerid = generateHttpConsumerid(topics, service);
         if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
-        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, this.workExecutor, httpMessageClient, getHttpProducer(), ns, service, servlet);
+        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, httpMessageClient, getHttpProducer(), ns, service, servlet);
         this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topics, consumerid, processor)));
     }
 
     public final synchronized void putService(NodeSncpServer ns, Service service, SncpServlet servlet) {
+        AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
+        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return;
         String topic = generateSncpReqTopic(service);
         String consumerid = generateSncpConsumerid(topic, service);
         if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
-        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, this.workExecutor, sncpMessageClient, getSncpProducer(), ns, service, servlet);
+        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, sncpMessageClient, getSncpProducer(), ns, service, servlet);
         this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(new String[]{topic}, consumerid, processor)));
     }
 

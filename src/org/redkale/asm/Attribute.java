@@ -58,13 +58,15 @@
  */
 package org.redkale.asm;
 
+import java.util.Arrays;
+
 /**
  * A non standard class, field, method or code attribute.
  *
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-class Attribute {
+public class Attribute {
 
     /**
      * The type of this attribute.
@@ -77,7 +79,7 @@ class Attribute {
     byte[] value;
 
     /**
-     * The next attribute in this attribute list. May be <code>null</code>.
+     * The next attribute in this attribute list. May be &#60;tt&#62;null&#60;/tt&#62;.
      */
     Attribute next;
 
@@ -92,19 +94,19 @@ class Attribute {
     }
 
     /**
-     * Returns <code>true</code> if this type of attribute is unknown. The default
-     * implementation of this method always returns <code>true</code>.
+     * Returns &#60;tt&#62;true&#60;/tt&#62; if this type of attribute is unknown. The default
+     * implementation of this method always returns &#60;tt&#62;true&#60;/tt&#62;.
      *
-     * @return <code>true</code> if this type of attribute is unknown.
+     * @return &#60;tt&#62;true&#60;/tt&#62; if this type of attribute is unknown.
      */
     public boolean isUnknown() {
         return true;
     }
 
     /**
-     * Returns <code>true</code> if this type of attribute is a code attribute.
+     * Returns &#60;tt&#62;true&#60;/tt&#62; if this type of attribute is a code attribute.
      *
-     * @return <code>true</code> if this type of attribute is a code attribute.
+     * @return &#60;tt&#62;true&#60;/tt&#62; if this type of attribute is a code attribute.
      */
     public boolean isCodeAttribute() {
         return false;
@@ -113,7 +115,7 @@ class Attribute {
     /**
      * Returns the labels corresponding to this attribute.
      *
-     * @return the labels corresponding to this attribute, or <code>null</code> if
+     * @return the labels corresponding to this attribute, or &#60;tt&#62;null&#60;/tt&#62; if
      *         this attribute is not a code attribute that contains labels.
      */
     protected Label[] getLabels() {
@@ -123,7 +125,7 @@ class Attribute {
     /**
      * Reads a {@link #type type} attribute. This method must return a
      * <i>new</i> {@link Attribute} object, of type {@link #type type},
-     * corresponding to the <code>len</code> bytes starting at the given offset, in
+     * corresponding to the &#60;tt&#62;len&#60;/tt&#62; bytes starting at the given offset, in
      * the given class reader.
      *
      * @param cr
@@ -146,7 +148,7 @@ class Attribute {
      *            containing the type and the length of the attribute, are not
      *            taken into account here.
      * @param labels
-     *            the labels of the method's code, or <code>null</code> if the
+     *            the labels of the method's code, or &#60;tt&#62;null&#60;/tt&#62; if the
      *            attribute to be read is not a code attribute.
      * @return a <i>new</i> {@link Attribute} object corresponding to the given
      *         bytes.
@@ -169,11 +171,11 @@ class Attribute {
      *            class the items that corresponds to this attribute.
      * @param code
      *            the bytecode of the method corresponding to this code
-     *            attribute, or <code>null</code> if this attribute is not a code
+     *            attribute, or &#60;tt&#62;null&#60;/tt&#62; if this attribute is not a code
      *            attributes.
      * @param len
      *            the length of the bytecode of the method corresponding to this
-     *            code attribute, or <code>null</code> if this attribute is not a
+     *            code attribute, or &#60;tt&#62;null&#60;/tt&#62; if this attribute is not a
      *            code attribute.
      * @param maxStack
      *            the maximum stack size of the method corresponding to this
@@ -216,11 +218,11 @@ class Attribute {
      *            byte arrays, with the {@link #write write} method.
      * @param code
      *            the bytecode of the method corresponding to these code
-     *            attributes, or <code>null</code> if these attributes are not code
+     *            attributes, or &#60;tt&#62;null&#60;/tt&#62; if these attributes are not code
      *            attributes.
      * @param len
      *            the length of the bytecode of the method corresponding to
-     *            these code attributes, or <code>null</code> if these attributes
+     *            these code attributes, or &#60;tt&#62;null&#60;/tt&#62; if these attributes
      *            are not code attributes.
      * @param maxStack
      *            the maximum stack size of the method corresponding to these
@@ -254,11 +256,11 @@ class Attribute {
      *            byte arrays, with the {@link #write write} method.
      * @param code
      *            the bytecode of the method corresponding to these code
-     *            attributes, or <code>null</code> if these attributes are not code
+     *            attributes, or &#60;tt&#62;null&#60;/tt&#62; if these attributes are not code
      *            attributes.
      * @param len
      *            the length of the bytecode of the method corresponding to
-     *            these code attributes, or <code>null</code> if these attributes
+     *            these code attributes, or &#60;tt&#62;null&#60;/tt&#62; if these attributes
      *            are not code attributes.
      * @param maxStack
      *            the maximum stack size of the method corresponding to these
@@ -281,4 +283,72 @@ class Attribute {
             attr = attr.next;
         }
     }
+
+    //The stuff below is temporary - once proper support for nestmate attribute has been added, it can be safely removed.
+    //see also changes in ClassReader.accept.
+
+    public static class NestMembers extends Attribute {
+        public NestMembers() {
+            super("NestMembers");
+        }
+
+        byte[] bytes;
+        String[] classes;
+
+        @Override
+        protected Attribute read(ClassReader cr, int off, int len, char[] buf, int codeOff, Label[] labels) {
+            int offset = off;
+            NestMembers a = new NestMembers();
+            int size = cr.readShort(off);
+            a.classes = new String[size];
+            off += 2;
+            for (int i = 0; i < size ; i++) {
+                a.classes[i] = cr.readClass(off, buf);
+                off += 2;
+            }
+            a.bytes = Arrays.copyOfRange(cr.b, offset, offset + len);
+            return a;
+        }
+
+        @Override
+        protected ByteVector write(ClassWriter cw, byte[] code, int len, int maxStack, int maxLocals) {
+            ByteVector v = new ByteVector(bytes.length);
+            v.putShort(classes.length);
+            for (String s : classes) {
+                v.putShort(cw.newClass(s));
+            }
+            return v;
+        }
+    }
+
+    public static class NestHost extends Attribute {
+
+        byte[] bytes;
+        String clazz;
+
+        public NestHost() {
+            super("NestHost");
+        }
+
+        @Override
+        protected Attribute read(ClassReader cr, int off, int len, char[] buf, int codeOff, Label[] labels) {
+            int offset = off;
+            NestHost a = new NestHost();
+            a.clazz = cr.readClass(off, buf);
+            a.bytes = Arrays.copyOfRange(cr.b, offset, offset + len);
+            return a;
+        }
+
+        @Override
+        protected ByteVector write(ClassWriter cw, byte[] code, int len, int maxStack, int maxLocals) {
+            ByteVector v = new ByteVector(bytes.length);
+            v.putShort(cw.newClass(clazz));
+            return v;
+        }
+    }
+
+    static final Attribute[] DEFAULT_ATTRIBUTE_PROTOS = new Attribute[] {
+        new NestMembers(),
+        new NestHost()
+    };
 }

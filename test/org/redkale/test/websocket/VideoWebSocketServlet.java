@@ -118,7 +118,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
         HttpServer server = new HttpServer();
         server.addHttpServlet("/pipes", new VideoWebSocketServlet(), "/listen/*");
         server.init(config);
-        server.start();
+        server.start(null);
         cdl.await();
     }
 

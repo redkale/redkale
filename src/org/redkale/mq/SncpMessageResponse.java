@@ -5,12 +5,10 @@
  */
 package org.redkale.mq;
 
-import java.nio.ByteBuffer;
 import org.redkale.convert.bson.BsonWriter;
-import org.redkale.net.Response;
 import org.redkale.net.sncp.*;
 import static org.redkale.net.sncp.SncpRequest.HEADER_SIZE;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.ByteArray;
 
 /**
  *
@@ -31,16 +29,16 @@ public class SncpMessageResponse extends SncpResponse {
 
     protected Runnable callback;
 
-    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, Runnable callback, ObjectPool<Response> responsePool, MessageClient messageClient, MessageProducer producer) {
-        super(context, request, responsePool);
+    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, Runnable callback, MessageClient messageClient, MessageProducer producer) {
+        super(context, request);
         this.message = request.message;
         this.callback = callback;
         this.messageClient = messageClient;
         this.producer = producer;
     }
 
-    public SncpMessageResponse(SncpContext context, MessageRecord message, Runnable callback, ObjectPool<Response> responsePool, MessageClient messageClient, MessageProducer producer) {
-        super(context, new SncpMessageRequest(context, message), responsePool);
+    public SncpMessageResponse(SncpContext context, MessageRecord message, Runnable callback, MessageClient messageClient, MessageProducer producer) {
+        super(context, new SncpMessageRequest(context, message));
         this.message = message;
         this.callback = callback;
         this.messageClient = messageClient;
@@ -51,14 +49,14 @@ public class SncpMessageResponse extends SncpResponse {
     public void finish(final int retcode, final BsonWriter out) {
         if (callback != null) callback.run();
         if (out == null) {
-            final byte[] result = new byte[SncpRequest.HEADER_SIZE];
-            fillHeader(ByteBuffer.wrap(result), 0, retcode);
+            final ByteArray result = new ByteArray(SncpRequest.HEADER_SIZE);
+            fillHeader(result, 0, retcode);
             producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getResptopic(), null, (byte[]) null));
             return;
         }
         final int respBodyLength = out.count(); //body总长度
-        final byte[] result = out.toArray();
-        fillHeader(ByteBuffer.wrap(result), respBodyLength - HEADER_SIZE, retcode);
-        producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getResptopic(), null, result));
+        final ByteArray result = out.toByteArray();
+        fillHeader(result, respBodyLength - HEADER_SIZE, retcode);
+        producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getResptopic(), null, result.getBytes()));
     }
 }

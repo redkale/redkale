@@ -64,6 +64,9 @@ public final class EntityInfo<T> {
     //Entity缓存对象
     private final EntityCache<T> cache;
 
+    //用于存储绑定在EntityInfo上的对象
+    private final ConcurrentHashMap<String, Object> subobjectMap = new ConcurrentHashMap<>();
+
     //key是field的name， 不是sql字段。
     //存放所有与数据库对应的字段， 包括主键
     private final HashMap<String, Attribute<T, Serializable>> attributeMap = new HashMap<>();
@@ -103,14 +106,17 @@ public final class EntityInfo<T> {
     //分表 策略
     private final DistributeTableStrategy<T> tableStrategy;
 
+    //根据主键查找所有对象的SQL
+    private final String allQueryPrepareSQL;
+
     //根据主键查找单个对象的SQL， 含 ？
-    private final String queryPrepareSQL;
+    private final String findPrepareSQL;
 
     //根据主键查找单个对象的SQL， 含 $
-    private final String queryDollarPrepareSQL;
+    private final String findDollarPrepareSQL;
 
     //根据主键查找单个对象的SQL， 含 :name
-    private final String queryNamesPrepareSQL;
+    private final String findNamesPrepareSQL;
 
     //数据库中所有字段
     private final Attribute<T, Serializable>[] queryAttributes;
@@ -161,7 +167,7 @@ public final class EntityInfo<T> {
     final DataSource source;
 
     //全量数据的加载器
-    final BiFunction<DataSource, Class, List> fullloader;
+    final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader;
     //------------------------------------------------------------
 
     /**
@@ -174,7 +180,7 @@ public final class EntityInfo<T> {
      * @param fullloader     全量加载器,可为null
      */
     static <T> EntityInfo<T> load(Class<T> clazz, final boolean cacheForbidden, final Properties conf,
-        DataSource source, BiFunction<DataSource, Class, List> fullloader) {
+        DataSource source, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
         if (rs != null && (rs.cache == null || rs.cache.isFullLoaded())) return rs;
         synchronized (entityInfos) {
@@ -182,10 +188,10 @@ public final class EntityInfo<T> {
             if (rs == null) {
                 rs = new EntityInfo(clazz, cacheForbidden, conf, source, fullloader);
                 entityInfos.put(clazz, rs);
-                if (rs.cache != null) {
-                    if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
-                    rs.cache.fullLoad();
-                }
+            }
+            if (rs.cache != null && !rs.isCacheFullLoaded()) {
+                if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
+                rs.cache.fullLoadAsync();
             }
             return rs;
         }
@@ -213,7 +219,7 @@ public final class EntityInfo<T> {
      * @param fullloader     全量加载器,可为null
      */
     private EntityInfo(Class<T> type, final boolean cacheForbidden,
-        Properties conf, DataSource source, BiFunction<DataSource, Class, List> fullloader) {
+        Properties conf, DataSource source, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
         this.type = type;
         this.source = source;
         //---------------------------------------------
@@ -244,7 +250,7 @@ public final class EntityInfo<T> {
         Table t = type.getAnnotation(Table.class);
         if (type.getAnnotation(VirtualEntity.class) != null || (source == null || "memory".equalsIgnoreCase(source.getType()))) {
             this.table = null;
-            BiFunction<DataSource, Class, List> loader = null;
+            BiFunction<DataSource, EntityInfo, CompletableFuture<List>> loader = null;
             try {
                 VirtualEntity ve = type.getAnnotation(VirtualEntity.class);
                 if (ve != null) loader = ve.loader().getDeclaredConstructor().newInstance();
@@ -424,24 +430,26 @@ public final class EntityInfo<T> {
             this.deletePrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = ?";
             this.deleteDollarPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = $1";
             this.deleteNamesPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
-            this.queryPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
-            this.queryDollarPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = $1";
-            this.queryNamesPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
+            this.allQueryPrepareSQL = "SELECT * FROM " + table;
+            this.findPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.findDollarPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = $1";
+            this.findNamesPrepareSQL = "SELECT * FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
         } else {
             this.insertPrepareSQL = null;
             this.updatePrepareSQL = null;
             this.deletePrepareSQL = null;
-            this.queryPrepareSQL = null;
+            this.findPrepareSQL = null;
+            this.allQueryPrepareSQL = null;
 
             this.insertDollarPrepareSQL = null;
             this.updateDollarPrepareSQL = null;
             this.deleteDollarPrepareSQL = null;
-            this.queryDollarPrepareSQL = null;
+            this.findDollarPrepareSQL = null;
 
             this.insertNamesPrepareSQL = null;
             this.updateNamesPrepareSQL = null;
             this.deleteNamesPrepareSQL = null;
-            this.queryNamesPrepareSQL = null;
+            this.findNamesPrepareSQL = null;
         }
         //----------------cache--------------
         Cacheable c = type.getAnnotation(Cacheable.class);
@@ -456,6 +464,23 @@ public final class EntityInfo<T> {
 
         this.tablenotexistSqlstates = ";" + conf.getProperty(DataSources.JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
         this.tablecopySQL = conf.getProperty(DataSources.JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} LIKE ${oldtable}");
+    }
+
+    @SuppressWarnings("unchecked")
+    public <V> V getSubobject(String name) {
+        return (V) this.subobjectMap.get(name);
+    }
+
+    public void setSubobject(String name, Object value) {
+        this.subobjectMap.put(name, value);
+    }
+
+    public void removeSubobject(String name) {
+        this.subobjectMap.remove(name);
+    }
+
+    public void clearSubobjects() {
+        this.subobjectMap.clear();
     }
 
     /**
@@ -564,9 +589,19 @@ public final class EntityInfo<T> {
      *
      * @return String
      */
-    public String getQueryPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return queryPrepareSQL;
-        return queryPrepareSQL.replace("${newtable}", getTable(bean));
+    public String getFindPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return findPrepareSQL;
+        return findPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的QUERY SQL
+     *
+     *
+     * @return String
+     */
+    public String getAllQueryPrepareSQL() {
+        return this.allQueryPrepareSQL;
     }
 
     /**
@@ -576,9 +611,9 @@ public final class EntityInfo<T> {
      *
      * @return String
      */
-    public String getQueryDollarPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return queryDollarPrepareSQL;
-        return queryDollarPrepareSQL.replace("${newtable}", getTable(bean));
+    public String getFindDollarPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return findDollarPrepareSQL;
+        return findDollarPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
     /**
@@ -588,9 +623,9 @@ public final class EntityInfo<T> {
      *
      * @return String
      */
-    public String getQueryNamesPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return queryNamesPrepareSQL;
-        return queryNamesPrepareSQL.replace("${newtable}", getTable(bean));
+    public String getFindNamesPrepareSQL(T bean) {
+        if (this.tableStrategy == null) return findNamesPrepareSQL;
+        return findNamesPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
     /**

@@ -22,7 +22,8 @@ import javax.net.ssl.SSLContext;
  *
  * @author zhangjx
  */
-class AioTcpAsyncConnection extends AsyncConnection {
+@Deprecated //@since 2.3.0
+class AsyncAioTcpConnection extends AsyncConnection {
 
     //private final Semaphore semaphore = new Semaphore(1);
     private int readTimeoutSeconds;
@@ -35,11 +36,11 @@ class AioTcpAsyncConnection extends AsyncConnection {
 
     private BlockingQueue<WriteEntry> writeQueue;
 
-    public AioTcpAsyncConnection(Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
+    public AsyncAioTcpConnection(int bufferCapacity, Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
         final AsynchronousSocketChannel ch, final SSLContext sslContext, final SocketAddress addr0,
         final int readTimeoutSeconds, final int writeTimeoutSeconds,
         final AtomicLong livingCounter, final AtomicLong closedCounter) {
-        super(bufferSupplier, bufferConsumer, sslContext, livingCounter, closedCounter);
+        super(false, bufferCapacity, bufferSupplier, bufferConsumer, sslContext, livingCounter, closedCounter);
         this.channel = ch;
         this.readTimeoutSeconds = readTimeoutSeconds;
         this.writeTimeoutSeconds = writeTimeoutSeconds;
@@ -135,17 +136,6 @@ class AioTcpAsyncConnection extends AsyncConnection {
     }
 
     private <A> void write(boolean acquire, ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
-//        if (acquire && !semaphore.tryAcquire()) {
-//            if (this.writeQueue == null) {
-//                synchronized (semaphore) {
-//                    if (this.writeQueue == null) {
-//                        this.writeQueue = new LinkedBlockingDeque<>();
-//                    }
-//                }
-//            }
-//            this.writeQueue.add(new WriteEntry(src, attachment, handler));
-//            return;
-//        }
         WriteOneCompletionHandler newHandler = new WriteOneCompletionHandler(src, handler);
         if (!channel.isOpen()) {
             newHandler.failed(new ClosedChannelException(), attachment);
@@ -282,6 +272,8 @@ class AioTcpAsyncConnection extends AsyncConnection {
     @Override
     public final void close() throws IOException {
         super.close();
+        channel.shutdownInput();
+        channel.shutdownOutput();
         channel.close();
         BlockingQueue<WriteEntry> queue = this.writeQueue;
         if (queue == null) return;
@@ -304,6 +296,11 @@ class AioTcpAsyncConnection extends AsyncConnection {
     @Override
     public final boolean isTCP() {
         return true;
+    }
+
+    @Override
+    protected void continueRead() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     private class WriteMoreCompletionHandler<A> implements CompletionHandler<Long, A> {

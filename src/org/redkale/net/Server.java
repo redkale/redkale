@@ -9,12 +9,11 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.text.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
+import org.redkale.boot.Application;
 import org.redkale.util.*;
 
 /**
@@ -33,7 +32,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     public static final String RESNAME_SERVER_ROOT = "SERVER_ROOT";
 
-    public static final String RESNAME_SERVER_EXECUTOR = "SERVER_EXECUTOR";
+    @Deprecated  //@deprecated 2.3.0 使用RESNAME_APP_EXECUTOR
+    public static final String RESNAME_SERVER_EXECUTOR2 = "SERVER_EXECUTOR";
 
     public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
 
@@ -47,7 +47,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected String name;
 
     //应用层协议名
-    protected final String protocol;
+    protected final String netprotocol;
 
     //依赖注入工厂类
     protected final ResourceFactory resourceFactory;
@@ -82,12 +82,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //ByteBuffer的容量大小
     protected int bufferCapacity;
 
-    //线程数
-    protected int threads;
-
-    //线程池
-    protected ThreadPoolExecutor workExecutor;
-
     //ByteBuffer池大小
     protected int bufferPoolSize;
 
@@ -109,9 +103,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //IO写入 的超时秒数，小于1视为不设置
     protected int writeTimeoutSeconds;
 
-    protected Server(long serverStartTime, String protocol, ResourceFactory resourceFactory, PrepareServlet<K, C, R, P, S> servlet) {
+    protected Server(Application application, long serverStartTime, String netprotocol, ResourceFactory resourceFactory, PrepareServlet<K, C, R, P, S> servlet) {
         this.serverStartTime = serverStartTime;
-        this.protocol = protocol;
+        this.netprotocol = netprotocol;
         this.resourceFactory = resourceFactory;
         this.prepare = servlet;
     }
@@ -127,12 +121,11 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.writeTimeoutSeconds = config.getIntValue("writeTimeoutSeconds", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 1024);
         this.maxbody = parseLenth(config.getValue("maxbody"), 64 * 1024);
-        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(protocol) ? 1350 : 32 * 1024);
-        this.bufferCapacity = "UDP".equalsIgnoreCase(protocol) ? bufCapacity : (bufCapacity < 8 * 1024 ? 8 * 1024 : bufCapacity);
-        this.threads = config.getIntValue("threads", Math.max(8, Runtime.getRuntime().availableProcessors() * 2));
-        this.bufferPoolSize = config.getIntValue("bufferPoolSize", this.threads * 4);
-        this.responsePoolSize = config.getIntValue("responsePoolSize", this.threads * 2);
-        this.name = config.getValue("name", "Server-" + protocol + "-" + this.address.getPort());
+        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(netprotocol) ? 1350 : 32 * 1024);
+        this.bufferCapacity = "UDP".equalsIgnoreCase(netprotocol) ? bufCapacity : (bufCapacity < 1024 ? 1024 : bufCapacity);
+        this.bufferPoolSize = config.getIntValue("bufferPoolSize", Runtime.getRuntime().availableProcessors() * 4);
+        this.responsePoolSize = config.getIntValue("responsePoolSize", Runtime.getRuntime().availableProcessors() * 2);
+        this.name = config.getValue("name", "Server-" + (config == null ? netprotocol : config.getValue("protocol", netprotocol).replaceFirst("\\..+", "").toUpperCase()) + "-" + this.address.getPort());
         if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) throw new RuntimeException("server.name (" + this.name + ") is illegal");
         AnyValue sslConf = config.getAnyValue("ssl");
         if (sslConf != null) {
@@ -148,14 +141,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             this.resourceFactory.inject(creator);
             this.sslContext = creator.create(this, sslConf);
         }
-        final AtomicInteger counter = new AtomicInteger();
-        final Format f = createFormat();
-        final String n = name;
-        this.workExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads, (Runnable r) -> {
-            String threadname = "Redkale-" + n + "-WorkThread-" + f.format(counter.incrementAndGet());
-            Thread t = new WorkThread(threadname, workExecutor, r);
-            return t;
-        });
     }
 
     protected static int parseLenth(String value, int defValue) {
@@ -187,10 +172,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return resourceFactory;
     }
 
-    public ThreadPoolExecutor getWorkExecutor() {
-        return workExecutor;
-    }
-
     public InetSocketAddress getSocketAddress() {
         return address;
     }
@@ -199,8 +180,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return name;
     }
 
-    public String getProtocol() {
-        return protocol;
+    public String getNetprotocol() {
+        return netprotocol;
     }
 
     public Logger getLogger() {
@@ -231,10 +212,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return bufferCapacity;
     }
 
-    public int getThreads() {
-        return threads;
-    }
-
     public int getBufferPoolSize() {
         return bufferPoolSize;
     }
@@ -263,36 +240,32 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return maxconns;
     }
 
-    public void setThreads(int threads) {
-        int oldthreads = this.threads;
-        this.context.executor.setCorePoolSize(threads);
-        this.threads = threads;
-        logger.info("[" + Thread.currentThread().getName() + "] " + this.getClass().getSimpleName() + " change threads from " + oldthreads + " to " + threads);
-    }
-
     @SuppressWarnings("unchecked")
     public void addServlet(S servlet, final Object attachment, AnyValue conf, K... mappings) {
         this.prepare.addServlet(servlet, attachment, conf, mappings);
     }
 
-    public void start() throws IOException {
-        this.context = this.createContext();
+    public void start(Application application) throws IOException {
+        this.context = this.createContext(application);
         this.prepare.init(this.context, config);
-        this.serverChannel = ProtocolServer.create(this.protocol, context, this.serverClassLoader, config == null ? null : config.getValue("netimpl"));
+        this.serverChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader, config == null ? null : config.getValue("netimpl"));
+        if (application != null) { //main函数调试时可能为null
+            application.getResourceFactory().inject(this.serverChannel);
+        }
         this.serverChannel.open(config);
         serverChannel.bind(address, backlog);
-        serverChannel.accept(this);
+        serverChannel.accept(application, this);
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
         postStart();
-        logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol)) + " listen: " + address
-            + ", cpu: " + Runtime.getRuntime().availableProcessors() + ", threads: " + threads + ", maxbody: " + formatLenth(context.maxbody) + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
+        logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())
+            + ", cpu: " + Runtime.getRuntime().availableProcessors() + ", maxbody: " + formatLenth(context.maxbody) + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", bufferPoolSize: " + bufferPoolSize + ", responsePoolSize: " + responsePoolSize
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
     }
 
     protected void postStart() {
     }
 
-    public void changeAddress(final InetSocketAddress addr) throws IOException {
+    public void changeAddress(Application application, final InetSocketAddress addr) throws IOException {
         long s = System.currentTimeMillis();
         Objects.requireNonNull(addr);
         final InetSocketAddress oldAddress = context.address;
@@ -300,10 +273,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         context.address = addr;
         ProtocolServer newServerChannel = null;
         try {
-            newServerChannel = ProtocolServer.create(this.protocol, context, this.serverClassLoader, config == null ? null : config.getValue("netimpl"));
+            newServerChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader, config == null ? null : config.getValue("netimpl"));
             newServerChannel.open(config);
             newServerChannel.bind(addr, backlog);
-            newServerChannel.accept(this);
+            newServerChannel.accept(application, this);
         } catch (IOException e) {
             context.address = oldAddress;
             throw e;
@@ -311,7 +284,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.address = context.address;
         this.serverChannel = newServerChannel;
         final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(protocol) ? "" : ("." + protocol))
+        logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol))
             + " change address listen: " + address + ", started in " + (System.currentTimeMillis() - s) + " ms");
         if (oldServerChannel != null) {
             new Thread() {
@@ -360,7 +333,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         if (this.context != null) this.context.aliveTimeoutSeconds = newAliveTimeoutSeconds;
     }
 
-    protected abstract C createContext();
+    protected abstract C createContext(Application application);
 
     //必须在 createContext()之后调用
     protected abstract ObjectPool<ByteBuffer> createBufferPool(AtomicLong createCounter, AtomicLong cycleCounter, int bufferPoolSize);
@@ -370,12 +343,12 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     public void shutdown() throws IOException {
         long s = System.currentTimeMillis();
-        logger.info(this.getClass().getSimpleName() + "-" + this.protocol + " shutdowning");
+        logger.info(this.getClass().getSimpleName() + "-" + this.netprotocol + " shutdowning");
         try {
             this.serverChannel.close();
         } catch (Exception e) {
         }
-        logger.info(this.getClass().getSimpleName() + "-" + this.protocol + " shutdow prepare servlet");
+        logger.info(this.getClass().getSimpleName() + "-" + this.netprotocol + " shutdow prepare servlet");
         this.prepare.destroy(this.context, config);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " shutdown in " + e + " ms");
@@ -446,25 +419,17 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     //创建数
     public long getCreateConnectionCount() {
-        return serverChannel == null ? -1 : serverChannel.getCreateCount();
+        return serverChannel == null ? -1 : serverChannel.getCreateConnectionCount();
     }
 
     //关闭数
     public long getClosedConnectionCount() {
-        return serverChannel == null ? -1 : serverChannel.getClosedCount();
+        return serverChannel == null ? -1 : serverChannel.getClosedConnectionCount();
     }
 
     //在线数
     public long getLivingConnectionCount() {
-        return serverChannel == null ? -1 : serverChannel.getLivingCount();
-    }
-
-    protected Format createFormat() {
-        String sf = "0";
-        if (this.threads > 10) sf = "00";
-        if (this.threads > 100) sf = "000";
-        if (this.threads > 1000) sf = "0000";
-        return new DecimalFormat(sf);
+        return serverChannel == null ? -1 : serverChannel.getLivingConnectionCount();
     }
 
     public static URL[] loadLib(final RedkaleClassLoader classLoader, final Logger logger, final String lib) throws Exception {

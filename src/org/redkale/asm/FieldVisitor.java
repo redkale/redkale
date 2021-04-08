@@ -60,8 +60,8 @@ package org.redkale.asm;
 
 /**
  * A visitor to visit a Java field. The methods of this class must be called in
- * the following order: ( <code>visitAnnotation</code> |
- * <code>visitTypeAnnotation</code> | <code>visitAttribute</code> )* <code>visitEnd</code>.
+ * the following order: ( &#60;tt&#62;visitAnnotation&#60;/tt&#62; |
+ * &#60;tt&#62;visitTypeAnnotation&#60;/tt&#62; | &#60;tt&#62;visitAttribute&#60;/tt&#62; )* &#60;tt&#62;visitEnd&#60;/tt&#62;.
  *
  * @author Eric Bruneton
  */
@@ -101,6 +101,9 @@ public abstract class FieldVisitor {
      *            calls. May be null.
      */
     public FieldVisitor(final int api, final FieldVisitor fv) {
+        if (api < Opcodes.ASM4 || api > Opcodes.ASM6) {
+            throw new IllegalArgumentException();
+        }
         this.api = api;
         this.fv = fv;
     }
@@ -111,8 +114,8 @@ public abstract class FieldVisitor {
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <code>true</code> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <code>null</code> if
+     *            &#60;tt&#62;true&#60;/tt&#62; if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or &#60;tt&#62;null&#60;/tt&#62; if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
@@ -132,16 +135,19 @@ public abstract class FieldVisitor {
      * @param typePath
      *            the path to the annotated type argument, wildcard bound, array
      *            element type, or static inner type within 'typeRef'. May be
-     *            <code>null</code> if the annotation targets 'typeRef' as a whole.
+     *            &#60;tt&#62;null&#60;/tt&#62; if the annotation targets 'typeRef' as a whole.
      * @param desc
      *            the class descriptor of the annotation class.
      * @param visible
-     *            <code>true</code> if the annotation is visible at runtime.
-     * @return a visitor to visit the annotation values, or <code>null</code> if
+     *            &#60;tt&#62;true&#60;/tt&#62; if the annotation is visible at runtime.
+     * @return a visitor to visit the annotation values, or &#60;tt&#62;null&#60;/tt&#62; if
      *         this visitor is not interested in visiting this annotation.
      */
     public AnnotationVisitor visitTypeAnnotation(int typeRef,
             TypePath typePath, String desc, boolean visible) {
+        if (api < Opcodes.ASM5) {
+            throw new RuntimeException();
+        }
         if (fv != null) {
             return fv.visitTypeAnnotation(typeRef, typePath, desc, visible);
         }

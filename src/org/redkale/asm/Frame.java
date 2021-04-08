@@ -1403,7 +1403,7 @@ class Frame {
 
     /**
      * Merges the input frame of the given basic block with the input and output
-     * frames of this basic block. Returns <code>true</code> if the input frame of
+     * frames of this basic block. Returns &#60;tt&#62;true&#60;/tt&#62; if the input frame of
      * the given label has been changed by this operation.
      *
      * @param cw
@@ -1413,7 +1413,7 @@ class Frame {
      * @param edge
      *            the kind of the {@link Edge} between this label and 'label'.
      *            See {@link Edge#info}.
-     * @return <code>true</code> if the input frame of the given label has been
+     * @return &#60;tt&#62;true&#60;/tt&#62; if the input frame of the given label has been
      *         changed by this operation.
      */
     final boolean merge(final ClassWriter cw, final Frame frame, final int edge) {
@@ -1511,7 +1511,7 @@ class Frame {
 
     /**
      * Merges the type at the given index in the given type array with the given
-     * type. Returns <code>true</code> if the type array has been modified by this
+     * type. Returns &#60;tt&#62;true&#60;/tt&#62; if the type array has been modified by this
      * operation.
      *
      * @param cw
@@ -1522,7 +1522,7 @@ class Frame {
      *            an array of types.
      * @param index
      *            the index of the type that must be merged in 'types'.
-     * @return <code>true</code> if the type array has been modified by this
+     * @return &#60;tt&#62;true&#60;/tt&#62; if the type array has been modified by this
      *         operation.
      */
     private static boolean merge(final ClassWriter cw, int t,

@@ -81,38 +81,38 @@ public final class DataSources {
     public static DataSource createDataSource(final String unitName, URL persistxml, Properties readprop, Properties writeprop) throws IOException {
         String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
         if (DataJdbcSource.class.getName().equals(impl)) {
-            try {
+            if (PoolJdbcSource.checkSource(readprop)) {
                 return new DataJdbcSource(unitName, persistxml, readprop, writeprop);
-            } catch (RuntimeException re) {
-                if (!(re.getCause() instanceof ClassNotFoundException)) throw re;
-                String dbtype = null;
-                {
-                    /* jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串 */
-                    String url = readprop.getProperty(JDBC_URL);
-                    int pos = url.indexOf("://");
-                    if (pos > 0) {
-                        String url0 = url.substring(0, pos);
-                        pos = url0.lastIndexOf(':');
-                        if (pos > 0) dbtype = url0.substring(pos + 1);
-                    } else { //jdbc:oracle:thin:@localhost:1521
-                        String url0 = url.substring(url.indexOf(":") + 1);
-                        pos = url0.indexOf(':');
-                        if (pos > 0) dbtype = url0.substring(0, pos);
-                    }
-                }
-                if (dbtype == null) throw re;
-                Iterator<SourceLoader> it = ServiceLoader.load(SourceLoader.class).iterator();
-                Class dsClass = null;
-                while (it.hasNext()) {
-                    SourceLoader loader = it.next();
-                    if (dbtype.equalsIgnoreCase(loader.dbtype())) {
-                        dsClass = loader.dataSourceClass();
-                        if (dsClass != null) break;
-                    }
-                }
-                if (dsClass == null) throw re;
-                impl = dsClass.getName();
             }
+
+            final String url = readprop.getProperty(JDBC_URL);
+            String dbtype = null;
+            {
+                /* jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串 */
+                int pos = url.indexOf("://");
+                if (pos > 0) {
+                    String url0 = url.substring(0, pos);
+                    pos = url0.lastIndexOf(':');
+                    if (pos > 0) dbtype = url0.substring(pos + 1);
+                } else { //jdbc:oracle:thin:@localhost:1521
+                    String url0 = url.substring(url.indexOf(":") + 1);
+                    pos = url0.indexOf(':');
+                    if (pos > 0) dbtype = url0.substring(0, pos);
+                }
+            }
+            if (dbtype == null) throw new RuntimeException("not found datasource implements class, url=" + url);
+
+            Iterator<SourceLoader> it = ServiceLoader.load(SourceLoader.class).iterator();
+            Class dsClass = null;
+            while (it.hasNext()) {
+                SourceLoader loader = it.next();
+                if (dbtype.equalsIgnoreCase(loader.dbtype())) {
+                    dsClass = loader.dataSourceClass();
+                    if (dsClass != null) break;
+                }
+            }
+            if (dsClass == null) throw new RuntimeException("not found datasource implements ServiceLoader, url=" + url);
+            impl = dsClass.getName();
         }
         try {
             Class ds = Thread.currentThread().getContextClassLoader().loadClass(impl);

@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.bson;
 
+import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.*;
@@ -341,14 +342,14 @@ public class BsonReader extends Reader {
         int len = readInt();
         if (len == SIGN_NULL) return null;
         if (len == 0) return "";
-        String value = new String(Utility.decodeUTF8(content, ++this.position, len));
+        String value = new String(content, ++this.position, len, StandardCharsets.UTF_8);
         this.position += len - 1;//上一行已经++this.position，所以此处要-1
         return value;
     }
 
     @Override
     public ValueType readType() {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

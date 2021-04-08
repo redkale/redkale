@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 /**
+ * 一个Service对应一个MessageProcessor
  *
  * <p>
  * 详情见: https://redkale.org

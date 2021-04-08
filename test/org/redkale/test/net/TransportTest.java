@@ -33,11 +33,13 @@ public class TransportTest {
             HttpServer server = new HttpServer();
             DefaultAnyValue servconf = DefaultAnyValue.create("port", servaddr.getPort());
             server.init(servconf);
-            server.start();
+            server.start(null);
         }
         addrs.add(new InetSocketAddress("127.0.0.1", 22005));
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        asyncGroup.start();
         Thread.sleep(1000);
-        TransportFactory factory = TransportFactory.create(10);
+        TransportFactory factory = TransportFactory.create(asyncGroup, 0, 0);
         DefaultAnyValue conf = DefaultAnyValue.create(TransportFactory.NAME_PINGINTERVAL, 5);
         factory.init(conf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
         Transport transport = factory.createTransportTCP("", null, addrs);
@@ -54,7 +56,7 @@ public class TransportTest {
             HttpServer server = new HttpServer();
             DefaultAnyValue servconf = DefaultAnyValue.create("port", 22005);
             server.init(servconf);
-            server.start();
+            server.start(null);
             Thread.sleep(4000);
             CountDownLatch cdl2 = new CountDownLatch(20);
             for (int i = 0; i < 20; i++) {

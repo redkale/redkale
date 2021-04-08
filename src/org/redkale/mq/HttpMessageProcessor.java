@@ -6,13 +6,15 @@
 package org.redkale.mq;
 
 import java.util.concurrent.*;
+import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.boot.NodeHttpServer;
 import org.redkale.net.http.*;
 import org.redkale.service.Service;
-import org.redkale.util.ThreadHashExecutor;
+import org.redkale.util.ObjectPool;
 
 /**
+ * 一个Service对应一个MessageProcessor
  *
  * <p>
  * 详情见: https://redkale.org
@@ -31,13 +33,11 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final Logger logger;
 
-    protected MessageClient messageClient;
+    protected HttpMessageClient messageClient;
 
-    protected final MessageProducers producer;
+    protected final MessageProducers producers;
 
     protected final NodeHttpServer server;
-
-    protected final ThreadHashExecutor workExecutor;
 
     protected final Service service;
 
@@ -49,6 +49,12 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final String multimodule; //  前后有/, 例如: /userstat/
 
+    protected ThreadLocal<ObjectPool<HttpMessageResponse>> respPoolThreadLocal;
+
+    protected final Supplier<HttpMessageResponse> respSupplier;
+
+    protected final Consumer<HttpMessageResponse> respConsumer;
+
     protected CountDownLatch cdl;
 
     protected long starttime;
@@ -57,13 +63,13 @@ public class HttpMessageProcessor implements MessageProcessor {
         if (cdl != null) cdl.countDown();
     };
 
-    public HttpMessageProcessor(Logger logger, ThreadHashExecutor workExecutor, MessageClient messageClient, MessageProducers producer, NodeHttpServer server, Service service, HttpServlet servlet) {
+    public HttpMessageProcessor(Logger logger, HttpMessageClient messageClient, MessageProducers producers, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.finest = logger.isLoggable(Level.FINEST);
         this.finer = logger.isLoggable(Level.FINER);
         this.fine = logger.isLoggable(Level.FINE);
         this.messageClient = messageClient;
-        this.producer = producer;
+        this.producers = producers;
         this.server = server;
         this.service = service;
         this.servlet = servlet;
@@ -71,22 +77,21 @@ public class HttpMessageProcessor implements MessageProcessor {
         this.multiconsumer = mmc != null;
         this.restmodule = "/" + Rest.getRestModule(service) + "/";
         this.multimodule = mmc != null ? ("/" + mmc.module() + "/") : null;
-        this.workExecutor = workExecutor;
+        this.respSupplier = () -> respPoolThreadLocal.get().get();
+        this.respConsumer = resp -> respPoolThreadLocal.get().accept(resp);
+        this.respPoolThreadLocal = ThreadLocal.withInitial(() -> ObjectPool.createUnsafePool(Runtime.getRuntime().availableProcessors(),
+            ps -> new HttpMessageResponse(server.getHttpServer().getContext(), messageClient, respSupplier, respConsumer), HttpMessageResponse::prepare, HttpMessageResponse::recycle));
     }
 
     @Override
     public void begin(final int size, long starttime) {
         this.starttime = starttime;
-        if (this.workExecutor != null) this.cdl = new CountDownLatch(size);
+        this.cdl = new CountDownLatch(size);
     }
 
     @Override
     public void process(final MessageRecord message, final Runnable callback) {
-        if (this.workExecutor == null) {
-            execute(message, innerCallback);
-        } else {
-            this.workExecutor.execute(message.hash(), () -> execute(message, innerCallback));
-        }
+        execute(message, innerCallback);
     }
 
     private void execute(final MessageRecord message, final Runnable callback) {
@@ -96,13 +101,13 @@ public class HttpMessageProcessor implements MessageProcessor {
             long cha = now - message.createtime;
             long e = now - starttime;
             if (multiconsumer) message.setResptopic(null); //不容许有响应
-            HttpContext context = server.getHttpServer().getContext();
-            request = new HttpMessageRequest(context, message);
-            if (multiconsumer) {
-                request.setRequestURI(request.getRequestURI().replaceFirst(this.multimodule, this.restmodule));
-            }
-            HttpMessageResponse response = new HttpMessageResponse(context, request, callback, null, null, messageClient, producer.getProducer(message));
-            servlet.execute(request, response);
+
+            HttpMessageResponse response = respSupplier.get();
+            request = response.request();
+            response.prepare(message, callback, producers.getProducer(message));
+            if (multiconsumer) request.setRequestURI(request.getRequestURI().replaceFirst(this.multimodule, this.restmodule));
+
+            server.getHttpServer().getContext().execute(servlet, request, response);
             long o = System.currentTimeMillis() - now;
             if ((cha > 1000 || e > 100 || o > 1000) && fine) {
                 logger.log(Level.FINE, "HttpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms) message: " + message);
@@ -114,7 +119,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         } catch (Throwable ex) {
             if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
                 HttpMessageResponse.finishHttpResult(finest, request == null ? null : request.getRespConvert(),
-                    message, callback, messageClient, producer.getProducer(message), message.getResptopic(), new HttpResult().status(500));
+                    message, callback, messageClient, producers.getProducer(message), message.getResptopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }
@@ -133,7 +138,7 @@ public class HttpMessageProcessor implements MessageProcessor {
     }
 
     public MessageProducers getProducer() {
-        return producer;
+        return producers;
     }
 
     public NodeHttpServer getServer() {

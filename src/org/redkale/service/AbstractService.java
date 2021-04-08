@@ -7,7 +7,9 @@ package org.redkale.service;
 
 import java.util.concurrent.*;
 import javax.annotation.Resource;
+import org.redkale.boot.Application;
 import org.redkale.net.*;
+import org.redkale.util.ThreadHashExecutor;
 
 /**
  *
@@ -15,25 +17,46 @@ import org.redkale.net.*;
  */
 public abstract class AbstractService implements Service {
 
-    //如果开启了SNCP，此处线程池为SncpServer的线程池
-    @Resource(name = Server.RESNAME_SERVER_EXECUTOR)
-    private ExecutorService serverWorkExecutor;
+    @Resource(name = Application.RESNAME_APP_EXECUTOR)
+    private ExecutorService workExecutor;
 
-    protected void runAsync(Runnable runner) {
-        if (serverWorkExecutor != null) {
-            serverWorkExecutor.execute(runner);
+    protected void runAsync(Runnable command) {
+        if (workExecutor != null) {
+            workExecutor.execute(command);
         } else {
             Thread thread = Thread.currentThread();
             if (thread instanceof WorkThread) {
-                ((WorkThread) thread).runAsync(runner);
+                ((WorkThread) thread).runAsync(command);
             } else {
-                ForkJoinPool.commonPool().execute(runner);
+                ForkJoinPool.commonPool().execute(command);
+            }
+        }
+    }
+
+    protected void runAsync(int hash, Runnable command) {
+        if (workExecutor != null) {
+            if (workExecutor instanceof ThreadHashExecutor) {
+                ((ThreadHashExecutor) workExecutor).execute(hash, command);
+            } else {
+                Thread thread = Thread.currentThread();
+                if (thread instanceof WorkThread) {
+                    ((WorkThread) thread).runAsync(hash, command);
+                } else {
+                    workExecutor.execute(command);
+                }
+            }
+        } else {
+            Thread thread = Thread.currentThread();
+            if (thread instanceof WorkThread) {
+                ((WorkThread) thread).runAsync(hash, command);
+            } else {
+                ForkJoinPool.commonPool().execute(command);
             }
         }
     }
 
     protected ExecutorService getExecutor() {
-        if (serverWorkExecutor != null) return serverWorkExecutor;
+        if (workExecutor != null) return workExecutor;
         Thread thread = Thread.currentThread();
         if (thread instanceof WorkThread) {
             return ((WorkThread) thread).getWorkExecutor();

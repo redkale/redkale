@@ -28,11 +28,14 @@ public class HttpContext extends Context {
 
     protected final ConcurrentHashMap<Class, Creator> asyncHandlerCreators = new ConcurrentHashMap<>();
 
-    protected String remoteAddrHeader;
+    protected final String remoteAddrHeader;
+
+    protected final boolean lazyHeaders;
 
     public HttpContext(HttpContextConfig config) {
         super(config);
         this.remoteAddrHeader = config.remoteAddrHeader;
+        this.lazyHeaders = config.lazyHeaders;
         random.setSeed(Math.abs(System.nanoTime()));
     }
 
@@ -40,10 +43,6 @@ public class HttpContext extends Context {
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
         return new String(Utility.binToHex(bytes));
-    }
-
-    protected ExecutorService getExecutor() {
-        return executor;
     }
 
     @SuppressWarnings("unchecked")
@@ -162,5 +161,7 @@ public class HttpContext extends Context {
     public static class HttpContextConfig extends ContextConfig {
 
         public String remoteAddrHeader;
+
+        public boolean lazyHeaders;
     }
 }

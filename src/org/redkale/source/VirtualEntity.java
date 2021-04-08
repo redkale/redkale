@@ -9,6 +9,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 
 /**
@@ -36,16 +37,16 @@ public @interface VirtualEntity {
      *
      * @return Class
      */
-    Class<? extends BiFunction<DataSource, Class, List>> loader() default DefaultFunctionLoader.class;
+    Class<? extends BiFunction<DataSource, EntityInfo, CompletableFuture<List>>> loader() default DefaultFunctionLoader.class;
 
     /**
      * 默认全量加载器
      *
      */
-    public static class DefaultFunctionLoader implements BiFunction<DataSource, Class, List> {
+    public static class DefaultFunctionLoader implements BiFunction<DataSource, EntityInfo, CompletableFuture<List>> {
 
         @Override
-        public List apply(DataSource source, Class type) {
+        public CompletableFuture<List> apply(DataSource source, EntityInfo info) {
             return null;
         }
     }

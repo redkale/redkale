@@ -133,7 +133,7 @@ public abstract class Writer {
             }
         }
         Attribute attr = member.getAttribute();
-        this.writeFieldName(attr.field(), attr.genericType(), member.getPosition());
+        this.writeFieldName(member, attr.field(), attr.genericType(), member.getPosition());
         member.encoder.convertTo(this, value);
         this.comma = true;
     }
@@ -160,7 +160,7 @@ public abstract class Writer {
                 if (!((Boolean) value)) return;
             }
         }
-        this.writeFieldName(fieldName, fieldType, fieldPos);
+        this.writeFieldName(null, fieldName, fieldType, fieldPos);
         anyEncoder.convertTo(this, value);
         this.comma = true;
     }
@@ -172,7 +172,7 @@ public abstract class Writer {
      */
     public final void writeFieldName(final EnMember member) {
         Attribute attr = member.getAttribute();
-        this.writeFieldName(attr.field(), attr.genericType(), member.getPosition());
+        this.writeFieldName(member, attr.field(), attr.genericType(), member.getPosition());
     }
 
     /**
@@ -233,11 +233,12 @@ public abstract class Writer {
     /**
      * 输出一个字段名
      *
+     * @param member    EnMember
      * @param fieldName 字段名称
      * @param fieldType 字段类型
      * @param fieldPos  字段顺序
      */
-    public abstract void writeFieldName(String fieldName, Type fieldType, int fieldPos);
+    public abstract void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos);
 
     /**
      * 写入一个boolean值

@@ -32,6 +32,8 @@ public final class EntityCache<T> {
     //日志
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());
 
+    private Object[] array;
+
     //主键与对象的键值对
     private ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
@@ -62,6 +64,8 @@ public final class EntityCache<T> {
     //是否已经全量加载过
     private volatile boolean fullloaded;
 
+    private final AtomicBoolean loading = new AtomicBoolean();
+
     //Entity信息
     final EntityInfo<T> info;
 
@@ -71,6 +75,8 @@ public final class EntityCache<T> {
     //&#064;Cacheable的定时器
     private ScheduledThreadPoolExecutor scheduler;
 
+    private CompletableFuture<List> loadFuture;
+
     public EntityCache(final EntityInfo<T> info, final Cacheable c) {
         this.info = info;
         this.interval = c == null ? 0 : c.interval();
@@ -78,7 +84,9 @@ public final class EntityCache<T> {
         this.creator = info.getCreator();
         this.primary = info.primary;
         VirtualEntity ve = info.getType().getAnnotation(VirtualEntity.class);
-        this.needcopy = ve == null || !ve.direct();
+        boolean direct = c != null && c.direct();
+        if (!direct) direct = ve != null && ve.direct();
+        this.needcopy = !direct;
         this.newReproduce = Reproduce.create(type, type, (m) -> {
             try {
                 return type.getDeclaredField(m).getAnnotation(Transient.class) == null;
@@ -98,34 +106,35 @@ public final class EntityCache<T> {
         });
     }
 
-    public void fullLoad() {
+    public void fullLoadAsync() {
+        if (loading.getAndSet(true)) return;
         if (info.fullloader == null) {
             this.list = new ConcurrentLinkedQueue();
             this.map = new ConcurrentHashMap();
             this.fullloaded = true;
+            loading.set(false);
             return;
         }
         this.fullloaded = false;
-        ConcurrentHashMap newmap = new ConcurrentHashMap();
-        List<T> all = info.fullloader.apply(info.source, type);
-        if (all != null) {
-            all.stream().filter(x -> x != null).forEach(x -> {
-                newmap.put(this.primary.get(x), x);
-            });
+        CompletableFuture<List> allFuture = info.fullloader.apply(info.source, info);
+        this.loadFuture = allFuture;
+        if (allFuture == null) {
+            this.list = new ConcurrentLinkedQueue();
+            this.map = new ConcurrentHashMap();
+            this.fullloaded = true;
+            loading.set(false);
+            return;
         }
-        this.list = all == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all);
-        this.map = newmap;
-        this.fullloaded = true;
-        if (this.interval > 0) {
+        if (this.interval > 0 && this.scheduler == null && info.fullloader != null) {
             this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-                final Thread t = new Thread(r, "EntityCache-" + type + "-Thread");
+                final Thread t = new Thread(r, "Redkale-EntityCache-" + type + "-Thread");
                 t.setDaemon(true);
                 return t;
             });
             this.scheduler.scheduleAtFixedRate(() -> {
                 try {
                     ConcurrentHashMap newmap2 = new ConcurrentHashMap();
-                    List<T> all2 = info.fullloader.apply(info.source, type);
+                    List<T> all2 = info.fullloader.apply(info.source, info).join();
                     if (all2 != null) {
                         all2.stream().filter(x -> x != null).forEach(x -> {
                             newmap2.put(this.primary.get(x), x);
@@ -138,6 +147,23 @@ public final class EntityCache<T> {
                 }
             }, interval - System.currentTimeMillis() / 1000 % interval, interval, TimeUnit.SECONDS);
         }
+        allFuture.whenComplete((l, t) -> {
+            if (t != null) {
+                loading.set(false);
+                return;
+            }
+            List<T> all = l;
+            ConcurrentHashMap newmap = new ConcurrentHashMap();
+            if (all != null) {
+                all.stream().filter(x -> x != null).forEach(x -> {
+                    newmap.put(this.primary.get(x), x);
+                });
+            }
+            this.list = new ConcurrentLinkedQueue(all);
+            this.map = newmap;
+            this.fullloaded = true;
+            loading.set(false);
+        });
     }
 
     public Class<T> getType() {
@@ -157,6 +183,20 @@ public final class EntityCache<T> {
 
     public boolean isFullLoaded() {
         return fullloaded;
+    }
+
+    //临时功能
+    @Deprecated
+    public EntityCache<T> array() {
+        if (!isFullLoaded()) this.loadFuture.join();
+        this.array = this.list.toArray();
+        return this;
+    }
+
+    //临时功能    
+    @Deprecated
+    public T findAt(int pk) {
+        return (T) this.array[pk - 1];
     }
 
     public T find(Serializable pk) {

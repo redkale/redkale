@@ -6,10 +6,10 @@
 package org.redkale.convert.bson;
 
 import java.nio.*;
+import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.ByteSimpledCoder;
-import org.redkale.util.*;
 
 /**
  * 以ByteBuffer为数据载体的BsonReader
@@ -233,6 +233,6 @@ public class BsonByteBufferReader extends BsonReader {
         int len = readInt();
         if (len == SIGN_NULL) return null;
         if (len == 0) return "";
-        return new String(Utility.decodeUTF8(read(len)));
+        return new String(read(len), StandardCharsets.UTF_8);
     }
 }

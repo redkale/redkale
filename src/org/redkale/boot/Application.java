@@ -90,6 +90,20 @@ public final class Application {
     public static final String RESNAME_APP_ADDR = "APP_ADDR";
 
     /**
+     * 当前进程的work线程池， 类型：Executor、ExecutorService
+     *
+     * @since 2.3.0
+     */
+    public static final String RESNAME_APP_EXECUTOR = "APP_EXECUTOR";
+
+    /**
+     * 当前进程的客户端组， 类型：AsyncGroup
+     *
+     * @since 2.3.0
+     */
+    public static final String RESNAME_APP_GROUP = "APP_GROUP";
+
+    /**
      * 当前Service所属的SNCP Server的地址 类型: SocketAddress、InetSocketAddress、String <br>
      */
     public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
@@ -106,8 +120,11 @@ public final class Application {
 
     /**
      * 当前Server的线程池
+     *
+     * @deprecated 2.3.0 使用RESNAME_APP_EXECUTOR
      */
-    public static final String RESNAME_SERVER_EXECUTOR = Server.RESNAME_SERVER_EXECUTOR;
+    @Deprecated
+    public static final String RESNAME_SERVER_EXECUTOR2 = Server.RESNAME_SERVER_EXECUTOR2;
 
     /**
      * 当前Server的ResourceFactory
@@ -123,6 +140,10 @@ public final class Application {
     //本地IP地址
     final InetSocketAddress localAddress;
 
+    //业务逻辑线程池
+    //@since 2.3.0
+    final ExecutorService workExecutor;
+
     //CacheSource 资源
     final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
 
@@ -134,6 +155,9 @@ public final class Application {
 
     //SNCP传输端的TransportFactory, 注意： 只给SNCP使用
     final TransportFactory sncpTransportFactory;
+
+    //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
+    final AsyncGroup asyncGroup;
 
     //第三方服务发现管理接口
     //@since 2.1.0
@@ -289,9 +313,6 @@ public final class Application {
         this.classLoader = new RedkaleClassLoader(Thread.currentThread().getContextClassLoader());
         logger.log(Level.INFO, "------------------------- Redkale " + Redkale.getDotedVersion() + " -------------------------");
         //------------------配置 <transport> 节点 ------------------
-        ObjectPool<ByteBuffer> transportPool = null;
-        ExecutorService transportExec = null;
-        AsynchronousChannelGroup transportGroup = null;
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
         String excludelib0 = null;
@@ -301,9 +322,9 @@ public final class Application {
         int bufferPoolSize = Runtime.getRuntime().availableProcessors() * 8;
         int readTimeoutSeconds = TransportFactory.DEFAULT_READTIMEOUTSECONDS;
         int writeTimeoutSeconds = TransportFactory.DEFAULT_WRITETIMEOUTSECONDS;
-        AtomicLong createBufferCounter = new AtomicLong();
-        AtomicLong cycleBufferCounter = new AtomicLong();
+        AnyValue executorConf = null;
         if (resources != null) {
+            executorConf = resources.getAnyValue("executor");
             AnyValue excludelibConf = resources.getAnyValue("excludelibs");
             if (excludelibConf != null) excludelib0 = excludelibConf.getValue("value");
             AnyValue transportConf = resources.getAnyValue("transport");
@@ -316,31 +337,6 @@ public final class Application {
                 writeTimeoutSeconds = transportConf.getIntValue("writeTimeoutSeconds", writeTimeoutSeconds);
                 final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Runtime.getRuntime().availableProcessors() * 2);
                 bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), threads * 4);
-                final int capacity = bufferCapacity;
-                transportPool = ObjectPool.createSafePool(createBufferCounter, cycleBufferCounter, bufferPoolSize,
-                    (Object... params) -> ByteBuffer.allocateDirect(capacity), null, (e) -> {
-                        if (e == null || e.isReadOnly() || e.capacity() != capacity) return false;
-                        e.clear();
-                        return true;
-                    });
-                //-----------transportChannelGroup--------------
-                try {
-                    final String strategyClass = transportConf.getValue("strategy");
-                    if (strategyClass != null && !strategyClass.isEmpty()) {
-                        strategy = (TransportStrategy) classLoader.loadClass(strategyClass).getDeclaredConstructor().newInstance();
-                    }
-                    final AtomicInteger counter = new AtomicInteger();
-                    transportExec = Executors.newFixedThreadPool(threads, (Runnable r) -> {
-                        Thread t = new Thread(r);
-                        t.setDaemon(true);
-                        t.setName("Redkale-Transport-Thread-" + counter.incrementAndGet());
-                        return t;
-                    });
-                    transportGroup = AsynchronousChannelGroup.withCachedThreadPool(transportExec, 1);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                logger.log(Level.INFO, Transport.class.getSimpleName() + " configure bufferCapacity = " + bufferCapacity / 1024 + "K; bufferPoolSize = " + bufferPoolSize + "; threads = " + threads + ";");
             }
 
             AnyValue clusterConf = resources.getAnyValue("cluster");
@@ -424,31 +420,41 @@ public final class Application {
                 }
             }
         }
-        if (transportGroup == null) {
-            final AtomicInteger counter = new AtomicInteger();
-            transportExec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8, (Runnable r) -> {
-                Thread t = new Thread(r);
-                t.setDaemon(true);
-                t.setName("Redkale-Transport-Thread-" + counter.incrementAndGet());
-                return t;
-            });
-            try {
-                transportGroup = AsynchronousChannelGroup.withCachedThreadPool(transportExec, 1);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+
+        ExecutorService workExecutor0 = null;
+        if (executorConf != null) {
+            final AtomicReference<ExecutorService> workref = new AtomicReference<>();
+            int executorThreads = executorConf.getIntValue("threads", Math.max(2, Runtime.getRuntime().availableProcessors()));
+            boolean executorHash = executorConf.getBoolValue("hash");
+            if (executorThreads > 0) {
+                final AtomicInteger workcounter = new AtomicInteger();
+                if (executorHash) {
+                    workExecutor0 = new ThreadHashExecutor(executorThreads, (Runnable r) -> {
+                        int c = workcounter.incrementAndGet();
+                        String threadname = "Redkale-HashWorkThread-" + (c > 9 ? c : ("0" + c));
+                        Thread t = new WorkThread(threadname, workref.get(), r);
+                        return t;
+                    });
+                } else {
+                    workExecutor0 = Executors.newFixedThreadPool(executorThreads, (Runnable r) -> {
+                        int c = workcounter.incrementAndGet();
+                        String threadname = "Redkale-WorkThread-" + (c > 9 ? c : ("0" + c));
+                        Thread t = new WorkThread(threadname, workref.get(), r);
+                        return t;
+                    });
+                }
+                workref.set(workExecutor0);
             }
         }
-        if (transportPool == null) {
-            final int capacity = bufferCapacity;
-            transportPool = ObjectPool.createSafePool(createBufferCounter, cycleBufferCounter, bufferPoolSize,
-                (Object... params) -> ByteBuffer.allocateDirect(capacity), null, (e) -> {
-                    if (e == null || e.isReadOnly() || e.capacity() != capacity) return false;
-                    e.clear();
-                    return true;
-                });
-        }
+        this.workExecutor = workExecutor0;
+        this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
+        this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
+
+        this.asyncGroup = new AsyncIOGroup(this.workExecutor, Runtime.getRuntime().availableProcessors(), bufferCapacity, bufferPoolSize);
+        this.resourceFactory.register(RESNAME_APP_GROUP, AsyncGroup.class, this.asyncGroup);
+
         this.excludelibs = excludelib0;
-        this.sncpTransportFactory = TransportFactory.create(transportExec, transportPool, transportGroup, (SSLContext) null, readTimeoutSeconds, writeTimeoutSeconds, strategy);
+        this.sncpTransportFactory = TransportFactory.create(this.asyncGroup, (SSLContext) null, Transport.DEFAULT_NETPROTOCOL, readTimeoutSeconds, writeTimeoutSeconds, strategy);
         DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("net.transport.pool.maxconns", "100"))
             .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("net.transport.ping.interval", "30"))
             .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("net.transport.check.interval", "30"));
@@ -468,6 +474,14 @@ public final class Application {
             }
         }
         return name;
+    }
+
+    public ExecutorService getWorkExecutor() {
+        return workExecutor;
+    }
+
+    public AsyncGroup getAsyncGroup() {
+        return asyncGroup;
     }
 
     public ResourceFactory getResourceFactory() {
@@ -677,7 +691,23 @@ public final class Application {
             }
 
         }, Application.class, ResourceFactory.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
+
+        //------------------------------------- 注册 HttpClient --------------------------------------------------------        
+        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+            try {
+                if (field.getAnnotation(Resource.class) == null) return;
+                HttpClient httpClient = HttpClient.create(asyncGroup);
+                field.set(src, httpClient);
+                rf.inject(httpClient, null); // 给其可能包含@Resource的字段赋值;
+                rf.register(resourceName, HttpClient.class, httpClient);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpClient inject error", e);
+            }
+        }, HttpClient.class);
         //--------------------------------------------------------------------------
+        if (this.asyncGroup != null) {
+            ((AsyncIOGroup) this.asyncGroup).start();
+        }
         if (this.clusterAgent != null) {
             if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent initing");
             long s = System.currentTimeMillis();
@@ -759,7 +789,7 @@ public final class Application {
             //------------------------------------------------------------------------
             for (AnyValue conf : resources.getAnyValues("group")) {
                 final String group = conf.getValue("name", "");
-                final String protocol = conf.getValue("protocol", Transport.DEFAULT_PROTOCOL).toUpperCase();
+                final String protocol = conf.getValue("protocol", Transport.DEFAULT_NETPROTOCOL).toUpperCase();
                 if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                     throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
                 }
@@ -1004,8 +1034,7 @@ public final class Application {
         for (final AnyValue serconf : serconfs) {
             Thread thread = new Thread() {
                 {
-                    String host = serconf.getValue("host", "0.0.0.0").replace("0.0.0.0", "*");
-                    setName("Redkale-" + serconf.getValue("protocol", "Server").toUpperCase() + "-" + host + ":" + serconf.getIntValue("port") + "-Thread");
+                    setName("Redkale-" + serconf.getValue("protocol", "Server").toUpperCase().replaceFirst("\\..+", "") + ":" + serconf.getIntValue("port") + "-Thread");
                     this.setDaemon(true);
                 }
 

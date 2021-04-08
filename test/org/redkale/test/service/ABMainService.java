@@ -15,7 +15,7 @@ import java.util.logging.*;
 import javax.annotation.Resource;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.TransportFactory;
+import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
@@ -35,9 +35,11 @@ public class ABMainService implements Service {
     public static void remotemain(String[] args) throws Throwable {
         System.out.println("------------------- 远程模式调用 -----------------------------------");
         final int abport = 8888;
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        asyncGroup.start();
         ResourceFactory resFactory = ResourceFactory.root();
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        final TransportFactory transFactory = TransportFactory.create(executor, newBufferPool(), newChannelGroup());
+        final TransportFactory transFactory = TransportFactory.create(asyncGroup, 0, 0);
         transFactory.addGroupInfo("g77", new InetSocketAddress("127.0.0.1", 5577));
         transFactory.addGroupInfo("g88", new InetSocketAddress("127.0.0.1", 5588));
         transFactory.addGroupInfo("g99", new InetSocketAddress("127.0.0.1", 5599));
@@ -51,7 +53,7 @@ public class ABMainService implements Service {
         cserver.getLogger().setLevel(Level.WARNING);
         cserver.addSncpServlet(cservice);
         cserver.init(DefaultAnyValue.create("port", 5577));
-        cserver.start();
+        cserver.start(null);
 
         //------------------------ 初始化 BCService ------------------------------------
         BCService bcservice = Sncp.createSimpleLocalService(BCService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g88");
@@ -62,7 +64,7 @@ public class ABMainService implements Service {
         bcserver.getLogger().setLevel(Level.WARNING);
         bcserver.addSncpServlet(bcservice);
         bcserver.init(DefaultAnyValue.create("port", 5588));
-        bcserver.start();
+        bcserver.start(null);
 
         //------------------------ 初始化 ABMainService ------------------------------------
         ABMainService service = Sncp.createSimpleLocalService(ABMainService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g99");
@@ -80,7 +82,7 @@ public class ABMainService implements Service {
         resFactory.inject(service);
 
         server.init(DefaultAnyValue.create("port", abport));
-        server.start();
+        server.start(null);
         Thread.sleep(100);
 
         //同步方法
@@ -117,7 +119,7 @@ public class ABMainService implements Service {
         server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
 
         server.init(DefaultAnyValue.create("port", "" + abport));
-        server.start();
+        server.start(null);
         Thread.sleep(100);
 
         //同步方法

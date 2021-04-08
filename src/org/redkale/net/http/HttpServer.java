@@ -16,6 +16,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import org.redkale.boot.Application;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.HttpContext.HttpContextConfig;
@@ -41,15 +42,15 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     private HttpResponseConfig respConfig;
 
     public HttpServer() {
-        this(System.currentTimeMillis(), ResourceFactory.root());
+        this(null, System.currentTimeMillis(), ResourceFactory.root());
     }
 
     public HttpServer(ResourceFactory resourceFactory) {
-        this(System.currentTimeMillis(), resourceFactory);
+        this(null, System.currentTimeMillis(), resourceFactory);
     }
 
-    public HttpServer(long serverStartTime, ResourceFactory resourceFactory) {
-        super(serverStartTime, "TCP", resourceFactory, new HttpPrepareServlet());
+    public HttpServer(Application application, long serverStartTime, ResourceFactory resourceFactory) {
+        super(application, serverStartTime, "TCP", resourceFactory, new HttpPrepareServlet());
     }
 
     @Override
@@ -311,9 +312,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     @Override
     @SuppressWarnings("unchecked")
-    protected HttpContext createContext() {
+    protected HttpContext createContext(Application application) {
         final int port = this.address.getPort();
-        this.bufferCapacity = Math.max(this.bufferCapacity, 16 * 1024 + 16); //兼容 HTTP 2.0;
+        //this.bufferCapacity = Math.max(this.bufferCapacity, 16 * 1024 + 16); //兼容 HTTP 2.0;
+        this.bufferCapacity = Math.max(this.bufferCapacity, 1024);
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
         boolean autoOptions = false;
@@ -322,8 +324,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         String jsonContentType = null;
         HttpCookie defaultCookie = null;
         String remoteAddrHeader = null;
+        boolean lazyHeaders = false;
         if (config != null) {
-            AnyValue reqs = config == null ? null : config.getAnyValue("request");
+            lazyHeaders = config.getBoolValue("lazy", false);
+            AnyValue reqs = config.getAnyValue("request");
             if (reqs != null) {
                 AnyValue raddr = reqs.getAnyValue("remoteaddr");
                 remoteAddrHeader = raddr == null ? null : raddr.getValue("value");
@@ -336,7 +340,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 }
             }
 
-            AnyValue resps = config == null ? null : config.getAnyValue("response");
+            AnyValue resps = config.getAnyValue("response");
             if (resps != null) {
                 AnyValue contenttypes = resps.getAnyValue("contenttype");
                 if (contenttypes != null) {
@@ -387,10 +391,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                         defaultCookie.setPath(path);
                     }
                 }
-                AnyValue options = resps == null ? null : resps.getAnyValue("options");
+                AnyValue options = resps.getAnyValue("options");
                 autoOptions = options != null && options.getBoolValue("auto", false);
 
-                AnyValue dates = resps == null ? null : resps.getAnyValue("date");
+                AnyValue dates = resps.getAnyValue("date");
                 datePeriod = dates == null ? 0 : dates.getIntValue("period", 0);
             }
 
@@ -402,7 +406,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         } else if (datePeriod > 0) {
             if (this.dateScheduler == null) {
                 this.dateScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-                    final Thread t = new Thread(r, "HTTP:" + port + "-DateSchedule-Thread");
+                    final Thread t = new Thread(r, "Redkale-HTTP:" + port + "-DateSchedule-Thread");
                     t.setDaemon(true);
                     return t;
                 });
@@ -432,11 +436,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         respConfig.autoOptions = autoOptions;
         respConfig.dateSupplier = dateSupplier;
         respConfig.renders = ((HttpPrepareServlet) prepare).renders;
+        respConfig.init(config);
 
         final HttpContextConfig contextConfig = new HttpContextConfig();
+        if (application != null) contextConfig.workExecutor = application.getWorkExecutor();
         contextConfig.serverStartTime = this.serverStartTime;
         contextConfig.logger = this.logger;
-        contextConfig.executor = this.workExecutor;
         contextConfig.sslContext = this.sslContext;
         contextConfig.bufferCapacity = this.bufferCapacity;
         contextConfig.maxconns = this.maxconns;
@@ -449,6 +454,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         contextConfig.readTimeoutSeconds = this.readTimeoutSeconds;
         contextConfig.writeTimeoutSeconds = this.writeTimeoutSeconds;
         contextConfig.remoteAddrHeader = addrHeader;
+        contextConfig.lazyHeaders = lazyHeaders;
 
         return new HttpContext(contextConfig);
     }
@@ -469,8 +475,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     @Override
     protected ObjectPool<Response> createResponsePool(AtomicLong createCounter, AtomicLong cycleCounter, int responsePoolSize) {
-        ObjectPool<Response> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize,(Creator)null, (x) ->((HttpResponse)x).prepare(),(x) -> ((HttpResponse)x).recycle());
-        pool.setCreator((Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context), pool, this.respConfig));
+        Creator<Response> creator = (Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context), this.respConfig);
+        ObjectPool<Response> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
         return pool;
     }
 }

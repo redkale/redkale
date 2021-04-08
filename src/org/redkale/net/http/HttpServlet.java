@@ -8,10 +8,9 @@ package org.redkale.net.http;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
+import java.util.function.*;
 import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
@@ -35,28 +34,29 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     String _prefix = ""; //当前HttpServlet的path前缀
 
-    HashMap<String, InnerActionEntry> _tmpentrys;  //Rest生成时赋值, 字段名Rest有用到
+    HashMap<String, ActionEntry> _actionmap;  //Rest生成时赋值, 字段名Rest有用到
 
-    private Map.Entry<String, InnerActionEntry>[] mappings; //字段名Rest有用到
+    private Map.Entry<String, ActionEntry>[] mappings; //字段名Rest有用到
 
     //这里不能直接使用HttpServlet，会造成死循环初始化HttpServlet
     private final Servlet<HttpContext, HttpRequest, HttpResponse> authSuccessServlet = new Servlet<HttpContext, HttpRequest, HttpResponse>() {
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
-            InnerActionEntry entry = (InnerActionEntry) request.attachment;
+            ActionEntry entry = request.actionEntry;
             if (entry.rpconly && !request.rpc) {
                 response.finish(503, null);
                 return;
             }
             if (entry.cacheseconds > 0) {//有缓存设置
-                CacheEntry ce = entry.cache.get(request.getRequestURI());
+                CacheEntry ce = entry.modeOneCache ? entry.oneCache : entry.cache.get(request.getRequestURI());
                 if (ce != null && ce.time + entry.cacheseconds * 1000 > System.currentTimeMillis()) { //缓存有效
                     response.setStatus(ce.status);
                     response.setContentType(ce.contentType);
-                    response.finish(ce.getBuffers());
+                    response.skipHeader();
+                    response.finish(ce.getBytes());
                     return;
                 }
-                response.setBufferHandler(entry.cacheHandler);
+                response.setCacheHandler(entry.cacheHandler);
             }
             entry.servlet.execute(request, response);
         }
@@ -66,14 +66,31 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     private final Servlet<HttpContext, HttpRequest, HttpResponse> preSuccessServlet = new Servlet<HttpContext, HttpRequest, HttpResponse>() {
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
-            for (Map.Entry<String, InnerActionEntry> en : mappings) {
+            if (request.actionEntry != null) {
+                ActionEntry entry = request.actionEntry;
+                if (!entry.checkMethod(request.getMethod())) {
+                    response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
+                    return;
+                }
+                request.moduleid = entry.moduleid;
+                request.actionid = entry.actionid;
+                request.annotations = entry.annotations;
+                if (entry.auth) {
+                    response.thenEvent(authSuccessServlet);
+                    authenticate(request, response);
+                } else {
+                    authSuccessServlet.execute(request, response);
+                }
+                return;
+            }
+            for (Map.Entry<String, ActionEntry> en : mappings) {
                 if (request.getRequestURI().startsWith(en.getKey())) {
-                    InnerActionEntry entry = en.getValue();
+                    ActionEntry entry = en.getValue();
                     if (!entry.checkMethod(request.getMethod())) {
                         response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
                         return;
                     }
-                    request.attachment = entry;
+                    request.actionEntry = entry;
                     request.moduleid = entry.moduleid;
                     request.actionid = entry.actionid;
                     request.annotations = entry.annotations;
@@ -97,10 +114,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         String path = _prefix == null ? "" : _prefix;
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
         if (ws != null && !ws.repair()) path = "";
-        HashMap<String, InnerActionEntry> map = this._tmpentrys != null ? this._tmpentrys : loadActionEntry();
+        HashMap<String, ActionEntry> map = this._actionmap != null ? this._actionmap : loadActionEntry();
         this.mappings = new Map.Entry[map.size()];
         int i = -1;
-        for (Map.Entry<String, InnerActionEntry> en : map.entrySet()) {
+        for (Map.Entry<String, ActionEntry> en : map.entrySet()) {
             mappings[++i] = new AbstractMap.SimpleEntry<>(path + en.getKey(), en.getValue());
         }
         //必须要倒排序, /query /query1 /query12  确保含子集的优先匹配 /query12  /query1  /query
@@ -122,7 +139,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
      *      public void preExecute(final HttpRequest request, final HttpResponse response) throws IOException {
      *          //设置当前用户信息
      *          final String sessionid = request.getSessionid(false);
-     *          if (sessionid != null) request.setCurrentUser(userService.current(sessionid));
+     *          if (sessionid != null) request.setCurrentUserid(userService.currentUserid(sessionid));
      *
      *          if (finer) response.recycleListener((req, resp) -&#62; {  //记录处理时间比较长的请求
      *              long e = System.currentTimeMillis() - ((HttpRequest) req).getCreatetime();
@@ -148,12 +165,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
      * <blockquote><pre>
      *      &#64;Override
      *      public void authenticate(HttpRequest request, HttpResponse response) throws IOException {
-     *          UserInfo info = request.currentUser();
-     *          if (info == null) {
+     *          Serializable userid = request.currentUserid();
+     *          if (userid == null) {
      *              response.finishJson(RET_UNLOGIN);
-     *              return;
-     *          } else if (!info.checkAuth(request.getModuleid(), request.getActionid())) {
-     *              response.finishJson(RET_AUTHILLEGAL);
      *              return;
      *          }
      *          response.nextEvent();
@@ -177,10 +191,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         preExecute(request, response);
     }
 
-    private HashMap<String, InnerActionEntry> loadActionEntry() {
+    private HashMap<String, ActionEntry> loadActionEntry() {
         WebServlet module = this.getClass().getAnnotation(WebServlet.class);
         final int serviceid = module == null ? 0 : module.moduleid();
-        final HashMap<String, InnerActionEntry> map = new HashMap<>();
+        final HashMap<String, ActionEntry> map = new HashMap<>();
         HashMap<String, Class> nameset = new HashMap<>();
         final Class selfClz = this.getClass();
         Class clz = this.getClass();
@@ -192,8 +206,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 if ("service".equals(methodname) || "preExecute".equals(methodname) || "execute".equals(methodname) || "authenticate".equals(methodname)) continue;
                 //-----------------------------------------------
                 Class[] paramTypes = method.getParameterTypes();
-                if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class
-                    || paramTypes[1] != HttpResponse.class) continue;
+                if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class || paramTypes[1] != HttpResponse.class) continue;
                 //-----------------------------------------------
                 Class[] exps = method.getExceptionTypes();
                 if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) continue;
@@ -211,21 +224,21 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     throw new RuntimeException(this.getClass().getSimpleName() + " have two same " + HttpMapping.class.getSimpleName() + "(" + name + ")");
                 }
                 nameset.put(name, clz);
-                map.put(name, new InnerActionEntry(serviceid, actionid, name, methods, method, createActionServlet(method)));
+                map.put(name, new ActionEntry(serviceid, actionid, name, methods, method, createActionServlet(method)));
             }
         } while ((clz = clz.getSuperclass()) != HttpServlet.class);
         return map;
     }
 
-    protected static final class InnerActionEntry {
+    protected static final class ActionEntry {
 
-        InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
+        ActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
             this(moduleid, actionid, name, methods, method, rpconly(method), auth(method), cacheseconds(method), servlet);
             this.annotations = annotations(method);
         }
 
         //供Rest类使用，参数不能随便更改
-        public InnerActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean rpconly, boolean auth, int cacheseconds, HttpServlet servlet) {
+        public ActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean rpconly, boolean auth, int cacheseconds, HttpServlet servlet) {
             this.moduleid = moduleid;
             this.actionid = actionid;
             this.name = name;
@@ -235,14 +248,24 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             this.rpconly = rpconly;
             this.auth = auth;
             this.cacheseconds = cacheseconds;
-            this.cache = cacheseconds > 0 ? new ConcurrentHashMap<>() : null;
-            this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, ByteBuffer[] buffers) -> {
-                int status = response.getStatus();
-                if (status != 200) return null;
-                CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), buffers);
-                cache.put(response.getRequest().getRequestURI(), ce);
-                return ce.getBuffers();
-            } : null;
+            if (Utility.contains(name, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\') || name.endsWith("/")) { //是否是正则表达式
+                this.modeOneCache = false;
+                this.cache = cacheseconds > 0 ? new ConcurrentHashMap<>() : null;
+                this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, byte[] content) -> {
+                    int status = response.getStatus();
+                    if (status != 200) return;
+                    CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), content);
+                    cache.put(response.getRequest().getRequestURI(), ce);
+                } : null;
+            } else { //单一url
+                this.modeOneCache = true;
+                this.cache = null;
+                this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, byte[] content) -> {
+                    int status = response.getStatus();
+                    if (status != 200) return;
+                    oneCache = new CacheEntry(response.getStatus(), response.getContentType(), content);
+                } : null;
+            }
         }
 
         protected static boolean auth(Method method) {
@@ -277,9 +300,11 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             return false;
         }
 
-        final BiFunction<HttpResponse, ByteBuffer[], ByteBuffer[]> cacheHandler;
+        final BiConsumer<HttpResponse, byte[]> cacheHandler;
 
         final ConcurrentHashMap<String, CacheEntry> cache;
+
+        final boolean modeOneCache;
 
         final int cacheseconds;
 
@@ -298,6 +323,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         final HttpServlet servlet;
 
         Method method;
+
+        CacheEntry oneCache;
 
         Annotation[] annotations;
     }
@@ -385,28 +412,38 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
         public final long time = System.currentTimeMillis();
 
-        private final ByteBuffer[] buffers;
+        private final byte[] cacheBytes;
 
         private final int status;
 
         private final String contentType;
 
-        public CacheEntry(int status, String contentType, ByteBuffer[] bufs) {
+        public CacheEntry(int status, String contentType, byte[] cacheBytes) {
             this.status = status;
             this.contentType = contentType;
-            final ByteBuffer[] newBuffers = new ByteBuffer[bufs.length];
-            for (int i = 0; i < newBuffers.length; i++) {
-                newBuffers[i] = bufs[i].duplicate().asReadOnlyBuffer();
-            }
-            this.buffers = newBuffers;
+            this.cacheBytes = cacheBytes;
         }
 
-        public ByteBuffer[] getBuffers() {
-            final ByteBuffer[] newBuffers = new ByteBuffer[buffers.length];
-            for (int i = 0; i < newBuffers.length; i++) {
-                newBuffers[i] = buffers[i].duplicate();
-            }
-            return newBuffers;
+        public byte[] getBytes() {
+            return cacheBytes;
+        }
+    }
+
+    static class HttpActionServlet extends HttpServlet {
+
+        final ActionEntry action;
+
+        final HttpServlet servlet;
+
+        public HttpActionServlet(ActionEntry actionEntry, HttpServlet servlet) {
+            this.action = actionEntry;
+            this.servlet = servlet;
+        }
+
+        @Override
+        public void execute(HttpRequest request, HttpResponse response) throws IOException {
+            request.actionEntry = action;
+            servlet.execute(request, response);
         }
     }
 }

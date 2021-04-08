@@ -33,15 +33,15 @@ public abstract class PoolSource<DBChannel> {
 
     protected final AtomicLong saveCounter = new AtomicLong();
 
-    protected final Semaphore semaphore;
-
     protected final Logger logger;
 
     protected final String rwtype; // "" 或 "read"  或 "write"
 
-    protected final int maxconns;
-
     protected final String dbtype;
+
+    protected int maxconns;
+
+    protected Semaphore semaphore;
 
     protected int connectTimeoutSeconds;
 
@@ -77,7 +77,7 @@ public abstract class PoolSource<DBChannel> {
         this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "6"));
         this.readTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_READTIMEOUT_SECONDS, "6"));
         this.writeTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_WRITETIMEOUT_SECONDS, "6"));
-        this.maxconns = Math.max(8, Integer.decode(prop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors() * 100)));
+        this.maxconns = Math.max(8, Integer.decode(prop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors())));
         this.semaphore = semaphore == null ? new Semaphore(this.maxconns) : semaphore;
         String dbtype0 = "";
         { //jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串
@@ -160,6 +160,22 @@ public abstract class PoolSource<DBChannel> {
 
     public abstract void close();
 
+    public Semaphore getSemaphore() {
+        return semaphore;
+    }
+
+    public void setSemaphore(Semaphore semaphore) {
+        this.semaphore = semaphore;
+    }
+
+    public int getMaxconns() {
+        return maxconns;
+    }
+
+    public void setMaxconns(int maxconns) {
+        this.maxconns = maxconns;
+    }
+
     public final String getDbtype() {
         return dbtype;
     }
@@ -182,10 +198,6 @@ public abstract class PoolSource<DBChannel> {
 
     public final long getSaveCount() {
         return saveCounter.longValue();
-    }
-
-    public final int getMaxconns() {
-        return maxconns;
     }
 
     public final int getConnectTimeoutSeconds() {

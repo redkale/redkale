@@ -185,9 +185,9 @@ public class ClassReader {
     public ClassReader(final byte[] b, final int off, final int len) {
         this.b = b;
         // checks the class version
-        if (readShort(off + 6) > Opcodes.V10) {
-            //throw new IllegalArgumentException();
-        }
+        //if (readShort(off + 6) > Opcodes.V11) {
+        //    throw new IllegalArgumentException();
+        //}
         // parses the constant pool
         items = new int[readUnsignedShort(off + 8)];
         int n = items.length;
@@ -205,6 +205,10 @@ public class ClassReader {
             case ClassWriter.FLOAT:
             case ClassWriter.NAME_TYPE:
             case ClassWriter.INDY:
+            // @@@ ClassWriter.CONDY
+            // Enables MethodHandles.lookup().defineClass to function correctly
+            // when it reads the class name
+            case 17:
                 size = 5;
                 break;
             case ClassWriter.LONG:
@@ -267,7 +271,7 @@ public class ClassReader {
      * {@link Type#getInternalName() getInternalName}). For interfaces, the
      * super class is {@link Object}.
      *
-     * @return the internal name of super class, or <code>null</code> for
+     * @return the internal name of super class, or &#60;tt&#62;null&#60;/tt&#62; for
      *         {@link Object} class.
      *
      * @see ClassVisitor#visit(int, int, String, String, String, String[])
@@ -281,7 +285,7 @@ public class ClassReader {
      * {@link Type#getInternalName() getInternalName}).
      *
      * @return the array of internal names for all implemented interfaces or
-     *         <code>null</code>.
+     *         &#60;tt&#62;null&#60;/tt&#62;.
      *
      * @see ClassVisitor#visit(int, int, String, String, String, String[])
      */
@@ -526,7 +530,7 @@ public class ClassReader {
      *            , {@link #SKIP_FRAMES}, {@link #SKIP_CODE}.
      */
     public void accept(final ClassVisitor classVisitor, final int flags) {
-        accept(classVisitor, new Attribute[0], flags);
+        accept(classVisitor, Attribute.DEFAULT_ATTRIBUTE_PROTOS, flags);
     }
 
     /**
@@ -1932,7 +1936,7 @@ public class ClassReader {
      * @param v
      *            start offset in {@link #b b} of the annotations to be read.
      * @param visible
-     *            <code>true</code> if the annotations to be read are visible at
+     *            &#60;tt&#62;true&#60;/tt&#62; if the annotations to be read are visible at
      *            runtime.
      */
     private void readParameterAnnotations(final MethodVisitor mv,
@@ -2474,9 +2478,9 @@ public class ClassReader {
      *            and the length of the attribute, are not taken into account
      *            here.
      * @param labels
-     *            the labels of the method's code, or <code>null</code> if the
+     *            the labels of the method's code, or &#60;tt&#62;null&#60;/tt&#62; if the
      *            attribute to be read is not a code attribute.
-     * @return the attribute that has been read, or <code>null</code> to skip this
+     * @return the attribute that has been read, or &#60;tt&#62;null&#60;/tt&#62; to skip this
      *         attribute.
      */
     private Attribute readAttribute(final Attribute[] attrs, final String type,

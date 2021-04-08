@@ -9,6 +9,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import org.redkale.util.*;
 
 /**
@@ -207,11 +208,16 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
     @SuppressWarnings("unchecked")
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
 
-    public final void prepare(final R request, final P response) throws IOException {
-        request.prepare();
-        response.filter = this.headFilter;
-        response.servlet = this;
-        response.nextEvent();
+    public final void prepare(final R request, final P response) {
+        try {
+            request.prepare();
+            response.filter = this.headFilter;
+            response.servlet = this;
+            response.nextEvent();
+        } catch (Throwable t) {
+            response.context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
+            response.finish(true);
+        }
     }
 
     protected AnyValue getServletConf(Servlet servlet) {

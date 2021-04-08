@@ -33,15 +33,15 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     private final int addrPort;
 
     public static String getRetCodeInfo(int retcode) {
-        if (retcode == RETCODE_ILLSERVICEID) return "serviceid is invalid";
-        if (retcode == RETCODE_ILLSERVICEVER) return "serviceversion is invalid";
-        if (retcode == RETCODE_ILLACTIONID) return "actionid is invalid";
+        if (retcode == RETCODE_ILLSERVICEID) return "The serviceid is invalid";
+        if (retcode == RETCODE_ILLSERVICEVER) return "The serviceversion is invalid";
+        if (retcode == RETCODE_ILLACTIONID) return "The actionid is invalid";
         if (retcode == RETCODE_THROWEXCEPTION) return "Inner exception";
         return null;
     }
 
-    protected SncpResponse(SncpContext context, SncpRequest request, ObjectPool<Response> responsePool) {
-        super(context, request, responsePool);
+    protected SncpResponse(SncpContext context, SncpRequest request) {
+        super(context, request);
         this.addrBytes = context.getServerAddress().getAddress().getAddress();
         this.addrPort = context.getServerAddress().getPort();
         if (this.addrBytes.length != 4) throw new RuntimeException("SNCP serverAddress only support IPv4");
@@ -58,36 +58,59 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     @Override
-    protected void offerBuffer(ByteBuffer... buffers) {
-        super.offerBuffer(buffers);
+    protected void finish(boolean kill, ByteBuffer buffer) {
+        super.finish(kill, buffer);
     }
 
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
-            final ByteBuffer buffer = channel.pollWriteBuffer();
+            final ByteArray buffer = new ByteArray(SncpRequest.HEADER_SIZE);
             fillHeader(buffer, 0, retcode);
             finish(buffer);
             return;
         }
         final int respBodyLength = out.count(); //body总长度
-        final ByteBuffer[] buffers = out.toBuffers();
-        fillHeader(buffers[0], respBodyLength - HEADER_SIZE, retcode);
-        finish(buffers);
+        final ByteArray array = out.toByteArray();
+        fillHeader(array, respBodyLength - HEADER_SIZE, retcode);
+        finish(array);
     }
 
-    protected void fillHeader(ByteBuffer buffer, int bodyLength, int retcode) {
+    protected void fillHeader(ByteArray buffer, int bodyLength, int retcode) {
         //---------------------head----------------------------------
-        final int currentpos = buffer.position();
-        buffer.position(0);
-        buffer.putLong(request.getSeqid());
-        buffer.putChar((char) SncpRequest.HEADER_SIZE);
-        DLong.write(buffer, request.getServiceid());
-        buffer.putInt(request.getServiceversion());
-        DLong.write(buffer, request.getActionid());
-        buffer.put(addrBytes);
-        buffer.putChar((char) this.addrPort);
-        buffer.putInt(bodyLength);
-        buffer.putInt(retcode);
-        buffer.position(currentpos);
+        int offset = 0;
+        buffer.putLong(offset, request.getSeqid());
+        offset += 8;
+        buffer.putChar(offset, (char) SncpRequest.HEADER_SIZE);
+        offset += 2;
+        DLong.write(buffer, offset, request.getServiceid());
+        offset += 16;
+        buffer.putInt(offset, request.getServiceversion());
+        offset += 4;
+        DLong.write(buffer, offset, request.getActionid());
+        offset += 16;
+        buffer.put(offset, addrBytes);
+        offset += addrBytes.length; //4
+        buffer.putChar(offset, (char) this.addrPort);
+        offset += 2;
+        buffer.putInt(offset, bodyLength);
+        offset += 4;
+        buffer.putInt(offset, retcode);
+        //offset += 4;
     }
+
+//    protected void fillHeader(ByteBuffer buffer, int bodyLength, int retcode) {
+//        //---------------------head----------------------------------
+//        final int currentpos = buffer.position();
+//        buffer.position(0);
+//        buffer.putLong(request.getSeqid());
+//        buffer.putChar((char) SncpRequest.HEADER_SIZE);
+//        DLong.write(buffer, request.getServiceid());
+//        buffer.putInt(request.getServiceversion());
+//        DLong.write(buffer, request.getActionid());
+//        buffer.put(addrBytes);
+//        buffer.putChar((char) this.addrPort);
+//        buffer.putInt(bodyLength);
+//        buffer.putInt(retcode);
+//        buffer.position(currentpos);
+//    }
 }

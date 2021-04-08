@@ -14,7 +14,7 @@ import org.redkale.util.*;
 /**
  *
  * 详情见: https://redkale.org
- * 
+ *
  * @author zhangjx
  */
 class JsonStreamWriter extends JsonByteBufferWriter {
@@ -64,6 +64,13 @@ class JsonStreamWriter extends JsonByteBufferWriter {
                     } else if (c < 0x800) {
                         out.write((byte) (0xc0 | (c >> 6)));
                         out.write((byte) (0x80 | (c & 0x3f)));
+                    } else if (Character.isSurrogate(c)) { //连取两个
+                        int uc = Character.toCodePoint(c, chs[i + 1]);
+                        out.write((byte) (0xf0 | ((uc >> 18))));
+                        out.write((byte) (0x80 | ((uc >> 12) & 0x3f)));
+                        out.write((byte) (0x80 | ((uc >> 6) & 0x3f)));
+                        out.write((byte) (0x80 | (uc & 0x3f)));
+                        i++;
                     } else {
                         out.write((byte) (0xe0 | ((c >> 12))));
                         out.write((byte) (0x80 | ((c >> 6) & 0x3f)));

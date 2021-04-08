@@ -41,7 +41,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override
     public CompletableFuture<List<String>> getWebSocketAddresses(@RpcTargetTopic String topic, final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
-        if ((topic == null || !topic.equals(wsaddress.getTopic())) && (localSncpAddress == null || !localSncpAddress.equals(targetAddress))) return remoteWebSocketAddresses(topic, targetAddress, groupid);
+        if ((topic == null || !topic.equals(this.wsNodeAddress.getTopic())) && (localSncpAddress == null || !localSncpAddress.equals(targetAddress))) return remoteWebSocketAddresses(topic, targetAddress, groupid);
         if (this.localEngine == null) return CompletableFuture.completedFuture(new ArrayList<>());
         final List<String> rs = new ArrayList<>();
         this.localEngine.getLocalWebSockets(groupid).forEach(x -> rs.add(x.getRemoteAddr()));
@@ -72,6 +72,12 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
         return this.localEngine.broadcastLocalAction(action);
     }
 
+    @Override
+    public CompletableFuture<Integer> getUserSize(@RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress) {
+        if (this.localEngine == null) return CompletableFuture.completedFuture(0);
+        return CompletableFuture.completedFuture(this.localEngine.getLocalUserSize());
+    }
+
     /**
      * 当用户连接到节点，需要更新到CacheSource
      *
@@ -83,8 +89,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Void> connect(Serializable userid, WebSocketAddress wsaddr) {
         tryAcquireSemaphore();
-        CompletableFuture<Void> future = source.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
-        future = future.thenAccept((a) -> source.appendSetItemAsync(SOURCE_SNCP_NODES_KEY, WebSocketAddress.class, wsaddr));
+        CompletableFuture<Void> future = source.appendSetItemAsync(WS_SOURCE_KEY_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
         if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " connect from " + wsaddr);
         return future;
@@ -101,7 +106,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Void> disconnect(Serializable userid, WebSocketAddress wsaddr) {
         tryAcquireSemaphore();
-        CompletableFuture<Integer> future = source.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
+        CompletableFuture<Integer> future = source.removeSetItemAsync(WS_SOURCE_KEY_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
         if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " disconnect from " + wsaddr);
         return future.thenApply(v -> null);
@@ -119,8 +124,8 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Void> changeUserid(Serializable olduserid, Serializable newuserid, WebSocketAddress wsaddr) {
         tryAcquireSemaphore();
-        CompletableFuture<Void> future = source.appendSetItemAsync(SOURCE_SNCP_USERID_PREFIX + newuserid, WebSocketAddress.class, wsaddr);
-        future = future.thenAccept((a) -> source.removeSetItemAsync(SOURCE_SNCP_USERID_PREFIX + olduserid, WebSocketAddress.class, wsaddr));
+        CompletableFuture<Void> future = source.appendSetItemAsync(WS_SOURCE_KEY_USERID_PREFIX + newuserid, WebSocketAddress.class, wsaddr);
+        future = future.thenAccept((a) -> source.removeSetItemAsync(WS_SOURCE_KEY_USERID_PREFIX + olduserid, WebSocketAddress.class, wsaddr));
         if (semaphore != null) future.whenComplete((r, e) -> releaseSemaphore());
         if (logger.isLoggable(Level.FINEST)) logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + olduserid + " changeUserid to " + newuserid + " from " + wsaddr);
         return future;

@@ -103,7 +103,8 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     if (factory.isConvertDisabled(method)) continue;
                     if (method.getParameterTypes().length != 0) continue;
                     if (method.getReturnType() == void.class) continue;
-                    if (reversible && (cps == null || !contains(cps, ConvertFactory.readGetSetFieldName(method)))) {
+                    String convertname = ConvertFactory.readGetSetFieldName(method);
+                    if (reversible && (cps == null || !contains(cps, convertname))) {
                         boolean is = method.getName().startsWith("is");
                         try {
                             clazz.getMethod(method.getName().replaceFirst(is ? "is" : "get", "set"), method.getReturnType());
@@ -114,6 +115,13 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     ref = factory.findRef(clazz, method);
                     if (ref != null && ref.ignore()) continue;
                     ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
+                    if (small == null) {
+                        try {
+                            Field f = clazz.getDeclaredField(convertname);
+                            if (f != null) small = f.getAnnotation(ConvertSmallString.class);
+                        } catch (Exception e) {
+                        }
+                    }
                     Encodeable<W, ?> fieldCoder;
                     if (small != null && method.getReturnType() == String.class) {
                         fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;

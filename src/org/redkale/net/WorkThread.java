@@ -6,6 +6,7 @@
 package org.redkale.net;
 
 import java.util.concurrent.*;
+import org.redkale.util.ThreadHashExecutor;
 
 /**
  * 协议处理的自定义线程类
@@ -21,15 +22,42 @@ public class WorkThread extends Thread {
 
     protected final ExecutorService workExecutor;
 
+    protected final ThreadHashExecutor hashExecutor;
+
     public WorkThread(String name, ExecutorService workExecutor, Runnable target) {
         super(target);
         if (name != null) setName(name);
         this.workExecutor = workExecutor;
+        this.hashExecutor = workExecutor instanceof ThreadHashExecutor ? (ThreadHashExecutor) workExecutor : null;
         this.setDaemon(true);
     }
 
-    public void runAsync(Runnable runner) {
-        workExecutor.execute(runner);
+    public void runWork(Runnable command) {
+        if (workExecutor == null) {
+            command.run();
+        } else {
+            workExecutor.execute(command);
+        }
+    }
+
+    public void runAsync(Runnable command) {
+        if (workExecutor == null) {
+            ForkJoinPool.commonPool().execute(command);
+        } else {
+            workExecutor.execute(command);
+        }
+    }
+
+    public void runAsync(int hash, Runnable command) {
+        if (hashExecutor == null) {
+            if (workExecutor == null) {
+                ForkJoinPool.commonPool().execute(command);
+            } else {
+                workExecutor.execute(command);
+            }
+        } else {
+            hashExecutor.execute(hash, command);
+        }
     }
 
     public ExecutorService getWorkExecutor() {

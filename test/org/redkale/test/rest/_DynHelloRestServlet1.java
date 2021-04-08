@@ -28,7 +28,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
         DefaultAnyValue conf = DefaultAnyValue.create("port", "" + port);
         server.init(conf);
-        server.start();
+        server.start(null);
         Thread.sleep(100);
 
         HelloEntity entity = new HelloEntity();

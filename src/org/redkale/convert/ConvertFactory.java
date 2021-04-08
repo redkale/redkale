@@ -42,7 +42,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     protected Convert<R, W> convert;
 
-    protected boolean tiny;
+    protected boolean tiny; //String类型值为""，Boolean类型值为false时是否需要输出， 默认为true
 
     private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
 
@@ -112,6 +112,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressSimpledCoder.instance);
             this.register(Pattern.class, PatternSimpledCoder.instance);
             this.register(File.class, FileSimpledCoder.instance);
+            this.register(Throwable.class, ThrowableSimpledCoder.instance);
             this.register(CompletionHandler.class, CompletionHandlerSimpledCoder.instance);
             this.register(URL.class, URLSimpledCoder.instance);
             this.register(URI.class, URISimpledCoder.instance);
@@ -232,11 +233,15 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return new EnumSimpledCoder(enumClass);
     }
 
+    protected <E> Encodeable<W, E> createDyncEncoder(Type type) {
+        return null;
+    }
+
     protected ObjectDecoder createObjectDecoder(Type type) {
         return new ObjectDecoder(type);
     }
 
-    protected ObjectEncoder createObjectEncoder(Type type) {
+    protected <E> ObjectEncoder<W, E> createObjectEncoder(Type type) {
         return new ObjectEncoder(type);
     }
 
@@ -810,8 +815,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 }
             }
             if (simpleCoder == null) {
-                oe = createObjectEncoder(type);
-                encoder = oe;
+                encoder = createDyncEncoder(type);
+                if (encoder == null) {
+                    oe = createObjectEncoder(type);
+                    encoder = oe;
+                }
             } else {
                 encoder = simpleCoder;
             }

@@ -12,7 +12,6 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
 import java.util.logging.*;
 import javax.annotation.Resource;
 import org.redkale.convert.bson.*;
@@ -55,15 +54,11 @@ public final class SncpClient {
 
     protected final SncpAction[] actions;
 
-    protected final ExecutorService executor;
-
     protected final MessageAgent messageAgent;
 
     protected final SncpMessageClient messageClient;
 
     protected final String topic;
-
-    protected final Supplier<ByteBuffer> bufferSupplier;
 
     @Resource
     protected JsonConvert jsonConvert;
@@ -80,8 +75,6 @@ public final class SncpClient {
     public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent messageAgent, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
         this.remote = remote;
-        this.executor = factory.getExecutor();
-        this.bufferSupplier = factory.getBufferSupplier();
         this.messageAgent = messageAgent;
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
         this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(service);
@@ -269,7 +262,7 @@ public final class SncpClient {
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientSncpAddress;
         if (bsonConvert == null) bsonConvert = BsonConvert.root();
-        final BsonWriter writer = messageAgent == null ? bsonConvert.pollBsonWriter() : bsonConvert.pollBsonWriter(transport.getBufferSupplier()); // 将head写入
+        final BsonWriter writer = bsonConvert.pollBsonWriter(); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
             BsonConvert bcc = bsonConvert;
@@ -283,11 +276,11 @@ public final class SncpClient {
         final long seqid = System.nanoTime();
         final DLong actionid = action.actionid;
         if (messageAgent != null) { //MQ模式
-            final byte[] reqbytes = writer.toArray();
-            fillHeader(ByteBuffer.wrap(reqbytes), seqid, actionid, reqBodyLength);
+            final ByteArray reqbytes = writer.toByteArray();
+            fillHeader(reqbytes, seqid, actionid, reqBodyLength);
             String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
             if (targetTopic == null) targetTopic = this.topic;
-            MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes);
+            MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes.getBytes());
             final String tt = targetTopic;
             if (logger.isLoggable(Level.FINER)) {
                 message.attach(Utility.append(new Object[]{action.actionName()}, params));
@@ -327,31 +320,13 @@ public final class SncpClient {
                 return future;
             }
             final AsyncConnection conn = conn0;
-            final ByteBuffer[] sendBuffers = writer.toBuffers();
-            fillHeader(sendBuffers[0], seqid, actionid, reqBodyLength);
+            final ByteArray array = writer.toByteArray();
+            fillHeader(array, seqid, actionid, reqBodyLength);
 
-            conn.write(sendBuffers, sendBuffers, new CompletionHandler<Integer, ByteBuffer[]>() {
+            conn.write(array, new CompletionHandler<Integer, Void>() {
 
                 @Override
-                public void completed(Integer result, ByteBuffer[] attachments) {
-                    int index = -1;
-                    for (int i = 0; i < attachments.length; i++) {
-                        if (attachments[i].hasRemaining()) {
-                            index = i;
-                            break;
-                        } else {
-                            transport.offerBuffer(attachments[i]);
-                        }
-                    }
-                    if (index == 0) { //ByteBuffer[]不统一回收的必须采用此写法分开
-                        conn.write(attachments, attachments, this);
-                        return;
-                    } else if (index > 0) {
-                        ByteBuffer[] newattachs = new ByteBuffer[attachments.length - index];
-                        System.arraycopy(attachments, index, newattachs, 0, newattachs.length);
-                        conn.write(newattachs, newattachs, this);
-                        return;
-                    }
+                public void completed(Integer result, Void attachments) {
                     //----------------------- 读取返回结果 -------------------------------------     
                     conn.read(new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -460,7 +435,7 @@ public final class SncpClient {
                 }
 
                 @Override
-                public void failed(Throwable exc, ByteBuffer[] attachment) {
+                public void failed(Throwable exc, Void attachment) {
                     future.completeExceptionally(new RpcRemoteException(action.method + " sncp remote exec failed, params=" + JsonConvert.root().convertTo(params)));
                     transport.offerConnection(true, conn);
                     if (handler != null) {
@@ -489,22 +464,44 @@ public final class SncpClient {
         buffer.getChar(); //端口
     }
 
-    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int bodyLength) {
+    private void fillHeader(ByteArray buffer, long seqid, DLong actionid, int bodyLength) {
         //---------------------head----------------------------------
-        final int currentpos = buffer.position();
-        buffer.position(0);
-        buffer.putLong(seqid); //序列号
-        buffer.putChar((char) HEADER_SIZE); //header长度
-        DLong.write(buffer, this.serviceid);
-        buffer.putInt(this.serviceversion);
-        DLong.write(buffer, actionid);
-        buffer.put(addrBytes);
-        buffer.putChar((char) this.addrPort);
-        buffer.putInt(bodyLength); //body长度        
-        buffer.putInt(0); //结果码， 请求方固定传0
-        buffer.position(currentpos);
+        int offset = 0;
+        buffer.putLong(offset, seqid); //序列号
+        offset += 8;
+        buffer.putChar(offset, (char) HEADER_SIZE); //header长度
+        offset += 2;
+        DLong.write(buffer, offset, this.serviceid);
+        offset += 16;
+        buffer.putInt(offset, this.serviceversion);
+        offset += 4;
+        DLong.write(buffer, offset, actionid);
+        offset += 16;
+        buffer.put(offset, addrBytes);
+        offset += addrBytes.length; //4
+        buffer.putChar(offset, (char) this.addrPort);
+        offset += 2;
+        buffer.putInt(offset, bodyLength); //body长度        
+        offset += 4;
+        buffer.putInt(offset, 0); //结果码， 请求方固定传0        
+        //offset += 4;
     }
 
+//    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int bodyLength) {
+//        //---------------------head----------------------------------
+//        final int currentpos = buffer.position();
+//        buffer.position(0);
+//        buffer.putLong(seqid); //序列号
+//        buffer.putChar((char) HEADER_SIZE); //header长度
+//        DLong.write(buffer, this.serviceid);
+//        buffer.putInt(this.serviceversion);
+//        DLong.write(buffer, actionid);
+//        buffer.put(addrBytes);
+//        buffer.putChar((char) this.addrPort);
+//        buffer.putInt(bodyLength); //body长度        
+//        buffer.putInt(0); //结果码， 请求方固定传0
+//        buffer.position(currentpos);
+//    }
     protected static final class SncpAction {
 
         protected final DLong actionid;

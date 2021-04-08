@@ -46,7 +46,7 @@ public class NodeHttpServer extends NodeServer {
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
-        return new HttpServer(application.getStartTime(), application.getResourceFactory().createChild());
+        return new HttpServer(application, application.getStartTime(), application.getResourceFactory().createChild());
     }
 
     public HttpServer getHttpServer() {

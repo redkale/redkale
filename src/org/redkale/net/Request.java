@@ -31,9 +31,13 @@ public abstract class Request<C extends Context> {
 
     protected boolean keepAlive;
 
-    protected boolean more; //pipeline模式
+    protected int pipelineIndex;
 
-    protected ByteBuffer moredata; //pipeline模式
+    protected int pipelineCount;
+
+    protected boolean pipelineOver;
+
+    protected int hashid;
 
     protected AsyncConnection channel;
 
@@ -51,41 +55,35 @@ public abstract class Request<C extends Context> {
         this.jsonConvert = context.getJsonConvert();
     }
 
-    protected void setMoredata(ByteBuffer buffer) {
-        this.moredata = buffer;
+    protected Request copyHeader() {
+        return null;
     }
 
-    protected ByteBuffer removeMoredata() {
-        ByteBuffer rs = this.moredata;
-        this.moredata = null;
-        return rs;
+    protected Request pipeline(int pipelineIndex, int pipelineCount) {
+        this.pipelineIndex = pipelineIndex;
+        this.pipelineCount = pipelineCount;
+        return this;
     }
 
     /**
      * 返回值：Integer.MIN_VALUE: 帧数据； -1：数据不合法； 0：解析完毕； &gt;0: 需再读取的字节数。
      *
      * @param buffer ByteBuffer对象
+     * @param last   同一Channel的上一个Request
      *
      * @return 缺少的字节数
      */
-    protected abstract int readHeader(ByteBuffer buffer);
-
-    /**
-     * 读取buffer，并返回读取的有效数据长度
-     *
-     * @param buffer ByteBuffer对象
-     *
-     * @return 有效数据长度
-     */
-    protected abstract int readBody(ByteBuffer buffer);
+    protected abstract int readHeader(ByteBuffer buffer, Request last);
 
     protected abstract void prepare();
 
     protected void recycle() {
+        hashid = 0;
         createtime = 0;
+        pipelineIndex = 0;
+        pipelineCount = 0;
+        pipelineOver = false;
         keepAlive = false;
-        more = false;
-        moredata = null;
         attributes.clear();
         channel = null; // close it by response
     }
@@ -134,6 +132,15 @@ public abstract class Request<C extends Context> {
 
     public long getCreatetime() {
         return createtime;
+    }
+
+    public int getHashid() {
+        return hashid;
+    }
+
+    public Request<C> hashid(int hashid) {
+        this.hashid = hashid;
+        return this;
     }
 
 }
