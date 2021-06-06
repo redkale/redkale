@@ -74,7 +74,12 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (factory.loadEncoder(t) instanceof JsonDynEncoder) return true;
             }
         }
-        if (factory.loadEncoder(type) instanceof JsonDynEncoder) return true;
+        if (type instanceof TypeVariable) return false;
+        try {
+            if (factory.loadEncoder(type) instanceof JsonDynEncoder) return true;
+        } catch (Exception e) {
+            return false;
+        }
         return false;
     }
 

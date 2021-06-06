@@ -81,15 +81,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     /**
-     * 获取HttpRender列表
-     *
-     * @return HttpRender列表
-     */
-    public List<HttpRender> getHttpRenders() {
-        return ((HttpPrepareServlet) this.prepare).renders;
-    }
-
-    /**
      * 获取静态资源HttpServlet
      *
      * @return HttpServlet
@@ -324,9 +315,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         String jsonContentType = null;
         HttpCookie defaultCookie = null;
         String remoteAddrHeader = null;
-        boolean lazyHeaders = false;
+
         if (config != null) {
-            lazyHeaders = config.getBoolValue("lazy", false);
             AnyValue reqs = config.getAnyValue("request");
             if (reqs != null) {
                 AnyValue raddr = reqs.getAnyValue("remoteaddr");
@@ -424,6 +414,21 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 dateSupplier = () -> currDateBytes;
             }
         }
+        HttpRender httpRender = null;
+        AnyValue renderConfig = null;
+        { //设置TemplateEngine            
+            renderConfig = config.getAnyValue("render");
+            if (renderConfig != null) {
+                String renderType = renderConfig.getValue("value");
+                try {
+                    HttpRender render = (HttpRender) Thread.currentThread().getContextClassLoader().loadClass(renderType).getDeclaredConstructor().newInstance();
+                    getResourceFactory().inject(render);
+                    httpRender = render;
+                } catch (Throwable e) {
+                    logger.log(Level.WARNING, "init HttpRender(" + renderType + ") error", e);
+                }
+            }
+        }
 
         final String addrHeader = remoteAddrHeader;
 
@@ -435,7 +440,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         respConfig.defaultCookie = defaultCookie;
         respConfig.autoOptions = autoOptions;
         respConfig.dateSupplier = dateSupplier;
-        respConfig.renders = ((HttpPrepareServlet) prepare).renders;
+        respConfig.httpRender = httpRender;
         respConfig.init(config);
 
         final HttpContextConfig contextConfig = new HttpContextConfig();
@@ -454,9 +459,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         contextConfig.readTimeoutSeconds = this.readTimeoutSeconds;
         contextConfig.writeTimeoutSeconds = this.writeTimeoutSeconds;
         contextConfig.remoteAddrHeader = addrHeader;
-        contextConfig.lazyHeaders = lazyHeaders;
 
-        return new HttpContext(contextConfig);
+        HttpContext c = new HttpContext(contextConfig);
+        if (httpRender != null) httpRender.init(c, renderConfig);
+        return c;
     }
 
     @Override

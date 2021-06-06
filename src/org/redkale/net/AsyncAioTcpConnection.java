@@ -270,6 +270,11 @@ class AsyncAioTcpConnection extends AsyncConnection {
     }
 
     @Override
+    public InputStream newInputStream() {
+        return Channels.newInputStream(readableByteChannel());
+    }
+
+    @Override
     public final void close() throws IOException {
         super.close();
         channel.shutdownInput();

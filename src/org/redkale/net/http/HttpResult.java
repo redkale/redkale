@@ -26,7 +26,7 @@ public class HttpResult<T> {
     public static final String SESSIONID_COOKIENAME = HttpRequest.SESSIONID_NAME;
 
     @ConvertColumn(index = 1)
-    protected int status = 0; //不设置则为 200
+    protected int status = 200; //不设置则为 200
 
     @ConvertColumn(index = 2)
     protected String contentType;
@@ -110,7 +110,7 @@ public class HttpResult<T> {
     }
 
     public String getHeader(String name, String dfvalue) {
-        return headers == null ? null : headers.getOrDefault(name, dfvalue);
+        return headers == null ? dfvalue : headers.getOrDefault(name, dfvalue);
     }
 
     public CompletableFuture<HttpResult<T>> toFuture() {

@@ -68,7 +68,8 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             out.writeNull();
             return;
         }
-        if (value.length == 0) {
+        int iMax = value.length - 1;
+        if (iMax == -1) {
             out.writeArrayB(0, this, componentEncoder, value);
             out.writeArrayE();
             return;
@@ -87,28 +88,27 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
         Encodeable<Writer, Object> itemEncoder = this.componentEncoder;
         if (subtypefinal) {
             if (out.writeArrayB(value.length, this, itemEncoder, value) < 0) {
-                boolean first = true;
-                for (Object v : value) {
-                    if (!first) out.writeArrayMark();
-                    writeMemberValue(out, member, itemEncoder, v, first);
-                    if (first) first = false;
+                for (int i = 0;; i++) {
+                    writeMemberValue(out, member, itemEncoder, value[i], i);
+                    if (i == iMax) break;
+                    out.writeArrayMark();
                 }
             }
         } else {
             if (out.writeArrayB(value.length, this, itemEncoder, value) < 0) {
                 final Type comp = this.componentType;
-                boolean first = true;
-                for (Object v : value) {
-                    if (!first) out.writeArrayMark();
-                    writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? itemEncoder : anyEncoder), v, first);
-                    if (first) first = false;
+                for (int i = 0;; i++) {
+                    Object v = value[i];
+                    writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? itemEncoder : anyEncoder), v, i);
+                    if (i == iMax) break;
+                    out.writeArrayMark();
                 }
             }
         }
         out.writeArrayE();
     }
 
-    protected void writeMemberValue(Writer out, EnMember member, Encodeable<Writer, Object> encoder, Object value, boolean first) {
+    protected void writeMemberValue(Writer out, EnMember member, Encodeable<Writer, Object> encoder, Object value, int index) {
         encoder.convertTo(out, value);
     }
 

@@ -119,21 +119,21 @@ public class HttpMessageClient extends MessageClient {
         broadcastMessage(topic, userid, groupid, request, null);
     }
 
-    public final <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), 0, null, request, null).thenApply((HttpResult<byte[]> httbs) -> {
             if (httbs == null || httbs.getResult() == null) return null;
             return JsonConvert.root().convertFrom(type, httbs.getResult());
         });
     }
 
-    public final <T> CompletableFuture<T> sendMessage(int userid, HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(int userid, HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), userid, null, request, null).thenApply((HttpResult<byte[]> httbs) -> {
             if (httbs == null || httbs.getResult() == null) return null;
             return JsonConvert.root().convertFrom(type, httbs.getResult());
         });
     }
 
-    public final <T> CompletableFuture<T> sendMessage(int userid, String groupid, HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(int userid, String groupid, HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request, null).thenApply((HttpResult<byte[]> httbs) -> {
             if (httbs == null || httbs.getResult() == null) return null;
             return JsonConvert.root().convertFrom(type, httbs.getResult());

@@ -156,7 +156,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
 
             } catch (Exception ex) {
-                throw new ConvertException(ex);
+                throw new ConvertException("ObjectEncoder init type=" + this.type + " error", ex);
             }
         } finally {
             inited = true;

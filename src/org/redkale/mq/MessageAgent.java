@@ -216,6 +216,10 @@ public abstract class MessageAgent {
     public final synchronized void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return;
+        { //标记@RestService(name = " ") 需要跳过， 一般作为模板引擎
+            RestService rest = service.getClass().getAnnotation(RestService.class);
+            if (rest != null && !rest.name().isEmpty() && rest.name().trim().isEmpty()) return;
+        }
         String[] topics = generateHttpReqTopics(service);
         String consumerid = generateHttpConsumerid(topics, service);
         if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");

@@ -22,7 +22,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public abstract class AsyncConnection implements AutoCloseable {
+public abstract class AsyncConnection implements ChannelContext, Channel, AutoCloseable {
 
     private SSLContext sslContext;
 
@@ -134,6 +134,8 @@ public abstract class AsyncConnection implements AutoCloseable {
 
     public abstract WritableByteChannel writableByteChannel();
 
+    protected abstract InputStream newInputStream();
+
     public abstract void read(CompletionHandler<Integer, ByteBuffer> handler);
 
     //src会写完才会回调
@@ -145,26 +147,29 @@ public abstract class AsyncConnection implements AutoCloseable {
     }
 
     public final void write(byte[] bytes, CompletionHandler<Integer, Void> handler) {
-        write(bytes, 0, bytes.length, null, 0, 0, handler);
+        write(bytes, 0, bytes.length, null, 0, 0, null, null, handler);
     }
 
     public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
-        write(array.content(), array.offset(), array.length(), null, 0, 0, handler);
+        write(array.content(), array.offset(), array.length(), null, 0, 0, null, null, handler);
     }
 
     public final void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
-        write(bytes, offset, length, null, 0, 0, handler);
+        write(bytes, offset, length, null, 0, 0, null, null, handler);
     }
 
     public final void write(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
-        write(header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length(), handler);
+        write(header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length(), null, null, handler);
     }
 
-    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, CompletionHandler<Integer, Void> handler) {
+    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
         final ByteBuffer buffer = pollWriteBuffer();
         if (buffer.remaining() >= headerLength + bodyLength) {
             buffer.put(headerContent, headerOffset, headerLength);
-            if (bodyLength > 0) buffer.put(bodyContent, bodyOffset, bodyLength);
+            if (bodyLength > 0) {
+                buffer.put(bodyContent, bodyOffset, bodyLength);
+                if (bodyCallback != null) bodyCallback.accept(bodyAttachment);
+            }
             buffer.flip();
             CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
                 @Override
@@ -183,7 +188,10 @@ public abstract class AsyncConnection implements AutoCloseable {
         } else {
             ByteBufferWriter writer = ByteBufferWriter.create(bufferSupplier, buffer);
             writer.put(headerContent, headerOffset, headerLength);
-            if (bodyLength > 0) writer.put(bodyContent, bodyOffset, bodyLength);
+            if (bodyLength > 0) {
+                writer.put(bodyContent, bodyOffset, bodyLength);
+                if (bodyCallback != null) bodyCallback.accept(bodyAttachment);
+            }
             final ByteBuffer[] buffers = writer.toBuffers();
             CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
                 @Override
@@ -285,6 +293,44 @@ public abstract class AsyncConnection implements AutoCloseable {
         }
     }
 
+    //返回 是否over
+    public final boolean writePipelineData(int pipelineIndex, int pipelineCount, ByteTuple header, ByteTuple body) {
+        return writePipelineData(pipelineIndex, pipelineCount, header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length());
+    }
+
+    //返回 是否over
+    public boolean writePipelineData(int pipelineIndex, int pipelineCount, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+        synchronized (this) {
+            ByteBufferWriter writer = this.pipelineWriter;
+            if (writer == null) {
+                writer = ByteBufferWriter.create(getBufferSupplier());
+                this.pipelineWriter = writer;
+            }
+            if (this.pipelineDataNode == null && pipelineIndex == writer.getWriteBytesCounter() + 1) {
+                writer.put(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                return (pipelineIndex == pipelineCount);
+            } else {
+                PipelineDataNode dataNode = this.pipelineDataNode;
+                if (dataNode == null) {
+                    dataNode = new PipelineDataNode();
+                    this.pipelineDataNode = dataNode;
+                }
+                if (pipelineIndex == pipelineCount) { //此时pipelineCount为最大值
+                    dataNode.pipelineCount = pipelineCount;
+                }
+                dataNode.put(pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                if (writer.getWriteBytesCounter() + dataNode.itemsize == dataNode.pipelineCount) {
+                    for (PipelineDataItem item : dataNode.arrayItems()) {
+                        writer.put(item.data);
+                    }
+                    this.pipelineDataNode = null;
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
+
     private static class PipelineDataNode {
 
         public int pipelineCount;
@@ -320,6 +366,19 @@ public abstract class AsyncConnection implements AutoCloseable {
             }
             itemsize++;
         }
+
+        public void put(int pipelineIndex, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+            if (tail == null) {
+                head = new PipelineDataItem(pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                tail = head;
+            } else {
+                PipelineDataItem item = new PipelineDataItem(pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                tail.next = item;
+                tail = item;
+            }
+            itemsize++;
+        }
+
     }
 
     private static class PipelineDataItem implements Comparable<PipelineDataItem> {
@@ -333,6 +392,19 @@ public abstract class AsyncConnection implements AutoCloseable {
         public PipelineDataItem(int index, byte[] bs, int offset, int length) {
             this.index = index;
             this.data = Arrays.copyOfRange(bs, offset, offset + length);
+        }
+
+        public PipelineDataItem(int index, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+            this.index = index;
+            this.data = bodyLength > 0 ? copyOfRange(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength)
+                : Arrays.copyOfRange(headerContent, headerOffset, headerOffset + headerLength);
+        }
+
+        private static byte[] copyOfRange(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+            byte[] result = new byte[headerLength + bodyLength];
+            System.arraycopy(headerContent, headerOffset, result, 0, headerLength);
+            System.arraycopy(bodyContent, bodyOffset, result, headerLength, bodyLength);
+            return result;
         }
 
         @Override
@@ -409,6 +481,7 @@ public abstract class AsyncConnection implements AutoCloseable {
             for (Object obj : attributes.values()) {
                 if (obj instanceof AutoCloseable) ((AutoCloseable) obj).close();
             }
+            attributes.clear();
         } catch (Exception io) {
         }
     }
@@ -422,24 +495,29 @@ public abstract class AsyncConnection implements AutoCloseable {
         this.subobject = value;
     }
 
+    @Override
     public void setAttribute(String name, Object value) {
         if (this.attributes == null) this.attributes = new HashMap<>();
         this.attributes.put(name, value);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public final <T> T getAttribute(String name) {
         return (T) (this.attributes == null ? null : this.attributes.get(name));
     }
 
+    @Override
     public final void removeAttribute(String name) {
         if (this.attributes != null) this.attributes.remove(name);
     }
 
+    @Override
     public final Map<String, Object> getAttributes() {
         return this.attributes;
     }
 
+    @Override
     public final void clearAttribute() {
         if (this.attributes != null) this.attributes.clear();
     }

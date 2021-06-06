@@ -168,4 +168,9 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
         if (this.writeKey != null) this.writeKey.cancel();
     }
 
+    @Override
+    protected InputStream newInputStream() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }

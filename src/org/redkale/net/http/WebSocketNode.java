@@ -22,6 +22,7 @@ import org.redkale.source.*;
 import org.redkale.util.*;
 
 /**
+ * 注: 部署了WebSocketNodeService就必然要配置SNCP协议的Server，不然无法做到WebSocketNode.sendMessage方法的有效性
  *
  * <p>
  * 详情见: https://redkale.org
@@ -284,7 +285,7 @@ public abstract class WebSocketNode {
         CompletableFuture<Boolean> localFuture = null;
         if (this.localEngine != null) localFuture = CompletableFuture.completedFuture(localEngine.existsLocalWebSocket(userid));
         if (this.source == null || this.remoteNode == null) {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket " + (this.remoteNode == null ? (this.source == null ? "remote and source" : "remote") : "source") + " node is null");
             //没有CacheSource就不会有分布式节点
             return localFuture == null ? CompletableFuture.completedFuture(false) : localFuture;
         }
@@ -317,7 +318,7 @@ public abstract class WebSocketNode {
     public CompletableFuture<Boolean> existsWebSocket(final WebSocketUserAddress userAddress) {
         if (this.localEngine != null && localEngine.existsLocalWebSocket(userAddress.userid())) return CompletableFuture.completedFuture(true);
         if (this.source == null || this.remoteNode == null) {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket " + (this.remoteNode == null ? (this.source == null ? "remote and source" : "remote") : "source") + " node is null");
             //没有CacheSource就不会有分布式节点
             return CompletableFuture.completedFuture(false);
         }
@@ -365,7 +366,7 @@ public abstract class WebSocketNode {
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = CompletableFuture.completedFuture(localEngine.forceCloseLocalWebSocket(userAddress == null ? userid : userAddress.userid()));
         if (this.source == null || this.remoteNode == null) {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket " + (this.remoteNode == null ? (this.source == null ? "remote and source" : "remote") : "source") + " node is null");
             //没有CacheSource就不会有分布式节点
             return localFuture == null ? CompletableFuture.completedFuture(0) : localFuture;
         }
@@ -629,7 +630,7 @@ public abstract class WebSocketNode {
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = localEngine.sendLocalMessage(message, last, userid);
         if (this.source == null || this.remoteNode == null) {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket " + (this.remoteNode == null ? (this.source == null ? "remote and source" : "remote") : "source") + " node is null");
             //没有CacheSource就不会有分布式节点
             return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
         }
@@ -664,7 +665,7 @@ public abstract class WebSocketNode {
             return this.localEngine == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localEngine.sendLocalMessage(message, last, userids);
         }
         if (this.source == null || this.remoteNode == null) {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket " + (this.remoteNode == null ? (this.source == null ? "remote and source" : "remote") : "source") + " node is null");
             //没有CacheSource就不会有分布式节点
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
@@ -954,7 +955,7 @@ public abstract class WebSocketNode {
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) localFuture = localEngine.sendLocalAction(action, userid);
         if (this.source == null || this.remoteNode == null) {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket " + (this.remoteNode == null ? (this.source == null ? "remote and source" : "remote") : "source") + " node is null");
             //没有CacheSource就不会有分布式节点
             return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
         }
@@ -987,7 +988,7 @@ public abstract class WebSocketNode {
             return this.localEngine == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localEngine.sendLocalAction(action, userids);
         }
         if (this.source == null || this.remoteNode == null) {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket remote node is null");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("websocket " + (this.remoteNode == null ? (this.source == null ? "remote and source" : "remote") : "source") + " node is null");
             //没有CacheSource就不会有分布式节点
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }

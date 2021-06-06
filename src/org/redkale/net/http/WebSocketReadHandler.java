@@ -93,11 +93,11 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
      * | Payload Data continued |
      * +-----------------------------------------------------------------------+
      *
-     * @param realbuf
+     * @param realbuf ByteBuffer
      *
      */
     protected void readDecode(final ByteBuffer realbuf) {
-        if (debug) logger.log(Level.FINEST, "read websocket message's length = " + realbuf.remaining());
+        if (debug && realbuf.remaining() > 6) logger.log(Level.FINEST, "read websocket message's length = " + realbuf.remaining());
         if (!realbuf.hasRemaining()) return;
         ByteBuffer buffer = realbuf;
         byte frameOpcode;

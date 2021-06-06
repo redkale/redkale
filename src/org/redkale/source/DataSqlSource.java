@@ -19,6 +19,7 @@ import org.redkale.service.*;
 import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
 import static org.redkale.boot.Application.RESNAME_APP_GROUP;
+import org.redkale.net.*;
 
 /**
  * DataSource的SQL抽象实现类 <br>
@@ -28,13 +29,12 @@ import static org.redkale.boot.Application.RESNAME_APP_GROUP;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * @param <DBChannel> 数据库连接
  */
 @Local
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(DataSource.class)
-public abstract class DataSqlSource<DBChannel> extends AbstractService implements DataSource, Function<Class, EntityInfo>, AutoCloseable, Resourcable {
+public abstract class DataSqlSource extends AbstractService implements DataSource, Function<Class, EntityInfo>, AutoCloseable, Resourcable {
 
     protected static final Flipper FLIPPER_ONE = new Flipper(1);
 
@@ -50,9 +50,9 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     protected boolean cacheForbidden;
 
-    protected PoolSource<DBChannel> readPool;
+    protected PoolSource readPool;
 
-    protected PoolSource<DBChannel> writePool;
+    protected PoolSource writePool;
 
     @Resource(name = RESNAME_APP_GROUP)
     protected AsyncGroup asyncGroup;
@@ -82,7 +82,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         int maxconns = Math.max(8, Integer.decode(readprop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Runtime.getRuntime().availableProcessors() * 32)));
         if (readprop != writeprop) maxconns = 0;
         this.cacheForbidden = "NONE".equalsIgnoreCase(readprop.getProperty(JDBC_CACHE_MODE));
-        ArrayBlockingQueue<DBChannel> queue = maxconns > 0 ? new ArrayBlockingQueue(maxconns) : null;
+        ArrayBlockingQueue queue = maxconns > 0 ? new ArrayBlockingQueue(maxconns) : null;
         Semaphore semaphore = maxconns > 0 ? new Semaphore(maxconns) : null;
         this.readPool = createPoolSource(this, this.asyncGroup, "read", queue, semaphore, readprop);
         this.writePool = createPoolSource(this, this.asyncGroup, "write", queue, semaphore, writeprop);
@@ -131,7 +131,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract String prepareParamSign(int index);
 
     //创建连接池
-    protected abstract PoolSource<DBChannel> createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop);
+    protected abstract PoolSource createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop);
 
     //插入纪录
     protected abstract <T> CompletableFuture<Integer> insertDB(final EntityInfo<T> info, T... entitys);
@@ -146,7 +146,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract <T> CompletableFuture<Integer> dropTableDB(final EntityInfo<T> info, final String table, final String sql);
 
     //更新纪录
-    protected abstract <T> CompletableFuture<Integer> updateDB(final EntityInfo<T> info, T... entitys);
+    protected abstract <T> CompletableFuture<Integer> updateDB(final EntityInfo<T> info, final ChannelContext context, T... entitys);
 
     //更新纪录
     protected abstract <T> CompletableFuture<Integer> updateDB(final EntityInfo<T> info, Flipper flipper, final String sql, final boolean prepared, Object... params);
@@ -164,7 +164,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDB(final EntityInfo<T> info, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns);
 
     //查询单条记录
-    protected abstract <T> CompletableFuture<T> findDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final SelectColumn selects);
+    protected abstract <T> CompletableFuture<T> findDB(final EntityInfo<T> info, final ChannelContext context, final String sql, final boolean onlypk, final SelectColumn selects);
 
     //查询单条记录的单个字段
     protected abstract <T> CompletableFuture<Serializable> findColumnDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final String column, final Serializable defValue);
@@ -222,12 +222,12 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Local
-    public PoolSource<DBChannel> getReadPoolSource() {
+    public PoolSource getReadPoolSource() {
         return readPool;
     }
 
     @Local
-    public PoolSource<DBChannel> getWritePoolSource() {
+    public PoolSource getWritePoolSource() {
         return writePool;
     }
 
@@ -701,7 +701,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) return updateCache(info, -1, entitys);
-        return updateDB(info, entitys).whenComplete((rs, t) -> {
+        return updateDB(info, null, entitys).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
@@ -712,6 +712,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
 
     @Override
     public <T> CompletableFuture<Integer> updateAsync(final T... entitys) {
+        return updateAsync((ChannelContext) null, entitys);
+    }
+
+    @Override
+    public <T> CompletableFuture<Integer> updateAsync(final ChannelContext context, final T... entitys) {
         if (entitys.length == 0) return CompletableFuture.completedFuture(-1);
         CompletableFuture future = checkEntity("update", true, entitys);
         if (future != null) return future;
@@ -720,14 +725,14 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, entitys));
         }
-        if (isAsync()) return updateDB(info, entitys).whenComplete((rs, t) -> {
+        if (isAsync()) return updateDB(info, context, entitys).whenComplete((rs, t) -> {
                 if (t != null) {
                     futureCompleteConsumer.accept(rs, t);
                 } else {
                     updateCache(info, rs, entitys);
                 }
             });
-        return CompletableFuture.supplyAsync(() -> updateDB(info, entitys).join(), getExecutor()).whenComplete((rs, t) -> {
+        return CompletableFuture.supplyAsync(() -> updateDB(info, context, entitys).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
                 futureCompleteConsumer.accept(rs, t);
             } else {
@@ -1617,6 +1622,11 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
     }
 
     @Override
+    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, ChannelContext context, final Serializable pk) {
+        return findAsync(clazz, context, (SelectColumn) null, pk);
+    }
+
+    @Override
     public <T> T find(Class<T> clazz, final SelectColumn selects, Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
@@ -1624,26 +1634,30 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
             T rs = selects == null ? cache.find(pk) : cache.find(selects, pk);
             if (cache.isFullLoaded() || rs != null) return rs;
         }
-        return findCompose(info, selects, pk).join();
+        return findCompose(info, null, selects, pk).join();
     }
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final Serializable pk) {
+        return findAsync(clazz, null, selects, pk);
+    }
+
+    protected <T> CompletableFuture<T> findAsync(final Class<T> clazz, final ChannelContext context, final SelectColumn selects, final Serializable pk) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (cache != null) {
             T rs = selects == null ? cache.find(pk) : cache.find(selects, pk);
             if (cache.isFullLoaded() || rs != null) return CompletableFuture.completedFuture(rs);
         }
-        if (isAsync()) return findCompose(info, selects, pk);
-        return CompletableFuture.supplyAsync(() -> findCompose(info, selects, pk).join(), getExecutor());
+        if (isAsync()) return findCompose(info, context, selects, pk);
+        return CompletableFuture.supplyAsync(() -> findCompose(info, context, selects, pk).join(), getExecutor());
     }
 
-    protected <T> CompletableFuture<T> findCompose(final EntityInfo<T> info, final SelectColumn selects, Serializable pk) {
+    protected <T> CompletableFuture<T> findCompose(final EntityInfo<T> info, final ChannelContext context, final SelectColumn selects, Serializable pk) {
         String column = info.getPrimarySQLColumn();
         final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) + " WHERE " + column + "=" + info.formatSQLValue(column, pk, sqlFormatter);
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
-        return findDB(info, sql, true, selects);
+        return findDB(info, context, sql, true, selects);
     }
 
     @Override
@@ -1711,7 +1725,7 @@ public abstract class DataSqlSource<DBChannel> extends AbstractService implement
         final CharSequence where = node == null ? null : node.createSQLExpress(info, joinTabalis);
         final String sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
         if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
-        return findDB(info, sql, false, selects);
+        return findDB(info, null, sql, false, selects);
     }
 
     @Override

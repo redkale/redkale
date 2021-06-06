@@ -41,11 +41,13 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     private final Object excludeLock = new Object();
 
+    protected HttpContext context;
+
+    protected boolean lazyHeaders = true;
+
     private Map<String, BiPredicate<String, String>> forbidURIMaps; //禁用的URL的正则表达式, 必须与 forbidURIPredicates 保持一致
 
     private BiPredicate<String, String>[] forbidURIPredicates; //禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
-
-    final List<HttpRender> renders = new ArrayList<>();
 
     private List<HttpServlet> removeHttpServlet(final Predicate<MappingEntry> predicateEntry, final Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter) {
         List<HttpServlet> servlets = new ArrayList<>();
@@ -204,6 +206,8 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
     @SuppressWarnings("unchecked")
     public void init(HttpContext context, AnyValue config) {
         super.init(context, config); //必须要执行
+        this.context = context;
+        context.lazyHeaders = lazyHeaders;
         Collection<HttpServlet> servlets = getServlets();
         servlets.forEach(s -> {
             s.preInit(context, getServletConf(s));
@@ -234,28 +238,15 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 this.resourceHttpServlet = new HttpResourceServlet();
                 logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
             }
+            { //获取render的suffixs         
+                AnyValue renderConfig = config.getAnyValue("render");
+                if (renderConfig != null) {
+                    String[] suffixs = renderConfig.getValue("suffixs", ".htel").toLowerCase().split(";");
+                    ((HttpResourceServlet) this.resourceHttpServlet).renderSuffixs = suffixs;
+                }
+            }
             context.getResourceFactory().inject(this.resourceHttpServlet);
             this.resourceHttpServlet.init(context, resConfig);
-        }
-        { //设置TemplateEngine            
-            AnyValue[] renderConfigs = config.getAnyValues("render");
-            if (renderConfigs != null) {
-                for (AnyValue renderConfig : renderConfigs) {
-                    String renderType = renderConfig.getValue("value");
-                    try {
-                        HttpRender render = (HttpRender) Thread.currentThread().getContextClassLoader().loadClass(renderType).getDeclaredConstructor().newInstance();
-                        for (HttpRender one : renders) {
-                            if (one.getType().equals(render.getType())) throw new RuntimeException("HttpRender(" + renderType + ") repeat");
-                        }
-                        context.getResourceFactory().inject(render);
-                        render.init(context, renderConfig);
-                        renders.add(render);
-                    } catch (Throwable e) {
-                        logger.log(Level.WARNING, "init HttpRender(" + renderType + ") error", e);
-                    }
-                }
-                renders.sort((o1, o2) -> o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
-            }
         }
     }
 
@@ -334,12 +325,16 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 if (!ws.repair()) prefix = "";//被设置为不自动追加前缀则清空prefix
             }
         }
+        if (lazyHeaders && !Rest.isSimpleRestDyn(servlet)) {
+            lazyHeaders = false;
+            if (context != null) context.lazyHeaders = false; //启动后运行过程中执行addServlet
+        }
         synchronized (allMapStrings) {  //需要整段锁住
             for (String mappingpath : mappingpaths) {
                 if (mappingpath == null) continue;
                 if (!prefix.toString().isEmpty()) mappingpath = prefix + mappingpath;
 
-                if (Utility.contains(mappingpath, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+                if (Utility.contains(mappingpath, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                     if (mappingpath.charAt(0) != '^') mappingpath = '^' + mappingpath;
                     if (mappingpath.endsWith("/*")) {
                         mappingpath = mappingpath.substring(0, mappingpath.length() - 1) + ".*";
@@ -364,6 +359,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                     }
                 } else if (mappingpath != null && !mappingpath.isEmpty()) {
                     if (servlet._actionmap != null && servlet._actionmap.containsKey(mappingpath)) {
+                        //context.addRequestURINode(mappingpath);
                         putMapping(mappingpath, new HttpServlet.HttpActionServlet(servlet._actionmap.get(mappingpath), servlet));
                     } else {
                         putMapping(mappingpath, servlet);

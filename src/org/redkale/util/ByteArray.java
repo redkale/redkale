@@ -5,6 +5,7 @@
  */
 package org.redkale.util;
 
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.util.Arrays;
@@ -47,6 +48,20 @@ public final class ByteArray implements ByteTuple {
     }
 
     /**
+     * 生成一个OutputStream
+     *
+     * @return OutputStream
+     */
+    public OutputStream newOutputStream() {
+        return new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                put((byte) b);
+            }
+        };
+    }
+
+    /**
      * 比较内容是否相同
      *
      * @param bytes 待比较内容
@@ -54,9 +69,12 @@ public final class ByteArray implements ByteTuple {
      * @return 是否相同
      */
     public boolean equal(final byte[] bytes) {
-        if (bytes == null || count != bytes.length) return false;
-        for (int i = 0; i < count; i++) {
-            if (content[i] != bytes[i]) return false;
+        if (bytes == null) return false;
+        int len = count;
+        if (len != bytes.length) return false;
+        byte[] ba = content;
+        for (int i = 0; i < len; i++) {
+            if (ba[i] != bytes[i]) return false;
         }
         return true;
     }
@@ -575,6 +593,23 @@ public final class ByteArray implements ByteTuple {
      */
     public void put(int poffset, byte[] values, int offset, int length) {
         System.arraycopy(values, offset, content, poffset, length);
+    }
+
+    /**
+     * 写入ByteArray中的一部分
+     *
+     * @param array  ByteArray
+     * @param offset 偏移量
+     * @param length 长度
+     */
+    public void put(ByteArray array, int offset, int length) {
+        if (count >= content.length - length) {
+            byte[] ns = new byte[content.length + Math.max(16, length)];
+            System.arraycopy(content, 0, ns, 0, count);
+            this.content = ns;
+        }
+        System.arraycopy(array.content, offset, content, count, length);
+        count += length;
     }
 
     /**

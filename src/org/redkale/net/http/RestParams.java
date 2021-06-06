@@ -5,26 +5,24 @@
  */
 package org.redkale.net.http;
 
-import static java.lang.annotation.ElementType.*;
 import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 配合 HttpServlet 使用。
- * 用于指定HttpRequest.currentUser的数据类型。<br>
- * 注意： 数据类型是JavaBean
+ * 只能注解于RestService类的方法的参数或参数内的Map&#60;String, String&#62;字段
  *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.4.0
  */
 @Inherited
 @Documented
-@Target({TYPE})
+@Target({PARAMETER, FIELD})
 @Retention(RUNTIME)
-public @interface HttpUserType {
-
-    Class value();
+public @interface RestParams {
 
 }

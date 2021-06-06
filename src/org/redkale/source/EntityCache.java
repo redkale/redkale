@@ -32,8 +32,6 @@ public final class EntityCache<T> {
     //日志
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());
 
-    private Object[] array;
-
     //主键与对象的键值对
     private ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
@@ -75,7 +73,7 @@ public final class EntityCache<T> {
     //&#064;Cacheable的定时器
     private ScheduledThreadPoolExecutor scheduler;
 
-    private CompletableFuture<List> loadFuture;
+    private CompletableFuture<List<T>> loadFuture;
 
     public EntityCache(final EntityInfo<T> info, final Cacheable c) {
         this.info = info;
@@ -106,24 +104,25 @@ public final class EntityCache<T> {
         });
     }
 
-    public void fullLoadAsync() {
-        if (loading.getAndSet(true)) return;
+    public CompletableFuture<List<T>> fullLoadAsync() {
+        if (this.fullloaded) return this.loadFuture;
+        if (loading.getAndSet(true)) return this.loadFuture;
         if (info.fullloader == null) {
             this.list = new ConcurrentLinkedQueue();
             this.map = new ConcurrentHashMap();
             this.fullloaded = true;
             loading.set(false);
-            return;
+            return this.loadFuture;
         }
         this.fullloaded = false;
         CompletableFuture<List> allFuture = info.fullloader.apply(info.source, info);
-        this.loadFuture = allFuture;
+        this.loadFuture = (CompletableFuture) allFuture;
         if (allFuture == null) {
             this.list = new ConcurrentLinkedQueue();
             this.map = new ConcurrentHashMap();
             this.fullloaded = true;
             loading.set(false);
-            return;
+            return this.loadFuture;
         }
         if (this.interval > 0 && this.scheduler == null && info.fullloader != null) {
             this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -164,6 +163,7 @@ public final class EntityCache<T> {
             this.fullloaded = true;
             loading.set(false);
         });
+        return this.loadFuture;
     }
 
     public Class<T> getType() {
@@ -183,20 +183,6 @@ public final class EntityCache<T> {
 
     public boolean isFullLoaded() {
         return fullloaded;
-    }
-
-    //临时功能
-    @Deprecated
-    public EntityCache<T> array() {
-        if (!isFullLoaded()) this.loadFuture.join();
-        this.array = this.list.toArray();
-        return this;
-    }
-
-    //临时功能    
-    @Deprecated
-    public T findAt(int pk) {
-        return (T) this.array[pk - 1];
     }
 
     public T find(Serializable pk) {

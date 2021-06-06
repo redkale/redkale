@@ -20,7 +20,9 @@ import java.util.concurrent.*;
  */
 class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Runnable {
 
-    private final CompletionHandler<Integer, A> handler;
+    private final AsyncNioConnection conn;
+
+    private CompletionHandler<Integer, A> handler;
 
     private A attachment;
 
@@ -28,20 +30,35 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
 
     private ByteBuffer[] buffers;
 
-    private AsyncNioConnection conn;
+    private ByteBuffer buffer;
 
-    public AsyncNioCompletionHandler(CompletionHandler<Integer, A> handler, A attachment) {
+    public AsyncNioCompletionHandler(AsyncNioConnection conn) {
+        this.conn = conn;
+    }
+
+    public void handler(CompletionHandler<Integer, A> handler, A attachment) {
         this.handler = handler;
         this.attachment = attachment;
     }
 
-    public void setConnBuffers(AsyncNioConnection conn, ByteBuffer... buffs) {
-        this.conn = conn;
+    public void attachment(A attachment) {
+        this.attachment = attachment;
+    }
+
+    public void buffers(ByteBuffer... buffs) {
         this.buffers = buffs;
     }
 
-    public void setAttachment(A attachment) {
-        this.attachment = attachment;
+    public void buffer(ByteBuffer buff) {
+        this.buffer = buff;
+    }
+
+    private void clear() {
+        this.handler = null;
+        this.attachment = null;
+        this.timeoutFuture = null;
+        this.buffers = null;
+        this.buffer = null;
     }
 
     @Override
@@ -51,10 +68,17 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
             this.timeoutFuture = null;
             future.cancel(true);
         }
-        if (conn != null && buffers != null) {
-            conn.offerBuffer(buffers);
+        if (conn != null) {
+            if (buffers != null) {
+                conn.offerBuffer(buffers);
+            } else if (buffer != null) {
+                conn.offerBuffer(buffer);
+            }
         }
-        handler.completed(result, attachment);
+        CompletionHandler<Integer, A> handler0 = handler;
+        A attachment0 = attachment;
+        clear();
+        handler0.completed(result, attachment0);
     }
 
     @Override
@@ -64,18 +88,32 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
             this.timeoutFuture = null;
             future.cancel(true);
         }
-        if (conn != null && buffers != null) {
-            conn.offerBuffer(buffers);
+        if (conn != null) {
+            if (buffers != null) {
+                conn.offerBuffer(buffers);
+            } else if (buffer != null) {
+                conn.offerBuffer(buffer);
+            }
         }
-        handler.failed(exc, attachment);
+        CompletionHandler<Integer, A> handler0 = handler;
+        A attachment0 = attachment;
+        clear();
+        handler0.failed(exc, attachment0);
     }
 
     @Override
     public void run() {
-        if (conn != null && buffers != null) {
-            conn.offerBuffer(buffers);
+        if (conn != null) {
+            if (buffers != null) {
+                conn.offerBuffer(buffers);
+            } else if (buffer != null) {
+                conn.offerBuffer(buffer);
+            }
         }
-        handler.failed(new TimeoutException(), attachment);
+        CompletionHandler<Integer, A> handler0 = handler;
+        A attachment0 = attachment;
+        clear();
+        handler0.failed(new TimeoutException(), attachment0);
     }
 
 }

@@ -279,8 +279,8 @@ public abstract class AnyValue {
         }
 
         public DefaultAnyValue clear() {
-            this.stringEntrys = new Entry[0];
-            this.anyEntrys = new Entry[0];
+            if (this.stringEntrys != null && this.stringEntrys.length > 0) this.stringEntrys = new Entry[0];
+            if (this.anyEntrys != null && this.anyEntrys.length > 0) this.anyEntrys = new Entry[0];
             return this;
         }
 

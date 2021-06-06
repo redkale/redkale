@@ -9,7 +9,9 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+import org.redkale.service.Local;
 import org.redkale.util.*;
+import org.redkale.net.ChannelContext;
 
 /**
  *
@@ -51,7 +53,10 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int insert(final Collection<T> entitys);
+    default <T> int insert(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return 0;
+        return insert(entitys.toArray());
+    }
 
     /**
      * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
@@ -61,7 +66,10 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int insert(final Stream<T> entitys);
+    default <T> int insert(final Stream<T> entitys) {
+        if (entitys == null) return 0;
+        return insert(entitys.toArray());
+    }
 
     /**
      * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
@@ -81,7 +89,10 @@ public interface DataSource {
      *
      * @return CompletableFuture
      */
-    public <T> CompletableFuture<Integer> insertAsync(final Collection<T> entitys);
+    default <T> CompletableFuture<Integer> insertAsync(final Collection<T> entitys) {
+        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        return insertAsync(entitys.toArray());
+    }
 
     /**
      * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
@@ -91,7 +102,10 @@ public interface DataSource {
      *
      * @return CompletableFuture
      */
-    public <T> CompletableFuture<Integer> insertAsync(final Stream<T> entitys);
+    default <T> CompletableFuture<Integer> insertAsync(final Stream<T> entitys) {
+        if (entitys == null) return CompletableFuture.completedFuture(0);
+        return insertAsync(entitys.toArray());
+    }
 
     //-------------------------deleteAsync--------------------------
     /**
@@ -206,7 +220,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int delete(final Class<T> clazz, final FilterNode node);
+    default <T> int delete(final Class<T> clazz, final FilterNode node) {
+        return delete(clazz, (Flipper) null, node);
+    }
 
     /**
      * 删除符合过滤条件的记录  <br>
@@ -218,7 +234,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final FilterNode node);
+    default <T> CompletableFuture<Integer> deleteAsync(final Class<T> clazz, final FilterNode node) {
+        return deleteAsync(clazz, (Flipper) null, node);
+    }
 
     /**
      * 删除符合过滤条件且指定最大影响条数的记录  <br>
@@ -258,7 +276,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数 -1表示表不存在
      */
-    public <T> int clearTable(final Class<T> clazz);
+    default <T> int clearTable(final Class<T> clazz) {
+        return clearTable(clazz, (FilterNode) null);
+    }
 
     /**
      * 清空表  <br>
@@ -269,7 +289,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture -1表示表不存在
      */
-    public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz);
+    default <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz) {
+        return clearTableAsync(clazz, (FilterNode) null);
+    }
 
     /**
      * 清空表  <br>
@@ -305,7 +327,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数 -1表示表不存在
      */
-    public <T> int dropTable(final Class<T> clazz);
+    default <T> int dropTable(final Class<T> clazz) {
+        return dropTable(clazz, (FilterNode) null);
+    }
 
     /**
      * 删除表  <br>
@@ -316,7 +340,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture -1表示表不存在
      */
-    public <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz);
+    default <T> CompletableFuture<Integer> dropTableAsync(final Class<T> clazz) {
+        return dropTableAsync(clazz, (FilterNode) null);
+    }
 
     /**
      * 删除表  <br>
@@ -404,6 +430,21 @@ public interface DataSource {
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> updateAsync(final T... entitys);
+
+    /**
+     * 更新记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
+     * 等价SQL:  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
+     * &#183;&#183;&#183;  <br>
+     *
+     * @param context ContextChannel
+     * @param <T>     泛型
+     * @param entitys Entity对象
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    public <T> CompletableFuture<Integer> updateAsync(final ChannelContext context, final T... entitys);
 
     /**
      * 更新记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
@@ -540,7 +581,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values);
+    default <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+        return updateColumn(clazz, node, (Flipper) null, values);
+    }
 
     /**
      * 更新符合过滤条件记录的部分字段   <br>
@@ -555,7 +598,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final ColumnValue... values);
+    default <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+        return updateColumnAsync(clazz, node, (Flipper) null, values);
+    }
 
     /**
      * 更新符合过滤条件的记录的指定字段   <br>
@@ -600,7 +645,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int updateColumn(final T entity, final String... columns);
+    default <T> int updateColumn(final T entity, final String... columns) {
+        return updateColumn(entity, (FilterNode) null, columns);
+    }
 
     /**
      * 更新单个记录的指定字段   <br>
@@ -613,7 +660,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final String... columns);
+    default <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final String... columns) {
+        return updateColumnAsync(entity, (FilterNode) null, columns);
+    }
 
     /**
      * 更新符合过滤条件记录的指定字段   <br>
@@ -654,7 +703,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数
      */
-    public <T> int updateColumn(final T entity, final SelectColumn selects);
+    default <T> int updateColumn(final T entity, final SelectColumn selects) {
+        return updateColumn(entity, (FilterNode) null, selects);
+    }
 
     /**
      * 更新单个记录的指定字段   <br>
@@ -667,7 +718,9 @@ public interface DataSource {
      *
      * @return 影响的记录条数CompletableFuture
      */
-    public <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final SelectColumn selects);
+    default <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final SelectColumn selects) {
+        return updateColumnAsync(entity, (FilterNode) null, selects);
+    }
 
     /**
      * 更新符合过滤条件记录的指定字段   <br>
@@ -710,7 +763,9 @@ public interface DataSource {
      *
      * @return 聚合结果
      */
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column);
+    default Number getNumberResult(final Class entityClass, final FilterFunc func, final String column) {
+        return getNumberResult(entityClass, func, null, column, (FilterNode) null);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
@@ -723,7 +778,9 @@ public interface DataSource {
      *
      * @return 聚合结果CompletableFuture
      */
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column);
+    default CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column) {
+        return getNumberResultAsync(entityClass, func, null, column, (FilterNode) null);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
@@ -737,7 +794,9 @@ public interface DataSource {
      *
      * @return 聚合结果
      */
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean);
+    default Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean) {
+        return getNumberResult(entityClass, func, column, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
@@ -751,7 +810,9 @@ public interface DataSource {
      *
      * @return 聚合结果CompletableFuture
      */
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean);
+    default CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean) {
+        return getNumberResultAsync(entityClass, func, column, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
@@ -765,7 +826,9 @@ public interface DataSource {
      *
      * @return 聚合结果
      */
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterNode node);
+    default Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+        return getNumberResult(entityClass, func, null, column, node);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
@@ -779,7 +842,9 @@ public interface DataSource {
      *
      * @return 聚合结果
      */
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterNode node);
+    default CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+        return getNumberResultAsync(entityClass, func, null, column, node);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
@@ -793,7 +858,9 @@ public interface DataSource {
      *
      * @return 聚合结果
      */
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column);
+    default Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+        return getNumberResult(entityClass, func, defVal, column, (FilterNode) null);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
@@ -807,7 +874,9 @@ public interface DataSource {
      *
      * @return 聚合结果CompletableFuture
      */
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column);
+    default CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+        return getNumberResultAsync(entityClass, func, defVal, column, (FilterNode) null);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
@@ -822,7 +891,9 @@ public interface DataSource {
      *
      * @return 聚合结果
      */
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean);
+    default Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean) {
+        return getNumberResult(entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
@@ -837,7 +908,9 @@ public interface DataSource {
      *
      * @return 聚合结果CompletableFuture
      */
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean);
+    default CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterBean bean) {
+        return getNumberResultAsync(entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
@@ -880,7 +953,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map
      */
-    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterFuncColumn... columns);
+    default <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterFuncColumn... columns) {
+        return getNumberMap(entityClass, (FilterNode) null, columns);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
@@ -893,7 +968,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterFuncColumn... columns);
+    default <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterFuncColumn... columns) {
+        return getNumberMapAsync(entityClass, (FilterNode) null, columns);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
@@ -907,7 +984,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map
      */
-    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns);
+    default <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+        return getNumberMap(entityClass, FilterNodeBean.createFilterNode(bean), columns);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
@@ -921,7 +1000,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns);
+    default <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+        return getNumberMapAsync(entityClass, FilterNodeBean.createFilterNode(bean), columns);
+    }
 
     /**
      * 获取符合过滤条件记录的聚合结果Map   <br>
@@ -966,7 +1047,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map
      */
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn);
+    default <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
+        return queryColumnMap(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -983,7 +1066,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn);
+    default <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
+        return queryColumnMapAsync(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1001,7 +1086,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map
      */
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean);
+    default <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+        return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1019,7 +1106,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean);
+    default <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+        return queryColumnMapAsync(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1072,7 +1161,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn);
+    default <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn) {
+        return queryColumnMap(entityClass, funcNodes, groupByColumn, (FilterNode) null);
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1089,7 +1180,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn);
+    default <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn) {
+        return queryColumnMapAsync(entityClass, funcNodes, groupByColumn, (FilterNode) null);
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1107,7 +1200,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean);
+    default <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
+        return queryColumnMap(entityClass, funcNodes, groupByColumn, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1125,7 +1220,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean);
+    default <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
+        return queryColumnMapAsync(entityClass, funcNodes, groupByColumn, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1178,7 +1275,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns);
+    default <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return queryColumnMap(entityClass, funcNodes, groupByColumns, (FilterNode) null);
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1195,7 +1294,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns);
+    default <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return queryColumnMapAsync(entityClass, funcNodes, groupByColumns, (FilterNode) null);
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1213,7 +1314,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean);
+    default <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
+        return queryColumnMap(entityClass, funcNodes, groupByColumns, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1231,7 +1334,9 @@ public interface DataSource {
      *
      * @return 聚合结果Map CompletableFuture
      */
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean);
+    default <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
+        return queryColumnMapAsync(entityClass, funcNodes, groupByColumns, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
@@ -1280,7 +1385,9 @@ public interface DataSource {
      *
      * @return Entity对象
      */
-    public <T> T find(final Class<T> clazz, final Serializable pk);
+    default <T> T find(final Class<T> clazz, final Serializable pk) {
+        return find(clazz, (SelectColumn) null, pk);
+    }
 
     /**
      * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
@@ -1292,7 +1399,23 @@ public interface DataSource {
      *
      * @return Entity对象 CompletableFuture
      */
-    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final Serializable pk);
+    default <T> CompletableFuture<T> findAsync(final Class<T> clazz, final Serializable pk) {
+        return findAsync(clazz, (SelectColumn) null, pk);
+    }
+
+    /**
+     * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id}  <br>
+     *
+     * @param context ContextChannel
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param pk      主键值
+     *
+     * @return Entity对象 CompletableFuture
+     */
+    @Local
+    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final ChannelContext context, final Serializable pk);
 
     /**
      * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
@@ -1331,7 +1454,6 @@ public interface DataSource {
      * @return Entity对象
      */
     //public <T> T[] finds(final Class<T> clazz, final Serializable... pks);
-
     /**
      * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id}  <br>
@@ -1343,7 +1465,6 @@ public interface DataSource {
      * @return Entity对象 CompletableFuture
      */
     //public <T> CompletableFuture<T[]> findsAsync(final Class<T> clazz, final Serializable... pks);
-
     /**
      * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
      * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id}  <br>
@@ -1356,7 +1477,6 @@ public interface DataSource {
      * @return Entity对象
      */
     //public <T> T[] finds(final Class<T> clazz, final SelectColumn selects, final Serializable... pks);
-
     /**
      * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
      * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id}  <br>
@@ -1369,7 +1489,6 @@ public interface DataSource {
      * @return Entity对象CompletableFuture
      */
     //public <T> CompletableFuture<T[]> findsAsync(final Class<T> clazz, final SelectColumn selects, final Serializable... pks);
-
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
@@ -1406,7 +1525,9 @@ public interface DataSource {
      *
      * @return Entity对象
      */
-    public <T> T find(final Class<T> clazz, final FilterBean bean);
+    default <T> T find(final Class<T> clazz, final FilterBean bean) {
+        return find(clazz, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -1418,7 +1539,9 @@ public interface DataSource {
      *
      * @return Entity对象CompletableFuture
      */
-    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final FilterBean bean);
+    default <T> CompletableFuture<T> findAsync(final Class<T> clazz, final FilterBean bean) {
+        return findAsync(clazz, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -1430,7 +1553,9 @@ public interface DataSource {
      *
      * @return Entity对象
      */
-    public <T> T find(final Class<T> clazz, final FilterNode node);
+    default <T> T find(final Class<T> clazz, final FilterNode node) {
+        return find(clazz, (SelectColumn) null, node);
+    }
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -1442,7 +1567,9 @@ public interface DataSource {
      *
      * @return Entity对象CompletableFuture
      */
-    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final FilterNode node);
+    default <T> CompletableFuture<T> findAsync(final Class<T> clazz, final FilterNode node) {
+        return findAsync(clazz, (SelectColumn) null, node);
+    }
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -1455,7 +1582,9 @@ public interface DataSource {
      *
      * @return Entity对象
      */
-    public <T> T find(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    default <T> T find(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return find(clazz, selects, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -1468,7 +1597,9 @@ public interface DataSource {
      *
      * @return Entity对象 CompletableFuture
      */
-    public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    default <T> CompletableFuture<T> findAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return findAsync(clazz, selects, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
@@ -1533,7 +1664,9 @@ public interface DataSource {
      *
      * @return 字段值
      */
-    public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterBean bean);
+    default <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterBean bean) {
+        return findColumn(clazz, column, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
@@ -1546,7 +1679,9 @@ public interface DataSource {
      *
      * @return 字段值 CompletableFuture
      */
-    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterBean bean);
+    default <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterBean bean) {
+        return findColumnAsync(clazz, column, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
@@ -1559,7 +1694,9 @@ public interface DataSource {
      *
      * @return 字段值
      */
-    public <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterNode node);
+    default <T> Serializable findColumn(final Class<T> clazz, final String column, final FilterNode node) {
+        return findColumn(clazz, column, null, node);
+    }
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
@@ -1572,7 +1709,9 @@ public interface DataSource {
      *
      * @return 字段值 CompletableFuture
      */
-    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterNode node);
+    default <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterNode node) {
+        return findColumnAsync(clazz, column, null, node);
+    }
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
@@ -1614,7 +1753,9 @@ public interface DataSource {
      *
      * @return 字段值
      */
-    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean);
+    default <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+        return findColumn(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
@@ -1628,7 +1769,9 @@ public interface DataSource {
      *
      * @return 字段值 CompletableFuture
      */
-    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean);
+    default <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+        return findColumnAsync(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
@@ -1692,7 +1835,9 @@ public interface DataSource {
      *
      * @return 是否存在
      */
-    public <T> boolean exists(final Class<T> clazz, final FilterBean bean);
+    default <T> boolean exists(final Class<T> clazz, final FilterBean bean) {
+        return exists(clazz, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 判断是否存在符合过滤条件的记录   <br>
@@ -1704,7 +1849,9 @@ public interface DataSource {
      *
      * @return 是否存在CompletableFuture
      */
-    public <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final FilterBean bean);
+    default <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final FilterBean bean) {
+        return existsAsync(clazz, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 判断是否存在符合过滤条件的记录   <br>
@@ -1773,7 +1920,9 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
+    default <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+        return queryColumnSet(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
@@ -1787,7 +1936,9 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
+    default <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+        return queryColumnSetAsync(selectedColumn, clazz, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
@@ -1801,7 +1952,9 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterNode node);
+    default <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+        return queryColumnSet(selectedColumn, clazz, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
@@ -1815,7 +1968,9 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node);
+    default <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+        return queryColumnSetAsync(selectedColumn, clazz, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
@@ -1830,7 +1985,9 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnSet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
@@ -1845,7 +2002,9 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnSetAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段Set集合   <br>
@@ -1919,7 +2078,9 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
+    default <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+        return queryColumnList(selectedColumn, clazz, (Flipper) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1933,7 +2094,9 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean);
+    default <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+        return queryColumnListAsync(selectedColumn, clazz, (Flipper) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1947,7 +2110,9 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterNode node);
+    default <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+        return queryColumnList(selectedColumn, clazz, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1961,7 +2126,9 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node);
+    default <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+        return queryColumnListAsync(selectedColumn, clazz, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1976,7 +2143,9 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnList(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -1991,7 +2160,9 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnListAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段List集合   <br>
@@ -2036,7 +2207,9 @@ public interface DataSource {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段Sheet集合   <br>
@@ -2051,7 +2224,9 @@ public interface DataSource {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryColumnSheetAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的某个字段Sheet集合   <br>
@@ -2084,8 +2259,8 @@ public interface DataSource {
     public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids}  <br>
      *
      * @param <K>       主键泛型
      * @param <T>       Entity泛型
@@ -2094,11 +2269,13 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final Stream<K> keyStream);
+    default <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final Stream<K> keyStream) {
+        return queryMap(clazz, (SelectColumn) null, keyStream);
+    }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids}  <br>
      *
      * @param <K>       主键泛型
      * @param <T>       Entity泛型
@@ -2107,11 +2284,13 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final Stream<K> keyStream);
+    default <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final Stream<K> keyStream) {
+        return queryMapAsync(clazz, (SelectColumn) null, keyStream);
+    }
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
      * @param <K>   主键泛型
      * @param <T>   Entity泛型
@@ -2120,11 +2299,13 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterBean bean);
+    default <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterBean bean) {
+        return queryMap(clazz, (SelectColumn) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
      * @param <K>   主键泛型
      * @param <T>   Entity泛型
@@ -2133,11 +2314,13 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterBean bean);
+    default <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterBean bean) {
+        return queryMapAsync(clazz, (SelectColumn) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
      * @param <K>   主键泛型
      * @param <T>   Entity泛型
@@ -2146,11 +2329,13 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterNode node);
+    default <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final FilterNode node) {
+        return queryMap(clazz, (SelectColumn) null, node);
+    }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
      * @param <K>   主键泛型
      * @param <T>   Entity泛型
@@ -2159,11 +2344,13 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterNode node);
+    default <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterNode node) {
+        return queryMapAsync(clazz, (SelectColumn) null, node);
+    }
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids}  <br>
      *
      * @param <K>       主键泛型
      * @param <T>       Entity泛型
@@ -2176,8 +2363,8 @@ public interface DataSource {
     public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final Stream<K> keyStream);
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids}  <br>
      *
      * @param <K>       主键泛型
      * @param <T>       Entity泛型
@@ -2190,8 +2377,8 @@ public interface DataSource {
     public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final Stream<K> keyStream);
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
      * @param <K>     主键泛型
      * @param <T>     Entity泛型
@@ -2201,11 +2388,13 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    default <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return queryMap(clazz, selects, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
      * @param <K>     主键泛型
      * @param <T>     Entity泛型
@@ -2215,11 +2404,13 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, FilterBean bean);
+    default <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, FilterBean bean) {
+        return queryMapAsync(clazz, selects, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
      * @param <K>     主键泛型
      * @param <T>     Entity泛型
@@ -2232,8 +2423,8 @@ public interface DataSource {
     public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
      *
      * @param <K>     主键泛型
      * @param <T>     Entity泛型
@@ -2256,7 +2447,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Set<T> querySet(final Class<T> clazz, final String column, final Serializable colval);
+    default <T> Set<T> querySet(final Class<T> clazz, final String column, final Serializable colval) {
+        return querySet(clazz, (Flipper) null, column, colval);
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2269,7 +2462,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final String column, final Serializable colval);
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final String column, final Serializable colval) {
+        return querySetAsync(clazz, (Flipper) null, column, colval);
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2281,7 +2476,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Set<T> querySet(final Class<T> clazz, final FilterBean bean);
+    default <T> Set<T> querySet(final Class<T> clazz, final FilterBean bean) {
+        return querySet(clazz, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2293,7 +2490,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final FilterBean bean);
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final FilterBean bean) {
+        return querySetAsync(clazz, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询记录的Set集合   <br>
@@ -2305,7 +2504,7 @@ public interface DataSource {
      * @return Entity的集合
      */
     default <T> Set<T> querySet(final Class<T> clazz) {
-        return querySet(clazz, (FilterNode) null);
+        return querySet(clazz, (SelectColumn) null, (Flipper) null, (FilterNode) null);
     }
 
     /**
@@ -2318,7 +2517,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Set<T> querySet(final Class<T> clazz, final FilterNode node);
+    default <T> Set<T> querySet(final Class<T> clazz, final FilterNode node) {
+        return querySet(clazz, (SelectColumn) null, (Flipper) null, node);
+    }
 
     /**
      * 查询记录的Set集合   <br>
@@ -2330,7 +2531,7 @@ public interface DataSource {
      * @return Entity的集合CompletableFuture
      */
     default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz) {
-        return querySetAsync(clazz, (FilterNode) null);
+        return querySetAsync(clazz, (SelectColumn) null, (Flipper) null, (FilterNode) null);
     }
 
     /**
@@ -2343,7 +2544,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final FilterNode node);
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final FilterNode node) {
+        return querySetAsync(clazz, (SelectColumn) null, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2356,7 +2559,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    default <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return querySet(clazz, selects, (Flipper) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2369,7 +2574,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return querySetAsync(clazz, selects, (Flipper) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2382,7 +2589,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+    default <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        return querySet(clazz, selects, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2395,7 +2604,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        return querySetAsync(clazz, selects, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2436,7 +2647,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return querySet(clazz, (SelectColumn) null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2449,7 +2662,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return querySetAsync(clazz, (SelectColumn) null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2463,7 +2678,9 @@ public interface DataSource {
      * @return Entity的集合
      *
      */
-    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    default <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return querySet(clazz, (SelectColumn) null, flipper, node);
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2477,7 +2694,9 @@ public interface DataSource {
      * @return Entity的集合
      *
      */
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return querySetAsync(clazz, (SelectColumn) null, flipper, node);
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2491,7 +2710,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+    default <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return querySet(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2505,7 +2726,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+    default <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return querySetAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Set集合   <br>
@@ -2546,7 +2769,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable colval);
+    default <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable colval) {
+        return queryList(clazz, (Flipper) null, column, colval);
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2559,7 +2784,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final String column, final Serializable colval);
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final String column, final Serializable colval) {
+        return queryListAsync(clazz, (Flipper) null, column, colval);
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2571,7 +2798,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> List<T> queryList(final Class<T> clazz, final FilterBean bean);
+    default <T> List<T> queryList(final Class<T> clazz, final FilterBean bean) {
+        return queryList(clazz, (SelectColumn) null, (Flipper) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2583,7 +2812,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final FilterBean bean);
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final FilterBean bean) {
+        return queryListAsync(clazz, (SelectColumn) null, (Flipper) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询记录的List集合   <br>
@@ -2595,7 +2826,7 @@ public interface DataSource {
      * @return Entity的集合
      */
     default <T> List<T> queryList(final Class<T> clazz) {
-        return queryList(clazz, (FilterNode) null);
+        return queryList(clazz, (SelectColumn) null, (Flipper) null, (FilterNode) null);
     }
 
     /**
@@ -2608,7 +2839,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> List<T> queryList(final Class<T> clazz, final FilterNode node);
+    default <T> List<T> queryList(final Class<T> clazz, final FilterNode node) {
+        return queryList(clazz, (SelectColumn) null, (Flipper) null, node);
+    }
 
     /**
      * 查询记录的List集合   <br>
@@ -2620,7 +2853,7 @@ public interface DataSource {
      * @return Entity的集合CompletableFuture
      */
     default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz) {
-        return queryListAsync(clazz, (FilterNode) null);
+        return queryListAsync(clazz, (SelectColumn) null, (Flipper) null, (FilterNode) null);
     }
 
     /**
@@ -2633,7 +2866,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final FilterNode node);
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final FilterNode node) {
+        return queryListAsync(clazz, (SelectColumn) null, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2646,7 +2881,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    default <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return queryList(clazz, selects, (Flipper) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2659,7 +2896,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean);
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+        return queryListAsync(clazz, selects, (Flipper) null, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2672,7 +2911,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+    default <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        return queryList(clazz, selects, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2685,7 +2926,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node);
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+        return queryListAsync(clazz, selects, (Flipper) null, node);
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2726,7 +2969,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryList(clazz, (SelectColumn) null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2739,7 +2984,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return queryListAsync(clazz, (SelectColumn) null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2753,7 +3000,9 @@ public interface DataSource {
      * @return Entity的集合
      *
      */
-    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    default <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return queryList(clazz, (SelectColumn) null, flipper, node);
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2767,7 +3016,9 @@ public interface DataSource {
      * @return Entity的集合
      *
      */
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return queryListAsync(clazz, (SelectColumn) null, flipper, node);
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2781,7 +3032,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+    default <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return queryList(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2795,7 +3048,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+    default <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return queryListAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的List集合   <br>
@@ -2837,7 +3092,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return querySheet(clazz, (SelectColumn) null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>
@@ -2850,7 +3107,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean);
+    default <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+        return querySheetAsync(clazz, (SelectColumn) null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>
@@ -2863,7 +3122,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    default <T> Sheet<T> querySheet(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return querySheet(clazz, (SelectColumn) null, flipper, node);
+    }
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>
@@ -2876,7 +3137,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    default <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+        return querySheetAsync(clazz, (SelectColumn) null, flipper, node);
+    }
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>
@@ -2890,7 +3153,9 @@ public interface DataSource {
      *
      * @return Entity的集合
      */
-    public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+    default <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return querySheet(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>
@@ -2904,7 +3169,9 @@ public interface DataSource {
      *
      * @return Entity的集合CompletableFuture
      */
-    public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean);
+    default <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+        return querySheetAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
 
     /**
      * 查询符合过滤条件记录的Sheet集合   <br>

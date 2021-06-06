@@ -75,6 +75,19 @@ public class ColumnValue {
     }
 
     /**
+     * 返回 {column} = {column} + 1 操作
+     *
+     * @param column 字段名
+     *
+     * @return ColumnValue
+     *
+     * @since 2.4.0
+     */
+    public static ColumnValue inc(String column) {
+        return new ColumnValue(column, INC, 1);
+    }
+
+    /**
      * 返回 {column} = {column} - {value} 操作
      *
      * @param column 字段名
@@ -85,7 +98,20 @@ public class ColumnValue {
     public static ColumnValue dec(String column, Serializable value) {
         return new ColumnValue(column, DEC, value);
     }
-    
+
+    /**
+     * 返回 {column} = {column} - 1 操作
+     *
+     * @param column 字段名
+     *
+     * @return ColumnValue
+     *
+     * @since 2.4.0
+     */
+    public static ColumnValue dec(String column) {
+        return new ColumnValue(column, DEC, 1);
+    }
+
     /**
      * 返回 {column} = {column} * {value} 操作
      *
@@ -109,7 +135,7 @@ public class ColumnValue {
     public static ColumnValue div(String column, Serializable value) {
         return new ColumnValue(column, DIV, value);
     }
-    
+
     /**
      * 返回 {column} = {column} % {value} 操作
      *
@@ -118,11 +144,10 @@ public class ColumnValue {
      *
      * @return ColumnValue
      */
-      //不常用，防止开发者容易在mov时误输入mod
+    //不常用，防止开发者容易在mov时误输入mod
 //    public static ColumnValue mod(String column, Serializable value) {
 //        return new ColumnValue(column, MOD, value);
 //    }
-    
     /**
      * 返回 {column} = {column} &#38; {value} 操作
      *

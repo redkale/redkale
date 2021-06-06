@@ -38,6 +38,14 @@ public @interface FilterColumn {
     long least() default 1;
 
     /**
+     * 生成过滤条件时是否屏蔽该字段
+     *
+     * @return 是否屏蔽该字段
+     * @since 2.4.0
+     */
+    boolean ignore() default false;
+
+    /**
      * express的默认值根据字段类型的不同而不同:  <br>
      * 数组 --&gt; IN  <br>
      * Range --&gt; Between  <br>

@@ -13,6 +13,7 @@
             -->
             <property name="javax.persistence.cachemode" value="ALL"/>
             
+            <!-- 多个URL用;隔开，如分布式SearchSource需要配多个URL -->
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/dbuser?characterEncoding=utf8"/>
             <!-- 
                 javax.persistence.jdbc.driver在JPA的值是JDBC驱动，Redkale有所不同，值应该是javax.sql.DataSource的子类。 

@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.Level;
-import org.redkale.net.AsyncGroup;
+import org.redkale.net.*;
 import org.redkale.service.Local;
 import org.redkale.util.*;
 
@@ -29,7 +29,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(DataSource.class)
-public class DataJdbcSource extends DataSqlSource<Connection> {
+public class DataJdbcSource extends DataSqlSource {
 
     public DataJdbcSource(String unitName, URL persistxml, Properties readprop, Properties writeprop) {
         super(unitName, persistxml, readprop, writeprop);
@@ -46,7 +46,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected PoolSource<Connection> createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
+    protected PoolSource createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
         return new PoolJdbcSource(this.name, this.persistxml, rwtype, queue, semaphore, prop, this.logger);
     }
 
@@ -256,7 +256,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateDB(EntityInfo<T> info, T... entitys) {
+    protected <T> CompletableFuture<Integer> updateDB(EntityInfo<T> info, ChannelContext context, T... entitys) {
         Connection conn = null;
         try {
             conn = writePool.poll();
@@ -471,7 +471,7 @@ public class DataJdbcSource extends DataSqlSource<Connection> {
     }
 
     @Override
-    protected <T> CompletableFuture<T> findDB(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
+    protected <T> CompletableFuture<T> findDB(EntityInfo<T> info, ChannelContext context, String sql, boolean onlypk, SelectColumn selects) {
         Connection conn = null;
         try {
             conn = readPool.poll();

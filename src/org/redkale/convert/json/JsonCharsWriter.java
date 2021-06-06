@@ -24,6 +24,16 @@ public class JsonCharsWriter extends JsonWriter {
 
     private static final char[] CHARS_FALSEVALUE = "false".toCharArray();
 
+    private static final int TENTHOUSAND_MAX = 10001;
+
+    private static final char[][] TENTHOUSAND_BYTES = new char[TENTHOUSAND_MAX][];
+
+    static {
+        for (int i = 0; i < TENTHOUSAND_BYTES.length; i++) {
+            TENTHOUSAND_BYTES[i] = String.valueOf(i).toCharArray();
+        }
+    }
+
     private int count;
 
     private char[] content;
@@ -171,6 +181,10 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override
     public void writeInt(int value) {
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_BYTES[value]);
+            return;
+        }
         final char sign = value >= 0 ? 0 : '-';
         if (value < 0) value = -value;
         int size;
@@ -211,6 +225,10 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override
     public void writeLong(long value) {
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_BYTES[(int) value]);
+            return;
+        }
         final char sign = value >= 0 ? 0 : '-';
         if (value < 0) value = -value;
         int size = 19;

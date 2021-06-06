@@ -198,4 +198,76 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
         if (this.readKey != null) this.readKey.cancel();
         if (this.writeKey != null) this.writeKey.cancel();
     }
+
+    @Override
+    public InputStream newInputStream() {
+
+        return new InputStream() {
+
+            ByteBuffer bb;
+
+            int count;
+
+            @Override
+            public synchronized int read() throws IOException {
+                if (bb == null || !bb.hasRemaining()) {
+                    int r = readBuffer();
+                    if (r < 1) return -1;
+                }
+                return bb.get() & 0xff;
+            }
+
+            @Override
+            public synchronized int read(byte b[], int off, int len) throws IOException {
+                if (b == null) {
+                    throw new NullPointerException();
+                } else if (off < 0 || len < 0 || len > b.length - off) {
+                    throw new IndexOutOfBoundsException();
+                } else if (len == 0) {
+                    return 0;
+                }
+                if (bb == null || !bb.hasRemaining()) {
+                    int r = readBuffer();
+                    if (r < 1) return -1;
+                }
+                int size = Math.min(b.length, Math.min(len, bb.remaining()));
+                bb.get(b, off, size);
+                return size;
+            }
+
+            @Override
+            public void close() throws IOException {
+                if (bb != null) {
+                    offerBuffer(bb);
+                    bb = null;
+                }
+                channel.close();
+            }
+
+            @Override
+            public int available() throws IOException {
+                if (bb == null || !bb.hasRemaining()) return 0;
+                return bb.remaining();
+            }
+
+            private int readBuffer() throws IOException {
+                if (bb == null) {
+                    bb = pollReadBuffer();
+                } else {
+                    bb.clear();
+                }
+                try {
+                    int size = channel.read(bb);
+                    bb.flip();
+                    return size;
+                } catch (IOException ioe) {
+                    throw ioe;
+                } catch (Exception e) {
+                    throw new IOException(e);
+                }
+
+            }
+
+        };
+    }
 }

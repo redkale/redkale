@@ -79,7 +79,23 @@ public class LogFileHandler extends Handler {
                 message,
                 throwable);
         }
+    }
 
+    public static void initDebugLogConfig() {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            final PrintStream ps = new PrintStream(out);
+            ps.println("handlers = java.util.logging.ConsoleHandler");
+            ps.println(".level = FINEST");
+            ps.println("jdk.level = INFO");
+            ps.println("sun.level = INFO");
+            ps.println("com.sun.level = INFO");
+            ps.println("javax.level = INFO");            
+            ps.println("java.util.logging.ConsoleHandler.level = FINEST");
+            ps.println("java.util.logging.ConsoleHandler.formatter = " + LogFileHandler.LoggingFormater.class.getName());
+            LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(out.toByteArray()));
+        } catch (Exception e) {
+        }
     }
 
     protected final LinkedBlockingQueue<LogRecord> logqueue = new LinkedBlockingQueue();

@@ -23,7 +23,7 @@ import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
-import org.redkale.net.Cryptor;
+import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -80,6 +80,8 @@ public final class Rest {
     @Retention(RUNTIME)
     public static @interface RestDyn {
 
+        //是否不需要解析HttpHeader，对应HttpContext.lazyHeaders
+        boolean simple() default false;
     }
 
     /**
@@ -203,6 +205,18 @@ public final class Rest {
      */
     public static boolean isRestDyn(HttpServlet servlet) {
         return servlet.getClass().getAnnotation(RestDyn.class) != null;
+    }
+
+    /**
+     * 判断HttpServlet是否为Rest动态生成的,且simple
+     *
+     * @param servlet 检测的HttpServlet
+     *
+     * @return 是否是动态生成的RestHttpServlet
+     */
+    static boolean isSimpleRestDyn(HttpServlet servlet) {
+        RestDyn dyn = servlet.getClass().getAnnotation(RestDyn.class);
+        return dyn != null && dyn.simple();
     }
 
     /**
@@ -767,7 +781,13 @@ public final class Rest {
         if (!HttpServlet.class.isAssignableFrom(baseServletType)) throw new RuntimeException(baseServletType + " is not HttpServlet Class on createRestServlet");
         int mod = baseServletType.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) throw new RuntimeException(baseServletType + " is not Public Class on createRestServlet");
-        if (java.lang.reflect.Modifier.isAbstract(mod)) throw new RuntimeException(baseServletType + " cannot a abstract Class on createRestServlet");
+        if (java.lang.reflect.Modifier.isAbstract(mod)) {
+            for (Method m : baseServletType.getDeclaredMethods()) {
+                if (java.lang.reflect.Modifier.isAbstract(m.getModifiers())) { //@since 2.4.0
+                    throw new RuntimeException(baseServletType + " cannot contains a abstract Method on " + baseServletType);
+                }
+            }
+        }
 
         final String restInternalName = Type.getInternalName(Rest.class);
         final String serviceDesc = Type.getDescriptor(serviceType);
@@ -779,8 +799,11 @@ public final class Rest {
         final String typeDesc = Type.getDescriptor(java.lang.reflect.Type.class);
         final String jsonConvertDesc = Type.getDescriptor(JsonConvert.class);
         final String retDesc = Type.getDescriptor(RetResult.class);
+        final String httpretDesc = Type.getDescriptor(HttpResult.class);
+        final String scopeDesc = Type.getDescriptor(HttpScope.class);
         final String futureDesc = Type.getDescriptor(CompletableFuture.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
+        final String channelDesc = Type.getDescriptor(ChannelContext.class);
         final String httpServletName = HttpServlet.class.getName().replace('.', '/');
         final String actionEntryName = HttpServlet.ActionEntry.class.getName().replace('.', '/');
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
@@ -830,16 +853,12 @@ public final class Rest {
         List<Map<String, Object>> mappingMaps = new ArrayList<>();
         cw.visit(V1_8, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
 
-        { //RestDyn
-            av0 = cw.visitAnnotation(Type.getDescriptor(RestDyn.class), true);
-            av0.visitEnd();
-        }
         { //RestDynSourceType
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDynSourceType.class), true);
             av0.visit("value", Type.getType(Type.getDescriptor(serviceType)));
             av0.visitEnd();
         }
-
+        boolean dynsimple = true;
         final List<MappingEntry> entrys = new ArrayList<>();
         final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
         //获取所有可以转换成HttpMapping的方法
@@ -918,6 +937,11 @@ public final class Rest {
                 if (defmodulename.isEmpty() || (!pound && entrys.size() <= 2)) {
                     for (MappingEntry entry : entrys) {
                         String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name;
+                        if ("//".equals(suburl)) {
+                            suburl = "/";
+                        } else if (suburl.length() > 2 && suburl.endsWith("/")) {
+                            suburl += "*";
+                        }
                         urlpath += "," + suburl;
                         av1.visit(null, suburl);
                     }
@@ -1146,6 +1170,19 @@ public final class Rest {
                     if (!TYPE_MAP_STRING_STRING.equals(param.getParameterizedType())) throw new RuntimeException("@RestHeaders must on Map<String, String> Parameter in " + method);
                     comment = "";
                 }
+                RestParams annparams = param.getAnnotation(RestParams.class);
+                if (annparams != null) {
+                    if (annhead != null) throw new RuntimeException("@RestParams and @RestHeader cannot on the same Parameter in " + method);
+                    if (anncookie != null) throw new RuntimeException("@RestParams and @RestCookie cannot on the same Parameter in " + method);
+                    if (annsid != null) throw new RuntimeException("@RestParams and @RestSessionid cannot on the same Parameter in " + method);
+                    if (annaddr != null) throw new RuntimeException("@RestParams and @RestAddress cannot on the same Parameter in " + method);
+                    if (annbody != null) throw new RuntimeException("@RestParams and @RestBody cannot on the same Parameter in " + method);
+                    if (annfile != null) throw new RuntimeException("@RestParams and @RestUploadFile cannot on the same Parameter in " + method);
+                    if (userid != null) throw new RuntimeException("@RestParams and @RestUserid cannot on the same Parameter in " + method);
+                    if (annheaders != null) throw new RuntimeException("@RestParams and @RestHeaders cannot on the same Parameter in " + method);
+                    if (!TYPE_MAP_STRING_STRING.equals(param.getParameterizedType())) throw new RuntimeException("@RestParams must on Map<String, String> Parameter in " + method);
+                    comment = "";
+                }
 
                 RestParam annpara = param.getAnnotation(RestParam.class);
                 if (annpara != null) radix = annpara.radix();
@@ -1181,7 +1218,7 @@ public final class Rest {
                     } while ((loop = loop.getSuperclass()) != Object.class);
                 }
                 java.lang.reflect.Type paramtype = TypeToken.getGenericType(param.getParameterizedType(), serviceType);
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, userid, annheaders, paramtype});
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annhead, anncookie, annbody, annfile, annuri, userid, annheaders, annparams, paramtype});
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
@@ -1196,6 +1233,7 @@ public final class Rest {
                 }
                 av0 = mv.visitAnnotation(mappingDesc, true);
                 String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name + (reqpath ? "/" : "");
+                if ("//".equals(url)) url = "/";
                 av0.visit("url", url);
                 av0.visit("rpconly", entry.rpconly);
                 av0.visit("auth", entry.auth);
@@ -1303,8 +1341,9 @@ public final class Rest {
                 RestURI annuri = (RestURI) ps[13];
                 RestUserid userid = (RestUserid) ps[14];
                 RestHeaders annheaders = (RestHeaders) ps[15];
-
-                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[16];
+                RestParams annparams = (RestParams) ps[16];
+                java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[17];
+                if (dynsimple && (annsid != null || annaddr != null || annhead != null || anncookie != null || annfile != null || annheaders != null)) dynsimple = false;
 
                 final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
                 final boolean iscookie = anncookie != null; //是否取getCookie
@@ -1341,6 +1380,11 @@ public final class Rest {
                 } else if (annheaders != null) { //HttpRequest.getHeaders
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeaders", "()Ljava/util/Map;", false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
+                } else if (annparams != null) { //HttpRequest.getParameters
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getParameters", "()Ljava/util/Map;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (annbody != null) { //HttpRequest.getBodyUTF8 / HttpRequest.getBody
@@ -1634,6 +1678,11 @@ public final class Rest {
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, iscookie ? "getCookie" : (ishead ? "getHeader" : "getParameter"), "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
+                } else if (ptype == ChannelContext.class) {
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getChannelContext", "()" + channelDesc, false);
+                    mv.visitVarInsn(ASTORE, maxLocals);
+                    varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (ptype == Flipper.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getFlipper", "()" + flipperDesc, false);
@@ -1920,29 +1969,23 @@ public final class Rest {
                 if (!CompletableFuture.class.isAssignableFrom(returnType) && !org.redkale.service.RetResult.class.isAssignableFrom(returnType)
                     && !HttpResult.class.isAssignableFrom(returnType) && !HttpScope.class.isAssignableFrom(returnType)) {
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    if (entry.contentLength > 0) {
-                        mv.visitVarInsn(ALOAD, 2); //response
-                        pushInt(mv, entry.contentLength);
-                        mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(ILjava/lang/Object;)V", false);
-                    } else {
-                        mv.visitVarInsn(ALOAD, 2); //response
-                        mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(Ljava/lang/Object;)V", false);
-                    }
+                    mv.visitVarInsn(ALOAD, 2); //response
+                    mv.visitVarInsn(ALOAD, maxLocals);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(Ljava/lang/Object;)V", false);
                     mv.visitInsn(RETURN);
                     maxLocals++;
                 } else {
                     mv.visitVarInsn(ASTORE, maxLocals);
                     mv.visitVarInsn(ALOAD, 2); //response
+                    String objdesc = HttpScope.class.isAssignableFrom(returnType) ? scopeDesc : (HttpResult.class.isAssignableFrom(returnType) ? httpretDesc : "Ljava/lang/Object;");
                     if (rcs != null && rcs.length > 0) {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_JSONCONVERT_FIELD_PREFIX + restConverts.size(), jsonConvertDesc);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + "Ljava/lang/Object;)V", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + objdesc + ")V", false);
                     } else {
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/Object;)V", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + objdesc + ")V", false);
                     }
                     mv.visitInsn(RETURN);
                     maxLocals++;
@@ -2073,6 +2116,12 @@ public final class Rest {
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
+        }
+
+        { //RestDyn
+            av0 = cw.visitAnnotation(Type.getDescriptor(RestDyn.class), true);
+            av0.visit("simple", (Boolean) dynsimple);
+            av0.visitEnd();
         }
 
         cw.visitEnd();
@@ -2213,7 +2262,6 @@ public final class Rest {
             this.rpconly = serrpconly || mapping.rpconly();
             this.actionid = mapping.actionid();
             this.cacheseconds = mapping.cacheseconds();
-            this.contentLength = mapping.length();
             this.comment = mapping.comment();
             boolean pound = false;
             Parameter[] params = method.getParameters();
@@ -2228,8 +2276,6 @@ public final class Rest {
             this.newMethodName = this.name.replace('/', '$').replace('.', '_');
             this.newActionClassName = "_Dyn_" + this.newMethodName + "_ActionHttpServlet";
         }
-
-        public final int contentLength;
 
         public final int methodidx; // _paramtypes 的下标，从0开始
 

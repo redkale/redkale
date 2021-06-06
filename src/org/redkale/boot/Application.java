@@ -123,9 +123,8 @@ public final class Application {
      *
      * @deprecated 2.3.0 使用RESNAME_APP_EXECUTOR
      */
-    @Deprecated
-    public static final String RESNAME_SERVER_EXECUTOR2 = Server.RESNAME_SERVER_EXECUTOR2;
-
+    //@Deprecated
+    //public static final String RESNAME_SERVER_EXECUTOR2 = Server.RESNAME_SERVER_EXECUTOR2;
     /**
      * 当前Server的ResourceFactory
      */
@@ -228,6 +227,7 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_HOME, URI.class, root.toURI());
         try {
             this.resourceFactory.register(RESNAME_APP_HOME, root.getCanonicalPath());
+            if (System.getProperty(RESNAME_APP_HOME) == null) System.setProperty(RESNAME_APP_HOME, root.getCanonicalPath());
             this.home = root.getCanonicalFile();
             String confsubpath = System.getProperty(RESNAME_APP_CONF, "conf");
             if (confsubpath.contains("://")) {
@@ -344,11 +344,11 @@ public final class Application {
                 try {
                     String classval = clusterConf.getValue("value");
                     if (classval == null || classval.isEmpty()) {
-                        Iterator<ClusterAgent> it = ServiceLoader.load(ClusterAgent.class, classLoader).iterator();
+                        Iterator<ClusterAgentLoader> it = ServiceLoader.load(ClusterAgentLoader.class, classLoader).iterator();
                         while (it.hasNext()) {
-                            ClusterAgent agent = it.next();
-                            if (agent.match(clusterConf)) {
-                                cluster = agent;
+                            ClusterAgentLoader agent = it.next();
+                            if (agent != null && agent.match(clusterConf)) {
+                                cluster = agent.agentClass().getConstructor().newInstance();
                                 cluster.setConfig(clusterConf);
                                 break;
                             }
@@ -380,7 +380,7 @@ public final class Application {
                 mqs = new MessageAgent[mqConfs.length];
                 Set<String> mqnames = new HashSet<>();
                 for (int i = 0; i < mqConfs.length; i++) {
-                    AnyValue mqConf = mqConfs[0];
+                    AnyValue mqConf = mqConfs[i];
                     String mqname = mqConf.getValue("name", "");
                     if (mqnames.contains(mqname)) throw new RuntimeException("mq.name(" + mqname + ") is repeat");
                     mqnames.add(mqname);
@@ -395,11 +395,11 @@ public final class Application {
                     try {
                         String classval = mqConf.getValue("value");
                         if (classval == null || classval.isEmpty()) {
-                            Iterator<MessageAgent> it = ServiceLoader.load(MessageAgent.class, classLoader).iterator();
+                            Iterator<MessageAgentLoader> it = ServiceLoader.load(MessageAgentLoader.class, classLoader).iterator();
                             while (it.hasNext()) {
-                                MessageAgent messageAgent = it.next();
-                                if (messageAgent.match(mqConf)) {
-                                    mqs[i] = messageAgent;
+                                MessageAgentLoader messageAgent = it.next();
+                                if (messageAgent != null && messageAgent.match(mqConf)) {
+                                    mqs[i] = messageAgent.agentClass().getConstructor().newInstance();
                                     mqs[i].setConfig(mqConf);
                                     break;
                                 }
@@ -649,7 +649,7 @@ public final class Application {
                     } else if (type == NodeSncpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() == NodeSncpServer.class) continue;
+                            if (ns.getClass() != NodeSncpServer.class) continue;
                             if (res.name().equals(ns.server.getName())) {
                                 server = ns;
                                 break;
@@ -659,7 +659,7 @@ public final class Application {
                     } else if (type == NodeHttpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() == NodeHttpServer.class) continue;
+                            if (ns.getClass() != NodeHttpServer.class) continue;
                             if (res.name().equals(ns.server.getName())) {
                                 server = ns;
                                 break;
@@ -669,7 +669,7 @@ public final class Application {
                     } else if (type == NodeWatchServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() == NodeWatchServer.class) continue;
+                            if (ns.getClass() != NodeWatchServer.class) continue;
                             if (res.name().equals(ns.server.getName())) {
                                 server = ns;
                                 break;
@@ -738,7 +738,29 @@ public final class Application {
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
-                if (clusterAgent == null) return;
+                if (clusterAgent == null) {
+                    NodeHttpServer nodeHttpServer = null;
+                    for (NodeServer n : getNodeServers()) {
+                        if (n.getClass() == NodeHttpServer.class && Objects.equals(resourceName, ((NodeHttpServer) n).getHttpServer().getName())) {
+                            nodeHttpServer = (NodeHttpServer) n;
+                            break;
+                        }
+                    }
+                    if (nodeHttpServer == null) {
+                        for (NodeServer n : getNodeServers()) {
+                            if (n.getClass() == NodeHttpServer.class) {
+                                nodeHttpServer = (NodeHttpServer) n;
+                                break;
+                            }
+                        }
+                    }
+                    if (nodeHttpServer == null) return;
+                    HttpMessageClient messageClient = new HttpMessageLocalClient(nodeHttpServer.getHttpServer());
+                    field.set(src, messageClient);
+                    rf.inject(messageClient, null); // 给其可能包含@Resource的字段赋值;
+                    rf.register(resourceName, HttpMessageClient.class, messageClient);
+                    return;
+                }
                 HttpMessageClient messageClient = new HttpMessageClusterClient(clusterAgent);
                 field.set(src, messageClient);
                 rf.inject(messageClient, null); // 给其可能包含@Resource的字段赋值;
@@ -758,11 +780,11 @@ public final class Application {
             try {
                 Class sourceType = CacheMemorySource.class;
                 if (classval == null || classval.isEmpty()) {
-                    Iterator<CacheSource> it = ServiceLoader.load(CacheSource.class, serverClassLoader).iterator();
+                    Iterator<CacheSourceLoader> it = ServiceLoader.load(CacheSourceLoader.class, serverClassLoader).iterator();
                     while (it.hasNext()) {
-                        CacheSource s = it.next();
-                        if (s.match(sourceConf)) {
-                            sourceType = s.getClass();
+                        CacheSourceLoader s = it.next();
+                        if (s != null && s.match(sourceConf)) {
+                            sourceType = s.sourceClass();
                             break;
                         }
                     }

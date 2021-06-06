@@ -74,10 +74,6 @@ public @interface RestMapping {
      */
     int cacheseconds() default 0;
 
-    //json结果的长度, 临时功能, 对应&#64;HttpMapping.length
-    @Deprecated
-    int length() default 0;
-
     /**
      * 允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;HttpMapping.methods
      *

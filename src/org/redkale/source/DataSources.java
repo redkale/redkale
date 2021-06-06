@@ -54,6 +54,9 @@ public final class DataSources {
 
     public static final String JDBC_SOURCE = "javax.persistence.jdbc.source";
 
+    //@since 2.4.0 for SearchSource  default value: true
+    public static final String JDBC_AUTO_MAPPING = "javax.persistence.jdbc.auto-mapping";
+    
     private DataSources() {
     }
 
@@ -88,26 +91,33 @@ public final class DataSources {
             final String url = readprop.getProperty(JDBC_URL);
             String dbtype = null;
             {
-                /* jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串 */
-                int pos = url.indexOf("://");
-                if (pos > 0) {
-                    String url0 = url.substring(0, pos);
-                    pos = url0.lastIndexOf(':');
-                    if (pos > 0) dbtype = url0.substring(pos + 1);
-                } else { //jdbc:oracle:thin:@localhost:1521
-                    String url0 = url.substring(url.indexOf(":") + 1);
-                    pos = url0.indexOf(':');
-                    if (pos > 0) dbtype = url0.substring(0, pos);
+                if (url.startsWith("http://") || url.startsWith("https://")) { //elasticsearch or opensearch
+                    dbtype = "search";
+                } else {
+                    /* jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串 */
+                    int pos = url.indexOf("://");
+                    if (pos > 0) {
+                        String url0 = url.substring(0, pos);
+                        pos = url0.lastIndexOf(':');
+                        if (pos > 0) dbtype = url0.substring(pos + 1);
+                    } else { //jdbc:oracle:thin:@localhost:1521
+                        String url0 = url.substring(url.indexOf(":") + 1);
+                        pos = url0.indexOf(':');
+                        if (pos > 0) dbtype = url0.substring(0, pos);
+                    }
                 }
             }
             if (dbtype == null) throw new RuntimeException("not found datasource implements class, url=" + url);
 
-            Iterator<SourceLoader> it = ServiceLoader.load(SourceLoader.class).iterator();
+            Iterator<DataSourceLoader> it = ServiceLoader.load(DataSourceLoader.class).iterator();
             Class dsClass = null;
+            final AnyValue.DefaultAnyValue lc = new AnyValue.DefaultAnyValue();
+            readprop.forEach((k, v) -> lc.addValue(k.toString(), v.toString()));
+            lc.setValue("dbtype", dbtype);
             while (it.hasNext()) {
-                SourceLoader loader = it.next();
-                if (dbtype.equalsIgnoreCase(loader.dbtype())) {
-                    dsClass = loader.dataSourceClass();
+                DataSourceLoader loader = it.next();
+                if (loader != null && loader.match(lc)) {
+                    dsClass = loader.sourceClass();
                     if (dsClass != null) break;
                 }
             }

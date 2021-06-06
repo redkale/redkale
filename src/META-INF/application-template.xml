@@ -34,6 +34,14 @@
     <resources>  
         
         <!--
+           【节点全局唯一】 @since 2.3.0
+            全局Serivce执行的线程池， Application.workExecutor, 没配置该节点将自动创建一个。
+            threads： 线程数，为0表示不启用workExecutor，只用IO线程。默认: CPU核数, 核数=1的情况下默认值为2
+            hash:     是否使用ThreadHashExecutor作为线程池，默认值为：false
+        -->
+        <executor threads="4" hash="false"/>
+        
+        <!--
             【节点全局唯一】
             transport节点只能有一个，用于配置所有Transport的池参数，没配置该节点将自动创建一个。
             threads：            线程总数， 默认: <group>节点数*CPU核数*2
@@ -156,7 +164,7 @@
         excludelibs:         排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
         charset:             文本编码， 默认: UTF-8
         backlog:             默认10K
-        threads：            线程数， 默认: CPU核数*2，最小8个
+        threads：            线程数， 默认: CPU核数*2，最小8个【已废弃 @since 2.3.0】
         maxconns：           最大连接数, 小于1表示无限制， 默认: 0
         maxbody:             request.body最大值， 默认: 64K
         bufferCapacity:      ByteBuffer的初始化大小， TCP默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上); UDP默认: 1350B
@@ -165,7 +173,7 @@
         aliveTimeoutSeconds: KeepAlive读操作超时秒数， 默认30， 0表示永久不超时; -1表示禁止KeepAlive
         readTimeoutSeconds:  读操作超时秒数， 默认0， 表示永久不超时
         writeTimeoutSeconds: 写操作超时秒数， 默认0， 表示永久不超时
-        netimpl:             ProtocolServer的实现类。TCP情况下值可以是aio或nio，默认值为aio；UDP情况下值可以是bio，默认值为bio；
+        iogroup:             流线程组AsyncGroup对象，如果值为client，表示和Application.asyncGroup对象共用
         interceptor:         启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
@@ -300,8 +308,9 @@
            【节点在<server>中唯一】
            当Server为HTTP协议时，render才有效. 指定输出引擎的实现类
            value: 输出引擎的实现类, 必须是org.redkale.net.http.HttpRender的子类
+           suffixs: 引擎文件名后缀，多个用;隔开，默认值为: .htel
         -->
-        <render value="org.redkalex.htel.HttpTemplateRender"/>
+        <render value="org.redkalex.htel.HttpTemplateRender" suffixs=".htel"/>
         <!-- 
            【节点在<server>中唯一】
            当Server为HTTP协议时，ResourceServlet才有效. 默认存在一个有默认属性的resource-servlet节点

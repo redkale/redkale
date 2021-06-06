@@ -19,7 +19,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
+public abstract class PoolTcpSource extends PoolSource {
 
     protected AsyncGroup asyncGroup;
 
@@ -84,7 +84,8 @@ public abstract class PoolTcpSource extends PoolSource<AsyncConnection> {
     }
 
     @Override
-    public void offerConnection(final AsyncConnection conn) {
+    public <C> void offerConnection(final C connection) {
+        AsyncConnection conn = (AsyncConnection) connection;
         if (conn == null) return;
         if (conn.isOpen()) {
             CompletableFuture<AsyncConnection> future = pollQueue.poll();

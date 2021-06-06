@@ -30,15 +30,30 @@ public class HttpContext extends Context {
 
     protected final String remoteAddrHeader;
 
-    protected final boolean lazyHeaders;
+    protected boolean lazyHeaders; //存在动态改值
 
+//    protected RequestURINode[] uriCacheNodes;
     public HttpContext(HttpContextConfig config) {
         super(config);
         this.remoteAddrHeader = config.remoteAddrHeader;
-        this.lazyHeaders = config.lazyHeaders;
         random.setSeed(Math.abs(System.nanoTime()));
     }
 
+//    protected RequestURINode[] getUriCacheNodes() {
+//        return uriCacheNodes;
+//    }
+//
+//    protected void addRequestURINode(String path) {
+//        RequestURINode node = new RequestURINode(path);
+//        synchronized (this) {
+//            if (this.uriCacheNodes != null) {
+//                for (int i = 0; i < uriCacheNodes.length; i++) {
+//                    if (uriCacheNodes[i].path.equals(path)) return;
+//                }
+//            }
+//            this.uriCacheNodes = Utility.append(this.uriCacheNodes, node);
+//        }
+//    }
     protected String createSessionid() {
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
@@ -162,6 +177,23 @@ public class HttpContext extends Context {
 
         public String remoteAddrHeader;
 
-        public boolean lazyHeaders;
+    }
+
+    protected static class RequestURINode {
+
+        public final byte[] bytes;
+
+        public final String path;
+
+        public RequestURINode(String path) {
+            this.path = path;
+            this.bytes = path.getBytes();
+        }
+
+        @Override
+        public String toString() {
+            return "RequestURINode{" + "path=" + path + '}';
+        }
+
     }
 }

@@ -5,18 +5,21 @@
  */
 package org.redkale.source;
 
+import org.redkale.util.AnyValue;
+
 /**
- * 自定义的DataSource加载器
+ * 自定义的CacheSource加载器
  *
  *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @since 2.4.0
  */
-public interface SourceLoader {
+public interface CacheSourceLoader {
 
-    public String dbtype();
+    public boolean match(AnyValue config);
 
-    public Class<? extends DataSource> dataSourceClass();
+    public Class<? extends CacheSource> sourceClass();
 }

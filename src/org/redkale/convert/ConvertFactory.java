@@ -71,6 +71,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         this.parent = parent;
         if (parent == null) {
             //---------------------------------------------------------
+
             this.register(boolean.class, BoolSimpledCoder.instance);
             this.register(Boolean.class, BoolSimpledCoder.instance);
 

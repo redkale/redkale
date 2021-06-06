@@ -70,17 +70,16 @@ public class SelectColumn implements Predicate<String> {
     }
 
     /**
-     * @deprecated
      * class中的字段名
      *
      * @param columns 包含的字段名集合
      *
      * @return SelectColumn
      */
-    @Deprecated
-    public static SelectColumn createIncludes(String... columns) {
-        return new SelectColumn(columns, false);
-    }
+//    @Deprecated
+//    public static SelectColumn createIncludes(String... columns) {
+//        return new SelectColumn(columns, false);
+//    }
 
     /**
      * class中的字段名
@@ -94,7 +93,6 @@ public class SelectColumn implements Predicate<String> {
     }
 
     /**
-     * @deprecated
      * class中的字段名
      *
      * @param cols    包含的字段名集合
@@ -102,10 +100,10 @@ public class SelectColumn implements Predicate<String> {
      *
      * @return SelectColumn
      */
-    @Deprecated
-    public static SelectColumn createIncludes(String[] cols, String... columns) {
-        return new SelectColumn(Utility.append(cols, columns), false);
-    }
+//    @Deprecated
+//    public static SelectColumn createIncludes(String[] cols, String... columns) {
+//        return new SelectColumn(Utility.append(cols, columns), false);
+//    }
 
     /**
      * class中的字段名
@@ -120,7 +118,6 @@ public class SelectColumn implements Predicate<String> {
     }
 
     /**
-     * @deprecated
      *
      * class中的字段名
      *
@@ -128,10 +125,10 @@ public class SelectColumn implements Predicate<String> {
      *
      * @return SelectColumn
      */
-    @Deprecated
-    public static SelectColumn createExcludes(String... columns) {
-        return new SelectColumn(columns, true);
-    }
+//    @Deprecated
+//    public static SelectColumn createExcludes(String... columns) {
+//        return new SelectColumn(columns, true);
+//    }
 
     /**
      * class中的字段名
@@ -145,7 +142,6 @@ public class SelectColumn implements Predicate<String> {
     }
 
     /**
-     * @deprecated
      * class中的字段名
      *
      * @param cols    排除的字段名集合
@@ -153,10 +149,10 @@ public class SelectColumn implements Predicate<String> {
      *
      * @return SelectColumn
      */
-    @Deprecated
-    public static SelectColumn createExcludes(String[] cols, String... columns) {
-        return new SelectColumn(Utility.append(cols, columns), true);
-    }
+//    @Deprecated
+//    public static SelectColumn createExcludes(String[] cols, String... columns) {
+//        return new SelectColumn(Utility.append(cols, columns), true);
+//    }
 
     /**
      *

@@ -248,7 +248,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             this.rpconly = rpconly;
             this.auth = auth;
             this.cacheseconds = cacheseconds;
-            if (Utility.contains(name, '.', '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\') || name.endsWith("/")) { //是否是正则表达式
+            if (Utility.contains(name, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\') || name.endsWith("/")) { //是否是正则表达式
                 this.modeOneCache = false;
                 this.cache = cacheseconds > 0 ? new ConcurrentHashMap<>() : null;
                 this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, byte[] content) -> {

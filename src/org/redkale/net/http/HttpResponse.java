@@ -16,7 +16,7 @@ import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
-import java.util.logging.Level;
+import java.util.logging.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
@@ -50,7 +50,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected static final byte[] connectAliveBytes = "none".equalsIgnoreCase(System.getProperty("http.response.header.connection")) ? new byte[0] : "Connection: keep-alive\r\n".getBytes();
 
-    private static final int cacheMaxContentLength = 999;
+    protected static final String contentTypeHtmlUTF8 = "text/html; charset=utf-8";
+
+    private static final int cacheMaxContentLength = 1000;
 
     private static final byte[] status200_server_live_Bytes = append(append(status200Bytes, serverNameBytes), connectAliveBytes);
 
@@ -62,7 +64,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private static final Map<Integer, String> httpCodes = new HashMap<>();
 
-    private static final Map<Integer, byte[]> contentLengthMap = new HashMap<>();
+    private static final byte[][] contentLengthArray = new byte[cacheMaxContentLength][];
 
     static {
 
@@ -111,8 +113,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         httpCodes.put(504, "Gateway Timeout");
         httpCodes.put(505, "HTTP Version Not Supported");
 
-        for (int i = 0; i <= cacheMaxContentLength; i++) {
-            contentLengthMap.put(i, ("Content-Length: " + i + "\r\n").getBytes());
+        for (int i = 0; i < cacheMaxContentLength; i++) {
+            contentLengthArray[i] = ("Content-Length: " + i + "\r\n").getBytes();
         }
     }
 
@@ -132,13 +134,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private BiFunction<HttpRequest, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler;
 
-    private Map<Integer, byte[]> lastContentLengthMap;//lazyHeaders=true下缓存, recycle不会清空
-
-    private int lastContentLength; //lazyHeaders=true下缓存, recycle不会清空
-
-    private byte[] lastContentLengthBytes; //lazyHeaders=true下缓存, recycle不会清空
-
-    //private Supplier<ByteBuffer> bodyBufferSupplier;
     //------------------------------------------------
     private final String plainContentType;
 
@@ -160,21 +155,17 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final HttpCookie defaultCookie;
 
-    private final List<HttpRender> renders;
-
-    private final boolean hasRender;
-
-    private final HttpRender onlyoneHttpRender;
+    private final HttpRender httpRender;
 
     private final ByteArray headerArray = new ByteArray();
 
-    private final Map<Integer, byte[]> plainLiveContentLengthMap;
+    private final byte[][] plainLiveContentLengthArray;
 
-    private final Map<Integer, byte[]> jsonLiveContentLengthMap;
+    private final byte[][] jsonLiveContentLengthArray;
 
-    private final Map<Integer, byte[]> plainCloseContentLengthMap;
+    private final byte[][] plainCloseContentLengthArray;
 
-    private final Map<Integer, byte[]> jsonCloseContentLengthMap;
+    private final byte[][] jsonCloseContentLengthArray;
 
     protected final CompletionHandler<Integer, Void> pipelineWriteHandler = new CompletionHandler<Integer, Void>() {
 
@@ -204,18 +195,16 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.defaultCookie = config == null ? null : config.defaultCookie;
         this.autoOptions = config == null ? false : config.autoOptions;
         this.dateSupplier = config == null ? null : config.dateSupplier;
-        this.renders = config == null ? null : config.renders;
-        this.hasRender = renders != null && !renders.isEmpty();
-        this.onlyoneHttpRender = renders != null && renders.size() == 1 ? renders.get(0) : null;
+        this.httpRender = config == null ? null : config.httpRender;
 
         this.plainContentType = config == null ? "text/plain; charset=utf-8" : config.plainContentType;
         this.jsonContentType = config == null ? "application/json; charset=utf-8" : config.jsonContentType;
         this.plainContentTypeBytes = config == null ? ("Content-Type: " + this.plainContentType + "\r\n").getBytes() : config.plainContentTypeBytes;
         this.jsonContentTypeBytes = config == null ? ("Content-Type: " + this.jsonContentType + "\r\n").getBytes() : config.jsonContentTypeBytes;
-        this.plainLiveContentLengthMap = config == null ? new HashMap<>() : config.plainLiveContentLengthMap;
-        this.plainCloseContentLengthMap = config == null ? new HashMap<>() : config.plainCloseContentLengthMap;
-        this.jsonLiveContentLengthMap = config == null ? new HashMap<>() : config.jsonLiveContentLengthMap;
-        this.jsonCloseContentLengthMap = config == null ? new HashMap<>() : config.jsonCloseContentLengthMap;
+        this.plainLiveContentLengthArray = config == null ? null : config.plainLiveContentLengthArray;
+        this.plainCloseContentLengthArray = config == null ? null : config.plainCloseContentLengthArray;
+        this.jsonLiveContentLengthArray = config == null ? null : config.jsonLiveContentLengthArray;
+        this.jsonCloseContentLengthArray = config == null ? null : config.jsonCloseContentLengthArray;
         this.contentType = this.plainContentType;
     }
 
@@ -353,42 +342,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
-     * 指定json内容长度将对象以JSON格式输出, 临时功能
-     *
-     * @param length json内容长度
-     * @param obj    输出对象
-     */
-    @Deprecated
-    public void finishJson(final int length, final Object obj) {
-        this.contentType = this.jsonContentType;
-        this.contentLength = length;
-        if (this.recycleListener != null) this.output = obj;
-        createHeader();
-        ByteArray data = headerArray;
-        request.getRespConvert().convertToBytes(data, obj);
-
-        int pipelineIndex = request.getPipelineIndex();
-        if (pipelineIndex > 0) {
-            boolean over = this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data);
-            if (over) {
-                request.setPipelineOver(true);
-                this.channel.flushPipelineData(this.pipelineWriteHandler);
-            } else {
-                removeChannel();
-                this.responseConsumer.accept(this);
-            }
-        } else {
-            if (this.channel.hasPipelineData()) {
-                this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data);
-                this.channel.flushPipelineData(this.pipelineWriteHandler);
-            } else {
-                //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finish
-                super.finish(false, data.content(), 0, data.length());
-            }
-        }
-    }
-
-    /**
      * 将对象以JSON格式输出
      *
      * @param convert 指定的JsonConvert
@@ -430,13 +383,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param objs 输出对象
      */
-    @Deprecated  //@since 2.3.0
-    void finishJson(final Object... objs) {
-        this.contentType = this.jsonContentType;
-        if (this.recycleListener != null) this.output = objs;
-        request.getRespConvert().convertToBytes(objs, convertHandler);
-    }
-
+//    @Deprecated  //@since 2.3.0
+//    void finishJson(final Object... objs) {
+//        this.contentType = this.jsonContentType;
+//        if (this.recycleListener != null) this.output = objs;
+//        request.getRespConvert().convertToBytes(objs, convertHandler);
+//    }
     /**
      * 将RetResult对象以JSON格式输出
      *
@@ -479,6 +431,15 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 将HttpResult对象输出
      *
+     * @param result HttpResult输出对象
+     */
+    public void finish(HttpResult result) {
+        finish(request.getRespConvert(), result);
+    }
+
+    /**
+     * 将HttpResult对象输出
+     *
      * @param convert 指定的Convert
      * @param result  HttpResult输出对象
      */
@@ -494,6 +455,36 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             if (cc == null) cc = convert;
             finish(cc, result.getResult());
         }
+    }
+
+    /**
+     * 将HttpScope对象输出
+     *
+     * @param result HttpScope输出对象
+     */
+    public void finish(HttpScope result) {
+        finish(request.getRespConvert(), result);
+    }
+
+    /**
+     * 将HttpScope对象输出
+     *
+     * @param convert 指定的Convert
+     * @param result  HttpScope输出对象
+     */
+    public void finish(final Convert convert, HttpScope result) {
+        if (result == null) {
+            finish("null");
+            return;
+        }
+        if (httpRender != null) {
+            setContentType(contentTypeHtmlUTF8);
+            if (result.getHeaders() != null) addHeader(result.getHeaders());
+            if (result.getCookies() != null) addCookie(result.getCookies());
+            httpRender.renderTo(this.request, this, convert, result);
+            return;
+        }
+        finish("");
     }
 
     /**
@@ -585,23 +576,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             finishJson((org.redkale.service.RetResult) obj);
         } else if (obj instanceof HttpResult) {
             finish(convert, (HttpResult) obj);
+        } else if (obj instanceof HttpScope) {
+            finish(convert, (HttpScope) obj);
         } else {
-            if (hasRender) {
-                if (onlyoneHttpRender != null) {
-                    if (onlyoneHttpRender.getType().isAssignableFrom(obj.getClass())) {
-                        onlyoneHttpRender.renderTo(this.request, this, convert, obj);
-                        return;
-                    }
-                } else {
-                    Class objt = obj.getClass();
-                    for (HttpRender render : this.renders) {
-                        if (render.getType().isAssignableFrom(objt)) {
-                            render.renderTo(this.request, this, convert, obj);
-                            return;
-                        }
-                    }
-                }
-            }
             if (convert instanceof JsonConvert) {
                 this.contentType = this.jsonContentType;
             } else if (convert instanceof TextConvert) {
@@ -646,7 +623,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (isClosed()) return;
         this.status = status;
         if (status != 200) super.refuseAlive();
-        final byte[] val = message == null ? new byte[0] : (context.getCharset() == null ? Utility.encodeUTF8(message) : message.getBytes(context.getCharset()));
+        final byte[] val = message == null ? HttpRequest.EMPTY_BYTES : (context.getCharset() == null ? Utility.encodeUTF8(message) : message.getBytes(context.getCharset()));
         finish(false, null, val, 0, val.length, null, null);
     }
 
@@ -696,12 +673,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     protected <A> void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length, Consumer<A> callback, A attachment) {
         if (isClosed()) return; //避免重复关闭
-        ByteArray data = headerArray;
         if (this.headWritedSize < 0) {
             if (contentType != null) this.contentType = contentType;
             this.contentLength = length;
             createHeader();
         }
+        ByteArray data = headerArray;
         data.put(bs, offset, length);
         if (callback != null) callback.accept(attachment);
         if (cacheHandler != null) cacheHandler.accept(this, data.getBytes());
@@ -725,6 +702,32 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 super.finish(false, data.content(), 0, data.length());
             }
         }
+
+//        ByteArray data = headerArray;
+//        int pipelineIndex = request.getPipelineIndex();
+//        if (pipelineIndex > 0) {
+//            boolean over = this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data.content(), 0, data.length(), bs, offset, length);
+//            if (callback != null) callback.accept(attachment);
+//            if (cacheHandler != null) cacheHandler.accept(this, Utility.append(data.getBytes(), bs, offset, length));
+//
+//            if (over) {
+//                request.setPipelineOver(true);
+//                this.channel.flushPipelineData(this.pipelineWriteHandler);
+//            } else {
+//                removeChannel();
+//                this.responseConsumer.accept(this);
+//            }
+//        } else {   
+//            if (this.channel.hasPipelineData()) {
+//                this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data.content(), 0, data.length(), bs, offset, length);
+//                if (callback != null) callback.accept(attachment);
+//                if (cacheHandler != null) cacheHandler.accept(this, Utility.append(data.getBytes(), bs, offset, length));
+//                this.channel.flushPipelineData(this.pipelineWriteHandler);
+//            } else {
+//                //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finish
+//                super.finish(false, data.content(), 0, data.length(), bs, offset, length, callback, attachment);
+//            }
+//        }
     }
 
     /**
@@ -747,32 +750,20 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     protected void createHeader() {
         if (this.status == 200 && !this.respHeadContainsConnection && !this.request.isWebSocket()
             && (this.contentType == null || this.contentType == this.jsonContentType || this.contentType == this.plainContentType)
-            && (this.contentLength >= 0 && this.contentLength < jsonLiveContentLengthMap.size())) {
-            Map<Integer, byte[]> lengthMap = this.plainLiveContentLengthMap;
+            && (this.contentLength >= 0 && this.contentLength < jsonLiveContentLengthArray.length)) {
+            byte[][] lengthArray = this.plainLiveContentLengthArray;
             if (this.request.isKeepAlive()) {
                 if (this.contentType == this.jsonContentType) {
-                    lengthMap = this.jsonLiveContentLengthMap;
+                    lengthArray = this.jsonLiveContentLengthArray;
                 }
             } else {
                 if (this.contentType == this.jsonContentType) {
-                    lengthMap = this.jsonCloseContentLengthMap;
+                    lengthArray = this.jsonCloseContentLengthArray;
                 } else {
-                    lengthMap = this.plainCloseContentLengthMap;
+                    lengthArray = this.plainCloseContentLengthArray;
                 }
             }
-            if (context.lazyHeaders) {
-                if (this.lastContentLength == this.contentLength && this.lastContentLengthMap == lengthMap) {
-                    headerArray.put(this.lastContentLengthBytes);
-                } else {
-                    byte[] lenbs = lengthMap.get((int) this.contentLength);
-                    this.lastContentLength = (int) this.contentLength;
-                    this.lastContentLengthMap = lengthMap;
-                    this.lastContentLengthBytes = lenbs;
-                    headerArray.put(lenbs);
-                }
-            } else {
-                headerArray.put(lengthMap.get((int) this.contentLength));
-            }
+            headerArray.put(lengthArray[(int) this.contentLength]);
         } else {
             if (this.status == 200 && !this.respHeadContainsConnection && !this.request.isWebSocket()) {
                 if (this.request.isKeepAlive()) {
@@ -801,8 +792,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 }
             }
             if (this.contentLength >= 0) {
-                if (this.contentLength < contentLengthMap.size()) {
-                    headerArray.put(contentLengthMap.get((int) this.contentLength));
+                if (this.contentLength < contentLengthArray.length) {
+                    headerArray.put(contentLengthArray[(int) this.contentLength]);
                 } else {
                     headerArray.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
                 }
@@ -938,7 +929,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @throws IOException IO异常
      */
-    protected void finishFile(final File file, ByteBuffer fileBody) throws IOException {
+    protected void finishFile(final File file, ByteArray fileBody) throws IOException {
         finishFile(null, file, fileBody);
     }
 
@@ -953,13 +944,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @throws IOException IO异常
      */
-    protected void finishFile(final String filename, final File file, ByteBuffer fileBody) throws IOException {
+    protected void finishFile(final String filename, final File file, ByteArray fileBody) throws IOException {
         if ((file == null || !file.isFile() || !file.canRead()) && fileBody == null) {
             finish404();
             return;
         }
-        if (fileBody != null) fileBody = fileBody.duplicate().asReadOnlyBuffer();
-        final long length = file == null ? fileBody.remaining() : file.length();
+        final long length = file == null ? fileBody.length() : file.length();
         final String match = request.getHeader("If-None-Match");
         final String etag = (file == null ? 0L : file.lastModified()) + "-" + length;
         if (match != null && etag.equals(match)) {
@@ -992,24 +982,54 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         this.addHeader("ETag", etag);
         createHeader();
-        ByteBuffer hbuffer = channel.pollWriteBuffer();
-        hbuffer.put(headerArray.content(), 0, headerArray.length());
-        hbuffer.flip();
+        ByteArray data = headerArray;
         if (fileBody == null) {
             if (this.recycleListener != null) this.output = file;
-            finishFile(hbuffer, file, start, len);
-        } else {
-            if (start >= 0) {
-                fileBody.position((int) start);
-                if (len > 0) fileBody.limit((int) (fileBody.position() + len));
-            }
-            if (this.recycleListener != null) this.output = fileBody;
-            super.finish(hbuffer, fileBody);
+            finishFile(data, file, start, len);
+        } else { //一般HttpResourceServlet缓存file内容时fileBody不为空
+            if (start >= 0) data.put(fileBody, (int) start, (int) ((len > 0) ? len : fileBody.length() - start));
+            super.finish(false, data.content(), 0, data.length());
         }
     }
 
-    private void finishFile(ByteBuffer hbuffer, File file, long offset, long length) throws IOException {
-        this.channel.write(hbuffer, hbuffer, new TransferFileHandler(file, offset, length));
+    //offset、length 为 -1 表示输出整个文件
+    private void finishFile(ByteArray headerData, File file, long offset, long length) throws IOException {
+        //this.channel.write(headerData,  new TransferFileHandler(file, offset, length));
+        final Logger logger = context.getLogger();
+        this.channel.write(headerData, new CompletionHandler<Integer, Void>() {
+
+            @Override
+            public void completed(Integer result, Void attachment) {
+                FileChannel fileChannel = null;
+                try {
+                    fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+                    WritableByteChannel writeChannel = channel.writableByteChannel();
+                    long remain = length > 0 ? length : file.length();
+                    long start = offset < 0 ? 0 : offset;
+                    while (remain > 0) {
+                        long c = fileChannel.transferTo(start, remain, writeChannel);
+                        start += c;
+                        remain -= c;
+                    }
+                    fileChannel.close();
+                    finish();
+                } catch (Exception e) {
+                    if (fileChannel != null) {
+                        try {
+                            fileChannel.close();
+                        } catch (IOException ie) {
+                        }
+                    }
+                    failed(e, attachment);
+                }
+            }
+
+            @Override
+            public void failed(Throwable exc, Void attachment) {
+                if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "finishFile error", exc);
+                finish(true);
+            }
+        });
     }
 
     /**
@@ -1172,93 +1192,91 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.retResultHandler = retResultHandler;
     }
 
-    protected final class TransferFileHandler implements CompletionHandler<Integer, ByteBuffer> {
-
-        private final File file;
-
-        private final AsynchronousFileChannel filechannel;
-
-        private final long max; //需要读取的字节数， -1表示读到文件结尾
-
-        private long count;//读取文件的字节数
-
-        private long readpos = 0;
-
-        private boolean hdwrite = true; //写入Header
-
-        private boolean read = false;
-
-        public TransferFileHandler(File file) throws IOException {
-            this.file = file;
-            this.filechannel = AsynchronousFileChannel.open(file.toPath(), options);
-            this.readpos = 0;
-            this.max = file.length();
-        }
-
-        public TransferFileHandler(File file, long offset, long len) throws IOException {
-            this.file = file;
-            this.filechannel = AsynchronousFileChannel.open(file.toPath(), options);
-            this.readpos = offset <= 0 ? 0 : offset;
-            this.max = len <= 0 ? file.length() : len;
-        }
-
-        @Override
-        public void completed(Integer result, ByteBuffer attachment) {
-            //(Utility.now() + "---" + Thread.currentThread().getName() + "-----------" + file + "-------------------result: " + result + ", max = " + max + ", readpos = " + readpos + ", count = " + count + ", " + (hdwrite ? "正在写Header" : (read ? "准备读" : "准备写")));
-            if (result < 0 || count >= max) {
-                failed(null, attachment);
-                return;
-            }
-            if (hdwrite && attachment.hasRemaining()) { //Header还没写完
-                channel.write(attachment, attachment, this);
-                return;
-            }
-            if (hdwrite) {
-                //(Utility.now() + "---" + Thread.currentThread().getName() + "-----------" + file + "-------------------Header写入完毕， 准备读取文件.");
-                hdwrite = false;
-                read = true;
-                result = 0;
-            }
-            if (read) {
-                count += result;
-            } else {
-                readpos += result;
-            }
-            if (read && attachment.hasRemaining()) { //Buffer还没写完
-                channel.write(attachment, attachment, this);
-                return;
-            }
-
-            if (read) {
-                read = false;
-                attachment.clear();
-                filechannel.read(attachment, readpos, attachment, this);
-            } else {
-                read = true;
-                if (count > max) {
-                    attachment.limit((int) (attachment.position() + max - count));
-                }
-                attachment.flip();
-                if (attachment.hasRemaining()) {
-                    channel.write(attachment, attachment, this);
-                } else {
-                    failed(null, attachment);
-                }
-            }
-        }
-
-        @Override
-        public void failed(Throwable exc, ByteBuffer attachment) {
-            channel.offerBuffer(attachment);
-            finish(true);
-            try {
-                filechannel.close();
-            } catch (IOException e) {
-            }
-        }
-
-    }
-
+//    protected final class TransferFileHandler implements CompletionHandler<Integer, Void> {
+//
+//        private final File file;
+//
+//        private final AsynchronousFileChannel filechannel;
+//
+//        private final long max; //需要读取的字节数， -1表示读到文件结尾
+//
+//        private long count;//读取文件的字节数
+//
+//        private long readpos = 0;
+//
+//        private boolean hdwrite = true; //写入Header
+//
+//        private boolean read = false;
+//
+//        public TransferFileHandler(File file) throws IOException {
+//            this.file = file;
+//            this.filechannel = AsynchronousFileChannel.open(file.toPath(), options);
+//            this.readpos = 0;
+//            this.max = file.length();
+//        }
+//
+//        public TransferFileHandler(File file, long offset, long len) throws IOException {
+//            this.file = file;
+//            this.filechannel = AsynchronousFileChannel.open(file.toPath(), options);
+//            this.readpos = offset <= 0 ? 0 : offset;
+//            this.max = len <= 0 ? file.length() : len;
+//        }
+//
+//        @Override
+//        public void completed(Integer result, Void attachment) {
+//            //(Utility.now() + "---" + Thread.currentThread().getName() + "-----------" + file + "-------------------result: " + result + ", max = " + max + ", readpos = " + readpos + ", count = " + count + ", " + (hdwrite ? "正在写Header" : (read ? "准备读" : "准备写")));
+//            if (result < 0 || count >= max) {
+//                failed(null, attachment);
+//                return;
+//            }
+//            if (hdwrite && attachment.hasRemaining()) { //Header还没写完
+//                channel.write(attachment, attachment, this);
+//                return;
+//            }
+//            if (hdwrite) {
+//                //(Utility.now() + "---" + Thread.currentThread().getName() + "-----------" + file + "-------------------Header写入完毕， 准备读取文件.");
+//                hdwrite = false;
+//                read = true;
+//                result = 0;
+//            }
+//            if (read) {
+//                count += result;
+//            } else {
+//                readpos += result;
+//            }
+//            if (read && attachment.hasRemaining()) { //Buffer还没写完
+//                channel.write(attachment, attachment, this);
+//                return;
+//            }
+//
+//            if (read) {
+//                read = false;
+//                attachment.clear();
+//                filechannel.read(attachment, readpos, attachment, this);
+//            } else {
+//                read = true;
+//                if (count > max) {
+//                    attachment.limit((int) (attachment.position() + max - count));
+//                }
+//                attachment.flip();
+//                if (attachment.hasRemaining()) {
+//                    channel.write(attachment, attachment, this);
+//                } else {
+//                    failed(null, attachment);
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void failed(Throwable exc, Void attachment) {
+//            finish(true);
+//            try {
+//                filechannel.close();
+//            } catch (IOException e) {
+//            }
+//        }
+//
+//    }
     public static class HttpResponseConfig {
 
         public String plainContentType;
@@ -1279,15 +1297,15 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         public Supplier<byte[]> dateSupplier;
 
-        public List< HttpRender> renders;
+        public HttpRender httpRender;
 
-        public final Map<Integer, byte[]> plainLiveContentLengthMap = new HashMap<>();
+        public final byte[][] plainLiveContentLengthArray = new byte[cacheMaxContentLength][];
 
-        public final Map<Integer, byte[]> jsonLiveContentLengthMap = new HashMap<>();
+        public final byte[][] jsonLiveContentLengthArray = new byte[cacheMaxContentLength][];
 
-        public final Map<Integer, byte[]> plainCloseContentLengthMap = new HashMap<>();
+        public final byte[][] plainCloseContentLengthArray = new byte[cacheMaxContentLength][];
 
-        public final Map<Integer, byte[]> jsonCloseContentLengthMap = new HashMap<>();
+        public final byte[][] jsonCloseContentLengthArray = new byte[cacheMaxContentLength][];
 
         public HttpResponseConfig init(AnyValue config) {
             if (this.plainContentTypeBytes == null) {
@@ -1297,12 +1315,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 this.jsonContentType = jsonct;
                 this.plainContentTypeBytes = ("Content-Type: " + plainct + "\r\n").getBytes();
                 this.jsonContentTypeBytes = ("Content-Type: " + jsonct + "\r\n").getBytes();
-                for (int i = 0; i <= cacheMaxContentLength; i++) {
+                for (int i = 0; i < cacheMaxContentLength; i++) {
                     byte[] lenbytes = ("Content-Length: " + i + "\r\n").getBytes();
-                    plainLiveContentLengthMap.put(i, append(append(status200_server_live_Bytes, plainContentTypeBytes), lenbytes));
-                    plainCloseContentLengthMap.put(i, append(append(status200_server_close_Bytes, plainContentTypeBytes), lenbytes));
-                    jsonLiveContentLengthMap.put(i, append(append(status200_server_live_Bytes, jsonContentTypeBytes), lenbytes));
-                    jsonCloseContentLengthMap.put(i, append(append(status200_server_close_Bytes, jsonContentTypeBytes), lenbytes));
+                    plainLiveContentLengthArray[i] = append(append(status200_server_live_Bytes, plainContentTypeBytes), lenbytes);
+                    plainCloseContentLengthArray[i] = append(append(status200_server_close_Bytes, plainContentTypeBytes), lenbytes);
+                    jsonLiveContentLengthArray[i] = append(append(status200_server_live_Bytes, jsonContentTypeBytes), lenbytes);
+                    jsonCloseContentLengthArray[i] = append(append(status200_server_close_Bytes, jsonContentTypeBytes), lenbytes);
                 }
             }
             return this;

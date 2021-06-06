@@ -31,8 +31,14 @@ public final class AnyEncoder<T> implements Encodeable<Writer, T> {
             out.writeClassName(null);
             out.writeNull();
         } else {
-            if (out.needWriteClassName()) out.writeClassName(factory.getEntityAlias(value.getClass()));
-            factory.loadEncoder(value.getClass()).convertTo(out, value);
+            Class clazz = value.getClass();
+            if (clazz == Object.class) {
+                out.writeObjectB(value);
+                out.writeObjectE(value);
+                return;
+            }
+            if (out.needWriteClassName()) out.writeClassName(factory.getEntityAlias(clazz));
+            factory.loadEncoder(clazz).convertTo(out, value);
         }
     }
 

@@ -15,9 +15,8 @@ import org.redkale.util.AnyValue;
  * HttpResponse.finish(Object obj)内置对如下数据类型进行了特殊处理:
  *      CharSequence/String
  *      byte[]
- *      ByteBuffer
- *      ByteBuffer[]
  *      File
+ *      RetResult
  *      HttpResult
  * </pre>
  * <p>
@@ -26,13 +25,11 @@ import org.redkale.util.AnyValue;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * @param <T> 泛型
  */
-public interface HttpRender<T> {
+public interface HttpRender {
 
     public void init(HttpContext context, AnyValue config);
 
-    public <V extends T> void renderTo(HttpRequest request, HttpResponse response, Convert convert, V scope);
+    public void renderTo(HttpRequest request, HttpResponse response, Convert convert, HttpScope scope);
 
-    public Class<T> getType();
 }

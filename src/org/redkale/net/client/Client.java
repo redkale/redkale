@@ -157,14 +157,18 @@ public abstract class Client<R extends ClientRequest, P> {
     }
 
     public CompletableFuture<P> sendAsync(R request) {
-        return connect().thenCompose(conn -> conn.writeChannel(request));
+        return connect(null).thenCompose(conn -> conn.writeChannel(request));
+    }
+
+    public CompletableFuture<P> sendAsync(ChannelContext context, R request) {
+        return connect(context).thenCompose(conn -> conn.writeChannel(request));
     }
 
     protected CompletableFuture<P> writeChannel(ClientConnection conn, R request) {
         return conn.writeChannel(request);
     }
 
-    protected CompletableFuture<ClientConnection> connect() {
+    protected CompletableFuture<ClientConnection> connect(ChannelContext context) {
         ClientConnection minRunningConn = null;
         for (int i = 0; i < this.connArray.length; i++) {
             final int index = i;

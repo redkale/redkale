@@ -5,6 +5,7 @@
  */
 package org.redkale.util;
 
+import java.lang.reflect.TypeVariable;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.asm.*;
@@ -857,7 +858,11 @@ public interface Attribute<T, F> {
                             throw new RuntimeException(ex); //不可能会发生
                         }
                     }
-                    mv.visitFieldInsn(PUTFIELD, interName, tfield.getName(), Type.getDescriptor(pcolumn));
+                    if (!tfield.getType().isPrimitive() && tfield.getGenericType() instanceof TypeVariable) {
+                        mv.visitFieldInsn(PUTFIELD, interName, tfield.getName(), "Ljava/lang/Object;");
+                    } else {
+                        mv.visitFieldInsn(PUTFIELD, interName, tfield.getName(), Type.getDescriptor(pcolumn));
+                    }
                 }
             } else {
                 mv.visitVarInsn(ALOAD, 1);

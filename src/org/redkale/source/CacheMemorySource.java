@@ -22,7 +22,6 @@ import org.redkale.util.*;
 /**
  * CacheSource的默认实现--内存缓存
  *
- * @param <V> value类型
  * <p>
  * 详情见: https://redkale.org
  *
@@ -32,7 +31,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(CacheSource.class)
-public final class CacheMemorySource<V extends Object> extends AbstractService implements CacheSource<V>, Service, AutoCloseable, Resourcable {
+public final class CacheMemorySource extends AbstractService implements CacheSource, Service, AutoCloseable, Resourcable {
 
     private static final Type STRING_ENTRY_TYPE = new TypeToken<CacheEntry<String>>() {
     }.getType();
@@ -71,21 +70,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         if (t != null) logger.log(Level.SEVERE, "CompletableFuture complete error", (Throwable) t);
     };
 
-    @RpcRemote
-    protected CacheSource<V> remoteSource;
-
     public CacheMemorySource() {
-    }
-
-    @Override
-    public final void initValueType(Type valueType) {
-        this.objValueType = valueType;
-        this.initTransient(this.objValueType == null);
-    }
-
-    @Override
-    public final void initTransient(boolean flag) {
-        this.needStore = !flag;
     }
 
     @Override
@@ -110,17 +95,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         if (this.convert == null) this.convert = JsonConvert.root();
         final CacheMemorySource self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("properties");
-        if (prop != null) {
-            String storeValueStr = prop.getValue("value-type");
-            if (storeValueStr != null) {
-                try {
-                    this.initValueType(Thread.currentThread().getContextClassLoader().loadClass(storeValueStr));
-                } catch (Throwable e) {
-                    logger.log(Level.SEVERE, self.getClass().getSimpleName() + " load key & value store class (" + storeValueStr + ") error", e);
-                }
-            }
-            this.initTransient(prop.getBoolValue("store-ignore", false));
-        }
         String expireHandlerClass = prop == null ? null : prop.getValue("expirehandler");
         if (expireHandlerClass != null) {
             try {
@@ -192,28 +166,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
                 logger.log(Level.SEVERE, CacheSource.class.getSimpleName() + "(" + resourceName() + ") load store file error ", e);
             }
         }
-        if (remoteSource != null && !Sncp.isRemote(this)) {
-            SncpClient client = Sncp.getSncpClient((Service) remoteSource);
-            if (client != null && client.getRemoteGroupTransport() != null
-                && client.getRemoteGroupTransport().getRemoteAddresses().length > 0) {
-                super.runAsync(() -> {
-                    try {
-                        CompletableFuture<List<CacheEntry<Object>>> listFuture = remoteSource.queryListAsync();
-                        listFuture.whenComplete((list, exp) -> {
-                            if (exp != null) {
-                                if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error", exp);
-                            } else {
-                                for (CacheEntry<Object> entry : list) {
-                                    container.put(entry.key, entry);
-                                }
-                            }
-                        });
-                    } catch (Exception e) {
-                        if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, CacheSource.class.getSimpleName() + "(" + resourceName() + ") queryListAsync error, maybe remote node connot connect ", e);
-                    }
-                });
-            }
-        }
     }
 
     public static void main(String[] args) throws Exception {
@@ -222,44 +174,43 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
 
         CacheMemorySource source = new CacheMemorySource();
         source.defaultConvert = JsonFactory.root().getConvert();
-        source.initValueType(String.class); //value用String类型
-        source.initTransient(false);
+
         source.init(conf);
 
         System.out.println("------------------------------------");
         source.remove("key1");
         source.remove("key2");
         source.remove("300");
-        source.set("key1", "value1");
+        source.setString("key1", "value1");
         source.setString("keystr1", "strvalue1");
         source.setLong("keylong1", 333L);
-        source.set("300", "4000");
-        source.getAndRefresh("key1", 3500);
-        System.out.println("[有值] 300 GET : " + source.get("300"));
-        System.out.println("[有值] key1 GET : " + source.get("key1"));
-        System.out.println("[无值] key2 GET : " + source.get("key2"));
+        source.setString("300", "4000");
+        source.getStringAndRefresh("key1", 3500);
+        System.out.println("[有值] 300 GET : " + source.get("300", String.class));
+        System.out.println("[有值] key1 GET : " + source.get("key1", String.class));
+        System.out.println("[无值] key2 GET : " + source.get("key2", String.class));
         System.out.println("[有值] keylong1 GET : " + source.getLong("keylong1", 0L));
         System.out.println("[有值] key1 EXISTS : " + source.exists("key1"));
         System.out.println("[无值] key2 EXISTS : " + source.exists("key2"));
 
         source.remove("keys3");
-        source.appendListItem("keys3", "vals1");
-        source.appendListItem("keys3", "vals2");
+        source.appendStringListItem("keys3", "vals1");
+        source.appendStringListItem("keys3", "vals2");
         System.out.println("-------- keys3 追加了两个值 --------");
-        System.out.println("[两值] keys3 VALUES : " + source.getCollection("keys3"));
+        System.out.println("[两值] keys3 VALUES : " + source.getStringCollection("keys3"));
         System.out.println("[有值] keys3 EXISTS : " + source.exists("keys3"));
-        source.removeListItem("keys3", "vals1");
-        System.out.println("[一值] keys3 VALUES : " + source.getCollection("keys3"));
-        source.getCollectionAndRefresh("keys3", 3000);
+        source.removeStringListItem("keys3", "vals1");
+        System.out.println("[一值] keys3 VALUES : " + source.getStringCollection("keys3"));
+        source.getStringCollectionAndRefresh("keys3", 3000);
 
         source.remove("sets3");
-        source.appendSetItem("sets3", "setvals1");
-        source.appendSetItem("sets3", "setvals2");
-        source.appendSetItem("sets3", "setvals1");
-        System.out.println("[两值] sets3 VALUES : " + source.getCollection("sets3"));
+        source.appendStringSetItem("sets3", "setvals1");
+        source.appendStringSetItem("sets3", "setvals2");
+        source.appendStringSetItem("sets3", "setvals1");
+        System.out.println("[两值] sets3 VALUES : " + source.getStringCollection("sets3"));
         System.out.println("[有值] sets3 EXISTS : " + source.exists("sets3"));
-        source.removeSetItem("sets3", "setvals1");
-        System.out.println("[一值] sets3 VALUES : " + source.getCollection("sets3"));
+        source.removeStringSetItem("sets3", "setvals1");
+        System.out.println("[一值] sets3 VALUES : " + source.getStringCollection("sets3"));
         System.out.println("sets3 大小 : " + source.getCollectionSize("sets3"));
         System.out.println("all keys: " + source.queryKeys());
         System.out.println("newnum 值 : " + source.incr("newnum"));
@@ -340,6 +291,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
             logger.log(Level.SEVERE, CacheSource.class.getSimpleName() + "(" + resourceName() + ") store to file error ", e);
         }
     }
+    
     //----------- hxxx --------------
 
     @Override
@@ -523,19 +475,13 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public V get(String key) {
+    public <T> T get(final String key, final Type type) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return null;
-        if (entry.isListCacheType()) return (V) (entry.listValue == null ? null : new ArrayList(entry.listValue));
-        if (entry.isSetCacheType()) return (V) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
-        return (V) entry.objectValue;
-    }
-
-    @Override
-    public <T> T get(final String key, final Type type) {
-        return (T) get(key);
+        if (entry.isListCacheType()) return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
+        if (entry.isSetCacheType()) return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
+        return (T) entry.objectValue;
     }
 
     @Override
@@ -657,13 +603,8 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
 
     //----------- hxxx --------------
     @Override
-    public CompletableFuture<V> getAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> get(key), getExecutor());
-    }
-
-    @Override
     public <T> CompletableFuture<T> getAsync(final String key, final Type type) {
-        return CompletableFuture.supplyAsync(() -> (T) get(key), getExecutor());
+        return CompletableFuture.supplyAsync(() -> (T) get(key, type), getExecutor());
     }
 
     @Override
@@ -677,21 +618,15 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public V getAndRefresh(String key, final int expireSeconds) {
+    public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return null;
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         entry.expireSeconds = expireSeconds;
-        if (entry.isListCacheType()) return (V) (entry.listValue == null ? null : new ArrayList(entry.listValue));
-        if (entry.isSetCacheType()) return (V) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
-        return (V) entry.objectValue;
-    }
-
-    @Override
-    public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type) {
-        return (T) getAndRefresh(key, expireSeconds);
+        if (entry.isListCacheType()) return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
+        if (entry.isSetCacheType()) return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
+        return (T) entry.objectValue;
     }
 
     @Override
@@ -714,11 +649,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         entry.expireSeconds = expireSeconds;
         return entry.objectValue == null ? defValue : (entry.objectValue instanceof AtomicLong ? ((AtomicLong) entry.objectValue).get() : (Long) entry.objectValue);
 
-    }
-
-    @Override
-    public CompletableFuture<V> getAndRefreshAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getAndRefresh(key, expireSeconds), getExecutor());
     }
 
     @Override
@@ -778,11 +708,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public void set(String key, V value) {
-        set(CacheEntryType.OBJECT, key, value);
-    }
-
-    @Override
     public <T> void set(String key, Convert convert, T value) {
         set(CacheEntryType.OBJECT, key, value);
     }
@@ -805,11 +730,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     @Override
     public void setLong(String key, long value) {
         set(CacheEntryType.LONG, key, value);
-    }
-
-    @Override
-    public CompletableFuture<Void> setAsync(String key, V value) {
-        return CompletableFuture.runAsync(() -> set(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -851,11 +771,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public void set(int expireSeconds, String key, V value) {
-        set(CacheEntryType.OBJECT, expireSeconds, key, value);
-    }
-
-    @Override
     public <T> void set(final int expireSeconds, String key, Convert convert, T value) {
         set(CacheEntryType.OBJECT, expireSeconds, key, value);
     }
@@ -878,11 +793,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     @Override
     public void setLong(int expireSeconds, String key, long value) {
         set(CacheEntryType.LONG, expireSeconds, key, value);
-    }
-
-    @Override
-    public CompletableFuture<Void> setAsync(int expireSeconds, String key, V value) {
-        return CompletableFuture.runAsync(() -> set(expireSeconds, key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -985,20 +895,15 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public Collection<V> getCollection(final String key) {
-        return (Collection<V>) get(key);
-    }
-
-    @Override
     public <T> Collection<T> getCollection(final String key, final Type componentType) {
-        return (Collection<T>) get(key);
+        return (Collection<T>) get(key, componentType);
     }
 
     @Override
     public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys) {
         Map<String, Collection<T>> map = new HashMap<>();
         for (String key : keys) {
-            Collection<T> s = (Collection<T>) get(key);
+            Collection<T> s = (Collection<T>) get(key, componentType);
             if (s != null) map.put(key, s);
         }
         return map;
@@ -1006,14 +911,14 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
 
     @Override
     public Collection<String> getStringCollection(final String key) {
-        return (Collection<String>) get(key);
+        return (Collection<String>) get(key, String.class);
     }
 
     @Override
     public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys) {
         Map<String, Collection<String>> map = new HashMap<>();
         for (String key : keys) {
-            Collection<String> s = (Collection<String>) get(key);
+            Collection<String> s = (Collection<String>) get(key, String.class);
             if (s != null) map.put(key, s);
         }
         return map;
@@ -1023,7 +928,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     public Map<String, Long> getLongMap(final String... keys) {
         Map<String, Long> map = new LinkedHashMap<>();
         for (String key : keys) {
-            Number n = (Number) get(key);
+            Number n = (Number) get(key, long.class);
             map.put(key, n == null ? null : n.longValue());
         }
         return map;
@@ -1034,7 +939,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         Long[] rs = new Long[keys.length];
         int index = -1;
         for (String key : keys) {
-            Number n = (Number) get(key);
+            Number n = (Number) get(key, long.class);
             rs[++index] = n == null ? null : n.longValue();
         }
         return rs;
@@ -1054,7 +959,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     public Map<String, String> getStringMap(final String... keys) {
         Map<String, String> map = new LinkedHashMap<>();
         for (String key : keys) {
-            Object n = get(key);
+            Object n = get(key, String.class);
             map.put(key, n == null ? null : n.toString());
         }
         return map;
@@ -1065,7 +970,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         String[] rs = new String[keys.length];
         int index = -1;
         for (String key : keys) {
-            Object n = get(key);
+            Object n = get(key, String.class);
             rs[++index] = n == null ? null : n.toString();
         }
         return rs;
@@ -1085,7 +990,7 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     public <T> Map<String, T> getMap(final Type componentType, final String... keys) {
         Map<String, T> map = new LinkedHashMap<>();
         for (String key : keys) {
-            map.put(key, (T) get(key));
+            map.put(key, (T) get(key, componentType));
         }
         return map;
     }
@@ -1097,31 +1002,21 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
 
     @Override
     public Collection<Long> getLongCollection(final String key) {
-        return (Collection<Long>) get(key);
+        return (Collection<Long>) get(key, long.class);
     }
 
     @Override
     public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys) {
         Map<String, Collection<Long>> map = new HashMap<>();
         for (String key : keys) {
-            Collection<Long> s = (Collection<Long>) get(key);
+            Collection<Long> s = (Collection<Long>) get(key, long.class);
             if (s != null) map.put(key, s);
         }
         return map;
     }
 
     @Override
-    public CompletableFuture<Collection<V>> getCollectionAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getCollection(key), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Collection<V>> getCollectionAsync(final String key, final Type componentType) {
-        return CompletableFuture.supplyAsync(() -> getCollection(key, componentType), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Map<String, Collection<V>>> getCollectionMapAsync(final boolean set, final Type componentType, final String... keys) {
+    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(boolean set, Type componentType, String... keys) {
         return CompletableFuture.supplyAsync(() -> getCollectionMap(set, componentType, keys), getExecutor());
     }
 
@@ -1146,8 +1041,13 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
+    public <T> CompletableFuture<Collection<T>> getCollectionAsync(String key, Type componentType) {
+        return CompletableFuture.supplyAsync(() -> getCollection(key, componentType), getExecutor());
+    }
+
+    @Override
     public int getCollectionSize(final String key) {
-        Collection<V> collection = (Collection<V>) get(key);
+        Collection collection = (Collection) get(key, Object.class);
         return collection == null ? 0 : collection.size();
     }
 
@@ -1157,35 +1057,19 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public Collection<V> getCollectionAndRefresh(final String key, final int expireSeconds) {
-        return (Collection<V>) getAndRefresh(key, expireSeconds);
-    }
-
-    @Override
     public <T> Collection<T> getCollectionAndRefresh(final String key, final int expireSeconds, final Type componentType) {
         return (Collection<T>) getAndRefresh(key, expireSeconds, componentType);
     }
 
     @Override
     public Collection<String> getStringCollectionAndRefresh(final String key, final int expireSeconds) {
-        return (Collection<String>) getAndRefresh(key, expireSeconds);
-    }
-
-    @Override
-    public boolean existsSetItem(final String key, final V value) {
-        Collection<V> list = getCollection(key);
-        return list != null && list.contains(value);
+        return (Collection<String>) getAndRefresh(key, expireSeconds, String.class);
     }
 
     @Override
     public <T> boolean existsSetItem(final String key, final Type type, final T value) {
-        Collection list = getCollection(key);
+        Collection list = getCollection(key, type);
         return list != null && list.contains(value);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> existsSetItemAsync(final String key, final V value) {
-        return CompletableFuture.supplyAsync(() -> existsSetItem(key, value), getExecutor());
     }
 
     @Override
@@ -1216,13 +1100,8 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public Collection<Long> getLongCollectionAndRefresh(final String key, final int expireSeconds) {
-        return (Collection<Long>) getAndRefresh(key, expireSeconds);
-    }
-
-    @Override
-    public CompletableFuture<Collection<V>> getCollectionAndRefreshAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getCollectionAndRefresh(key, expireSeconds), getExecutor());
+    public Collection<Long> getLongCollectionAndRefresh(String key, int expireSeconds) {
+        return (Collection<Long>) getAndRefresh(key, expireSeconds, long.class);
     }
 
     @Override
@@ -1255,11 +1134,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public void appendListItem(String key, V value) {
-        appendListItem(CacheEntryType.OBJECT_LIST, key, value);
-    }
-
-    @Override
     public <T> void appendListItem(String key, Type componentType, T value) {
         appendListItem(CacheEntryType.OBJECT_LIST, key, value);
     }
@@ -1275,11 +1149,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public CompletableFuture<Void> appendListItemAsync(final String key, final V value) {
-        return CompletableFuture.runAsync(() -> appendListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
     public <T> CompletableFuture<Void> appendListItemAsync(final String key, final Type componentType, final T value) {
         return CompletableFuture.runAsync(() -> appendListItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
@@ -1292,15 +1161,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     @Override
     public CompletableFuture<Void> appendLongListItemAsync(final String key, final long value) {
         return CompletableFuture.runAsync(() -> appendLongListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public int removeListItem(String key, V value) {
-        if (key == null) return 0;
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) return 0;
-        return entry.listValue.remove(value) ? 1 : 0;
-
     }
 
     @Override
@@ -1325,11 +1185,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         CacheEntry entry = container.get(key);
         if (entry == null || entry.listValue == null) return 0;
         return entry.listValue.remove(value) ? 1 : 0;
-    }
-
-    @Override
-    public CompletableFuture<Integer> removeListItemAsync(final String key, final V value) {
-        return CompletableFuture.supplyAsync(() -> removeListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1421,11 +1276,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public void appendSetItem(String key, V value) {
-        appendSetItem(CacheEntryType.OBJECT_SET, key, value);
-    }
-
-    @Override
     public <T> void appendSetItem(String key, final Type componentType, T value) {
         appendSetItem(CacheEntryType.OBJECT_SET, key, value);
     }
@@ -1441,11 +1291,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     }
 
     @Override
-    public CompletableFuture<Void> appendSetItemAsync(final String key, final V value) {
-        return CompletableFuture.runAsync(() -> appendSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
     public <T> CompletableFuture<Void> appendSetItemAsync(final String key, final Type componentType, T value) {
         return CompletableFuture.runAsync(() -> appendSetItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
@@ -1458,14 +1303,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     @Override
     public CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value) {
         return CompletableFuture.runAsync(() -> appendLongSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public int removeSetItem(String key, V value) {
-        if (key == null) return 0;
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) return 0;
-        return entry.csetValue.remove(value) ? 1 : 0;
     }
 
     @Override
@@ -1490,11 +1327,6 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
         CacheEntry entry = container.get(key);
         if (entry == null || entry.csetValue == null) return 0;
         return entry.csetValue.remove(value) ? 1 : 0;
-    }
-
-    @Override
-    public CompletableFuture<Integer> removeSetItemAsync(final String key, final V value) {
-        return CompletableFuture.supplyAsync(() -> removeSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1665,4 +1497,5 @@ public final class CacheMemorySource<V extends Object> extends AbstractService i
     public CompletableFuture<List<Long>> spopLongSetItemAsync(String key, int count) {
         return CompletableFuture.supplyAsync(() -> spopLongSetItem(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
     }
+
 }

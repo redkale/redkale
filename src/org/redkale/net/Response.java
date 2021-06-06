@@ -256,6 +256,27 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
+    public <A> void finish(boolean kill, final byte[] bs, int offset, int length, final byte[] bs2, int offset2, int length2, Consumer<A> callback, A attachment) {
+        if (!this.inited) return; //避免重复关闭
+        if (kill) refuseAlive();
+        if (this.channel.hasPipelineData()) {
+            this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
+
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    channel.write(bs, offset, length, bs2, offset2, length2, callback, attachment, finishBytesHandler);
+                }
+
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    finishBytesHandler.failed(exc, attachment);
+                }
+            });
+        } else {
+            this.channel.write(bs, offset, length, bs2, offset2, length2, callback, attachment, finishBytesHandler);
+        }
+    }
+
     protected final void finish(ByteBuffer buffer) {
         finish(false, buffer);
     }

@@ -273,7 +273,11 @@ public final class MultiContext {
                                     buf[s++] = buf[i];
                                 }
                                 int readed = 0;
-                                while ((readed += input.read(buf, s + readed, pos - readed)) != pos);
+                                int t = 0;
+                                while ((t = input.read(buf, s + readed, pos - readed)) > 0) {
+                                    readed += t;
+                                    if (readed == pos) break;
+                                }
                                 this.bufposition = 0;
                                 if (Arrays.equals(boundarray, buf)) {
                                     this.end = true;

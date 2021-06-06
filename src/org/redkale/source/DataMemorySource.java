@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
-import org.redkale.net.AsyncGroup;
+import org.redkale.net.*;
 import org.redkale.service.Local;
 import org.redkale.util.*;
 
@@ -33,7 +33,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(DataSource.class)
-public class DataMemorySource extends DataSqlSource<Void> {
+public class DataMemorySource extends DataSqlSource {
 
     public DataMemorySource(String unitName, URL persistxml, Properties readprop, Properties writeprop) {
         super(unitName, persistxml, readprop, writeprop);
@@ -80,7 +80,7 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
-    protected PoolSource<Void> createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
+    protected PoolSource createPoolSource(DataSource source, AsyncGroup asyncGroup, String rwtype, ArrayBlockingQueue queue, Semaphore semaphore, Properties prop) {
         return null;
     }
 
@@ -105,7 +105,7 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateDB(EntityInfo<T> info, T... entitys) {
+    protected <T> CompletableFuture<Integer> updateDB(EntityInfo<T> info, ChannelContext context, T... entitys) {
         return CompletableFuture.completedFuture(0);
     }
 
@@ -135,7 +135,7 @@ public class DataMemorySource extends DataSqlSource<Void> {
     }
 
     @Override
-    protected <T> CompletableFuture<T> findDB(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
+    protected <T> CompletableFuture<T> findDB(EntityInfo<T> info, ChannelContext context, String sql, boolean onlypk, SelectColumn selects) {
         return CompletableFuture.completedFuture(null);
     }
 

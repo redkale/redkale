@@ -24,6 +24,7 @@ module org.redkale {
     exports org.redkale.convert.json;
     exports org.redkale.mq;
     exports org.redkale.net;
+    exports org.redkale.net.client;
     exports org.redkale.net.http;
     exports org.redkale.net.sncp;
     exports org.redkale.service;

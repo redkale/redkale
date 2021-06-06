@@ -30,8 +30,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
 
     //jdk.internal.net.http.common.Utils.DISALLOWED_HEADERS_SET
     private static final Set<String> DISALLOWED_HEADERS_SET = Utility.ofSet("connection", "content-length",
-        "date", "expect", "from", "host", "origin",
-        "referer", "upgrade", "via", "warning");
+        "date", "expect", "from", "host", "origin", "referer", "upgrade", "via", "warning");
 
     protected ClusterAgent clusterAgent;
 
@@ -39,6 +38,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     protected HttpClient httpClient;
 
     //protected java.net.http.HttpClient httpClient;
+    
     public HttpMessageClusterClient(ClusterAgent clusterAgent) {
         super(null);
         Objects.requireNonNull(clusterAgent);

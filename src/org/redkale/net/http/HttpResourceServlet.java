@@ -6,7 +6,6 @@
 package org.redkale.net.http;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import static java.nio.file.StandardWatchEventKinds.*;
 import java.nio.file.*;
 import java.util.AbstractMap.SimpleEntry;
@@ -15,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
 import java.util.regex.*;
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  * 静态资源HttpServlet
@@ -106,6 +105,8 @@ public class HttpResourceServlet extends HttpServlet {
     protected SimpleEntry<Pattern, String>[] locationRewrites;
 
     protected WatchThread watchThread;
+
+    protected String[] renderSuffixs;
 
     @Override
     public void init(HttpContext context, AnyValue config) {
@@ -211,6 +212,16 @@ public class HttpResourceServlet extends HttpServlet {
         if (uri.length() == 0 || uri.equals("/")) {
             uri = this.indexHtml.indexOf('/') == 0 ? this.indexHtml : ("/" + this.indexHtml);
         }
+        //跳过模板引擎的后缀文件
+        if (renderSuffixs != null) {
+            String suri = uri.toLowerCase();
+            for (String suffix : renderSuffixs) {
+                if (suri.endsWith(suffix)) {
+                    response.finish404();
+                    return;
+                }
+            }
+        }
         //System.out.println(request);
         FileEntry entry;
         if (watchThread == null && files.isEmpty()) {
@@ -219,7 +230,7 @@ public class HttpResourceServlet extends HttpServlet {
             entry = files.computeIfAbsent(uri, x -> createFileEntry(x));
         }
         if (entry == null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "Not found resource (404), request = " + request);
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "Not found resource (404), url = " + request.getRequestURI());
             response.finish404();
         } else {
             //file = null 表示资源内容在内存而不是在File中
@@ -253,8 +264,9 @@ public class HttpResourceServlet extends HttpServlet {
 
         protected final HttpResourceServlet servlet;
 
-        protected ByteBuffer content;
+        protected ByteArray content;
 
+        @SuppressWarnings("OverridableMethodCallInConstructor")
         public FileEntry(final HttpResourceServlet servlet, File file) {
             this.servlet = servlet;
             this.file = file;
@@ -262,37 +274,32 @@ public class HttpResourceServlet extends HttpServlet {
             update();
         }
 
-        public FileEntry(final HttpResourceServlet servlet, String filename, ByteBuffer content) {
+        public FileEntry(final HttpResourceServlet servlet, String filename, ByteArray content) {
             this.servlet = servlet;
             this.file = null;
             this.filename = filename;
-            this.content = content.asReadOnlyBuffer();
-            this.servlet.cachedLength.add(this.content.remaining());
+            this.content = content;
+            this.servlet.cachedLength.add(this.content.length());
         }
 
         public FileEntry(final HttpResourceServlet servlet, String filename, InputStream in) throws IOException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ByteArray out = new ByteArray();
             byte[] bytes = new byte[10240];
             int pos;
             while ((pos = in.read(bytes)) != -1) {
-                out.write(bytes, 0, pos);
-            }
-            byte[] bs = out.toByteArray();
-            ByteBuffer buf = ByteBuffer.allocateDirect(bs.length);
-            buf.put(bs);
-            buf.flip();
-
+                out.put(bytes, 0, pos);
+            }  
             this.servlet = servlet;
             this.file = null;
             this.filename = filename;
-            this.content = buf.asReadOnlyBuffer();
-            this.servlet.cachedLength.add(this.content.remaining());
+            this.content = out;
+            this.servlet.cachedLength.add(this.content.length());
         }
 
         public void update() {
             if (this.file == null) return;
             if (this.content != null) {
-                this.servlet.cachedLength.add(0L - this.content.remaining());
+                this.servlet.cachedLength.add(0L - this.content.length());
                 this.content = null;
             }
             long length = this.file.length();
@@ -300,30 +307,26 @@ public class HttpResourceServlet extends HttpServlet {
             if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) return; //超过缓存总容量
             try {
                 FileInputStream in = new FileInputStream(file);
-                ByteArrayOutputStream out = new ByteArrayOutputStream((int) file.length());
+                 ByteArray out = new ByteArray((int) file.length());
                 byte[] bytes = new byte[10240];
                 int pos;
                 while ((pos = in.read(bytes)) != -1) {
-                    out.write(bytes, 0, pos);
+                    out.put(bytes, 0, pos);
                 }
                 in.close();
-                byte[] bs = out.toByteArray();
-                ByteBuffer buf = ByteBuffer.allocateDirect(bs.length);
-                buf.put(bs);
-                buf.flip();
-                this.content = buf.asReadOnlyBuffer();
-                this.servlet.cachedLength.add(this.content.remaining());
+                this.content = out;
+                this.servlet.cachedLength.add(this.content.length());
             } catch (Exception e) {
                 this.servlet.logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " update FileEntry(" + file + ") erroneous", e);
             }
         }
 
         public void remove() {
-            if (this.content != null) this.servlet.cachedLength.add(0L - this.content.remaining());
+            if (this.content != null) this.servlet.cachedLength.add(0L - this.content.length());
         }
 
         public long getCachedLength() {
-            return this.content == null ? 0L : this.content.remaining();
+            return this.content == null ? 0L : this.content.length();
         }
 
     }

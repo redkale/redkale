@@ -60,16 +60,25 @@ public final class Utility {
 
     private static final class FutureTimeout implements Runnable {
 
-        final CompletableFuture<?> f;
+        final CompletableFuture f;
 
-        FutureTimeout(CompletableFuture<?> f) {
+        final boolean or;
+
+        final Object u;
+
+        FutureTimeout(CompletableFuture f, boolean or, Object u) {
             this.f = f;
+            this.or = or;
+            this.u = u;
         }
 
         @Override
         public void run() {
-            if (f != null && !f.isDone())
-                f.completeExceptionally(new TimeoutException());
+            if (or) {
+                if (f != null) f.complete(u);
+            } else {
+                if (f != null && !f.isDone()) f.completeExceptionally(new TimeoutException());
+            }
         }
     }
 
@@ -314,14 +323,14 @@ public final class Utility {
         return greatejdk8;
     }
 
-    public static <T> CompletableFuture orTimeout(CompletableFuture future, long timeout, TimeUnit unit) {
+    public static <T> CompletableFuture<T> orTimeout(CompletableFuture future, long timeout, TimeUnit unit) {
         //if (greatejdk8) return future.orTimeout(timeout, unit);
-        return future.whenComplete(new FutureCanceller(futureDelayer.schedule(new FutureTimeout(future), timeout, unit)));
+        return future.whenComplete(new FutureCanceller(futureDelayer.schedule(new FutureTimeout(future, false, null), timeout, unit)));
     }
 
-    public static void main(String[] args) throws Throwable {
-        byte[] bs = readBytes(new FileInputStream("D:\\Java-Projects\\JavaApplication20\\dist\\AnonymousUnsafeByteBooleanFunction.class"));
-        System.out.println(binToHex(bs));
+    public static <T> CompletableFuture<T> completeOnTimeout(CompletableFuture future, T value, long timeout, TimeUnit unit) {
+        //if (greatejdk8) return future.completeOnTimeout(value, timeout, unit);
+        return future.whenComplete(new FutureCanceller(futureDelayer.schedule(new FutureTimeout(future, true, value), timeout, unit)));
     }
 
     /**
@@ -420,6 +429,19 @@ public final class Utility {
      */
     public static <T> T[] ofArray(T... items) {
         return items;
+    }
+
+    /**
+     * 裁剪List，使其size不超过limit大小 <br>
+     *
+     * @param list  集合
+     * @param limit 大小
+     *
+     * @return List
+     */
+    public static <T> List<T> limit(List<T> list, int limit) {
+        if (list == null || list.isEmpty() || list.size() <= limit) return list;
+        return list.subList(0, limit);
     }
 
     /**
@@ -673,6 +695,68 @@ public final class Utility {
         for (T i : array) {
             if (sb.length() > 0) sb.append(delimiter);
             sb.append(i);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 将对象数组用分隔符拼接成字符串
+     *
+     * @param <T>       泛型
+     * @param array     数组
+     * @param delimiter 分隔符
+     *
+     * @return String
+     */
+    public static <T> String joining(final String[] array, final char delimiter) {
+        if (array == null || array.length == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (String i : array) {
+            if (sb.length() > 0) sb.append(delimiter);
+            sb.append(i);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 将对象数组用分隔符拼接成字符串
+     *
+     * @param <T>       泛型
+     * @param array     数组
+     * @param delimiter 分隔符
+     *
+     * @return String
+     */
+    public static <T> String joiningHex(final byte[] array, final char delimiter) {
+        if (array == null || array.length == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (byte i : array) {
+            if (sb.length() > 0) sb.append(delimiter);
+            String s = Integer.toHexString(i & 0xff);
+            sb.append(s.length() > 1 ? "0x" : "0x0").append(s);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 将对象数组用分隔符拼接成字符串
+     *
+     * @param <T>       泛型
+     * @param array     数组
+     * @param offset    偏移量
+     * @param length    长度
+     * @param delimiter 分隔符
+     *
+     * @return String
+     */
+    public static <T> String joiningHex(final byte[] array, int offset, int length, final char delimiter) {
+        if (array == null || array.length == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        int len = offset + length;
+        for (int i = offset; i < len; i++) {
+            if (sb.length() > 0) sb.append(delimiter);
+            String s = Integer.toHexString(array[i] & 0xff);
+            sb.append(s.length() > 1 ? "0x" : "0x0").append(s);
         }
         return sb.toString();
     }
@@ -2701,6 +2785,10 @@ public final class Utility {
         }
         if (close) in.close();
         return out;
+    }
+
+    public static byte[] readBytes(File file) throws IOException {
+        return readBytesThenClose(new FileInputStream(file));
     }
 
     public static byte[] readBytes(InputStream in) throws IOException {

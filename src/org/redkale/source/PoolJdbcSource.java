@@ -21,7 +21,7 @@ import static org.redkale.source.DataSources.*;
  *
  * @author zhangjx
  */
-public class PoolJdbcSource extends PoolSource<Connection> {
+public class PoolJdbcSource extends PoolSource {
 
     protected final ConnectionPoolDataSource source;
 
@@ -187,7 +187,8 @@ public class PoolJdbcSource extends PoolSource<Connection> {
     }
 
     @Override
-    public void offerConnection(final Connection conn) {
+    public <C> void offerConnection(final C connection) {
+        Connection conn = (Connection) connection;
         if (conn == null) return;
         try {
             conn.close();

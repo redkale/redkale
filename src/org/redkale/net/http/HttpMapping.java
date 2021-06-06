@@ -46,10 +46,6 @@ public @interface HttpMapping {
      */
     int cacheseconds() default 0;
 
-    //json结果的长度, 临时功能, 仅供Rest的HttpResponse.finishJson(final int length, final Object obj) 方法使用
-    @Deprecated
-    int length() default 0;
-
     /**
      * 是否只接受RPC请求， 默认为false
      *

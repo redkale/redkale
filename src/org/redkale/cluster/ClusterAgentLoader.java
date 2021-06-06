@@ -3,18 +3,23 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.source;
+package org.redkale.cluster;
+
+import org.redkale.util.AnyValue;
 
 /**
- * FilterBean用于过滤条件， 所有的FilterBean都必须可以转换成FilterNode  <br>
+ * 自定义的ClusterAgent加载器
  *
- * 标记为&#64;FilterColumn.ignore=true 的字段会被忽略， 不参与生成过滤条件   <br>
  *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @since 2.4.0
  */
-public interface FilterBean {
+public interface ClusterAgentLoader {
 
+    public boolean match(AnyValue config);
+
+    public Class<? extends ClusterAgent> agentClass();
 }

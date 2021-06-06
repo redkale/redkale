@@ -5,6 +5,7 @@
  */
 package org.redkale.net;
 
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import org.redkale.convert.bson.BsonConvert;
@@ -107,6 +108,10 @@ public abstract class Request<C extends Context> {
         return properties;
     }
 
+    protected InputStream newInputStream() {
+        return channel.newInputStream();
+    }
+
     public <T> T setAttribute(String name, T value) {
         attributes.put(name, value);
         return value;
@@ -124,6 +129,10 @@ public abstract class Request<C extends Context> {
 
     public Map<String, Object> getAttributes() {
         return attributes;
+    }
+
+    public ChannelContext getChannelContext() {
+        return channel;
     }
 
     public C getContext() {

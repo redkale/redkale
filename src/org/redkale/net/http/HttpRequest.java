@@ -10,9 +10,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
@@ -33,6 +33,8 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 public class HttpRequest extends Request<HttpContext> {
+
+    private static final boolean pipelineSameHeaders = Boolean.getBoolean("http.request.pipeline.sameheaders");
 
     protected static final Serializable CURRUSERID_NIL = new Serializable() {
     };
@@ -90,7 +92,7 @@ public class HttpRequest extends Request<HttpContext> {
     // @since 2.1.0
     protected Serializable currentUserid = CURRUSERID_NIL;
 
-    protected Object currentUser;
+    protected Supplier<Object> currentUserSupplier;
 
     protected boolean frombody;
 
@@ -129,6 +131,10 @@ public class HttpRequest extends Request<HttpContext> {
     protected Annotation[] annotations;
 
     protected String remoteAddr;
+
+    private String lastRequestURIString;
+
+    private byte[] lastRequestURIBytes;
 
     private final ByteArray array;
 
@@ -289,7 +295,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerBytes = httplast.headerBytes;
                 this.headerParsed = httplast.headerParsed;
                 this.headers.putAll(httplast.headers);
-            } else if (context.lazyHeaders && getmethod) {
+            } else if (context.lazyHeaders && getmethod) { //非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs != 0) return rs;
                 this.headerParsed = false;
@@ -444,13 +450,30 @@ public class HttpRequest extends Request<HttpContext> {
             if (qst > 0) {
                 this.requestURI = decodeable ? bytes.toDecodeString(0, qst, charset) : bytes.toString(0, qst, charset);
                 this.queryBytes = bytes.getBytes(qst + 1, size - qst - 1);
+                this.lastRequestURIString = null;
+                this.lastRequestURIBytes = null;
                 try {
                     addParameter(bytes, qst + 1, size - qst - 1);
                 } catch (Exception e) {
                     this.context.getLogger().log(Level.WARNING, "HttpRequest.addParameter error: " + bytes.toString(), e);
                 }
             } else {
-                this.requestURI = decodeable ? bytes.toDecodeString(charset) : bytes.toString(charset);
+                if (decodeable) {
+                    this.requestURI = bytes.toDecodeString(charset);
+                    this.lastRequestURIString = null;
+                    this.lastRequestURIBytes = null;
+                } else if (context.lazyHeaders) {
+                    byte[] lastURIBytes = lastRequestURIBytes;
+                    if (lastURIBytes != null && lastURIBytes.length == size && bytes.equal(lastURIBytes)) {
+                        this.requestURI = this.lastRequestURIString;
+                    } else {
+                        this.requestURI = bytes.toString(charset);
+                        this.lastRequestURIString = this.requestURI;
+                        this.lastRequestURIBytes = bytes.getBytes();
+                    }
+                } else {
+                    this.requestURI = bytes.toString(charset);
+                }
                 this.queryBytes = EMPTY_BYTES;
             }
             bytes.clear();
@@ -700,7 +723,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     @Override
     protected HttpRequest copyHeader() {
-        if (!context.lazyHeaders) return null;
+        if (!pipelineSameHeaders || !context.lazyHeaders) return null;
         HttpRequest req = new HttpRequest(context, this.array);
         req.headerLength = this.headerLength;
         req.headerBytes = this.headerBytes;
@@ -715,7 +738,7 @@ public class HttpRequest extends Request<HttpContext> {
         req.rpc = this.rpc;
         req.hashid = this.hashid;
         req.currentUserid = this.currentUserid;
-        req.currentUser = this.currentUser;
+        req.currentUserSupplier = this.currentUserSupplier;
         req.frombody = this.frombody;
         req.reqConvertType = this.reqConvertType;
         req.reqConvert = this.reqConvert;
@@ -746,7 +769,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.rpc = false;
         this.readState = READ_STATE_ROUTE;
         this.currentUserid = CURRUSERID_NIL;
-        this.currentUser = null;
+        this.currentUserSupplier = null;
         this.frombody = false;
         this.reqConvertType = null;
         this.reqConvert = null;
@@ -838,6 +861,20 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取当前用户ID的int值<br>
+     *
+     * @return 用户ID
+     *
+     * @since 2.4.0
+     */
+    @SuppressWarnings("unchecked")
+    public int currentIntUserid() {
+        if (currentUserid == CURRUSERID_NIL || currentUserid == null) return 0;
+        if (this.currentUserid instanceof Number) return ((Number) this.currentUserid).intValue();
+        return Integer.parseInt(this.currentUserid.toString());
+    }
+
+    /**
      * 获取当前用户ID<br>
      *
      * @param <T>  数据类型只能是int、long、String、JavaBean
@@ -872,14 +909,14 @@ public class HttpRequest extends Request<HttpContext> {
      * 设置当前用户信息, 通常在HttpServlet.preExecute方法里设置currentUser <br>
      * 数据类型由&#64;HttpUserType指定
      *
-     * @param <T>  泛型
-     * @param user 用户信息
+     * @param supplier currentUser对象方法
+     *
+     * @since 2.4.0
      *
      * @return HttpRequest
      */
-    @Deprecated
-    public <T> HttpRequest setCurrentUser(T user) {
-        this.currentUser = user;
+    public HttpRequest setCurrentUserSupplier(Supplier supplier) {
+        this.currentUserSupplier = supplier;
         return this;
     }
 
@@ -892,10 +929,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 用户信息
      */
-    @Deprecated
     @SuppressWarnings("unchecked")
     public <T> T currentUser() {
-        return (T) this.currentUser;
+        Supplier<Object> supplier = this.currentUserSupplier;
+        return (T) (supplier == null ? null : supplier.get());
     }
 
     /**
@@ -1110,13 +1147,23 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @ConvertDisabled
     public final MultiContext getMultiContext() {
+        final InputStream in = newInputStream();
         return new MultiContext(context.getCharset(), this.getContentType(), this.params,
-            new BufferedInputStream(Channels.newInputStream(this.channel.readableByteChannel()), Math.max(array.length(), 8192)) {
+            new BufferedInputStream(in, Math.max(array.length(), 8192)) {
             {
                 array.copyTo(this.buf);
                 this.count = array.length();
             }
         }, null);
+    }
+
+    /**
+     * 是否上传文件请求
+     *
+     * @return boolean
+     */
+    public final boolean isMultipart() {
+        return boundary;
     }
 
     /**

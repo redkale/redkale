@@ -19,9 +19,8 @@ import static org.redkale.source.DataSources.*;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * @param <DBChannel> 连接泛型
  */
-public abstract class PoolSource<DBChannel> {
+public abstract class PoolSource {
 
     protected final AtomicLong closeCounter = new AtomicLong();
 
@@ -152,11 +151,11 @@ public abstract class PoolSource<DBChannel> {
 
     public abstract void change(Properties property);
 
-    public abstract DBChannel poll();
+    public abstract <C> C poll();
 
-    public abstract CompletableFuture<DBChannel> pollAsync();
+    public abstract <C> CompletableFuture<C> pollAsync();
 
-    public abstract void offerConnection(final DBChannel conn);
+    public abstract <C> void offerConnection(final C conn);
 
     public abstract void close();
 

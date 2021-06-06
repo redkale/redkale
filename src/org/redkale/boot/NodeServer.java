@@ -214,11 +214,11 @@ public abstract class NodeServer {
                     String classval = sourceConf.getValue("value");
                     Class type = null;
                     if (classval == null || classval.isEmpty()) {
-                        Iterator<CacheSource> it = ServiceLoader.load(CacheSource.class, serverClassLoader).iterator();
+                        Iterator<CacheSourceLoader> it = ServiceLoader.load(CacheSourceLoader.class, serverClassLoader).iterator();
                         while (it.hasNext()) {
-                            CacheSource s = it.next();
-                            if (s.match(sourceConf)) {
-                                type = s.getClass();
+                            CacheSourceLoader s = it.next();
+                            if (s != null && s.match(sourceConf)) {
+                                type = s.sourceClass();
                                 break;
                             }
                         }
@@ -333,6 +333,9 @@ public abstract class NodeServer {
                 }
 
                 application.dataSources.add(source);
+                if (source instanceof SearchSource) {
+                    appResFactory.register(resourceName, SearchSource.class, source);
+                }
                 appResFactory.register(resourceName, DataSource.class, source);
 
                 field.set(src, source);
@@ -365,11 +368,11 @@ public abstract class NodeServer {
                     if (sourceConf != null) {
                         String classval = sourceConf.getValue("value");
                         if (classval == null || classval.isEmpty()) {
-                            Iterator<CacheSource> it = ServiceLoader.load(CacheSource.class, serverClassLoader).iterator();
+                            Iterator<CacheSourceLoader> it = ServiceLoader.load(CacheSourceLoader.class, serverClassLoader).iterator();
                             while (it.hasNext()) {
-                                CacheSource s = it.next();
-                                if (s.match(sourceConf)) {
-                                    sourceType0 = s.getClass();
+                                CacheSourceLoader s = it.next();
+                                if (s != null && s.match(sourceConf)) {
+                                    sourceType0 = s.sourceClass();
                                     break;
                                 }
                             }

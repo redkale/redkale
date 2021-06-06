@@ -173,6 +173,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 if (Modifier.isStatic(field.getModifiers())) continue;
                 if (fields.contains(field.getName())) continue;
                 if (field.getAnnotation(Transient.class) != null) continue;
+                if (field.getAnnotation(FilterColumn.class) != null && field.getAnnotation(FilterColumn.class).ignore()) continue;
 
                 final boolean pubmod = Modifier.isPublic(field.getModifiers());
 

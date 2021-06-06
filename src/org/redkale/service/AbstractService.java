@@ -59,7 +59,8 @@ public abstract class AbstractService implements Service {
         if (workExecutor != null) return workExecutor;
         Thread thread = Thread.currentThread();
         if (thread instanceof WorkThread) {
-            return ((WorkThread) thread).getWorkExecutor();
+            ExecutorService e = ((WorkThread) thread).getWorkExecutor();
+            if (e != null) return e;
         }
         return ForkJoinPool.commonPool();
     }
