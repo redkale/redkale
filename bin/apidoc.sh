@@ -6,7 +6,7 @@ APP_HOME=`dirname "$0"`
 
 if [ ! -f "$APP_HOME"/conf/application.xml ]; then 
      APP_HOME="$APP_HOME"/..  
-fi
+fi 
 
 lib='.'
 for jar in `ls $APP_HOME/lib/*.jar`
