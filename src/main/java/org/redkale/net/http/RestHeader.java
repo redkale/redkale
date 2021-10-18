@@ -1,0 +1,59 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.redkale.net.http;
+
+import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+/**
+ * 只能注解于RestService类的方法的参数或参数内的String、java.net.InetSocketAddress字段
+ * <p>
+ * 详情见: https://redkale.org
+ *
+ * @author zhangjx
+ */
+@Inherited
+@Documented
+@Target({PARAMETER, FIELD})
+@Retention(RUNTIME)
+public @interface RestHeader {
+
+    /**
+     * Header参数名
+     *
+     * @return String
+     */
+    String name();
+
+    /**
+     * 转换数字byte/short/int/long时所用的进制数， 默认10进制
+     *
+     * @return int
+     */
+    int radix() default 10;
+    
+    /**
+     * 参数是否必传, 框架运行中不作验证, only for OpenAPI Specification 3
+     *
+     * @return boolean
+     */
+    boolean required() default true;
+    
+    /**
+     * for OpenAPI Specification 3.1.0
+     * 
+     * @return String
+     */
+    String example() default  "";
+    
+    /**
+     * 备注描述
+     *
+     * @return String
+     */
+    String comment() default "";
+}

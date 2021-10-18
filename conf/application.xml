@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<application nodeid="10000" port="2121">     
-    
-    <!--  详细配置说明见： http://redkale.org/redkale.html#redkale_confxml  -->
-    
+<application nodeid="10000" port="2020">     
+        
     <resources>       
 
     </resources> 
         
-    <server protocol="HTTP" port="6060">      
+    <server protocol="HTTP" port="5050">      
               
         <request>
             <remoteaddr value="request.headers.X-RemoteAddress"/>
@@ -24,7 +22,7 @@
         
         <filters autoload="true"/>
 
-        <rest path="/pipes" />  <!-- base指定的自定义HttpServlet子类必须标记@HttpUserType, 不设置base则视为没有当前用户信息设置  -->  
+        <rest path="/pipes" /> 
         
         <servlets path="/pipes" autoload="true" />
         
