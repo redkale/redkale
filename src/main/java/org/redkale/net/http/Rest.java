@@ -321,11 +321,13 @@ public final class Rest {
         }
         final Map<String, List<String>> asmParamMap = namePresent ? null : MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), webSocketType);
         final Set<String> messageNames = new HashSet<>();
-        final List<Method> messageMethods = new ArrayList<>();
+        Method wildcardMethod = null;
+        List<Method> mmethods = new ArrayList<>();
         for (Method method : webSocketType.getMethods()) {
             RestOnMessage rom = method.getAnnotation(RestOnMessage.class);
             if (rom == null) continue;
             String name = rom.name();
+            if (!"*".equals(name) && !checkName(name)) throw new RuntimeException("@RestOnMessage.name contains illegal characters on (" + method + ")");
             if (Modifier.isFinal(method.getModifiers())) throw new RuntimeException("@RestOnMessage method can not final but (" + method + ")");
             if (Modifier.isStatic(method.getModifiers())) throw new RuntimeException("@RestOnMessage method can not static but (" + method + ")");
             if (method.getReturnType() != void.class) throw new RuntimeException("@RestOnMessage method must return void but (" + method + ")");
@@ -333,8 +335,16 @@ public final class Rest {
             if (name.isEmpty()) throw new RuntimeException(method + " RestOnMessage.name is empty createRestWebSocketServlet");
             if (messageNames.contains(name)) throw new RuntimeException(method + " repeat RestOnMessage.name(" + name + ") createRestWebSocketServlet");
             messageNames.add(name);
-            messageMethods.add(method);
+            if ("*".equals(name)) {
+                wildcardMethod = method;
+            } else {
+                mmethods.add(method);
+            }
         }
+        final List<Method> messageMethods = new ArrayList<>();
+        messageMethods.addAll(mmethods);
+        //wildcardMethod 必须放最后, _DynRestOnMessageConsumer 是按messageMethods顺序来判断的
+        if (wildcardMethod != null) messageMethods.add(wildcardMethod);
         //----------------------------------------------------------------------------------------
         final String resDesc = Type.getDescriptor(Resource.class);
         final String wsDesc = Type.getDescriptor(WebSocket.class);
@@ -364,7 +374,8 @@ public final class Rest {
             for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage 子消息List
                 Method method = messageMethods.get(i);
                 String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
-                msgclassToAnnotations.put(newDynMessageFullName + endfix, method.getAnnotations());
+                String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
+                msgclassToAnnotations.put(newDynSuperMessageFullName, method.getAnnotations());
             }
             clz.getField("_redkale_annotations").set(null, msgclassToAnnotations);
             if (rws.cryptor() != Cryptor.class) {
@@ -436,7 +447,8 @@ public final class Rest {
             for (int i = 0; i < messageMethods.size(); i++) {
                 Method method = messageMethods.get(i);
                 String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
-                cw.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+                String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
+                cw.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
             }
         }
         { //@Resource
@@ -463,7 +475,7 @@ public final class Rest {
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitLdcInsn(Type.getObjectType(newDynName + "$" + newDynWebSokcetSimpleName + "Message"));
-            mv.visitFieldInsn(PUTFIELD, newDynName, "messageTextType", "Ljava/lang/reflect/Type;");
+            mv.visitFieldInsn(PUTFIELD, newDynName, "messageRestType", "Ljava/lang/reflect/Type;");
 
             mv.visitVarInsn(ALOAD, 0);
             MethodDebugVisitor.pushInt(mv, rws.liveinterval());
@@ -526,13 +538,14 @@ public final class Rest {
         RestClassLoader newLoader = new RestClassLoader(loader);
         Map<String, Annotation[]> msgclassToAnnotations = new HashMap<>();
         for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage 子消息List
-            Method method = messageMethods.get(i);
+            final Method method = messageMethods.get(i);
             String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
-            msgclassToAnnotations.put(newDynMessageFullName + endfix, method.getAnnotations());
+            String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
+            msgclassToAnnotations.put(newDynSuperMessageFullName, method.getAnnotations());
 
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
-            cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynMessageFullName + endfix, null, "java/lang/Object", new String[]{webSocketParamName, "java/lang/Runnable"});
-            cw2.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+            cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynSuperMessageFullName, null, "java/lang/Object", new String[]{webSocketParamName, "java/lang/Runnable"});
+            cw2.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
             Set<String> paramnames = new HashSet<>();
             String methodesc = method.getName() + ":" + Type.getMethodDescriptor(method);
             List<String> names = asmParamMap == null ? null : asmParamMap.get(methodesc);
@@ -555,6 +568,17 @@ public final class Rest {
                     param.getType() == param.getParameterizedType() ? null : Utility.getTypeDescriptor(param.getParameterizedType()), null);
                 fv.visitEnd();
             }
+            if (method == wildcardMethod) {
+                for (int j = 0; j < messageMethods.size(); j++) {
+                    Method method2 = messageMethods.get(j);
+                    if (method2 == wildcardMethod) continue;
+                    String endfix2 = "_" + method2.getName() + "_" + (j > 9 ? j : ("0" + j));
+                    String newDynSuperMessageFullName2 = newDynMessageFullName + (method2 == wildcardMethod ? "" : endfix2);
+                    cw2.visitInnerClass(newDynSuperMessageFullName2, newDynName, newDynMessageSimpleName + endfix2, ACC_PUBLIC + ACC_STATIC);
+                    fv = cw2.visitField(ACC_PUBLIC, method2.getAnnotation(RestOnMessage.class).name(), "L" + newDynSuperMessageFullName2 + ";", null, null);
+                    fv.visitEnd();
+                }
+            }
             { //_redkale_websocket
                 fv = cw2.visitField(ACC_PUBLIC, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";", null, null);
                 av0 = fv.visitAnnotation(convertDisabledDesc, true);
@@ -571,6 +595,8 @@ public final class Rest {
             }
             { //getNames
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "getNames", "()[Ljava/lang/String;", null, null));
+                av0 = mv.visitAnnotation(convertDisabledDesc, true);
+                av0.visitEnd();
                 MethodDebugVisitor.pushInt(mv, paramap.size());
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
                 int index = -1;
@@ -594,7 +620,7 @@ public final class Rest {
                     Label l1 = new Label();
                     mv.visitJumpInsn(IFEQ, l1);
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynMessageFullName + endfix, en.getKey(), Type.getDescriptor(paramType));
+                    mv.visitFieldInsn(GETFIELD, newDynSuperMessageFullName, en.getKey(), Type.getDescriptor(paramType));
                     if (paramType.isPrimitive()) {
                         Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(paramType, 1), 0).getClass();
                         mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(paramType) + ")" + Type.getDescriptor(bigclaz), false);
@@ -609,8 +635,10 @@ public final class Rest {
             }
             { //getAnnotations
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "getAnnotations", "()[Ljava/lang/annotation/Annotation;", null, null));
+                av0 = mv.visitAnnotation(convertDisabledDesc, true);
+                av0.visitEnd();
                 mv.visitFieldInsn(GETSTATIC, newDynName, "_redkale_annotations", "Ljava/util/Map;");
-                mv.visitLdcInsn(newDynMessageFullName + endfix);
+                mv.visitLdcInsn(newDynSuperMessageFullName);
                 mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);
                 mv.visitTypeInsn(CHECKCAST, "[Ljava/lang/annotation/Annotation;");
                 mv.visitVarInsn(ASTORE, 1);
@@ -635,7 +663,7 @@ public final class Rest {
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "execute", "(L" + newDynWebSokcetFullName + ";)V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitFieldInsn(PUTFIELD, newDynMessageFullName + endfix, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
+                mv.visitFieldInsn(PUTFIELD, newDynSuperMessageFullName, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitLdcInsn(method.getAnnotation(RestOnMessage.class).name());
                 mv.visitVarInsn(ALOAD, 0);
@@ -648,11 +676,11 @@ public final class Rest {
             { //run
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "run", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynMessageFullName + endfix, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
+                mv.visitFieldInsn(GETFIELD, newDynSuperMessageFullName, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
 
                 for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, (newDynMessageFullName + endfix), en.getKey(), Type.getDescriptor(en.getValue().getType()));
+                    mv.visitFieldInsn(GETFIELD, (newDynSuperMessageFullName), en.getKey(), Type.getDescriptor(en.getValue().getType()));
                 }
                 mv.visitMethodInsn(INVOKEVIRTUAL, newDynWebSokcetFullName, method.getName(), Type.getMethodDescriptor(method), false);
 
@@ -671,11 +699,11 @@ public final class Rest {
             }
             cw2.visitEnd();
             byte[] bytes = cw2.toByteArray();
-            Class cz = newLoader.loadClass((newDynMessageFullName + endfix).replace('/', '.'), bytes);
-            RedkaleClassLoader.putDynClass((newDynMessageFullName + endfix).replace('/', '.'), bytes, cz);
+            Class cz = newLoader.loadClass((newDynSuperMessageFullName).replace('/', '.'), bytes);
+            RedkaleClassLoader.putDynClass((newDynSuperMessageFullName).replace('/', '.'), bytes, cz);
         }
 
-        { //_DynXXXWebSocketMessage class
+        if (wildcardMethod == null) { //_DynXXXWebSocketMessage class
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
             cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynMessageFullName, null, "java/lang/Object", null);
 
@@ -684,9 +712,10 @@ public final class Rest {
             for (int i = 0; i < messageMethods.size(); i++) {
                 Method method = messageMethods.get(i);
                 String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
-                cw2.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+                String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
+                cw2.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
 
-                fv = cw2.visitField(ACC_PUBLIC, method.getAnnotation(RestOnMessage.class).name(), "L" + newDynMessageFullName + endfix + ";", null, null);
+                fv = cw2.visitField(ACC_PUBLIC, method.getAnnotation(RestOnMessage.class).name(), "L" + newDynSuperMessageFullName + ";", null, null);
                 fv.visitEnd();
             }
             { //构造函数
@@ -751,7 +780,8 @@ public final class Rest {
             for (int i = 0; i < messageMethods.size(); i++) {
                 Method method = messageMethods.get(i);
                 String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
-                cw2.visitInnerClass(newDynMessageFullName + endfix, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+                String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
+                cw2.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
             }
 
             { //构造函数
@@ -776,19 +806,25 @@ public final class Rest {
                 for (int i = 0; i < messageMethods.size(); i++) {
                     final Method method = messageMethods.get(i);
                     String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
+                    String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
                     final String messagename = method.getAnnotation(RestOnMessage.class).name();
+                    if (method == wildcardMethod) {
+                        mv.visitVarInsn(ALOAD, 4);
+                        mv.visitVarInsn(ALOAD, 3);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynSuperMessageFullName, "execute", "(L" + newDynWebSokcetFullName + ";)V", false);
+                    } else {
+                        mv.visitVarInsn(ALOAD, 4);
+                        mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + newDynSuperMessageFullName + ";");
+                        Label ifLabel = new Label();
+                        mv.visitJumpInsn(IFNULL, ifLabel);
 
-                    mv.visitVarInsn(ALOAD, 4);
-                    mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + (newDynMessageFullName + endfix) + ";");
-                    Label ifLabel = new Label();
-                    mv.visitJumpInsn(IFNULL, ifLabel);
-
-                    mv.visitVarInsn(ALOAD, 4);
-                    mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + (newDynMessageFullName + endfix) + ";");
-                    mv.visitVarInsn(ALOAD, 3);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, (newDynMessageFullName + endfix), "execute", "(L" + newDynWebSokcetFullName + ";)V", false);
-                    mv.visitInsn(RETURN);
-                    mv.visitLabel(ifLabel);
+                        mv.visitVarInsn(ALOAD, 4);
+                        mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + newDynSuperMessageFullName + ";");
+                        mv.visitVarInsn(ALOAD, 3);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynSuperMessageFullName, "execute", "(L" + newDynWebSokcetFullName + ";)V", false);
+                        mv.visitInsn(RETURN);
+                        mv.visitLabel(ifLabel);
+                    }
                 }
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(3, 3 + messageMethods.size());
@@ -2380,7 +2416,7 @@ public final class Rest {
                 MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
                 mv.visitInsn(AALOAD);
                 mv.visitMethodInsn(INVOKESTATIC, retInternalName, "success", "()" + retDesc, false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + typeDesc + retDesc + ")V", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + typeDesc + "Ljava/lang/Object;)V", false);
                 mv.visitInsn(RETURN);
             } else if (returnType == boolean.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
@@ -2905,7 +2941,7 @@ public final class Rest {
         return t;
     }
 
-    private static boolean checkName(String name) {  //不能含特殊字符
+    private static boolean checkName(String name) {  //只能是字母、数字和下划线，且不能以数字开头
         if (name.isEmpty()) return true;
         if (name.charAt(0) >= '0' && name.charAt(0) <= '9') return false;
         for (char ch : name.toCharArray()) {
@@ -2916,7 +2952,7 @@ public final class Rest {
         return true;
     }
 
-    private static boolean checkName2(String name) {  //不能含特殊字符
+    private static boolean checkName2(String name) {  //只能是字母、数字、短横、点和下划线，且不能以数字开头
         if (name.isEmpty()) return true;
         if (name.charAt(0) >= '0' && name.charAt(0) <= '9') return false;
         for (char ch : name.toCharArray()) {

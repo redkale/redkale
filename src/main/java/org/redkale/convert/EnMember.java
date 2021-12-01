@@ -6,7 +6,9 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
-import org.redkale.util.Attribute;
+import javax.persistence.Column;
+import org.redkale.source.FilterColumn;
+import org.redkale.util.*;
 
 /**
  * 字段的序列化操作类
@@ -26,6 +28,8 @@ public final class EnMember<W extends Writer, T, F> {
 
     final Encodeable<W, F> encoder;
 
+    final String comment;
+
     final boolean string;
 
     //final boolean isnumber;
@@ -39,11 +43,11 @@ public final class EnMember<W extends Writer, T, F> {
 
     final Method method; //对应类成员的Method也可能为null
 
-    protected int index;
+    int index;
 
-    protected int position; //从1开始
+    int position; //从1开始
 
-    protected int tag; //主要给protobuf使用
+    int tag; //主要给protobuf使用
 
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder, Field field, Method method) {
         this.attribute = attribute;
@@ -55,6 +59,43 @@ public final class EnMember<W extends Writer, T, F> {
         this.bool = t == Boolean.class || t == boolean.class;
         this.jsonFieldNameChars = ('"' + attribute.field() + "\":").toCharArray();
         this.jsonFieldNameBytes = ('"' + attribute.field() + "\":").getBytes();
+        if (field != null) {
+            Comment ct = field.getAnnotation(Comment.class);
+            if (ct == null) {
+                Column col = field.getAnnotation(Column.class);
+                if (col == null) {
+                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
+                    if (fc == null) {
+                        this.comment = "";
+                    } else {
+                        this.comment = fc.comment();
+                    }
+                } else {
+                    this.comment = col.comment();
+                }
+            } else {
+                this.comment = ct.value();
+            }
+        } else if (method != null) {
+            Comment ct = method.getAnnotation(Comment.class);
+            if (ct == null) {
+                Column col = method.getAnnotation(Column.class);
+                if (col == null) {
+                    FilterColumn fc = method.getAnnotation(FilterColumn.class);
+                    if (fc == null) {
+                        this.comment = "";
+                    } else {
+                        this.comment = fc.comment();
+                    }
+                } else {
+                    this.comment = col.comment();
+                }
+            } else {
+                this.comment = ct.value();
+            }
+        } else {
+            this.comment = "";
+        }
         //this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
     }
 
@@ -86,6 +127,10 @@ public final class EnMember<W extends Writer, T, F> {
 
     public Attribute<T, F> getAttribute() {
         return attribute;
+    }
+
+    public String getComment() {
+        return comment;
     }
 
     public char[] getJsonFieldNameChars() {

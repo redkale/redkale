@@ -64,7 +64,7 @@ public class SncpMessageProcessor implements MessageProcessor {
     @Override
     public void begin(final int size, long starttime) {
         this.starttime = starttime;
-        this.cdl = new CountDownLatch(size);
+        this.cdl = size > 1 ? new CountDownLatch(size) : null;
     }
 
     @Override

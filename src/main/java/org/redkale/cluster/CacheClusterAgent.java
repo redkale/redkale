@@ -112,7 +112,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
                         updateSncpTransport(entry);
                     });
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, "scheduleAtFixedRate check error", e);
+                    logger.log(Level.SEVERE, "scheduleAtFixedRate check error", e instanceof CompletionException ? ((CompletionException) e).getCause() : e);
                 }
             }, Math.max(2000, ttls * 1000), Math.max(2000, ttls * 1000), TimeUnit.MILLISECONDS);
         }

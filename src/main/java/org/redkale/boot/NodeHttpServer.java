@@ -131,7 +131,7 @@ public class NodeHttpServer extends NodeServer {
                         } catch (Exception ex) {
                             logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
                         }
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, messageAgent, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, messageAgent, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
                     resourceFactory.inject(nodeService, self);

@@ -106,7 +106,7 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     Convert _sendConvert; //不可能为空 
 
-    java.lang.reflect.Type _messageTextType; //不可能为空
+    java.lang.reflect.Type _messageRestType; //不可能为空
 
     Deflater deflater; //压缩
 

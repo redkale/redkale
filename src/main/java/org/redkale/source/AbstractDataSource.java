@@ -18,7 +18,7 @@ import org.redkale.util.*;
  * DataSource的S抽象实现类 <br>
  * 注意: 所有的操作只能作用在一张表上，不能同时变更多张表
  *
- * <p>
+ *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -30,39 +30,121 @@ import org.redkale.util.*;
 @ResourceType(DataSource.class)
 public abstract class AbstractDataSource extends AbstractService implements DataSource, AutoCloseable, Resourcable {
 
+    /**
+     * 是否虚拟化的持久对象
+     *
+     * @param info EntityInfo
+     *
+     * @return boolean
+     */
     protected boolean isOnlyCache(EntityInfo info) {
         return info.isVirtualEntity();
     }
 
+    /**
+     * 是否可以使用缓存，一般包含关联查询就不使用缓存
+     *
+     * @param node          过滤条件
+     * @param entityApplyer 函数
+     *
+     * @return boolean
+     */
     protected boolean isCacheUseable(FilterNode node, Function<Class, EntityInfo> entityApplyer) {
         return node.isCacheUseable(entityApplyer);
     }
 
+    /**
+     * 生成过滤函数
+     *
+     * @param <T>   泛型
+     * @param <E>   泛型
+     * @param node  过滤条件
+     * @param cache 缓存
+     *
+     * @return Predicate
+     */
     protected <T, E> Predicate<T> createPredicate(FilterNode node, EntityCache<T> cache) {
         return node.createPredicate(cache);
     }
 
+    /**
+     * 根据ResultSet获取对象
+     *
+     * @param <T>  泛型
+     * @param info EntityInfo
+     * @param sels 过滤字段
+     * @param row  ResultSet
+     *
+     * @return 对象
+     */
     protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final EntityInfo.DataResultSetRow row) {
         return sels == null ? info.getFullEntityValue(row) : info.getEntityValue(sels, row);
     }
 
+    /**
+     * 根据ResultSet获取对象
+     *
+     * @param <T>                泛型
+     * @param info               EntityInfo
+     * @param constructorAttrs   构造函数字段
+     * @param unconstructorAttrs 非构造函数字段
+     * @param row                ResultSet
+     *
+     * @return 对象
+     */
     protected <T> T getEntityValue(EntityInfo<T> info, final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final EntityInfo.DataResultSetRow row) {
         return info.getEntityValue(constructorAttrs, unconstructorAttrs, row);
     }
 
+    /**
+     * 根据翻页参数构建排序SQL
+     *
+     * @param <T>     泛型
+     * @param info    EntityInfo
+     * @param flipper 翻页参数
+     *
+     * @return SQL
+     */
     protected <T> String createSQLOrderby(EntityInfo<T> info, Flipper flipper) {
         return info.createSQLOrderby(flipper);
     }
 
+    /**
+     * 根据过滤条件生成关联表与别名的映射关系
+     *
+     * @param node 过滤条件
+     *
+     * @return Map
+     */
     protected Map<Class, String> getJoinTabalis(FilterNode node) {
         return node == null ? null : node.getJoinTabalis();
     }
 
+    /**
+     * 加载指定类的EntityInfo
+     *
+     * @param <T>            泛型
+     * @param clazz          类
+     * @param cacheForbidden 是否屏蔽缓存
+     * @param props          配置信息
+     * @param fullloader     加载器
+     *
+     * @return EntityInfo
+     */
     protected <T> EntityInfo<T> loadEntityInfo(Class<T> clazz, final boolean cacheForbidden, final Properties props, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
         return EntityInfo.load(clazz, cacheForbidden, props, this, fullloader);
     }
 
-    //检查对象是否都是同一个Entity类
+    /**
+     * 检查对象是否都是同一个Entity类
+     *
+     * @param <T>     泛型
+     * @param action  操作
+     * @param async   是否异步
+     * @param entitys 对象集合
+     *
+     * @return CompletableFuture
+     */
     protected <T> CompletableFuture checkEntity(String action, boolean async, T... entitys) {
         if (entitys.length < 1) return null;
         Class clazz = null;
@@ -487,7 +569,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     /**
      * 根据指定参数查询对象某个字段的集合
-     * <p>
+     *
      * @param <T>            Entity类的泛型
      * @param <V>            字段值的类型
      * @param selectedColumn 字段名

@@ -7,6 +7,7 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.math.*;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Attribute;
@@ -140,6 +141,14 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                     } else {
                         o = new BigInteger(o.toString());
                     }
+                }
+            } else if (t == String.class) {
+                if (o == null) {
+                    o = "";
+                } else if (o instanceof byte[]) {
+                    o = new String((byte[]) o, StandardCharsets.UTF_8);
+                } else {
+                    o = o.toString();
                 }
             } else if (o != null && !t.isAssignableFrom(o.getClass()) && o instanceof CharSequence) {
                 o = ((CharSequence) o).length() == 0 ? null : JsonConvert.root().convertFrom(attr.genericType(), o.toString());

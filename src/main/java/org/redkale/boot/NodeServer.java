@@ -438,7 +438,7 @@ public abstract class NodeServer {
                     rf.inject(source, self); //
                     if (!application.isCompileMode() && source instanceof Service) ((Service) source).init(sourceConf);
 
-                    if ((src instanceof WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
+                    if ((src instanceof org.redkale.net.http.WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
                         NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
                         if (source != null && source.getClass().getAnnotation(Local.class) == null) { //本地模式的Service不生成SncpServlet
                             sncpServer.getSncpServer().addSncpServlet((Service) source);
@@ -468,9 +468,9 @@ public abstract class NodeServer {
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) groups.add(NodeServer.this.sncpGroup);
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, Sncp.getMessageAgent((Service) src), application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, Sncp.getMessageAgent((Service) src), application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
-                        ((WebSocketNodeService) nodeService).setName(resourceName);
+                        ((org.redkale.net.http.WebSocketNodeService) nodeService).setName(resourceName);
                     }
                     resourceFactory.inject(nodeService, self);
                     MessageAgent messageAgent = Sncp.getMessageAgent((Service) src);
@@ -551,8 +551,8 @@ public abstract class NodeServer {
                     } else {
                         service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, agent, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     }
-                    if (service instanceof WebSocketNodeService) {
-                        ((WebSocketNodeService) service).setName(resourceName);
+                    if (service instanceof org.redkale.net.http.WebSocketNodeService) {
+                        ((org.redkale.net.http.WebSocketNodeService) service).setName(resourceName);
                         if (agent != null) Sncp.setMessageAgent(service, agent);
                     }
                     final Class restype = Sncp.getResourceType(service);

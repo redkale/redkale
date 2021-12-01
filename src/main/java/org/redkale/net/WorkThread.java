@@ -86,6 +86,16 @@ public class WorkThread extends Thread implements Executor {
         return workExecutor;
     }
 
+    /**
+     * 是否IO线程
+     *
+     * @since 2.6.0
+     * @return boolean
+     */
+    public boolean inIO() {
+        return false;
+    }
+
     public boolean inCurrThread() {
         return this == Thread.currentThread();
     }

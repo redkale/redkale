@@ -19,6 +19,12 @@ import java.lang.reflect.Type;
  */
 public interface Encodeable<W extends Writer, T> {
 
+    /**
+     * 序列化操作
+     *
+     * @param out   Writer
+     * @param value 对象
+     */
     public void convertTo(final W out, T value);
 
     /**

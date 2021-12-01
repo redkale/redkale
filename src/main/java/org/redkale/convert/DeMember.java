@@ -6,7 +6,9 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
-import org.redkale.util.Attribute;
+import javax.persistence.Column;
+import org.redkale.source.FilterColumn;
+import org.redkale.util.*;
 
 /**
  * 字段的反序列化操作类
@@ -26,6 +28,8 @@ public final class DeMember<R extends Reader, T, F> {
 
     final Method method; //对应类成员的Method也可能为null
 
+    final String comment;
+
     protected int index;
 
     protected int position; //从1开始
@@ -40,6 +44,43 @@ public final class DeMember<R extends Reader, T, F> {
         this.attribute = attribute;
         this.field = field;
         this.method = method;
+        if (field != null) {
+            Comment ct = field.getAnnotation(Comment.class);
+            if (ct == null) {
+                Column col = field.getAnnotation(Column.class);
+                if (col == null) {
+                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
+                    if (fc == null) {
+                        this.comment = "";
+                    } else {
+                        this.comment = fc.comment();
+                    }
+                } else {
+                    this.comment = col.comment();
+                }
+            } else {
+                this.comment = ct.value();
+            }
+        } else if (method != null) {
+            Comment ct = method.getAnnotation(Comment.class);
+            if (ct == null) {
+                Column col = method.getAnnotation(Column.class);
+                if (col == null) {
+                    FilterColumn fc = method.getAnnotation(FilterColumn.class);
+                    if (fc == null) {
+                        this.comment = "";
+                    } else {
+                        this.comment = fc.comment();
+                    }
+                } else {
+                    this.comment = col.comment();
+                }
+            } else {
+                this.comment = ct.value();
+            }
+        } else {
+            this.comment = "";
+        }
     }
 
     public DeMember(Attribute<T, F> attribute, Decodeable<R, F> decoder, Field field, Method method) {
@@ -83,6 +124,10 @@ public final class DeMember<R extends Reader, T, F> {
 
     public Attribute<T, F> getAttribute() {
         return this.attribute;
+    }
+
+    public String getComment() {
+        return comment;
     }
 
     public Decodeable<R, F> getDecoder() {

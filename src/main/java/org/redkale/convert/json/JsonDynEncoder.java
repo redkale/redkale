@@ -44,7 +44,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         return false;
     }
 
-    private static boolean checkMemberType(final JsonFactory factory, Type type, Class clazz) {
+    private static boolean checkMemberType(final JsonFactory factory, final Class declaringClass, Type type, Class clazz) {
         if (type == String.class) return true;
         if (clazz.isPrimitive()) return true;
         if (clazz.isEnum()) return true;
@@ -65,6 +65,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         if (type == Long[].class) return true;
         if (type == Double[].class) return true;
         if (type == String[].class) return true;
+
+        if (declaringClass == clazz) return false;
         if (Collection.class.isAssignableFrom(clazz) && type instanceof ParameterizedType) {
             Type[] ts = ((ParameterizedType) type).getActualTypeArguments();
             if (ts.length == 1) {
@@ -72,14 +74,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (t == Boolean.class || t == Byte.class || t == Short.class || t == Character.class
                     || t == Integer.class || t == Float.class || t == Long.class || t == Double.class
                     || t == String.class || ((t instanceof Class) && ((Class) t).isEnum())) return true;
-                if (factory.loadEncoder(t) instanceof JsonDynEncoder) return true;
+                return false;
             }
-        }
-        if (type instanceof TypeVariable) return false;
-        try {
-            if (factory.loadEncoder(type) instanceof JsonDynEncoder) return true;
-        } catch (Exception e) {
-            return false;
         }
         return false;
     }
@@ -119,7 +115,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (factory.isConvertDisabled(field)) continue;
                 ref = factory.findRef(clazz, field);
                 if (ref != null && ref.ignore()) continue;
-                if (!(checkMemberType(factory, field.getGenericType(), field.getType()))) return null;
+                if (!(checkMemberType(factory, clazz, field.getGenericType(), field.getType()))) return null;
                 String name = convertFieldName(factory, clazz, field);
                 if (names.contains(name)) continue;
                 names.add(name);
@@ -139,7 +135,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (method.getReturnType() == void.class) continue;
                 ref = factory.findRef(clazz, method);
                 if (ref != null && ref.ignore()) continue;
-                if (!(checkMemberType(factory, method.getGenericReturnType(), method.getReturnType()))) return null;
+                if (!(checkMemberType(factory, clazz, method.getGenericReturnType(), method.getReturnType()))) return null;
                 String name = convertFieldName(factory, clazz, method);
                 if (names.contains(name)) continue;
                 names.add(name);
@@ -404,8 +400,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 } else {
                     mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, ((Method) element1).getName(), "()" + org.redkale.asm.Type.getDescriptor(fieldtype1), false);
                 }
-                maxLocals ++;
-                
+                maxLocals++;
+
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, fieldname2 + "CommaFieldBytes", "[B");
 
@@ -415,10 +411,10 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 } else {
                     mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, ((Method) element2).getName(), "()" + org.redkale.asm.Type.getDescriptor(fieldtype2), false);
                 }
-                maxLocals ++;
-                
+                maxLocals++;
+
                 mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeObjectByOnlyTwoIntFieldValue", "([BI[BI)V", false);
-                
+
             } else if (onlyShotIntLongLatin1MoreFieldObjectFlag && mustHadComma) {
                 for (AccessibleObject element : members) {
                     elementIndex++;

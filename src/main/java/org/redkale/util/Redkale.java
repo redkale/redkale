@@ -16,7 +16,7 @@ public final class Redkale {
 
     private static final String rootPackage = "org.redkale";
 
-    private Redkale() {
+    private Redkale() { 
     }
 
     public static String getRootPackage() {
@@ -24,7 +24,7 @@ public final class Redkale {
     }
 
     public static String getDotedVersion() {
-        return "2.5.0";
+        return "2.6.0";
     }
 
     public static int getMajorVersion() {
@@ -32,6 +32,6 @@ public final class Redkale {
     }
 
     public static int getMinorVersion() {
-        return 5;
+        return 6;
     }
 }

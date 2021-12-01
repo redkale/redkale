@@ -8,11 +8,13 @@ package org.redkale.mq;
 import java.io.Serializable;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
 import javax.annotation.Resource;
+import org.redkale.boot.Application;
 import org.redkale.cluster.ClusterAgent;
 import org.redkale.net.http.*;
 import org.redkale.util.Utility;
@@ -33,27 +35,44 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     private static final Set<String> DISALLOWED_HEADERS_SET = Utility.ofSet("connection", "content-length",
         "date", "expect", "from", "host", "origin", "referer", "upgrade", "via", "warning");
 
+    protected final HttpMessageLocalClient localClient;
+
+    protected final ConcurrentHashMap<String, Boolean> topicServletMap = new ConcurrentHashMap<>();
+
     protected ClusterAgent clusterAgent;
 
     @Resource(name = "cluster.httpClient")
-    protected HttpClient httpClient;
+    protected java.net.http.HttpClient httpClient;
 
-    //protected java.net.http.HttpClient httpClient;
-    public HttpMessageClusterClient(ClusterAgent clusterAgent) {
+    @Resource(name = "cluster.httpClient")
+    protected HttpSimpleClient httpSimpleClient;
+
+    public HttpMessageClusterClient(Application application, String resourceName, ClusterAgent clusterAgent) {
         super(null);
         Objects.requireNonNull(clusterAgent);
+        this.localClient = new HttpMessageLocalClient(application, resourceName);
         this.clusterAgent = clusterAgent;
-        //this.httpClient = java.net.http.HttpClient.newHttpClient();
+        this.finest = logger.isLoggable(Level.FINEST);
+        this.finer = logger.isLoggable(Level.FINER);
+        this.fine = logger.isLoggable(Level.FINE);
     }
 
     @Override
     public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        return httpAsync(userid, request);
+        if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
+            return localClient.sendMessage(topic, userid, groupid, request, counter);
+        } else {
+            return httpAsync(false, userid, request);
+        }
     }
 
     @Override
     public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        httpAsync(userid, request);
+        if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
+            localClient.produceMessage(topic, userid, groupid, request, counter);
+        } else {
+            httpAsync(true, userid, request);
+        }
     }
 
     @Override
@@ -62,14 +81,17 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     }
 
     private CompletableFuture<HttpResult<byte[]>> mqtpAsync(Serializable userid, HttpSimpleRequest req) {
-        final boolean finest = logger.isLoggable(Level.FINEST);
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         Map<String, String> headers = req.getHeaders();
         String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
+        final String localModule = module;
         return clusterAgent.queryMqtpAddress("mqtp", module, resname).thenCompose(addrmap -> {
-            if (addrmap == null || addrmap.isEmpty()) return new HttpResult().status(404).toAnyFuture();
+            if (addrmap == null || addrmap.isEmpty()) {
+                if (fine) logger.log(Level.FINE, "mqtpAsync.broadcastMessage: module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                return new HttpResult<byte[]>().status(404).toFuture();
+            }
             final Map<String, String> clientHeaders = new LinkedHashMap<>();
             byte[] clientBody = null;
             if (req.isRpc()) clientHeaders.put(Rest.REST_HEADER_RPC_NAME, "true");
@@ -96,6 +118,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 if (paramstr != null) clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
             }
             List<CompletableFuture> futures = new ArrayList<>();
+            if (finest) logger.log(Level.FINEST, "mqtpAsync: module=" + localModule + ", resname=" + resname + ", addrmap=" + addrmap);
             for (Map.Entry<String, Collection<InetSocketAddress>> en : addrmap.entrySet()) {
                 String realmodule = en.getKey();
                 Collection<InetSocketAddress> addrs = en.getValue();
@@ -110,15 +133,19 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         });
     }
 
-    private CompletableFuture<HttpResult<byte[]>> httpAsync(Serializable userid, HttpSimpleRequest req) {
-        final boolean finest = logger.isLoggable(Level.FINEST);
+    private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, HttpSimpleRequest req) {
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         Map<String, String> headers = req.getHeaders();
         String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
+        final String localModule = module;
+        if (finest) logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);
         return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
-            if (addrs == null || addrs.isEmpty()) return new HttpResult().status(404).toAnyFuture();
+            if (addrs == null || addrs.isEmpty()) {
+                if (fine) logger.log(Level.FINE, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + ": module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                return new HttpResult<byte[]>().status(404).toFuture();
+            }
             final Map<String, String> clientHeaders = new LinkedHashMap<>();
             byte[] clientBody = null;
             if (req.isRpc()) clientHeaders.put(Rest.REST_HEADER_RPC_NAME, "true");
@@ -126,9 +153,14 @@ public class HttpMessageClusterClient extends HttpMessageClient {
             if (req.getReqConvertType() != null) clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
             if (req.getRespConvertType() != null) clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
             if (userid != null) clientHeaders.put(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
-            if (headers != null) headers.forEach((n, v) -> {
-                    if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) clientHeaders.put(n, v);
+            if (headers != null) {
+                boolean ws = headers.containsKey("Sec-WebSocket-Key");
+                headers.forEach((n, v) -> {
+                    if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())
+                        && (!ws || (!"Connection".equals(n) && !"Sec-WebSocket-Key".equals(n)
+                        && !"Sec-WebSocket-Version".equals(n)))) clientHeaders.put(n, v);
                 });
+            }
             clientHeaders.put("Content-Type", "x-www-form-urlencoded");
             if (req.getBody() != null && req.getBody().length > 0) {
                 String paramstr = req.getParametersToString();
@@ -144,6 +176,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 String paramstr = req.getParametersToString();
                 if (paramstr != null) clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
             }
+            if (finest) logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
             return forEachCollectionFuture(finest, userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(), clientHeaders, clientBody, addrs.iterator());
         });
     }
@@ -152,7 +185,19 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         if (!it.hasNext()) return CompletableFuture.completedFuture(null);
         InetSocketAddress addr = it.next();
         String url = "http://" + addr.getHostString() + ":" + addr.getPort() + requesturi;
-        return httpClient.postAsync(url, clientHeaders, clientBody);
+        if (finest) logger.log(Level.FINEST, "forEachCollectionFuture: url=" + url + ", headers=" + clientHeaders);
+        if (httpSimpleClient != null) return httpSimpleClient.postAsync(url, clientHeaders, clientBody);
+        java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().uri(URI.create(url))
+            .timeout(Duration.ofMillis(10_000))
+            //存在sendHeader后不发送body数据的问题， java.net.http.HttpRequest的bug?
+            .method("POST", clientBody == null ? java.net.http.HttpRequest.BodyPublishers.noBody() : java.net.http.HttpRequest.BodyPublishers.ofByteArray(clientBody));
+        if (clientHeaders != null) clientHeaders.forEach((n, v) -> builder.header(n, v));
+        return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
+            .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {
+                final int rs = resp.statusCode();
+                if (rs != 200) return new HttpResult<byte[]>().status(rs);
+                return new HttpResult<byte[]>(resp.body());
+            });
     }
 
 //    private CompletableFuture<HttpResult<byte[]>> mqtpAsync(Serializable userid, HttpSimpleRequest req) {

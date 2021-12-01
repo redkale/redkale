@@ -46,4 +46,10 @@ public class ChatService implements Service {
     public void chatMessage(ChatMessage message) {
         wsnode.broadcastMessage(message);
     }
+
+    @Comment("其他操作")
+    public void other(int roomid, String name) {
+        System.out.println("其他操作: roomid: " + roomid + ", name: " + name);
+    }
+
 }

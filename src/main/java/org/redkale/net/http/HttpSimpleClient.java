@@ -20,7 +20,7 @@ import org.redkale.util.*;
  * 1、使用HTTPS；<br>
  * 2、上传下载文件；<br>
  * 3、返回超大响应包；<br>
- * 类似JDK11的 java.net.http.HttpClient <br>
+ * 类似JDK11的 java.net.http.HttpSimpleClient <br>
  *
  * <p>
  * 详情见: https://redkale.org
@@ -29,7 +29,7 @@ import org.redkale.util.*;
  * @since 2.3.0
  *
  */
-public class HttpClient {
+public class HttpSimpleClient {
 
     protected final AsyncGroup asyncGroup;
 
@@ -37,12 +37,12 @@ public class HttpClient {
 
     protected int writeTimeoutSeconds = 6;
 
-    protected HttpClient(AsyncGroup asyncGroup) {
+    protected HttpSimpleClient(AsyncGroup asyncGroup) {
         this.asyncGroup = asyncGroup;
     }
 
-    public static HttpClient create(AsyncGroup asyncGroup) {
-        return new HttpClient(asyncGroup);
+    public static HttpSimpleClient create(AsyncGroup asyncGroup) {
+        return new HttpSimpleClient(asyncGroup);
     }
 
     public CompletableFuture<HttpResult<byte[]>> getAsync(String url) {
@@ -103,7 +103,7 @@ public class HttpClient {
                 + "Host: " + uri.getHost() + "\r\n"
                 + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
             if (headers == null || !headers.containsKey("User-Agent")) {
-                array.put(("User-Agent: redkale-httpclient/" + Redkale.getDotedVersion() + "\r\n").getBytes(StandardCharsets.UTF_8));
+                array.put(("User-Agent: Redkale-http-client/" + Redkale.getDotedVersion() + "\r\n").getBytes(StandardCharsets.UTF_8));
             }
             if (headers == null || !headers.containsKey("Connection")) {
                 array.put(("Connection: close\r\n").getBytes(StandardCharsets.UTF_8));
@@ -115,7 +115,6 @@ public class HttpClient {
             }
             array.put((byte) '\r', (byte) '\n');
             if (body != null) array.put(body);
-            System.out.println(array);
             final CompletableFuture<HttpResult<byte[]>> future = new CompletableFuture();
             conn.write(array, new CompletionHandler<Integer, Void>() {
                 @Override
@@ -137,7 +136,7 @@ public class HttpClient {
 //        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
 //        asyncGroup.start();
 //        String url = "http://redkale.org";
-//        HttpClient client = HttpClient.create(asyncGroup);
+//        HttpSimpleClient client = HttpSimpleClient.create(asyncGroup);
 //        System.out.println(client.getAsync(url).join());
 //    }
 
@@ -211,7 +210,9 @@ public class HttpClient {
                 if (buffer.hasRemaining()) array.put(buffer, buffer.remaining());
                 this.readState = READ_STATE_END;
             }
-            this.responseResult.setResult(array.getBytes());
+            if (responseResult.getStatus() <= 200) {
+                this.responseResult.setResult(array.getBytes());
+            }
             this.future.complete(this.responseResult);
             conn.offerBuffer(buffer);
             conn.dispose();

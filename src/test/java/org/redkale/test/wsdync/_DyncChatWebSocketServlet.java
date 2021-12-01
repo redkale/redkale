@@ -31,7 +31,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
     public _DyncChatWebSocketServlet() {
         super();
-        this.messageTextType = _DyncChatWebSocketMessage.class;
+        this.messageRestType = _DyncChatWebSocketMessage.class;
     }
 
     @Override
@@ -52,11 +52,47 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
         }
     }
 
-    public static class _DyncChatWebSocketMessage {
+    public static class _DyncChatWebSocketMessage implements WebSocketParam, Runnable {
 
         public _DyncChatWebSocketMessage_sendmessagee_00 sendmessage;
 
         public _DyncChatWebSocketMessage_joinroom_01 joinroom;
+
+        @ConvertDisabled
+        public _DyncChatWebSocket _redkale_websocket;
+
+        public int roomid;
+
+        public String name;
+
+        @Override
+        public String[] getNames() {
+            return new String[]{"roomid", "name"};
+        }
+
+        @Override
+        public <T> T getValue(String name) {
+            if ("roomid".equals(name)) return (T) (Integer) roomid;
+            if ("name".equals(name)) return (T) (String) name;
+            return null;
+        }
+
+        @Override
+        public Annotation[] getAnnotations() {
+            Annotation[] annotations = _redkale_annotations.get("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage");
+            if (annotations == null) return new Annotation[0];
+            return Arrays.copyOf(annotations, annotations.length);
+        }
+
+        public void execute(_DyncChatWebSocket websocket) {
+            this._redkale_websocket = websocket;
+            websocket.preOnMessage("*", this, this);
+        }
+
+        @Override
+        public void run() {
+            _redkale_websocket.other(this.roomid, this.name);
+        }
 
         @Override
         public String toString() {
@@ -163,6 +199,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
                 message.joinroom.execute(websocket);
                 return;
             }
+            message.execute(websocket);
         }
 
     }

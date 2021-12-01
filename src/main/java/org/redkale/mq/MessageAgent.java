@@ -8,7 +8,7 @@ package org.redkale.mq;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
+import java.util.logging.*;
 import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
@@ -165,12 +165,15 @@ public abstract class MessageAgent {
         if (this.sncpProducer == null) {
             synchronized (sncpProducerLock) {
                 if (this.sncpProducer == null) {
+                    long s = System.currentTimeMillis();
                     MessageProducer[] producers = new MessageProducer[producerCount];
                     for (int i = 0; i < producers.length; i++) {
                         MessageProducer producer = createProducer("SncpProducer");
                         producer.startup().join();
                         producers[i] = producer;
                     }
+                    long e = System.currentTimeMillis() - s;
+                    if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "MessageAgent.SncpProducer startup all in " + e + "ms");
                     this.sncpProducer = new MessageProducers(producers);
                 }
             }
@@ -182,12 +185,15 @@ public abstract class MessageAgent {
         if (this.httpProducer == null) {
             synchronized (httpProducerLock) {
                 if (this.httpProducer == null) {
+                    long s = System.currentTimeMillis();
                     MessageProducer[] producers = new MessageProducer[producerCount];
                     for (int i = 0; i < producers.length; i++) {
                         MessageProducer producer = createProducer("HttpProducer");
                         producer.startup().join();
                         producers[i] = producer;
                     }
+                    long e = System.currentTimeMillis() - s;
+                    if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "MessageAgent.HttpProducer startup all in " + e + "ms");
                     this.httpProducer = new MessageProducers(producers);
                 }
             }

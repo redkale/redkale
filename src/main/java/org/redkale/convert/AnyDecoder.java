@@ -14,7 +14,7 @@ import static org.redkale.convert.Reader.ValueType.MAP;
 /**
  * 对不明类型的对象进行反序列化。 <br>
  * <b>注意: 目前只支持文本格式</b> <br>
- * <p>
+ *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -31,12 +31,17 @@ public class AnyDecoder implements Decodeable<Reader, Object> {
 
     private static final Creator<HashMap> mapCreator = Creator.create(HashMap.class);
 
-    protected final Decodeable<Reader, String> stringDecoder;
+    final Decodeable<Reader, String> stringDecoder;
 
-    protected final CollectionDecoder collectionDecoder;
+    final CollectionDecoder collectionDecoder;
 
-    protected final MapDecoder mapDecoder;
+    final MapDecoder mapDecoder;
 
+    /**
+     * 构造函数
+     *
+     * @param factory ConvertFactory
+     */
     public AnyDecoder(final ConvertFactory factory) {
         this.stringDecoder = factory.loadDecoder(String.class);
         this.collectionDecoder = new CollectionDecoder(factory, collectionObjectType, Object.class, collectionCreator, this);

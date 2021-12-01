@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.convert.*;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import static org.redkale.mq.MessageRecord.CTYPE_HTTP_RESULT;
@@ -71,6 +72,10 @@ public class HttpMessageResponse extends HttpResponse {
         finishHttpResult(this.finest, ((HttpMessageRequest) this.request).getRespConvert(), type, this.message, this.callback, this.messageClient, this.producer, message.getResptopic(), result);
     }
 
+    public void finishHttpResult(Type type, Convert respConvert, HttpResult result) {
+        finishHttpResult(this.finest, respConvert == null ? ((HttpMessageRequest) this.request).getRespConvert() : respConvert, type, this.message, this.callback, this.messageClient, this.producer, message.getResptopic(), result);
+    }
+
     public static void finishHttpResult(boolean finest, Convert respConvert, Type type, MessageRecord msg, Runnable callback, MessageClient messageClient, MessageProducer producer, String resptopic, HttpResult result) {
         if (callback != null) callback.run();
         if (resptopic == null || resptopic.isEmpty()) return;
@@ -109,6 +114,67 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
+    public void finishJson(final Object obj) {
+        finishJson((JsonConvert) null, (Type) null, obj);
+    }
+
+    @Override
+    public void finishJson(final JsonConvert convert, final Object obj) {
+        if (message.isEmptyResptopic()) {
+            if (callback != null) callback.run();
+            return;
+        }
+        finishHttpResult(obj.getClass(), convert, new HttpResult(obj));
+
+    }
+
+    @Override
+    public void finishJson(final Type type, final Object obj) {
+        if (message.isEmptyResptopic()) {
+            if (callback != null) callback.run();
+            return;
+        }
+        finishHttpResult(type, new HttpResult(obj));
+    }
+
+    @Override
+    public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
+        if (message.isEmptyResptopic()) {
+            if (callback != null) callback.run();
+            return;
+        }
+        finishHttpResult(type, convert, new HttpResult(obj));
+    }
+
+    @Override
+    public void finish(Type type, org.redkale.service.RetResult ret) {
+        if (message.isEmptyResptopic()) {
+            if (callback != null) callback.run();
+            return;
+        }
+        finishHttpResult(type, new HttpResult(ret));
+
+    }
+
+    @Override
+    public void finish(final Convert convert, Type type, org.redkale.service.RetResult ret) {
+        if (message.isEmptyResptopic()) {
+            if (callback != null) callback.run();
+            return;
+        }
+        finishHttpResult(type, convert, new HttpResult(ret));
+    }
+
+    @Override
+    public void finish(final Convert convert, final Type type, Object obj) {
+        if (message.isEmptyResptopic()) {
+            if (callback != null) callback.run();
+            return;
+        }
+        finishHttpResult(type, convert, new HttpResult(obj));
+    }
+
+    @Override
     public void finish(String obj) {
         if (message.isEmptyResptopic()) {
             if (callback != null) callback.run();
@@ -118,8 +184,23 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
+    public void finish304() {
+        finish(304, null);
+    }
+
+    @Override
     public void finish404() {
         finish(404, null);
+    }
+
+    @Override
+    public void finish500() {
+        finish(500, null);
+    }
+
+    @Override
+    public void finish504() {
+        finish(504, null);
     }
 
     @Override
@@ -161,6 +242,16 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length) {
+        if (message.isEmptyResptopic()) {
+            if (callback != null) callback.run();
+            return;
+        }
+        byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
+        finishHttpResult(null, new HttpResult(rs).contentType(contentType));
+    }
+
+    @Override
+    protected <A> void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length, Consumer<A> consumer, A attachment) {
         if (message.isEmptyResptopic()) {
             if (callback != null) callback.run();
             return;

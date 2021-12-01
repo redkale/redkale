@@ -135,7 +135,13 @@ public abstract class AnyValue {
             return rs;
         }
 
-        //去重
+        /**
+         * 合并两个AnyValue对象， 会去重， 没有的才增加
+         *
+         * @param av AnyValue
+         *
+         * @return DefaultAnyValue
+         */
         public DefaultAnyValue addAllStringSet(final AnyValue av) {
             if (av == null) return this;
             final Entry<String>[] strings = av.getStringEntrys();
@@ -146,6 +152,13 @@ public abstract class AnyValue {
             return this;
         }
 
+        /**
+         * 合并两个AnyValue对象 不去重
+         *
+         * @param av AnyValue
+         *
+         * @return DefaultAnyValue
+         */
         public DefaultAnyValue addAll(final AnyValue av) {
             if (av == null) return this;
             if (av instanceof DefaultAnyValue) {
@@ -177,6 +190,13 @@ public abstract class AnyValue {
             return this;
         }
 
+        /**
+         * 合并两个AnyValue对象 会去重
+         *
+         * @param av AnyValue
+         *
+         * @return DefaultAnyValue
+         */
         public DefaultAnyValue setAll(final AnyValue av) {
             if (av == null) return this;
             if (av instanceof DefaultAnyValue) {
@@ -401,8 +421,16 @@ public abstract class AnyValue {
 
     }
 
+    /**
+     * 字段名和值的组合对象
+     *
+     * @param <T> 泛型
+     */
     public static final class Entry<T> {
 
+        /**
+         * 字段名
+         */
         public final String name;
 
         T value;
@@ -413,10 +441,20 @@ public abstract class AnyValue {
             this.value = value0;
         }
 
+        /**
+         * 获取字段名
+         *
+         * @return 字段名
+         */
         public String getName() {
             return name;
         }
 
+        /**
+         * 获取字段值
+         *
+         * @return 字段值
+         */
         public T getValue() {
             return value;
         }
@@ -506,34 +544,99 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 创建DefaultAnyValue
+     *
+     * @return DefaultAnyValue
+     */
     public static DefaultAnyValue create() {
         return new DefaultAnyValue();
     }
 
+    /**
+     * 文本内容转换成AnyValue对象
+     *
+     * @param text 文本内容
+     *
+     * @return AnyValue
+     * @throws IOException 异常
+     */
     public static AnyValue loadFromXml(String text) throws IOException {
         return new XmlReader(text).read();
     }
 
+    /**
+     * 内容流转换成AnyValue对象
+     *
+     * @param in 内容流
+     *
+     * @return AnyValue
+     * @throws IOException 异常
+     */
     public static AnyValue loadFromXml(InputStream in) throws IOException {
         return loadFromXml(in, StandardCharsets.UTF_8);
     }
 
+    /**
+     * 内容流转换成AnyValue对象
+     *
+     * @param in      内容流
+     * @param charset 字符编码
+     *
+     * @return AnyValue
+     * @throws IOException 异常
+     */
     public static AnyValue loadFromXml(InputStream in, Charset charset) throws IOException {
         return new XmlReader(Utility.read(in, charset)).read();
     }
 
+    /**
+     * 内容流转换成AnyValue对象
+     *
+     * @param text     文本内容
+     * @param attrFunc 字段回调函数
+     *
+     * @return AnyValue
+     * @throws IOException 异常
+     */
     public static AnyValue loadFromXml(String text, BiFunction<String, String, String> attrFunc) throws IOException {
         return new XmlReader(text).attrFunc(attrFunc).read();
     }
 
+    /**
+     * 内容流转换成AnyValue对象
+     *
+     * @param in       内容流
+     * @param attrFunc 字段回调函数
+     *
+     * @return AnyValue
+     * @throws IOException 异常
+     */
     public static AnyValue loadFromXml(InputStream in, BiFunction<String, String, String> attrFunc) throws IOException {
         return loadFromXml(in, StandardCharsets.UTF_8, attrFunc);
     }
 
+    /**
+     * 内容流转换成AnyValue对象
+     *
+     * @param in       内容流
+     * @param charset  字符编码
+     * @param attrFunc 字段回调函数
+     *
+     * @return AnyValue
+     * @throws IOException 异常
+     */
     public static AnyValue loadFromXml(InputStream in, Charset charset, BiFunction<String, String, String> attrFunc) throws IOException {
         return new XmlReader(Utility.read(in, charset)).attrFunc(attrFunc).read();
     }
 
+    /**
+     * 当前AnyValue对象字符串化
+     *
+     * @param indent 缩进长度
+     *
+     * @return String
+     */
     public String toString(int indent) { //indent: 缩进长度
         if (indent < 0) indent = 0;
         char[] chars = new char[indent];
@@ -551,43 +654,148 @@ public abstract class AnyValue {
         return sb.toString();
     }
 
+    /**
+     * 回调子节点
+     *
+     * @param stringConsumer 字符串字段的回调函数
+     */
     public abstract void forEach(BiConsumer<String, String> stringConsumer);
 
+    /**
+     * 回调子节点
+     *
+     * @param stringConsumer 字符串字段的回调函数
+     * @param anyConsumer    字符串对象的回调函数
+     */
     public abstract void forEach(BiConsumer<String, String> stringConsumer, BiConsumer<String, AnyValue> anyConsumer);
 
+    /**
+     * 获取所有字符串子节点
+     *
+     * @return Entry[]
+     */
     public abstract Entry<String>[] getStringEntrys();
 
+    /**
+     * 获取所有复合子节点
+     *
+     * @return Entry[]
+     */
     public abstract Entry<AnyValue>[] getAnyEntrys();
 
+    /**
+     * 获取字段名集合
+     *
+     * @return String[]
+     */
     public abstract String[] getNames();
 
+    /**
+     * 获取同级下同一字段名下所有的String对象
+     *
+     * @param name 字段名
+     *
+     * @return String[]
+     */
     public abstract String[] getValues(String name);
 
+    /**
+     * 根据字段名集合获取String类型的字段值集合
+     *
+     * @param names 字段名集合
+     *
+     * @return String[]
+     */
     public abstract String[] getValues(String... names);
 
+    /**
+     * 获取同级下同一字段名下所有的AnyValue对象
+     *
+     * @param name 字段名
+     *
+     * @return AnyValue[]
+     */
     public abstract AnyValue[] getAnyValues(String name);
 
+    /**
+     * 根据字段名集合获取AnyValue类型的字段值集合
+     *
+     * @param names 字段名集合
+     *
+     * @return AnyValue[]
+     */
     public abstract AnyValue[] getAnyValues(String... names);
 
+    /**
+     * 根据字段名获取AnyValue类型的字段值
+     *
+     * @param name 字段名
+     *
+     * @return AnyValue
+     */
     public abstract AnyValue getAnyValue(String name);
 
+    /**
+     * 根据字段名获取String类型的字段值
+     *
+     * @param name 字段名
+     *
+     * @return String
+     */
     public abstract String getValue(String name);
 
+    /**
+     * 根据字段名获取String类型的字段值
+     *
+     * @param name 字段名
+     *
+     * @return String
+     */
     public abstract String get(String name);
 
+    /**
+     * 获取字段值
+     *
+     * @param name 字段名
+     *
+     * @return 字段值
+     */
     public boolean getBoolValue(String name) {
         return Boolean.parseBoolean(getValue(name));
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public boolean getBoolValue(String name, boolean defaultValue) {
         String value = getValue(name);
         return value == null || value.length() == 0 ? defaultValue : Boolean.parseBoolean(value);
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name 字段名
+     *
+     * @return 字段值
+     */
     public byte getByteValue(String name) {
         return Byte.parseByte(getValue(name));
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public byte getByteValue(String name, byte defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -598,6 +806,15 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param radix        进制，默认十进制
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public byte getByteValue(int radix, String name, byte defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -608,19 +825,49 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name 字段名
+     *
+     * @return 字段值
+     */
     public char getCharValue(String name) {
         return getValue(name).charAt(0);
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public char getCharValue(String name, char defaultValue) {
         String value = getValue(name);
         return value == null || value.length() == 0 ? defaultValue : value.charAt(0);
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name 字段名
+     *
+     * @return String
+     */
     public short getShortValue(String name) {
         return Short.decode(getValue(name));
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public short getShortValue(String name, short defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -631,6 +878,15 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param radix        进制，默认十进制
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public short getShortValue(int radix, String name, short defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -641,10 +897,25 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name 字段名
+     *
+     * @return 字段值
+     */
     public int getIntValue(String name) {
         return Integer.decode(getValue(name));
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return String
+     */
     public int getIntValue(String name, int defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -655,6 +926,15 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param radix        进制，默认十进制
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public int getIntValue(int radix, String name, int defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -665,10 +945,25 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name 字段名
+     *
+     * @return 字段值
+     */
     public long getLongValue(String name) {
         return Long.decode(getValue(name));
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public long getLongValue(String name, long defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -679,6 +974,15 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param radix        进制，默认十进制
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public long getLongValue(int radix, String name, long defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -689,10 +993,25 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name 字段名
+     *
+     * @return String
+     */
     public float getFloatValue(String name) {
         return Float.parseFloat(getValue(name));
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public float getFloatValue(String name, float defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -703,10 +1022,25 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name 字段名
+     *
+     * @return 字段值
+     */
     public double getDoubleValue(String name) {
         return Double.parseDouble(getValue(name));
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public double getDoubleValue(String name, double defaultValue) {
         String value = getValue(name);
         if (value == null || value.length() == 0) return defaultValue;
@@ -717,11 +1051,27 @@ public abstract class AnyValue {
         }
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public String getValue(String name, String defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : value;
     }
 
+    /**
+     * 获取字段值
+     *
+     * @param name         字段名
+     * @param defaultValue 默认值
+     *
+     * @return 字段值
+     */
     public String getOrDefault(String name, String defaultValue) {
         String value = getValue(name);
         return value == null ? defaultValue : value;
@@ -753,10 +1103,27 @@ public abstract class AnyValue {
         return hash;
     }
 
+    /**
+     * xml化当前AnyValue对象
+     *
+     * @param rootName root名称
+     *
+     * @return String
+     */
     public String toXML(String rootName) {
         return toXMLString(new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\r\n"), rootName, this, 0).toString();
     }
 
+    /**
+     * xml化AnyValue对象
+     *
+     * @param sb       StringBuilder
+     * @param nodeName 字段名
+     * @param conf     AnyValue
+     * @param indent   缩进长度
+     *
+     * @return StringBuilder
+     */
     protected static StringBuilder toXMLString(StringBuilder sb, String nodeName, AnyValue conf, int indent) { //indent: 缩进长度
         if (indent < 0) indent = 0;
         char[] chars = new char[indent];

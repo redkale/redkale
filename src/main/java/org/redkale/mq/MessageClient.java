@@ -76,18 +76,23 @@ public abstract class MessageClient {
                             if (node.scheduledFuture != null) node.scheduledFuture.cancel(true);
                             AtomicLong ncer = node.getCounter();
                             if (ncer != null) ncer.decrementAndGet();
+                            final long cha = now - msg.createtime;
+                            if (finest) messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.receive (mq.delay = " + cha + "ms, mq.seqid = " + msg.getSeqid() + ")");
                             node.future.complete(msg);
-                            long cha = now - msg.createtime;
-                            if (cha > 1000 && fine) {
-                                messageAgent.logger.log(Level.FINE, clazzName + ".MessageRespFutureNode.process (mqs.delays = " + cha + "ms, mqs.counters = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
-                            } else if (cha > 50 && finer) {
-                                messageAgent.logger.log(Level.FINER, clazzName + ".MessageRespFutureNode.process (mq.delays = " + cha + "ms, mq.counters = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
+                            long cha2 = System.currentTimeMillis() - now;
+                            if ((cha > 1000 || cha2 > 1000) && fine) {
+                                messageAgent.logger.log(Level.FINE, clazzName + ".MessageRespFutureNode.complete (mqs.delays = " + cha + "ms, mqs.completes = " + cha2 + "ms, mqs.counters = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
+                            } else if ((cha > 50 || cha2 > 50) && finer) {
+                                messageAgent.logger.log(Level.FINER, clazzName + ".MessageRespFutureNode.complete (mq.delays = " + cha + "ms, mq.completes = " + cha2 + "ms, mq.counters = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
                             } else if (finest) {
-                                messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.process (mq.delay = " + cha + "ms, mq.counter = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
+                                messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.complete (mq.delay = " + cha + "ms, mq.complete = " + cha2 + "ms, mq.counter = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
                             }
                         };
+                        long ones = System.currentTimeMillis();
                         MessageConsumer one = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
                         one.startup().join();
+                        long onee = System.currentTimeMillis() - ones;
+                        if (finest) messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.startup " + onee + "ms ");
                         this.respConsumer = one;
                     }
                 }

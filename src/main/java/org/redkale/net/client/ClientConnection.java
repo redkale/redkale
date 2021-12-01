@@ -153,17 +153,15 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
                                     request.workThread = null;
                                 }
                                 if (rs.exc != null) {
-                                    if (workThread == null || workThread == Thread.currentThread()
-                                        || workThread.getState() == Thread.State.BLOCKED
-                                        || workThread.getState() == Thread.State.WAITING) {
+                                    if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
+                                        || workThread.getState() != Thread.State.RUNNABLE) {
                                         respFuture.completeExceptionally(rs.exc);
                                     } else {
                                         workThread.execute(() -> respFuture.completeExceptionally(rs.exc));
                                     }
                                 } else {
-                                    if (workThread == null || workThread == Thread.currentThread()
-                                        || workThread.getState() == Thread.State.BLOCKED
-                                        || workThread.getState() == Thread.State.WAITING) {
+                                    if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
+                                        || workThread.getState() != Thread.State.RUNNABLE) {
                                         respFuture.complete(rs.result);
                                     } else {
                                         workThread.execute(() -> respFuture.complete(rs.result));

@@ -19,6 +19,13 @@ import java.lang.reflect.Type;
  */
 public interface Decodeable<R extends Reader, T> {
 
+    /**
+     * 反序列化操作
+     *
+     * @param in R
+     *
+     * @return T
+     */
     public T convertFrom(final R in);
 
     /**

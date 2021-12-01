@@ -248,11 +248,13 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
         this(MIN_SIZE);
     }
 
-    /** Create a new NonBlockingHashMap with initial room for the given number of
+    /** *  Create a new NonBlockingHashMap with initial room for the given number of
      * elements, thus avoiding internal resizing operations to reach an
-     * appropriate size. Large numbers here when used with a small count of
+     * appropriate size.Large numbers here when used with a small count of
      * elements will sacrifice space for a small amount of time gained. The
-     * initial size will be rounded up internally to the next larger power of 2. */
+     * initial size will be rounded up internally to the next larger power of 2.
+     * @param initial_sz int
+     */
     public NonBlockingHashMap(final int initial_sz) {
         initialize(initial_sz);
     }
@@ -399,10 +401,13 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
         return res == TOMBSTONE ? null : res;
     }
 
-    /** Atomically replace newVal for oldVal, returning the value that existed
-     * there before. If the oldVal matches the returned value, then newVal was
+    /** *  Atomically replace newVal for oldVal, returning the value that existed
+     * there before.If the oldVal matches the returned value, then newVal was
      * inserted, otherwise not.
      *
+     * @param key key
+     * @param newVal newVal
+     * @param oldVal oldVal
      * @return the previous value associated with the specified key,
      *         or &#60;tt&#62;null&#60;/tt&#62; if there was no mapping for the key
      * @throws NullPointerException if the key or either value is null
@@ -544,7 +549,7 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
     }
 
     // --- get -----------------------------------------------------------------
-    /** Returns the value to which the specified key is mapped, or {@code null}
+    /** *  Returns the value to which the specified key is mapped, or {@code null}
      * if this map contains no mapping for the key.
      * <p>
      * More formally, if this map contains a mapping from a key {@code k} to
@@ -552,6 +557,8 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
      * returns {@code v}; otherwise it returns {@code null}. (There can be at
      * most one such mapping.)
      *
+     * @param key key
+     * @return Type
      * @throws NullPointerException if the specified key is null */
     // Never returns a Prime nor a Tombstone.
     @Override
@@ -615,6 +622,8 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
     /** Returns the Key to which the specified key is mapped, or {@code null}
      * if this map contains no mapping for the key.
      *
+     * @param key TypeK
+     * @return TypeK
      * @throws NullPointerException if the specified key is null */
     // Never returns a Prime nor a Tombstone.
     public TypeK getk(TypeK key) {
@@ -1690,11 +1699,11 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
 
         // --- public interface ---
         /**
-         * Add the given value to current counter value. Concurrent updates will
+         * Add the given value to current counter value.Concurrent updates will
          * not be lost, but addAndGet or getAndAdd are not implemented because the
-         * total counter value (i.e., {@link #get}) is not atomically updated.
-         * Updates are striped across an array of counters to avoid cache contention
+         * total counter value (i.e., {@link #get}) is not atomically updated. Updates are striped across an array of counters to avoid cache contention
          * and has been tested with performance scaling linearly up to 768 CPUs.
+         * @param x long
          */
         public void add(long x) {
             add_if(x);
@@ -1710,8 +1719,8 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
             add_if(1L);
         }
 
-        /** Atomically set the sum of the striped counters to specified value.
-         * Rather more expensive than a simple store, in order to remain atomic.
+        /** *  Atomically set the sum of the striped counters to specified value.Rather more expensive than a simple store, in order to remain atomic.
+         * @param x long
          */
         public void set(long x) {
             CAT newcat = new CAT(null, 4, x);
@@ -1721,27 +1730,30 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
         }
 
         /**
-         * Current value of the counter. Since other threads are updating furiously
+         * Current value of the counter.Since other threads are updating furiously
          * the value is only approximate, but it includes all counts made by the
          * current thread. Requires a pass over the internally striped counters.
+         * @return long
          */
         public long get() {
             return _cat.sum();
         }
 
-        /** Same as {@link #get}, included for completeness. */
+        /** Same as {@link #get}, included for completeness.
+         * @return  int */
         public int intValue() {
             return (int) _cat.sum();
         }
 
-        /** Same as {@link #get}, included for completeness. */
+        /** Same as {@link #get}, included for completeness.
+         * @return  long */
         public long longValue() {
             return _cat.sum();
         }
 
         /**
-         * A cheaper {@link #get}. Updated only once/millisecond, but as fast as a
-         * simple load instruction when not updating.
+         * A cheaper {@link #get}.Updated only once/millisecond, but as fast as a simple load instruction when not updating.
+         * @return long
          */
         public long estimate_get() {
             return _cat.estimate_sum();
@@ -1749,7 +1761,9 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
 
         /**
          * Return the counter's {@code long} value converted to a string.
+         * @return String
          */
+        @Override
         public String toString() {
             return _cat.toString();
         }
@@ -1763,8 +1777,8 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
         }
 
         /**
-         * Return the internal counter striping factor. Useful for diagnosing
-         * performance problems.
+         * Return the internal counter striping factor.Useful for diagnosing performance problems.
+         * @return int
          */
         public int internal_size() {
             return _cat._t.length;

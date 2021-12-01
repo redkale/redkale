@@ -430,27 +430,27 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param type 指定的RetResult泛型类型
      * @param ret  RetResult输出对象
      */
-    @Deprecated //@since 2.5.0
-    public void finishJson(Type type, org.redkale.service.RetResult ret) {
-        this.contentType = this.jsonContentType;
-        if (this.retResultHandler != null) {
-            ret = this.retResultHandler.apply(this.request, ret);
-        }
-        if (this.recycleListener != null) this.output = ret;
-        if (ret != null && !ret.isSuccess()) {
-            this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
-            this.header.addValue("retinfo", ret.getRetinfo());
-        }
-        Convert convert = ret == null ? null : ret.convert();
-        if (convert == null) convert = request.getRespConvert();
-        if (convert == jsonRootConvert) {
-            JsonBytesWriter writer = jsonWriter;
-            convert.convertTo(writer.clear(), type, ret);
-            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
-        } else {
-            convert.convertToBytes(type, ret, convertHandler);
-        }
-    }
+//    @Deprecated //@since 2.5.0
+//    public void finishJson(Type type, org.redkale.service.RetResult ret) {
+//        this.contentType = this.jsonContentType;
+//        if (this.retResultHandler != null) {
+//            ret = this.retResultHandler.apply(this.request, ret);
+//        }
+//        if (this.recycleListener != null) this.output = ret;
+//        if (ret != null && !ret.isSuccess()) {
+//            this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
+//            this.header.addValue("retinfo", ret.getRetinfo());
+//        }
+//        Convert convert = ret == null ? null : ret.convert();
+//        if (convert == null) convert = request.getRespConvert();
+//        if (convert == jsonRootConvert) {
+//            JsonBytesWriter writer = jsonWriter;
+//            convert.convertTo(writer.clear(), type, ret);
+//            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
+//        } else {
+//            convert.convertToBytes(type, ret, convertHandler);
+//        }
+//    }
 
     /**
      * 将RetResult对象以JSON格式输出
@@ -459,25 +459,25 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param type    指定的RetResult泛型类型
      * @param ret     RetResult输出对象
      */
-    @Deprecated //@since 2.5.0
-    public void finishJson(final JsonConvert convert, Type type, org.redkale.service.RetResult ret) {
-        this.contentType = this.jsonContentType;
-        if (this.retResultHandler != null) {
-            ret = this.retResultHandler.apply(this.request, ret);
-        }
-        if (this.recycleListener != null) this.output = ret;
-        if (ret != null && !ret.isSuccess()) {
-            this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
-            this.header.addValue("retinfo", ret.getRetinfo());
-        }
-        if (convert == jsonRootConvert) {
-            JsonBytesWriter writer = jsonWriter;
-            convert.convertTo(writer.clear(), type, ret);
-            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
-        } else {
-            convert.convertToBytes(type, ret, convertHandler);
-        }
-    }
+//    @Deprecated //@since 2.5.0
+//    public void finishJson(final JsonConvert convert, Type type, org.redkale.service.RetResult ret) {
+//        this.contentType = this.jsonContentType;
+//        if (this.retResultHandler != null) {
+//            ret = this.retResultHandler.apply(this.request, ret);
+//        }
+//        if (this.recycleListener != null) this.output = ret;
+//        if (ret != null && !ret.isSuccess()) {
+//            this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
+//            this.header.addValue("retinfo", ret.getRetinfo());
+//        }
+//        if (convert == jsonRootConvert) {
+//            JsonBytesWriter writer = jsonWriter;
+//            convert.convertTo(writer.clear(), type, ret);
+//            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
+//        } else {
+//            convert.convertToBytes(type, ret, convertHandler);
+//        }
+//    }
 
     /**
      * 将CompletableFuture的结果对象以JSON格式输出
@@ -486,11 +486,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType 指定CompletableFuture.value的泛型类型
      * @param future    输出对象的句柄
      */
-    @Deprecated //@since 2.5.0
-    @SuppressWarnings("unchecked")
-    public void finishJson(final JsonConvert convert, final Type valueType, final CompletableFuture future) {
-        finish(convert, valueType, future);
-    }
+//    @Deprecated //@since 2.5.0
+//    @SuppressWarnings("unchecked")
+//    public void finishJson(final JsonConvert convert, final Type valueType, final CompletableFuture future) {
+//        finish(convert, valueType, future);
+//    }
 
     /**
      * 将RetResult对象输出
@@ -932,7 +932,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 //            }
 //        }
     }
-
+    
+    @Override
+    protected void error() {
+        finish500();
+    }
+    
     /**
      * 以304状态码输出
      */

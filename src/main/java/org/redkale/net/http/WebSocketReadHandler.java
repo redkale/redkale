@@ -297,7 +297,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                         try {
                             Convert convert = webSocket.getTextConvert();
                             if (restMessageConsumer != null) { //主要供RestWebSocket使用
-                                restMessageConsumer.accept(webSocket, convert.convertFrom(webSocket._messageTextType, packet.getPayload()));
+                                restMessageConsumer.accept(webSocket, convert.convertFrom(webSocket._messageRestType, packet.getPayload()));
                             } else {
                                 webSocket.onMessage(packet.getPayload() == null ? null : new String(packet.getPayload(), StandardCharsets.UTF_8), packet.last);
                             }
@@ -308,7 +308,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                         try {
                             Convert convert = webSocket.getBinaryConvert();
                             if (restMessageConsumer != null) { //主要供RestWebSocket使用
-                                restMessageConsumer.accept(webSocket, convert.convertFrom(webSocket._messageTextType, packet.getPayload()));
+                                restMessageConsumer.accept(webSocket, convert.convertFrom(webSocket._messageRestType, packet.getPayload()));
                             } else {
                                 webSocket.onMessage(packet.getPayload(), packet.last);
                             }

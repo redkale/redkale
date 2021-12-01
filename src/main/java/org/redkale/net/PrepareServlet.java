@@ -221,7 +221,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
             response.nextEvent();
         } catch (Throwable t) {
             response.context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
-            response.finish(true);
+            response.error();
         }
     }
 

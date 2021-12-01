@@ -763,8 +763,13 @@ public interface Attribute<T, F> {
         final String columnName = column.getName().replace('.', '/');
         final String interDesc = Type.getDescriptor(TypeToken.typeToClass(subclass));
         final String columnDesc = Type.getDescriptor(column);
-        final ClassLoader loader = Thread.currentThread().getContextClassLoader();
         Class realclz = TypeToken.typeToClass(subclass);
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        try {
+            loader.loadClass(realclz.getName());
+        } catch (ClassNotFoundException e) {
+            loader = realclz.getClassLoader();
+        }
         String pkgname = "";
         String clzname = newsubname.toString();
         if (realclz != null) {

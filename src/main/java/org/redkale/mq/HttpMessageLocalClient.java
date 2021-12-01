@@ -72,53 +72,31 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         return (HttpPrepareServlet) httpServer().getPrepareServlet();
     }
 
+    protected HttpServlet findHttpServlet(String topic) {
+        return prepareServlet().findServletByTopic(topic);
+    }
+
+    protected HttpServlet findHttpServlet(HttpSimpleRequest request) {
+        return prepareServlet().findServletByTopic(generateHttpReqTopic(request, request.getPath()));
+    }
+
     @Override
     public <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
-        HttpPrepareServlet ps = prepareServlet();
-        String topic = generateHttpReqTopic(request, request.getPath());
-        HttpServlet servlet = ps.findServletByTopic(topic);
-        CompletableFuture future = new CompletableFuture();
-        if (servlet == null) {
-            future.completeExceptionally(new RuntimeException("404 Not Found " + topic));
-            return future;
-        }
-        HttpRequest req = new HttpMessageLocalRequest(context(), request);
-        HttpResponse resp = new HttpMessageLocalResponse(req, future);
-        try {
-            servlet.execute(req, resp);
-        } catch (Exception e) {
-            future.completeExceptionally(e);
-        }
-        return future;
+        return sendMessage((Serializable) null, (String) null, request, type);
     }
 
     @Override
     public <T> CompletableFuture<T> sendMessage(Serializable userid, HttpSimpleRequest request, Type type) {
-        HttpPrepareServlet ps = prepareServlet();
-        String topic = generateHttpReqTopic(request, request.getPath());
-        HttpServlet servlet = ps.findServletByTopic(topic);
-        CompletableFuture future = new CompletableFuture();
-        if (servlet == null) {
-            future.completeExceptionally(new RuntimeException("404 Not Found " + topic));
-            return future;
-        }
-        HttpRequest req = new HttpMessageLocalRequest(context(), request);
-        HttpResponse resp = new HttpMessageLocalResponse(req, future);
-        try {
-            servlet.execute(req, resp);
-        } catch (Exception e) {
-            future.completeExceptionally(e);
-        }
-        return future;
+        return sendMessage(userid, (String) null, request, type);
     }
 
     @Override
     public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, Type type) {
-        HttpPrepareServlet ps = prepareServlet();
         String topic = generateHttpReqTopic(request, request.getPath());
-        HttpServlet servlet = ps.findServletByTopic(topic);
+        HttpServlet servlet = findHttpServlet(topic);
         CompletableFuture future = new CompletableFuture();
         if (servlet == null) {
+            if (fine) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
             future.completeExceptionally(new RuntimeException("404 Not Found " + topic));
             return future;
         }
@@ -134,9 +112,11 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
     @Override
     public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        HttpPrepareServlet ps = prepareServlet();
-        HttpServlet servlet = ps.findServletByTopic(topic);
-        if (servlet == null) return CompletableFuture.completedFuture(new HttpResult().status(404));
+        HttpServlet servlet = findHttpServlet(topic);
+        if (servlet == null) {
+            if (fine) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
+            return CompletableFuture.completedFuture(new HttpResult().status(404));
+        }
         HttpRequest req = new HttpMessageLocalRequest(context(), request);
         CompletableFuture future = new CompletableFuture();
         HttpResponse resp = new HttpMessageLocalResponse(req, future);
@@ -160,7 +140,10 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         HttpPrepareServlet ps = prepareServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);
-        if (servlet == null) return;
+        if (servlet == null) {
+            if (fine) logger.log(Level.FINE, "produceMessage: request=" + request + ", not found servlet");
+            return;
+        }
         HttpRequest req = new HttpMessageLocalRequest(context(), request);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
         try {
@@ -201,14 +184,67 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
 
         @Override
+        public void finishJson(final Object obj) {
+            finish((Convert) null, (Type) null, obj);
+        }
+
+        @Override
+        public void finishJson(final JsonConvert convert, final Object obj) {
+            finish(convert, (Type) null, obj);
+        }
+
+        @Override
+        public void finishJson(final Type type, final Object obj) {
+            finish((Convert) null, type, obj);
+        }
+
+        @Override
+        public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
+            if (future == null) return;
+            future.complete(obj);
+        }
+
+        @Override
+        public void finish(Type type, org.redkale.service.RetResult ret) {
+            finish((Convert) null, type, ret);
+        }
+
+        @Override
+        public void finish(final Convert convert, Type type, org.redkale.service.RetResult ret) {
+            if (future == null) return;
+            future.complete(ret);
+        }
+
+        @Override
+        public void finish(final Convert convert, final Type type, Object obj) {
+            if (future == null) return;
+            future.complete(obj);
+        }
+
+        @Override
         public void finish(String obj) {
             if (future == null) return;
             future.complete(obj == null ? "" : obj);
         }
 
         @Override
+        public void finish304() {
+            finish(304, null);
+        }
+
+        @Override
         public void finish404() {
             finish(404, null);
+        }
+
+        @Override
+        public void finish500() {
+            finish(500, null);
+        }
+
+        @Override
+        public void finish504() {
+            finish(504, null);
         }
 
         @Override

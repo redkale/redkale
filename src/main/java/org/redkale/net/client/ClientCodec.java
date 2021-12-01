@@ -23,7 +23,7 @@ import org.redkale.util.ByteArray;
  */
 public abstract class ClientCodec<R extends ClientRequest, P> {
 
-    private final List<ClientResult<P>> results = new ArrayList<>();
+    protected final List<ClientResult<P>> results = new ArrayList<>();
 
     public ClientCodec() {
     }

@@ -11,6 +11,7 @@ import org.redkale.net.TransportGroupInfo;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
+import java.net.http.HttpClient;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
@@ -509,7 +510,8 @@ public final class Application {
         }
 
         ExecutorService workExecutor0 = null;
-        if (executorConf != null) {
+        {
+            if (executorConf == null) executorConf = DefaultAnyValue.create();
             final AtomicReference<ExecutorService> workref = new AtomicReference<>();
             final int executorThreads = executorConf.getIntValue("threads", Math.max(2, Utility.cpus()));
             boolean executorHash = executorConf.getBoolValue("hash");
@@ -804,18 +806,36 @@ public final class Application {
 
         }, Application.class, ResourceFactory.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
 
-        //------------------------------------- 注册 HttpClient --------------------------------------------------------        
+        //------------------------------------- 注册 java.net.http.HttpClient --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
-                HttpClient httpClient = HttpClient.create(asyncGroup);
+                java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
+                if (resourceName.endsWith(".1.1")) {
+                    builder.version(HttpClient.Version.HTTP_1_1);
+                } else if (resourceName.endsWith(".2")) {
+                    builder.version(HttpClient.Version.HTTP_2);
+                }
+                java.net.http.HttpClient httpClient = builder.build();
                 field.set(src, httpClient);
                 rf.inject(httpClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, HttpClient.class, httpClient);
+                rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] java.net.http.HttpClient inject error", e);
+            }
+        }, java.net.http.HttpClient.class);
+        //------------------------------------- 注册 HttpSimpleClient --------------------------------------------------------        
+        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+            try {
+                if (field.getAnnotation(Resource.class) == null) return;
+                HttpSimpleClient httpClient = HttpSimpleClient.create(asyncGroup);
+                field.set(src, httpClient);
+                rf.inject(httpClient, null); // 给其可能包含@Resource的字段赋值;
+                rf.register(resourceName, HttpSimpleClient.class, httpClient);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpClient inject error", e);
             }
-        }, HttpClient.class);
+        }, HttpSimpleClient.class);
         //--------------------------------------------------------------------------
         if (this.asyncGroup != null) {
             ((AsyncIOGroup) this.asyncGroup).start();
@@ -857,7 +877,7 @@ public final class Application {
                     rf.register(resourceName, HttpMessageClient.class, messageClient);
                     return;
                 }
-                HttpMessageClient messageClient = new HttpMessageClusterClient(clusterAgent);
+                HttpMessageClient messageClient = new HttpMessageClusterClient(application, resourceName, clusterAgent);
                 field.set(src, messageClient);
                 rf.inject(messageClient, null); // 给其可能包含@Resource的字段赋值;
                 rf.register(resourceName, HttpMessageClient.class, messageClient);
@@ -1066,6 +1086,11 @@ public final class Application {
         }
     }
 
+    /**
+     * 启动
+     *
+     * @throws Exception 异常
+     */
     public void start() throws Exception {
         if (!singletonMode && !compileMode && this.clusterAgent != null) {
             this.clusterAgent.register(this);
@@ -1248,10 +1273,31 @@ public final class Application {
         sercdl.await();
     }
 
+    /**
+     * 实例化单个Service
+     *
+     * @param <T>               泛型
+     * @param serviceClass      指定的service类
+     * @param extServiceClasses 需要排除的service类
+     *
+     * @return Service对象
+     * @throws Exception 异常
+     */
     public static <T extends Service> T singleton(Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
         return singleton("", serviceClass, extServiceClasses);
     }
 
+    /**
+     * 实例化单个Service
+     *
+     * @param <T>               泛型
+     * @param name              Service的资源名
+     * @param serviceClass      指定的service类
+     * @param extServiceClasses 需要排除的service类
+     *
+     * @return Service对象
+     * @throws Exception 异常
+     */
     public static <T extends Service> T singleton(String name, Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
         if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
         final Application application = Application.create(true);
@@ -1279,6 +1325,11 @@ public final class Application {
         return new Application(singleton, false, loadAppConfig());
     }
 
+    /**
+     * 重新加载配置信息
+     *
+     * @throws IOException 异常
+     */
     public void reloadConfig() throws IOException {
         AnyValue newconfig = loadAppConfig();
         final String confpath = this.confPath.toString();

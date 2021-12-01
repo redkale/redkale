@@ -177,6 +177,7 @@ public class MpscChunkedArrayQueue<E> extends AbstractQueue<E> {
     /**
      * An ordered store of an element to a given offset
      *
+     * @param <E> E
      * @param buffer this.buffer
      * @param offset computed via
      * @param e      an orderly kitty

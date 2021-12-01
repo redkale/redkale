@@ -133,7 +133,7 @@ public class Context {
                     }
                 } catch (Throwable t) {
                     response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
-                    response.finish(true);
+                    response.error();
                 }
             });
         } else if (workExecutor != null) {
@@ -142,7 +142,7 @@ public class Context {
                     servlet.execute(request, response);
                 } catch (Throwable t) {
                     response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
-                    response.finish(true);
+                    response.error();
                 }
             });
         } else {
@@ -150,7 +150,7 @@ public class Context {
                 servlet.execute(request, response);
             } catch (Throwable t) {
                 response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
-                response.finish(true);
+                response.error();
             }
         }
 

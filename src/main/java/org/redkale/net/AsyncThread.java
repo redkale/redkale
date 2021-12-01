@@ -28,4 +28,13 @@ public abstract class AsyncThread extends WorkThread {
         return t instanceof AsyncThread ? (AsyncThread) t : null;
     }
 
+    /**
+     * 是否IO线程
+     *
+     * @return boolean
+     */
+    @Override
+    public final boolean inIO() {
+        return true;
+    }
 }

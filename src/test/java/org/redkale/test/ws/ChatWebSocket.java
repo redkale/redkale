@@ -91,4 +91,21 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
         service.joinRoom(getUserid(), roomid);
     }
 
+    /**
+     * 浏览器WebSocket请求：
+     * <pre>
+     * websocket.send(JSON.stringify({
+     *      roomid: 10212
+     *      name: "haha"
+     * }));
+     * </pre>
+     *
+     * @param roomid 参数1
+     * @param name   参数2
+     */
+    @RestOnMessage(name = "*")  //*为特殊值表示参数中不包含方法名
+    public void other(int roomid, String name) {
+        service.other(roomid, name);
+    }
+
 }

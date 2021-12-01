@@ -20,8 +20,7 @@ import javax.annotation.*;
 import org.redkale.boot.Application;
 import org.redkale.convert.Convert;
 import org.redkale.mq.MessageAgent;
-import org.redkale.net.Cryptor;
-import org.redkale.service.*;
+import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
@@ -74,7 +73,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer = createRestOnMessageConsumer();
 
-    protected Type messageTextType;  //RestWebSocket时会被修改
+    protected Type messageRestType;  //RestWebSocket时会被修改
 
     //同RestWebSocket.single
     protected boolean single = true; //是否单用户单连接
@@ -138,7 +137,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         } catch (Exception e) {
             logger.warning(this.getClass().getName() + " not designate text message type on createWebSocket Method");
         }
-        this.messageTextType = msgtype;
+        this.messageRestType = msgtype;
     }
 
     @Override
@@ -214,7 +213,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         final WebSocket webSocket = this.createWebSocket();
         webSocket._engine = this.node.localEngine;
         webSocket._channel = response.getChannel();
-        webSocket._messageTextType = this.messageTextType;
+        webSocket._messageRestType = this.messageRestType;
         webSocket._textConvert = textConvert;
         webSocket._binaryConvert = binaryConvert;
         webSocket._sendConvert = sendConvert;
@@ -232,7 +231,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             response.finish(true);
             return;
         }
-        sessionFuture.whenComplete((sessionid, ex) -> {
+        BiConsumer<String, Throwable> sessionConsumer = (sessionid, ex) -> {
             if ((sessionid == null && webSocket.delayPackets == null) || ex != null) {
                 if (debug || ex != null) logger.log(ex == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Not found sessionid or occur error. request=" + request, ex);
                 response.finish(true);
@@ -360,6 +359,14 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                     response.finish(true);
                 }
             });
+        };
+        WorkThread workThread = WorkThread.currWorkThread();
+        sessionFuture.whenComplete((sessionid, ex) -> {
+            if (workThread == null || workThread == Thread.currentThread()) {
+                sessionConsumer.accept(sessionid, ex);
+            } else {
+                workThread.execute(() -> sessionConsumer.accept(sessionid, ex));
+            }
         });
     }
 
