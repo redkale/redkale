@@ -43,11 +43,11 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected final HttpServlet servlet;
 
-    protected final boolean multiconsumer;
+    protected final boolean multiConsumer;
 
-    protected final String restmodule; //  前后有/, 例如: /user/
+    protected final String restModule; //  前后有/, 例如: /user/
 
-    protected final String multimodule; //  前后有/, 例如: /userstat/
+    protected final String multiModule; //  前后有/, 例如: /userstat/
 
     protected ThreadLocal<ObjectPool<HttpMessageResponse>> respPoolThreadLocal;
 
@@ -57,7 +57,7 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected CountDownLatch cdl;
 
-    protected long starttime;
+    protected long startTime;
 
     protected final Runnable innerCallback = () -> {
         if (cdl != null) cdl.countDown();
@@ -74,9 +74,9 @@ public class HttpMessageProcessor implements MessageProcessor {
         this.service = service;
         this.servlet = servlet;
         MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
-        this.multiconsumer = mmc != null;
-        this.restmodule = "/" + Rest.getRestModule(service) + "/";
-        this.multimodule = mmc != null ? ("/" + mmc.module() + "/") : null;
+        this.multiConsumer = mmc != null;
+        this.restModule = "/" + Rest.getRestModule(service) + "/";
+        this.multiModule = mmc != null ? ("/" + mmc.module() + "/") : null;
         this.respSupplier = () -> respPoolThreadLocal.get().get();
         this.respConsumer = resp -> respPoolThreadLocal.get().accept(resp);
         this.respPoolThreadLocal = ThreadLocal.withInitial(() -> ObjectPool.createUnsafePool(Utility.cpus(),
@@ -85,7 +85,7 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     @Override
     public void begin(final int size, long starttime) {
-        this.starttime = starttime;
+        this.startTime = starttime;
         this.cdl = size > 1 ? new CountDownLatch(size) : null;
     }
 
@@ -97,15 +97,16 @@ public class HttpMessageProcessor implements MessageProcessor {
     private void execute(final MessageRecord message, final Runnable callback) {
         HttpMessageRequest request = null;
         try {
+            Traces.currTraceid(message.getTraceid());
             long now = System.currentTimeMillis();
-            long cha = now - message.createtime;
-            long e = now - starttime;
-            if (multiconsumer) message.setResptopic(null); //不容许有响应
+            long cha = now - message.createTime;
+            long e = now - startTime;
+            if (multiConsumer) message.setRespTopic(null); //不容许有响应
 
             HttpMessageResponse response = respSupplier.get();
             request = response.request();
             response.prepare(message, callback, producers.getProducer(message));
-            if (multiconsumer) request.setRequestURI(request.getRequestURI().replaceFirst(this.multimodule, this.restmodule));
+            if (multiConsumer) request.setRequestURI(request.getRequestURI().replaceFirst(this.multiModule, this.restModule));
 
             server.getHttpServer().getContext().execute(servlet, request, response);
             long o = System.currentTimeMillis() - now;
@@ -117,9 +118,9 @@ public class HttpMessageProcessor implements MessageProcessor {
                 logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
             }
         } catch (Throwable ex) {
-            if (message.getResptopic() != null && !message.getResptopic().isEmpty()) {
+            if (message.getRespTopic() != null && !message.getRespTopic().isEmpty()) {
                 HttpMessageResponse.finishHttpResult(finest, request == null ? null : request.getRespConvert(),
-                    null, message, callback, messageClient, producers.getProducer(message), message.getResptopic(), new HttpResult().status(500));
+                    null, message, callback, messageClient, producers.getProducer(message), message.getRespTopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }
@@ -131,7 +132,7 @@ public class HttpMessageProcessor implements MessageProcessor {
             try {
                 this.cdl.await(30, TimeUnit.SECONDS);
             } catch (Exception ex) {
-                logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " commit error, restmodule=" + this.restmodule, ex);
+                logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " commit error, restmodule=" + this.restModule, ex);
             }
             this.cdl = null;
         }

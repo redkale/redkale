@@ -27,6 +27,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.HashMap<String, String>>() {
     }.getType();
 
+    public static final Type TYPE_LIST_STRING = new TypeToken<java.util.List<String>>() {
+    }.getType();
+
     public static final Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
 
@@ -100,6 +103,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return convertFrom(type, new String(bytes, offset, length, StandardCharsets.UTF_8));
     }
 
+    @Override
     public <T> T convertFrom(final Type type, final String text) {
         if (text == null) return null;
         return convertFrom(type, Utility.charArray(text));
@@ -209,6 +213,24 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public <V> V convertFrom(final JsonReader reader) {
         if (reader == null) return null;
         return (V) new AnyDecoder(factory).convertFrom(reader);
+    }
+
+    //json数据的数组长度必须和types个数相同
+    public Object[] convertFrom(final Type[] types, final String text) {
+        if (text == null) return null;
+        return new JsonMultiArrayDecoder(getFactory(), types).convertFrom(new JsonReader(text));
+    }
+
+    //json数据的数组长度必须和types个数相同
+    public Object[] convertFrom(final Type[] types, final byte[] bytes) {
+        if (bytes == null) return null;
+        return convertFrom(types, new String(bytes, StandardCharsets.UTF_8));
+    }
+
+    //json数据的数组长度必须和types个数相同
+    public Object[] convertFrom(final Type[] types, final byte[] bytes, final int offset, final int length) {
+        if (bytes == null) return null;
+        return convertFrom(types, new String(bytes, offset, length, StandardCharsets.UTF_8));
     }
 
     //------------------------------ convertTo -----------------------------------------------------------

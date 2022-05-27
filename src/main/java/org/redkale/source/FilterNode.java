@@ -299,14 +299,17 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return rs;
     }
 
+    @Deprecated //@deprecated @since 2.7.0  使用 filter 方法替换
     public static FilterNode create(String column, Serializable value) {
         return filter(column, null, value);
     }
 
+    @Deprecated //@deprecated @since 2.7.0  使用 filter 方法替换
     public static FilterNode create(String column, FilterExpress express, Serializable value) {
         return filter(column, express, true, value);
     }
 
+    @Deprecated //@deprecated @since 2.7.0  使用 filter 方法替换
     public static FilterNode create(String column, FilterExpress express, boolean itemand, Serializable value) {
         return new FilterNode(column, express, itemand, value);
     }
@@ -411,8 +414,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         StringBuilder sb = new StringBuilder(32);
         if (express == CONTAIN) return source.containSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
         if (express == IGNORECASECONTAIN) return source.containSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
-        if (express == NOTCONTAIN) return source.notcontainSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
-        if (express == IGNORECASENOTCONTAIN) return source.notcontainSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
+        if (express == NOTCONTAIN) return source.notContainSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
+        if (express == IGNORECASENOTCONTAIN) return source.notContainSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
 
         if (express == LENGTH_EQUAL || express == LENGTH_LESSTHAN || express == LENGTH_LESSTHANOREQUALTO
             || express == LENGTH_GREATERTHAN || express == LENGTH_GREATERTHANOREQUALTO) {

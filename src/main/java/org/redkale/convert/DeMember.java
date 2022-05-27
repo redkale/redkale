@@ -88,26 +88,26 @@ public final class DeMember<R extends Reader, T, F> {
         this.decoder = decoder;
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldname) {
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldName) {
         try {
-            Field field = clazz.getDeclaredField(fieldname);
+            Field field = clazz.getDeclaredField(fieldName);
             return new DeMember<>(Attribute.create(field), factory.loadDecoder(field.getGenericType()), field, null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldname, final Class<F> fieldtype) {
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldName, final Class<F> fieldType) {
         try {
-            Field field = clazz.getDeclaredField(fieldname);
-            return new DeMember<>(Attribute.create(clazz, fieldname, fieldtype), factory.loadDecoder(fieldtype), field, null);
+            Field field = clazz.getDeclaredField(fieldName);
+            return new DeMember<>(Attribute.create(clazz, fieldName, fieldType), factory.loadDecoder(fieldType), field, null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(final Attribute<T, F> attribute, final ConvertFactory factory, final Class<F> fieldtype) {
-        return new DeMember<>(attribute, factory.loadDecoder(fieldtype), null, null);
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(final Attribute<T, F> attribute, final ConvertFactory factory, final Class<F> fieldType) {
+        return new DeMember<>(attribute, factory.loadDecoder(fieldType), null, null);
     }
 
     public final boolean accepts(String name) {

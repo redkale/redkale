@@ -10,6 +10,7 @@ import java.util.logging.*;
 import org.redkale.boot.NodeSncpServer;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
+import org.redkale.util.Traces;
 
 /**
  * 一个Service对应一个MessageProcessor
@@ -75,8 +76,9 @@ public class SncpMessageProcessor implements MessageProcessor {
     private void execute(final MessageRecord message, final Runnable callback) {
         SncpMessageResponse response = null;
         try {
+            Traces.currTraceid(message.getTraceid());
             long now = System.currentTimeMillis();
-            long cha = now - message.createtime;
+            long cha = now - message.createTime;
             long e = now - starttime;
             SncpContext context = server.getSncpServer().getContext();
             SncpMessageRequest request = new SncpMessageRequest(context, message);

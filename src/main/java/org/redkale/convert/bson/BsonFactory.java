@@ -58,6 +58,10 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         return this;
     }
 
+    protected boolean tiny() {
+        return this.tiny;
+    }
+
     @Override
     public BsonFactory skipAllIgnore(final boolean skipIgnore) {
         this.registerSkipAllIgnore(skipIgnore);

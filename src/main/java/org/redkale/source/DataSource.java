@@ -1554,6 +1554,32 @@ public interface DataSource {
     }
 
     /**
+     * 获取指定主键值的多个记录, 返回列表   <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     *
+     * @param <D>主键泛型
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param pks     主键值集合
+     *
+     * @return Entity对象
+     */
+    public <D extends Serializable, T> List<T> findsList(final Class<T> clazz, final Stream<D> pks);
+
+    /**
+     * 获取指定主键值的多个记录, 返回列表   <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     *
+     * @param <D>主键泛型
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param pks     主键值集合
+     *
+     * @return Entity对象
+     */
+    public <D extends Serializable, T> CompletableFuture<List<T>> findsListAsync(final Class<T> clazz, final Stream<D> pks);
+
+    /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
      *

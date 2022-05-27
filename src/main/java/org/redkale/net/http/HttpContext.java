@@ -30,12 +30,18 @@ public class HttpContext extends Context {
 
     protected final String remoteAddrHeader;
 
+    protected final HttpRpcAuthenticator rpcAuthenticator;
+
+    protected final AnyValue rpcAuthenticatorConfig;
+
     protected boolean lazyHeaders; //存在动态改值
 
 //    protected RequestURINode[] uriCacheNodes;
     public HttpContext(HttpContextConfig config) {
         super(config);
         this.remoteAddrHeader = config.remoteAddrHeader;
+        this.rpcAuthenticator = config.rpcAuthenticator;
+        this.rpcAuthenticatorConfig = config.rpcAuthenticatorConfig;
         random.setSeed(Math.abs(System.nanoTime()));
     }
 
@@ -183,6 +189,10 @@ public class HttpContext extends Context {
     public static class HttpContextConfig extends ContextConfig {
 
         public String remoteAddrHeader;
+
+        public HttpRpcAuthenticator rpcAuthenticator;
+
+        public AnyValue rpcAuthenticatorConfig;
 
     }
 

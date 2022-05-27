@@ -10,13 +10,13 @@ import org.redkale.util.RedkaleClassLoader;
 import java.io.*;
 import java.nio.file.*;
 import static java.nio.file.StandardCopyOption.*;
-import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import java.util.logging.Formatter;
 import java.util.regex.Pattern;
+import org.redkale.util.*;
 
 /**
  * 自定义的日志输出类
@@ -26,10 +26,12 @@ import java.util.regex.Pattern;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public class LoggingFileHandler extends Handler {
+public class LoggingFileHandler extends LoggingBaseHandler {
 
     //public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s%n%5$s%6$s%n";
     public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s\r\n%5$s%6$s\r\n";
+
+    static boolean traceflag = false; //防止设置system.property前调用Traces类导致enable提前初始化
 
     /**
      * SNCP的日志输出Handler
@@ -42,6 +44,46 @@ public class LoggingFileHandler extends Handler {
         }
     }
 
+    public static class LoggingConsoleHandler extends ConsoleHandler {
+
+        private Pattern denyreg;
+
+        public LoggingConsoleHandler() {
+            super();
+            configure();
+        }
+
+        private void configure() {
+            LogManager manager = LogManager.getLogManager();
+            String denyregstr = manager.getProperty("java.util.logging.ConsoleHandler.denyreg");
+            try {
+                if (denyregstr != null && !denyregstr.trim().isEmpty()) {
+                    denyreg = Pattern.compile(denyregstr);
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        @Override
+        public void publish(LogRecord log) {
+            if (denyreg != null && denyreg.matcher(log.getMessage()).find()) return;
+            if (traceflag && Traces.enable()) {
+                String traceid = Traces.currTraceid();
+                if (traceid == null || traceid.isEmpty()) {
+                    traceid = "[TID:N/A] ";
+                } else {
+                    traceid = "[TID:" + traceid + "] ";
+                }
+                if (log.getMessage() == null) {
+                    log.setMessage(traceid);
+                } else {
+                    log.setMessage(traceid + log.getMessage());
+                }
+            }
+            super.publish(log);
+        }
+    }
+
     /**
      * 默认的日志时间格式化类
      * 与SimpleFormatter的区别在于level不使用本地化
@@ -51,6 +93,9 @@ public class LoggingFileHandler extends Handler {
 
         @Override
         public String format(LogRecord log) {
+            if (log.getThrown() == null && log.getMessage() != null && log.getMessage().startsWith("------")) {
+                return formatMessage(log) + "\r\n";
+            }
             String source;
             if (log.getSourceClassName() != null) {
                 source = log.getSourceClassName();
@@ -104,9 +149,13 @@ public class LoggingFileHandler extends Handler {
 
     protected final LinkedBlockingQueue<LogRecord> logqueue = new LinkedBlockingQueue();
 
-    private String pattern;
+    protected String pattern;
 
-    private String unusual; //不为null表示将 WARNING、SEVERE 级别的日志写入单独的文件中
+    protected String patternDateFormat; //需要时间格式化
+
+    protected String unusual; //不为null表示将 WARNING、SEVERE 级别的日志写入单独的文件中
+
+    protected String unusualDateFormat; //需要时间格式化
 
     private int limit;   //文件大小限制
 
@@ -118,9 +167,9 @@ public class LoggingFileHandler extends Handler {
 
     private long tomorrow;
 
-    private boolean append;
+    protected boolean append;
 
-    private Pattern denyreg;
+    protected Pattern denyreg;
 
     private final AtomicLong loglength = new AtomicLong();
 
@@ -198,16 +247,14 @@ public class LoggingFileHandler extends Handler {
                         }
                         if (logstream == null) {
                             logindex.incrementAndGet();
-                            java.time.LocalDate date = LocalDate.now();
-                            logfile = new File(pattern.replace("%m", String.valueOf((date.getYear() * 100 + date.getMonthValue()))).replace("%d", String.valueOf((date.getYear() * 10000 + date.getMonthValue() * 100 + date.getDayOfMonth()))));
+                            logfile = new File(patternDateFormat == null ? pattern : Utility.formatTime(patternDateFormat, -1, System.currentTimeMillis()));
                             logfile.getParentFile().mkdirs();
                             loglength.set(logfile.length());
                             logstream = new FileOutputStream(logfile, append);
                         }
                         if (unusual != null && logunusualstream == null) {
                             logunusualindex.incrementAndGet();
-                            java.time.LocalDate date = LocalDate.now();
-                            logunusualfile = new File(unusual.replace("%m", String.valueOf((date.getYear() * 100 + date.getMonthValue()))).replace("%d", String.valueOf((date.getYear() * 10000 + date.getMonthValue() * 100 + date.getDayOfMonth()))));
+                            logunusualfile = new File(unusualDateFormat == null ? unusual : Utility.formatTime(unusualDateFormat, -1, System.currentTimeMillis()));
                             logunusualfile.getParentFile().mkdirs();
                             logunusuallength.set(logunusualfile.length());
                             logunusualstream = new FileOutputStream(logunusualfile, append);
@@ -241,7 +288,7 @@ public class LoggingFileHandler extends Handler {
         String cname = LoggingFileHandler.class.getName();
         this.pattern = manager.getProperty(cname + ".pattern");
         if (this.pattern == null) {
-            this.pattern = "logs-%m/" + getPrefix() + "log-%d.log";
+            this.pattern = "logs-%tm/" + getPrefix() + "log-%td.log";
         } else {
             int pos = this.pattern.lastIndexOf('/');
             if (pos > 0) {
@@ -249,6 +296,10 @@ public class LoggingFileHandler extends Handler {
             } else {
                 this.pattern = getPrefix() + this.pattern;
             }
+        }
+        if (this.pattern != null && this.pattern.contains("%")) { //需要时间格式化
+            this.patternDateFormat = this.pattern;
+            Utility.formatTime(this.patternDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
         }
         String unusualstr = manager.getProperty(cname + ".unusual");
         if (unusualstr != null) {
@@ -258,6 +309,10 @@ public class LoggingFileHandler extends Handler {
             } else {
                 this.unusual = getPrefix() + unusualstr;
             }
+        }
+        if (this.unusual != null && this.unusual.contains("%")) { //需要时间格式化
+            this.unusualDateFormat = this.unusual;
+            Utility.formatTime(this.unusualDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
         }
         String limitstr = manager.getProperty(cname + ".limit");
         try {
@@ -333,6 +388,7 @@ public class LoggingFileHandler extends Handler {
 
     @Override
     public void publish(LogRecord log) {
+        if (!isLoggable(log)) return;
         final String sourceClassName = log.getSourceClassName();
         if (sourceClassName == null || true) {
             StackTraceElement[] ses = new Throwable().getStackTrace();
@@ -346,6 +402,19 @@ public class LoggingFileHandler extends Handler {
             log.setSourceClassName('[' + Thread.currentThread().getName() + "] " + sourceClassName);
         }
         if (denyreg != null && denyreg.matcher(log.getMessage()).find()) return;
+        if (traceflag && Traces.enable()) {
+            String traceid = Traces.currTraceid();
+            if (traceid == null || traceid.isEmpty()) {
+                traceid = "[TID:N/A] ";
+            } else {
+                traceid = "[TID:" + traceid + "] ";
+            }
+            if (log.getMessage() == null) {
+                log.setMessage(traceid);
+            } else {
+                log.setMessage(traceid + log.getMessage());
+            }
+        }
         logqueue.offer(log);
     }
 

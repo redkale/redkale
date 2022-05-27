@@ -10,6 +10,7 @@ import java.util.*;
 import javax.persistence.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  *
@@ -60,11 +61,13 @@ public class JsonRecord {
     }
 
     public static void main(String[] args) throws Throwable {
-        Properties properties = new Properties();
-        properties.put("javax.persistence.jdbc.url", "jdbc:mysql://localhost:3306/center?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true");
-        properties.put("javax.persistence.jdbc.user", "root");
-        properties.put("javax.persistence.jdbc.password", "");
-        DataSource source = DataSources.createDataSource("", properties);
+        DefaultAnyValue conf = DefaultAnyValue.create();
+        conf.addValue("name", "");
+        conf.addValue("url", "jdbc:mysql://localhost:3306/center?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true");
+        conf.addValue("user", "root");
+        conf.addValue("password", "");
+        DataJdbcSource source = new DataJdbcSource();
+        source.init(conf);
         JsonRecord record = JsonRecord.create();
         source.insert(record);
         source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.mov("recordname", "my name 2"));

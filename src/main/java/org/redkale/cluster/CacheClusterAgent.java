@@ -37,24 +37,26 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     protected ScheduledThreadPoolExecutor scheduler;
 
-    //可能被HttpMessageClient用到的服务 key: servicename
+    //可能被HttpMessageClient用到的服务 key: serviceName
     protected final ConcurrentHashMap<String, Collection<InetSocketAddress>> httpAddressMap = new ConcurrentHashMap<>();
 
-    //可能被mqtp用到的服务 key: servicename
+    //可能被mqtp用到的服务 key: serviceName
     protected final ConcurrentHashMap<String, Collection<InetSocketAddress>> mqtpAddressMap = new ConcurrentHashMap<>();
 
     @Override
-    public void init(AnyValue config) {
-        super.init(config);
+    public void init(ResourceFactory factory, AnyValue config) {
+        super.init(factory, config);
+
         this.sourceName = getSourceName();
 
-        AnyValue[] properties = config.getAnyValues("property");
-        for (AnyValue property : properties) {
-            if ("ttls".equalsIgnoreCase(property.getValue("name"))) {
-                this.ttls = Integer.parseInt(property.getValue("value", "").trim());
-                if (this.ttls < 5) this.ttls = 10;
-            }
-        }
+        this.ttls = config.getIntValue("ttls", 10);
+        if (this.ttls < 5) this.ttls = 10;
+    }
+
+    @Override
+    public void setConfig(AnyValue config) {
+        super.setConfig(config);
+        this.sourceName = getSourceName();
     }
 
     @Override
@@ -63,15 +65,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     public String getSourceName() {
-        AnyValue[] properties = config.getAnyValues("property");
-        for (AnyValue property : properties) {
-            if ("source".equalsIgnoreCase(property.getValue("name"))
-                && property.getValue("value") != null) {
-                this.sourceName = property.getValue("value");
-                return this.sourceName;
-            }
-        }
-        return null;
+        return config.getValue("source");
     }
 
     @Override
@@ -82,13 +76,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     @Override //ServiceLoader时判断配置是否符合当前实现类
     public boolean acceptsConf(AnyValue config) {
         if (config == null) return false;
-        AnyValue[] properties = config.getAnyValues("property");
-        if (properties == null || properties.length == 0) return false;
-        for (AnyValue property : properties) {
-            if ("source".equalsIgnoreCase(property.getValue("name"))
-                && property.getValue("value") != null) return true;
-        }
-        return false;
+        return config.getValue("source") != null;
     }
 
     @Override
@@ -120,22 +108,22 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     protected void loadMqtpAddressHealth() {
         List<String> keys = source.queryKeysStartsWith("cluster.mqtp:");
-        keys.forEach(servicename -> {
+        keys.forEach(serviceName -> {
             try {
-                this.mqtpAddressMap.put(servicename, queryAddress(servicename).get(3, TimeUnit.SECONDS));
+                this.mqtpAddressMap.put(serviceName, queryAddress(serviceName).get(3, TimeUnit.SECONDS));
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "loadMqtpAddressHealth check " + servicename + " error", e);
+                logger.log(Level.SEVERE, "loadMqtpAddressHealth check " + serviceName + " error", e);
             }
         });
     }
 
     protected void checkHttpAddressHealth() {
         try {
-            this.httpAddressMap.keySet().stream().forEach(servicename -> {
+            this.httpAddressMap.keySet().stream().forEach(serviceName -> {
                 try {
-                    this.httpAddressMap.put(servicename, queryAddress(servicename).get(3, TimeUnit.SECONDS));
+                    this.httpAddressMap.put(serviceName, queryAddress(serviceName).get(3, TimeUnit.SECONDS));
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, "checkHttpAddressHealth check " + servicename + " error", e);
+                    logger.log(Level.SEVERE, "checkHttpAddressHealth check " + serviceName + " error", e);
                 }
             });
         } catch (Exception ex) {
@@ -148,10 +136,10 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         newaddr.addr = entry.address;
         newaddr.nodeid = this.nodeid;
         newaddr.time = System.currentTimeMillis();
-        source.hset(entry.checkname, entry.checkid, AddressEntry.class, newaddr);
+        source.hset(entry.checkName, entry.checkid, AddressEntry.class, newaddr);
     }
 
-    @Override //获取MQTP的HTTP远程服务的可用ip列表, key = servicename的后半段
+    @Override //获取MQTP的HTTP远程服务的可用ip列表, key = serviceName的后半段
     public CompletableFuture<Map<String, Collection<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname) {
         final Map<String, Collection<InetSocketAddress>> rsmap = new ConcurrentHashMap<>();
         final String servicenamprefix = generateHttpServiceName(protocol, module, null) + ":";
@@ -162,22 +150,22 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     @Override //获取HTTP远程服务的可用ip列表
     public CompletableFuture<Collection<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname) {
-        final String servicename = generateHttpServiceName(protocol, module, resname);
-        Collection<InetSocketAddress> rs = httpAddressMap.get(servicename);
+        final String serviceName = generateHttpServiceName(protocol, module, resname);
+        Collection<InetSocketAddress> rs = httpAddressMap.get(serviceName);
         if (rs != null) return CompletableFuture.completedFuture(rs);
-        return queryAddress(servicename).thenApply(t -> {
-            httpAddressMap.put(servicename, t);
+        return queryAddress(serviceName).thenApply(t -> {
+            httpAddressMap.put(serviceName, t);
             return t;
         });
     }
 
     @Override
     protected CompletableFuture<Collection<InetSocketAddress>> queryAddress(final ClusterEntry entry) {
-        return queryAddress(entry.servicename);
+        return queryAddress(entry.serviceName);
     }
 
-    private CompletableFuture<Collection<InetSocketAddress>> queryAddress(final String servicename) {
-        final CompletableFuture<Map<String, AddressEntry>> future = source.hmapAsync(servicename, AddressEntry.class, 0, 10000);
+    private CompletableFuture<Collection<InetSocketAddress>> queryAddress(final String serviceName) {
+        final CompletableFuture<Map<String, AddressEntry>> future = source.hmapAsync(serviceName, AddressEntry.class, 0, 10000);
         return future.thenApply(map -> {
             final Set<InetSocketAddress> set = new HashSet<>();
             map.forEach((n, v) -> {
@@ -188,9 +176,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     protected boolean isApplicationHealth() {
-        String servicename = generateApplicationServiceName();
+        String serviceName = generateApplicationServiceName();
         String serviceid = generateApplicationServiceId();
-        AddressEntry entry = (AddressEntry) source.hget(servicename, serviceid, AddressEntry.class);
+        AddressEntry entry = (AddressEntry) source.hget(serviceName, serviceid, AddressEntry.class);
         return entry != null && (System.currentTimeMillis() - entry.time) / 1000 < ttls;
     }
 
@@ -210,18 +198,18 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         deregister(application);
 
         String serviceid = generateApplicationServiceId();
-        String servicename = generateApplicationServiceName();
+        String serviceName = generateApplicationServiceName();
         AddressEntry entry = new AddressEntry();
         entry.addr = this.appAddress;
         entry.nodeid = this.nodeid;
         entry.time = System.currentTimeMillis();
-        source.hset(servicename, serviceid, AddressEntry.class, entry);
+        source.hset(serviceName, serviceid, AddressEntry.class, entry);
     }
 
     @Override
     public void deregister(Application application) {
-        String servicename = generateApplicationServiceName();
-        source.remove(servicename);
+        String serviceName = generateApplicationServiceName();
+        source.remove(serviceName);
     }
 
     @Override
@@ -233,7 +221,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         entry.addr = clusterEntry.address;
         entry.nodeid = this.nodeid;
         entry.time = System.currentTimeMillis();
-        source.hset(clusterEntry.servicename, clusterEntry.serviceid, AddressEntry.class, entry);
+        source.hset(clusterEntry.serviceName, clusterEntry.serviceid, AddressEntry.class, entry);
         return clusterEntry;
     }
 
@@ -243,24 +231,24 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     protected void deregister(NodeServer ns, String protocol, Service service, boolean realcanceled) {
-        String servicename = generateServiceName(ns, protocol, service);
+        String serviceName = generateServiceName(ns, protocol, service);
         String serviceid = generateServiceId(ns, protocol, service);
         ClusterEntry currEntry = null;
         for (final ClusterEntry entry : localEntrys.values()) {
-            if (entry.servicename.equals(servicename) && entry.serviceid.equals(serviceid)) {
+            if (entry.serviceName.equals(serviceName) && entry.serviceid.equals(serviceid)) {
                 currEntry = entry;
                 break;
             }
         }
         if (currEntry == null) {
             for (final ClusterEntry entry : remoteEntrys.values()) {
-                if (entry.servicename.equals(servicename) && entry.serviceid.equals(serviceid)) {
+                if (entry.serviceName.equals(serviceName) && entry.serviceid.equals(serviceid)) {
                     currEntry = entry;
                     break;
                 }
             }
         }
-        source.hremove(servicename, serviceid);
+        source.hremove(serviceName, serviceid);
         if (realcanceled && currEntry != null) currEntry.canceled = true;
         if (!"mqtp".equals(protocol) && currEntry != null && currEntry.submqtp) {
             deregister(ns, "mqtp", service, realcanceled);

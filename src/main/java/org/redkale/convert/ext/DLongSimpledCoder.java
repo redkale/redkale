@@ -8,6 +8,7 @@ package org.redkale.convert.ext;
 import org.redkale.convert.Reader;
 import org.redkale.convert.Writer;
 import org.redkale.convert.SimpledCoder;
+import org.redkale.convert.json.*;
 import org.redkale.util.*;
 
 /**
@@ -50,12 +51,12 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public static class DLongJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, DLong> {
+    public static class DLongJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, DLong> {
 
         public static final DLongJsonSimpledCoder instance = new DLongJsonSimpledCoder();
 
         @Override
-        public void convertTo(final Writer out, final DLong value) {
+        public void convertTo(final W out, final DLong value) {
             if (value == null) {
                 out.writeNull();
             } else {
@@ -64,7 +65,7 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
         }
 
         @Override
-        public DLong convertFrom(Reader in) {
+        public DLong convertFrom(R in) {
             final String str = in.readSmallString();
             if (str == null) return null;
             return DLong.create(Utility.hexToBin(str));

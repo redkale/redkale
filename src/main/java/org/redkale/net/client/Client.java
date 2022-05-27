@@ -5,7 +5,6 @@
  */
 package org.redkale.net.client;
 
-import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -27,6 +26,8 @@ import org.redkale.util.*;
  */
 public abstract class Client<R extends ClientRequest, P> {
 
+    public static final int DEFAULT_MAX_PIPELINES = 256;
+
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected final boolean finest = logger.isLoggable(Level.FINEST);
@@ -35,15 +36,13 @@ public abstract class Client<R extends ClientRequest, P> {
 
     protected final boolean tcp; //是否TCP协议
 
-    protected final SocketAddress address;  //连接的地址
-
-    protected final Creator<ClientCodec<R, P>> codecCreator;
+    protected final ClientAddress address;  //连接的地址
 
     protected final ScheduledThreadPoolExecutor timeoutScheduler;
 
-    protected final LongAdder writeReqCounter = new LongAdder();
+    protected final LongAdder reqWritedCounter = new LongAdder();
 
-    protected final LongAdder pollRespCounter = new LongAdder();
+    protected final LongAdder respDoneCounter = new LongAdder();
 
     private final AtomicInteger connSeqno = new AtomicInteger();
 
@@ -53,15 +52,15 @@ public abstract class Client<R extends ClientRequest, P> {
 
     protected ClientConnection<R, P>[] connArray;  //连接池
 
-    protected LongAdder[] connResps;  //连接当前处理数
+    protected LongAdder[] connRespWaitings;  //连接当前处理数
 
-    protected AtomicBoolean[] connOpens; //conns的标记组，当conn不存在或closed状态，标记为false
+    protected AtomicBoolean[] connOpenStates; //conns的标记组，当conn不存在或closed状态，标记为false
 
-    protected final Queue<CompletableFuture<ClientConnection>>[] connWaits;  //连接等待池
+    protected final Queue<CompletableFuture<ClientConnection>>[] connAcquireWaitings;  //连接等待池
 
     protected int connLimit = Utility.cpus();  //最大连接数
 
-    protected int maxPipelines = 16; //单个连接最大并行处理数
+    protected int maxPipelines = DEFAULT_MAX_PIPELINES; //单个连接最大并行处理数
 
     protected int readTimeoutSeconds;
 
@@ -79,36 +78,35 @@ public abstract class Client<R extends ClientRequest, P> {
     //创建连接后进行的登录鉴权操作
     protected Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate;
 
-    protected Client(AsyncGroup group, SocketAddress address, Creator<ClientCodec<R, P>> responseCreator) {
-        this(group, true, address, Utility.cpus(), 16, responseCreator, null, null, null);
+    protected Client(AsyncGroup group, ClientAddress address) {
+        this(group, true, address, Utility.cpus(), 16, null, null, null);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, SocketAddress address, Creator<ClientCodec<R, P>> codecCreator) {
-        this(group, tcp, address, Utility.cpus(), 16, codecCreator, null, null, null);
+    protected Client(AsyncGroup group, boolean tcp, ClientAddress address) {
+        this(group, tcp, address, Utility.cpus(), 16, null, null, null);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, SocketAddress address, int maxconns, Creator<ClientCodec<R, P>> codecCreator) {
-        this(group, tcp, address, maxconns, 16, codecCreator, null, null, null);
+    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns) {
+        this(group, tcp, address, maxconns, 16, null, null, null);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, SocketAddress address, int maxconns, int maxPipelines, Creator<ClientCodec<R, P>> codecCreator) {
-        this(group, tcp, address, maxconns, maxPipelines, codecCreator, null, null, null);
+    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns, int maxPipelines) {
+        this(group, tcp, address, maxconns, maxPipelines, null, null, null);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, SocketAddress address, int maxconns, Creator<ClientCodec<R, P>> codecCreator,
+    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
         Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        this(group, tcp, address, maxconns, 16, codecCreator, null, null, authenticate);
+        this(group, tcp, address, maxconns, 16, null, null, authenticate);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, SocketAddress address, int maxconns, Creator<ClientCodec<R, P>> codecCreator,
+    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
         R closeRequest, Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        this(group, tcp, address, maxconns, 16, codecCreator, null, closeRequest, authenticate);
+        this(group, tcp, address, maxconns, 16, null, closeRequest, authenticate);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    protected Client(AsyncGroup group, boolean tcp, SocketAddress address, int maxconns,
-        int maxPipelines, Creator<ClientCodec<R, P>> codecCreator, R pingRequest, R closeRequest,
-        Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
+    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
+        int maxPipelines, R pingRequest, R closeRequest, Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
         if (maxPipelines < 1) throw new IllegalArgumentException("maxPipelines must bigger 0");
         this.group = group;
         this.tcp = tcp;
@@ -117,16 +115,15 @@ public abstract class Client<R extends ClientRequest, P> {
         this.maxPipelines = maxPipelines;
         this.pingRequest = pingRequest;
         this.closeRequest = closeRequest;
-        this.codecCreator = codecCreator;
         this.authenticate = authenticate;
         this.connArray = new ClientConnection[connLimit];
-        this.connOpens = new AtomicBoolean[connLimit];
-        this.connResps = new LongAdder[connLimit];
-        this.connWaits = new Queue[connLimit];
-        for (int i = 0; i < connOpens.length; i++) {
-            this.connOpens[i] = new AtomicBoolean();
-            this.connResps[i] = new LongAdder();
-            this.connWaits[i] = Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 10) : new ConcurrentLinkedDeque();
+        this.connOpenStates = new AtomicBoolean[connLimit];
+        this.connRespWaitings = new LongAdder[connLimit];
+        this.connAcquireWaitings = new Queue[connLimit];
+        for (int i = 0; i < connOpenStates.length; i++) {
+            this.connOpenStates[i] = new AtomicBoolean();
+            this.connRespWaitings[i] = new LongAdder();
+            this.connAcquireWaitings[i] = Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 10) : new ConcurrentLinkedDeque();
         }
         //timeoutScheduler 不仅仅给超时用， 还给write用
         this.timeoutScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -151,11 +148,13 @@ public abstract class Client<R extends ClientRequest, P> {
                     }
                 } catch (Throwable t) {
                 }
-            }, pingInterval(), pingInterval(), TimeUnit.SECONDS);
+            }, pingIntervalSeconds(), pingIntervalSeconds(), TimeUnit.SECONDS);
         }
     }
 
-    protected int pingInterval() {
+    protected abstract ClientConnection createClientConnection(final int index, AsyncConnection channel);
+
+    protected int pingIntervalSeconds() {
         return 30;
     }
 
@@ -205,80 +204,84 @@ public abstract class Client<R extends ClientRequest, P> {
         if (cflag) {
             ClientConnection cc = context.getAttribute(connectionContextName);
             if (cc != null && cc.isOpen()) return CompletableFuture.completedFuture(cc);
-
         }
-        int connIndex = -1;
+        int connIndex;
         final int size = this.connArray.length;
         WorkThread workThread = WorkThread.currWorkThread();
         if (workThread != null && workThread.threads() == size) {
             connIndex = workThread.index();
+        } else {
+            connIndex = (int) Math.abs(Thread.currentThread().getId() % size);
         }
-        if (connIndex >= 0) {
-            ClientConnection cc = this.connArray[connIndex];
-            if (cc != null && cc.isOpen()) {
-                if (cflag) context.setAttribute(connectionContextName, cc);
-                return CompletableFuture.completedFuture(cc);
-            }
-            final int index = connIndex;
-            final Queue<CompletableFuture<ClientConnection>> waitQueue = this.connWaits[index];
-            if (this.connOpens[index].compareAndSet(false, true)) {
-                CompletableFuture<ClientConnection> future = group.createClient(tcp, address, readTimeoutSeconds, writeTimeoutSeconds)
-                    .thenApply(c -> createClientConnection(index, c).setMaxPipelines(maxPipelines));
-                return (authenticate == null ? future : authenticate.apply(future)).thenApply(c -> {
-                    c.authenticated = true;
-                    this.connArray[index] = c;
-                    CompletableFuture<ClientConnection> f;
-                    if (cflag) context.setAttribute(connectionContextName, c);
-                    while ((f = waitQueue.poll()) != null) {
-                        f.complete(c);
-                    }
-                    return c;
-                }).whenComplete((r, t) -> {
-                    if (t != null) this.connOpens[index].set(false);
-                });
-            } else {
-                CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), 6, TimeUnit.SECONDS);
-                waitQueue.offer(rs);
-                return rs;
-            }
+//        if (connIndex >= 0) {
+        ClientConnection cc = this.connArray[connIndex];
+        if (cc != null && cc.isOpen()) {
+            if (cflag) context.setAttribute(connectionContextName, cc);
+            return CompletableFuture.completedFuture(cc);
         }
-        ClientConnection minRunningConn = null;
-        for (int i = 0; i < size; i++) {
-            final int index = i;
-            final ClientConnection conn = this.connArray[index];
-            if (conn == null || !conn.isOpen()) {
-                if (this.connOpens[index].compareAndSet(false, true)) {
-                    CompletableFuture<ClientConnection> future = group.createClient(tcp, address, readTimeoutSeconds, writeTimeoutSeconds)
-                        .thenApply(c -> createClientConnection(index, c).setMaxPipelines(maxPipelines));
-                    return (authenticate == null ? future : authenticate.apply(future)).thenApply(c -> {
-                        c.authenticated = true;
-                        this.connArray[index] = c;
-                        return c;
-                    }).whenComplete((r, t) -> {
-                        if (t != null) this.connOpens[index].set(false);
-                    });
+        final int index = connIndex;
+        final Queue<CompletableFuture<ClientConnection>> waitQueue = this.connAcquireWaitings[index];
+        if (this.connOpenStates[index].compareAndSet(false, true)) {
+            CompletableFuture<ClientConnection> future = address.createClient(tcp, group, readTimeoutSeconds, writeTimeoutSeconds)
+                .thenApply(c -> createClientConnection(index, c).setMaxPipelines(maxPipelines));
+            return (authenticate == null ? future : authenticate.apply(future)).thenApply(c -> {
+                c.authenticated = true;
+                this.connArray[index] = c;
+                CompletableFuture<ClientConnection> f;
+                if (cflag) context.setAttribute(connectionContextName, c);
+                while ((f = waitQueue.poll()) != null) {
+                    f.complete(c);
                 }
-            } else if (conn.runningCount() < 1) {
-                return CompletableFuture.completedFuture(conn);
-            } else if (minRunningConn == null || minRunningConn.runningCount() > conn.runningCount()) {
-                minRunningConn = conn;
-            }
+                return c;
+            }).whenComplete((r, t) -> {
+                if (t != null) this.connOpenStates[index].set(false);
+            });
+        } else {
+            CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), 6, TimeUnit.SECONDS);
+            waitQueue.offer(rs);
+            return rs;
         }
-        if (minRunningConn != null && minRunningConn.runningCount() < maxPipelines) {
-            ClientConnection minConn = minRunningConn;
-            return CompletableFuture.completedFuture(minConn);
-        }
-        return waitClientConnection();
+//        }
+//        ClientConnection minRunningConn = null;
+//        for (int i = 0; i < size; i++) {
+//            final int index = i;
+//            final ClientConnection conn = this.connArray[index];
+//            if (conn == null || !conn.isOpen()) {
+//                if (this.connOpenStates[index].compareAndSet(false, true)) {
+//                    CompletableFuture<ClientConnection> future = group.createClient(tcp, address, readTimeoutSeconds, writeTimeoutSeconds)
+//                        .thenApply(c -> createClientConnection(index, c).setMaxPipelines(maxPipelines));
+//                    return (authenticate == null ? future : authenticate.apply(future)).thenApply(c -> {
+//                        c.authenticated = true;
+//                        this.connArray[index] = c;
+//                        return c;
+//                    }).whenComplete((r, t) -> {
+//                        if (t != null) this.connOpenStates[index].set(false);
+//                    });
+//                }
+//            } else if (conn.runningCount() < 1) {
+//                return CompletableFuture.completedFuture(conn);
+//            } else if (minRunningConn == null || minRunningConn.runningCount() > conn.runningCount()) {
+//                minRunningConn = conn;
+//            }
+//        }
+//        if (minRunningConn != null) { // && minRunningConn.runningCount() < maxPipelines
+//            return CompletableFuture.completedFuture(minRunningConn);
+//        }
+//        return waitClientConnection();
     }
 
     protected CompletableFuture<ClientConnection> waitClientConnection() {
         CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), 6, TimeUnit.SECONDS);
-        connWaits[connSeqno.getAndIncrement() % this.connLimit].offer(rs);
+        connAcquireWaitings[connSeqno.getAndIncrement() % this.connLimit].offer(rs);
         return rs;
     }
 
-    protected ClientConnection createClientConnection(final int index, AsyncConnection channel) {
-        return new ClientConnection(this, index, channel);
+    protected long getRespWaitingCount() {
+        long s = 0;
+        for (LongAdder a : connRespWaitings) {
+            s += a.longValue();
+        }
+        return s;
     }
 
     public int getReadTimeoutSeconds() {

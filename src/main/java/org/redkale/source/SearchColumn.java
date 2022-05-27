@@ -57,7 +57,7 @@ public @interface SearchColumn {
     boolean ignore() default false;
 
     /**
-     * 设置索引参数
+     * 设置索引参数, 特殊值"false"表示不被索引
      *
      * @return String
      */
@@ -69,6 +69,20 @@ public @interface SearchColumn {
      * @return boolean
      */
     boolean html() default false;
+
+    /**
+     * 内容是否时间类型，只有数据类型为int、long、String才有效
+     *
+     * @return boolean
+     */
+    boolean date() default false;
+
+    /**
+     * 内容是否ip类型，只有数据类型为String才有效
+     *
+     * @return boolean
+     */
+    boolean ip() default false;
 
     /**
      * 设置索引分词器

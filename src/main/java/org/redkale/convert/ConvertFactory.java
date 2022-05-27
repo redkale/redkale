@@ -12,7 +12,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.regex.Pattern;
 import java.util.stream.*;
@@ -248,7 +248,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         if (type instanceof Class) {
             Class<?> clazz = (Class) type;
             ConvertImpl ci = clazz.getAnnotation(ConvertImpl.class);
-            if (ci != null) {
+            if (ci != null && ci.value() != Object.class) {
+                if (!clazz.isAssignableFrom(ci.value())) {
+                    throw new ConvertException("@" + ConvertImpl.class.getSimpleName() + ".value(" + ci.value() + ") must be " + clazz + "'s subclass");
+                }
                 if (!Modifier.isAbstract(clazz.getModifiers()) && !Modifier.isInterface(clazz.getModifiers())) {
                     throw new ConvertException("@" + ConvertImpl.class.getSimpleName() + " must at interface or abstract class, but " + clazz + " not");
                 }
@@ -268,6 +271,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     protected ObjectDecoder createObjectDecoder(Type type) {
         return new ObjectDecoder(type);
+    }
+
+    protected <E> Decodeable<R, E> createMultiImplDecoder(Class[] types) {
+        return null;
     }
 
     protected <E> ObjectEncoder<W, E> createObjectEncoder(Type type) {
@@ -401,7 +408,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     static String readGetSetFieldName(Method method) {
         if (method == null) return null;
         String fname = method.getName();
-        if (!fname.startsWith("is") && !fname.startsWith("get") && !fname.startsWith("set")) return fname; //record类会直接用field名作为method名
+        if (!(fname.startsWith("is") && fname.length() > 2)
+            && !(fname.startsWith("get") && fname.length() > 3)
+            && !(fname.startsWith("set") && fname.length() > 3)) return fname; //record类会直接用field名作为method名
         fname = fname.substring(fname.startsWith("is") ? 2 : 3);
         if (fname.length() > 1 && !(fname.charAt(1) >= 'A' && fname.charAt(1) <= 'Z')) {
             fname = Character.toLowerCase(fname.charAt(0)) + fname.substring(1);
@@ -480,6 +489,175 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } catch (Exception ex) {
             throw new ConvertException("convert entity is " + name, ex);
         }
+    }
+
+    ConvertFactory columnFactory(Class type, ConvertCoder[] coders, boolean encode) {
+        if (coders == null || coders.length < 1) return this;
+        final ConvertType ct = this.getConvertType();
+        List<Encodeable> encoderList = null;
+        List<Decodeable> decoderList = null;
+        Class readerOrWriterClass = (Class) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[encode ? 1 : 0];
+        for (ConvertCoder ann : coders) {
+            if (!ann.type().contains(ct)) continue;
+            SimpledCoder coder = null;
+            Class<? extends SimpledCoder> clazz1 = ann.coder();
+            if (clazz1 != SimpledCoder.class) {
+                try {
+                    boolean skip = false;
+                    RedkaleClassLoader.putReflectionPublicMethods(clazz1.getName());
+                    for (Method method : clazz1.getMethods()) {
+                        if (method.isBridge()) continue;
+                        if (encode) {
+                            if ("convertTo".equals(method.getName()) && method.getParameterCount() == 2 && Writer.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                                skip = !method.getParameterTypes()[0].isAssignableFrom(readerOrWriterClass);
+                                break;
+                            }
+                        } else {
+                            if ("convertFrom".equals(method.getName()) && method.getParameterCount() == 1 && Reader.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                                skip = !method.getParameterTypes()[0].isAssignableFrom(readerOrWriterClass);
+                                break;
+                            }
+                        }
+                    }
+                    if (skip) continue;
+                    Field instanceField = clazz1.getField("instance");
+                    if (Modifier.isStatic(instanceField.getModifiers()) && instanceField.getType() == clazz1) {
+                        RedkaleClassLoader.putReflectionField(clazz1.getName(), instanceField);
+                        coder = (SimpledCoder) instanceField.get(null);
+                    }
+                } catch (Throwable t) {
+                }
+                if (coder == null) {
+                    try {
+                        coder = (SimpledCoder) clazz1.getConstructor().newInstance();
+                        RedkaleClassLoader.putReflectionPublicConstructors(clazz1, clazz1.getName());
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        continue;
+                    }
+                }
+                if (encode) {
+                    if (encoderList == null) encoderList = new ArrayList<>();
+                    encoderList.add(coder);
+                } else {
+                    if (decoderList == null) decoderList = new ArrayList<>();
+                    decoderList.add(coder);
+                }
+            }
+            if (coder == null) {
+                Class colType = type;
+                if (ann.column() != Object.class) colType = ann.column();
+                if (encode) {
+                    Class<? extends Encodeable> clazz2 = ann.encoder();
+                    if (clazz2 != Encodeable.class) {
+                        try {
+                            boolean skip = false;
+                            RedkaleClassLoader.putReflectionPublicMethods(clazz2.getName());
+                            for (Method method : clazz2.getMethods()) {
+                                if (method.isBridge()) continue;
+                                if ("convertTo".equals(method.getName()) && method.getParameterCount() == 2 && Writer.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                                    skip = !method.getParameterTypes()[0].isAssignableFrom(readerOrWriterClass);
+                                    break;
+                                }
+                            }
+                            if (skip) continue;
+                            Encodeable encoder = null;
+                            Constructor constructor = clazz2.getConstructors()[0];
+                            Parameter[] params = constructor.getParameters();
+                            Class[] paramTypes = new Class[params.length];
+                            for (int i = 0; i < paramTypes.length; i++) {
+                                paramTypes[i] = params[i].getType();
+                            }
+                            if (params.length == 0) {
+                                encoder = (Encodeable) constructor.newInstance();
+                            } else if (params.length == 1) {
+                                if (paramTypes[0] != Type.class) throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                encoder = (Encodeable) constructor.newInstance(colType);
+                            } else if (params.length == 2) {
+                                if (paramTypes[0] == ConvertFactory.class && paramTypes[1] == Type.class) {
+                                    encoder = (Encodeable) constructor.newInstance(this, colType);
+                                } else if (paramTypes[0] == Type.class && paramTypes[1] == ConvertFactory.class) {
+                                    encoder = (Encodeable) constructor.newInstance(colType, this);
+                                } else {
+                                    throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                }
+                            } else {
+                                throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                            }
+                            RedkaleClassLoader.putReflectionPublicConstructors(clazz2, clazz2.getName());
+                            if (encoderList == null) encoderList = new ArrayList<>();
+                            encoderList.add(encoder);
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                            continue;
+                        }
+                    }
+                } else {
+                    Class<? extends Decodeable> clazz2 = ann.decoder();
+                    if (clazz2 != Decodeable.class) {
+                        try {
+                            boolean skip = false;
+                            RedkaleClassLoader.putReflectionPublicMethods(clazz2.getName());
+                            for (Method method : clazz2.getMethods()) {
+                                if (method.isBridge()) continue;
+                                if ("convertFrom".equals(method.getName()) && method.getParameterCount() == 1 && Reader.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                                    skip = !method.getParameterTypes()[0].isAssignableFrom(readerOrWriterClass);
+                                    break;
+                                }
+                            }
+                            if (skip) continue;
+                            Decodeable decoder = null;
+                            Constructor constructor = clazz2.getConstructors()[0];
+                            Parameter[] params = constructor.getParameters();
+                            Class[] paramTypes = new Class[params.length];
+                            for (int i = 0; i < paramTypes.length; i++) {
+                                paramTypes[i] = params[i].getType();
+                            }
+                            if (params.length == 0) {
+                                decoder = (Decodeable) constructor.newInstance();
+                            } else if (params.length == 1) {
+                                if (paramTypes[0] != Type.class) throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                decoder = (Decodeable) constructor.newInstance(colType);
+                            } else if (params.length == 2) {
+                                if (paramTypes[0] == ConvertFactory.class && paramTypes[1] == Type.class) {
+                                    decoder = (Decodeable) constructor.newInstance(this, colType);
+                                } else if (paramTypes[0] == Type.class && paramTypes[1] == ConvertFactory.class) {
+                                    decoder = (Decodeable) constructor.newInstance(colType, this);
+                                } else {
+                                    throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                }
+                            } else {
+                                throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                            }
+                            RedkaleClassLoader.putReflectionPublicConstructors(clazz2, clazz2.getName());
+                            if (decoderList == null) decoderList = new ArrayList<>();
+                            decoderList.add(decoder);
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+        if (encoderList == null && decoderList == null) return this;
+        ConvertFactory child = createChild();
+        if (encode) {
+            for (Encodeable item : encoderList) {
+                child.register(item.getType(), item);
+                if (item instanceof ObjectEncoder) {
+                    ((ObjectEncoder) item).init(child);
+                }
+            }
+        } else {
+            for (Decodeable item : decoderList) {
+                child.register(item.getType(), item);
+                if (item instanceof ObjectDecoder) {
+                    ((ObjectDecoder) item).init(child);
+                }
+            }
+        }
+        return child;
     }
 
     private Class findEntityAlias(String name) {
@@ -600,8 +778,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     }
 
     public final void reloadCoder(final Type type, final Class clazz) {
-        this.register(type, this.createDecoder(type, clazz));
-        this.register(type, this.createEncoder(type, clazz));
+        this.register(type, this.createDecoder(type, clazz, false));
+        this.register(type, this.createEncoder(type, clazz, false));
     }
 
     public final <E> void register(final Class<E> clazz, final Creator<? extends E> creator) {
@@ -717,10 +895,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             throw new ConvertException("not support the type (" + type + ")");
         }
         //此处不能再findDecoder，否则type与class不一致, 如: RetResult 和 RetResult<Integer>
-        return createDecoder(type, clazz);
+        return createDecoder(type, clazz, false);
     }
 
     public final <E> Decodeable<R, E> createDecoder(final Type type) {
+        return createDecoder(type, false);
+    }
+
+    public final <E> Decodeable<R, E> createDecoder(final Type type, boolean skipCustomMethod) {
         Class clazz;
         if (type instanceof ParameterizedType) {
             final ParameterizedType pts = (ParameterizedType) type;
@@ -730,10 +912,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } else {
             throw new ConvertException("not support the type (" + type + ")");
         }
-        return createDecoder(type, clazz);
+        return createDecoder(type, clazz, skipCustomMethod);
     }
 
-    private <E> Decodeable<R, E> createDecoder(final Type type, final Class clazz) {
+    private <E> Decodeable<R, E> createDecoder(final Type type, final Class clazz, boolean skipCustomMethod) {
         Decodeable<R, E> decoder = null;
         ObjectDecoder od = null;
         if (clazz.isEnum()) {
@@ -756,25 +938,47 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             || java.util.AbstractMap.SimpleEntry.class == clazz
             || clazz.getName().startsWith("java.awt.geom.Point2D")) {
             Decodeable simpleCoder = null;
-            for (final Method method : clazz.getDeclaredMethods()) {
-                if (!Modifier.isStatic(method.getModifiers())) continue;
-                Class[] paramTypes = method.getParameterTypes();
-                if (paramTypes.length != 1) continue;
-                if (paramTypes[0] != ConvertFactory.class && paramTypes[0] != this.getClass()) continue;
-                if (!Decodeable.class.isAssignableFrom(method.getReturnType())) continue;
-                try {
-                    method.setAccessible(true);
-                    simpleCoder = (Decodeable) method.invoke(null, this);
-                    RedkaleClassLoader.putReflectionDeclaredMethods(clazz.getName());
-                    RedkaleClassLoader.putReflectionMethod(clazz.getName(), method);
-                    break;
-                } catch (Exception e) {
+            if (!skipCustomMethod) {
+                for (Class subclazz : getSuperClasses(clazz)) {
+                    for (final Method method : subclazz.getDeclaredMethods()) {
+                        if (!Modifier.isStatic(method.getModifiers())) continue;
+                        Class[] paramTypes = method.getParameterTypes();
+                        if (paramTypes.length != 1 && paramTypes.length != 2) continue;
+                        if (paramTypes[0] != ConvertFactory.class && paramTypes[0] != this.getClass()) continue;
+                        if (paramTypes.length == 2 && paramTypes[1] != Class.class && paramTypes[1] != Type.class) continue;
+                        if (!Decodeable.class.isAssignableFrom(method.getReturnType())) continue;
+                        if (Modifier.isPrivate(method.getModifiers()) && subclazz != clazz) continue; //声明private的只能被自身类使用
+                        try {
+                            method.setAccessible(true);
+                            simpleCoder = (Decodeable) (paramTypes.length == 2 ? (paramTypes[1] == Type.class ? method.invoke(null, this, type) : method.invoke(null, this, clazz)) : method.invoke(null, this));
+                            RedkaleClassLoader.putReflectionDeclaredMethods(subclazz.getName());
+                            RedkaleClassLoader.putReflectionMethod(subclazz.getName(), method);
+                            break;
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (simpleCoder != null) break;
                 }
             }
             if (simpleCoder == null) {
-                Type impl = formatObjectType(type);
-                od = createObjectDecoder(impl);
-                decoder = od;
+                if (type instanceof Class) {
+                    Class<?> typeclz = (Class) type;
+                    ConvertImpl ci = typeclz.getAnnotation(ConvertImpl.class);
+                    if (ci != null && ci.types().length > 0) {
+                        for (Class sub : ci.types()) {
+                            if (!typeclz.isAssignableFrom(sub)) {
+                                throw new ConvertException("@" + ConvertImpl.class.getSimpleName() + ".types(" + sub + ") must be " + typeclz + "'s subclass");
+                            }
+                        }
+                        decoder = createMultiImplDecoder(ci.types());
+                    }
+                }
+                if (decoder == null) {
+                    Type impl = formatObjectType(type);
+                    od = createObjectDecoder(impl);
+                    decoder = od;
+                }
             } else {
                 decoder = simpleCoder;
             }
@@ -807,10 +1011,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             throw new ConvertException("not support the type (" + type + ")");
         }
         //此处不能再findEncoder，否则type与class不一致, 如: RetResult 和 RetResult<Integer> 
-        return createEncoder(type, clazz);
+        return createEncoder(type, clazz, false);
     }
 
     public final <E> Encodeable<W, E> createEncoder(final Type type) {
+        return createEncoder(type, false);
+    }
+
+    public final <E> Encodeable<W, E> createEncoder(final Type type, boolean skipCustomMethod) {
         Class clazz;
         if (type instanceof ParameterizedType) {
             final ParameterizedType pts = (ParameterizedType) type;
@@ -820,10 +1028,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } else {
             throw new ConvertException("not support the type (" + type + ")");
         }
-        return createEncoder(type, clazz);
+        return createEncoder(type, clazz, skipCustomMethod);
     }
 
-    private <E> Encodeable<W, E> createEncoder(final Type type, final Class clazz) {
+    private <E> Encodeable<W, E> createEncoder(final Type type, final Class clazz, boolean skipCustomMethod) {
         Encodeable<W, E> encoder = null;
         ObjectEncoder oe = null;
         if (clazz.isEnum()) {
@@ -843,19 +1051,27 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } else if (!clazz.getName().startsWith("java.") || java.net.HttpCookie.class == clazz
             || java.util.Map.Entry.class == clazz || java.util.AbstractMap.SimpleEntry.class == clazz) {
             Encodeable simpleCoder = null;
-            for (final Method method : clazz.getDeclaredMethods()) {
-                if (!Modifier.isStatic(method.getModifiers())) continue;
-                Class[] paramTypes = method.getParameterTypes();
-                if (paramTypes.length != 1) continue;
-                if (paramTypes[0] != ConvertFactory.class && paramTypes[0] != this.getClass()) continue;
-                if (!Encodeable.class.isAssignableFrom(method.getReturnType())) continue;
-                try {
-                    method.setAccessible(true);
-                    simpleCoder = (Encodeable) method.invoke(null, this);
-                    RedkaleClassLoader.putReflectionDeclaredMethods(clazz.getName());
-                    RedkaleClassLoader.putReflectionMethod(clazz.getName(), method);
-                    break;
-                } catch (Exception e) {
+            if (!skipCustomMethod) {
+                for (Class subclazz : getSuperClasses(clazz)) {
+                    for (final Method method : subclazz.getDeclaredMethods()) {
+                        if (!Modifier.isStatic(method.getModifiers())) continue;
+                        Class[] paramTypes = method.getParameterTypes();
+                        if (paramTypes.length != 1 && paramTypes.length != 2) continue;
+                        if (paramTypes[0] != ConvertFactory.class && paramTypes[0] != this.getClass()) continue;
+                        if (paramTypes.length == 2 && paramTypes[1] != Class.class && paramTypes[1] != Type.class) continue;
+                        if (!Encodeable.class.isAssignableFrom(method.getReturnType())) continue;
+                        if (Modifier.isPrivate(method.getModifiers()) && subclazz != clazz) continue; //声明private的只能被自身类使用
+                        try {
+                            method.setAccessible(true);
+                            simpleCoder = (Encodeable) (paramTypes.length == 2 ? (paramTypes[1] == Type.class ? method.invoke(null, this, type) : method.invoke(null, this, clazz)) : method.invoke(null, this));
+                            RedkaleClassLoader.putReflectionDeclaredMethods(subclazz.getName());
+                            RedkaleClassLoader.putReflectionMethod(subclazz.getName(), method);
+                            break;
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (simpleCoder != null) break;
                 }
             }
             if (simpleCoder == null) {
@@ -874,6 +1090,20 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         if (oe != null) oe.init(this);
         return encoder;
 
+    }
+
+    private Set<Class> getSuperClasses(final Class clazz) {
+        Set<Class> set = new LinkedHashSet<>();
+        set.add(clazz);
+        Class recursClass = clazz;
+        while ((recursClass = recursClass.getSuperclass()) != null) {
+            if (recursClass == Object.class) break;
+            set.addAll(getSuperClasses(recursClass));
+        }
+        for (Class sub : clazz.getInterfaces()) {
+            set.addAll(getSuperClasses(sub));
+        }
+        return set;
     }
 
 }

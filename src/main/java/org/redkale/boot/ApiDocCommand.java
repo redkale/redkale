@@ -10,6 +10,7 @@ import java.lang.reflect.*;
 import java.math.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 import javax.persistence.*;
@@ -31,7 +32,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class ApiDocsService {
+public final class ApiDocCommand {
 
     private static final java.lang.reflect.Type TYPE_RETRESULT_OBJECT = new TypeToken<RetResult<Object>>() {
     }.getType();
@@ -47,13 +48,26 @@ public final class ApiDocsService {
 
     private final Application app; //Application全局对象
 
-    public ApiDocsService(Application app) {
+    public ApiDocCommand(Application app) {
         this.app = app;
     }
 
-    public void run(String[] args) throws Exception {
+    public String command(String cmd, String[] params) throws Exception {
         //是否跳过RPC接口
-        final boolean skipRPC = Arrays.toString(args).toLowerCase().contains("skip-rpc") && !Arrays.toString(args).toLowerCase().contains("skip-rpc=false");
+        boolean skipRPC = true;
+        String apiHost = "http://localhost";
+
+        if (params != null && params.length > 0) {
+            for (String param : params) {
+                if (param == null) continue;
+                param = param.toLowerCase();
+                if (param.startsWith("--api-skiprpc=")) {
+                    skipRPC = "true".equalsIgnoreCase(param.substring("--api-skiprpc=".length()));
+                } else if (param.startsWith("--api-host=")) {
+                    apiHost = param.substring("--api-host=".length());
+                }
+            }
+        }
 
         List<Map> serverList = new ArrayList<>();
         Field __prefix = HttpServlet.class.getDeclaredField("_prefix");
@@ -70,7 +84,7 @@ public final class ApiDocsService {
             serverList.add(map);
             HttpServer server = node.getServer();
             map.put("address", server.getSocketAddress());
-            swaggerServers.add(Utility.ofMap("url", "http://localhost:" + server.getSocketAddress().getPort()));
+            swaggerServers.add(Utility.ofMap("url", apiHost + ":" + server.getSocketAddress().getPort()));
             List<Map<String, Object>> servletsList = new ArrayList<>();
             map.put("servlets", servletsList);
             String plainContentType = server.getResponseConfig() == null ? "application/json" : server.getResponseConfig().plainContentType;
@@ -200,7 +214,7 @@ public final class ApiDocsService {
                                     f.setAccessible(true);
                                     paramGenericType = (Type) f.get(servlet);
                                 }
-                                simpleSchemaType(node.getLogger(), swaggerComponentsMap, param.type(), paramGenericType, paramSchemaMap, true);
+                                simpleSchemaType(null, node.getLogger(), swaggerComponentsMap, param.type(), paramGenericType, paramSchemaMap, true);
                                 if (param.style() == HttpParam.HttpParameterStyle.BODY) {
                                     swaggerRequestBody.put("description", param.comment());
                                     swaggerRequestBody.put("content", Utility.ofMap(plainContentType, Utility.ofMap("schema", paramSchemaMap)));
@@ -217,9 +231,10 @@ public final class ApiDocsService {
                                     swaggerParamMap.put("style", param.style() == HttpParam.HttpParameterStyle.HEADER || param.name().indexOf('#') == 0 ? "simple" : "form");
                                     swaggerParamMap.put("explode", true);
                                     swaggerParamMap.put("schema", paramSchemaMap);
-                                    Object example = formatExample(param.example(), param.type(), paramGenericType);
-                                    if (example != null) swaggerParamMap.put("example", example);
-                                    if (!param.example().isEmpty()) {
+                                    Object example = formatExample(null, param.example(), param.type(), paramGenericType);
+                                    if (example != null) {
+                                        swaggerParamMap.put("example", example);
+                                    } else if (!param.example().isEmpty()) {
                                         swaggerParamMap.put("example", param.example());
                                     }
                                     swaggerParamsList.add(swaggerParamMap);
@@ -276,12 +291,13 @@ public final class ApiDocsService {
                             swaggerOperatMap.put("deprecated", true);
                         }
                         Map<String, Object> respSchemaMap = new LinkedHashMap<>();
-                        simpleSchemaType(node.getLogger(), swaggerComponentsMap, action.result(), resultType, respSchemaMap, true);
+                        JsonFactory returnFactory = Rest.createJsonFactory(false, method.getAnnotationsByType(RestConvert.class), method.getAnnotationsByType(RestConvertCoder.class));
+                        simpleSchemaType(returnFactory, node.getLogger(), swaggerComponentsMap, action.result(), resultType, respSchemaMap, true);
 
                         Map<String, Object> respMap = new LinkedHashMap<>();
                         respMap.put("schema", respSchemaMap);
-                        Object example = formatExample(action.example(), action.result(), resultType);
-                        if (example != null) swaggerOperatMap.put("example", example);
+                        Object example = formatExample(returnFactory, action.example(), action.result(), resultType);
+                        if (example != null) respSchemaMap.put("example", example);
                         if (!swaggerRequestBody.isEmpty()) swaggerOperatMap.put("requestBody", swaggerRequestBody);
                         swaggerOperatMap.put("parameters", swaggerParamsList);
                         String actiondesc = action.comment();
@@ -335,16 +351,18 @@ public final class ApiDocsService {
             if (doctemplate.isFile() && doctemplate.canRead()) {
                 in = new FileInputStream(doctemplate);
             }
-            if (in == null) in = ApiDocsService.class.getResourceAsStream("apidoc-template.html");
-            String content = Utility.read(in).replace("'${content}'", json);
-            in.close();
-            FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "apidoc.html"));
-            outhtml.write(content.getBytes(StandardCharsets.UTF_8));
-            outhtml.close();
+            if (in != null) {
+                String content = Utility.read(in).replace("'${content}'", json);
+                in.close();
+                FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "apidoc.html"));
+                outhtml.write(content.getBytes(StandardCharsets.UTF_8));
+                outhtml.close();
+            }
         }
+        return "apidoc success";
     }
 
-    private static void simpleSchemaType(Logger logger, Map<String, Map<String, Object>> componentsMap, Class type, Type genericType, Map<String, Object> schemaMap, boolean recursive) {
+    private static void simpleSchemaType(JsonFactory factory, Logger logger, Map<String, Map<String, Object>> componentsMap, Class type, Type genericType, Map<String, Object> schemaMap, boolean recursive) {
         if (type == int.class || type == Integer.class || type == AtomicInteger.class) {
             schemaMap.put("type", "integer");
             schemaMap.put("format", "int32");
@@ -368,13 +386,13 @@ public final class ApiDocsService {
             schemaMap.put("type", "array");
             Map<String, Object> sbumap = new LinkedHashMap<>();
             if (type.isArray()) {
-                simpleSchemaType(logger, componentsMap, type.getComponentType(), type.getComponentType(), sbumap, false);
+                simpleSchemaType(factory, logger, componentsMap, type.getComponentType(), type.getComponentType(), sbumap, false);
             } else if (genericType instanceof ParameterizedType) {
                 Type subpt = ((ParameterizedType) genericType).getActualTypeArguments()[0];
                 if (subpt instanceof Class) {
-                    simpleSchemaType(logger, componentsMap, (Class) subpt, subpt, sbumap, false);
+                    simpleSchemaType(factory, logger, componentsMap, (Class) subpt, subpt, sbumap, false);
                 } else if (subpt instanceof ParameterizedType && ((ParameterizedType) subpt).getOwnerType() instanceof Class) {
-                    simpleSchemaType(logger, componentsMap, (Class) ((ParameterizedType) subpt).getOwnerType(), subpt, sbumap, false);
+                    simpleSchemaType(factory, logger, componentsMap, (Class) ((ParameterizedType) subpt).getOwnerType(), subpt, sbumap, false);
                 } else {
                     sbumap.put("type", "object");
                 }
@@ -383,7 +401,7 @@ public final class ApiDocsService {
             }
             schemaMap.put("items", sbumap);
         } else if (!type.getName().startsWith("java.") && !type.getName().startsWith("javax.")) {
-            String ct = simpleComponentType(logger, componentsMap, type, genericType);
+            String ct = simpleComponentType(factory, logger, componentsMap, type, genericType);
             if (ct == null) {
                 schemaMap.put("type", "object");
             } else {
@@ -394,10 +412,11 @@ public final class ApiDocsService {
         }
     }
 
-    private static String simpleComponentType(Logger logger, Map<String, Map<String, Object>> componentsMap, Class type, Type genericType) {
+    private static String simpleComponentType(JsonFactory factory, Logger logger, Map<String, Map<String, Object>> componentsMap, Class type, Type genericType) {
         try {
+            Set<Type> types = new HashSet<>();
             Encodeable encodeable = JsonFactory.root().loadEncoder(genericType);
-            String ct = componentKey(logger, componentsMap, null, encodeable, true);
+            String ct = componentKey(factory, logger, types, componentsMap, null, encodeable, true);
             if (ct == null || ct.length() == 0) return null;
             if (componentsMap.containsKey(ct)) return ct;
             Map<String, Object> cmap = new LinkedHashMap<>();
@@ -409,7 +428,7 @@ public final class ApiDocsService {
             if (encodeable instanceof ObjectEncoder) {
                 for (EnMember member : ((ObjectEncoder) encodeable).getMembers()) {
                     Map<String, Object> schemaMap = new LinkedHashMap<>();
-                    simpleSchemaType(logger, componentsMap, TypeToken.typeToClassOrElse(member.getEncoder().getType(), Object.class), member.getEncoder().getType(), schemaMap, true);
+                    simpleSchemaType(factory, logger, componentsMap, TypeToken.typeToClassOrElse(member.getEncoder().getType(), Object.class), member.getEncoder().getType(), schemaMap, true);
                     String desc = "";
                     if (member.getField() != null) {
                         Column col = member.getField().getAnnotation(Column.class);
@@ -455,35 +474,41 @@ public final class ApiDocsService {
         }
     }
 
-    private static String componentKey(Logger logger, Map<String, Map<String, Object>> componentsMap, EnMember field, Encodeable encodeable, boolean first) {
+    private static String componentKey(JsonFactory factory, Logger logger, Set<Type> types, Map<String, Map<String, Object>> componentsMap, EnMember field, Encodeable encodeable, boolean first) {
         if (encodeable instanceof ObjectEncoder) {
+            if (types.contains(encodeable.getType())) return "";
+            types.add(encodeable.getType());
             StringBuilder sb = new StringBuilder();
             sb.append(((ObjectEncoder) encodeable).getTypeClass().getSimpleName());
             for (EnMember member : ((ObjectEncoder) encodeable).getMembers()) {
                 if (member.getEncoder() instanceof ArrayEncoder
                     || member.getEncoder() instanceof CollectionEncoder) {
-                    String subsb = componentKey(logger, componentsMap, member, member.getEncoder(), false);
+                    String subsb = componentKey(factory, logger, types, componentsMap, member, member.getEncoder(), false);
                     if (subsb == null) return null;
                     AccessibleObject real = member.getField() == null ? member.getMethod() : member.getField();
                     if (real == null) continue;
                     Class cz = real instanceof Field ? ((Field) real).getType() : ((Method) real).getReturnType();
                     Type ct = real instanceof Field ? ((Field) real).getGenericType() : ((Method) real).getGenericReturnType();
                     if (cz == ct) continue;
+                    if (field == null && encodeable.getType() instanceof Class) continue;
                     if (sb.length() > 0 && subsb.length() > 0) sb.append("_");
                     sb.append(subsb);
                 } else if (member.getEncoder() instanceof ObjectEncoder || member.getEncoder() instanceof SimpledCoder) {
                     AccessibleObject real = member.getField() == null ? member.getMethod() : member.getField();
                     if (real == null) continue;
+                    if (types.contains(member.getEncoder().getType())) continue;
+                    types.add(member.getEncoder().getType());
                     if (member.getEncoder() instanceof SimpledCoder) {
-                        simpleSchemaType(logger, componentsMap, ((SimpledCoder) member.getEncoder()).getType(), ((SimpledCoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
+                        simpleSchemaType(factory, logger, componentsMap, ((SimpledCoder) member.getEncoder()).getType(), ((SimpledCoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
                     } else {
-                        simpleSchemaType(logger, componentsMap, ((ObjectEncoder) member.getEncoder()).getTypeClass(), ((ObjectEncoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
+                        simpleSchemaType(factory, logger, componentsMap, ((ObjectEncoder) member.getEncoder()).getTypeClass(), ((ObjectEncoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
                     }
                     Class cz = real instanceof Field ? ((Field) real).getType() : ((Method) real).getReturnType();
                     Type ct = real instanceof Field ? ((Field) real).getGenericType() : ((Method) real).getGenericReturnType();
                     if (cz == ct) continue;
-                    String subsb = componentKey(logger, componentsMap, member, member.getEncoder(), false);
+                    String subsb = componentKey(factory, logger, types, componentsMap, member, member.getEncoder(), false);
                     if (subsb == null) return null;
+                    if (field == null && member.getEncoder().getType() instanceof Class) continue;
                     if (sb.length() > 0 && subsb.length() > 0) sb.append("_");
                     sb.append(subsb);
                 } else if (member.getEncoder() instanceof MapEncoder) {
@@ -497,7 +522,7 @@ public final class ApiDocsService {
             final boolean array = (encodeable instanceof ArrayEncoder);
             Encodeable subEncodeable = array ? ((ArrayEncoder) encodeable).getComponentEncoder() : ((CollectionEncoder) encodeable).getComponentEncoder();
             if (subEncodeable instanceof SimpledCoder && field != null) return "";
-            final String sb = componentKey(logger, componentsMap, null, subEncodeable, false);
+            final String sb = componentKey(factory, logger, types, componentsMap, null, subEncodeable, false);
             if (sb == null || sb.isEmpty()) return sb;
             if (field != null && field.getField() != null && field.getField().getDeclaringClass() == Sheet.class) {
                 return sb;
@@ -516,8 +541,9 @@ public final class ApiDocsService {
         }
     }
 
-    private static Object formatExample(String example, Class type, Type genericType) {
-        if (example == null || example.isEmpty()) return null;
+    private static Object formatExample(JsonFactory factory, String example, Class type, Type genericType) {
+        if (example != null && !example.isEmpty()) return example;
+        JsonFactory jsonFactory = factory == null || factory == JsonFactory.root() ? exampleFactory : factory;
         if (type == Flipper.class) {
             return new Flipper();
         } else if (TYPE_RETRESULT_OBJECT.equals(genericType)) {
@@ -528,8 +554,103 @@ public final class ApiDocsService {
             return RetResult.success(0);
         } else if (TYPE_RETRESULT_LONG.equals(genericType)) {
             return RetResult.success(0L);
+        } else if (type == boolean.class || type == Boolean.class) {
+            return true;
+        } else if (type.isPrimitive()) {
+            return 0;
+        } else if (type == boolean[].class || type == Boolean[].class) {
+            return new boolean[]{true, false};
+        } else if (type == byte[].class || type == Byte[].class) {
+            return new byte[]{0, 0};
+        } else if (type == char[].class || type == Character[].class) {
+            return new char[]{'a', 'b'};
+        } else if (type == short[].class || type == Short[].class) {
+            return new short[]{0, 0};
+        } else if (type == int[].class || type == Integer[].class) {
+            return new int[]{0, 0};
+        } else if (type == long[].class || type == Long[].class) {
+            return new long[]{0, 0};
+        } else if (type == float[].class || type == Float[].class) {
+            return new float[]{0, 0};
+        } else if (type == double[].class || type == Double[].class) {
+            return new double[]{0, 0};
+        } else if (Number.class.isAssignableFrom(type)) {
+            return 0;
+        } else if (CharSequence.class.isAssignableFrom(type)) {
+            return "";
+        } else if (CompletableFuture.class.isAssignableFrom(type)) {
+            if (genericType instanceof ParameterizedType) {
+                try {
+                    ParameterizedType pt = (ParameterizedType) genericType;
+                    Type valType = pt.getActualTypeArguments()[0];
+                    return formatExample(factory, example, valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : ((Class) valType), valType);
+                } catch (Throwable t) {
+                }
+            }
+        } else if (Sheet.class.isAssignableFrom(type)) { //要在Collection前面
+            if (genericType instanceof ParameterizedType) {
+                try {
+                    ParameterizedType pt = (ParameterizedType) genericType;
+                    Type valType = pt.getActualTypeArguments()[0];
+                    Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
+                    Object val = formatExample(factory, example, valClass, valType);
+                    return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'rows':[" + val + "," + val + "]}")));
+                } catch (Throwable t) {
+                }
+            }
+        } else if (type.isArray()) {
+            try {
+                Object val = formatExample(factory, example, type.getComponentType(), type.getComponentType());
+                return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
+            } catch (Throwable t) {
+            }
+        } else if (Collection.class.isAssignableFrom(type)) {
+            if (genericType instanceof ParameterizedType) {
+                try {
+                    ParameterizedType pt = (ParameterizedType) genericType;
+                    Type valType = pt.getActualTypeArguments()[0];
+                    Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
+                    Object val = formatExample(factory, example, valClass, valType);
+                    return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
+                } catch (Throwable t) {
+                }
+            }
+        } else if (type == RetResult.class) {
+            if (genericType instanceof ParameterizedType) {
+                try {
+                    ParameterizedType pt = (ParameterizedType) genericType;
+                    Type valType = pt.getActualTypeArguments()[0];
+                    Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
+                    Object val = formatExample(factory, example, valClass, valType);
+                    return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'result':" + val + "}")));
+                } catch (Throwable t) {
+                }
+            }
+        } else if (type != void.class) {
+            try {
+                Decodeable decoder = jsonFactory.loadDecoder(genericType);
+                if (decoder instanceof ObjectDecoder) {
+                    StringBuilder json = new StringBuilder();
+                    json.append("{");
+                    int index = 0;
+                    for (DeMember member : ((ObjectDecoder) decoder).getMembers()) {
+                        if (!(member.getDecoder() instanceof ObjectDecoder)) continue;
+                        if (index > 0) json.append(",");
+                        json.append('"').append(member.getAttribute().field()).append("\":{}");
+                        index++;
+                    }
+                    json.append("}");
+                    Object val = jsonFactory.getConvert().convertFrom(genericType, json.toString());
+                    return new StringWrapper(jsonFactory.getConvert().convertTo(val));
+                }
+                Creator creator = Creator.create(type);
+                return new StringWrapper(jsonFactory.getConvert().convertTo(creator.create()));
+            } catch (Throwable t) {
+            }
         }
         return example;
     }
+
+    private static final JsonFactory exampleFactory = JsonFactory.create().tiny(false);
 
 }

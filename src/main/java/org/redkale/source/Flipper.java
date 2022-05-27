@@ -90,7 +90,7 @@ public final class Flipper implements Serializable, Cloneable {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{offset:" + this.offset + ", limit:" + this.limit + ", sort:" + this.sort + "}";
+        return "{offset:" + this.offset + ",limit:" + this.limit + ((sort == null || sort.isEmpty()) ? "" : (",sort:\"" + this.sort.replace('"', '\'') + "\"")) + "}";
     }
 
     @Override

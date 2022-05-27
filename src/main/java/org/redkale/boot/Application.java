@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.Consumer;
 import java.util.logging.*;
 import javax.annotation.*;
 import javax.net.ssl.SSLContext;
@@ -33,7 +34,6 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.source.*;
-import static org.redkale.source.DataSources.DATASOURCE_CONFPATH;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 import org.redkale.watch.*;
@@ -61,7 +61,7 @@ public final class Application {
     public static final String RESNAME_APP_TIME = "APP_TIME";
 
     /**
-     * 当前进程的名称， 类型：String
+     * 当前进程服务的名称， 类型：String
      */
     public static final String RESNAME_APP_NAME = "APP_NAME";
 
@@ -74,7 +74,13 @@ public final class Application {
      * 当前进程的配置目录URI，如果不是绝对路径则视为HOME目录下的相对路径 类型：String、URI、File、Path <br>
      * 若配置目录不是本地文件夹， 则File、Path类型的值为null
      */
-    public static final String RESNAME_APP_CONF = "APP_CONF";
+    public static final String RESNAME_APP_CONF_DIR = "APP_CONF_DIR";
+
+    /**
+     * 当前进程的配置文件， 类型：String、URI、File、Path <br>
+     * 一般命名为: application.xml、application.properties， 若配置文件不是本地文件， 则File、Path类型的值为null
+     */
+    public static final String RESNAME_APP_CONF_FILE = "APP_CONF_FILE";
 
     /**
      * application.xml 文件中resources节点的内容， 类型： AnyValue
@@ -125,6 +131,11 @@ public final class Application {
      */
     public static final String RESNAME_SERVER_RESFACTORY = Server.RESNAME_SERVER_RESFACTORY;
 
+    private static final int UDP_CAPACITY = 1024;
+
+    //仅仅用于传递给LoggingSearchHandler使用
+    static Application currentApplication;
+
     //本进程节点ID
     final int nodeid;
 
@@ -137,6 +148,15 @@ public final class Application {
     //业务逻辑线程池
     //@since 2.3.0
     final ExecutorService workExecutor;
+
+    //Source 原始的配置资源
+    final Properties sourceProperties = new Properties();
+
+    //CacheSource 配置信息
+    final Map<String, AnyValue> cacheResources = new ConcurrentHashMap<>();
+
+    //DataSource 配置信息
+    final Map<String, AnyValue> dataResources = new ConcurrentHashMap<>();
 
     //CacheSource 资源
     final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
@@ -152,6 +172,12 @@ public final class Application {
 
     //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
     final AsyncGroup asyncGroup;
+
+    //配置源管理接口
+    //@since 2.7.0
+    private PropertiesAgent propertiesAgent;
+
+    final Properties appProperties = new Properties();
 
     //第三方服务发现管理接口
     //@since 2.1.0
@@ -204,7 +230,7 @@ public final class Application {
     private final long startTime = System.currentTimeMillis();
 
     //Server启动的计数器，用于确保所有Server都启动完后再进行下一步处理
-    private final CountDownLatch serversLatch;
+    private final CountDownLatch shutdownLatch;
 
     //根ClassLoader
     private final RedkaleClassLoader classLoader;
@@ -236,7 +262,7 @@ public final class Application {
                 System.setProperty(RESNAME_APP_HOME, root.getCanonicalPath());
             }
             this.home = root.getCanonicalFile();
-            String confDir = System.getProperty(RESNAME_APP_CONF, "conf");
+            String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
             if (confDir.contains("://") || confDir.startsWith("file:") || confDir.startsWith("resource:") || confDir.contains("!")) { //graalvm native-image startwith resource:META-INF
                 this.confPath = new URI(confDir);
                 if (confDir.startsWith("file:")) {
@@ -259,11 +285,11 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, addr);
         this.resourceFactory.register(RESNAME_APP_ADDR, InetSocketAddress.class, this.localAddress);
 
-        this.resourceFactory.register(RESNAME_APP_CONF, URI.class, this.confPath);
-        this.resourceFactory.register(RESNAME_APP_CONF, String.class, this.confPath.toString());
+        this.resourceFactory.register(RESNAME_APP_CONF_DIR, URI.class, this.confPath);
+        this.resourceFactory.register(RESNAME_APP_CONF_DIR, String.class, this.confPath.toString());
         if (confFile != null) {
-            this.resourceFactory.register(RESNAME_APP_CONF, File.class, confFile);
-            this.resourceFactory.register(RESNAME_APP_CONF, Path.class, confFile.toPath());
+            this.resourceFactory.register(RESNAME_APP_CONF_DIR, File.class, confFile);
+            this.resourceFactory.register(RESNAME_APP_CONF_DIR, Path.class, confFile.toPath());
         }
 
         {
@@ -322,11 +348,21 @@ public final class Application {
                 try {
                     final String rootpath = root.getCanonicalPath().replace('\\', '/');
                     InputStream fin = logConfURI.toURL().openStream();
-                    Properties properties = new Properties();
-                    properties.load(fin);
+                    Properties properties0 = new Properties();
+                    properties0.load(fin);
                     fin.close();
-                    properties.entrySet().forEach(x -> x.setValue(x.getValue().toString().replace("${APP_HOME}", rootpath)));
-
+                    String searchRawHandler = "java.util.logging.SearchHandler";
+                    String searchReadHandler = LoggingSearchHandler.class.getName();
+                    Properties properties = new Properties();
+                    properties0.entrySet().forEach(x -> {
+                        properties.put(x.getKey().toString().replace(searchRawHandler, searchReadHandler),
+                            x.getValue().toString()
+                                .replace("%m", "%tY%tm").replace("%d", "%tY%tm%td") //兼容旧时间格式
+                                .replace("${" + RESNAME_APP_NAME + "}", getName())
+                                .replace("${" + RESNAME_APP_HOME + "}", rootpath)
+                                .replace(searchRawHandler, searchReadHandler)
+                        );
+                    });
                     if (properties.getProperty("java.util.logging.FileHandler.formatter") == null) {
                         if (compileMode) {
                             properties.setProperty("java.util.logging.FileHandler.formatter", SimpleFormatter.class.getName());
@@ -347,8 +383,14 @@ public final class Application {
                             properties.setProperty("java.util.logging.ConsoleHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
                         }
                     }
+                    if (properties.getProperty("java.util.logging.ConsoleHandler.denyreg") != null && !compileMode) {
+                        final String handlers = properties.getProperty("handlers");
+                        if (handlers != null && handlers.contains("java.util.logging.ConsoleHandler")) {
+                            properties.setProperty("handlers", handlers.replace("java.util.logging.ConsoleHandler", LoggingFileHandler.LoggingConsoleHandler.class.getName()));
+                        }
+                    }
                     String fileHandlerPattern = properties.getProperty("java.util.logging.FileHandler.pattern");
-                    if (fileHandlerPattern != null && fileHandlerPattern.contains("%d")) {
+                    if (fileHandlerPattern != null && fileHandlerPattern.contains("%")) { //带日期格式
                         final String fileHandlerClass = LoggingFileHandler.class.getName();
                         Properties prop = new Properties();
                         final String handlers = properties.getProperty("handlers");
@@ -388,10 +430,20 @@ public final class Application {
                     Logger.getLogger(this.getClass().getSimpleName()).log(Level.WARNING, "init logger configuration error", e);
                 }
             }
+
+            if (compileMode) {
+                RedkaleClassLoader.putReflectionClass(java.lang.Class.class.getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(SimpleFormatter.class, SimpleFormatter.class.getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(LoggingSearchHandler.class, LoggingSearchHandler.class.getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.class, LoggingFileHandler.class.getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.LoggingFormater.class, LoggingFileHandler.LoggingFormater.class.getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.LoggingConsoleHandler.class, LoggingFileHandler.LoggingConsoleHandler.class.getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.LoggingSncpFileHandler.class, LoggingFileHandler.LoggingSncpFileHandler.class.getName());
+            }
         }
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
-        this.serversLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
-        logger.log(Level.INFO, "------------------------- Redkale " + Redkale.getDotedVersion() + " -------------------------");
+        this.shutdownLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
+        logger.log(Level.INFO, colorMessage(logger, 36, 1, "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
         //------------------配置 <transport> 节点 ------------------
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
@@ -422,7 +474,7 @@ public final class Application {
             AnyValue clusterConf = resources.getAnyValue("cluster");
             if (clusterConf != null) {
                 try {
-                    String classval = clusterConf.getValue("value");
+                    String classval = clusterConf.getValue("type", clusterConf.getValue("value")); //兼容value字段
                     if (classval == null || classval.isEmpty()) {
                         Iterator<ClusterAgentProvider> it = ServiceLoader.load(ClusterAgentProvider.class, classLoader).iterator();
                         RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
@@ -443,9 +495,9 @@ public final class Application {
                                 cluster.setConfig(clusterConf);
                             }
                         }
-                        if (cluster == null) logger.log(Level.SEVERE, "load application cluster resource, but not found name='value' value error: " + clusterConf);
+                        if (cluster == null) logger.log(Level.SEVERE, "load application cluster resource, but not found name='type' value error: " + clusterConf);
                     } else {
-                        Class type = classLoader.loadClass(clusterConf.getValue("value"));
+                        Class type = classLoader.loadClass(classval);
                         if (!ClusterAgent.class.isAssignableFrom(type)) {
                             logger.log(Level.SEVERE, "load application cluster resource, but not found " + ClusterAgent.class.getSimpleName() + " implements class error: " + clusterConf);
                         } else {
@@ -454,6 +506,7 @@ public final class Application {
                             cluster.setConfig(clusterConf);
                         }
                     }
+                    //此时不能执行cluster.init，因内置的对象可能依赖config.properties配置项
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "load application cluster resource error: " + clusterConf, e);
                 }
@@ -477,7 +530,7 @@ public final class Application {
                         }
                     }
                     try {
-                        String classval = mqConf.getValue("value");
+                        String classval = mqConf.getValue("type", mqConf.getValue("value")); //兼容value字段
                         if (classval == null || classval.isEmpty()) {
                             Iterator<MessageAgentProvider> it = ServiceLoader.load(MessageAgentProvider.class, classLoader).iterator();
                             RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
@@ -502,6 +555,7 @@ public final class Application {
                                 mqs[i].setConfig(mqConf);
                             }
                         }
+                        //此时不能执行mq.init，因内置的对象可能依赖config.properties配置项
                     } catch (Exception e) {
                         logger.log(Level.SEVERE, "load application mq resource error: " + mqs[i], e);
                     }
@@ -559,15 +613,1188 @@ public final class Application {
         }
     }
 
+    private static String colorMessage(Logger logger, int color, int type, String msg) {
+        final boolean linux = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("linux");
+        if (linux) { //Windows PowerShell 也能正常着色
+            boolean supported = true;
+            Logger l = logger;
+            do {
+                if (l.getHandlers() == null) break;
+                for (Handler handler : l.getHandlers()) {
+                    if (!(handler instanceof ConsoleHandler)) {
+                        supported = false;
+                        break;
+                    }
+                }
+                if (!supported) break;
+            } while ((l = l.getParent()) != null);
+            //colour  颜色代号：背景颜色代号(41-46)；前景色代号(31-36)
+            //type    样式代号：0无；1加粗；3斜体；4下划线
+            //String.format("\033[%d;%dm%s\033[0m", colour, type, content)
+            if (supported) msg = "\033[" + color + (type > 0 ? (";" + type) : "") + "m" + msg + "\033[0m";
+        }
+        return msg;
+    }
+
     private String checkName(String name) {  //不能含特殊字符
         if (name == null || name.isEmpty()) return name;
-        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
         for (char ch : name.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
-                throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+            if (!((ch >= '0' && ch <= '9') || ch == '_' || ch == '.' || ch == '-' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+                throw new RuntimeException("name only 0-9 a-z A-Z _ - . cannot begin 0-9");
             }
         }
         return name;
+    }
+
+    public void init() throws Exception {
+        System.setProperty("redkale.net.transport.poolmaxconns", "100");
+        System.setProperty("redkale.net.transport.pinginterval", "30");
+        System.setProperty("redkale.net.transport.checkinterval", "30");
+        System.setProperty("redkale.convert.tiny", "true");
+        System.setProperty("redkale.convert.pool.size", "128");
+        System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
+
+        final String confDir = this.confPath.toString();
+        final String homepath = this.home.getCanonicalPath();
+//        String pidstr = "";
+//        try { //JDK 9+
+//            Class phclass = Thread.currentThread().getContextClassLoader().loadClass("java.lang.ProcessHandle");
+//            Object phobj = phclass.getMethod("current").invoke(null);
+//            Object pid = phclass.getMethod("pid").invoke(phobj);
+//            pidstr = "APP_PID  = " + pid + "\r\n";
+//        } catch (Throwable t) {
+//        }
+
+        logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
+            + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
+            + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
+            + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
+            + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
+            + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
+            + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
+            + RESNAME_APP_HOME + "     = " + homepath + "\r\n"
+            + RESNAME_APP_CONF_DIR + " = " + confDir.substring(confDir.indexOf('!') + 1));
+
+        if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
+            String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
+            lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
+            Server.loadLib(classLoader, logger, lib);
+        }
+
+        //---------------------------- 读取 DataSource、CacheSource 配置 --------------------------------------------
+        if ("file".equals(this.confPath.getScheme())) {
+            File sourceFile = new File(new File(confPath), "source.properties");
+            if (sourceFile.isFile() && sourceFile.canRead()) {
+                InputStream in = new FileInputStream(sourceFile);
+                sourceProperties.load(in);
+                in.close();
+            } else {
+                //兼容 persistence.xml 【已废弃】
+                File persist = new File(new File(confPath), "persistence.xml");
+                if (persist.isFile() && persist.canRead()) {
+                    logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
+                    InputStream in = new FileInputStream(persist);
+                    dataResources.putAll(DataSources.loadAnyValuePersistenceXml(in));
+                    in.close();
+                }
+            }
+        } else {
+            try {
+                final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "source.properties");
+                InputStream in = sourceURI.toURL().openStream();
+                sourceProperties.load(in);
+                in.close();
+            } catch (Exception e) { //没有文件 跳过
+            }
+            //兼容 persistence.xml 【已废弃】
+            try {
+                final URI xmlURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "persistence.xml");
+                InputStream in = xmlURI.toURL().openStream();
+                dataResources.putAll(DataSources.loadAnyValuePersistenceXml(in));
+                in.close();
+                logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
+            } catch (Exception e) { //没有文件 跳过
+            }
+        }
+
+        //------------------------------------------------------------------------
+        final AnyValue resources = config.getAnyValue("resources");
+        if (resources != null) {
+            resourceFactory.register(RESNAME_APP_GRES, AnyValue.class, resources);
+            final AnyValue propertiesConf = resources.getAnyValue("properties");
+            if (propertiesConf != null) {
+                for (AnyValue prop : propertiesConf.getAnyValues("property")) {
+                    String key = prop.getValue("name");
+                    String value = prop.getValue("value");
+                    if (key == null || value == null) continue;
+                    appProperties.put(key, value);
+                    value = value.replace("${APP_HOME}", homepath);
+                    if (key.startsWith("redkale.datasource[") || key.startsWith("redkale.cachesource[")) {
+                        sourceProperties.put(key, value);
+                    } else if (key.startsWith("system.property.")) {
+                        System.setProperty(key.substring("system.property.".length()), value);
+                    } else if (key.startsWith("mimetype.property.")) {
+                        MimeType.add(key.substring("mimetype.property.".length()), value);
+                    } else if (key.startsWith("property.")) {
+                        resourceFactory.register(key, value);
+                    } else {
+                        resourceFactory.register("property." + key, value);
+                    }
+                }
+                String dfloads = propertiesConf.getValue("load");
+                if (dfloads != null) {
+                    for (String dfload : dfloads.split(";")) {
+                        if (dfload.trim().isEmpty()) continue;
+                        final URI df = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, dfload.trim());
+                        if (df != null && (!"file".equals(df.getScheme()) || df.toString().contains("!") || new File(df).isFile())) {
+                            Properties ps = new Properties();
+                            try {
+                                InputStream in = df.toURL().openStream();
+                                ps.load(in);
+                                in.close();
+                                if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
+                                appProperties.putAll(ps);
+                                ps.forEach((x, y) -> {
+                                    if (x.toString().startsWith("redkale.datasource[") || x.toString().startsWith("redkale.cachesource[")) {
+                                        sourceProperties.put(x, y.toString().replace("${APP_HOME}", homepath));
+                                    } else {
+                                        resourceFactory.register("property." + x, y.toString().replace("${APP_HOME}", homepath));
+                                    }
+                                });
+                            } catch (Exception e) {
+                                logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
+                            }
+                        }
+                    }
+                }
+
+                String agent = propertiesConf.getValue("agent");
+                if (agent != null && !agent.isEmpty() && !PropertiesAgent.class.getName().equals(agent)) {
+                    Class<PropertiesAgent> clazz = (Class) classLoader.loadClass(agent);
+                    if (!PropertiesAgent.class.isAssignableFrom(clazz)) {
+                        throw new RuntimeException("PropertiesAgent class (" + agent + ") is not " + PropertiesAgent.class.getName() + " impl class");
+                    }
+                    RedkaleClassLoader.putReflectionPublicConstructors(clazz, clazz.getName());
+                    this.propertiesAgent = clazz.getConstructor().newInstance();
+                    this.resourceFactory.inject(this.propertiesAgent);
+                    if (compileMode) {
+                        this.propertiesAgent.compile(propertiesConf);
+                    } else {
+                        this.propertiesAgent.init(resourceFactory, appProperties, propertiesConf);
+                    }
+                }
+            }
+            final AnyValue[] sourceConfs = resources.getAnyValues("source");
+            if (sourceConfs != null && sourceConfs.length > 0) {
+                //兼容 <source>节点 【已废弃】
+                logger.log(Level.WARNING, "<source> in application.xml is deprecated, replaced by source.properties");
+                for (AnyValue sourceConf : sourceConfs) {
+                    cacheResources.put(sourceConf.getValue("name"), sourceConf);
+                }
+            }
+        }
+        if (!sourceProperties.isEmpty()) {
+            AnyValue propConf = AnyValue.loadFromProperties(sourceProperties);
+            AnyValue redNode = propConf.getAnyValue("redkale");
+            if (redNode != null) {
+                AnyValue cacheNode = redNode.getAnyValue("cachesource");
+                if (cacheNode != null) cacheNode.forEach(null, (k, v) -> {
+                        if (v.getValue("name") != null) logger.log(Level.WARNING, "cachesource[" + k + "].name " + v.getValue("name") + " replaced by " + k);
+                        ((DefaultAnyValue) v).setValue("name", k);
+                        cacheResources.put(k, v);
+                    });
+                AnyValue dataNode = redNode.getAnyValue("datasource");
+                if (dataNode != null) dataNode.forEach(null, (k, v) -> {
+                        if (v.getValue("name") != null) logger.log(Level.WARNING, "datasource[" + k + "].name " + v.getValue("name") + " replaced by " + k);
+                        ((DefaultAnyValue) v).setValue("name", k);
+                        dataResources.put(k, v);
+                    });
+            }
+        }
+
+        this.resourceFactory.register(BsonFactory.root());
+        this.resourceFactory.register(JsonFactory.root());
+        this.resourceFactory.register(BsonFactory.root().getConvert());
+        this.resourceFactory.register(JsonFactory.root().getConvert());
+        this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
+        this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
+        //只有WatchService才能加载Application、WatchFactory
+        final Application application = this;
+        this.resourceFactory.register(new ResourceTypeLoader() {
+
+            @Override
+            public void load(ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) {
+                try {
+                    Resource res = field.getAnnotation(Resource.class);
+                    if (res == null) return;
+                    if (srcObj instanceof Service && Sncp.isRemote((Service) srcObj)) return; //远程模式不得注入 
+                    Class type = field.getType();
+                    if (type == Application.class) {
+                        field.set(srcObj, application);
+                    } else if (type == ResourceFactory.class) {
+                        boolean serv = RESNAME_SERVER_RESFACTORY.equals(res.name()) || res.name().equalsIgnoreCase("server");
+                        field.set(srcObj, serv ? rf : (res.name().isEmpty() ? application.resourceFactory : null));
+                    } else if (type == TransportFactory.class) {
+                        field.set(srcObj, application.sncpTransportFactory);
+                    } else if (type == NodeSncpServer.class) {
+                        NodeServer server = null;
+                        for (NodeServer ns : application.getNodeServers()) {
+                            if (ns.getClass() != NodeSncpServer.class) continue;
+                            if (res.name().equals(ns.server.getName())) {
+                                server = ns;
+                                break;
+                            }
+                        }
+                        field.set(srcObj, server);
+                    } else if (type == NodeHttpServer.class) {
+                        NodeServer server = null;
+                        for (NodeServer ns : application.getNodeServers()) {
+                            if (ns.getClass() != NodeHttpServer.class) continue;
+                            if (res.name().equals(ns.server.getName())) {
+                                server = ns;
+                                break;
+                            }
+                        }
+                        field.set(srcObj, server);
+                    } else if (type == NodeWatchServer.class) {
+                        NodeServer server = null;
+                        for (NodeServer ns : application.getNodeServers()) {
+                            if (ns.getClass() != NodeWatchServer.class) continue;
+                            if (res.name().equals(ns.server.getName())) {
+                                server = ns;
+                                break;
+                            }
+                        }
+                        field.set(srcObj, server);
+                    }
+//                    if (type == WatchFactory.class) {
+//                        field.set(src, application.watchFactory);
+//                    }
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Resource inject error", e);
+                }
+            }
+
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+
+        }, Application.class, ResourceFactory.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
+
+        //------------------------------------- 注册 java.net.http.HttpClient --------------------------------------------------------        
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
+            try {
+                if (field.getAnnotation(Resource.class) == null) return;
+                java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
+                if (resourceName.endsWith(".1.1")) {
+                    builder.version(HttpClient.Version.HTTP_1_1);
+                } else if (resourceName.endsWith(".2")) {
+                    builder.version(HttpClient.Version.HTTP_2);
+                }
+                java.net.http.HttpClient httpClient = builder.build();
+                field.set(srcObj, httpClient);
+                rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
+                rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] java.net.http.HttpClient inject error", e);
+            }
+        }, java.net.http.HttpClient.class);
+        //------------------------------------- 注册 HttpSimpleClient --------------------------------------------------------        
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
+            try {
+                if (field.getAnnotation(Resource.class) == null) return;
+                HttpSimpleClient httpClient = HttpSimpleClient.create(asyncGroup);
+                field.set(srcObj, httpClient);
+                rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
+                rf.register(resourceName, HttpSimpleClient.class, httpClient);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpClient inject error", e);
+            }
+        }, HttpSimpleClient.class);
+        //--------------------------------------------------------------------------
+        if (this.asyncGroup != null) {
+            ((AsyncIOGroup) this.asyncGroup).start();
+        }
+        if (this.clusterAgent != null) {
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") initing");
+            long s = System.currentTimeMillis();
+            if (this.clusterAgent instanceof CacheClusterAgent) {
+                String sourceName = ((CacheClusterAgent) clusterAgent).getSourceName(); //必须在inject前调用，需要赋值Resourcable.name
+                loadCacheSource(sourceName, false);
+            }
+            clusterAgent.setTransportFactory(this.sncpTransportFactory);
+            this.resourceFactory.inject(clusterAgent);
+            clusterAgent.init(this.resourceFactory, clusterAgent.getConfig());
+            this.resourceFactory.register(ClusterAgent.class, clusterAgent);
+            logger.info("ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (this.messageAgents != null) {
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent initing");
+            long s = System.currentTimeMillis();
+            for (MessageAgent agent : this.messageAgents) {
+                this.resourceFactory.inject(agent);
+                agent.init(this.resourceFactory, agent.getConfig());
+                this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
+                this.resourceFactory.register(agent.getName(), HttpMessageClient.class, agent.getHttpMessageClient());
+                //this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient()); //不需要给开发者使用
+            }
+            logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        //------------------------------------- 注册 HttpMessageClient --------------------------------------------------------        
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
+            try {
+                if (field.getAnnotation(Resource.class) == null) return;
+                if (clusterAgent == null) {
+                    HttpMessageClient messageClient = new HttpMessageLocalClient(application, resourceName);
+                    field.set(srcObj, messageClient);
+                    rf.inject(resourceName, messageClient, null); // 给其可能包含@Resource的字段赋值;
+                    rf.register(resourceName, HttpMessageClient.class, messageClient);
+                    return;
+                }
+                HttpMessageClient messageClient = new HttpMessageClusterClient(application, resourceName, clusterAgent);
+                field.set(srcObj, messageClient);
+                rf.inject(resourceName, messageClient, null); // 给其可能包含@Resource的字段赋值;
+                rf.register(resourceName, HttpMessageClient.class, messageClient);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpMessageClient inject error", e);
+            }
+        }, HttpMessageClient.class);
+        initResources();
+    }
+
+    CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
+        CacheSource old = resourceFactory.find(sourceName, CacheSource.class);
+        if (old != null) return old;
+        final AnyValue sourceConf = cacheResources.get(sourceName);
+        if (sourceConf == null) {
+            if (!autoMemory) return null;
+            CacheSource source = new CacheMemorySource(sourceName);
+            cacheSources.add(source);
+            resourceFactory.register(sourceName, CacheSource.class, source);
+            resourceFactory.inject(sourceName, source);
+            if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
+            logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source);
+            return source;
+        }
+        String classval = sourceConf.getValue("type");
+        try {
+            Class sourceType = null;
+            if (classval == null || classval.isEmpty()) {
+                RedkaleClassLoader.putServiceLoader(CacheSourceProvider.class);
+                List<CacheSourceProvider> providers = new ArrayList<>();
+                Iterator<CacheSourceProvider> it = ServiceLoader.load(CacheSourceProvider.class, serverClassLoader).iterator();
+                while (it.hasNext()) {
+                    CacheSourceProvider s = it.next();
+                    if (s != null) RedkaleClassLoader.putReflectionPublicConstructors(s.getClass(), s.getClass().getName());
+                    if (s != null && s.acceptsConf(sourceConf)) {
+                        providers.add(s);
+                    }
+                }
+                Collections.sort(providers, (a, b) -> {
+                    Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
+                    Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
+                    return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
+                });
+                for (CacheSourceProvider provider : providers) {
+                    sourceType = provider.sourceClass();
+                    if (sourceType != null) break;
+                }
+                if (sourceType == null) {
+                    if (CacheMemorySource.acceptsConf(sourceConf)) {
+                        sourceType = CacheMemorySource.class;
+                    }
+                }
+            } else {
+                sourceType = serverClassLoader.loadClass(classval);
+            }
+            if (sourceType == null) throw new RuntimeException("Not found CacheSourceProvider for config=" + sourceConf);
+
+            RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
+            CacheSource source = sourceType == CacheMemorySource.class ? new CacheMemorySource(sourceName) : (CacheSource) sourceType.getConstructor().newInstance();
+            cacheSources.add(source);
+            resourceFactory.register(sourceName, source);
+            resourceFactory.inject(sourceName, source);
+            if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
+            logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source);
+            return source;
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "load application CaheSource error: " + sourceConf, e);
+        }
+        return null;
+    }
+
+    DataSource loadDataSource(final String sourceName, boolean autoMemory) {
+        DataSource old = resourceFactory.find(sourceName, DataSource.class);
+        if (old != null) return old;
+        final AnyValue sourceConf = dataResources.get(sourceName);
+        if (sourceConf == null) {
+            if (!autoMemory) return null;
+            DataSource source = new DataMemorySource(sourceName);
+            dataSources.add(source);
+            resourceFactory.register(sourceName, DataSource.class, source);
+            resourceFactory.inject(sourceName, source);
+            if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
+            logger.info("[" + Thread.currentThread().getName() + "] Load DataSource resourceName = " + sourceName + ", source = " + source);
+            return source;
+        }
+        String classval = sourceConf.getValue("type");
+        try {
+            Class sourceType = null;
+            if (classval == null || classval.isEmpty()) {
+                if (DataJdbcSource.acceptsConf(sourceConf)) {
+                    sourceType = DataJdbcSource.class;
+                } else {
+                    RedkaleClassLoader.putServiceLoader(DataSourceProvider.class);
+                    List<DataSourceProvider> providers = new ArrayList<>();
+                    Iterator<DataSourceProvider> it = ServiceLoader.load(DataSourceProvider.class, serverClassLoader).iterator();
+                    while (it.hasNext()) {
+                        DataSourceProvider s = it.next();
+                        if (s != null) RedkaleClassLoader.putReflectionPublicConstructors(s.getClass(), s.getClass().getName());
+                        if (s != null && s.acceptsConf(sourceConf)) {
+                            providers.add(s);
+                        }
+                    }
+                    Collections.sort(providers, (a, b) -> {
+                        Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
+                        Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
+                        return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
+                    });
+                    for (DataSourceProvider provider : providers) {
+                        sourceType = provider.sourceClass();
+                        if (sourceType != null) break;
+                    }
+                    if (sourceType == null) {
+                        if (DataMemorySource.acceptsConf(sourceConf)) {
+                            sourceType = DataMemorySource.class;
+                        }
+                    }
+                }
+            } else {
+                sourceType = serverClassLoader.loadClass(classval);
+            }
+            if (sourceType == null) throw new RuntimeException("Not found DataSourceProvider for config=" + sourceConf);
+
+            RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
+            DataSource source = sourceType == DataMemorySource.class ? new DataMemorySource(sourceName) : (DataSource) sourceType.getConstructor().newInstance();
+            dataSources.add(source);
+            if (sourceType == DataMemorySource.class && DataMemorySource.isSearchType(sourceConf)) {
+                resourceFactory.register(sourceName, SearchSource.class, source);
+            } else {
+                resourceFactory.register(sourceName, source);
+            }
+            resourceFactory.inject(sourceName, source);
+            if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
+            logger.info("[" + Thread.currentThread().getName() + "] Load DataSource resourceName = " + sourceName + ", source = " + source);
+            return source;
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "load application DataSource error: " + sourceConf, e);
+        }
+        return null;
+    }
+
+    private void initResources() throws Exception {
+        //-------------------------------------------------------------------------
+        final AnyValue resources = config.getAnyValue("resources");
+        if (resources != null) {
+            //------------------------------------------------------------------------
+            for (AnyValue conf : resources.getAnyValues("group")) {
+                final String group = conf.getValue("name", "");
+                final String protocol = conf.getValue("protocol", Transport.DEFAULT_NETPROTOCOL).toUpperCase();
+                if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
+                    throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
+                }
+                TransportGroupInfo ginfo = new TransportGroupInfo(group, protocol, new LinkedHashSet<>());
+                for (AnyValue node : conf.getAnyValues("node")) {
+                    final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
+                    ginfo.putAddress(addr);
+                }
+                sncpTransportFactory.addGroupInfo(ginfo);
+            }
+            for (AnyValue conf : resources.getAnyValues("listener")) {
+                final String listenClass = conf.getValue("value", "");
+                if (listenClass.isEmpty()) continue;
+                Class clazz = classLoader.loadClass(listenClass);
+                if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
+                RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
+                @SuppressWarnings("unchecked")
+                ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
+                resourceFactory.inject(listener);
+                listener.init(config);
+                this.listeners.add(listener);
+            }
+        }
+        //------------------------------------------------------------------------
+    }
+
+    private void startSelfServer() throws Exception {
+        final Application application = this;
+        new Thread() {
+            {
+                setName("Redkale-Application-SelfServer-Thread");
+            }
+
+            @Override
+            public void run() {
+                try {
+                    DatagramChannel channel = DatagramChannel.open();
+                    channel.configureBlocking(true);
+                    channel.socket().setSoTimeout(3000);
+                    channel.bind(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
+                    if (!singletonMode) signalShutdownHandle();
+                    boolean loop = true;
+                    final ByteBuffer buffer = ByteBuffer.allocateDirect(UDP_CAPACITY);
+                    while (loop) {
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        SocketAddress address = readUdpData(channel, buffer, out);
+                        String[] args = JsonConvert.root().convertFrom(String[].class, out.toString(StandardCharsets.UTF_8));
+                        final String cmd = args[0];
+                        String[] params = args.length == 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length);
+                        //接收到命令必须要有回应, 无结果输出则回应回车换行符
+                        if ("SHUTDOWN".equalsIgnoreCase(cmd)) {
+                            try {
+                                long s = System.currentTimeMillis();
+                                logger.info(application.getClass().getSimpleName() + " shutdowning");
+                                application.shutdown();
+                                sendUdpData(channel, address, buffer, "--- shutdown finish ---".getBytes(StandardCharsets.UTF_8));
+                                long e = System.currentTimeMillis() - s;
+                                logger.info(application.getClass().getSimpleName() + " shutdown in " + e + " ms");
+                                channel.close();
+                            } catch (Exception ex) {
+                                logger.log(Level.INFO, "shutdown fail", ex);
+                                sendUdpData(channel, address, buffer, "shutdown fail".getBytes(StandardCharsets.UTF_8));
+                            } finally {
+                                loop = false;
+                                application.shutdownLatch.countDown();
+                            }
+                        } else if ("APIDOC".equalsIgnoreCase(cmd)) {
+                            try {
+                                String rs = new ApiDocCommand(application).command(cmd, params);
+                                if (rs == null || rs.isEmpty()) rs = "\r\n";
+                                sendUdpData(channel, address, buffer, rs.getBytes(StandardCharsets.UTF_8));
+                            } catch (Exception ex) {
+                                sendUdpData(channel, address, buffer, "apidoc fail".getBytes(StandardCharsets.UTF_8));
+                            }
+                        } else {
+                            long s = System.currentTimeMillis();
+                            logger.info(application.getClass().getSimpleName() + " command " + cmd);
+                            List<Object> rs = application.command(cmd, params);
+                            StringBuilder sb = new StringBuilder();
+                            if (rs != null) {
+                                for (Object o : rs) {
+                                    if (o instanceof CharSequence) {
+                                        sb.append(o).append("\r\n");
+                                    } else {
+                                        sb.append(JsonConvert.root().convertTo(o)).append("\r\n");
+                                    }
+                                }
+                            }
+                            if (sb.length() == 0) sb.append("\r\n");
+                            sendUdpData(channel, address, buffer, sb.toString().getBytes(StandardCharsets.UTF_8));
+                            long e = System.currentTimeMillis() - s;
+                            logger.info(application.getClass().getSimpleName() + " command in " + e + " ms");
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.INFO, "Control fail", e);
+                    System.exit(1);
+                }
+            }
+        }.start();
+    }
+
+    //数据包前4个字节为数据内容的长度
+    private static void sendUdpData(final DatagramChannel channel, SocketAddress dest, ByteBuffer buffer, byte[] bytes) throws IOException {
+        buffer.clear();
+        int count = (bytes.length + 4) / UDP_CAPACITY + ((bytes.length + 4) % UDP_CAPACITY > 0 ? 1 : 0);
+        int start = 0;
+        for (int i = 0; i < count; i++) {
+            if (start == 0) buffer.putInt(bytes.length);
+            int len = Math.min(buffer.remaining(), bytes.length - start);
+            buffer.put(bytes, start, len);
+            buffer.flip();
+            boolean first = true;
+            while (buffer.hasRemaining()) {
+                if (!first) Utility.sleep(10);
+                if (dest == null) {
+                    channel.write(buffer);
+                } else {
+                    channel.send(buffer, dest);
+                }
+                first = false;
+            }
+            start += len;
+            buffer.clear();
+        }
+    }
+
+    private static SocketAddress readUdpData(final DatagramChannel channel, ByteBuffer buffer, ByteArrayOutputStream out) throws IOException {
+        out.reset();
+        buffer.clear();
+        SocketAddress src = null;
+        if (channel.isConnected()) {
+            channel.read(buffer);
+            while (buffer.position() < 4) channel.read(buffer);
+        } else {
+            src = channel.receive(buffer);
+            while (buffer.position() < 4) src = channel.receive(buffer);
+        }
+        buffer.flip();
+        final int dataSize = buffer.getInt();
+        while (buffer.hasRemaining()) {
+            out.write(buffer.get());
+        }
+        while (out.size() < dataSize) {
+            buffer.clear();
+            channel.receive(buffer);
+            buffer.flip();
+            while (buffer.hasRemaining()) {
+                out.write(buffer.get());
+            }
+        }
+        return src;
+    }
+
+    private static void sendCommand(Logger logger, int port, String cmd, String[] params) throws Exception {
+        final DatagramChannel channel = DatagramChannel.open();
+        channel.configureBlocking(true);
+        channel.socket().setSoTimeout(3000);
+        SocketAddress dest = new InetSocketAddress("127.0.0.1", port);
+        channel.connect(dest);
+        //命令和参数合成一个数组
+        String[] args = new String[1 + (params == null ? 0 : params.length)];
+        args[0] = cmd;
+        if (params != null) System.arraycopy(params, 0, args, 1, params.length);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(UDP_CAPACITY);
+        try {
+            sendUdpData(channel, dest, buffer, JsonConvert.root().convertToBytes(args));
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            readUdpData(channel, buffer, out);
+            channel.close();
+            String rs = out.toString(StandardCharsets.UTF_8).trim();
+            if (logger != null) logger.info("Send: " + cmd + ", Reply: " + rs);
+            System.out.println(rs);
+        } catch (Exception e) {
+            if (e instanceof PortUnreachableException) {
+                if ("APIDOC".equalsIgnoreCase(cmd)) {
+                    final Application application = new Application(false, true, Application.loadAppConfig());
+                    application.init();
+                    application.start();
+                    String rs = new ApiDocCommand(application).command(cmd, params);
+                    application.shutdown();
+                    if (logger != null) logger.info(rs);
+                    System.out.println(rs);
+                    return;
+                }
+                //if ("SHUTDOWN".equalsIgnoreCase(cmd)) {
+                //    System.out.println("--- application not running ---");
+                //} else {
+                System.err.println("--- application not running ---");
+                //}
+                return;
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * 启动
+     *
+     * @throws Exception 异常
+     */
+    public void start() throws Exception {
+        if (!singletonMode && !compileMode && this.clusterAgent != null) {
+            this.clusterAgent.register(this);
+        }
+        final AnyValue[] entrys = config.getAnyValues("server");
+        CountDownLatch timecd = new CountDownLatch(entrys.length);
+        final List<AnyValue> sncps = new ArrayList<>();
+        final List<AnyValue> others = new ArrayList<>();
+        final List<AnyValue> watchs = new ArrayList<>();
+        for (final AnyValue entry : entrys) {
+            if (entry.getValue("protocol", "").toUpperCase().startsWith("SNCP")) {
+                sncps.add(entry);
+            } else if (entry.getValue("protocol", "").toUpperCase().startsWith("WATCH")) {
+                watchs.add(entry);
+            } else {
+                others.add(entry);
+            }
+        }
+        if (watchs.size() > 1) throw new RuntimeException("Found one more WATCH Server");
+        this.watching = !watchs.isEmpty();
+
+        runServers(timecd, sncps);  //必须确保SNCP服务都启动后再启动其他服务
+        runServers(timecd, others);
+        runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
+        timecd.await();
+        if (this.clusterAgent != null) this.clusterAgent.start();
+        if (this.messageAgents != null) {
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent starting");
+            long s = System.currentTimeMillis();
+            final StringBuffer sb = new StringBuffer();
+            Set<String> names = new HashSet<>();
+            for (MessageAgent agent : this.messageAgents) {
+                names.add(agent.getName());
+                Map<String, Long> map = agent.start().join();
+                AtomicInteger maxlen = new AtomicInteger();
+                map.keySet().forEach(str -> {
+                    if (str.length() > maxlen.get()) maxlen.set(str.length());
+                });
+                new TreeMap<>(map).forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
+                );
+            }
+            if (sb.length() > 0) logger.info(sb.toString().trim());
+            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") start in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        long intms = System.currentTimeMillis() - startTime;
+        String ms = String.valueOf(intms);
+        int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
+        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale started in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n");
+        LoggingFileHandler.traceflag = true;
+
+        for (ApplicationListener listener : this.listeners) {
+            listener.postStart(this);
+        }
+        if (!singletonMode && !compileMode) this.shutdownLatch.await();
+    }
+
+    private static String alignString(String value, int maxlen) {
+        StringBuilder sb = new StringBuilder(maxlen);
+        sb.append(value);
+        for (int i = 0; i < maxlen - value.length(); i++) {
+            sb.append(' ');
+        }
+        return sb.toString();
+    }
+
+    //使用了nohup或使用了后台&，Runtime.getRuntime().addShutdownHook失效
+    private void signalShutdownHandle() {
+        Consumer<Consumer<String>> signalShutdownConsumer = Utility.signalShutdownConsumer();
+        if (signalShutdownConsumer == null) return;
+        signalShutdownConsumer.accept(sig -> {
+            try {
+                long s = System.currentTimeMillis();
+                logger.info(Application.this.getClass().getSimpleName() + " shutdowning " + sig);
+                shutdown();
+                long e = System.currentTimeMillis() - s;
+                logger.info(Application.this.getClass().getSimpleName() + " shutdown in " + e + " ms");
+            } catch (Exception ex) {
+                logger.log(Level.INFO, "shutdown fail", ex);
+            } finally {
+                shutdownLatch.countDown();
+            }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void runServers(CountDownLatch timecd, final List<AnyValue> serconfs) throws Exception {
+        this.servicecdl = new CountDownLatch(serconfs.size());
+        CountDownLatch sercdl = new CountDownLatch(serconfs.size());
+        final AtomicBoolean inited = new AtomicBoolean(false);
+        final Map<String, Class<? extends NodeServer>> nodeClasses = new HashMap<>();
+        for (final AnyValue serconf : serconfs) {
+            Thread thread = new Thread() {
+                {
+                    setName("Redkale-" + serconf.getValue("protocol", "Server").toUpperCase().replaceFirst("\\..+", "") + ":" + serconf.getIntValue("port") + "-Thread");
+                    this.setDaemon(true);
+                }
+
+                @Override
+                public void run() {
+                    try {
+                        //Thread ctd = Thread.currentThread();
+                        //ctd.setContextClassLoader(new URLClassLoader(new URL[0], ctd.getContextClassLoader()));
+                        final String protocol = serconf.getValue("protocol", "").replaceFirst("\\..+", "").toUpperCase();
+                        NodeServer server = null;
+                        if ("SNCP".equals(protocol)) {
+                            server = NodeSncpServer.createNodeServer(Application.this, serconf);
+                        } else if ("WATCH".equalsIgnoreCase(protocol)) {
+                            DefaultAnyValue serconf2 = (DefaultAnyValue) serconf;
+                            DefaultAnyValue rest = (DefaultAnyValue) serconf2.getAnyValue("rest");
+                            if (rest == null) {
+                                rest = new DefaultAnyValue();
+                                serconf2.addValue("rest", rest);
+                            }
+                            rest.setValue("base", WatchServlet.class.getName());
+                            server = new NodeWatchServer(Application.this, serconf);
+                        } else if ("HTTP".equalsIgnoreCase(protocol)) {
+                            server = new NodeHttpServer(Application.this, serconf);
+                        } else {
+                            if (!inited.get()) {
+                                synchronized (nodeClasses) {
+                                    if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
+                                        ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
+                                        ClassFilter.Loader.load(home, classLoader, ((excludelibs != null ? (excludelibs + ";") : "") + serconf.getValue("excludelibs", "")).split(";"), profilter);
+                                        final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
+                                        for (FilterEntry<NodeServer> entry : entrys) {
+                                            final Class<? extends NodeServer> type = entry.getType();
+                                            NodeProtocol pros = type.getAnnotation(NodeProtocol.class);
+                                            String p = pros.value().toUpperCase();
+                                            if ("SNCP".equals(p) || "HTTP".equals(p)) continue;
+                                            final Class<? extends NodeServer> old = nodeClasses.get(p);
+                                            if (old != null && old != type) {
+                                                throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
+                                            }
+                                            nodeClasses.put(p, type);
+                                        }
+                                    }
+                                }
+                            }
+                            Class<? extends NodeServer> nodeClass = nodeClasses.get(protocol);
+                            if (nodeClass != null) server = NodeServer.create(nodeClass, Application.this, serconf);
+                        }
+                        if (server == null) {
+                            logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
+                            System.exit(0);
+                        }
+                        server.init(serconf);
+                        if (!singletonMode && !compileMode) {
+                            server.start();
+                        } else if (compileMode) {
+                            server.getServer().getPrepareServlet().init(server.getServer().getContext(), serconf);
+                        }
+                        servers.add(server);
+                        timecd.countDown();
+                        sercdl.countDown();
+                    } catch (Exception ex) {
+                        logger.log(Level.WARNING, serconf + " runServers error", ex);
+                        Application.this.shutdownLatch.countDown();
+                    }
+                }
+            };
+            thread.start();
+        }
+        sercdl.await();
+    }
+
+    /**
+     * 实例化单个Service
+     *
+     * @param <T>               泛型
+     * @param serviceClass      指定的service类
+     * @param extServiceClasses 需要排除的service类
+     *
+     * @return Service对象
+     * @throws Exception 异常
+     */
+    public static <T extends Service> T singleton(Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
+        return singleton("", serviceClass, extServiceClasses);
+    }
+
+    /**
+     * 实例化单个Service
+     *
+     * @param <T>               泛型
+     * @param name              Service的资源名
+     * @param serviceClass      指定的service类
+     * @param extServiceClasses 需要排除的service类
+     *
+     * @return Service对象
+     * @throws Exception 异常
+     */
+    public static <T extends Service> T singleton(String name, Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
+        if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
+        final Application application = Application.create(true);
+        System.setProperty("red" + "kale.singleton.serviceclass", serviceClass.getName());
+        if (extServiceClasses != null && extServiceClasses.length > 0) {
+            StringBuilder sb = new StringBuilder();
+            for (Class clazz : extServiceClasses) {
+                if (sb.length() > 0) sb.append(',');
+                sb.append(clazz.getName());
+            }
+            System.setProperty("red" + "kale.singleton.extserviceclasses", sb.toString());
+        }
+        application.init();
+        application.start();
+        for (NodeServer server : application.servers) {
+            T service = server.resourceFactory.find(name, serviceClass);
+            if (service != null) return service;
+        }
+        if (Modifier.isAbstract(serviceClass.getModifiers())) throw new IllegalArgumentException("abstract class not allowed");
+        if (serviceClass.isInterface()) throw new IllegalArgumentException("interface class not allowed");
+        throw new IllegalArgumentException(serviceClass.getName() + " maybe have zero not-final public method");
+    }
+
+    public static Application create(final boolean singleton) throws IOException {
+        return new Application(singleton, false, loadAppConfig());
+    }
+
+    static AnyValue loadAppConfig() throws IOException {
+        final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/');
+        System.setProperty(RESNAME_APP_HOME, home);
+        String sysConfFile = System.getProperty(RESNAME_APP_CONF_FILE);
+        if (sysConfFile != null) {
+            String text;
+            if (sysConfFile.contains("://")) {
+                text = Utility.readThenClose(URI.create(sysConfFile).toURL().openStream());
+            } else {
+                File f = new File(sysConfFile);
+                if (f.isFile() && f.canRead()) {
+                    text = Utility.readThenClose(new FileInputStream(f));
+                } else {
+                    throw new IOException("Read application conf file (" + sysConfFile + ") error ");
+                }
+            }
+            return text.trim().startsWith("<") ? AnyValue.loadFromXml(text, (k, v) -> v.replace("${APP_HOME}", home)).getAnyValue("application") : AnyValue.loadFromProperties(text).getAnyValue("redkale");
+        }
+        String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
+        URI appConfFile;
+        boolean fromcache = false;
+        if (confDir.contains("://")) { //jar内部资源
+            appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.xml");
+            try {
+                appConfFile.toURL().openStream().close();
+            } catch (IOException e) { //没有application.xml就尝试读application.properties
+                appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.properties");
+            }
+        } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > 0) { //绝对路径
+            File f = new File(confDir, "application.xml");
+            if (f.isFile() && f.canRead()) {
+                appConfFile = f.toURI();
+                confDir = f.getParentFile().getCanonicalPath();
+            } else {
+                f = new File(confDir, "application.properties");
+                if (f.isFile() && f.canRead()) {
+                    appConfFile = f.toURI();
+                    confDir = f.getParentFile().getCanonicalPath();
+                } else {
+                    appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); //不能传confDir
+                    try {
+                        appConfFile.toURL().openStream().close();
+                    } catch (IOException e) { //没有application.xml就尝试读application.properties
+                        appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
+                    }
+                    confDir = appConfFile.toString().replace("/application.xml", "").replace("/application.properties", "");
+                    fromcache = true;
+                }
+            }
+        } else { //相对路径
+            File f = new File(new File(home, confDir), "application.xml");
+            if (f.isFile() && f.canRead()) {
+                appConfFile = f.toURI();
+                confDir = f.getParentFile().getCanonicalPath();
+            } else {
+                f = new File(new File(home, confDir), "application.properties");
+                if (f.isFile() && f.canRead()) {
+                    appConfFile = f.toURI();
+                    confDir = f.getParentFile().getCanonicalPath();
+                } else {
+                    appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); //不能传confDir
+                    try {
+                        appConfFile.toURL().openStream().close();
+                    } catch (IOException e) { //没有application.xml就尝试读application.properties
+                        appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
+                    }
+                    confDir = appConfFile.toString().replace("/application.xml", "").replace("/application.properties", "");
+                    fromcache = true;
+                }
+            }
+        }
+        System.setProperty(RESNAME_APP_CONF_DIR, confDir);
+        String text = Utility.readThenClose(appConfFile.toURL().openStream());
+        AnyValue conf = text.trim().startsWith("<") ? AnyValue.loadFromXml(text, (k, v) -> v.replace("${APP_HOME}", home)).getAnyValue("application") : AnyValue.loadFromProperties(text).getAnyValue("redkale");
+        if (fromcache) ((DefaultAnyValue) conf).addValue("[config-from-cache]", "true");
+        return conf;
+    }
+
+    public static void main(String[] args) throws Exception {
+        Utility.midnight(); //先初始化一下Utility
+        Thread.currentThread().setName("Redkale-Application-Main-Thread");
+        //运行主程序
+        {
+            String cmd = System.getProperty("cmd", System.getProperty("CMD"));
+            String[] params = args;
+            if (args != null && args.length > 0) {
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i] != null && args[i].toLowerCase().startsWith("--conf-file=")) {
+                        System.setProperty(RESNAME_APP_CONF_FILE, args[i].substring("--conf-file=".length()));
+                        String[] newargs = new String[args.length - 1];
+                        System.arraycopy(args, 0, newargs, 0, i);
+                        System.arraycopy(args, i + 1, newargs, i, args.length - 1 - i);
+                        args = newargs;
+                        break;
+                    }
+                }
+                if (cmd == null) {
+                    for (int i = 0; i < args.length; i++) {
+                        if (args[i] != null && !args[i].startsWith("-")) { //非-开头的第一个视为命令号
+                            cmd = args[i];
+                            if ("start".equalsIgnoreCase(cmd) || "startup".equalsIgnoreCase(cmd)) {
+                                cmd = null;
+                            }
+                            params = new String[args.length - 1];
+                            System.arraycopy(args, 0, params, 0, i);
+                            System.arraycopy(args, i + 1, params, i, args.length - 1 - i);
+                            break;
+                        }
+                    }
+                }
+                if (cmd == null) {
+                    if (args.length == 1 && ("--help".equalsIgnoreCase(args[0]) || "-h".equalsIgnoreCase(args[0]))) {
+                        cmd = args[0];
+                    }
+                }
+            }
+            if (cmd != null) {
+                if ("stop".equalsIgnoreCase(cmd)) {
+                    cmd = "shutdown";
+                }
+                if ("help".equalsIgnoreCase(cmd) || "--help".equalsIgnoreCase(cmd) || "-h".equalsIgnoreCase(cmd)) {
+                    System.out.println(generateHelp());
+                    return;
+                }
+                boolean restart = "restart".equalsIgnoreCase(cmd);
+                AnyValue config = loadAppConfig();
+                Application.sendCommand(null, config.getIntValue("port"), restart ? "SHUTDOWN" : cmd, params);
+                if (!restart) return;
+            }
+        }
+        //PrepareCompiler.main(args); //测试代码
+
+        final Application application = Application.create(false);
+        currentApplication = application;
+        application.init();
+        application.startSelfServer();
+        try {
+            for (ApplicationListener listener : application.listeners) {
+                listener.preStart(application);
+            }
+            application.start();
+        } catch (Exception e) {
+            application.logger.log(Level.SEVERE, "Application start error", e);
+            System.exit(1);
+        }
+        System.exit(0); //必须要有
+    }
+
+    private static String generateHelp() {
+        return ""
+            + "Usage: redkale [command] [arguments]\r\n"
+            + "Command: \r\n"
+            + "   start, startup                            start one process\r\n"
+            + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
+            + "   shutdown, stop                            shutdown one process\r\n"
+            + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
+            + "   restart                                   restart one process\r\n"
+            + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
+            + "   apidoc                                    generate apidoc\r\n"
+            + "       --api-skiprpc=[true|false]            skip @RestService(rpconly=true) service or @RestMapping(rpconly=true) method, default is true\r\n"
+            + "       --api-host=[url]                      api root url, default is http://localhost\r\n"
+            + "   help, -h, --help                          show this help\r\n";
+    }
+
+    NodeSncpServer findNodeSncpServer(final InetSocketAddress sncpAddr) {
+        for (NodeServer node : servers) {
+            if (node.isSNCP() && sncpAddr.equals(node.getSncpAddress())) {
+                return (NodeSncpServer) node;
+            }
+        }
+        return null;
+    }
+
+    public List<Object> command(String cmd, String[] params) {
+        List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs        
+        List<Object> results = new ArrayList<>();
+        localServers.stream().forEach((server) -> {
+            try {
+                List<Object> rs = server.command(cmd, params);
+                if (rs != null) results.addAll(rs);
+            } catch (Exception t) {
+                logger.log(Level.WARNING, " command server(" + server.getSocketAddress() + ") error", t);
+            }
+        });
+        return results;
+    }
+
+    public void shutdown() throws Exception {
+        for (ApplicationListener listener : this.listeners) {
+            try {
+                listener.preShutdown(this);
+            } catch (Exception e) {
+                logger.log(Level.WARNING, listener.getClass() + " preShutdown erroneous", e);
+            }
+        }
+        List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs
+        Collections.reverse(localServers); //倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
+        if (isCompileMode() && this.messageAgents != null) {
+            Set<String> names = new HashSet<>();
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent stopping");
+            long s = System.currentTimeMillis();
+            for (MessageAgent agent : this.messageAgents) {
+                names.add(agent.getName());
+                agent.stop().join();
+            }
+            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (!isCompileMode() && clusterAgent != null) {
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent destroying");
+            long s = System.currentTimeMillis();
+            clusterAgent.deregister(this);
+            clusterAgent.destroy(clusterAgent.getConfig());
+            logger.info("ClusterAgent destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        localServers.stream().forEach((server) -> {
+            try {
+                server.shutdown();
+            } catch (Exception t) {
+                logger.log(Level.WARNING, " shutdown server(" + server.getSocketAddress() + ") error", t);
+            } finally {
+                shutdownLatch.countDown();
+            }
+        });
+        if (this.messageAgents != null) {
+            Set<String> names = new HashSet<>();
+            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent destroying");
+            long s = System.currentTimeMillis();
+            for (MessageAgent agent : this.messageAgents) {
+                names.add(agent.getName());
+                agent.destroy(agent.getConfig());
+            }
+            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        for (DataSource source : dataSources) {
+            if (source == null) continue;
+            try {
+                if (source instanceof Service) {
+                    long s = System.currentTimeMillis();
+                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getConf((Service) source) : null);
+                    logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
+//                } else {
+//                    source.getClass().getMethod("close").invoke(source);
+//                    RedkaleClassLoader.putReflectionMethod(source.getClass().getName(), source.getClass().getMethod("close"));
+                }
+            } catch (Exception e) {
+                logger.log(Level.FINER, source.getClass() + " close DataSource erroneous", e);
+            }
+        }
+        for (CacheSource source : cacheSources) {
+            if (source == null) continue;
+            try {
+                if (source instanceof Service) {
+                    long s = System.currentTimeMillis();
+                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getConf((Service) source) : null);
+                    logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
+//                } else {
+//                    source.getClass().getMethod("close").invoke(source);
+//                    RedkaleClassLoader.putReflectionMethod(source.getClass().getName(), source.getClass().getMethod("close"));
+                }
+            } catch (Exception e) {
+                logger.log(Level.FINER, source.getClass() + " close CacheSource erroneous", e);
+            }
+        }
+        if (this.propertiesAgent != null) {
+            long s = System.currentTimeMillis();
+            this.propertiesAgent.destroy(config.getAnyValue("resources").getAnyValue("properties"));
+            logger.info(this.propertiesAgent.getClass().getSimpleName() + " destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (this.asyncGroup != null) {
+            long s = System.currentTimeMillis();
+            ((AsyncIOGroup) this.asyncGroup).close();
+            logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        this.sncpTransportFactory.shutdownNow();
     }
 
     public ExecutorService getWorkExecutor() {
@@ -652,896 +1879,6 @@ public final class Application {
 
     public boolean isSingletonMode() {
         return singletonMode;
-    }
-
-    public void init() throws Exception {
-        System.setProperty("redkale.net.transport.poolmaxconns", "100");
-        System.setProperty("redkale.net.transport.pinginterval", "30");
-        System.setProperty("redkale.net.transport.checkinterval", "30");
-        System.setProperty("redkale.convert.tiny", "true");
-        System.setProperty("redkale.convert.pool.size", "128");
-        System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
-
-        final String confDir = this.confPath.toString();
-        final String homepath = this.home.getCanonicalPath();
-        if ("file".equals(this.confPath.getScheme())) {
-            File persist = new File(new File(confPath), "persistence.xml");
-            if (persist.isFile()) System.setProperty(DataSources.DATASOURCE_CONFPATH, persist.getCanonicalPath());
-        } else {
-            System.setProperty(DataSources.DATASOURCE_CONFPATH, confDir + (confDir.endsWith("/") ? "" : "/") + "persistence.xml");
-        }
-//        String pidstr = "";
-//        try { //JDK 9+
-//            Class phclass = Thread.currentThread().getContextClassLoader().loadClass("java.lang.ProcessHandle");
-//            Object phobj = phclass.getMethod("current").invoke(null);
-//            Object pid = phclass.getMethod("pid").invoke(phobj);
-//            pidstr = "APP_PID  = " + pid + "\r\n";
-//        } catch (Throwable t) {
-//        }
-
-        logger.log(Level.INFO, "APP_OSNAME = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
-            + "APP_JAVA   = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
-            + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
-            + "APP_PID    = " + ProcessHandle.current().pid() + "\r\n"
-            + RESNAME_APP_NODEID + " = " + this.nodeid + "\r\n"
-            + "APP_LOADER = " + this.classLoader.getClass().getSimpleName() + "\r\n"
-            + RESNAME_APP_ADDR + "   = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
-            + RESNAME_APP_HOME + "   = " + homepath + "\r\n"
-            + RESNAME_APP_CONF + "   = " + confDir.substring(confDir.indexOf('!') + 1));
-
-        if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
-            String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
-            lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
-            Server.loadLib(classLoader, logger, lib);
-        }
-
-        //------------------------------------------------------------------------
-        final AnyValue resources = config.getAnyValue("resources");
-        if (resources != null) {
-            resourceFactory.register(RESNAME_APP_GRES, AnyValue.class, resources);
-            final AnyValue properties = resources.getAnyValue("properties");
-            if (properties != null) {
-                String dfloads = properties.getValue("load");
-                if (dfloads != null) {
-                    for (String dfload : dfloads.split(";")) {
-                        if (dfload.trim().isEmpty()) continue;
-                        final URI df = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, dfload.trim());
-                        if (df != null && (!"file".equals(df.getScheme()) || df.toString().contains("!") || new File(df).isFile())) {
-                            Properties ps = new Properties();
-                            try {
-                                InputStream in = df.toURL().openStream();
-                                ps.load(in);
-                                in.close();
-                                ps.forEach((x, y) -> resourceFactory.register("property." + x, y.toString().replace("${APP_HOME}", homepath)));
-                            } catch (Exception e) {
-                                logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
-                            }
-                        }
-                    }
-                }
-                for (AnyValue prop : properties.getAnyValues("property")) {
-                    String name = prop.getValue("name");
-                    String value = prop.getValue("value");
-                    if (name == null || value == null) continue;
-                    value = value.replace("${APP_HOME}", homepath);
-                    if (name.startsWith("system.property.")) {
-                        System.setProperty(name.substring("system.property.".length()), value);
-                    } else if (name.startsWith("mimetype.property.")) {
-                        MimeType.add(name.substring("mimetype.property.".length()), value);
-                    } else if (name.startsWith("property.")) {
-                        resourceFactory.register(name, value);
-                    } else {
-                        resourceFactory.register("property." + name, value);
-                    }
-                }
-            }
-        }
-        this.resourceFactory.register(BsonFactory.root());
-        this.resourceFactory.register(JsonFactory.root());
-        this.resourceFactory.register(BsonFactory.root().getConvert());
-        this.resourceFactory.register(JsonFactory.root().getConvert());
-        this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
-        this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
-        //只有WatchService才能加载Application、WatchFactory
-        final Application application = this;
-        this.resourceFactory.register(new ResourceFactory.ResourceLoader() {
-
-            @Override
-            public void load(ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) {
-                try {
-                    Resource res = field.getAnnotation(Resource.class);
-                    if (res == null) return;
-                    if (src instanceof Service && Sncp.isRemote((Service) src)) return; //远程模式不得注入 
-                    Class type = field.getType();
-                    if (type == Application.class) {
-                        field.set(src, application);
-                    } else if (type == ResourceFactory.class) {
-                        boolean serv = RESNAME_SERVER_RESFACTORY.equals(res.name()) || res.name().equalsIgnoreCase("server");
-                        field.set(src, serv ? rf : (res.name().isEmpty() ? application.resourceFactory : null));
-                    } else if (type == TransportFactory.class) {
-                        field.set(src, application.sncpTransportFactory);
-                    } else if (type == NodeSncpServer.class) {
-                        NodeServer server = null;
-                        for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeSncpServer.class) continue;
-                            if (res.name().equals(ns.server.getName())) {
-                                server = ns;
-                                break;
-                            }
-                        }
-                        field.set(src, server);
-                    } else if (type == NodeHttpServer.class) {
-                        NodeServer server = null;
-                        for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeHttpServer.class) continue;
-                            if (res.name().equals(ns.server.getName())) {
-                                server = ns;
-                                break;
-                            }
-                        }
-                        field.set(src, server);
-                    } else if (type == NodeWatchServer.class) {
-                        NodeServer server = null;
-                        for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeWatchServer.class) continue;
-                            if (res.name().equals(ns.server.getName())) {
-                                server = ns;
-                                break;
-                            }
-                        }
-                        field.set(src, server);
-                    }
-//                    if (type == WatchFactory.class) {
-//                        field.set(src, application.watchFactory);
-//                    }
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Resource inject error", e);
-                }
-            }
-
-            @Override
-            public boolean autoNone() {
-                return false;
-            }
-
-        }, Application.class, ResourceFactory.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
-
-        //------------------------------------- 注册 java.net.http.HttpClient --------------------------------------------------------        
-        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
-            try {
-                if (field.getAnnotation(Resource.class) == null) return;
-                java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
-                if (resourceName.endsWith(".1.1")) {
-                    builder.version(HttpClient.Version.HTTP_1_1);
-                } else if (resourceName.endsWith(".2")) {
-                    builder.version(HttpClient.Version.HTTP_2);
-                }
-                java.net.http.HttpClient httpClient = builder.build();
-                field.set(src, httpClient);
-                rf.inject(httpClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] java.net.http.HttpClient inject error", e);
-            }
-        }, java.net.http.HttpClient.class);
-        //------------------------------------- 注册 HttpSimpleClient --------------------------------------------------------        
-        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
-            try {
-                if (field.getAnnotation(Resource.class) == null) return;
-                HttpSimpleClient httpClient = HttpSimpleClient.create(asyncGroup);
-                field.set(src, httpClient);
-                rf.inject(httpClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, HttpSimpleClient.class, httpClient);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpClient inject error", e);
-            }
-        }, HttpSimpleClient.class);
-        //--------------------------------------------------------------------------
-        if (this.asyncGroup != null) {
-            ((AsyncIOGroup) this.asyncGroup).start();
-        }
-        if (this.clusterAgent != null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent initing");
-            long s = System.currentTimeMillis();
-            if (this.clusterAgent instanceof CacheClusterAgent) {
-                String sourceName = ((CacheClusterAgent) clusterAgent).getSourceName(); //必须在inject前调用，需要赋值Resourcable.name
-                loadCacheSource(sourceName);
-            }
-            clusterAgent.setTransportFactory(this.sncpTransportFactory);
-            this.resourceFactory.inject(clusterAgent);
-            clusterAgent.init(clusterAgent.getConfig());
-            this.resourceFactory.register(ClusterAgent.class, clusterAgent);
-            logger.info("ClusterAgent init in " + (System.currentTimeMillis() - s) + " ms");
-        }
-        if (this.messageAgents != null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent initing");
-            long s = System.currentTimeMillis();
-            for (MessageAgent agent : this.messageAgents) {
-                this.resourceFactory.inject(agent);
-                agent.init(agent.getConfig());
-                this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
-                this.resourceFactory.register(agent.getName(), HttpMessageClient.class, agent.getHttpMessageClient());
-                //this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient()); //不需要给开发者使用
-            }
-            logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
-
-        }
-        //------------------------------------- 注册 HttpMessageClient --------------------------------------------------------        
-        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
-            try {
-                if (field.getAnnotation(Resource.class) == null) return;
-                if (clusterAgent == null) {
-                    HttpMessageClient messageClient = new HttpMessageLocalClient(application, resourceName);
-                    field.set(src, messageClient);
-                    rf.inject(messageClient, null); // 给其可能包含@Resource的字段赋值;
-                    rf.register(resourceName, HttpMessageClient.class, messageClient);
-                    return;
-                }
-                HttpMessageClient messageClient = new HttpMessageClusterClient(application, resourceName, clusterAgent);
-                field.set(src, messageClient);
-                rf.inject(messageClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, HttpMessageClient.class, messageClient);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpMessageClient inject error", e);
-            }
-        }, HttpMessageClient.class);
-        initResources();
-    }
-
-    private void loadCacheSource(final String sourceName) {
-        final AnyValue resources = config.getAnyValue("resources");
-        for (AnyValue sourceConf : resources.getAnyValues("source")) {
-            if (!sourceName.equals(sourceConf.getValue("name"))) continue;
-            String classval = sourceConf.getValue("value");
-            try {
-                Class sourceType = CacheMemorySource.class;
-                if (classval == null || classval.isEmpty()) {
-                    RedkaleClassLoader.putServiceLoader(CacheSourceProvider.class);
-                    List<CacheSourceProvider> providers = new ArrayList<>();
-                    Iterator<CacheSourceProvider> it = ServiceLoader.load(CacheSourceProvider.class, serverClassLoader).iterator();
-                    while (it.hasNext()) {
-                        CacheSourceProvider s = it.next();
-                        if (s != null) RedkaleClassLoader.putReflectionPublicConstructors(s.getClass(), s.getClass().getName());
-                        if (s != null && s.acceptsConf(sourceConf)) {
-                            providers.add(s);
-                        }
-                    }
-                    Collections.sort(providers, (a, b) -> {
-                        Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
-                        Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
-                        return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
-                    });
-                    for (CacheSourceProvider provider : providers) {
-                        sourceType = provider.sourceClass();
-                        if (sourceType != null) break;
-                    }
-                } else {
-                    sourceType = serverClassLoader.loadClass(classval);
-                }
-                RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
-                CacheSource source = sourceType == CacheMemorySource.class ? new CacheMemorySource(sourceName)
-                    : Modifier.isFinal(sourceType.getModifiers()) ? (CacheSource) sourceType.getConstructor().newInstance()
-                    : (CacheSource) Sncp.createLocalService(serverClassLoader, sourceName, sourceType, null, resourceFactory, sncpTransportFactory, null, null, sourceConf);
-                cacheSources.add((CacheSource) source);
-                resourceFactory.register(sourceName, CacheSource.class, source);
-                resourceFactory.inject(source);
-                if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
-                logger.info("[" + Thread.currentThread().getName() + "] Load Source resourceName = " + sourceName + ", source = " + source);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "load application source resource error: " + sourceConf, e);
-            }
-            return;
-        }
-    }
-
-    private void initResources() throws Exception {
-        //-------------------------------------------------------------------------
-        final AnyValue resources = config.getAnyValue("resources");
-        if (!compileMode && !singletonMode && configFromCache) {
-            System.setProperty(DATASOURCE_CONFPATH, ""); //必须要清空
-        }
-        if (resources != null) {
-            //------------------------------------------------------------------------
-            for (AnyValue conf : resources.getAnyValues("group")) {
-                final String group = conf.getValue("name", "");
-                final String protocol = conf.getValue("protocol", Transport.DEFAULT_NETPROTOCOL).toUpperCase();
-                if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
-                    throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
-                }
-                TransportGroupInfo ginfo = new TransportGroupInfo(group, protocol, new LinkedHashSet<>());
-                for (AnyValue node : conf.getAnyValues("node")) {
-                    final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
-                    ginfo.putAddress(addr);
-                }
-                sncpTransportFactory.addGroupInfo(ginfo);
-            }
-            for (AnyValue conf : resources.getAnyValues("listener")) {
-                final String listenClass = conf.getValue("value", "");
-                if (listenClass.isEmpty()) continue;
-                Class clazz = classLoader.loadClass(listenClass);
-                if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
-                RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
-                @SuppressWarnings("unchecked")
-                ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
-                resourceFactory.inject(listener);
-                listener.init(config);
-                this.listeners.add(listener);
-            }
-        }
-        //------------------------------------------------------------------------
-    }
-
-    private void startSelfServer() throws Exception {
-        final Application application = this;
-        new Thread() {
-            {
-                setName("Redkale-Application-SelfServer-Thread");
-            }
-
-            @Override
-            public void run() {
-                try {
-                    final DatagramChannel channel = DatagramChannel.open();
-                    channel.configureBlocking(true);
-                    channel.socket().setSoTimeout(3000);
-                    channel.bind(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
-                    boolean loop = true;
-                    ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
-                    while (loop) {
-                        buffer.clear();
-                        SocketAddress address = channel.receive(buffer);
-                        buffer.flip();
-                        byte[] bytes = new byte[buffer.remaining()];
-                        buffer.get(bytes);
-                        String[] param = JsonConvert.root().convertFrom(String[].class, bytes);
-                        final String cmd = param[0];
-                        if ("SHUTDOWN".equalsIgnoreCase(cmd)) {
-                            try {
-                                long s = System.currentTimeMillis();
-                                logger.info(application.getClass().getSimpleName() + " shutdowning");
-                                application.shutdown();
-                                buffer.clear();
-                                buffer.put("SHUTDOWN OK".getBytes());
-                                buffer.flip();
-                                channel.send(buffer, address);
-                                long e = System.currentTimeMillis() - s;
-                                logger.info(application.getClass().getSimpleName() + " shutdown in " + e + " ms");
-                                application.serversLatch.countDown();
-                                System.exit(0);
-                            } catch (Exception ex) {
-                                logger.log(Level.INFO, "SHUTDOWN FAIL", ex);
-                                buffer.clear();
-                                buffer.put("SHUTDOWN FAIL".getBytes());
-                                buffer.flip();
-                                channel.send(buffer, address);
-                            }
-                        } else if ("APIDOC".equalsIgnoreCase(cmd)) {
-                            try {
-                                String[] args = new String[param.length - 1];
-                                if (param.length > 1) System.arraycopy(param, 1, args, 0, args.length);
-                                new ApiDocsService(application).run(args);
-                                buffer.clear();
-                                buffer.put("APIDOC OK".getBytes());
-                                buffer.flip();
-                                channel.send(buffer, address);
-                            } catch (Exception ex) {
-                                buffer.clear();
-                                buffer.put("APIDOC FAIL".getBytes());
-                                buffer.flip();
-                                channel.send(buffer, address);
-                            }
-                        } else {
-                            long s = System.currentTimeMillis();
-                            logger.info(application.getClass().getSimpleName() + " command " + cmd);
-                            application.command(cmd);
-                            buffer.clear();
-                            buffer.put("COMMAND OK".getBytes());
-                            buffer.flip();
-                            channel.send(buffer, address);
-                            long e = System.currentTimeMillis() - s;
-                            logger.info(application.getClass().getSimpleName() + " command in " + e + " ms");
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.INFO, "Control fail", e);
-                    System.exit(1);
-                }
-            }
-        }.start();
-    }
-
-    private static void sendCommand(Logger logger, int port, String command, String[] args) throws Exception {
-        final DatagramChannel channel = DatagramChannel.open();
-        channel.configureBlocking(true);
-        channel.connect(new InetSocketAddress("127.0.0.1", port));
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        String[] param = new String[1 + (args == null ? 0 : args.length)];
-        param[0] = command;
-        if (args != null) System.arraycopy(args, 0, param, 1, args.length);
-        buffer.put(JsonConvert.root().convertToBytes(param));
-        buffer.flip();
-        channel.write(buffer);
-        buffer.clear();
-        channel.configureBlocking(true);
-        try {
-            channel.read(buffer);
-            buffer.flip();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            channel.close();
-            if (logger != null) logger.info("Send: " + command + ", Reply: " + new String(bytes));
-            Thread.sleep(1000);
-        } catch (Exception e) {
-            if (e instanceof PortUnreachableException) {
-                if ("APIDOC".equalsIgnoreCase(command)) {
-                    final Application application = Application.create(true);
-                    application.init();
-                    application.start();
-                    new ApiDocsService(application).run(args);
-                    if (logger != null) logger.info("APIDOC OK");
-                    return;
-                }
-            }
-            throw e;
-        }
-    }
-
-    /**
-     * 启动
-     *
-     * @throws Exception 异常
-     */
-    public void start() throws Exception {
-        if (!singletonMode && !compileMode && this.clusterAgent != null) {
-            this.clusterAgent.register(this);
-        }
-        final AnyValue[] entrys = config.getAnyValues("server");
-        CountDownLatch timecd = new CountDownLatch(entrys.length);
-        final List<AnyValue> sncps = new ArrayList<>();
-        final List<AnyValue> others = new ArrayList<>();
-        final List<AnyValue> watchs = new ArrayList<>();
-        for (final AnyValue entry : entrys) {
-            if (entry.getValue("protocol", "").toUpperCase().startsWith("SNCP")) {
-                sncps.add(entry);
-            } else if (entry.getValue("protocol", "").toUpperCase().startsWith("WATCH")) {
-                watchs.add(entry);
-            } else {
-                others.add(entry);
-            }
-        }
-        if (watchs.size() > 1) throw new RuntimeException("Found one more WATCH Server");
-        this.watching = !watchs.isEmpty();
-
-        runServers(timecd, sncps);  //必须确保SNCP服务都启动后再启动其他服务
-        runServers(timecd, others);
-        runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
-        timecd.await();
-        if (this.clusterAgent != null) this.clusterAgent.start();
-        if (this.messageAgents != null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent starting");
-            long s = System.currentTimeMillis();
-            final StringBuffer sb = new StringBuffer();
-            Set<String> names = new HashSet<>();
-            for (MessageAgent agent : this.messageAgents) {
-                names.add(agent.getName());
-                Map<String, Long> map = agent.start().join();
-                AtomicInteger maxlen = new AtomicInteger();
-                map.keySet().forEach(str -> {
-                    if (str.length() > maxlen.get()) maxlen.set(str.length());
-                });
-                new TreeMap<>(map).forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
-                );
-            }
-            if (sb.length() > 0) logger.info(sb.toString().trim());
-            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") start in " + (System.currentTimeMillis() - s) + " ms");
-        }
-        //if (!singletonrun) signalHandle();
-        //if (!singletonrun) clearPersistData();
-        logger.info(this.getClass().getSimpleName() + " started in " + (System.currentTimeMillis() - startTime) + " ms\r\n");
-        for (ApplicationListener listener : this.listeners) {
-            listener.postStart(this);
-        }
-        if (!singletonMode && !compileMode) this.serversLatch.await();
-    }
-
-    private static String alignString(String value, int maxlen) {
-        StringBuilder sb = new StringBuilder(maxlen);
-        sb.append(value);
-        for (int i = 0; i < maxlen - value.length(); i++) {
-            sb.append(' ');
-        }
-        return sb.toString();
-    }
-
-//    private void clearPersistData() {
-//        File cachedir = new File(home, "cache");
-//        if (!cachedir.isDirectory()) return;
-//        File[] lfs = cachedir.listFiles();
-//        if (lfs != null) {
-//            for (File file : lfs) {
-//                if (file.getName().startsWith("persist-")) file.delete();
-//            }
-//        }
-//    }
-//    private void signalHandle() {
-//        //http://www.comptechdoc.org/os/linux/programming/linux_pgsignals.html
-//        String[] sigs = new String[]{"HUP", "TERM", "INT", "QUIT", "KILL", "TSTP", "USR1", "USR2", "STOP"};
-//        List<sun.misc.Signal> list = new ArrayList<>();
-//        for (String sig : sigs) {
-//            try {
-//                list.add(new sun.misc.Signal(sig));
-//            } catch (Exception e) {
-//            }
-//        }
-//        sun.misc.SignalHandler handler = new sun.misc.SignalHandler() {
-//
-//            private volatile boolean runed;
-//
-//            @Override
-//            public void handle(Signal sig) {
-//                if (runed) return;
-//                runed = true;
-//                logger.info(Application.this.getClass().getSimpleName() + " stoped\r\n");
-//                System.exit(0);
-//            }
-//        };
-//        for (Signal sig : list) {
-//            try {
-//                Signal.handle(sig, handler);
-//            } catch (Exception e) {
-//            }
-//        }
-//    }
-    @SuppressWarnings("unchecked")
-    private void runServers(CountDownLatch timecd, final List<AnyValue> serconfs) throws Exception {
-        this.servicecdl = new CountDownLatch(serconfs.size());
-        CountDownLatch sercdl = new CountDownLatch(serconfs.size());
-        final AtomicBoolean inited = new AtomicBoolean(false);
-        final Map<String, Class<? extends NodeServer>> nodeClasses = new HashMap<>();
-        for (final AnyValue serconf : serconfs) {
-            Thread thread = new Thread() {
-                {
-                    setName("Redkale-" + serconf.getValue("protocol", "Server").toUpperCase().replaceFirst("\\..+", "") + ":" + serconf.getIntValue("port") + "-Thread");
-                    this.setDaemon(true);
-                }
-
-                @Override
-                public void run() {
-                    try {
-                        //Thread ctd = Thread.currentThread();
-                        //ctd.setContextClassLoader(new URLClassLoader(new URL[0], ctd.getContextClassLoader()));
-                        final String protocol = serconf.getValue("protocol", "").replaceFirst("\\..+", "").toUpperCase();
-                        NodeServer server = null;
-                        if ("SNCP".equals(protocol)) {
-                            server = NodeSncpServer.createNodeServer(Application.this, serconf);
-                        } else if ("WATCH".equalsIgnoreCase(protocol)) {
-                            DefaultAnyValue serconf2 = (DefaultAnyValue) serconf;
-                            DefaultAnyValue rest = (DefaultAnyValue) serconf2.getAnyValue("rest");
-                            if (rest == null) {
-                                rest = new DefaultAnyValue();
-                                serconf2.addValue("rest", rest);
-                            }
-                            rest.setValue("base", WatchServlet.class.getName());
-                            server = new NodeWatchServer(Application.this, serconf);
-                        } else if ("HTTP".equalsIgnoreCase(protocol)) {
-                            server = new NodeHttpServer(Application.this, serconf);
-                        } else {
-                            if (!inited.get()) {
-                                synchronized (nodeClasses) {
-                                    if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
-                                        ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
-                                        ClassFilter.Loader.load(home, classLoader, ((excludelibs != null ? (excludelibs + ";") : "") + serconf.getValue("excludelibs", "")).split(";"), profilter);
-                                        final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
-                                        for (FilterEntry<NodeServer> entry : entrys) {
-                                            final Class<? extends NodeServer> type = entry.getType();
-                                            NodeProtocol pros = type.getAnnotation(NodeProtocol.class);
-                                            String p = pros.value().toUpperCase();
-                                            if ("SNCP".equals(p) || "HTTP".equals(p)) continue;
-                                            final Class<? extends NodeServer> old = nodeClasses.get(p);
-                                            if (old != null && old != type) {
-                                                throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
-                                            }
-                                            nodeClasses.put(p, type);
-                                        }
-                                    }
-                                }
-                            }
-                            Class<? extends NodeServer> nodeClass = nodeClasses.get(protocol);
-                            if (nodeClass != null) server = NodeServer.create(nodeClass, Application.this, serconf);
-                        }
-                        if (server == null) {
-                            logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
-                            System.exit(0);
-                        }
-                        servers.add(server);
-                        server.init(serconf);
-                        if (!singletonMode && !compileMode) {
-                            server.start();
-                        } else if (compileMode) {
-                            server.getServer().getPrepareServlet().init(server.getServer().getContext(), serconf);
-                        }
-                        timecd.countDown();
-                        sercdl.countDown();
-                    } catch (Exception ex) {
-                        logger.log(Level.WARNING, serconf + " runServers error", ex);
-                        Application.this.serversLatch.countDown();
-                    }
-                }
-            };
-            thread.start();
-        }
-        sercdl.await();
-    }
-
-    /**
-     * 实例化单个Service
-     *
-     * @param <T>               泛型
-     * @param serviceClass      指定的service类
-     * @param extServiceClasses 需要排除的service类
-     *
-     * @return Service对象
-     * @throws Exception 异常
-     */
-    public static <T extends Service> T singleton(Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
-        return singleton("", serviceClass, extServiceClasses);
-    }
-
-    /**
-     * 实例化单个Service
-     *
-     * @param <T>               泛型
-     * @param name              Service的资源名
-     * @param serviceClass      指定的service类
-     * @param extServiceClasses 需要排除的service类
-     *
-     * @return Service对象
-     * @throws Exception 异常
-     */
-    public static <T extends Service> T singleton(String name, Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
-        if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
-        final Application application = Application.create(true);
-        System.setProperty("red" + "kale.singleton.serviceclass", serviceClass.getName());
-        if (extServiceClasses != null && extServiceClasses.length > 0) {
-            StringBuilder sb = new StringBuilder();
-            for (Class clazz : extServiceClasses) {
-                if (sb.length() > 0) sb.append(',');
-                sb.append(clazz.getName());
-            }
-            System.setProperty("red" + "kale.singleton.extserviceclasses", sb.toString());
-        }
-        application.init();
-        application.start();
-        for (NodeServer server : application.servers) {
-            T service = server.resourceFactory.find(name, serviceClass);
-            if (service != null) return service;
-        }
-        if (Modifier.isAbstract(serviceClass.getModifiers())) throw new IllegalArgumentException("abstract class not allowed");
-        if (serviceClass.isInterface()) throw new IllegalArgumentException("interface class not allowed");
-        throw new IllegalArgumentException(serviceClass.getName() + " maybe have zero not-final public method");
-    }
-
-    public static Application create(final boolean singleton) throws IOException {
-        return new Application(singleton, false, loadAppConfig());
-    }
-
-    /**
-     * 重新加载配置信息
-     *
-     * @throws IOException 异常
-     */
-    public void reloadConfig() throws IOException {
-        AnyValue newconfig = loadAppConfig();
-        final String confpath = this.confPath.toString();
-        final String homepath = this.home.getCanonicalPath();
-        final AnyValue resources = newconfig.getAnyValue("resources");
-        if (resources != null) {
-            resourceFactory.register(RESNAME_APP_GRES, AnyValue.class, resources);
-            final AnyValue properties = resources.getAnyValue("properties");
-            if (properties != null) {
-                String dfloads = properties.getValue("load");
-                if (dfloads != null) {
-                    for (String dfload : dfloads.split(";")) {
-                        if (dfload.trim().isEmpty()) continue;
-                        final URI df = (dfload.indexOf('/') < 0) ? URI.create(confpath + (confpath.endsWith("/") ? "" : "/") + dfload) : new File(dfload).toURI();
-                        if (!"file".equals(df.getScheme()) || new File(df).isFile()) {
-                            Properties ps = new Properties();
-                            try {
-                                InputStream in = df.toURL().openStream();
-                                ps.load(in);
-                                in.close();
-                                ps.forEach((x, y) -> resourceFactory.register("property." + x, y.toString().replace("${APP_HOME}", homepath)));
-                            } catch (Exception e) {
-                                logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
-                            }
-                        }
-                    }
-                }
-                for (AnyValue prop : properties.getAnyValues("property")) {
-                    String name = prop.getValue("name");
-                    String value = prop.getValue("value");
-                    if (name == null || value == null) continue;
-                    value = value.replace("${APP_HOME}", homepath);
-                    if (name.startsWith("system.property.")) {
-                        System.setProperty(name.substring("system.property.".length()), value);
-                    } else if (name.startsWith("mimetype.property.")) {
-                        MimeType.add(name.substring("mimetype.property.".length()), value);
-                    } else if (name.startsWith("property.")) {
-                        resourceFactory.register(name, value);
-                    } else {
-                        resourceFactory.register("property." + name, value);
-                    }
-                }
-            }
-        }
-    }
-
-    static AnyValue loadAppConfig() throws IOException {
-        final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/');
-        System.setProperty(RESNAME_APP_HOME, home);
-        String confDir = System.getProperty(RESNAME_APP_CONF, "conf");
-        URI appConfFile;
-        boolean fromcache = false;
-        if (confDir.contains("://")) {
-            appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.xml");
-        } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > 0) {
-            File f = new File(confDir, "application.xml");
-            if (f.isFile() && f.canRead()) {
-                appConfFile = f.toURI();
-                confDir = f.getParentFile().getCanonicalPath();
-            } else {
-                appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); //不能传confDir
-                confDir = appConfFile.toString().replace("/application.xml", "");
-                fromcache = true;
-            }
-        } else {
-            File f = new File(new File(home, confDir), "application.xml");
-            if (f.isFile() && f.canRead()) {
-                appConfFile = f.toURI();
-                confDir = f.getParentFile().getCanonicalPath();
-            } else {
-                appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); //不能传confDir
-                confDir = appConfFile.toString().replace("/application.xml", "");
-                fromcache = true;
-            }
-        }
-        System.setProperty(RESNAME_APP_CONF, confDir);
-        AnyValue conf = AnyValue.loadFromXml(appConfFile.toURL().openStream(), StandardCharsets.UTF_8, (k, v) -> v.replace("${APP_HOME}", home)).getAnyValue("application");
-        if (fromcache) ((DefaultAnyValue) conf).addValue("[config-from-cache]", "true");
-        return conf;
-    }
-
-    public static void main(String[] args) throws Exception {
-        Utility.midnight(); //先初始化一下Utility
-        Thread.currentThread().setName("Redkale-Application-Main-Thread");
-        //运行主程序
-        {
-            String cmd = System.getProperty("cmd", System.getProperty("CMD"));
-            String[] params = args;
-            if (cmd == null && args != null && args.length > 0
-                && args[0] != null && !args[0].trim().isEmpty() && !"start".equalsIgnoreCase(args[0])) {
-                cmd = args[0];
-                params = Arrays.copyOfRange(args, 1, args.length);
-            }
-            if (cmd != null) {
-                AnyValue config = loadAppConfig();
-                Application.sendCommand(null, config.getIntValue("port"), cmd, params);
-                return;
-            }
-        }
-        //PrepareCompiler.main(args); //测试代码
-
-        final Application application = Application.create(false);
-        application.init();
-        application.startSelfServer();
-        try {
-            for (ApplicationListener listener : application.listeners) {
-                listener.preStart(application);
-            }
-            application.start();
-        } catch (Exception e) {
-            application.logger.log(Level.SEVERE, "Application start error", e);
-            System.exit(0);
-        }
-        System.exit(0);
-    }
-
-    NodeSncpServer findNodeSncpServer(final InetSocketAddress sncpAddr) {
-        for (NodeServer node : servers) {
-            if (node.isSNCP() && sncpAddr.equals(node.getSncpAddress())) {
-                return (NodeSncpServer) node;
-            }
-        }
-        return null;
-    }
-
-    public void command(String cmd) {
-        List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs        
-        localServers.stream().forEach((server) -> {
-            try {
-                server.command(cmd);
-            } catch (Exception t) {
-                logger.log(Level.WARNING, " command server(" + server.getSocketAddress() + ") error", t);
-            }
-        });
-    }
-
-    public void shutdown() throws Exception {
-        for (ApplicationListener listener : this.listeners) {
-            try {
-                listener.preShutdown(this);
-            } catch (Exception e) {
-                logger.log(Level.WARNING, listener.getClass() + " preShutdown erroneous", e);
-            }
-        }
-        List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs
-        Collections.reverse(localServers); //倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
-        if (isCompileMode() && this.messageAgents != null) {
-            Set<String> names = new HashSet<>();
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent stopping");
-            long s = System.currentTimeMillis();
-            for (MessageAgent agent : this.messageAgents) {
-                names.add(agent.getName());
-                agent.stop().join();
-            }
-            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in " + (System.currentTimeMillis() - s) + " ms");
-        }
-        if (!isCompileMode() && clusterAgent != null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent destroying");
-            long s = System.currentTimeMillis();
-            clusterAgent.deregister(this);
-            clusterAgent.destroy(clusterAgent.getConfig());
-            logger.info("ClusterAgent destroy in " + (System.currentTimeMillis() - s) + " ms");
-        }
-        localServers.stream().forEach((server) -> {
-            try {
-                server.shutdown();
-            } catch (Exception t) {
-                logger.log(Level.WARNING, " shutdown server(" + server.getSocketAddress() + ") error", t);
-            } finally {
-                serversLatch.countDown();
-            }
-        });
-        if (this.messageAgents != null) {
-            Set<String> names = new HashSet<>();
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent destroying");
-            long s = System.currentTimeMillis();
-            for (MessageAgent agent : this.messageAgents) {
-                names.add(agent.getName());
-                agent.destroy(agent.getConfig());
-            }
-            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in " + (System.currentTimeMillis() - s) + " ms");
-        }
-        for (DataSource source : dataSources) {
-            if (source == null) continue;
-            try {
-                if (source instanceof Service) {
-                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getConf((Service) source) : null);
-//                } else {
-//                    source.getClass().getMethod("close").invoke(source);
-//                    RedkaleClassLoader.putReflectionMethod(source.getClass().getName(), source.getClass().getMethod("close"));
-                }
-            } catch (Exception e) {
-                logger.log(Level.FINER, source.getClass() + " close DataSource erroneous", e);
-            }
-        }
-        for (CacheSource source : cacheSources) {
-            if (source == null) continue;
-            try {
-                if (source instanceof Service) {
-                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getConf((Service) source) : null);
-//                } else {
-//                    source.getClass().getMethod("close").invoke(source);
-//                    RedkaleClassLoader.putReflectionMethod(source.getClass().getName(), source.getClass().getMethod("close"));
-                }
-            } catch (Exception e) {
-                logger.log(Level.FINER, source.getClass() + " close CacheSource erroneous", e);
-            }
-        }
-        if (this.asyncGroup != null) {
-            ((AsyncIOGroup) this.asyncGroup).close();
-        }
-        this.sncpTransportFactory.shutdownNow();
     }
 
     private static int parseLenth(String value, int defValue) {

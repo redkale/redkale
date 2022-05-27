@@ -20,6 +20,7 @@ import org.redkale.util.*;
 
 /**
  * CacheSource的默认实现--内存缓存
+ * 注意: url 需要指定为 memory:cachesource
  *
  * <p>
  * 详情见: https://redkale.org
@@ -30,7 +31,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(CacheSource.class)
-public final class CacheMemorySource extends AbstractService implements CacheSource, Service, AutoCloseable, Resourcable {
+public final class CacheMemorySource extends AbstractCacheSource {
 
     @Resource
     private JsonConvert defaultConvert;
@@ -61,14 +62,13 @@ public final class CacheMemorySource extends AbstractService implements CacheSou
         return "memory";
     }
 
-    @Override
-    public String toString() {
-        return "CacheMemorySource(type=memory, name='" + resourceName() + "')";
+    public static boolean acceptsConf(AnyValue config) {
+        return config.getValue(CACHE_SOURCE_URL).startsWith("memory:");
     }
 
-    @Override //ServiceLoader时判断配置是否符合当前实现类
-    public boolean acceptsConf(AnyValue config) {
-        return false;
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{type=memory, name='" + resourceName() + "'}";
     }
 
     @Override
@@ -112,10 +112,10 @@ public final class CacheMemorySource extends AbstractService implements CacheSou
                     logger.log(Level.SEVERE, "CacheMemorySource schedule(interval=" + 10 + "s) error", t);
                 }
             }, 10, 10, TimeUnit.SECONDS);
-            if (logger.isLoggable(Level.FINEST)) logger.finest(self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");
+            logger.info(self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");
         }
     }
-    
+
     @Override
     public void close() throws Exception {  //给Application 关闭时调用
         destroy(null);
@@ -331,14 +331,28 @@ public final class CacheMemorySource extends AbstractService implements CacheSou
     }
 
     @Override
+    public String getSetString(String key, String value) {
+        String old = getString(key);
+        setString(key, value);
+        return old;
+    }
+
+    @Override
     public long getLong(String key, long defValue) {
         if (key == null) return defValue;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return defValue;
         return entry.objectValue == null ? defValue : (entry.objectValue instanceof AtomicLong ? ((AtomicLong) entry.objectValue).get() : (Long) entry.objectValue);
     }
-    //----------- hxxx --------------
 
+    @Override
+    public long getSetLong(String key, long value, long defValue) {
+        long old = getLong(key, defValue);
+        setLong(key, value);
+        return old;
+    }
+
+    //----------- hxxx --------------
     @Override
     public CompletableFuture<Integer> hremoveAsync(final String key, String... fields) {
         return CompletableFuture.supplyAsync(() -> hremove(key, fields), getExecutor());
@@ -456,6 +470,11 @@ public final class CacheMemorySource extends AbstractService implements CacheSou
     }
 
     @Override
+    public CompletableFuture<Long> getSetLongAsync(final String key, long value, long defValue) {
+        return CompletableFuture.supplyAsync(() -> getSetLong(key, value, defValue), getExecutor());
+    }
+
+    @Override
     public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
@@ -561,6 +580,20 @@ public final class CacheMemorySource extends AbstractService implements CacheSou
     }
 
     @Override
+    public <T> T getSet(String key, Type type, T value) {
+        T old = get(key, type);
+        set(CacheEntryType.OBJECT, key, value);
+        return old;
+    }
+
+    @Override
+    public <T> T getSet(String key, Convert convert, Type type, T value) {
+        T old = get(key, type);
+        set(CacheEntryType.OBJECT, key, value);
+        return old;
+    }
+
+    @Override
     public void setString(String key, String value) {
         set(CacheEntryType.STRING, key, value);
     }
@@ -586,8 +619,23 @@ public final class CacheMemorySource extends AbstractService implements CacheSou
     }
 
     @Override
+    public <T> CompletableFuture<T> getSetAsync(String key, Type type, T value) {
+        return CompletableFuture.runAsync(() -> getSet(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<T> getSetAsync(String key, Convert convert, Type type, T value) {
+        return CompletableFuture.runAsync(() -> getSet(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public CompletableFuture<Void> setStringAsync(String key, String value) {
         return CompletableFuture.runAsync(() -> setString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<String> getSetStringAsync(String key, String value) {
+        return CompletableFuture.runAsync(() -> getSetString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1191,8 +1239,20 @@ public final class CacheMemorySource extends AbstractService implements CacheSou
     }
 
     @Override
+    public byte[] getSetBytes(final String key, byte[] value) {
+        byte[] old = getBytes(key);
+        setBytes(key, value);
+        return old;
+    }
+
+    @Override
     public CompletableFuture<byte[]> getBytesAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> getBytes(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<byte[]> getSetBytesAsync(final String key, byte[] value) {
+        return CompletableFuture.supplyAsync(() -> getSetBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

@@ -8,6 +8,7 @@ package org.redkale.net.client;
 /**
  *
  * @author zhangjx
+ * @param <P> result
  */
 public class ClientResult<P> {
 

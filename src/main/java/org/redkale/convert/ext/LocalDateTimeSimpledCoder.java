@@ -7,6 +7,7 @@ package org.redkale.convert.ext;
 
 import java.time.*;
 import org.redkale.convert.*;
+import org.redkale.convert.json.*;
 
 /**
  * java.time.LocalDateTime 的SimpledCoder实现
@@ -62,12 +63,12 @@ public final class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer>
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public final static class LocalDateTimeJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, LocalDateTime> {
+    public final static class LocalDateTimeJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, LocalDateTime> {
 
         public static final LocalDateTimeJsonSimpledCoder instance = new LocalDateTimeJsonSimpledCoder();
 
         @Override
-        public void convertTo(final Writer out, final LocalDateTime value) {
+        public void convertTo(final W out, final LocalDateTime value) {
             if (value == null) {
                 out.writeNull();
             } else {
@@ -76,7 +77,7 @@ public final class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer>
         }
 
         @Override
-        public LocalDateTime convertFrom(Reader in) {
+        public LocalDateTime convertFrom(R in) {
             final String str = in.readSmallString();
             if (str == null) return null;
             return LocalDateTime.parse(str);

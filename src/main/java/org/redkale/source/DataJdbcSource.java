@@ -6,7 +6,6 @@
 package org.redkale.source;
 
 import java.io.*;
-import java.net.URL;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -14,7 +13,6 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.service.Local;
-import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
 
 /**
@@ -35,8 +33,8 @@ public class DataJdbcSource extends DataSqlSource {
 
     protected ConnectionPool writePool;
 
-    public DataJdbcSource(String unitName, URL persistFile, String dbtype, Properties readprop, Properties writeprop) {
-        super(unitName, persistFile, dbtype, readprop, writeprop);
+    public DataJdbcSource() {
+        super();
     }
 
     @Override
@@ -64,9 +62,11 @@ public class DataJdbcSource extends DataSqlSource {
         if (writePool != null) writePool.close();
     }
 
-    public static boolean acceptsConf(Properties property) {
+    public static boolean acceptsConf(AnyValue conf) {
         try {
-            final Class driverClass = DriverManager.getDriver(property.getProperty(JDBC_URL)).getClass();
+            AnyValue read = conf.getAnyValue("read");
+            AnyValue node = read == null ? conf : read;
+            final Class driverClass = DriverManager.getDriver(node.getValue(DATA_SOURCE_URL)).getClass();
             RedkaleClassLoader.putReflectionDeclaredConstructors(driverClass, driverClass.getName());
             RedkaleClassLoader.putServiceLoader(java.sql.Driver.class);
         } catch (Exception e) {
@@ -118,10 +118,17 @@ public class DataJdbcSource extends DataSqlSource {
             } catch (SQLException se) {
                 if (!isTableNotExist(info, se.getSQLState())) throw se;
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql == null) throw se;
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls == null) throw se;
                     Statement st = conn.createStatement();
-                    st.execute(tablesql);
+                    if (tablesqls.length == 1) {
+                        st.execute(tablesqls[0]);
+                    } else {
+                        for (String tablesql : tablesqls) {
+                            st.addBatch(tablesql);
+                        }
+                        st.executeBatch();
+                    }
                     st.close();
                 } else {
                     synchronized (info.disTableLock()) {
@@ -138,10 +145,17 @@ public class DataJdbcSource extends DataSqlSource {
                             } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
                                 if (isTableNotExist(info, sqle.getSQLState())) {
                                     if (newTable.indexOf('.') < 0) {
-                                        String tablesql = createTableSql(info);
-                                        if (tablesql != null) {
+                                        String[] tablesqls = createTableSqls(info);
+                                        if (tablesqls != null) {
                                             Statement st = conn.createStatement();
-                                            st.execute(tablesql);
+                                            if (tablesqls.length == 1) {
+                                                st.execute(tablesqls[0]);
+                                            } else {
+                                                for (String tablesql : tablesqls) {
+                                                    st.addBatch(tablesql);
+                                                }
+                                                st.executeBatch();
+                                            }
                                             st.close();
                                             //再执行一遍复制表操作
                                             st = conn.createStatement();
@@ -166,10 +180,17 @@ public class DataJdbcSource extends DataSqlSource {
                                             info.addDisTable(tablekey);
                                         } catch (SQLException sqle2) {
                                             if (isTableNotExist(info, sqle2.getSQLState())) {
-                                                String tablesql = createTableSql(info);
-                                                if (tablesql != null) {
+                                                String[] tablesqls = createTableSqls(info);
+                                                if (tablesqls != null) {
                                                     st = conn.createStatement();
-                                                    st.execute(tablesql);
+                                                    if (tablesqls.length == 1) {
+                                                        st.execute(tablesqls[0]);
+                                                    } else {
+                                                        for (String tablesql : tablesqls) {
+                                                            st.addBatch(tablesql);
+                                                        }
+                                                        st.executeBatch();
+                                                    }
                                                     st.close();
                                                     //再执行一遍复制表操作
                                                     st = conn.createStatement();
@@ -243,7 +264,7 @@ public class DataJdbcSource extends DataSqlSource {
     protected <T> int batchStatementParameters(Connection conn, PreparedStatement prestmt, EntityInfo<T> info, Attribute<T, Serializable>[] attrs, T entity) throws SQLException {
         int i = 0;
         for (Attribute<T, Serializable> attr : attrs) {
-            Object val = info.getSQLValue(attr, entity);
+            Object val = getEntityAttrValue(info, attr, entity);
             if (val instanceof byte[]) {
                 Blob blob = conn.createBlob();
                 blob.setBytes(1, (byte[]) val);
@@ -254,11 +275,6 @@ public class DataJdbcSource extends DataSqlSource {
                 prestmt.setObject(++i, ((AtomicInteger) val).get());
             } else if (val instanceof AtomicLong) {
                 prestmt.setObject(++i, ((AtomicLong) val).get());
-            } else if (val != null && !(val instanceof Number) && !(val instanceof CharSequence) && !(val instanceof java.util.Date)
-                && !val.getClass().getName().startsWith("java.sql.") && !val.getClass().getName().startsWith("java.time.")) {
-                prestmt.setObject(++i, info.jsonConvert.convertTo(attr.genericType(), val));
-            } else if (val == null && info.isNotNullJson(attr)) {
-                prestmt.setObject(++i, "");
             } else {
                 prestmt.setObject(++i, val);
             }
@@ -282,11 +298,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                             return CompletableFuture.completedFuture(0);
                         } catch (SQLException e2) {
@@ -390,11 +413,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -436,11 +466,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -480,11 +517,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -517,11 +561,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -555,11 +606,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -608,11 +666,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -634,7 +699,7 @@ public class DataJdbcSource extends DataSqlSource {
             //conn.setReadOnly(true);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
-            final DataResultSet set = createDataResultSet(ps.executeQuery());
+            final DataResultSet set = createDataResultSet(info, ps.executeQuery());
             T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
             set.close();
             ps.close();
@@ -642,11 +707,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -669,7 +741,7 @@ public class DataJdbcSource extends DataSqlSource {
             final Attribute<T, Serializable> attr = info.getAttribute(column);
             final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
-            final DataResultSet set = createDataResultSet(ps.executeQuery());
+            final DataResultSet set = createDataResultSet(info, ps.executeQuery());
             Serializable val = defValue;
             if (set.next()) {
                 val = info.getFieldValue(attr, set, 1);
@@ -680,11 +752,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -714,11 +793,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -752,7 +838,7 @@ public class DataJdbcSource extends DataSqlSource {
                 }
                 PreparedStatement ps = conn.prepareStatement(listsql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
                 ResultSet set = ps.executeQuery();
-                final DataResultSet rr = createDataResultSet(set);
+                final DataResultSet rr = createDataResultSet(info, set);
                 while (set.next()) {
                     list.add(getEntityValue(info, sels, rr));
                 }
@@ -784,7 +870,7 @@ public class DataJdbcSource extends DataSqlSource {
             if (flipper != null && flipper.getOffset() > 0) set.absolute(flipper.getOffset());
             final int limit = flipper == null || flipper.getLimit() < 1 ? Integer.MAX_VALUE : flipper.getLimit();
             int i = 0;
-            final DataResultSet rr = createDataResultSet(set);
+            final DataResultSet rr = createDataResultSet(info, set);
             if (sels == null) {
                 while (set.next()) {
                     i++;
@@ -809,11 +895,18 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String tablesql = createTableSql(info);
-                    if (tablesql != null) {
+                    String[] tablesqls = createTableSqls(info);
+                    if (tablesqls != null) {
                         try {
                             Statement st = conn.createStatement();
-                            st.execute(tablesql);
+                            if (tablesqls.length == 1) {
+                                st.execute(tablesqls[0]);
+                            } else {
+                                for (String tablesql : tablesqls) {
+                                    st.addBatch(tablesql);
+                                }
+                                st.executeBatch();
+                            }
                             st.close();
                         } catch (SQLException e2) {
                         }
@@ -891,7 +984,7 @@ public class DataJdbcSource extends DataSqlSource {
             final Statement statement = conn.createStatement();
             //final PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = statement.executeQuery(sql);// ps.executeQuery();
-            V rs = handler.apply(createDataResultSet(set));
+            V rs = handler.apply(createDataResultSet(null, set));
             set.close();
             statement.close();
             return rs;
@@ -902,7 +995,7 @@ public class DataJdbcSource extends DataSqlSource {
         }
     }
 
-    public static DataResultSet createDataResultSet(ResultSet set) {
+    public static DataResultSet createDataResultSet(EntityInfo info, ResultSet set) {
 
         final ResultSet rr = set;
 
@@ -978,6 +1071,11 @@ public class DataJdbcSource extends DataSqlSource {
                 }
             }
 
+            @Override
+            public EntityInfo getEntityInfo() {
+                return info;
+            }
+
         };
     }
 
@@ -1006,12 +1104,12 @@ public class DataJdbcSource extends DataSqlSource {
         protected String url;
 
         public ConnectionPool(Properties prop) {
-            this.connectTimeoutSeconds = Integer.decode(prop.getProperty(JDBC_CONNECTTIMEOUT_SECONDS, "6"));
-            this.maxconns = Math.max(1, Integer.decode(prop.getProperty(JDBC_CONNECTIONS_LIMIT, "" + Utility.cpus() * 4)));
+            this.connectTimeoutSeconds = Integer.decode(prop.getProperty(DATA_SOURCE_CONNECTTIMEOUT_SECONDS, "6"));
+            this.maxconns = Math.max(1, Integer.decode(prop.getProperty(DATA_SOURCE_MAXCONNS, "" + Utility.cpus() * 4)));
             this.queue = new ArrayBlockingQueue<>(maxconns);
-            this.url = prop.getProperty(JDBC_URL);
-            String username = prop.getProperty(JDBC_USER, "");
-            String password = prop.getProperty(JDBC_PWD, "");
+            this.url = prop.getProperty(DATA_SOURCE_URL);
+            String username = prop.getProperty(DATA_SOURCE_USER, "");
+            String password = prop.getProperty(DATA_SOURCE_PASSWORD, "");
             this.connectAttrs = new Properties();
             if (username != null) this.connectAttrs.put("user", username);
             if (password != null) this.connectAttrs.put("password", password);

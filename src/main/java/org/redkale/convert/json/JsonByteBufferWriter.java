@@ -263,7 +263,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     /**
-     * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger转换的String
+     * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger、BigDecimal转换的String
      *
      * @param quote 是否写入双引号
      * @param value String值
@@ -622,6 +622,11 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public void writeString(String value) {
+        writeString(true, value);
+    }
+
+    @Override
+    public void writeString(final boolean quote, String value) {
         if (value == null) {
             writeNull();
             return;
@@ -654,7 +659,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             expandsize = expand(byteLength);
             if (expandsize == 0) { // 只需要一个buffer 
                 final ByteBuffer buffer = this.buffers[index];
-                buffer.put((byte) '"');
+                if (quote) buffer.put((byte) '"');
                 for (int i = 0; i < chs.length; i++) {
                     char c = chs[i];
                     switch (c) {
@@ -689,7 +694,7 @@ public class JsonByteBufferWriter extends JsonWriter {
                             break;
                     }
                 }
-                buffer.put((byte) '"');
+                if (quote) buffer.put((byte) '"');
                 return;
             }
         }
@@ -711,7 +716,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             }
         }
         char[] cs = Utility.charArray(sb);
-        writeTo(expandsize, true, cs, 0, sb.length());
+        writeTo(expandsize, quote, cs, 0, sb.length());
     }
 
     @Override

@@ -10,7 +10,6 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.convert.*;
-import org.redkale.util.*;
 
 /**
  * Redkale中缓存数据源的核心类。 主要供业务开发者使用， 技术开发者提供CacheSource的实现。<br>
@@ -29,9 +28,6 @@ import org.redkale.util.*;
 public interface CacheSource {
 
     public String getType();
-
-    //ServiceLoader时判断配置是否符合当前实现类
-    public boolean acceptsConf(AnyValue config);
 
     default boolean isOpen() {
         return true;
@@ -93,6 +89,10 @@ public interface CacheSource {
 
     public <T> void set(final String key, final Convert convert, final Type type, final T value);
 
+    public <T> T getSet(final String key, final Type type, final T value);
+
+    public <T> T getSet(final String key, final Convert convert, final Type type, final T value);
+
     public <T> void set(final int expireSeconds, final String key, final Convert convert, final T value);
 
     public <T> void set(final int expireSeconds, final String key, final Type type, final T value);
@@ -137,6 +137,8 @@ public interface CacheSource {
 
     public byte[] getBytes(final String key);
 
+    public byte[] getSetBytes(final String key, final byte[] value);
+
     public byte[] getBytesAndRefresh(final String key, final int expireSeconds);
 
     public void setBytes(final String key, final byte[] value);
@@ -156,6 +158,8 @@ public interface CacheSource {
     public int getKeySize();
 
     public String getString(final String key);
+
+    public String getSetString(final String key, final String value);
 
     public String getStringAndRefresh(final String key, final int expireSeconds);
 
@@ -188,6 +192,8 @@ public interface CacheSource {
     public int removeStringSetItem(final String key, final String value);
 
     public long getLong(final String key, long defValue);
+
+    public long getSetLong(final String key, long value, long defValue);
 
     public long getLongAndRefresh(final String key, final int expireSeconds, long defValue);
 
@@ -233,6 +239,10 @@ public interface CacheSource {
     public <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value);
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final Type type, final T value);
+
+    public <T> CompletableFuture<T> getSetAsync(final String key, final Type type, final T value);
+
+    public <T> CompletableFuture<T> getSetAsync(final String key, final Convert convert, final Type type, final T value);
 
     public <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final T value);
 
@@ -320,6 +330,8 @@ public interface CacheSource {
 
     public CompletableFuture<byte[]> getBytesAsync(final String key);
 
+    public CompletableFuture<byte[]> getSetBytesAsync(final String key, final byte[] value);
+
     public CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds);
 
     public CompletableFuture<Void> setBytesAsync(final String key, final byte[] value);
@@ -339,6 +351,8 @@ public interface CacheSource {
     public CompletableFuture<Integer> getKeySizeAsync();
 
     public CompletableFuture<String> getStringAsync(final String key);
+
+    public CompletableFuture<String> getSetStringAsync(final String key, final String value);
 
     public CompletableFuture<String> getStringAndRefreshAsync(final String key, final int expireSeconds);
 
@@ -371,6 +385,8 @@ public interface CacheSource {
     public CompletableFuture<Integer> removeStringSetItemAsync(final String key, final String value);
 
     public CompletableFuture<Long> getLongAsync(final String key, long defValue);
+
+    public CompletableFuture<Long> getSetLongAsync(final String key, long value, long defValue);
 
     public CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue);
 

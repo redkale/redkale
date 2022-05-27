@@ -58,14 +58,31 @@ public abstract class MessageAgent {
 
     protected int producerCount = 1;
 
+    protected MessageCoder<MessageRecord> messageCoder = MessageRecordCoder.getInstance();
+
     //本地Service消息接收处理器， key:consumer
     protected HashMap<String, MessageConsumerNode> messageNodes = new LinkedHashMap<>();
 
-    public void init(AnyValue config) {
+    public void init(ResourceFactory factory, AnyValue config) {
         this.name = checkName(config.getValue("name", ""));
         this.httpMessageClient = new HttpMessageClient(this);
         this.sncpMessageClient = new SncpMessageClient(this);
         this.producerCount = config.getIntValue("producers", Utility.cpus());
+        String coderType = config.getValue("coder", "");
+        if (!coderType.trim().isEmpty()) {
+            try {
+                Class<MessageCoder<MessageRecord>> coderClass = (Class) Thread.currentThread().getContextClassLoader().loadClass(coderType);
+                RedkaleClassLoader.putReflectionPublicConstructors(coderClass, coderClass.getName());
+                MessageCoder<MessageRecord> coder = coderClass.getConstructor().newInstance();
+                if (factory != null) factory.inject(coder);
+                if (coder instanceof Service) ((Service) coder).init(config);
+                this.messageCoder = coder;
+            } catch (RuntimeException ex) {
+                throw ex;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
         // application (it doesn't execute completion handlers).
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
             Thread t = new Thread(r);
@@ -102,6 +119,7 @@ public abstract class MessageAgent {
         if (this.timeoutExecutor != null) this.timeoutExecutor.shutdown();
         if (this.sncpProducer != null) this.sncpProducer.shutdown().join();
         if (this.httpProducer != null) this.httpProducer.shutdown().join();
+        if (this.messageCoder instanceof Service) ((Service) this.messageCoder).destroy(config);
     }
 
     protected List<MessageConsumer> getAllMessageConsumer() {
@@ -123,6 +141,10 @@ public abstract class MessageAgent {
         one = this.sncpMessageClient == null ? null : this.sncpMessageClient.getProducer();
         if (one != null) producers.addAll(Utility.ofList(one.producers));
         return producers;
+    }
+
+    public MessageCoder<MessageRecord> getMessageCoder() {
+        return this.messageCoder;
     }
 
     public Logger getLogger() {

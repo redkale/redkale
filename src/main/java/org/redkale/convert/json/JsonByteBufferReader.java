@@ -99,21 +99,6 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     /**
-     * 读取下一个有效字符
-     *
-     * @return 有效字符
-     */
-    @Override
-    protected final char nextGoodChar() {
-        char c = nextChar();
-        if (c > ' ' || c == 0) return c; // 0 表示buffer结尾了
-        for (;;) {
-            c = nextChar();
-            if (c > ' ' || c == 0) return c;
-        }
-    }
-
-    /**
      * 回退最后读取的字符
      *
      * @param ch 回退的字符
@@ -130,7 +115,8 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     public final String readObjectB(final Class clazz) {
-        char ch = nextGoodChar();
+        this.fieldIndex = 0; //必须要重置为0
+        char ch = nextGoodChar(true);
         if (ch == '{') return "";
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return null;
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') return null;
@@ -155,7 +141,7 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     public final int readArrayB(DeMember member, byte[] typevals, Decodeable decoder) {
-        char ch = nextGoodChar();
+        char ch = nextGoodChar(true);
         if (ch == '[' || ch == '{') return SIGN_NOLENGTH;
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return SIGN_NULL;
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') return SIGN_NULL;
@@ -174,7 +160,7 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     public final void readBlank() {
-        char ch = nextGoodChar();
+        char ch = nextGoodChar(true);
         if (ch == ':') return;
         StringBuilder sb = new StringBuilder();
         sb.append(ch);
@@ -187,30 +173,13 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     /**
-     * 判断对象是否存在下一个属性或者数组是否存在下一个元素
-     *
-     * @param startPosition 起始位置
-     * @param contentLength 内容大小， 不确定的传-1
-     *
-     * @return 是否存在
-     */
-    @Override
-    public boolean hasNext(int startPosition, int contentLength) {
-        char ch = nextGoodChar();
-        if (ch == ',') return true;
-        if (ch == '}' || ch == ']' || ch == 0) return false;
-        backChar(ch); // { [ 交由 readObjectB 或 readMapB 或 readArrayB 读取
-        return true;
-    }
-
-    /**
      * 读取小字符串
      *
      * @return String值
      */
     @Override
     public final String readSmallString() {
-        char ch = nextGoodChar();
+        char ch = nextGoodChar(true);
         if (ch == 0) return null;
         final StringBuilder sb = new StringBuilder();
         if (ch == '"' || ch == '\'') {
@@ -298,80 +267,6 @@ public class JsonByteBufferReader extends JsonReader {
             String rs = sb.toString();
             return "null".equalsIgnoreCase(rs) ? null : rs;
         }
-    }
-
-    /**
-     * 读取一个int值
-     *
-     * @return int值
-     */
-    @Override
-    public final int readInt() {
-        char firstchar = nextGoodChar();
-        boolean quote = false;
-        if (firstchar == '"' || firstchar == '\'') {
-            quote = true;
-            firstchar = nextGoodChar();
-            if (firstchar == '"' || firstchar == '\'') return 0;
-        }
-        int value = 0;
-        final boolean negative = firstchar == '-';
-        if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
-            value = firstchar - '0';
-        }
-        for (;;) {
-            char ch = nextChar();
-            if (ch == 0) break;
-            if (ch >= '0' && ch <= '9') {
-                value = (value << 3) + (value << 1) + (ch - '0');
-            } else if (ch == '"' || ch == '\'') {
-            } else if (quote && ch <= ' ') {
-            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
-                backChar(ch);
-                break;
-            } else {
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
-            }
-        }
-        return negative ? -value : value;
-    }
-
-    /**
-     * 读取一个long值
-     *
-     * @return long值
-     */
-    @Override
-    public final long readLong() {
-        char firstchar = nextGoodChar();
-        boolean quote = false;
-        if (firstchar == '"' || firstchar == '\'') {
-            quote = true;
-            firstchar = nextGoodChar();
-            if (firstchar == '"' || firstchar == '\'') return 0L;
-        }
-        long value = 0;
-        final boolean negative = firstchar == '-';
-        if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
-            value = firstchar - '0';
-        }
-        for (;;) {
-            char ch = nextChar();
-            if (ch == 0) break;
-            if (ch >= '0' && ch <= '9') {
-                value = (value << 3) + (value << 1) + (ch - '0');
-            } else if (ch == '"' || ch == '\'') {
-            } else if (quote && ch <= ' ') {
-            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
-                backChar(ch);
-                break;
-            } else {
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
-            }
-        }
-        return negative ? -value : value;
     }
 
     /**

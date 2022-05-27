@@ -137,7 +137,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     /**
-     * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger转换的String
+     * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger、BigDecimal转换的String
      *
      * @param quote 是否加双引号
      * @param value 非null且不含需要转义的字符的String值
@@ -363,10 +363,10 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         return this.count;
     }
 
-    private void writeEscapeLatinString(byte[] value) {
+    private void writeEscapeLatinString(final boolean quote, byte[] value) {
         byte[] bytes = expand(value.length * 2 + 2);
         int curr = count;
-        bytes[curr++] = '"';
+        if (quote) bytes[curr++] = '"';
         for (byte b : value) {
             if (b == '"') {
                 bytes[curr++] = '\\';
@@ -391,23 +391,28 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                 bytes[curr++] = b;
             }
         }
-        bytes[curr++] = '"';
+        if (quote) bytes[curr++] = '"';
         count = curr;
     }
 
     @Override
     public void writeString(String value) {
+        writeString(true, value);
+    }
+
+    @Override
+    public void writeString(final boolean quote, String value) {
         if (value == null) {
             writeNull();
             return;
         }
         if (Utility.isLatin1(value)) {
-            writeEscapeLatinString(Utility.latin1ByteArray(value));
+            writeEscapeLatinString(quote, Utility.latin1ByteArray(value));
             return;
         }
         byte[] bytes = expand(value.length() * 4 + 2);
         int curr = count;
-        bytes[curr++] = '"';
+        if (quote) bytes[curr++] = '"';
         int len = value.length();
         for (int i = 0; i < len; i++) {
             char ch = value.charAt(i);
@@ -452,7 +457,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                     break;
             }
         }
-        bytes[curr++] = '"';
+        if (quote) bytes[curr++] = '"';
         count = curr;
     }
 

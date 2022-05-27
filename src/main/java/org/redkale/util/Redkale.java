@@ -24,7 +24,7 @@ public final class Redkale {
     }
 
     public static String getDotedVersion() {
-        return "2.6.0";
+        return "2.7.0";
     }
 
     public static int getMajorVersion() {
@@ -32,6 +32,6 @@ public final class Redkale {
     }
 
     public static int getMinorVersion() {
-        return 6;
+        return 7;
     }
 }

@@ -74,6 +74,7 @@ public class RedkaleClassLoader extends URLClassLoader {
     }
 
     public static URI getConfResourceAsURI(String confURI, String file) {
+        if (file.startsWith("http:") || file.startsWith("https:") || file.startsWith("ftp:")) return URI.create(file);
         if (confURI != null && !confURI.contains("!")) { //带!的是 /usr/xxx.jar!/META-INF/conf/xxx
             File f = new File(URI.create(confURI).getPath(), file);
             if (f.isFile() && f.canRead()) {

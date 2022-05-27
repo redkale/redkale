@@ -16,6 +16,7 @@ import java.util.function.Predicate;
 import java.util.jar.*;
 import java.util.logging.*;
 import java.util.regex.*;
+import javax.annotation.Priority;
 import org.redkale.util.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 
@@ -103,11 +104,12 @@ public final class ClassFilter<T> {
      * @return Set&lt;FilterEntry&lt;T&gt;&gt;
      */
     public final Set<FilterEntry<T>> getFilterEntrys() {
-        HashSet<FilterEntry<T>> set = new HashSet<>();
-        set.addAll(entrys);
-        if (ors != null) ors.forEach(f -> set.addAll(f.getFilterEntrys()));
-        if (ands != null) ands.forEach(f -> set.addAll(f.getFilterEntrys()));
-        return set;
+        List<FilterEntry<T>> list = new ArrayList<>();
+        list.addAll(entrys);
+        if (ors != null) ors.forEach(f -> list.addAll(f.getFilterEntrys()));
+        if (ands != null) ands.forEach(f -> list.addAll(f.getFilterEntrys()));
+        Collections.sort(list);
+        return new LinkedHashSet<>(list);
     }
 
     /**
@@ -116,11 +118,12 @@ public final class ClassFilter<T> {
      * @return Set&lt;FilterEntry&lt;T&gt;&gt;
      */
     public final Set<FilterEntry<T>> getFilterExpectEntrys() {
-        HashSet<FilterEntry<T>> set = new HashSet<>();
-        set.addAll(expectEntrys);
-        if (ors != null) ors.forEach(f -> set.addAll(f.getFilterExpectEntrys()));
-        if (ands != null) ands.forEach(f -> set.addAll(f.getFilterExpectEntrys()));
-        return set;
+        List<FilterEntry<T>> list = new ArrayList<>();
+        list.addAll(expectEntrys);
+        if (ors != null) ors.forEach(f -> list.addAll(f.getFilterExpectEntrys()));
+        if (ands != null) ands.forEach(f -> list.addAll(f.getFilterExpectEntrys()));
+        Collections.sort(list);
+        return new LinkedHashSet<>(list);
     }
 
     /**
@@ -129,7 +132,7 @@ public final class ClassFilter<T> {
      * @return Set&lt;FilterEntry&lt;T&gt;&gt;
      */
     public final Set<FilterEntry<T>> getAllFilterEntrys() {
-        HashSet<FilterEntry<T>> rs = new HashSet<>();
+        HashSet<FilterEntry<T>> rs = new LinkedHashSet<>();
         rs.addAll(getFilterEntrys());
         rs.addAll(getFilterExpectEntrys());
         return rs;
@@ -384,7 +387,7 @@ public final class ClassFilter<T> {
      *
      * @param <T> 泛型
      */
-    public static final class FilterEntry<T> {
+    public static final class FilterEntry<T> implements Comparable<FilterEntry<T>> {
 
         private final HashSet<String> groups = new LinkedHashSet<>();
 
@@ -414,6 +417,14 @@ public final class ClassFilter<T> {
             this.autoload = autoload;
             this.expect = expect;
             this.name = property == null ? "" : property.getValue("name", "");
+        }
+
+        @Override //@Priority值越大，优先级越高, 需要排前面
+        public int compareTo(FilterEntry o) {
+            if (!(o instanceof FilterEntry)) return 1;
+            Priority p1 = this.type.getAnnotation(Priority.class);
+            Priority p2 = ((FilterEntry<T>) o).type.getAnnotation(Priority.class);
+            return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
         }
 
         @Override
@@ -465,6 +476,7 @@ public final class ClassFilter<T> {
         public boolean isExpect() {
             return expect;
         }
+
     }
 
     /**

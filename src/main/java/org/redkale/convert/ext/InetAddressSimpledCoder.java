@@ -9,6 +9,7 @@ import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
 import org.redkale.convert.Reader;
 import java.net.*;
+import org.redkale.convert.json.*;
 import org.redkale.util.StringWrapper;
 
 /**
@@ -87,7 +88,7 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public final static class InetAddressJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetAddress> {
+    public final static class InetAddressJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, InetAddress> {
 
         public static final InetAddressJsonSimpledCoder instance = new InetAddressJsonSimpledCoder();
 
@@ -119,7 +120,7 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public final static class InetSocketAddressJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetSocketAddress> {
+    public final static class InetSocketAddressJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, InetSocketAddress> {
 
         public static final InetSocketAddressJsonSimpledCoder instance = new InetSocketAddressJsonSimpledCoder();
 

@@ -67,6 +67,15 @@ public class AsyncIOThread extends AsyncThread {
         selector.wakeup();
     }
 
+    @Override
+    public void execute(Collection<Runnable> commands) {
+        if (commands == null) return;
+        for (Runnable command : commands) {
+            commandQueue.offer(command);
+        }
+        selector.wakeup();
+    }
+
     public void register(Consumer<Selector> consumer) {
         registerQueue.offer(consumer);
         selector.wakeup();

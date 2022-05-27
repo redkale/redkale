@@ -129,7 +129,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (method.isSynthetic()) continue;
                 if (method.getName().length() < 3) continue;
                 if (method.getName().equals("getClass")) continue;
-                if (!method.getName().startsWith("is") && !method.getName().startsWith("get")) continue;
+                if (!(method.getName().startsWith("is") && method.getName().length() > 2)
+                    && !(method.getName().startsWith("get") && method.getName().length() > 3)) continue;
                 if (factory.isConvertDisabled(method)) continue;
                 if (method.getParameterTypes().length != 0) continue;
                 if (method.getReturnType() == void.class) continue;
@@ -195,7 +196,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         Method method = (Method) element;
         if (method == null) return null;
         String fname = method.getName();
-        if (!fname.startsWith("is") && !fname.startsWith("get") && !fname.startsWith("set")) return fname;
+        if (!(fname.startsWith("is") && fname.length() > 2)
+            && !(fname.startsWith("get") && fname.length() > 3)
+            && !(fname.startsWith("set") && fname.length() > 3)) return fname;
         fname = fname.substring(fname.startsWith("is") ? 2 : 3);
         if (fname.length() > 1 && !(fname.charAt(1) >= 'A' && fname.charAt(1) <= 'Z')) {
             fname = Character.toLowerCase(fname.charAt(0)) + fname.substring(1);
@@ -206,6 +209,10 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
     }
 
     protected static JsonDynEncoder generateDyncEncoder(final JsonFactory factory, final Class clazz, final List<AccessibleObject> members) {
+        final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
+        selfObjEncoder.init(factory);
+        if (selfObjEncoder.getMembers().length != members.size()) return null; //存在ignore等定制配置
+
         final String supDynName = JsonDynEncoder.class.getName().replace('.', '/');
         final String valtypeName = clazz.getName().replace('.', '/');
         final String writerName = JsonWriter.class.getName().replace('.', '/');
@@ -220,9 +227,11 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         final String valtypeDesc = org.redkale.asm.Type.getDescriptor(clazz);
 
         Map<String, AccessibleObject> mixedNames0 = null;
+        StringBuilder memberb = new StringBuilder();
         for (AccessibleObject element : members) {
             ConvertColumnEntry ref1 = factory.findRef(clazz, element);
             final String fieldname = ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element) : ref1.name();
+            memberb.append(fieldname).append(',');
             final Class fieldtype = readGetSetFieldType(element);
             if (fieldtype != String.class && !fieldtype.isPrimitive()) {
                 if (mixedNames0 == null) mixedNames0 = new HashMap<>();
@@ -231,9 +240,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         }
         final Map<String, AccessibleObject> mixedNames = mixedNames0;
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        final String newDynName = "org/redkaledyn/json/_Dyn" + JsonDynEncoder.class.getSimpleName() + "__" + clazz.getName().replace('.', '_').replace('$', '_');
-        final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
-        selfObjEncoder.init(factory);
+        final String newDynName = "org/redkaledyn/json/_Dyn" + JsonDynEncoder.class.getSimpleName()
+            + "__" + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.tiny() + "_" + Utility.md5Hex(memberb.toString()); //tiny必须要加上, 同一个类会有多个字段定制Convert
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;

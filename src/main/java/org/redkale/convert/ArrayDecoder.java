@@ -7,6 +7,8 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.IntFunction;
+import org.redkale.util.Creator;
 
 /**
  * 数组的反序列化操作类  <br>
@@ -30,6 +32,8 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
 
     protected final Decodeable<Reader, T> componentDecoder;
 
+    protected final IntFunction<T[]> componentArrayFunction;
+
     protected volatile boolean inited = false;
 
     protected final Object lock = new Object();
@@ -52,6 +56,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
             }
             factory.register(type, this);
             this.componentDecoder = factory.loadDecoder(this.componentType);
+            this.componentArrayFunction = Creator.arrayFunction(this.componentClass);
         } finally {
             inited = true;
             synchronized (lock) {
@@ -102,7 +107,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
             }
         }
         in.readArrayE();
-        T[] rs = (T[]) Array.newInstance((Class) this.componentClass, result.size());
+        T[] rs = this.componentArrayFunction.apply(result.size());
         return result.toArray(rs);
     }
 

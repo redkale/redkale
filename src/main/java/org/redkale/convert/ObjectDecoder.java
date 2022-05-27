@@ -34,6 +34,10 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected DeMember[] members;
 
+    protected Map<String, DeMember> memberFieldMap;
+
+    protected Map<Integer, DeMember> memberTagMap;
+
     protected ConvertFactory factory;
 
     protected volatile boolean inited = false;
@@ -92,6 +96,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             final String[] cps = ObjectEncoder.findConstructorProperties(this.creator);
             try {
                 ConvertColumnEntry ref;
+                ConvertFactory colFactory;
                 RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
                 for (final Field field : clazz.getFields()) {
                     if (Modifier.isStatic(field.getModifiers())) continue;
@@ -99,17 +104,18 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     ref = factory.findRef(clazz, field);
                     if (ref != null && ref.ignore()) continue;
                     ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
+                    colFactory = factory.columnFactory(field.getType(), field.getAnnotationsByType(ConvertCoder.class), false);
                     Decodeable<R, ?> fieldCoder;
                     if (small != null && field.getType() == String.class) {
                         fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
                     } else {
-                        fieldCoder = factory.findFieldCoder(clazz, field.getName());
+                        fieldCoder = colFactory.findFieldCoder(clazz, field.getName());
                     }
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
-                        fieldCoder = factory.loadDecoder(t);
+                        fieldCoder = colFactory.loadDecoder(t);
                     }
-                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, field, null, null), fieldCoder, field, null);
+                    DeMember member = new DeMember(ObjectEncoder.createAttribute(colFactory, type, clazz, field, null, null), fieldCoder, field, null);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -153,17 +159,22 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     if (ref != null && ref.ignore()) continue;
 
                     ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
+                    Field maybeField = ConvertFactory.readGetSetField(method);
+                    colFactory = factory.columnFactory(method.getParameterTypes()[0], method.getAnnotationsByType(ConvertCoder.class), false);
+                    if (maybeField != null && colFactory == factory) {
+                        colFactory = factory.columnFactory(maybeField.getType(), maybeField.getAnnotationsByType(ConvertCoder.class), false);
+                    }
                     Decodeable<R, ?> fieldCoder;
-                    if (small != null && method.getReturnType() == String.class) {
+                    if (small != null && method.getParameterTypes()[0] == String.class) {
                         fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
                     } else {
-                        fieldCoder = factory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
+                        fieldCoder = colFactory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
                     }
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericParameterTypes()[0], this.type), this.type);
-                        fieldCoder = factory.loadDecoder(t);
+                        fieldCoder = colFactory.loadDecoder(t);
                     }
-                    DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, null, null, method), fieldCoder, ConvertFactory.readGetSetField(method), method);
+                    DeMember member = new DeMember(ObjectEncoder.createAttribute(colFactory, type, clazz, null, null, method), fieldCoder, maybeField, method);
                     if (ref != null) member.index = ref.getIndex();
                     list.add(member);
                 }
@@ -217,6 +228,12 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
                 this.members = list.toArray(new DeMember[list.size()]);
                 Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
+                this.memberFieldMap = new HashMap<>(this.members.length);
+                this.memberTagMap = new HashMap<>(this.members.length);
+                for (DeMember member : this.members) {
+                    this.memberFieldMap.put(member.getAttribute().field(), member);
+                    this.memberTagMap.put(member.getTag(), member);
+                }
 
                 if (cps != null) {
                     final String[] fields = cps;
@@ -231,6 +248,8 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     }
                     this.creatorConstructorMembers = ms;
                 }
+
+                afterInitDeMember(factory);
             } catch (Exception ex) {
                 throw new ConvertException(ex);
             }
@@ -240,13 +259,6 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 lock.notifyAll();
             }
         }
-    }
-
-    protected void initForEachDeMember(ConvertFactory factory, DeMember member) {
-    }
-
-    protected void setTag(DeMember member, int tag) {
-        member.tag = tag;
     }
 
     /**
@@ -276,37 +288,41 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 throw new ConvertException("[" + typeClass + "] is a interface or abstract class, cannot create it's Creator.");
             }
         }
+
+        DeMember[] memberArray = this.members;
+        Map<String, DeMember> fieldMap = this.memberFieldMap;
+        Map<Integer, DeMember> tagMap = this.memberTagMap;
         if (this.creatorConstructorMembers == null) {  //空构造函数
             final T result = this.creator == null ? null : this.creator.create();
             boolean first = true;
-            while (hasNext(objin, first)) {
-                DeMember member = objin.readFieldName(members);
+            while (objin.hasNext()) {
+                DeMember member = objin.readFieldName(memberArray, fieldMap, tagMap);
                 objin.readBlank();
                 if (member == null) {
                     objin.skipValue(); //跳过不存在的属性的值
                 } else {
-                    readMemberValue(objin, member, result, first);
+                    readDeMemberValue(objin, member, result, first);
                 }
                 first = false;
             }
             objin.readObjectE(typeClass);
             return result;
         } else {  //带参数的构造函数
-            final DeMember<R, T, ?>[] fields = this.creatorConstructorMembers;
-            final Object[] constructorParams = new Object[fields.length];
+            final DeMember<R, T, ?>[] constructorFields = this.creatorConstructorMembers;
+            final Object[] constructorParams = new Object[constructorFields.length];
             final Object[][] otherParams = new Object[this.members.length][2];
             int oc = 0;
             boolean first = true;
-            while (hasNext(objin, first)) {
-                DeMember member = objin.readFieldName(members);
+            while (objin.hasNext()) {
+                DeMember member = objin.readFieldName(memberArray, fieldMap, tagMap);
                 objin.readBlank();
                 if (member == null) {
                     objin.skipValue(); //跳过不存在的属性的值
                 } else {
-                    Object val = readMemberValue(objin, member, first);
+                    Object val = readDeMemberValue(objin, member, first);
                     boolean flag = true;
-                    for (int i = 0; i < fields.length; i++) {
-                        if (member == fields[i]) {
+                    for (int i = 0; i < constructorFields.length; i++) {
+                        if (member == constructorFields[i]) {
                             constructorParams[i] = val;
                             flag = false;
                             break;
@@ -327,20 +343,40 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         }
     }
 
-    protected R objectReader(R in) {
-        return in;
+    //---------------------------------- 可定制方法 ----------------------------------
+    protected void initForEachDeMember(ConvertFactory factory, DeMember member) {
+    }
+
+    protected void afterInitDeMember(ConvertFactory factory) {
     }
 
     protected boolean hasNext(R in, boolean first) {
         return in.hasNext();
     }
 
-    protected Object readMemberValue(R in, DeMember member, boolean first) {
+    protected R objectReader(R in) {
+        return in;
+    }
+
+    protected Object readDeMemberValue(R in, DeMember member, boolean first) {
         return member.read(in);
     }
 
-    protected void readMemberValue(R in, DeMember member, T result, boolean first) {
+    protected void readDeMemberValue(R in, DeMember member, T result, boolean first) {
         member.read(in, result);
+    }
+
+    //---------------------------------------------------------------------------------
+    protected void setTag(DeMember member, int tag) {
+        member.tag = tag;
+    }
+
+    protected void setIndex(DeMember member, int index) {
+        member.index = index;
+    }
+
+    protected void setPosition(DeMember member, int position) {
+        member.position = position;
     }
 
     @Override
@@ -349,7 +385,27 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     }
 
     public DeMember[] getMembers() {
-        return Arrays.copyOf(members, members.length);
+        return members;
+    }
+
+    public DeMember getMember(String fieldName) {
+        return memberFieldMap.get(fieldName);
+    }
+
+    public Map<String, DeMember> getMemberFieldMap() {
+        return memberFieldMap;
+    }
+
+    public Map<Integer, DeMember> getMemberTagMap() {
+        return memberTagMap;
+    }
+
+    public DeMember<R, T, ?>[] getConstructorMembers() {
+        return creatorConstructorMembers;
+    }
+
+    public Creator<T> getCreator() {
+        return creator;
     }
 
     @Override

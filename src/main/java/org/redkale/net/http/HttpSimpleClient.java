@@ -31,6 +31,8 @@ import org.redkale.util.*;
  */
 public class HttpSimpleClient {
 
+    public static final String USER_AGENT = "Redkale-http-client/" + Redkale.getDotedVersion();
+
     protected final AsyncGroup asyncGroup;
 
     protected int readTimeoutSeconds = 6;
@@ -103,7 +105,7 @@ public class HttpSimpleClient {
                 + "Host: " + uri.getHost() + "\r\n"
                 + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
             if (headers == null || !headers.containsKey("User-Agent")) {
-                array.put(("User-Agent: Redkale-http-client/" + Redkale.getDotedVersion() + "\r\n").getBytes(StandardCharsets.UTF_8));
+                array.put(("User-Agent: " + USER_AGENT + "\r\n").getBytes(StandardCharsets.UTF_8));
             }
             if (headers == null || !headers.containsKey("Connection")) {
                 array.put(("Connection: close\r\n").getBytes(StandardCharsets.UTF_8));

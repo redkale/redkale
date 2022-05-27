@@ -47,12 +47,13 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
 
     public static <T> Serializable getRowColumnValue(final EntityInfo.DataResultSetRow row, Attribute<T, Serializable> attr, int index, String column) {
         final Class t = attr.type();
-        Serializable o;
-        if (t == byte[].class) {
-            Object blob = index > 0 ? row.getObject(index) : row.getObject(column);
-            if (blob == null) {
-                o = null;
-            } else { //不支持超过2G的数据
+        Serializable o = null;
+        try {
+            if (t == byte[].class) {
+                Object blob = index > 0 ? row.getObject(index) : row.getObject(column);
+                if (blob == null) {
+                    o = null;
+                } else { //不支持超过2G的数据
 //                if (blob instanceof java.sql.Blob) {
 //                    java.sql.Blob b = (java.sql.Blob) blob;
 //                    try {
@@ -61,98 +62,97 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
 //                        o = null;
 //                    }
 //                } else {
-                o = (byte[]) blob;
-                //}
-                CryptHandler cryptHandler = attr.attach();
-                if (cryptHandler != null) o = (Serializable) cryptHandler.decrypt(o);
-            }
-        } else {
-            o = (Serializable) (index > 0 ? row.getObject(index) : row.getObject(column));
-            CryptHandler cryptHandler = attr.attach();
-            if (cryptHandler != null) o = (Serializable) cryptHandler.decrypt(o);
-            if (t.isPrimitive()) {
-                if (o != null) {
-                    if (t == int.class) {
-                        o = ((Number) o).intValue();
+                    o = (byte[]) blob;
+                    //}
+                }
+            } else {
+                o = (Serializable) (index > 0 ? row.getObject(index) : row.getObject(column));
+                if (t.isPrimitive()) {
+                    if (o != null) {
+                        if (t == int.class) {
+                            o = ((Number) o).intValue();
+                        } else if (t == long.class) {
+                            o = ((Number) o).longValue();
+                        } else if (t == short.class) {
+                            o = ((Number) o).shortValue();
+                        } else if (t == float.class) {
+                            o = ((Number) o).floatValue();
+                        } else if (t == double.class) {
+                            o = ((Number) o).doubleValue();
+                        } else if (t == byte.class) {
+                            o = ((Number) o).byteValue();
+                        } else if (t == char.class) {
+                            o = (char) ((Number) o).intValue();
+                        } else if (t == boolean.class) {
+                            o = (Boolean) o;
+                        }
+                    } else if (t == int.class) {
+                        o = 0;
                     } else if (t == long.class) {
-                        o = ((Number) o).longValue();
+                        o = 0L;
                     } else if (t == short.class) {
-                        o = ((Number) o).shortValue();
+                        o = (short) 0;
                     } else if (t == float.class) {
-                        o = ((Number) o).floatValue();
+                        o = 0.0f;
                     } else if (t == double.class) {
-                        o = ((Number) o).doubleValue();
+                        o = 0.0d;
                     } else if (t == byte.class) {
-                        o = ((Number) o).byteValue();
-                    } else if (t == char.class) {
-                        o = (char) ((Number) o).intValue();
+                        o = (byte) 0;
                     } else if (t == boolean.class) {
-                        o = (Boolean) o;
+                        o = false;
+                    } else if (t == char.class) {
+                        o = (char) 0;
                     }
-                } else if (t == int.class) {
-                    o = 0;
-                } else if (t == long.class) {
-                    o = 0L;
-                } else if (t == short.class) {
-                    o = (short) 0;
-                } else if (t == float.class) {
-                    o = 0.0f;
-                } else if (t == double.class) {
-                    o = 0.0d;
-                } else if (t == byte.class) {
-                    o = (byte) 0;
-                } else if (t == boolean.class) {
-                    o = false;
-                } else if (t == char.class) {
-                    o = (char) 0;
-                }
-            } else if (t == AtomicInteger.class) {
-                if (o != null) {
-                    o = new AtomicInteger(((Number) o).intValue());
-                } else {
-                    o = new AtomicInteger();
-                }
-            } else if (t == AtomicLong.class) {
-                if (o != null) {
-                    o = new AtomicLong(((Number) o).longValue());
-                } else {
-                    o = new AtomicLong();
-                }
-            } else if (t == LongAdder.class) {
-                if (o != null) {
-                    LongAdder v = new LongAdder();
-                    v.add(((Number) o).longValue());
-                    o = v;
-                } else {
-                    o = new LongAdder();
-                }
-            } else if (t == BigInteger.class) {
-                if (o != null && !(o instanceof BigInteger)) {
-                    if (o instanceof byte[]) {
-                        o = new BigInteger((byte[]) o);
+                } else if (t == AtomicInteger.class) {
+                    if (o != null) {
+                        o = new AtomicInteger(((Number) o).intValue());
                     } else {
-                        o = new BigInteger(o.toString(), 10);
+                        o = new AtomicInteger();
                     }
-                }
-            } else if (t == BigDecimal.class) {
-                if (o != null && !(o instanceof BigDecimal)) {
-                    if (o instanceof byte[]) {
-                        o = new BigDecimal(new String((byte[]) o));
+                } else if (t == AtomicLong.class) {
+                    if (o != null) {
+                        o = new AtomicLong(((Number) o).longValue());
                     } else {
-                        o = new BigInteger(o.toString());
+                        o = new AtomicLong();
                     }
+                } else if (t == LongAdder.class) {
+                    if (o != null) {
+                        LongAdder v = new LongAdder();
+                        v.add(((Number) o).longValue());
+                        o = v;
+                    } else {
+                        o = new LongAdder();
+                    }
+                } else if (t == BigInteger.class) {
+                    if (o != null && !(o instanceof BigInteger)) {
+                        if (o instanceof byte[]) {
+                            o = new BigInteger((byte[]) o);
+                        } else {
+                            o = new BigInteger(o.toString(), 10);
+                        }
+                    }
+                } else if (t == BigDecimal.class) {
+                    if (o != null && !(o instanceof BigDecimal)) {
+                        if (o instanceof byte[]) {
+                            o = new BigDecimal(new String((byte[]) o));
+                        } else {
+                            o = new BigInteger(o.toString());
+                        }
+                    }
+                } else if (t == String.class) {
+                    if (o == null) {
+                        o = "";
+                    } else if (o instanceof byte[]) {
+                        o = new String((byte[]) o, StandardCharsets.UTF_8);
+                    } else {
+                        o = o.toString();
+                    }
+                } else if (o != null && !t.isAssignableFrom(o.getClass()) && o instanceof CharSequence) {
+                    o = ((CharSequence) o).length() == 0 ? null : JsonConvert.root().convertFrom(attr.genericType(), o.toString());
                 }
-            } else if (t == String.class) {
-                if (o == null) {
-                    o = "";
-                } else if (o instanceof byte[]) {
-                    o = new String((byte[]) o, StandardCharsets.UTF_8);
-                } else {
-                    o = o.toString();
-                }
-            } else if (o != null && !t.isAssignableFrom(o.getClass()) && o instanceof CharSequence) {
-                o = ((CharSequence) o).length() == 0 ? null : JsonConvert.root().convertFrom(attr.genericType(), o.toString());
             }
+        } catch (Exception e) {
+            throw new RuntimeException(row.getEntityInfo() + "." + attr.field() + ".value=" + o + ": " + e.getMessage(), e.getCause());
         }
         return o;
     }

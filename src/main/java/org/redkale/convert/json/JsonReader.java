@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.json;
 
+import java.util.Map;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 import org.redkale.util.*;
@@ -76,7 +77,7 @@ public class JsonReader extends Reader {
     public final void seek(String key) {
         if (key == null || key.length() < 1) return;
         final String[] keys = key.split("\\.");
-        nextGoodChar(); //读掉 { [
+        nextGoodChar(true); //读掉 { [
         for (String key1 : keys) {
             while (this.hasNext()) {
                 String field = this.readSmallString();
@@ -93,7 +94,7 @@ public class JsonReader extends Reader {
      */
     @Override
     public final void skipValue() {
-        final char ch = nextGoodChar();
+        final char ch = nextGoodChar(true);
         switch (ch) {
             case '"':
             case '\'':
@@ -131,20 +132,46 @@ public class JsonReader extends Reader {
      * @return 空白字符或有效字符
      */
     protected char nextChar() {
-        return this.text[++this.position];
+        int p = ++this.position;
+        if (p >= text.length) return 0;
+        return this.text[p];
     }
 
     /**
-     * 跳过空白字符， 返回一个非空白字符
+     * 跳过空白字符、单行或多行注释， 返回一个非空白字符
+     *
+     * @param allowComment 是否容许含注释
      *
      * @return 有效字符
      */
-    protected char nextGoodChar() {
-        char c = nextChar();
-        if (c > ' ') return c;
+    protected char nextGoodChar(boolean allowComment) {
+        char c;
         for (;;) {
             c = nextChar();
-            if (c > ' ') return c;
+            if (c == 0) return c;// 0 表示buffer结尾了
+            if (c > ' ') {
+                if (allowComment && c == '/') { //支持单行和多行注释
+                    char n = nextChar();
+                    if (n == '/') {
+                        for (;;) {
+                            if (nextChar() == '\n') break;
+                        }
+                        return nextGoodChar(allowComment);
+                    } else if (n == '*') {
+                        char nc;
+                        char lc = 0;
+                        for (;;) {
+                            nc = nextChar();
+                            if (nc == '/' && lc == '*') break;
+                            lc = nc;
+                        }
+                        return nextGoodChar(allowComment);
+                    } else {
+                        throw new ConvertException("illegal escape(" + n + ") (position = " + this.position + ") in '" + new String(text) + "'");
+                    }
+                }
+                return c;
+            }
         }
     }
 
@@ -157,9 +184,31 @@ public class JsonReader extends Reader {
         this.position--;
     }
 
+    /**
+     * 是否{开头的对象字符
+     *
+     * @return 是否对象字符
+     */
+    public boolean isNextObject() {
+        char ch = nextGoodChar(true);
+        backChar(ch);
+        return ch == '{';
+    }
+
+    /**
+     * 是否[开头的数组字符
+     *
+     * @return 是否数组字符
+     */
+    public boolean isNextArray() {
+        char ch = nextGoodChar(true);
+        backChar(ch);
+        return ch == '[';
+    }
+
     @Override
     public final ValueType readType() {
-        char ch = nextGoodChar();
+        char ch = nextGoodChar(true);
         if (ch == '{') {
             backChar(ch);
             return ValueType.MAP;
@@ -183,15 +232,8 @@ public class JsonReader extends Reader {
     public String readObjectB(final Class clazz) {
         this.fieldIndex = 0; //必须要重置为0
         if (this.text.length == 0) return null;
-        char ch = this.text[++this.position];
+        char ch = nextGoodChar(true);
         if (ch == '{') return "";
-        if (ch <= ' ') {
-            for (;;) {
-                ch = this.text[++this.position];
-                if (ch > ' ') break;
-            }
-            if (ch == '{') return "";
-        }
         if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') return null;
         if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') return null;
         throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch + "' in (" + new String(this.text) + ")");
@@ -232,17 +274,9 @@ public class JsonReader extends Reader {
     @Override
     public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) {
         if (this.text.length == 0) return SIGN_NULL;
-        char ch = this.text[++this.position];
+        char ch = nextGoodChar(true);
         if (ch == '[') return SIGN_NOLENGTH;
         if (ch == '{') return SIGN_NOLENGTH;
-        if (ch <= ' ') {
-            for (;;) {
-                ch = this.text[++this.position];
-                if (ch > ' ') break;
-            }
-            if (ch == '[') return SIGN_NOLENGTH;
-            if (ch == '{') return SIGN_NOLENGTH;
-        }
         if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') return SIGN_NULL;
         if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') return SIGN_NULL;
         throw new ConvertException("a json array text must begin with '[' (position = " + position + ") but '" + ch + "' in (" + new String(this.text) + ")");
@@ -257,15 +291,8 @@ public class JsonReader extends Reader {
      */
     @Override
     public void readBlank() {
-        char ch = this.text[++this.position];
+        char ch = nextGoodChar(true);
         if (ch == ':') return;
-        if (ch <= ' ') {
-            for (;;) {
-                ch = this.text[++this.position];
-                if (ch > ' ') break;
-            }
-            if (ch == ':') return;
-        }
         throw new ConvertException("'" + new String(text) + "'expected a ':' but '" + ch + "'(position = " + position + ") in (" + new String(this.text) + ")");
     }
 
@@ -289,17 +316,14 @@ public class JsonReader extends Reader {
      */
     @Override
     public boolean hasNext(int startPosition, int contentLength) {
-        char ch = this.text[++this.position];
-        if (ch == ',') return true;
-        if (ch == '}' || ch == ']') return false;
-        if (ch <= ' ') {
-            for (;;) {
-                ch = this.text[++this.position];
-                if (ch > ' ') break;
-            }
-            if (ch == ',') return true;
-            if (ch == '}' || ch == ']') return false;
+        char ch = nextGoodChar(true);
+        if (ch == ',') {
+            char nt = nextGoodChar(true);
+            if (nt == '}' || nt == ']') return false;
+            this.position--;
+            return true;
         }
+        if (ch == '}' || ch == ']') return false;
         this.position--; // { [ 交由 readObjectB 或 readMapB 或 readArrayB 读取
         return true;
     }
@@ -313,15 +337,9 @@ public class JsonReader extends Reader {
     public String readSmallString() {
         final int eof = this.limit;
         if (this.position == eof) return null;
+        char ch = nextGoodChar(true); //需要跳过注释
         final char[] text0 = this.text;
         int currpos = this.position;
-        char ch = text0[++currpos];
-        if (ch <= ' ') {
-            for (;;) {
-                ch = text0[++currpos];
-                if (ch > ' ') break;
-            }
-        }
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
             final int start = currpos + 1;
@@ -363,55 +381,84 @@ public class JsonReader extends Reader {
      */
     @Override
     public int readInt() {
-        final char[] text0 = this.text;
-        final int eof = this.limit;
-        int currpos = this.position;
-        char firstchar = text0[++currpos];
-        if (firstchar <= ' ') {
-            for (;;) {
-                firstchar = text0[++currpos];
-                if (firstchar > ' ') break;
-            }
-        }
+        char firstchar = nextGoodChar(true);
         boolean quote = false;
         if (firstchar == '"' || firstchar == '\'') {
             quote = true;
-            firstchar = text0[++currpos];
-            if (firstchar <= ' ') {
-                for (;;) {
-                    firstchar = text0[++currpos];
-                    if (firstchar > ' ') break;
-                }
-            }
-            if (firstchar == '"' || firstchar == '\'') {
-                this.position = currpos;
-                return 0;
-            }
+            firstchar = nextGoodChar(false);
+            if (firstchar == '"' || firstchar == '\'') return 0;
         }
         int value = 0;
         final boolean negative = firstchar == '-';
         if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
+            if (firstchar == '+') firstchar = nextChar(); //兼容+开头的
+            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             value = firstchar - '0';
         }
+        if (firstchar == 'N') {
+            if (negative) throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            char c = nextChar();
+            if (c != 'a') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'N') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (quote) {
+                c = nextChar();
+                if (c != '"' && c != '\'') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            return 0;   //NaN 返回0;
+        } else if (firstchar == 'I') { //Infinity
+            char c = nextChar();
+            if (c != 'n') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'f') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'i') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'n') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'i') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 't') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'y') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (quote) {
+                c = nextChar();
+                if (c != '"' && c != '\'') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            return negative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        }
+        boolean hex = false;
         boolean dot = false;
         for (;;) {
-            if (currpos == eof) break;
-            char ch = text0[++currpos];
-            int val = digits[ch];
-            if (quote && val == -3) continue;
-            if (val <= -3) break;
-            if (dot) continue;
-            if (val == -1) {
-                if (ch == '.') {
-                    dot = true;
-                    continue;
-                }
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+            char ch = nextChar();
+            if (ch == 0) break;
+            if (ch >= '0' && ch <= '9') {
+                if (dot) continue;
+                value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
+            } else if (ch == '"' || ch == '\'') {
+                if (quote) break;
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+            } else if (ch == 'x' || ch == 'X') {
+                if (value != 0) throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                hex = true;
+            } else if (ch >= 'a' && ch <= 'f') {
+                if (!hex) throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                if (dot) continue;
+                value = (value << 4) + digits[ch];
+            } else if (ch >= 'A' && ch <= 'F') {
+                if (!hex) throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                if (dot) continue;
+                value = (value << 4) + digits[ch];
+            } else if (quote && ch <= ' ') {
+            } else if (ch == '.') {
+                dot = true;
+            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
+                backChar(ch);
+                break;
+            } else {
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
             }
-            if (val != -2) value = value * 10 + val;
         }
-        this.position = currpos - 1;
         return negative ? -value : value;
     }
 
@@ -422,72 +469,105 @@ public class JsonReader extends Reader {
      */
     @Override
     public long readLong() {
-        final char[] text0 = this.text;
-        final int eof = this.limit;
-        int currpos = this.position;
-        char firstchar = text0[++currpos];
-        if (firstchar <= ' ') {
-            for (;;) {
-                firstchar = text0[++currpos];
-                if (firstchar > ' ') break;
-            }
-        }
+        char firstchar = nextGoodChar(true);
         boolean quote = false;
         if (firstchar == '"' || firstchar == '\'') {
             quote = true;
-            firstchar = text0[++currpos];
-            if (firstchar <= ' ') {
-                for (;;) {
-                    firstchar = text0[++currpos];
-                    if (firstchar > ' ') break;
-                }
-            }
-            if (firstchar == '"' || firstchar == '\'') {
-                this.position = currpos;
-                return 0L;
-            }
+            firstchar = nextGoodChar(false);
+            if (firstchar == '"' || firstchar == '\'') return 0L;
         }
         long value = 0;
         final boolean negative = firstchar == '-';
         if (!negative) {
-            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + currpos + ") in (" + new String(this.text) + ")");
+            if (firstchar == '+') firstchar = nextChar(); //兼容+开头的
+            if (firstchar < '0' || firstchar > '9') throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             value = firstchar - '0';
         }
+        if (firstchar == 'N') {
+            if (negative) throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            char c = nextChar();
+            if (c != 'a') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'N') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (quote) {
+                c = nextChar();
+                if (c != '"' && c != '\'') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            return 0L;   //NaN 返回0;
+        } else if (firstchar == 'I') { //Infinity
+            char c = nextChar();
+            if (c != 'n') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'f') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'i') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'n') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'i') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 't') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            c = nextChar();
+            if (c != 'y') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (quote) {
+                c = nextChar();
+                if (c != '"' && c != '\'') throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            return negative ? Long.MIN_VALUE : Long.MAX_VALUE;
+        }
+        boolean hex = false;
         boolean dot = false;
         for (;;) {
-            if (currpos == eof) break;
-            char ch = text0[++currpos];
-            int val = digits[ch];
-            if (quote && val == -3) continue;
-            if (val <= -3) break;
-            if (dot) continue;
-            if (val == -1) {
-                if (ch == '.') {
-                    dot = true;
-                    continue;
-                }
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + currpos + ") but '" + ch + "' in (" + new String(this.text) + ")");
+            char ch = nextChar();
+            if (ch == 0) break;
+            if (ch >= '0' && ch <= '9') {
+                if (dot) continue;
+                value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
+            } else if (ch == '"' || ch == '\'') {
+                if (quote) break;
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+            } else if (ch == 'x' || ch == 'X') {
+                if (value != 0) throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                hex = true;
+            } else if (ch >= 'a' && ch <= 'f') {
+                if (!hex) throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                if (dot) continue;
+                value = (value << 4) + digits[ch];
+            } else if (ch >= 'A' && ch <= 'F') {
+                if (!hex) throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                if (dot) continue;
+                value = (value << 4) + digits[ch];
+            } else if (quote && ch <= ' ') {
+            } else if (ch == '.') {
+                dot = true;
+            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
+                backChar(ch);
+                break;
+            } else {
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
             }
-            if (val != -2) value = value * 10 + val;
         }
-        this.position = currpos - 1;
         return negative ? -value : value;
     }
 
+    public final String readFieldName() {
+        return this.readSmallString();
+    }
+
     @Override
-    public final DeMember readFieldName(final DeMember[] members) {
-        final String exceptedfield = this.readSmallString();
-        if (exceptedfield == null) return null;
+    public final DeMember readFieldName(final DeMember[] members, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+        final String exceptedField = this.readSmallString();
+        if (exceptedField == null) return null;
         final int len = members.length;
         if (this.fieldIndex >= len) this.fieldIndex = 0;
         for (int k = this.fieldIndex; k < len; k++) {
-            if (exceptedfield.equals(members[k].getAttribute().field())) {
+            if (exceptedField.equals(members[k].getAttribute().field())) {
                 this.fieldIndex = k;
                 return members[k];
             }
         }
         for (int k = 0; k < this.fieldIndex; k++) {
-            if (exceptedfield.equals(members[k].getAttribute().field())) {
+            if (exceptedField.equals(members[k].getAttribute().field())) {
                 this.fieldIndex = k;
                 return members[k];
             }
@@ -557,7 +637,11 @@ public class JsonReader extends Reader {
         String chars = readSmallString();
         if (chars != null) chars = chars.trim();
         if (chars == null || chars.isEmpty()) return 0.f;
-        return Float.parseFloat(chars);
+        switch (chars) {
+            case "Infinity": return (float) Double.POSITIVE_INFINITY;
+            case "-Infinity": return (float) Double.NEGATIVE_INFINITY;
+            default: return Float.parseFloat(chars); //Float.parseFloat能识别NaN
+        }
     }
 
     @Override
@@ -565,7 +649,11 @@ public class JsonReader extends Reader {
         String chars = readSmallString();
         if (chars != null) chars = chars.trim();
         if (chars == null || chars.isEmpty()) return 0.0;
-        return Double.parseDouble(chars);
+        switch (chars) {
+            case "Infinity": return Double.POSITIVE_INFINITY;
+            case "-Infinity": return Double.NEGATIVE_INFINITY;
+            default: return Double.parseDouble(chars);  //Double.parseDouble能识别NaN
+        }
     }
 
     /**
@@ -576,14 +664,8 @@ public class JsonReader extends Reader {
     @Override
     public String readString() {
         final char[] text0 = this.text;
+        char expected = nextGoodChar(true);
         int currpos = this.position;
-        char expected = text0[++currpos];
-        if (expected <= ' ') {
-            for (;;) {
-                expected = text0[++currpos];
-                if (expected > ' ') break;
-            }
-        }
         if (expected != '"' && expected != '\'') {
             if (expected == 'n' && text0.length > currpos + 3 && (text0[1 + currpos] == 'u' && text0[2 + currpos] == 'l' && text0[3 + currpos] == 'l')) {
                 if (text0[++currpos] == 'u' && text0[++currpos] == 'l' && text0[++currpos] == 'l') {

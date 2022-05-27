@@ -143,7 +143,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     protected void init(AsyncConnection channel) {
         this.channel = channel;
         this.request.channel = channel;
-        this.request.createtime = System.currentTimeMillis();
+        this.request.createTime = System.currentTimeMillis();
     }
 
     protected void setFilter(Filter<C, R, Response<C, R>> filter) {

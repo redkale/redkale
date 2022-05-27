@@ -97,6 +97,11 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
         return type;
     }
 
+    @Override
+    public boolean specifyable() {
+        return false;
+    }
+
     public Encodeable<Writer, Object> getComponentEncoder() {
         return componentEncoder;
     }

@@ -146,6 +146,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     private final String remoteAddrHeader;
 
+    final HttpRpcAuthenticator rpcAuthenticator;
+
     HttpServlet.ActionEntry actionEntry;  //仅供HttpServlet传递Entry使用
 
     public HttpRequest(HttpContext context) {
@@ -156,6 +158,7 @@ public class HttpRequest extends Request<HttpContext> {
         super(context);
         this.array = array;
         this.remoteAddrHeader = context.remoteAddrHeader;
+        this.rpcAuthenticator = context.rpcAuthenticator;
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
@@ -163,6 +166,7 @@ public class HttpRequest extends Request<HttpContext> {
         super(context);
         this.array = new ByteArray();
         this.remoteAddrHeader = null;
+        this.rpcAuthenticator = null;
         if (req != null) initSimpleRequest(req, true);
     }
 
@@ -198,10 +202,10 @@ public class HttpRequest extends Request<HttpContext> {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setBody(array.length() == 0 ? null : array.getBytes());
         if (!getHeaders().isEmpty()) {
-            if (headers.containsKey(Rest.REST_HEADER_RPC_NAME)
+            if (headers.containsKey(Rest.REST_HEADER_RPC)
                 || headers.containsKey(Rest.REST_HEADER_CURRUSERID_NAME)) { //外部request不能包含RPC的header信息
                 req.setHeaders(new HashMap<>(headers));
-                req.removeHeader(Rest.REST_HEADER_RPC_NAME);
+                req.removeHeader(Rest.REST_HEADER_RPC);
                 req.removeHeader(Rest.REST_HEADER_CURRUSERID_NAME);
             } else {
                 req.setHeaders(headers);
@@ -655,7 +659,7 @@ public class HttpRequest extends Request<HttpContext> {
                     value = bytes.toString(charset);
                     headers.put("User-Agent", value);
                     break;
-                case Rest.REST_HEADER_RPC_NAME:
+                case Rest.REST_HEADER_RPC:
                     value = bytes.toString(charset);
                     this.rpc = "true".equalsIgnoreCase(value);
                     headers.put(name, value);
@@ -827,7 +831,7 @@ public class HttpRequest extends Request<HttpContext> {
             return;
         }
         String name = toDecodeString(array, offset, keypos - offset, charset);
-        if (name.charAt(0) == '<') return; //内容可能是xml格式; 如: <?xml version="1.0"
+        if (!name.isEmpty() && name.charAt(0) == '<') return; //内容可能是xml格式; 如: <?xml version="1.0"
         ++keypos;
         String value = toDecodeString(array, keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
         this.params.put(name, value);
@@ -927,6 +931,21 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取当前用户ID的long值<br>
+     *
+     * @return 用户ID
+     *
+     * @since 2.7.0
+     */
+    @SuppressWarnings("unchecked")
+    public long currentLongUserid() {
+        if (currentUserid == CURRUSERID_NIL || currentUserid == null) return 0L;
+        if (this.currentUserid instanceof Number) return ((Number) this.currentUserid).longValue();
+        String uid = this.currentUserid.toString();
+        return uid.isEmpty() ? 0L : Long.parseLong(uid);
+    }
+
+    /**
      * 获取当前用户ID<br>
      *
      * @param <T>  数据类型只能是int、long、String、JavaBean
@@ -939,16 +958,16 @@ public class HttpRequest extends Request<HttpContext> {
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T currentUserid(Class<T> type) {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
-            if (type == int.class) return (T) (Integer) (int) 0;
-            if (type == long.class) return (T) (Long) (long) 0;
+            if (type == int.class || type == Integer.class) return (T) (Integer) (int) 0;
+            if (type == long.class || type == Long.class) return (T) (Long) (long) 0;
             return null;
         }
-        if (type == int.class) {
+        if (type == int.class || type == Integer.class) {
             if (this.currentUserid instanceof Number) return (T) (Integer) ((Number) this.currentUserid).intValue();
             String uid = this.currentUserid.toString();
             return (T) (Integer) (uid.isEmpty() ? 0 : Integer.parseInt(uid));
         }
-        if (type == long.class) {
+        if (type == long.class || type == Long.class) {
             if (this.currentUserid instanceof Number) return (T) (Long) ((Number) this.currentUserid).longValue();
             String uid = this.currentUserid.toString();
             return (T) (Long) (uid.isEmpty() ? 0L : Long.parseLong(uid));
@@ -1182,9 +1201,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     private static CharSequence toMapString(Map<String, String> map, int indent) {
-        char[] chars = new char[indent];
-        Arrays.fill(chars, ' ');
-        final String space = new String(chars);
+        final String space = " ".repeat(indent);
         StringBuilder sb = new StringBuilder();
         sb.append("{\r\n");
         for (Map.Entry en : map.entrySet()) {

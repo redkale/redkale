@@ -5,6 +5,7 @@
  */
 package org.redkale.test.convert;
 
+import java.util.*;
 import org.redkale.convert.*;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
@@ -32,19 +33,24 @@ public class InnerCoderEntity {
     /**
      * 该方法提供给Convert组件自动加载。
      * 1) 方法名可以随意。
- 2) 方法必须是static
- 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。
- —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和BSON。
- —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。
- —3.3) 参数类型为org.redkale.convert.bson.BsonFactory 表示仅适合BSON。
- 4）方法的返回类型必须是org.redkale.convert.Decodeable/org.redkale.convert.Encodeable/org.redkale.convert.SimpledCoder
- 若返回类型不是org.redkale.convert.SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。
+     * 2) 方法必须是static
+     * 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。
+     * —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和BSON。
+     * —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。
+     * —3.3) 参数类型为org.redkale.convert.bson.BsonFactory 表示仅适合BSON。
+     * 4）方法的返回类型必须是org.redkale.convert.Decodeable/org.redkale.convert.Encodeable/org.redkale.convert.SimpledCoder
+     * 若返回类型不是org.redkale.convert.SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。
      *
      * @param factory
+     *
      * @return
      */
-    private static SimpledCoder<Reader, Writer, InnerCoderEntity> createConvertCoder(final org.redkale.convert.ConvertFactory factory) {
+    static SimpledCoder<Reader, Writer, InnerCoderEntity> createConvertCoder(final org.redkale.convert.ConvertFactory factory) {
         return new SimpledCoder<Reader, Writer, InnerCoderEntity>() {
+
+            private Map<String, DeMember> deMemberFieldMap;
+
+            private Map<Integer, DeMember> deMemberTagMap;
 
             //必须与EnMember[] 顺序一致
             private final DeMember[] deMembers = new DeMember[]{
@@ -55,6 +61,15 @@ public class InnerCoderEntity {
             private final EnMember[] enMembers = new EnMember[]{
                 EnMember.create(factory, InnerCoderEntity.class, "id"),
                 EnMember.create(factory, InnerCoderEntity.class, "val")};
+
+            {
+                this.deMemberFieldMap = new HashMap<>(this.deMembers.length);
+                this.deMemberTagMap = new HashMap<>(this.deMembers.length);
+                for (DeMember member : this.deMembers) {
+                    this.deMemberFieldMap.put(member.getAttribute().field(), member);
+                    this.deMemberTagMap.put(member.getTag(), member);
+                }
+            }
 
             @Override
             public void convertTo(Writer out, InnerCoderEntity value) {
@@ -75,7 +90,7 @@ public class InnerCoderEntity {
                 int index = 0;
                 final Object[] params = new Object[deMembers.length];
                 while (in.hasNext()) {
-                    DeMember member = in.readFieldName(deMembers); //读取字段名
+                    DeMember member = in.readFieldName(deMembers, deMemberFieldMap, deMemberTagMap); //读取字段名
                     in.readBlank(); //读取字段名与字段值之间的间隔符，JSON则是跳过冒号:
                     if (member == null) {
                         in.skipValue(); //跳过不存在的字段的值, 一般不会发生

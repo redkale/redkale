@@ -20,4 +20,4 @@ done
 export CLASSPATH=$CLASSPATH:$lib
 
 echo "$APP_HOME"
-java -DCMD=$1  -DAPP_HOME="$APP_HOME"  org.redkale.boot.Application
+java -DAPP_HOME="$APP_HOME"  org.redkale.boot.Application $@ &

@@ -10,7 +10,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 
 /**
- * SearchFilterBean用于搜索条件， 所有的FilterBean都必须可以转换成FilterNode  <br>
+ * SearchQuery用于构建搜索过滤条件<br>
  *
  * 不被标记为&#64;javax.persistence.Transient 的字段均视为过滤条件   <br>
  *
@@ -19,19 +19,23 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @author zhangjx
  *
- * @since 2.4.0
+ * @since 2.7.0
  */
-@ConvertImpl(SearchBean.SearchSimpleBean.class)
-public interface SearchBean extends java.io.Serializable {
+@ConvertImpl(SearchQuery.SearchSimpleQuery.class)
+public interface SearchQuery extends java.io.Serializable {
 
     public static final String SEARCH_FILTER_NAME = "#search";
 
-    public static SearchSimpleBean create() {
-        return new SearchSimpleBean();
+    public static SearchSimpleQuery create() {
+        return new SearchSimpleQuery();
     }
 
-    public static SearchSimpleBean create(String keyword, String... fields) {
-        return new SearchSimpleBean(keyword, fields);
+    public static SearchSimpleQuery create(String keyword, String... fields) {
+        return new SearchSimpleQuery(keyword, fields);
+    }
+
+    public static SearchSimpleHighlight createHighlight() {
+        return new SearchSimpleHighlight();
     }
 
     /**
@@ -74,15 +78,19 @@ public interface SearchBean extends java.io.Serializable {
     /**
      * 高亮显示
      *
-     * @return SearchHighlightBean
+     * @return SearchHighlight
      */
-    public SearchHighlightBean highlight();
+    public SearchHighlight highlight();
 
-    @ConvertImpl(SearchBean.SearchSimpleHighlightBean.class)
-    public static interface SearchHighlightBean {
+    @ConvertImpl(SearchQuery.SearchSimpleHighlight.class)
+    public static interface SearchHighlight {
 
-        public static SearchSimpleHighlightBean create() {
-            return new SearchSimpleHighlightBean();
+        public static SearchSimpleHighlight create() {
+            return new SearchSimpleHighlight();
+        }
+
+        public static SearchSimpleHighlight createTag(String preTag, String postTag) {
+            return new SearchSimpleHighlight().tag(preTag, postTag);
         }
 
         public String preTag();
@@ -102,7 +110,7 @@ public interface SearchBean extends java.io.Serializable {
         }
     }
 
-    public static class SearchSimpleBean implements SearchBean {
+    public static class SearchSimpleQuery implements SearchQuery {
 
         @ConvertColumn(index = 1)
         @FilterColumn(ignore = true)
@@ -122,53 +130,53 @@ public interface SearchBean extends java.io.Serializable {
 
         @ConvertColumn(index = 5)
         @FilterColumn(ignore = true)
-        private SearchHighlightBean highlight;
+        private SearchHighlight highlight;
 
         @ConvertColumn(index = 6)
         @FilterColumn(ignore = true)
         private Map<String, Object> extras;
 
-        public SearchSimpleBean() {
+        public SearchSimpleQuery() {
         }
 
-        public SearchSimpleBean(String keyword, String... fields) {
+        public SearchSimpleQuery(String keyword, String... fields) {
             this.keyword = keyword;
             this.fields = fields;
             if (fields == null || fields.length < 1) throw new IllegalArgumentException("fields is empty");
         }
 
-        public SearchSimpleBean keyword(String keyword) {
+        public SearchSimpleQuery keyword(String keyword) {
             this.keyword = keyword;
             return this;
         }
 
-        public SearchSimpleBean analyzer(String analyzer) {
+        public SearchSimpleQuery analyzer(String analyzer) {
             this.analyzer = analyzer;
             return this;
         }
 
-        public SearchSimpleBean fields(String... fields) {
+        public SearchSimpleQuery fields(String... fields) {
             if (fields == null || fields.length < 1) throw new IllegalArgumentException("fields is empty");
             this.fields = fields;
             return this;
         }
 
-        public SearchSimpleBean classes(Class[] classes) {
+        public SearchSimpleQuery classes(Class[] classes) {
             this.classes = classes;
             return this;
         }
 
-        public SearchSimpleBean highlight(SearchHighlightBean highlight) {
+        public SearchSimpleQuery highlight(SearchHighlight highlight) {
             this.highlight = highlight;
             return this;
         }
 
-        public SearchSimpleBean extras(Map<String, Object> map) {
+        public SearchSimpleQuery extras(Map<String, Object> map) {
             this.extras = map;
             return this;
         }
 
-        public SearchSimpleBean extras(String key, Object value) {
+        public SearchSimpleQuery extras(String key, Object value) {
             if (this.extras == null) this.extras = new LinkedHashMap<>();
             this.extras.put(key, value);
             return this;
@@ -200,7 +208,7 @@ public interface SearchBean extends java.io.Serializable {
         }
 
         @Override
-        public SearchHighlightBean highlight() {
+        public SearchHighlight highlight() {
             return highlight;
         }
 
@@ -236,11 +244,11 @@ public interface SearchBean extends java.io.Serializable {
             this.analyzer = analyzer;
         }
 
-        public SearchHighlightBean getHighlight() {
+        public SearchHighlight getHighlight() {
             return highlight;
         }
 
-        public void setHighlight(SearchHighlightBean highlight) {
+        public void setHighlight(SearchHighlight highlight) {
             this.highlight = highlight;
         }
 
@@ -259,7 +267,7 @@ public interface SearchBean extends java.io.Serializable {
 
     }
 
-    public static class SearchSimpleHighlightBean implements SearchHighlightBean {
+    public static class SearchSimpleHighlight implements SearchHighlight {
 
         @ConvertColumn(index = 1)
         private String preTag;
@@ -280,33 +288,33 @@ public interface SearchBean extends java.io.Serializable {
         @FilterColumn(ignore = true)
         private Map<String, Object> extras;
 
-        public SearchSimpleHighlightBean tag(String preTag, String postTag) {
+        public SearchSimpleHighlight tag(String preTag, String postTag) {
             this.preTag = preTag;
             this.postTag = postTag;
             return this;
         }
 
-        public SearchSimpleHighlightBean boundaryLocale(String boundaryLocale) {
+        public SearchSimpleHighlight boundaryLocale(String boundaryLocale) {
             this.boundaryLocale = boundaryLocale;
             return this;
         }
 
-        public SearchSimpleHighlightBean fragmentSize(int fragmentSize) {
+        public SearchSimpleHighlight fragmentSize(int fragmentSize) {
             this.fragmentSize = fragmentSize;
             return this;
         }
 
-        public SearchSimpleHighlightBean fragmentCount(int fragmentCount) {
+        public SearchSimpleHighlight fragmentCount(int fragmentCount) {
             this.fragmentCount = fragmentCount;
             return this;
         }
 
-        public SearchSimpleHighlightBean extras(Map<String, Object> map) {
+        public SearchSimpleHighlight extras(Map<String, Object> map) {
             this.extras = map;
             return this;
         }
 
-        public SearchSimpleHighlightBean extras(String key, Object value) {
+        public SearchSimpleHighlight extras(String key, Object value) {
             if (this.extras == null) this.extras = new LinkedHashMap<>();
             this.extras.put(key, value);
             return this;

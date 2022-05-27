@@ -66,7 +66,7 @@ public class TestSourceCache {
 
         final Flipper flipper = new Flipper(2);
         flipper.setSort("userid DESC, createtime DESC");
-        final FilterNode node = FilterNode.create("userid", FilterExpress.GREATERTHAN, 1000).and("username", FilterExpress.LIKE, "用户");
+        final FilterNode node = FilterNode.filter("userid", FilterExpress.GREATERTHAN, 1000).and("username", FilterExpress.LIKE, "用户");
         System.out.println("node = " + node);
         Sheet<TestEntity> sheet = info.getCache().querySheet(null, flipper, node);
         System.out.println(sheet);

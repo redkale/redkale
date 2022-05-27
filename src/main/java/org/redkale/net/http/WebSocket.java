@@ -645,6 +645,18 @@ public abstract class WebSocket<G extends Serializable, T> {
         return _sendConvert;
     }
 
+    protected void setTextConvert(Convert convert) {
+        this._textConvert = convert;
+    }
+
+    protected void setBinaryConvert(Convert convert) {
+        this._binaryConvert = convert;
+    }
+
+    protected void setSendConvert(Convert convert) {
+        this._sendConvert = convert;
+    }
+
     //-------------------------------------------------------------------
     /**
      * 获取指定userid的WebSocket数组, 没有返回null <br>

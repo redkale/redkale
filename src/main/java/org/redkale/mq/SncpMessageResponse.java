@@ -51,12 +51,12 @@ public class SncpMessageResponse extends SncpResponse {
         if (out == null) {
             final ByteArray result = new ByteArray(SncpRequest.HEADER_SIZE);
             fillHeader(result, 0, retcode);
-            producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getResptopic(), null, (byte[]) null));
+            producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getRespTopic(), null, (byte[]) null));
             return;
         }
         final int respBodyLength = out.count(); //body总长度
         final ByteArray result = out.toByteArray();
         fillHeader(result, respBodyLength - HEADER_SIZE, retcode);
-        producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getResptopic(), null, result.getBytes()));
+        producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getRespTopic(), null, result.getBytes()));
     }
 }

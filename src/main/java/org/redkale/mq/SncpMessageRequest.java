@@ -29,13 +29,13 @@ public class SncpMessageRequest extends SncpRequest {
         super(context);
         this.message = message;
         this.hashid = this.message.hash();
-        this.createtime = System.currentTimeMillis();
+        this.createTime = System.currentTimeMillis();
         readHeader(ByteBuffer.wrap(message.getContent()), null);
     }
 
     @Override //被SncpAsyncHandler.sncp_setParams调用
     protected void sncp_setParams(SncpDynServlet.SncpServletAction action, Logger logger, Object... params) {
-        if (message.localattach != null) return;
+        if (message.localAttach != null) return;
         if (logger.isLoggable(Level.FINER)) {
             message.attach(Utility.append(new Object[]{action.actionName()}, params));
         } else {

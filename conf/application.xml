@@ -2,16 +2,17 @@
 
 <application nodeid="10000" port="2020">     
         
-    <resources>       
-
+    <resources>  
+        <properties load="config.properties">
+            <property name="system.property.redkale.convert.protobuf.enumtostring" value="true"/>
+        </properties>         
     </resources> 
         
-    <server protocol="HTTP" port="5050">      
-              
+    <server protocol="HTTP" port="5050">                    
         <request>
             <remoteaddr value="request.headers.X-RemoteAddress"/>
         </request>
-        
+                
         <response>
             <defcookie domain="" path="/"/>
             <addheader name="Access-Control-Allow-Origin" value="request.headers.Origin" /> 
@@ -24,8 +25,7 @@
 
         <rest path="/pipes" /> 
         
-        <servlets path="/pipes" autoload="true" />
-        
+        <servlets path="/pipes" autoload="true" />        
     </server>
     
 </application>

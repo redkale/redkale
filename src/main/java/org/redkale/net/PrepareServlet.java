@@ -215,6 +215,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
 
     public final void prepare(final R request, final P response) {
         try {
+            Traces.createTraceid();
             request.prepare();
             response.filter = this.headFilter;
             response.servlet = this;

@@ -16,6 +16,7 @@ import org.redkale.boot.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
+import org.redkale.util.Traces;
 
 /**
  * 没有配置MQ且也没有ClusterAgent的情况下实现的默认HttpMessageClient实例
@@ -100,8 +101,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
             future.completeExceptionally(new RuntimeException("404 Not Found " + topic));
             return future;
         }
-        HttpRequest req = new HttpMessageLocalRequest(context(), request);
+        HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, future);
+        Traces.createTraceid();
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -117,9 +119,10 @@ public class HttpMessageLocalClient extends HttpMessageClient {
             if (fine) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
             return CompletableFuture.completedFuture(new HttpResult().status(404));
         }
-        HttpRequest req = new HttpMessageLocalRequest(context(), request);
+        HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         CompletableFuture future = new CompletableFuture();
         HttpResponse resp = new HttpMessageLocalResponse(req, future);
+        Traces.createTraceid();
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -144,8 +147,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
             if (fine) logger.log(Level.FINE, "produceMessage: request=" + request + ", not found servlet");
             return;
         }
-        HttpRequest req = new HttpMessageLocalRequest(context(), request);
+        HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
+        Traces.createTraceid();
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -156,8 +160,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     @Override
     public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         HttpPrepareServlet ps = prepareServlet();
-        HttpRequest req = new HttpMessageLocalRequest(context(), request);
+        HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
+        Traces.createTraceid();
         ps.filterServletsByMmcTopic(topic).forEach(s -> {
             try {
                 s.execute(req, resp);
@@ -169,8 +174,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
     public static class HttpMessageLocalRequest extends HttpRequest {
 
-        public HttpMessageLocalRequest(HttpContext context, HttpSimpleRequest req) {
+        public HttpMessageLocalRequest(HttpContext context, HttpSimpleRequest req, Serializable userid) {
             super(context, req);
+            if (userid != null) this.currentUserid = userid;
         }
     }
 
@@ -218,7 +224,17 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         @Override
         public void finish(final Convert convert, final Type type, Object obj) {
             if (future == null) return;
-            future.complete(obj);
+            if (obj instanceof CompletableFuture) {
+                ((CompletableFuture) obj).whenComplete((r, t) -> {
+                    if (t == null) {
+                        future.complete(r);
+                    } else {
+                        future.completeExceptionally((Throwable) t);
+                    }
+                });
+            } else {
+                future.complete(obj);
+            }
         }
 
         @Override

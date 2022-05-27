@@ -63,29 +63,29 @@
         <!--
            【节点全局唯一】
             第三方服务发现管理接口
-            value：    类名，必须是org.redkale.cluster.ClusterAgent的子类
-            waits:     注销服务后是否需要等待检查周期时间后再进行Service销毁，默认值为：false
-                       当一个Service进行服务注销后，不能立刻销毁Service，因为健康检测是有间隔时间差的，
-                       需要等待一个健康检测周期时间，让其他进程都更新完服务列表。
-                       如果使用MQ，可以设置为false，如果对服务健壮性要求高，建议设置为true
-            protocols: 服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
-            ports:     服务发现可以处理的端口， 多个端口用分号;隔开
+            type：          类名，必须是org.redkale.cluster.ClusterAgent的子类
+            waits:          注销服务后是否需要等待检查周期时间后再进行Service销毁，默认值为：false
+                            当一个Service进行服务注销后，不能立刻销毁Service，因为健康检测是有间隔时间差的，
+                            需要等待一个健康检测周期时间，让其他进程都更新完服务列表。
+                            如果使用MQ，可以设置为false，如果对服务健壮性要求高，建议设置为true
+            protocols:      服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
+            ports:          服务发现可以处理的端口， 多个端口用分号;隔开
+            ttls:           心跳频率，多少秒一次
+            xxxx:           自定义的字段属性，例如：CacheClusterAgent有source字段; ConsulClusterAgent有apiurl字段;
         -->
-        <!--
-        <cluster value="org.redkalex.cluster.consul.ConsulClusterAgent" waits="false" protocols="SNCP" ports="7070;7071">
-            <property name="xxxxxx" value="XXXXXXXX"/>
-        </cluster>
-        -->
+        <cluster type="org.redkalex.cluster.consul.ConsulClusterAgent" waits="false" protocols="SNCP" ports="7070;7071" xxx="xxx" />
+
         <!--
             MQ管理接口配置
             不同MQ节点所配置的MQ集群不能重复。
             MQ跟着协议走，所以mq的属性值需要被赋值在rest节点上, 由于SncpServlet是自动生成的，故SNCP协议下，mq属性值被赋值在service/services节点上
             name:   服务的名称，用于监控识别，多个mq节点时只能有一个name为空的节点，mq.name不能重复,命名规则: 字母、数字、下划线
-            value： 实现类名，必须是org.redkale.mq.MessageAgent的子类
+            type： 实现类名，必须是org.redkale.mq.MessageAgent的子类
+            coder: MessageRecord的解析器类，必须是org.redkale.mq.MessageCoder<MessageRecord>的实现类, 
+                   可对数据包进行加密解密，默认值：org.redkale.mq.MessageRecordCoder
             MQ节点下的子节点配置没有固定格式, 根据MessageAgent实现方的定义来配置
         -->
-        <!--
-        <mq name="" value="org.redkalex.mq.kafka.KafkaMessageAgent">
+        <mq name="" type="org.redkalex.mq.kafka.KafkaMessageAgent">
             <servers value="127.0.0.1:9101"/>
             <consumer>
                 <property name="xxxxxx" value="XXXXXXXX"/>
@@ -94,7 +94,7 @@
                 <property name="xxxxxx" value="XXXXXXXX"/>
             </producer>
         </mq>
-        -->
+        
         <!--
             一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
             一个group节点对应一个 Transport 对象。
@@ -111,18 +111,7 @@
             -->
             <node addr="127.0.0.1" port="7070"/>
         </group>
-        
-        <!--
-            全局的数据源设置, 可以是CacheSource、DataSource， JDBC的DataSource通常通过persistence.xml配置，此处多用于CacheSource的配置
-            name:    资源名，用于依赖注入。
-            value：  类名，必须是CacheSource或DataSource的子类，且必须实现Service接口。如果是DataSource.class，系统自动映射成DataJdbcSource.class
-            groups:  指定groups。
-            xxx:     其他属性与子节点通过Service.init方法传入的AnyValue获取。
-        -->
-        <source name="redis" value="org.redkalex.cache.RedisCacheSource" xxx="16">
-            <node addr="127.0.0.1" port="7070"/>
-        </source>
-        
+
         <!--
            Application启动的监听事件,可配置多个节点
            value: 类名，必须是ApplicationListener的子类
@@ -134,6 +123,8 @@
             全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入<property>的信息, 被注解的字段类型只能是String、primitive class
             如果name是system.property.开头的值将会在进程启动时进行System.setProperty("yyyy", "YYYYYY")操作。
             如果name是mimetype.property.开头的值将会在进程启动时进行MimeType.add("yyyy", "YYYYYY")操作。
+            先加载子节点property，再加载load文件， 最后加载agent的实现子类。
+            agent: 实现类名，必须是org.redkale.boot.PropertiesAgent的子类
             load:  加载文件，多个用;隔开。
             默认置入的system.property.的有：
                System.setProperty("redkale.net.transport.poolmaxconns", "100");
@@ -146,7 +137,7 @@
             <properties>节点下也可包含非<property>节点.
             非<property>其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]
         -->
-        <properties load="config.properties">
+        <properties load="config.properties" agent="">
             <property name="system.property.yyyy" value="YYYYYY"/>
             <property name="xxxxxx" value="XXXXXXXX"/>
             <property name="xxxxxx" value="XXXXXXXX"/>
@@ -286,6 +277,7 @@
         -->
         <request>
             <remoteaddr value="request.headers.X-RemoteAddress"/>
+            <rpc authenticator="org.redkale.net.http.HttpRpcAuthenticator的实现类"/>
         </request>
         
         <!--

@@ -9,6 +9,7 @@ import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
 import org.redkale.convert.Reader;
 import java.math.BigInteger;
+import org.redkale.convert.json.*;
 
 /**
  * BigInteger 的SimpledCoder实现
@@ -47,23 +48,58 @@ public final class BigIntegerSimpledCoder<R extends Reader, W extends Writer> ex
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public static class BigIntegerJsonSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, BigInteger> {
+    public static class BigIntegerJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, BigInteger> {
 
         public static final BigIntegerJsonSimpledCoder instance = new BigIntegerJsonSimpledCoder();
 
         @Override
-        public void convertTo(final Writer out, final BigInteger value) {
+        public void convertTo(final W out, final BigInteger value) {
             if (value == null) {
                 out.writeNull();
             } else {
-                out.writeString(value.toString());
+                out.writeSmallString(value.toString());
             }
         }
 
         @Override
-        public BigInteger convertFrom(Reader in) {
+        public BigInteger convertFrom(R in) {
             final String str = in.readString();
             if (str == null) return null;
+            return new BigInteger(str);
+        }
+    }
+
+    /**
+     * BigInteger 的十六进制JsonSimpledCoder实现
+     *
+     * @param <R> Reader输入的子类型
+     * @param <W> Writer输出的子类型
+     */
+    public static class BigIntegerHexJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, BigInteger> {
+
+        public static final BigIntegerHexJsonSimpledCoder instance = new BigIntegerHexJsonSimpledCoder();
+
+        @Override
+        public void convertTo(final W out, final BigInteger value) {
+            if (value == null) {
+                out.writeNull();
+            } else {
+                String s = value.toString(16);
+                out.writeSmallString(s.charAt(0) == '-' ? ("-0x" + s.substring(1)) : ("0x" + s));
+            }
+        }
+
+        @Override
+        public BigInteger convertFrom(R in) {
+            final String str = in.readString();
+            if (str == null) return null;
+            if (str.length() > 2) {
+                if (str.charAt(0) == '0' && (str.charAt(1) == 'x' || str.charAt(1) == 'X')) {
+                    return new BigInteger(str.substring(2), 16);
+                } else if (str.charAt(0) == '-' && str.length() > 3 && str.charAt(1) == '0' && (str.charAt(2) == 'x' || str.charAt(2) == 'X')) {
+                    return new BigInteger("-" + str.substring(3), 16);
+                }
+            }
             return new BigInteger(str);
         }
     }

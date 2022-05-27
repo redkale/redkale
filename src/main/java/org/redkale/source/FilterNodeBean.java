@@ -155,14 +155,14 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         final Serializable val = beanAttr.get(bean);
         if (column != null && val != null) {
             boolean skip = false;
-            if (string && ((CharSequence) val).length() == 0) { //空字符串不需要进行过滤
+            if (string && (least > 0 && ((CharSequence) val).length() == 0)) { //空字符串不需要进行过滤
                 skip = true;
             } else if (number && ((Number) val).longValue() < least) { //数值小于过滤下值限则不需要过滤
                 skip = true;
             }
             if (!skip) {
                 if (this.joinClass == null) {
-                    node = FilterNode.create(column, express, itemand, val);
+                    node = FilterNode.filter(column, express, itemand, val);
                 } else {
                     node = FilterJoinNode.create(joinClass, joinColumns, column, express, itemand, val);
                 }

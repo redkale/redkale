@@ -138,6 +138,14 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         ioThread.execute(command);
     }
 
+    public final void execute(Runnable... commands) {
+        ioThread.execute(commands);
+    }
+
+    public final void execute(Collection<Runnable> commands) {
+        ioThread.execute(commands);
+    }
+
     public final boolean inCurrThread() {
         return ioThread.inCurrThread();
     }

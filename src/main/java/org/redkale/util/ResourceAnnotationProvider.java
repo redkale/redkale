@@ -17,9 +17,9 @@ import java.lang.reflect.Field;
  * @author zhangjx
  * @param <T> Annotation
  */
-public interface ResourceInjectLoader<T extends Annotation> {
+public interface ResourceAnnotationProvider<T extends Annotation> {
 
-    public void load(ResourceFactory factory, Object src, T annotation, Field field, Object attachment);
+    public void load(ResourceFactory factory, String srcResourceName, Object srcObj, T annotation, Field field, Object attachment);
 
     public Class<T> annotationType();
 }

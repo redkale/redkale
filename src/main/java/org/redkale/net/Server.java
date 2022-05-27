@@ -269,8 +269,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     public void start() throws IOException {
         this.prepare.init(this.context, config); //不能在init方法内执行，因Server.init执行后会调用loadService,loadServlet, 再执行Server.start
+        this.postPrepareInit();
         this.serverChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
-        if (application != null) { //main函数调试时可能为nulli
+        if (application != null) { //main函数调试时可能为null
             application.getResourceFactory().inject(this.serverChannel);
         }
         this.serverChannel.open(config);
@@ -282,6 +283,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             + ", cpu: " + Utility.cpus() + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
             + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxbody)
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
+    }
+
+    protected void postPrepareInit() {
     }
 
     protected void postStart() {

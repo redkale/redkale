@@ -7,7 +7,7 @@ package org.redkale.net.client;
 
 import java.util.Queue;
 import java.util.concurrent.*;
-import org.redkale.net.WorkThread;
+import org.redkale.net.*;
 
 /**
  *
@@ -32,7 +32,9 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
 
     ScheduledFuture timeout;
 
-    Queue<ClientFuture> responseQueue;
+    int mergeCount; //合并的个数，不算自身
+
+    ClientConnection conn;
 
     public ClientFuture() {
         super();
@@ -41,6 +43,10 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
     public ClientFuture(ClientRequest request) {
         super();
         this.request = request;
+    }
+
+    public int getMergeCount() {
+        return mergeCount;
     }
 
     @Override //JDK9+
@@ -54,6 +60,17 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
 
     @Override
     public void run() {
+        if (conn == null) return;
+        AsyncConnection channel = conn.getChannel();
+        if (channel.inCurrThread()) {
+            this.runTimeout();
+        } else {
+            channel.execute(this::runTimeout);
+        }
+    }
+
+    private void runTimeout() {
+        Queue<ClientFuture> responseQueue = conn.responseQueue;
         if (responseQueue != null) responseQueue.remove(this);
         TimeoutException ex = new TimeoutException();
         WorkThread workThread = null;

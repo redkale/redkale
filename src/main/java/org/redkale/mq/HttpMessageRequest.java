@@ -30,7 +30,7 @@ public class HttpMessageRequest extends HttpRequest {
         this.message = message;
         this.hashid = this.message.hash();
         this.currentUserid = message.getUserid();
-        this.createtime = System.currentTimeMillis();
+        this.createTime = System.currentTimeMillis();
         return this;
     }
 

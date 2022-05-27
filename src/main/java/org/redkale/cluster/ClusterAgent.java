@@ -6,13 +6,15 @@
 package org.redkale.cluster;
 
 import java.lang.ref.WeakReference;
-import java.net.InetSocketAddress;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import org.redkale.boot.*;
 import static org.redkale.boot.Application.*;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.MessageMultiConsumer;
 import org.redkale.net.*;
@@ -60,7 +62,7 @@ public abstract class ClusterAgent {
 
     protected final ConcurrentHashMap<String, ClusterEntry> remoteEntrys = new ConcurrentHashMap<>();
 
-    public void init(AnyValue config) {
+    public void init(ResourceFactory factory, AnyValue config) {
         this.config = config;
         this.name = config.getValue("name", "");
         this.waits = config.getBoolValue("waits", false);
@@ -106,7 +108,7 @@ public abstract class ClusterAgent {
         if (localServices.isEmpty()) return;
         //注册本地模式
         for (Service service : localServices) {
-            if (!canRegister(protocol, service)) continue;
+            if (!canRegister(ns, protocol, service)) continue;
             ClusterEntry htentry = register(ns, protocol, service);
             localEntrys.put(htentry.serviceid, htentry);
             if (protocol.toLowerCase().startsWith("http")) {
@@ -132,19 +134,21 @@ public abstract class ClusterAgent {
     public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
         //注销本地模式  远程模式不注册
         for (Service service : localServices) {
-            if (!canRegister(protocol, service)) continue;
+            if (!canRegister(ns, protocol, service)) continue;
             deregister(ns, protocol, service);
         }
         afterDeregister(ns, protocol);
     }
 
-    protected boolean canRegister(String protocol, Service service) {
+    protected boolean canRegister(NodeServer ns, String protocol, Service service) {
         if ("SNCP".equalsIgnoreCase(protocol) && service.getClass().getAnnotation(Local.class) != null) return false;
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return false;
         if (service instanceof WebSocketNode) {
             if (((WebSocketNode) service).getLocalWebSocketEngine() == null) return false;
         }
+        ClusterEntry entry = new ClusterEntry(ns, protocol, service);
+        if (entry.serviceName.trim().endsWith(serviceSeparator())) return false;
         return true;
     }
 
@@ -167,7 +171,7 @@ public abstract class ClusterAgent {
         return 10;
     }
 
-    //获取MQTP的HTTP远程服务的可用ip列表, key = servicename的后半段
+    //获取MQTP的HTTP远程服务的可用ip列表, key = serviceName的后半段
     public abstract CompletableFuture<Map<String, Collection<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname);
 
     //获取HTTP远程服务的可用ip列表
@@ -184,17 +188,25 @@ public abstract class ClusterAgent {
 
     //格式: protocol:classtype-resourcename
     protected void updateSncpTransport(ClusterEntry entry) {
-        Service service = entry.serviceref.get();
+        Service service = entry.serviceRef.get();
         if (service == null) return;
         Collection<InetSocketAddress> addrs = ClusterAgent.this.queryAddress(entry).join();
-        Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netprotocol, entry.address, null, addrs);
+        Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netProtocol, entry.address, null, addrs);
+    }
+
+    protected String urlEncode(String value) {
+        return value == null ? null : URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     protected String generateApplicationServiceName() {
-        return "application" + (appName == null || appName.isEmpty() ? "" : ("." + appName)) + ".node" + this.nodeid;
+        return "application" + (appName == null || appName.isEmpty() ? "" : ("." + appName)) + ".node." + this.nodeid;
     }
 
-    protected String generateApplicationServiceId() { //与servicename相同
+    protected String generateApplicationServiceType() {
+        return "application.nodes";
+    }
+
+    protected String generateApplicationServiceId() { //与serviceName相同
         return generateApplicationServiceName();
     }
 
@@ -206,9 +218,21 @@ public abstract class ClusterAgent {
         return "check-" + generateApplicationServiceId();
     }
 
+    protected String generateApplicationHost() {
+        return this.appAddress.getHostString();
+    }
+
+    protected int generateApplicationPort() {
+        return this.appAddress.getPort();
+    }
+
+    protected String serviceSeparator() {
+        return "-";
+    }
+
     //也会提供给HttpMessageClusterAgent适用
     public String generateHttpServiceName(String protocol, String module, String resname) {
-        return protocol.toLowerCase() + ":" + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + serviceSeparator() + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: protocol:classtype-resourcename
@@ -216,21 +240,21 @@ public abstract class ClusterAgent {
         if (protocol.toLowerCase().startsWith("http")) {  //HTTP使用RestService.name方式是为了与MessageClient中的module保持一致, 因为HTTP依靠的url中的module，无法知道Service类名
             String resname = Sncp.getResourceName(service);
             String module = Rest.getRestModule(service).toLowerCase();
-            return protocol.toLowerCase() + ":" + module + (resname.isEmpty() ? "" : ("-" + resname));
+            return protocol.toLowerCase() + serviceSeparator() + module + (resname.isEmpty() ? "" : ("-" + resname));
         }
         if ("mqtp".equalsIgnoreCase(protocol)) {
             MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
             String selfmodule = Rest.getRestModule(service).toLowerCase();
-            return protocol.toLowerCase() + ":" + mmc.module() + ":" + selfmodule;
+            return protocol.toLowerCase() + serviceSeparator() + mmc.module() + serviceSeparator() + selfmodule;
         }
-        if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + ":" + service.getClass().getName();
+        if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + serviceSeparator() + service.getClass().getName();
         String resname = Sncp.getResourceName(service);
-        return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + serviceSeparator() + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: protocol:classtype-resourcename:nodeid
     protected String generateServiceId(NodeServer ns, String protocol, Service service) {
-        return generateServiceName(ns, protocol, service) + ":" + this.nodeid;
+        return generateServiceName(ns, protocol, service) + serviceSeparator() + this.nodeid;
     }
 
     protected String generateCheckName(NodeServer ns, String protocol, Service service) {
@@ -247,11 +271,6 @@ public abstract class ClusterAgent {
 
     protected ConcurrentHashMap<String, ClusterEntry> getRemoteEntrys() {
         return remoteEntrys;
-    }
-
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(this);
     }
 
     public TransportFactory getTransportFactory() {
@@ -296,19 +315,26 @@ public abstract class ClusterAgent {
 
     public class ClusterEntry {
 
+        //serviceName+nodeid为主  服务的单个实例
         public String serviceid;
 
-        public String servicename;
+        //以协议+Rest资源名为主  服务类名
+        public String serviceName;
+
+        public String serviceType;
 
         public String checkid;
 
-        public String checkname;
+        public String checkName;
 
+        //http or sncp or mqtp
         public String protocol;
 
-        public String netprotocol;
+        //TCP or UDP
+        public String netProtocol;
 
-        public WeakReference<Service> serviceref;
+        @ConvertDisabled
+        public WeakReference<Service> serviceRef;
 
         public InetSocketAddress address;
 
@@ -318,9 +344,10 @@ public abstract class ClusterAgent {
 
         public ClusterEntry(NodeServer ns, String protocol, Service service) {
             this.serviceid = generateServiceId(ns, protocol, service);
-            this.servicename = generateServiceName(ns, protocol, service);
+            this.serviceName = generateServiceName(ns, protocol, service);
             this.checkid = generateCheckId(ns, protocol, service);
-            this.checkname = generateCheckName(ns, protocol, service);
+            this.checkName = generateCheckName(ns, protocol, service);
+            this.serviceType = Sncp.getServiceType(service).getName();
             this.protocol = protocol;
             InetSocketAddress addr = ns.getSocketAddress();
             String host = addr.getHostString();
@@ -329,9 +356,9 @@ public abstract class ClusterAgent {
                 addr = new InetSocketAddress(host, addr.getPort());
             }
             this.address = addr;
-            this.serviceref = new WeakReference(service);
+            this.serviceRef = new WeakReference(service);
             Server server = ns.getServer();
-            this.netprotocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_NETPROTOCOL;
+            this.netProtocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_NETPROTOCOL;
         }
 
         @Override

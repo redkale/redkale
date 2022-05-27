@@ -31,7 +31,8 @@ public @interface FilterColumn {
     String name() default "";
 
     /**
-     * 当字段类型是Number时， 如果值&gt;=least() 则需要过滤， 否则跳过该字段
+     * 当字段类型是Number时， 如果值&gt;=least() 则需要过滤， 否则跳过该字段 <br>
+     * 当字段类型是String时， 如果字符串.length == 0 且 least() == 0 则需要过滤， 否则跳过该字段
      *
      * @return 最小可过滤值
      */

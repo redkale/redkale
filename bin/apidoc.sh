@@ -6,7 +6,7 @@ APP_HOME=`dirname "$0"`
 
 if [ ! -f "$APP_HOME"/conf/application.xml ]; then 
      APP_HOME="$APP_HOME"/..  
-fi 
+fi
 
 lib='.'
 for jar in `ls $APP_HOME/lib/*.jar`
@@ -15,4 +15,4 @@ do
 done
 export CLASSPATH=$CLASSPATH:$lib
 echo "$APP_HOME"
-java -DCMD=APIDOC  -DAPP_HOME="$APP_HOME"  org.redkale.boot.Application
+java -DAPP_HOME="$APP_HOME"  org.redkale.boot.Application apidoc

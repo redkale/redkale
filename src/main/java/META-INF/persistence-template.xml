@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 其配置算是标准的JPA配置文件的缩略版 -->
+<!-- 
+  【已废弃】，建议使用 source.properties
+   其配置算是标准的JPA配置文件的缩略版
+-->
 <persistence>	
     <!-- 系统基本库 -->
     <persistence-unit name="demouser">
@@ -38,7 +41,7 @@
     <!-- IM消息库 -->
     <persistence-unit name="demoim">
         <properties>
-            <!-- jdbc:mysql://127.0.0.1:3306/dbim?autoReconnect=true&amp;autoReconnectForPools=true&amp;characterEncoding=utf8 -->
+            <!-- jdbc:mysql://127.0.0.1:3306/dbim?allowPublicKeyRetrieval=true&amp;rewriteBatchedStatements=true&amp;serverTimezone=UTC&amp;characterEncoding=utf8 -->
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/dbim?characterEncoding=utf8"/>
             <property name="javax.persistence.jdbc.user" value="root"/>
             <property name="javax.persistence.jdbc.password" value="123456"/>

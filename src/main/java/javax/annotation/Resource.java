@@ -17,20 +17,20 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
 
-    /**
-     * AuthenticationType
-     */
-    @Deprecated
-    public enum AuthenticationType {
-        /**
-         * @deprecated
-         */
-        CONTAINER,
-        /**
-         * @deprecated
-         */
-        APPLICATION
-    }
+//    /**
+//     * AuthenticationType
+//     */
+//    @Deprecated
+//    public enum AuthenticationType {
+//        /**
+//         * @deprecated
+//         */
+//        CONTAINER,
+//        /**
+//         * @deprecated
+//         */
+//        APPLICATION
+//    }
 
     /**
      * 资源名称
@@ -45,39 +45,39 @@ public @interface Resource {
      * @return Class
      */
     public Class<?> type() default Object.class;
-
-    /**
-     *
-     * @return AuthenticationType
-     */
-    @Deprecated
-    public AuthenticationType authenticationType() default AuthenticationType.CONTAINER;
-
-    /**
-     *
-     * @return boolean
-     */
-    @Deprecated
-    public boolean shareable() default true;
-
-    /**
-     *
-     * @return String
-     */
-    @Deprecated
-    public String description() default "";
-
-    /**
-     *
-     * @return String
-     */
-    @Deprecated
-    public String mappedName() default "";
-
-    /**
-     *
-     * @return String
-     */
-    @Deprecated
-    public String lookup() default "";
+//
+//    /**
+//     *
+//     * @return AuthenticationType
+//     */
+//    @Deprecated
+//    public AuthenticationType authenticationType() default AuthenticationType.CONTAINER;
+//
+//    /**
+//     *
+//     * @return boolean
+//     */
+//    @Deprecated
+//    public boolean shareable() default true;
+//
+//    /**
+//     *
+//     * @return String
+//     */
+//    @Deprecated
+//    public String description() default "";
+//
+//    /**
+//     *
+//     * @return String
+//     */
+//    @Deprecated
+//    public String mappedName() default "";
+//
+//    /**
+//     *
+//     * @return String
+//     */
+//    @Deprecated
+//    public String lookup() default "";
 }

@@ -21,7 +21,7 @@ public abstract class JsonWriter extends Writer {
 
     protected static final int defaultSize = Integer.getInteger("redkale.convert.json.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
-    protected boolean tiny;
+    protected boolean tiny = JsonFactory.root().tiny();
 
     @Override
     public boolean tiny() {
@@ -47,7 +47,7 @@ public abstract class JsonWriter extends Writer {
     public abstract void writeTo(final byte[] chs, final int start, final int len); //只能是 0 - 127 的字符
 
     /**
-     * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger转换的String
+     * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger、BigDecimal转换的String
      *
      * @param quote 是否加双引号
      * @param value 非null且不含需要转义的字符的String值
@@ -84,6 +84,8 @@ public abstract class JsonWriter extends Writer {
 
     @Override
     public abstract void writeLong(long value);
+
+    public abstract void writeString(final boolean quote, String value);
 
     @Override
     public abstract void writeString(String value);
@@ -156,7 +158,7 @@ public abstract class JsonWriter extends Writer {
 
     @Override
     public final void writeWrapper(StringWrapper value) {
-        writeLatin1To(false, String.valueOf(value));
+        writeString(false, String.valueOf(value));
     }
 
     @Override

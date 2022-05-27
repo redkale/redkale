@@ -13,6 +13,7 @@ import java.util.function.*;
 import java.util.logging.Level;
 
 /**
+ * 一个AsyncConnection绑定一个ProtocolCodec实例
  *
  * @author zhangjx
  */

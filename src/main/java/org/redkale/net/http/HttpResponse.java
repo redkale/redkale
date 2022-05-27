@@ -36,6 +36,8 @@ import static org.redkale.util.Utility.append;
  */
 public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
+    protected static final byte[] EMPTY_BTYES = new byte[0];
+
     protected static final byte[] bytes304 = "HTTP/1.1 304 Not Modified\r\nContent-Length:0\r\n\r\n".getBytes();
 
     protected static final byte[] bytes404 = "HTTP/1.1 404 Not Found\r\nContent-Length:0\r\n\r\n".getBytes();
@@ -451,7 +453,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 //            convert.convertToBytes(type, ret, convertHandler);
 //        }
 //    }
-
     /**
      * 将RetResult对象以JSON格式输出
      *
@@ -478,7 +479,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 //            convert.convertToBytes(type, ret, convertHandler);
 //        }
 //    }
-
     /**
      * 将CompletableFuture的结果对象以JSON格式输出
      *
@@ -491,7 +491,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 //    public void finishJson(final JsonConvert convert, final Type valueType, final CompletableFuture future) {
 //        finish(convert, valueType, future);
 //    }
-
     /**
      * 将RetResult对象输出
      *
@@ -580,9 +579,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         addHeader(result.getHeaders()).addCookie(result.getCookies()).setStatus(result.getStatus() < 1 ? 200 : result.getStatus());
         Object val = result.getResult();
         if (val == null) {
-            finish("");
+            finish((String) null, EMPTY_BTYES);
         } else if (val instanceof CharSequence) {
-            finish(val.toString());
+            finish(getStatus(), val.toString());
         } else {
             Convert cc = result.convert();
             if (cc == null) cc = convert;
@@ -664,6 +663,36 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishPublisher(final Convert convert, Type valueType, Object publisher) {
         finish(convert, valueType, (CompletionStage) Flows.maybePublisherToFuture(publisher));
+    }
+
+    /**
+     * 将HttpScope对象输出
+     *
+     * @param future HttpScope输出异步对象
+     */
+    public void finishScope(CompletionStage<HttpScope> future) {
+        finish(request.getRespConvert(), future);
+    }
+
+    /**
+     * 将HttpScope对象输出
+     *
+     * @param convert 指定的Convert
+     * @param future  HttpScope输出异步对象
+     */
+    public void finishScope(final Convert convert, CompletionStage<HttpScope> future) {
+        future.whenComplete((v, e) -> {
+            if (e != null) {
+                context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletionStage", (Throwable) e);
+                if (e instanceof TimeoutException) {
+                    finish504();
+                } else {
+                    finish500();
+                }
+                return;
+            }
+            finish(convert, v);
+        });
     }
 
     /**
@@ -932,12 +961,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 //            }
 //        }
     }
-    
+
     @Override
     protected void error() {
         finish500();
     }
-    
+
     /**
      * 以304状态码输出
      */
@@ -1298,6 +1327,17 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
+     * 判断是否存在Header值
+     *
+     * @param name
+     *
+     * @return 是否存在
+     */
+    public boolean existsHeader(String name) {
+        return this.header.getValue(name) != null;
+    }
+
+    /**
      * 设置Header值
      *
      * @param name  header名
@@ -1548,6 +1588,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         public Supplier<byte[]> dateSupplier;
 
         public HttpRender httpRender;
+
+        public AnyValue renderConfig;
 
         public final byte[][] plainLiveContentLengthArray = new byte[cacheMaxContentLength][];
 

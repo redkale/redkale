@@ -7,7 +7,7 @@ package org.redkale.convert.json;
 
 import java.io.Serializable;
 import java.lang.reflect.*;
-import java.math.BigInteger;
+import java.math.*;
 import java.net.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
@@ -24,7 +24,7 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
-    private static final JsonFactory instance = new JsonFactory(null, getSystemPropertyBoolean("redkaleconvert.json.tiny", "redkale.convert.tiny", true));
+    private static final JsonFactory instance = new JsonFactory(null, getSystemPropertyBoolean("redkale.convert.json.tiny", "redkale.convert.tiny", true));
 
     static {
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
@@ -40,6 +40,7 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
             this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
             this.register(DLong.class, DLongSimpledCoder.DLongJsonSimpledCoder.instance);
             this.register(BigInteger.class, BigIntegerSimpledCoder.BigIntegerJsonSimpledCoder.instance);
+            this.register(BigDecimal.class, BigDecimalSimpledCoder.BigDecimalJsonSimpledCoder.instance);
             this.register(java.time.Instant.class, InstantSimpledCoder.InstantJsonSimpledCoder.instance);
             this.register(java.time.LocalDate.class, LocalDateSimpledCoder.LocalDateJsonSimpledCoder.instance);
             this.register(java.time.LocalTime.class, LocalTimeSimpledCoder.LocalTimeJsonSimpledCoder.instance);
@@ -64,7 +65,7 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     }
 
     public static JsonFactory create() {
-        return new JsonFactory(null, getSystemPropertyBoolean("redkale.convert.json.tiny", "convert.tiny", true));
+        return new JsonFactory(null, getSystemPropertyBoolean("redkale.convert.json.tiny", "redkale.convert.tiny", true));
     }
 
     @Override
@@ -75,6 +76,11 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     @Override
     protected <E> ObjectEncoder<JsonWriter, E> createObjectEncoder(Type type) {
         return super.createObjectEncoder(type);
+    }
+
+    @Override
+    protected <E> Decodeable<JsonReader, E> createMultiImplDecoder(Class[] types) {
+        return new JsonMultiImplDecoder(this, types);
     }
 
     protected boolean tiny() {

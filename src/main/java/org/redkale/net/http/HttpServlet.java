@@ -48,9 +48,15 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
             ActionEntry entry = request.actionEntry;
-            if (entry.rpconly && !request.rpc) {
-                response.finish(503, null);
-                return;
+            if (entry.rpconly) {
+                if (!request.rpc) {
+                    response.finish(404, null);
+                    return;
+                } else if (request.rpcAuthenticator != null) {
+                    if (!request.rpcAuthenticator.auth(request, response)) {
+                        return;
+                    }
+                }
             }
             if (entry.cacheseconds > 0) {//有缓存设置
                 CacheEntry ce = entry.modeOneCache ? entry.oneCache : entry.cache.get(request.getRequestURI());

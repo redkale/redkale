@@ -18,7 +18,19 @@ import org.redkale.convert.json.*;
  *
  * @author zhangjx
  */
-public class JsonTestMain {
+public class JsonMainTest {
+
+    private boolean main;
+
+    public static void main(String[] args) throws Throwable {
+        JsonMainTest test = new JsonMainTest();
+        test.main = true;
+        test.run1();
+        test.run2();
+        test.run3();
+        test.run4();
+        test.run5();
+    }
 
     @Test
     public void run1() throws Throwable {
@@ -33,7 +45,7 @@ public class JsonTestMain {
         byte[] bs = new byte[buffers[0].remaining()];
         buffers[0].get(bs);
         System.out.println(new String(bs));
-        Assertions.assertEquals(rs, new String(bs)); 
+        Assertions.assertEquals(rs, new String(bs));
     }
 
     @Test
@@ -87,5 +99,12 @@ public class JsonTestMain {
         System.out.println("java.sql.Date 值: " + json);
         java.sql.Date rs = convert.convertFrom(java.sql.Date.class, json);
         System.out.println(convert.convertTo(rs));
+    }
+
+    @Test
+    public void run5() throws Throwable {
+        final JsonConvert convert = JsonConvert.root();
+        long v = convert.convertFrom(long.class, "100");
+        Assertions.assertEquals(100, v);
     }
 }

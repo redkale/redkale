@@ -122,6 +122,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) continue;
                 final boolean is = getter.getName().startsWith("is");
                 String sfname = getter.getName().substring(is ? 2 : 3);
+                if (sfname.isEmpty()) continue;
                 if (sfname.length() < 2 || Character.isLowerCase(sfname.charAt(1))) {
                     char[] cs = sfname.toCharArray();
                     cs[0] = Character.toLowerCase(cs[0]);

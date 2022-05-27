@@ -6,7 +6,6 @@
 package org.redkale.source;
 
 import java.io.Serializable;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
@@ -20,7 +19,7 @@ import org.redkale.util.*;
  */
 /**
  * DataSource的Memory实现类 <br>
- * 注意: javax.persistence.jdbc.url 需要指定为 memory:source
+ * 注意: url 需要指定为 memory:datasource
  *
  * <p>
  * 详情见: https://redkale.org
@@ -33,8 +32,8 @@ import org.redkale.util.*;
 @ResourceType(DataSource.class)
 public class DataMemorySource extends DataSqlSource implements SearchSource {
 
-    public DataMemorySource(String unitName, URL persistFile, Properties readprop, Properties writeprop) {
-        super(unitName, persistFile, "memory", readprop, writeprop);
+    public DataMemorySource(String name) {
+        this.name = name;
         this.cacheForbidden = false;
     }
 
@@ -42,6 +41,19 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     @Override
     public String getType() {
         return "memory";
+    }
+
+    public static boolean acceptsConf(AnyValue config) {
+        return config.getValue(DATA_SOURCE_URL).startsWith("memory:");
+    }
+
+    public static boolean isSearchType(AnyValue config) {
+        return config.getValue(DATA_SOURCE_URL).startsWith("memory:search");
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{type=memory, name='" + resourceName() + "'}";
     }
 
     @Override
@@ -52,12 +64,12 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    public <T> int updateMapping(final Class<T> clazz) {
+    public <T> int updateMapping(final Class<T> clazz, String table) {
         return 0;
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateMappingAsync(final Class<T> clazz) {
+    public <T> CompletableFuture<Integer> updateMappingAsync(final Class<T> clazz, String table) {
         return CompletableFuture.completedFuture(0);
     }
 

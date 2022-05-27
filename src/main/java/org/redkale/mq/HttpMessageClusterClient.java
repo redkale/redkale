@@ -94,7 +94,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
             }
             final Map<String, String> clientHeaders = new LinkedHashMap<>();
             byte[] clientBody = null;
-            if (req.isRpc()) clientHeaders.put(Rest.REST_HEADER_RPC_NAME, "true");
+            if (req.isRpc()) clientHeaders.put(Rest.REST_HEADER_RPC, "true");
             if (req.isFrombody()) clientHeaders.put(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
             if (req.getReqConvertType() != null) clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
             if (req.getRespConvertType() != null) clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
@@ -148,7 +148,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
             }
             final Map<String, String> clientHeaders = new LinkedHashMap<>();
             byte[] clientBody = null;
-            if (req.isRpc()) clientHeaders.put(Rest.REST_HEADER_RPC_NAME, "true");
+            if (req.isRpc()) clientHeaders.put(Rest.REST_HEADER_RPC, "true");
             if (req.isFrombody()) clientHeaders.put(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
             if (req.getReqConvertType() != null) clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
             if (req.getRespConvertType() != null) clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());

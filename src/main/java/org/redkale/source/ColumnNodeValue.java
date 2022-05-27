@@ -13,7 +13,9 @@ import static org.redkale.source.ColumnExpress.*;
  * String 视为 字段名  <br>
  * Number 视为 数值   <br>
  * 例如： UPDATE Reord SET updateTime = createTime + 10 WHERE id = 1   <br>
- * source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnNodeValue.inc("createTime", 10)));
+ * source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnNodeValue.inc("createTime", 10)));  <br>
+ * 例如： UPDATE Reord SET updateTime = createTime * 10 / createCount WHERE id = 1   <br>
+ * source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnNodeValue.div(ColumnNodeValue.mul("createTime", 10), "createCount")));  <br>
  *
  * <p>
  * 详情见: https://redkale.org

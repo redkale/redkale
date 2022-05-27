@@ -96,6 +96,11 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
         return type;
     }
 
+    @Override
+    public boolean specifyable() {
+        return false;
+    }
+
     public Type getKeyType() {
         return keyEncoder == null ? null : keyEncoder.getType();
     }

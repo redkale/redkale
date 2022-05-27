@@ -82,10 +82,6 @@ public final class EntityInfo<T> {
     //只有field.name 与 Column.name不同才存放在aliasmap里.
     private final Map<String, String> aliasmap;
 
-    //key是field的name， value是CryptHandler
-    //字段都不存在CryptHandler时值因为为null，减少判断
-    private final Map<String, CryptHandler> cryptmap;
-
     //所有可更新字段，即排除了主键字段和标记为&#064;Column(updatable=false)的字段
     private final Map<String, Attribute<T, Serializable>> updateAttributeMap = new HashMap<>();
 
@@ -138,6 +134,12 @@ public final class EntityInfo<T> {
     //根据主键更新所有可更新字段的SQL，含 $
     private final String updateDollarPrepareSQL;
 
+    //根据主键更新所有可更新字段的SQL，含 ？
+    private final String[] updateQuestionPrepareCaseSQLs;
+
+    //根据主键更新所有可更新字段的SQL，含 $
+    private final String[] updateDollarPrepareCaseSQLs;
+
     //根据主键更新所有可更新字段的SQL，含 :name
     private final String updateNamesPrepareSQL;
 
@@ -174,7 +176,7 @@ public final class EntityInfo<T> {
      *
      * @param clazz          Entity类
      * @param cacheForbidden 是否禁用EntityCache
-     * @param conf           配置信息, persistence.xml中的property节点值
+     * @param conf           配置信息, source.properties中的属性节点值
      * @param source         DataSource,可为null
      * @param fullloader     全量加载器,可为null
      */
@@ -302,7 +304,6 @@ public final class EntityInfo<T> {
         }
         this.constructorParameters = (cp == null || cp.value().length < 1) ? null : cp.value();
         Attribute idAttr0 = null;
-        Map<String, CryptHandler> cryptmap0 = null;
         Map<String, String> aliasmap0 = null;
         Class cltmp = type;
         Set<String> fields = new HashSet<>();
@@ -313,7 +314,6 @@ public final class EntityInfo<T> {
         List<String> updatecols = new ArrayList<>();
         List<Attribute<T, Serializable>> updateattrs = new ArrayList<>();
         List<List<EntityColumn>> ddlList = new ArrayList<>();
-        Map<Class, Creator<CryptHandler>> cryptCreatorMap = new HashMap<>();
         do {
             List<EntityColumn> ddl = new ArrayList<>();
             ddlList.add(ddl);
@@ -330,16 +330,9 @@ public final class EntityInfo<T> {
                     if (aliasmap0 == null) aliasmap0 = new HashMap<>();
                     aliasmap0.put(fieldname, sqlfield);
                 }
-                final CryptColumn cpt = field.getAnnotation(CryptColumn.class);
-                CryptHandler cryptHandler = null;
-                if (cpt != null) {
-                    if (cryptmap0 == null) cryptmap0 = new HashMap<>();
-                    cryptHandler = cryptCreatorMap.computeIfAbsent(cpt.handler(), c -> (Creator<CryptHandler>) Creator.create(cpt.handler())).create();
-                    cryptmap0.put(fieldname, cryptHandler);
-                }
                 Attribute attr;
                 try {
-                    attr = Attribute.create(type, cltmp, field, cryptHandler);
+                    attr = Attribute.create(type, cltmp, field);
                 } catch (RuntimeException e) {
                     continue;
                 }
@@ -391,7 +384,6 @@ public final class EntityInfo<T> {
 
         this.primary = idAttr0;
         this.aliasmap = aliasmap0;
-        this.cryptmap = cryptmap0;
         List<EntityColumn> ddls = new ArrayList<>();
         Collections.reverse(ddlList);  //父类的字段排在前面
         for (List<EntityColumn> ls : ddlList) {
@@ -489,6 +481,39 @@ public final class EntityInfo<T> {
             this.findQuestionPrepareSQL = "SELECT " + querydb + " FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
             this.findDollarPrepareSQL = "SELECT " + querydb + " FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = $1";
             this.findNamesPrepareSQL = "SELECT " + querydb + " FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
+
+            if (this.tableStrategy == null && this.updateAttributes.length == 1) { //不分表且只有两个字段的表才使用Case方式
+                String[] dollarPrepareCaseSQLs = new String[51]; //上限50个
+                String[] questionPrepareCaseSQLs = new String[dollarPrepareCaseSQLs.length];
+                String idsqlfield = getPrimarySQLColumn();
+                String otherfield = getSQLColumn(null, this.updateAttributes[0].field());
+                for (int i = 2; i < dollarPrepareCaseSQLs.length; i++) {
+                    StringBuilder ds = new StringBuilder();
+                    StringBuilder qs = new StringBuilder();
+                    ds.append("UPDATE ").append(table).append(" SET ").append(otherfield).append(" = CASE ").append(idsqlfield);
+                    qs.append("UPDATE ").append(table).append(" SET ").append(otherfield).append(" = ( CASE");
+                    for (int j = 1; j <= i; j++) {
+                        ds.append(" WHEN $").append(j).append(" THEN $").append(j + i);
+                        qs.append(" WHEN ").append(idsqlfield).append(" = ? THEN ?");
+                    }
+                    ds.append(" ELSE ").append(otherfield).append(" END WHERE ").append(idsqlfield).append(" IN ($1");
+                    qs.append(" END ) WHERE ").append(idsqlfield).append(" IN (?");
+                    for (int j = 2; j <= i; j++) {
+                        ds.append(",$").append(j);
+                        qs.append(",?");
+                    }
+                    ds.append(")");
+                    qs.append(")");
+                    dollarPrepareCaseSQLs[i] = ds.toString();
+                    questionPrepareCaseSQLs[i] = qs.toString();
+                }
+                this.updateDollarPrepareCaseSQLs = dollarPrepareCaseSQLs;
+                this.updateQuestionPrepareCaseSQLs = questionPrepareCaseSQLs;
+            } else {
+                this.updateDollarPrepareCaseSQLs = null;
+                this.updateQuestionPrepareCaseSQLs = null;
+            }
+
         } else {
             this.allQueryPrepareSQL = null;
 
@@ -506,6 +531,9 @@ public final class EntityInfo<T> {
             this.updateNamesPrepareSQL = null;
             this.deleteNamesPrepareSQL = null;
             this.findNamesPrepareSQL = null;
+
+            this.updateDollarPrepareCaseSQLs = null;
+            this.updateQuestionPrepareCaseSQLs = null;
         }
         //----------------cache--------------
         Cacheable c = type.getAnnotation(Cacheable.class);
@@ -736,6 +764,34 @@ public final class EntityInfo<T> {
     public String getUpdateDollarPrepareSQL(T bean) {
         if (this.tableStrategy == null) return updateDollarPrepareSQL;
         return updateDollarPrepareSQL.replace("${newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的UPDATE CASE SQL
+     *
+     * @param beans Entity对象
+     *
+     * @return String
+     */
+    public String getUpdateQuestionPrepareCaseSQL(T[] beans) {
+        if (beans == null || beans.length < 2) return null;
+        if (this.updateQuestionPrepareCaseSQLs == null) return null;
+        if (this.updateQuestionPrepareCaseSQLs.length <= beans.length) return null;
+        return this.updateQuestionPrepareCaseSQLs[beans.length];
+    }
+
+    /**
+     * 获取Entity的UPDATE CASE SQL
+     *
+     * @param beans Entity对象
+     *
+     * @return String
+     */
+    public String getUpdateDollarPrepareCaseSQL(T[] beans) {
+        if (beans == null || beans.length < 2) return null;
+        if (this.updateDollarPrepareCaseSQLs == null) return null;
+        if (this.updateDollarPrepareCaseSQLs.length <= beans.length) return null;
+        return this.updateDollarPrepareCaseSQLs[beans.length];
     }
 
     /**
@@ -989,10 +1045,7 @@ public final class EntityInfo<T> {
         if (fieldvalue == null && fieldname != null && isNotNullable(fieldname)) {
             if (isNotNullJson(getAttribute(fieldname))) return "";
         }
-        if (this.cryptmap == null) return fieldvalue;
-        CryptHandler handler = this.cryptmap.get(fieldname);
-        if (handler == null) return fieldvalue;
-        return handler.encrypt(fieldvalue);
+        return fieldvalue;
     }
 
     /**
@@ -1030,11 +1083,8 @@ public final class EntityInfo<T> {
      *
      * @return Object
      */
-    public <F> Object getSQLValue(Attribute<T, F> attr, T entity) {
-        Object val = attr.get(entity);
-        CryptHandler cryptHandler = attr.attach();
-        if (cryptHandler != null) val = cryptHandler.encrypt(val);
-        return val;
+    public <F> Serializable getSQLValue(Attribute<T, F> attr, T entity) {
+        return (Serializable) attr.get(entity);
     }
 
     /**
@@ -1048,7 +1098,7 @@ public final class EntityInfo<T> {
      * @return CharSequence
      */
     public <F> CharSequence formatSQLValue(Attribute<T, F> attr, T entity, BiFunction<EntityInfo, Object, CharSequence> sqlFormatter) {
-        Object val = getSQLValue(attr, entity);
+        Serializable val = getSQLValue(attr, entity);
         return sqlFormatter == null ? formatToString(val) : sqlFormatter.apply(this, val);
     }
 
@@ -1061,10 +1111,7 @@ public final class EntityInfo<T> {
      * @return Object
      */
     public Serializable getFieldValue(Attribute<T, Serializable> attr, T entity) {
-        Serializable val = attr.get(entity);
-        CryptHandler cryptHandler = attr.attach();
-        if (cryptHandler != null) val = (Serializable) cryptHandler.decrypt(val);
-        return val;
+        return attr.get(entity);
     }
 
     /**
@@ -1128,14 +1175,10 @@ public final class EntityInfo<T> {
             case ORR:
                 return new StringBuilder().append(sqlColumn).append(" | ").append(val);
             case MOV:
-                CryptHandler handler = attr.attach();
-                if (handler != null) val = handler.encrypt(val);
                 CharSequence rs = formatter == null ? formatToString(val) : formatter.apply(this, val);
                 if (rs == null && isNotNullJson(attr)) rs = "";
                 return rs;
         }
-        CryptHandler handler = attr.attach();
-        if (handler != null) val = handler.encrypt(val);
         return formatter == null ? formatToString(val) : formatter.apply(this, val);
     }
 
@@ -1221,7 +1264,7 @@ public final class EntityInfo<T> {
             && boolean.class != attr.type() && Boolean.class != attr.type()
             && byte[].class != attr.type()
             && java.util.Date.class != attr.type()
-            && !attr.type().getName().startsWith("java.sql.")  //避免引用import java.sql.* 减少模块依赖
+            && !attr.type().getName().startsWith("java.sql.") //避免引用import java.sql.* 减少模块依赖
             && !attr.type().getName().startsWith("java.time.");
     }
 
@@ -1337,7 +1380,15 @@ public final class EntityInfo<T> {
         return row.getObject(attr, index, index > 0 ? null : this.getSQLColumn(null, attr.field()));
     }
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" + type.getName() + ")@" + Objects.hashCode(this);
+    }
+
     public static interface DataResultSetRow {
+
+        //可以为空
+        public EntityInfo getEntityInfo();
 
         //index从1开始
         public Object getObject(int index);

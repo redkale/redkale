@@ -22,7 +22,9 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
 
     protected long createTime = System.currentTimeMillis();
 
-    WorkThread workThread;
+    protected WorkThread workThread;
+
+    ClientFuture respFuture;
 
     public long getCreateTime() {
         return createTime;
@@ -31,6 +33,25 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
     public <T extends ClientRequest> T currThread(WorkThread thread) {
         this.workThread = thread;
         return (T) this;
+    }
+
+    public int getMergeCount() {
+        return respFuture == null ? -1 : respFuture.mergeCount;
+    }
+
+    //是否能合并
+    protected boolean canMerge(ClientConnection conn) {
+        return false;
+    }
+
+    //合并成功了返回true
+    protected boolean merge(ClientConnection conn, ClientRequest other) {
+        return false;
+    }
+
+    //数据是否全部写入，如果只写部分，返回false
+    protected boolean isCompleted() {
+        return true;
     }
 
     protected void prepare() {

@@ -7,7 +7,7 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.math.*;
-import java.net.URL;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -18,7 +18,6 @@ import javax.annotation.Resource;
 import static org.redkale.boot.Application.*;
 import org.redkale.net.AsyncGroup;
 import org.redkale.service.*;
-import static org.redkale.source.DataSources.*;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
 
@@ -47,9 +46,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected boolean cacheForbidden;
 
-    private final String dbtype;
+    protected String dbtype;
 
-    private final boolean autoddl;
+    private boolean autoddl;
 
     protected Properties readConfProps;
 
@@ -61,7 +60,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     @Resource(name = RESNAME_APP_EXECUTOR)
     protected ExecutorService workExecutor;
 
-    protected final BiFunction<EntityInfo, Object, CharSequence> sqlFormatter;
+    protected BiFunction<EntityInfo, Object, CharSequence> sqlFormatter;
 
     protected BiConsumer futureCompleteConsumer = (r, t) -> {
         if (t != null) logger.log(Level.INFO, "CompletableFuture complete error", (Throwable) t);
@@ -71,66 +70,98 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         -> ((CompletableFuture<Sheet>) querySheetDB(i, false, false, false, null, null, (FilterNode) null)).thenApply(e -> e == null ? new ArrayList() : e.list(true));
 
     //用于反向LIKE使用
-    protected final String containSQL;
+    protected String containSQL;
 
     //用于反向LIKE使用
-    protected final String notcontainSQL;
+    protected String notContainSQL;
 
     //用于判断表不存在的使用, 多个SQLState用;隔开
-    protected final String tablenotexistSqlstates;
+    protected String tableNotExistSqlstates;
 
     //用于复制表结构使用
-    protected final String tablecopySQL;
+    protected String tablecopySQL;
 
-    @SuppressWarnings({"OverridableMethodCallInConstructor", "LeakingThisInConstructor"})
-    public DataSqlSource(String unitName, URL persistFile, String dbtype, Properties readConf, Properties writeConf) {
-        if (readConf == null) readConf = new Properties();
-        if (writeConf == null) writeConf = readConf;
-        this.dbtype = dbtype;
-        initProperties(readConf);
-        if (writeConf != readConf) initProperties(writeConf);
-        this.name = unitName;
-        this.persistFile = persistFile;
-        this.readConfProps = readConf;
-        this.writeConfProps = writeConf;
+    public DataSqlSource() {
+    }
+
+    @Override
+    public void init(AnyValue conf) {
+        if (conf.getAnyValue("read") == null) { //没有读写分离
+            Properties rwConf = new Properties();
+            conf.forEach((k, v) -> rwConf.put(k, v));
+            this.dbtype = parseDbtype(rwConf.getProperty(DATA_SOURCE_URL));
+            decryptProperties(rwConf);
+            initProperties(rwConf);
+            this.readConfProps = rwConf;
+            this.writeConfProps = rwConf;
+        } else { //读写分离
+            Properties readConf = new Properties();
+            Properties writeConf = new Properties();
+            conf.getAnyValue("read").forEach((k, v) -> readConf.put(k, v));
+            conf.getAnyValue("write").forEach((k, v) -> writeConf.put(k, v));
+            this.dbtype = parseDbtype(readConf.getProperty(DATA_SOURCE_URL));
+            decryptProperties(readConf);
+            decryptProperties(writeConf);
+            initProperties(readConf);
+            initProperties(writeConf);
+            this.readConfProps = readConf;
+            this.writeConfProps = writeConf;
+        }
+        this.name = conf.getValue("name", "");
         this.sqlFormatter = (info, val) -> formatValueToString(info, val);
-        this.autoddl = "true".equals(readConf.getProperty(DataSources.JDBC_TABLE_AUTODDL, "false").trim());
+        this.autoddl = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false").trim());
 
-        this.containSQL = readConf.getProperty(DataSources.JDBC_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
-        this.notcontainSQL = readConf.getProperty(DataSources.JDBC_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
+        this.containSQL = readConfProps.getProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
+        this.notContainSQL = readConfProps.getProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
 
-        this.tablenotexistSqlstates = ";" + readConf.getProperty(DataSources.JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
-        this.tablecopySQL = readConf.getProperty(DataSources.JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} LIKE ${oldtable}");
+        this.tableNotExistSqlstates = ";" + readConfProps.getProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
+        this.tablecopySQL = readConfProps.getProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} LIKE ${oldtable}");
+        this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
+    }
+
+    //解密可能存在的加密字段, 可重载
+    protected void decryptProperties(Properties props) {
+
     }
 
     protected void initProperties(Properties props) {
         if ("oracle".equals(this.dbtype)) {
-            props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) > 0");
-            props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) = 0");
-            if (!props.containsKey(JDBC_TABLENOTEXIST_SQLSTATES)) {
-                props.setProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42000;42S02");
+            props.setProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) > 0");
+            props.setProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) = 0");
+            if (!props.containsKey(DATA_SOURCE_TABLENOTEXIST_SQLSTATES)) {
+                props.setProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42000;42S02");
             }
-            if (!props.containsKey(JDBC_TABLECOPY_SQLTEMPLATE)) {
+            if (!props.containsKey(DATA_SOURCE_TABLECOPY_SQLTEMPLATE)) {
                 //注意：此语句复制表结构会导致默认值和主键信息的丢失
-                props.setProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} AS SELECT * FROM ${oldtable} WHERE 1=2");
+                props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} AS SELECT * FROM ${oldtable} WHERE 1=2");
             }
         } else if ("sqlserver".equals(this.dbtype)) {
-            props.setProperty(JDBC_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
-            props.setProperty(JDBC_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
+            props.setProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
+            props.setProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
         } else if ("postgresql".equals(this.dbtype)) {
-            if (!props.containsKey(JDBC_TABLECOPY_SQLTEMPLATE)) { //注意：此语句复制表结构会导致默认值和主键信息的丢失
+            if (!props.containsKey(DATA_SOURCE_TABLECOPY_SQLTEMPLATE)) { //注意：此语句复制表结构会导致默认值和主键信息的丢失
                 //注意：postgresql不支持跨库复制表结构
-                //props.setProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} AS (SELECT * FROM ${oldtable} LIMIT 0)");
-                props.setProperty(JDBC_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} (LIKE ${oldtable} INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING COMMENTS INCLUDING INDEXES)");
+                //props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} AS (SELECT * FROM ${oldtable} LIMIT 0)");
+                props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} (LIKE ${oldtable} INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING COMMENTS INCLUDING INDEXES)");
             }
-            if (!props.containsKey(JDBC_TABLENOTEXIST_SQLSTATES)) {
-                props.setProperty(JDBC_TABLENOTEXIST_SQLSTATES, "42P01;3F000");
+            if (!props.containsKey(DATA_SOURCE_TABLENOTEXIST_SQLSTATES)) {
+                props.setProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42P01;3F000");
             }
         }
     }
 
+    @Override
+    public String toString() {
+        if (readConfProps == null) return getClass().getSimpleName() + "{}"; //compileMode模式下会为null
+        if (readConfProps == writeConfProps) {
+            return getClass().getSimpleName() + "{url=" + readConfProps.getProperty(DATA_SOURCE_URL) + "}";
+        } else {
+            return getClass().getSimpleName() + "{readurl=" + readConfProps.getProperty(DATA_SOURCE_URL) + ",writeurl=" + writeConfProps.getProperty(DATA_SOURCE_URL) + "}";
+        }
+    }
+
     //生成创建表的SQL
-    protected <T> String createTableSql(EntityInfo<T> info) {
+    protected <T> String[] createTableSqls(EntityInfo<T> info) {
         if (info == null || !autoddl) return null;
         javax.persistence.Table table = info.getType().getAnnotation(javax.persistence.Table.class);
         if ("mysql".equals(dbtype())) {  //mysql
@@ -240,7 +271,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             if (table != null && !table.comment().isEmpty()) {
                 sb.append(" COMMENT '").append(table.comment().replace('\'', '"')).append("'");
             }
-            return sb.toString();
+            return Utility.ofArray(sb.toString());
         } else if ("postgresql".equals(dbtype())) {  //postgresql
             StringBuilder sb = new StringBuilder();
             sb.append("CREATE TABLE IF NOT EXISTS ").append(info.getOriginTable()).append("(\n");
@@ -311,7 +342,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                         if (!column.nullable) sqlnull = "NOT NULL";
                     }
                 } else if (column.type == byte[].class) {
-                    sqltype = "OID";
+                    sqltype = "BYTEA";
                     if (!column.nullable) sqlnull = "NOT NULL";
                 } else if (column.type == java.time.LocalDate.class || column.type == java.util.Date.class || "java.sql.Date".equals(column.type.getName())) {
                     sqltype = "DATE";
@@ -331,7 +362,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
             sb.append("   PRIMARY KEY (").append(primary.column).append(")\n");
             sb.append(")");
-            return sb.toString();
+            return Utility.ofArray(sb.toString());
         }
         return null;
     }
@@ -339,7 +370,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     @Local
     protected boolean isTableNotExist(EntityInfo info, String code) {
         if (code == null || code.isEmpty()) return false;
-        return tablenotexistSqlstates.contains(';' + code + ';');
+        return tableNotExistSqlstates.contains(';' + code + ';');
     }
 
     @Local
@@ -347,9 +378,21 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         return tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", info.table);
     }
 
-    @Override
-    public void init(AnyValue conf) {
-        this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(JDBC_CACHE_MODE));
+    @Local
+    protected <T> Serializable getSQLAttrValue(EntityInfo info, Attribute attr, Serializable val) {
+        if (val != null && !(val instanceof Number) && !(val instanceof CharSequence) && !(val instanceof java.util.Date)
+            && !val.getClass().getName().startsWith("java.sql.") && !val.getClass().getName().startsWith("java.time.")) {
+            val = info.jsonConvert.convertTo(attr.genericType(), val);
+        } else if (val == null && info.isNotNullJson(attr)) {
+            val = "";
+        }
+        return val;
+    }
+
+    @Local
+    protected <T> Serializable getEntityAttrValue(EntityInfo info, Attribute attr, T entity) {
+        Serializable val = info.getSQLValue(attr, entity);
+        return getSQLAttrValue(info, attr, val);
     }
 
     @Override
@@ -484,7 +527,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CharSequence formatValueToString(final EntityInfo<T> info, Object value) {
-        final String dbtype = dbtype();
         if ("mysql".equals(dbtype)) {
             if (value == null) return null;
             if (value instanceof CharSequence) {
@@ -699,6 +741,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
+        boolean pgsql = "postgresql".equals(dbtype());
         Map<Class, String> joinTabalis = null;
         CharSequence join = null;
         CharSequence where = null;
@@ -714,11 +757,19 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
             join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
         }
-        String sql = "DELETE " + ("mysql".equals(dbtype()) ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
-            + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper);
-        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " delete sql="
-                + (sql + ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()))));
+        String sql;
+        if (pgsql && flipper != null && flipper.getLimit() > 0) {
+            String wherestr = ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+            sql = "DELETE FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
+                + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryColumn() + " FROM " + info.getTable(node)
+                + wherestr + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
+        } else {
+            sql = "DELETE " + (("mysql".equals(dbtype()) && join1 != null) ? "a" : "") + " FROM " + info.getTable(node) + " a" + (join1 == null ? "" : (", " + join1))
+                + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
+                + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
+        }
         return deleteDB(info, flipper, sql);
     }
 
@@ -807,9 +858,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CompletableFuture<Integer> dropTableCompose(final EntityInfo<T> info, final FilterNode node) {
-        final String table = info.getTable(node);
-        String sql = "DROP TABLE " + table;
-        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " dropTable sql=" + sql);
+        final String table = node == null ? info.getOriginTable() : info.getTable(node);
+        String sql = "DROP TABLE IF EXISTS " + table;
+        //if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " dropTable sql=" + sql);
         return dropTableDB(info, table, sql);
     }
 
@@ -951,12 +1002,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
-        if (colval instanceof byte[]) {
+        Attribute attr = info.getAttribute(column);
+        Serializable val = getSQLAttrValue(info, attr, colval);
+        if (val instanceof byte[]) {
             String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
-            return updateColumnDB(info, null, sql, true, colval);
+            return updateColumnDB(info, null, sql, true, val);
         } else {
             String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
-                + info.formatSQLValue(column, colval, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+                + info.formatSQLValue(column, val, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
             return updateColumnDB(info, null, sql, false);
         }
     }
@@ -1019,16 +1072,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
             join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
         }
+        Attribute attr = info.getAttribute(column);
+        Serializable val = getSQLAttrValue(info, attr, colval);
         String alias = "postgresql".equals(dbtype()) ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
-        if (colval instanceof byte[]) {
+        if (val instanceof byte[]) {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                 + " SET " + info.getSQLColumn(alias, column) + "=" + prepareParamSign(1)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            return updateColumnDB(info, null, sql, true, colval);
+            return updateColumnDB(info, null, sql, true, val);
         } else {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
-                + " SET " + info.getSQLColumn(alias, column) + "=" + info.formatSQLValue(colval, sqlFormatter)
+                + " SET " + info.getSQLColumn(alias, column) + "=" + info.formatSQLValue(val, sqlFormatter)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             return updateColumnDB(info, null, sql, false);
@@ -1147,7 +1202,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
-        String alias = "postgresql".equals(dbtype()) ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
+        boolean pgsql = "postgresql".equals(dbtype());
+        String alias = pgsql ? null : "a"; //postgresql的BUG， UPDATE的SET中不能含别名
         for (ColumnValue col : values) {
             if (col == null) continue;
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
@@ -1173,12 +1229,33 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
             join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
         }
-        String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
-            + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-            : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))))
-            + info.createSQLOrderby(flipper);
-        if (blobs == null) return updateColumnDB(info, null, sql, false);
+        String sql;
+        if (pgsql && flipper != null && flipper.getLimit() > 0) {
+            String wherestr = ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+            sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
+                + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryColumn() + " FROM " + info.getTable(node)
+                + wherestr + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
+        } else {
+            sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
+                + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))))
+                + info.createSQLOrderby(flipper)
+                + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
+        }
+        if (blobs == null) return updateColumnDB(info, flipper, sql, false);
         return updateColumnDB(info, flipper, sql, true, blobs.toArray());
+    }
+
+    //返回不存在的字段名,null表示字段都合法;
+    protected <T> String checkIllegalColumn(final EntityInfo<T> info, SelectColumn selects) {
+        if (selects == null) return null;
+        String[] columns = selects.getColumns();
+        if (columns == null) return null;
+        for (String col : columns) {
+            if (info.getAttribute(col) == null) return col;
+        }
+        return null;
     }
 
     @Override
@@ -1186,6 +1263,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entity == null || selects == null) return -1;
         Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
+        String illegalColumn = checkIllegalColumn(info, selects);
+        if (illegalColumn != null) {
+            throw new RuntimeException(info.getType() + " cannot found column " + illegalColumn);
+        }
         if (isOnlyCache(info)) return updateCache(info, -1, false, entity, null, selects);
         return this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
             if (t != null) {
@@ -1201,6 +1282,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entity == null || selects == null) return CompletableFuture.completedFuture(-1);
         Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
+        String illegalColumn = checkIllegalColumn(info, selects);
+        if (illegalColumn != null) {
+            return CompletableFuture.failedFuture(new RuntimeException(info.getType() + " cannot found column " + illegalColumn));
+        }
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, false, entity, null, selects));
         }
@@ -1225,6 +1310,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entity == null || node == null || selects == null) return -1;
         Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
+        String illegalColumn = checkIllegalColumn(info, selects);
+        if (illegalColumn != null) {
+            throw new RuntimeException(info.getType() + " cannot found column " + illegalColumn);
+        }
         if (isOnlyCache(info)) return updateCache(info, -1, true, entity, node, selects);
         return this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {
             if (t != null) {
@@ -1240,6 +1329,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entity == null || node == null || selects == null) return CompletableFuture.completedFuture(-1);
         Class<T> clazz = (Class) entity.getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
+        String illegalColumn = checkIllegalColumn(info, selects);
+        if (illegalColumn != null) {
+            return CompletableFuture.failedFuture(new RuntimeException(info.getType() + " cannot found column " + illegalColumn));
+        }
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, true, entity, node, selects));
         }
@@ -1383,7 +1476,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         String column = info.getPrimary().field();
         int c = 0;
         for (Serializable id : pks) {
-            Sheet<T> sheet = querySheetCompose(false, true, false, clazz, null, FLIPPER_ONE, FilterNode.create(column, id)).join();
+            Sheet<T> sheet = querySheetCompose(false, true, false, clazz, null, FLIPPER_ONE, FilterNode.filter(column, id)).join();
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
             if (value != null) c += cache.update(value);
         }
@@ -1499,7 +1592,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
         final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : info.getSQLColumn("a", column))) + " FROM " + info.getTable(node) + " a"
             + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(entityClass.getSimpleName() + " getnumberresult sql=" + sql);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(entityClass.getSimpleName() + " getNumberResult sql=" + sql);
         return getNumberResultDB(info, sql, defVal, column);
     }
 
@@ -1680,7 +1773,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected <T> CompletableFuture<T[]> findsComposeAsync(final EntityInfo<T> info, final SelectColumn selects, Serializable... pks) {
         final Attribute<T, Serializable> primary = info.getPrimary();
-        return queryListAsync(info.getType(), selects, null, FilterNode.create(info.getPrimarySQLColumn(), FilterExpress.IN, pks)).thenApply(list -> {
+        return queryListAsync(info.getType(), selects, null, FilterNode.filter(info.getPrimarySQLColumn(), FilterExpress.IN, pks)).thenApply(list -> {
             T[] rs = info.getArrayer().apply(pks.length);
             for (int i = 0; i < rs.length; i++) {
                 T t = null;
@@ -1695,6 +1788,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
             return rs;
         });
+    }
+
+    @Override
+    public <D extends Serializable, T> List<T> findsList(Class<T> clazz, Stream<D> pks) {
+        return findsListAsync(clazz, pks).join();
+    }
+
+    @Override
+    public <D extends Serializable, T> CompletableFuture<List<T>> findsListAsync(final Class<T> clazz, final Stream<D> pks) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        Serializable[] ids = pks.toArray(v -> new Serializable[v]);
+        return queryListAsync(info.getType(), null, null, FilterNode.filter(info.getPrimarySQLColumn(), FilterExpress.IN, ids));
     }
 
     @Override
@@ -2016,7 +2121,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final ArrayList<K> ids = new ArrayList<>();
         keyStream.forEach(k -> ids.add(k));
         final Attribute<T, Serializable> primary = info.getPrimary();
-        List<T> rs = queryList(clazz, FilterNode.create(primary.field(), ids));
+        List<T> rs = queryList(clazz, FilterNode.filter(primary.field(), ids));
         Map<K, T> map = new LinkedHashMap<>();
         if (rs.isEmpty()) return new LinkedHashMap<>();
         for (T item : rs) {
@@ -2032,7 +2137,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final ArrayList<K> pks = new ArrayList<>();
         keyStream.forEach(k -> pks.add(k));
         final Attribute<T, Serializable> primary = info.getPrimary();
-        return queryListAsync(clazz, FilterNode.create(primary.field(), pks)).thenApply((List<T> rs) -> {
+        return queryListAsync(clazz, FilterNode.filter(primary.field(), pks)).thenApply((List<T> rs) -> {
             Map<K, T> map = new LinkedHashMap<>();
             if (rs.isEmpty()) return new LinkedHashMap<>();
             for (T item : rs) {
@@ -2127,4 +2232,5 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected static enum UpdateMode {
         INSERT, DELETE, UPDATE, CLEAR, DROP, ALTER, OTHER;
     }
+
 }

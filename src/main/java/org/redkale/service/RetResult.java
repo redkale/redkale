@@ -123,6 +123,22 @@ public class RetResult<T> implements Serializable {
         return CompletableFuture.completedFuture(new RetResult(result));
     }
 
+    //@since 2.7.0
+    public static <T> RetResult<T> fail(int retcode, String retinfo) {
+        return new RetResult(retcode, retinfo);
+    }
+
+    //@since 2.7.0
+    public static <T> CompletableFuture<RetResult<T>> failFuture(int retcode, String retinfo) {
+        return CompletableFuture.completedFuture(new RetResult(retcode, retinfo));
+    }
+
+    //@since 2.7.0
+    public T join() {
+        if (isSuccess()) return result;
+        throw new RetcodeException(this.retcode, this.retinfo);
+    }
+
     public static <T> RetResult<T> get(CompletableFuture<RetResult<T>> future, long timeout, TimeUnit unit) {
         try {
             return future.get(timeout, unit);
@@ -226,6 +242,7 @@ public class RetResult<T> implements Serializable {
      */
     @Deprecated
     public RetResult<T> attach(String key, Object value) {
+        System.err.println("RetResult.attach is deprecated");
         if (this.attach == null) this.attach = new HashMap<>();
         boolean canstr = value != null && (value instanceof CharSequence || value instanceof Number || value.getClass().isPrimitive());
         this.attach.put(key, value == null ? null : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
@@ -255,6 +272,16 @@ public class RetResult<T> implements Serializable {
 
     public void setRetcode(int retcode) {
         this.retcode = retcode;
+    }
+
+    /**
+     * retinfo值是否为空
+     *
+     * @return 是否为空
+     * @since 2.7.0
+     */
+    public boolean emptyRetinfo() {
+        return retinfo == null || retinfo.trim().isEmpty();
     }
 
     /**
@@ -305,6 +332,7 @@ public class RetResult<T> implements Serializable {
      */
     @Deprecated
     public String getAttach(String name, String defValue) {
+        System.err.println("RetResult.attach is deprecated");
         return attach == null ? defValue : attach.getOrDefault(name, defValue);
     }
 

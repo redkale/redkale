@@ -27,13 +27,15 @@ import org.redkale.util.*;
  * @param <R> 请求对象
  * @param <P> 响应对象
  */
-public class ClientConnection<R extends ClientRequest, P> implements Consumer<AsyncConnection> {
+public abstract class ClientConnection<R extends ClientRequest, P> implements Consumer<AsyncConnection> {
 
     protected final int index; //从0开始， connArray的下坐标
 
     protected final Client<R, P> client;
 
-    protected final LongAdder respCounter;
+    protected final ClientCodec<R, P> codec;
+
+    protected final LongAdder respWaitingCounter;
 
     protected final AsyncConnection channel;
 
@@ -49,7 +51,7 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
 
     protected final Queue<R> requestQueue = new ArrayDeque<>();
 
-    protected final Queue<ClientFuture> responseQueue = new ArrayDeque<>();
+    protected final ArrayDeque<ClientFuture> responseQueue = new ArrayDeque<>();
 
     protected final CompletionHandler<Integer, Void> writeHandler = new CompletionHandler<Integer, Void>() {
 
@@ -73,6 +75,8 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
 
     protected int maxPipelines; //最大并行处理数
 
+    protected R lastHalfRequest;
+
     protected ClientConnection setMaxPipelines(int maxPipelines) {
         this.maxPipelines = maxPipelines;
         return this;
@@ -83,28 +87,56 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
         return this;
     }
 
-    protected void pauseWriting(boolean flag) {
-        this.pauseWriting.set(flag);
+    protected void resumeWrite() {
+        this.pauseWriting.set(false);
     }
 
     private boolean continueWrite(boolean must) {
-        writeArray.clear();
+        ClientConnection conn = this;
+        ByteArray rw = conn.writeArray;
+        rw.clear();
         int pipelines = maxPipelines > 1 ? (maxPipelines - responseQueue.size()) : 1;
         if (must && pipelines < 1) pipelines = 1;
         int c = 0;
-        AtomicBoolean pw = this.pauseWriting;
+        AtomicBoolean pw = conn.pauseWriting;
         for (int i = 0; i < pipelines; i++) {
             if (pw.get()) break;
-            R r = requestQueue.poll();
-            if (r == null) break;
-            writeLastRequest = r;
-            r.accept(this, writeArray);
+            R req;
+            if (lastHalfRequest == null) {
+                req = requestQueue.poll();
+            } else {
+                req = lastHalfRequest;
+                lastHalfRequest = null;
+            }
+            if (req == null) break;
+            writeLastRequest = req;
+            if (req.canMerge(conn)) {
+                R r;
+                while ((r = requestQueue.poll()) != null) {
+                    i++;
+                    if (!req.merge(conn, r)) break;
+                    req.respFuture.mergeCount++;
+                }
+                req.accept(conn, rw);
+                if (r != null) {
+                    r.accept(conn, rw);
+                    req = r;
+                }
+            } else {
+                req.accept(conn, rw);
+            }
             c++;
+            if (!req.isCompleted()) {
+                lastHalfRequest = req;
+                this.pauseWriting.set(true);
+                break;
+            }
         }
-        if (c > 0) { //当Client连接Server时先从Server读取数据时,会先发送一个EMPTY的request，这样writeArray.count就会为0
-            channel.write(writeArray, writeHandler);
+        if (c > 0) { //当Client连接Server后先从Server读取数据时,会先发送一个EMPTY的request，这样writeArray.count就会为0
+            channel.write(rw, writeHandler);
             return true;
         }
+        if (pw.get()) writePending.compareAndSet(true, false);
         return false;
     }
 
@@ -112,8 +144,6 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
     }
 
     protected final CompletionHandler<Integer, ByteBuffer> readHandler = new CompletionHandler<Integer, ByteBuffer>() {
-
-        ClientCodec<R, P> codec;
 
         @Override
         public void completed(Integer count, ByteBuffer attachment) {
@@ -123,7 +153,6 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
                 return;
             }
             try {
-                if (codec == null) codec = client.codecCreator.create();
                 attachment.flip();
                 codecResponse(attachment);
             } catch (Throwable e) {
@@ -132,43 +161,66 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
             }
         }
 
+        protected void completeResponse(ClientResult<P> rs, ClientFuture respFuture) {
+            if (respFuture != null) {
+                if (!respFuture.request.isCompleted()) {
+                    if (rs.exc == null) {
+                        responseQueue.offerFirst(respFuture);
+                        pauseWriting.set(false);
+                        return;
+                    } else { //异常了需要清掉半包
+                        lastHalfRequest = null;
+                        pauseWriting.set(false);
+                    }
+                }
+                respWaitingCounter.decrement();
+                if (isAuthenticated() && client.respDoneCounter != null) client.respDoneCounter.increment();
+                try {
+                    if (respFuture.timeout != null) respFuture.timeout.cancel(true);
+                    ClientRequest request = respFuture.request;
+                    //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", result=" + rs.result);
+                    preComplete(rs.result, (R) request, rs.exc);
+                    WorkThread workThread = null;
+                    if (request != null) {
+                        workThread = request.workThread;
+                        request.workThread = null;
+                    }
+                    if (rs.exc != null) {
+                        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
+                            || workThread.getState() != Thread.State.RUNNABLE) {
+                            respFuture.completeExceptionally(rs.exc);
+                        } else {
+                            workThread.execute(() -> respFuture.completeExceptionally(rs.exc));
+                        }
+                    } else {
+                        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
+                            || workThread.getState() != Thread.State.RUNNABLE) {
+                            respFuture.complete(rs.result);
+                        } else {
+                            workThread.execute(() -> respFuture.complete(rs.result));
+                        }
+                    }
+                } catch (Throwable t) {
+                    client.logger.log(Level.INFO, "complete result error, request: " + respFuture.request, t);
+                }
+            }
+        }
+
         public void codecResponse(ByteBuffer buffer) {
-            if (codec.codecResult(ClientConnection.this, buffer, readArray)) { //成功了
+            if (codec.codecResult(buffer, readArray)) { //成功了
                 readArray.clear();
                 List<ClientResult<P>> results = codec.removeResults();
                 if (results != null) {
                     for (ClientResult<P> rs : results) {
                         ClientFuture respFuture = responseQueue.poll();
                         if (respFuture != null) {
-                            respCounter.decrement();
-                            if (isAuthenticated() && client.pollRespCounter != null) client.pollRespCounter.increment();
-                            try {
-                                if (respFuture.timeout != null) respFuture.timeout.cancel(true);
-                                ClientRequest request = respFuture.request;
-                                //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", result=" + rs.result);
-                                preComplete(rs.result, (R) request, rs.exc);
-                                WorkThread workThread = null;
-                                if (request != null) {
-                                    workThread = request.workThread;
-                                    request.workThread = null;
+                            int mergeCount = respFuture.mergeCount;
+                            completeResponse(rs, respFuture);
+                            if (mergeCount > 0) {
+                                for (int i = 0; i < mergeCount; i++) {
+                                    respFuture = responseQueue.poll();
+                                    if (respFuture != null) completeResponse(rs, respFuture);
                                 }
-                                if (rs.exc != null) {
-                                    if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
-                                        || workThread.getState() != Thread.State.RUNNABLE) {
-                                        respFuture.completeExceptionally(rs.exc);
-                                    } else {
-                                        workThread.execute(() -> respFuture.completeExceptionally(rs.exc));
-                                    }
-                                } else {
-                                    if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
-                                        || workThread.getState() != Thread.State.RUNNABLE) {
-                                        respFuture.complete(rs.result);
-                                    } else {
-                                        workThread.execute(() -> respFuture.complete(rs.result));
-                                    }
-                                }
-                            } catch (Throwable t) {
-                                client.logger.log(Level.INFO, "complete result error, request: " + respFuture.request, t);
                             }
                         }
                     }
@@ -185,7 +237,7 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
                         channel.read(this);
                     }
                 } else { //还有消息需要读取
-                    if (!requestQueue.isEmpty() && writePending.compareAndSet(false, true)) {
+                    if ((!requestQueue.isEmpty() || lastHalfRequest != null) && writePending.compareAndSet(false, true)) {
                         //先写后读取
                         if (!continueWrite(true)) {
                             writePending.compareAndSet(true, false);
@@ -214,13 +266,16 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
 
     private R writeLastRequest;
 
-    @SuppressWarnings("LeakingThisInConstructor")
+    @SuppressWarnings({"LeakingThisInConstructor", "OverridableMethodCallInConstructor"})
     public ClientConnection(Client client, int index, AsyncConnection channel) {
         this.client = client;
+        this.codec = createCodec();
         this.index = index;
-        this.respCounter = client.connResps[index];
+        this.respWaitingCounter = client.connRespWaitings[index];
         this.channel = channel.beforeCloseListener(this);
     }
+
+    protected abstract ClientCodec createCodec();
 
     protected CompletableFuture<P> writeChannel(R request) {
         ClientFuture respFuture = createClientFuture(request);
@@ -230,10 +285,11 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
         } else {
             int rts = this.channel.getReadTimeoutSeconds();
             if (rts > 0 && respFuture.request != null) {
-                respFuture.responseQueue = responseQueue;
+                respFuture.conn = this;
                 respFuture.timeout = client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS);
             }
         }
+        respWaitingCounter.increment(); //放在writeChannelInThread计数会延迟，导致不准确
         if (channel.inCurrThread()) {
             writeChannelInThread(request, respFuture);
         } else {
@@ -244,12 +300,16 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
 
     private void writeChannelInThread(R request, ClientFuture respFuture) {
         { //保证顺序一致
-            responseQueue.offer(client.closeRequest != null && respFuture.request == client.closeRequest ? ClientFuture.EMPTY : respFuture);
+            if (client.closeRequest != null && respFuture.request == client.closeRequest) {
+                responseQueue.offer(ClientFuture.EMPTY);
+            } else {
+                request.respFuture = respFuture;
+                responseQueue.offer(respFuture);
+            }
             requestQueue.offer(request);
-            respCounter.increment();
-            if (isAuthenticated() && client.writeReqCounter != null) client.writeReqCounter.increment();
+            if (isAuthenticated() && client.reqWritedCounter != null) client.reqWritedCounter.increment();
         }
-        if (writePending.compareAndSet(false, true)) {
+        if (responseQueue.size() < 2 && writePending.compareAndSet(false, true)) {//responseQueue.size() < 2 && 加了这句会存在偶尔不写数据的问题?
             continueWrite(true);
         }
     }
@@ -273,10 +333,14 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
         return channel;
     }
 
+    public ClientCodec<R, P> getCodec() {
+        return codec;
+    }
+
     @Override //AsyncConnection.beforeCloseListener
     public void accept(AsyncConnection t) {
-        respCounter.reset();
-        client.connOpens[index].set(false);
+        respWaitingCounter.reset();
+        client.connOpenStates[index].set(false);
         client.connArray[index] = null; //必须connflags之后
     }
 
@@ -284,7 +348,7 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
         channel.dispose();
         Throwable e = exc;
         CompletableFuture f;
-        respCounter.reset();
+        respWaitingCounter.reset();
         while ((f = responseQueue.poll()) != null) {
             if (e == null) e = new ClosedChannelException();
             f.completeExceptionally(e);
@@ -292,7 +356,7 @@ public class ClientConnection<R extends ClientRequest, P> implements Consumer<As
     }
 
     public int runningCount() {
-        return respCounter.intValue();
+        return respWaitingCounter.intValue();
     }
 
     public long getLastWriteTime() {

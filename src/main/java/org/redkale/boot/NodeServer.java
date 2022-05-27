@@ -14,7 +14,6 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.nio.file.*;
 import java.util.*;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
@@ -212,66 +211,13 @@ public abstract class NodeServer {
         final ResourceFactory appResFactory = application.getResourceFactory();
         final TransportFactory appSncpTranFactory = application.getSncpTransportFactory();
         final AnyValue resources = application.config.getAnyValue("resources");
-        final String confURI = appResFactory.find(RESNAME_APP_CONF, String.class);
-        final Map<String, SimpleEntry<Class, AnyValue>> cacheResource = new HashMap<>();
-        final Map<String, SimpleEntry<Class, AnyValue>> dataResources = new HashMap<>();
-        if (resources != null) {
-            for (AnyValue sourceConf : resources.getAnyValues("source")) {
-                try {
-                    String classval = sourceConf.getValue("value");
-                    Class type = null;
-                    if (classval == null || classval.isEmpty()) {
-                        RedkaleClassLoader.putServiceLoader(CacheSourceProvider.class);
-                        List<CacheSourceProvider> providers = new ArrayList<>();
-                        Iterator<CacheSourceProvider> it = ServiceLoader.load(CacheSourceProvider.class, serverClassLoader).iterator();
-                        while (it.hasNext()) {
-                            CacheSourceProvider s = it.next();
-                            if (s != null) RedkaleClassLoader.putReflectionPublicConstructors(s.getClass(), s.getClass().getName());
-                            if (s != null && s.acceptsConf(sourceConf)) {
-                                providers.add(s);
-                            }
-                        }
-                        Collections.sort(providers, (a, b) -> {
-                            Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
-                            Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
-                            return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
-                        });
-                        for (CacheSourceProvider provider : providers) {
-                            type = provider.sourceClass();
-                            if (type != null) break;
-                        }
-                    } else {
-                        type = serverClassLoader.loadClass(classval);
-                    }
-                    if (type == DataSource.class) {
-                        type = DataMemorySource.class;
-                        for (AnyValue itemConf : sourceConf.getAnyValues("property")) {
-                            if (itemConf.getValue("name", "").contains(DataSources.JDBC_URL)) {
-                                type = DataJdbcSource.class;
-                                break;
-                            }
-                        }
-                    }
-                    if (!Service.class.isAssignableFrom(type)) {
-                        logger.log(Level.SEVERE, "load application source resource, but not Service error: " + sourceConf);
-                    } else if (CacheSource.class.isAssignableFrom(type)) {
-                        cacheResource.put(sourceConf.getValue("name", ""), new SimpleEntry(type, sourceConf));
-                    } else if (DataSource.class.isAssignableFrom(type)) {
-                        dataResources.put(sourceConf.getValue("name", ""), new SimpleEntry(type, sourceConf));
-                    } else {
-                        logger.log(Level.SEVERE, "load application source resource, but not CacheSource error: " + sourceConf);
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "load application source resource error: " + sourceConf, e);
-                }
-            }
-        }
+        final String confURI = appResFactory.find(RESNAME_APP_CONF_DIR, String.class);
         //------------------------------------- 注册 Resource --------------------------------------------------------
-        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
                 Resource res = field.getAnnotation(Resource.class);
                 if (res == null || !res.name().startsWith("properties.")) return;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不得注入 DataSource
                 Class type = field.getType();
                 if (type != AnyValue.class && type != AnyValue[].class) return;
                 Object resource = null;
@@ -283,18 +229,18 @@ public abstract class NodeServer {
                     resource = properties.getAnyValues(res.name().substring("properties.".length()));
                     appResFactory.register(resourceName, AnyValue[].class, resource);
                 }
-                field.set(src, resource);
+                field.set(srcObj, resource);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Resource inject error", e);
             }
         }, AnyValue.class, AnyValue[].class);
 
         //------------------------------------- 注册 Local AutoLoad(false) Service --------------------------------------------------------        
-        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             Class<Service> resServiceType = Service.class;
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 AutoLoad Service
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不得注入 AutoLoad Service
                 if (!Service.class.isAssignableFrom(field.getType())) return;
                 resServiceType = (Class) field.getType();
                 if (resServiceType.getAnnotation(Local.class) == null) return;
@@ -302,150 +248,56 @@ public abstract class NodeServer {
                 if (al == null || al.value()) return;
 
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
-                SncpClient client = src instanceof Service ? Sncp.getSncpClient((Service) src) : null;
+                SncpClient client = srcObj instanceof Service ? Sncp.getSncpClient((Service) srcObj) : null;
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 final Set<String> groups = new HashSet<>();
                 Service service = Modifier.isFinal(resServiceType.getModifiers()) ? (Service) resServiceType.getConstructor().newInstance() : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, null, appResFactory, appSncpTranFactory, sncpAddr, groups, null);
                 appResFactory.register(resourceName, resServiceType, service);
 
-                field.set(src, service);
-                rf.inject(service, self); // 给其可能包含@Resource的字段赋值;
+                field.set(srcObj, service);
+                rf.inject(resourceName, service, self); // 给其可能包含@Resource的字段赋值;
                 if (!application.isCompileMode()) service.init(null);
                 logger.info("[" + Thread.currentThread().getName() + "] Load Service(@Local @AutoLoad service = " + resServiceType.getSimpleName() + ", resourceName = '" + resourceName + "')");
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] Load @Local @AutoLoad(false) Service inject " + resServiceType + " to " + src + " error", e);
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] Load @Local @AutoLoad(false) Service inject " + resServiceType + " to " + srcObj + " error", e);
             }
         }, Service.class);
 
         //------------------------------------- 注册 DataSource --------------------------------------------------------        
-        resourceFactory.register((ResourceFactory rf, final Object src, String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
-                if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不得注入 DataSource
-                SimpleEntry<Class, AnyValue> resEntry = dataResources.get(resourceName);
-                AnyValue sourceConf = resEntry == null ? null : resEntry.getValue();
-                DataSource source = null;
-                if (sourceConf != null) {
-                    final Class sourceType = resEntry.getKey();
-                    if (sourceType == DataJdbcSource.class) {
-                        source = DataSources.createDataSource(resourceName, sourceConf);
-                    } else {
-                        boolean can = false;
-                        RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
-                        for (Constructor cr : sourceType.getConstructors()) {
-                            if (cr.getParameterCount() == 0) {
-                                can = true;
-                                break;
-                            }
-                        }
-                        if (DataSource.class.isAssignableFrom(sourceType) && can) { // 必须有空构造函数
-                            if (Modifier.isFinal(sourceType.getModifiers()) || sourceType.getAnnotation(Local.class) != null) {
-                                source = (DataSource) sourceType.getConstructor().newInstance();
-                                RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
-                            } else {
-                                final Service srcService = (Service) src;
-                                SncpClient client = Sncp.getSncpClient(srcService);
-                                final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                                final Set<String> groups = new HashSet<>();
-                                source = (DataSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, client == null ? null : client.getMessageAgent(), appResFactory, appSncpTranFactory, sncpAddr, groups, Sncp.getConf(srcService));
-                            }
-                        }
-                    }
-                }
-                if (source == null) {
-                    source = DataSources.createDataSource(confURI, resourceName); //从persistence.xml配置中创建
-                }
-
-                RedkaleClassLoader.putReflectionPublicConstructors(source.getClass(), source.getClass().getName());
-                application.dataSources.add(source);
-                ResourceType rt = source.getClass().getAnnotation(ResourceType.class);
-                if (rt != null && rt.value() != DataSource.class) {
-                    appResFactory.register(resourceName, rt.value(), source);
-                } else if (source instanceof SearchSource) {
-                    appResFactory.register(resourceName, SearchSource.class, source);
-                }
-                appResFactory.register(resourceName, DataSource.class, source);
-
-                field.set(src, source);
-                rf.inject(source, self); // 给AsyncGroup和其他@Resource的字段赋值;
-                //NodeServer.this.watchFactory.inject(src);
-                if (!application.isCompileMode() && source instanceof Service) ((Service) source).init(sourceConf);
-                logger.info("[" + Thread.currentThread().getName() + "] Load DataSource (type = " + source.getClass().getSimpleName() + ", resourceName = '" + resourceName + "')");
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不得注入 DataSource
+                DataSource source = application.loadDataSource(resourceName, false);
+                field.set(srcObj, source);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] DataSource inject to " + src + " error", e);
+                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] DataSource inject to " + srcObj + " error", e);
             }
         }, DataSource.class);
 
         //------------------------------------- 注册 CacheSource --------------------------------------------------------
-        resourceFactory.register(new ResourceFactory.ResourceLoader() {
+        resourceFactory.register(new ResourceTypeLoader() {
             @Override
-            public void load(ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) {
+            public void load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
                     if (field.getAnnotation(Resource.class) == null) return;
-                    if (!(src instanceof Service)) throw new RuntimeException("CacheSource must be inject in Service, cannot " + src);
-                    if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 CacheSource 
-                    final Service srcService = (Service) src;
+                    if (!(srcObj instanceof Service)) throw new RuntimeException("CacheSource must be inject in Service, cannot " + srcObj);
+                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不需要注入 CacheSource 
+                    final Service srcService = (Service) srcObj;
                     SncpClient client = Sncp.getSncpClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                    SimpleEntry<Class, AnyValue> resEntry = cacheResource.get(resourceName);
-                    AnyValue sourceConf = resEntry == null ? null : resEntry.getValue();
-                    if (sourceConf == null) {
-                        SimpleEntry<Class, AnyValue> resEntry2 = dataResources.get(resourceName);
-                        sourceConf = resEntry2 == null ? null : resEntry2.getValue();
-                    }
-                    Class sourceType0 = CacheMemorySource.class;
-                    if (sourceConf != null) {
-                        String classval = sourceConf.getValue("value");
-                        if (classval == null || classval.isEmpty()) {
-                            RedkaleClassLoader.putServiceLoader(CacheSourceProvider.class);
-                            List<CacheSourceProvider> providers = new ArrayList<>();
-                            Iterator<CacheSourceProvider> it = ServiceLoader.load(CacheSourceProvider.class, serverClassLoader).iterator();
-                            while (it.hasNext()) {
-                                CacheSourceProvider s = it.next();
-                                if (s != null) RedkaleClassLoader.putReflectionPublicConstructors(s.getClass(), s.getClass().getName());
-                                if (s != null && s.acceptsConf(sourceConf)) {
-                                    providers.add(s);
-                                }
-                            }
-                            Collections.sort(providers, (a, b) -> {
-                                Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
-                                Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
-                                return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
-                            });
-                            for (CacheSourceProvider provider : providers) {
-                                sourceType0 = provider.sourceClass();
-                                if (sourceType0 != null) break;
-                            }
-                        } else {
-                            sourceType0 = serverClassLoader.loadClass(classval);
-                        }
-                    }
-                    final Class sourceType = sourceType0;
-                    Object source = null;
-                    if (CacheSource.class.isAssignableFrom(sourceType)) { // CacheSource
-                        RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
-                        source = sourceType == CacheMemorySource.class ? new CacheMemorySource(resourceName)
-                            : (Modifier.isFinal(sourceType.getModifiers()) || sourceType.getAnnotation(Local.class) != null) ? sourceType.getConstructor().newInstance()
-                            : (CacheSource) Sncp.createLocalService(serverClassLoader, resourceName, sourceType, client == null ? null : client.getMessageAgent(), appResFactory, appSncpTranFactory, sncpAddr, null, Sncp.getConf(srcService));
-                        Type genericType = field.getGenericType();
-                        application.cacheSources.add((CacheSource) source);
-                        appResFactory.register(resourceName, CacheSource.class, source);
-                        if (genericType != CacheSource.class) {
-                            appResFactory.register(resourceName, genericType, source);
-                        }
-                    }
-                    field.set(src, source);
-                    rf.inject(source, self); //
-                    if (!application.isCompileMode() && source instanceof Service) ((Service) source).init(sourceConf);
+                    final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService) && sncpAddr != null;
+                    CacheSource source = application.loadCacheSource(resourceName, ws);
+                    field.set(srcObj, source);
 
-                    if ((src instanceof org.redkale.net.http.WebSocketNodeService) && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
+                    if (ws) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
                         NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
                         if (source != null && source.getClass().getAnnotation(Local.class) == null) { //本地模式的Service不生成SncpServlet
                             sncpServer.getSncpServer().addSncpServlet((Service) source);
                         }
                         //logger.info("[" + Thread.currentThread().getName() + "] Load Service " + source);
                     }
-                    logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource (type = " + source.getClass().getSimpleName() + ", resourceName = '" + resourceName + "')");
+                    logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "DataSource inject error", e);
                 }
@@ -458,28 +310,28 @@ public abstract class NodeServer {
         }, CacheSource.class);
 
         //------------------------------------- 注册 WebSocketNode --------------------------------------------------------
-        resourceFactory.register(new ResourceFactory.ResourceLoader() {
+        resourceFactory.register(new ResourceTypeLoader() {
             @Override
-            public void load(ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) {
+            public void load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
                     if (field.getAnnotation(Resource.class) == null) return;
-                    if ((src instanceof Service) && Sncp.isRemote((Service) src)) return; //远程模式不需要注入 WebSocketNode 
+                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不需要注入 WebSocketNode 
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) groups.add(NodeServer.this.sncpGroup);
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, Sncp.getMessageAgent((Service) src), application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, Sncp.getMessageAgent((Service) srcObj), application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
                         ((org.redkale.net.http.WebSocketNodeService) nodeService).setName(resourceName);
                     }
-                    resourceFactory.inject(nodeService, self);
-                    MessageAgent messageAgent = Sncp.getMessageAgent((Service) src);
+                    resourceFactory.inject(resourceName, nodeService, self);
+                    MessageAgent messageAgent = Sncp.getMessageAgent((Service) srcObj);
                     if (messageAgent != null && Sncp.getMessageAgent(nodeService) == null) Sncp.setMessageAgent(nodeService, messageAgent);
-                    field.set(src, nodeService);
+                    field.set(srcObj, nodeService);
                     if (Sncp.isRemote(nodeService)) {
                         remoteServices.add(nodeService);
                     } else {
-                        rf.inject(nodeService); //动态加载的Service也存在按需加载的注入资源
+                        rf.inject(resourceName, nodeService); //动态加载的Service也存在按需加载的注入资源
                         localServices.add(nodeService);
                         interceptorServices.add(nodeService);
                         if (consumer != null) consumer.accept(null, nodeService);
@@ -529,7 +381,7 @@ public abstract class NodeServer {
                 || (this.sncpGroup == null && entry.isEmptyGroups()) //空的SNCP配置
                 || serviceImplClass.getAnnotation(Local.class) != null;//本地模式
             if (localed && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
-            final ResourceFactory.ResourceLoader resourceLoader = (ResourceFactory rf, final Object src, final String resourceName, Field field, final Object attachment) -> {
+            final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
                 try {
                     if (SncpClient.parseMethod(serviceImplClass).isEmpty() && serviceImplClass.getAnnotation(Priority.class) == null) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
                         if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
@@ -545,7 +397,7 @@ public abstract class NodeServer {
                     }
 
                     Service service;
-                    final boolean ws = src instanceof WebSocketServlet;
+                    final boolean ws = srcObj instanceof WebSocketServlet;
                     if (ws || localed) { //本地模式
                         service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, agent, appResourceFactory, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
                     } else {
@@ -565,7 +417,7 @@ public abstract class NodeServer {
                         remoteServices.add(service);
                         if (agent != null) sncpRemoteAgents.put(agent.getName(), agent);
                     } else {
-                        if (field != null) rf.inject(service); //动态加载的Service也存在按需加载的注入资源
+                        if (field != null) rf.inject(resourceName, service); //动态加载的Service也存在按需加载的注入资源
                         localServices.add(service);
                         interceptorServices.add(service);
                         if (consumer != null) consumer.accept(agent, service);
@@ -577,10 +429,12 @@ public abstract class NodeServer {
                 }
             };
             if (entry.isExpect()) {
-                ResourceType rty = entry.getType().getAnnotation(ResourceType.class);
-                resourceFactory.register(resourceLoader, rty == null ? entry.getType() : rty.value());
+                Class t = ResourceFactory.getResourceType(entry.getType());
+                if (resourceFactory.findResourceTypeLoader(t) == null) {
+                    resourceFactory.register(resourceLoader, t);
+                }
             } else {
-                resourceLoader.load(resourceFactory, null, entry.getName(), null, false);
+                resourceLoader.load(resourceFactory, null, null, entry.getName(), null, false);
             }
 
         }
@@ -591,10 +445,10 @@ public abstract class NodeServer {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         //---------------- inject ----------------
         new ArrayList<>(localServices).forEach(y -> {
-            resourceFactory.inject(y, NodeServer.this);
+            resourceFactory.inject(Sncp.getResourceName(y), y, NodeServer.this);
         });
         new ArrayList<>(remoteServices).forEach(y -> {
-            resourceFactory.inject(y, NodeServer.this);
+            resourceFactory.inject(Sncp.getResourceName(y), y, NodeServer.this);
             calcMaxLength(y);
         });
 
@@ -852,9 +706,9 @@ public abstract class NodeServer {
         server.shutdown();
     }
 
-    public void command(String cmd) throws IOException {
+    public List<Object> command(String cmd, String[] params) throws IOException {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        final boolean finest = logger.isLoggable(Level.FINEST);
+        List<Object> results = new ArrayList<>();
         localServices.forEach(y -> {
             Set<Method> methods = new HashSet<>();
             Class loop = y.getClass();
@@ -862,10 +716,23 @@ public abstract class NodeServer {
             for (Method m : loop.getMethods()) {
                 Command c = m.getAnnotation(Command.class);
                 if (c == null) continue;
-                if (Modifier.isStatic(m.getModifiers())) continue;
-                if (m.getReturnType() != void.class) continue;
-                if (m.getParameterCount() != 1) continue;
-                if (m.getParameterTypes()[0] != String.class) continue;
+                if (Modifier.isStatic(m.getModifiers())) {
+                    logger.log(Level.WARNING, m + " is static on @Command");
+                    continue;
+                }
+                if (m.getParameterCount() != 1 && m.getParameterCount() != 2) {
+                    logger.log(Level.WARNING, m + " parameter count = " + m.getParameterCount() + " on @Command");
+                    continue;
+                }
+                if (m.getParameterTypes()[0] != String.class) {
+                    logger.log(Level.WARNING, m + " parameters[0] type is not String.class on @Command");
+                    continue;
+                }
+                if (m.getParameterCount() == 2 && m.getParameterTypes()[1] != String[].class) {
+                    logger.log(Level.WARNING, m + " parameters[1] type is not String[].class on @Command");
+                    continue;
+                }
+                if (!c.value().isEmpty() && !c.value().equalsIgnoreCase(cmd)) continue;
                 methods.add(m);
             }
             //} while ((loop = loop.getSuperclass()) != Object.class);
@@ -875,7 +742,8 @@ public abstract class NodeServer {
             try {
                 for (Method method : methods) {
                     one = method;
-                    method.invoke(y, cmd);
+                    Object r = method.getParameterCount() == 2 ? method.invoke(y, cmd, params) : method.invoke(y, cmd);
+                    if (r != null) results.add(r);
                 }
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, one + " run error, cmd = " + cmd, ex);
@@ -886,6 +754,7 @@ public abstract class NodeServer {
             }
         });
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+        return results;
     }
 
     public <T extends Server> T getServer() {

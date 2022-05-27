@@ -29,10 +29,11 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
     @Override
     public byte[] encode(MessageRecord data) {
         if (data == null) return null;
-        byte[] stopics = MessageCoder.getBytes(data.getTopic());
-        byte[] dtopics = MessageCoder.getBytes(data.getResptopic());
-        byte[] groupid = MessageCoder.getBytes(data.getGroupid());
         byte[] userid = MessageCoder.encodeUserid(data.getUserid());
+        byte[] groupid = MessageCoder.getBytes(data.getGroupid());
+        byte[] topic = MessageCoder.getBytes(data.getTopic());
+        byte[] resptopic = MessageCoder.getBytes(data.getRespTopic());
+        byte[] traceid = MessageCoder.getBytes(data.getTraceid());
         int count = 8 //seqid
             + 1 //ctype
             + 4 //version
@@ -40,8 +41,9 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
             + 8 //createtime
             + 2 + userid.length
             + 2 + groupid.length
-            + 2 + stopics.length
-            + 2 + dtopics.length
+            + 2 + topic.length
+            + 2 + resptopic.length
+            + 2 + traceid.length
             + 4 + (data.getContent() == null ? 0 : data.getContent().length);
         final byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
@@ -49,15 +51,23 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         buffer.put(data.ctype);
         buffer.putInt(data.getVersion());
         buffer.putInt(data.getFlag());
-        buffer.putLong(data.getCreatetime());
+        buffer.putLong(data.getCreateTime());
+        
         buffer.putChar((char) userid.length);
         if (userid.length > 0) buffer.put(userid);
+        
         buffer.putChar((char) groupid.length);
         if (groupid.length > 0) buffer.put(groupid);
-        buffer.putChar((char) stopics.length);
-        if (stopics.length > 0) buffer.put(stopics);
-        buffer.putChar((char) dtopics.length);
-        if (dtopics.length > 0) buffer.put(dtopics);
+        
+        buffer.putChar((char) topic.length);
+        if (topic.length > 0) buffer.put(topic);
+        
+        buffer.putChar((char) resptopic.length);
+        if (resptopic.length > 0) buffer.put(resptopic);
+        
+        buffer.putChar((char) traceid.length);
+        if (traceid.length > 0) buffer.put(traceid);
+        
         if (data.getContent() == null) {
             buffer.putInt(0);
         } else {
@@ -81,6 +91,7 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         String groupid = MessageCoder.getShortString(buffer);
         String topic = MessageCoder.getShortString(buffer);
         String resptopic = MessageCoder.getShortString(buffer);
+        String traceid = MessageCoder.getShortString(buffer);
 
         byte[] content = null;
         int contentlen = buffer.getInt();
@@ -88,7 +99,7 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
             content = new byte[contentlen];
             buffer.get(content);
         }
-        return new MessageRecord(seqid, ctype, version, flag, createtime, userid, groupid, topic, resptopic, content);
+        return new MessageRecord(seqid, ctype, version, flag, createtime, userid, groupid, topic, resptopic, traceid, content);
     }
 
 }

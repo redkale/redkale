@@ -90,7 +90,7 @@ public class NodeHttpServer extends NodeServer {
 
     @Override
     protected void loadFilter(ClassFilter<? extends Filter> filterFilter, ClassFilter otherFilter) throws Exception {
-        if (httpServer != null) loadHttpFilter(this.serverConf.getAnyValue("filters"), filterFilter);
+        if (httpServer != null) loadHttpFilter(filterFilter);
     }
 
     @Override
@@ -102,19 +102,19 @@ public class NodeHttpServer extends NodeServer {
     private void initWebSocketService() {
         final NodeServer self = this;
         final ResourceFactory regFactory = application.getResourceFactory();
-        resourceFactory.register((ResourceFactory rf, final Object src, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
-                if (!(src instanceof WebSocketServlet)) return;
-                ResourceFactory.ResourceLoader loader = null;
+                if (!(srcObj instanceof WebSocketServlet)) return;
+                ResourceTypeLoader loader = null;
                 ResourceFactory sncpResFactory = null;
                 for (NodeServer ns : application.servers) {
                     if (!ns.isSNCP()) continue;
                     sncpResFactory = ns.resourceFactory;
-                    loader = sncpResFactory.findLoader(WebSocketNode.class, field);
+                    loader = sncpResFactory.findTypeLoader(WebSocketNode.class, field);
                     if (loader != null) break;
                 }
-                if (loader != null) loader.load(sncpResFactory, src, resourceName, field, attachment);
+                if (loader != null) loader.load(sncpResFactory, srcResourceName, srcObj, resourceName, field, attachment);
                 synchronized (regFactory) {
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (sncpResFactory != null && resourceFactory.find(RESNAME_SNCP_ADDR, String.class) == null) {
@@ -127,15 +127,15 @@ public class NodeHttpServer extends NodeServer {
                         try {
                             Field c = WebSocketServlet.class.getDeclaredField("messageAgent");
                             c.setAccessible(true);
-                            messageAgent = (MessageAgent) c.get(src);
+                            messageAgent = (MessageAgent) c.get(srcObj);
                         } catch (Exception ex) {
                             logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
                         }
                         nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, messageAgent, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
-                    resourceFactory.inject(nodeService, self);
-                    field.set(src, nodeService);
+                    resourceFactory.inject(resourceName, nodeService, self);
+                    field.set(srcObj, nodeService);
                     logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
                 }
             } catch (Exception e) {
@@ -145,7 +145,7 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadHttpFilter(final AnyValue filtersConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
+    protected void loadHttpFilter(final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());

@@ -6,12 +6,15 @@
 package org.redkale.net.http;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.net.HttpCookie;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import javax.persistence.Transient;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.TypeToken;
 
 /**
  * HTTP输出引擎的对象域 <br>
@@ -41,10 +44,17 @@ public class HttpScope {
 
     public static final Object NIL = new Object();
 
+    static final Type FUTRU_TYPE = new TypeToken<CompletableFuture<HttpScope>>() {
+    }.getType();
+
     @ConvertColumn(index = 1)
     protected String referid;
 
+    //@since 2.7.0  
     @ConvertColumn(index = 2)
+    protected Object referObj;
+
+    @ConvertColumn(index = 3)
     protected Map<String, Object> attributes;
 
     //@since 2.4.0  
@@ -52,11 +62,11 @@ public class HttpScope {
     protected Function<String, Object> attrFunction;
 
     //@since 2.4.0  
-    @ConvertColumn(index = 3)
+    @ConvertColumn(index = 4)
     protected Map<String, String> headers;
 
     //@since 2.4.0  
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 5)
     protected List<HttpCookie> cookies;
 
     public static HttpScope refer(String template) {
@@ -107,6 +117,11 @@ public class HttpScope {
         return rs;
     }
 
+    public HttpScope referObj(Object value) {
+        this.referObj = value;
+        return this;
+    }
+
     public HttpScope attrFunc(Function<String, Object> attrFunction) {
         this.attrFunction = attrFunction;
         return this;
@@ -131,7 +146,7 @@ public class HttpScope {
         return this;
     }
 
-    public HttpScope attr(Map<String, Object> map) {
+    public HttpScope attr(Map<String, ?> map) {
         if (map == null) return this;
         if (this.attributes == null) this.attributes = new LinkedHashMap<>();
         this.attributes.putAll(map);
@@ -214,6 +229,14 @@ public class HttpScope {
 
     public void setReferid(String referid) {
         this.referid = referid;
+    }
+
+    public Object getReferObj() {
+        return referObj;
+    }
+
+    public void setReferObj(Object referObj) {
+        this.referObj = referObj;
     }
 
     public Map<String, Object> getAttributes() {

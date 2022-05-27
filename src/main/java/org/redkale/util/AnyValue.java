@@ -554,19 +554,224 @@ public abstract class AnyValue {
     }
 
     /**
-     * 文本内容转换成AnyValue对象
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
      *
      * @param text 文本内容
      *
      * @return AnyValue
+     */
+    public static AnyValue loadFromProperties(String text) {
+        Properties properties = new Properties();
+        try {
+            properties.load(new StringReader(text));
+        } catch (IOException e) {
+            //不会发生
+        }
+        return loadFromProperties(properties);
+    }
+
+    /**
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
+     *
+     * @param text     文本内容
+     * @param nameName String
+     *
+     * @return AnyValue
+     */
+    public static AnyValue loadFromProperties(String text, String nameName) {
+        Properties properties = new Properties();
+        try {
+            properties.load(new StringReader(text));
+        } catch (IOException e) {
+            //不会发生
+        }
+        return loadFromProperties(properties, nameName);
+    }
+
+    /**
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
+     *
+     * @param in 内容流
+     *
+     * @return AnyValue
      * @throws IOException 异常
      */
-    public static AnyValue loadFromXml(String text) throws IOException {
+    public static AnyValue loadFromProperties(InputStream in) throws IOException {
+        Properties properties = new Properties();
+        properties.load(in);
+        return loadFromProperties(properties);
+    }
+
+    /**
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
+     *
+     * @param in      内容流
+     * @param charset 字符编码
+     *
+     * @return AnyValue
+     * @throws IOException 异常
+     */
+    public static AnyValue loadFromProperties(InputStream in, Charset charset) throws IOException {
+        Properties properties = new Properties();
+        properties.load(in);
+        return loadFromProperties(properties);
+    }
+
+    /**
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
+     *
+     * @param properties Properties
+     *
+     * @return AnyValue
+     */
+    public static AnyValue loadFromProperties(Properties properties) {
+        return loadFromProperties(properties, null);
+    }
+
+    /**
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入nameName属性
+     *
+     * @param properties Properties
+     * @param nameName   String
+     *
+     * @return AnyValue
+     */
+    public static AnyValue loadFromProperties(Properties properties, String nameName) {
+        if (properties == null) return null;
+        DefaultAnyValue conf = new DefaultAnyValue();
+        Map<String, DefaultAnyValue> prefixArray = new TreeMap<>(); //已处理的数组key，如 redkale.source[0].xx  存redkale.source[0]
+        properties.forEach((key, value) -> {
+            String[] keys = key.toString().split("\\.");
+            DefaultAnyValue parent = conf;
+            if (keys.length > 1) {
+                for (int i = 0; i < keys.length - 1; i++) {
+                    String item = keys[i];
+                    int pos = item.indexOf('[');
+                    if (pos < 0) {
+                        DefaultAnyValue child = (DefaultAnyValue) parent.getAnyValue(item);
+                        if (child == null) {
+                            child = new DefaultAnyValue();
+                            parent.addValue(item, child);
+                        }
+                        parent = child;
+                    } else { //数组或Map结构, []中间是数字开头的视为数组，其他视为map
+                        String itemField = item.substring(0, pos);  //[前面一部分
+                        String itemIndex = item.substring(pos + 1, item.indexOf(']'));
+                        if (!itemIndex.isEmpty() && itemIndex.charAt(0) >= '0' && itemIndex.charAt(0) <= '9') { //数组
+                            String prefixKey = "";
+                            for (int j = 0; j < i; j++) {
+                                prefixKey += keys[j] + ".";
+                            }
+                            DefaultAnyValue array = prefixArray.get(prefixKey + item);
+                            if (array == null) {
+                                final int ii = i;
+                                String findkey = prefixKey + itemField + "[";
+                                Map<String, DefaultAnyValue> keymap = new TreeMap<>();
+                                Map<Integer, DefaultAnyValue> sortmap = new TreeMap<>();
+                                properties.keySet().stream().filter(x -> x.toString().startsWith(findkey)).forEach(k -> {
+                                    String[] ks = k.toString().split("\\.");
+                                    String prefixKey2 = "";
+                                    for (int j = 0; j < ii; j++) {
+                                        prefixKey2 += ks[j] + ".";
+                                    }
+                                    prefixKey2 += ks[ii];
+                                    if (!keymap.containsKey(prefixKey2)) {
+                                        DefaultAnyValue vv = new DefaultAnyValue();
+                                        keymap.put(prefixKey2, vv);
+                                        sortmap.put(Integer.parseInt(ks[ii].substring(ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']'))), vv);
+                                    }
+                                });
+                                prefixArray.putAll(keymap);
+                                DefaultAnyValue pv = parent;
+                                sortmap.values().forEach(v -> pv.addValue(itemField, v));
+                                array = prefixArray.get(prefixKey + item);
+                            }
+                            parent = array;
+                        } else { //Map
+                            DefaultAnyValue field = (DefaultAnyValue) parent.getAnyValue(itemField);
+                            if (field == null) {
+                                field = new DefaultAnyValue();
+                                parent.addValue(itemField, field);
+                            }
+                            DefaultAnyValue index = (DefaultAnyValue) field.getAnyValue(itemIndex);
+                            if (index == null) {
+                                index = new DefaultAnyValue();
+                                if (nameName != null) index.setValue(nameName, itemIndex);
+                                field.addValue(itemIndex, index);
+                            }
+                            parent = index;
+                        }
+                    }
+                }
+            }
+
+            String lastItem = keys[keys.length - 1];
+            int pos = lastItem.indexOf('[');
+            if (pos < 0) {
+                parent.addValue(lastItem, value.toString());
+            } else {
+                String itemField = lastItem.substring(0, pos);  //[前面一部分
+                String itemIndex = lastItem.substring(pos + 1, lastItem.indexOf(']'));
+                if (!itemIndex.isEmpty() && itemIndex.charAt(0) >= '0' && itemIndex.charAt(0) <= '9') { //数组
+                    //parent.addValue(itemField, value.toString());
+                    String[] tss = parent.getValues(itemField);
+                    if (tss == null || tss.length == 0) {
+                        String prefixKey = "";
+                        for (int j = 0; j < keys.length - 1; j++) {
+                            prefixKey += keys[j] + ".";
+                        }
+                        final int ii = keys.length - 1;
+                        String findkey = prefixKey + itemField + "[";
+                        Map<String, String> keymap = new TreeMap<>();
+                        Map<Integer, String> sortmap = new TreeMap<>();
+                        properties.keySet().stream().filter(x -> x.toString().startsWith(findkey)).forEach(k -> {
+                            String[] ks = k.toString().split("\\.");
+                            String prefixKey2 = "";
+                            for (int j = 0; j < ii; j++) {
+                                prefixKey2 += ks[j] + ".";
+                            }
+                            prefixKey2 += ks[ii];
+                            if (!keymap.containsKey(prefixKey2)) {
+                                String vv = properties.getProperty(k.toString());
+                                keymap.put(prefixKey2, vv);
+                                sortmap.put(Integer.parseInt(ks[ii].substring(ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']'))), vv);
+                            }
+                        });
+                        DefaultAnyValue pv = parent;
+                        sortmap.values().forEach(v -> pv.addValue(itemField, v));
+                    }
+                } else { //Map
+                    DefaultAnyValue child = (DefaultAnyValue) parent.getAnyValue(itemField);
+                    if (child == null) {
+                        child = new DefaultAnyValue();
+                        parent.addValue(itemField, child);
+                    }
+                    child.addValue(itemIndex, value.toString());
+                }
+            }
+        });
+        return conf;
+    }
+
+    /**
+     * xml文本内容转换成AnyValue对象
+     *
+     * @param text 文本内容
+     *
+     * @return AnyValue
+     */
+    public static AnyValue loadFromXml(String text) {
         return new XmlReader(text).read();
     }
 
     /**
-     * 内容流转换成AnyValue对象
+     * xml内容流转换成AnyValue对象
      *
      * @param in 内容流
      *
@@ -578,7 +783,7 @@ public abstract class AnyValue {
     }
 
     /**
-     * 内容流转换成AnyValue对象
+     * xml内容流转换成AnyValue对象
      *
      * @param in      内容流
      * @param charset 字符编码
@@ -591,7 +796,7 @@ public abstract class AnyValue {
     }
 
     /**
-     * 内容流转换成AnyValue对象
+     * xml内容流转换成AnyValue对象
      *
      * @param text     文本内容
      * @param attrFunc 字段回调函数
@@ -604,7 +809,7 @@ public abstract class AnyValue {
     }
 
     /**
-     * 内容流转换成AnyValue对象
+     * xml内容流转换成AnyValue对象
      *
      * @param in       内容流
      * @param attrFunc 字段回调函数
@@ -617,7 +822,7 @@ public abstract class AnyValue {
     }
 
     /**
-     * 内容流转换成AnyValue对象
+     * xml内容流转换成AnyValue对象
      *
      * @param in       内容流
      * @param charset  字符编码
@@ -639,9 +844,7 @@ public abstract class AnyValue {
      */
     public String toString(int indent) { //indent: 缩进长度
         if (indent < 0) indent = 0;
-        char[] chars = new char[indent];
-        Arrays.fill(chars, ' ');
-        final String space = new String(chars);
+        final String space = " ".repeat(indent);
         StringBuilder sb = new StringBuilder();
         sb.append("{\r\n");
         for (Entry<String> en : getStringEntrys()) {
@@ -1126,9 +1329,7 @@ public abstract class AnyValue {
      */
     protected static StringBuilder toXMLString(StringBuilder sb, String nodeName, AnyValue conf, int indent) { //indent: 缩进长度
         if (indent < 0) indent = 0;
-        char[] chars = new char[indent];
-        Arrays.fill(chars, ' ');
-        final String space = new String(chars);
+        final String space = " ".repeat(indent);
         Entry<AnyValue>[] anys = conf.getAnyEntrys();
         sb.append(space).append('<').append(nodeName);
         for (Entry<String> en : conf.getStringEntrys()) {

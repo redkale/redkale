@@ -52,7 +52,7 @@ public class MessageRecord implements Serializable {
 
     @ConvertColumn(index = 4)
     @Comment("创建时间")
-    protected long createtime;
+    protected long createTime;
 
     @ConvertColumn(index = 5)
     @Comment("用户ID，无用户信息视为null或0, 具体数据类型只能是int、long、String")  //@since 2.5.0 由int改成Serializable
@@ -68,40 +68,45 @@ public class MessageRecord implements Serializable {
 
     @ConvertColumn(index = 8)
     @Comment("目标topic, 为空表示无目标topic")
-    protected String resptopic;
+    protected String respTopic;
 
     @ConvertColumn(index = 9)
+    @Comment("链路ID")
+    protected String traceid;
+
+    @ConvertColumn(index = 10)
     @Comment("消息内容")
     protected byte[] content;
 
-    @ConvertColumn(index = 10)
+    @ConvertColumn(index = 11)
     @Comment("消息内容的类型")
     protected byte ctype;
 
     @Comment("本地附加对象，不会被序列化")
-    protected Object localattach;
+    protected Object localAttach;
 
     public MessageRecord() {
     }
 
-    protected MessageRecord(long seqid, byte ctype, String topic, String resptopic, byte[] content) {
-        this(seqid, ctype, 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, content);
+    protected MessageRecord(long seqid, byte ctype, String topic, String resptopic, String traceid, byte[] content) {
+        this(seqid, ctype, 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, traceid, content);
     }
 
-    protected MessageRecord(long seqid, byte ctype, int flag, Serializable userid, String groupid, String topic, String resptopic, byte[] content) {
-        this(seqid, ctype, 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, content);
+    protected MessageRecord(long seqid, byte ctype, int flag, Serializable userid, String groupid, String topic, String resptopic, String traceid, byte[] content) {
+        this(seqid, ctype, 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, traceid, content);
     }
 
-    protected MessageRecord(long seqid, byte ctype, int version, int flag, long createtime, Serializable userid, String groupid, String topic, String resptopic, byte[] content) {
+    protected MessageRecord(long seqid, byte ctype, int version, int flag, long createTime, Serializable userid, String groupid, String topic, String resptopic, String traceid, byte[] content) {
         this.seqid = seqid;
         this.ctype = ctype;
         this.version = version;
         this.flag = flag;
-        this.createtime = createtime;
+        this.createTime = createTime;
         this.userid = userid;
         this.groupid = groupid;
         this.topic = topic;
-        this.resptopic = resptopic;
+        this.respTopic = resptopic;
+        this.traceid = traceid;
         this.content = content;
     }
 
@@ -110,7 +115,7 @@ public class MessageRecord implements Serializable {
     }
 
     public MessageRecord attach(Object attach) {
-        this.localattach = attach;
+        this.localAttach = attach;
         return this;
     }
 
@@ -120,8 +125,13 @@ public class MessageRecord implements Serializable {
     }
 
     @ConvertDisabled
-    public boolean isEmptyResptopic() {
-        return this.resptopic == null || this.resptopic.isEmpty();
+    public boolean isEmptyRespTopic() {
+        return this.respTopic == null || this.respTopic.isEmpty();
+    }
+
+    @ConvertDisabled
+    public boolean isEmptyTraceid() {
+        return this.traceid == null || this.traceid.isEmpty();
     }
 
     public <T> T convertFromContent(Convert convert, java.lang.reflect.Type type) {
@@ -159,8 +169,8 @@ public class MessageRecord implements Serializable {
         return this;
     }
 
-    public MessageRecord createtime(long createtime) {
-        this.createtime = createtime;
+    public MessageRecord createTime(long createtime) {
+        this.createTime = createtime;
         return this;
     }
 
@@ -179,13 +189,18 @@ public class MessageRecord implements Serializable {
         return this;
     }
 
-    public MessageRecord resptopic(String resptopic) {
-        this.resptopic = resptopic;
+    public MessageRecord respTopic(String resptopic) {
+        this.respTopic = resptopic;
         return this;
     }
 
     public MessageRecord content(byte[] content) {
         this.content = content;
+        return this;
+    }
+
+    public MessageRecord traceid(String traceid) {
+        this.traceid = traceid;
         return this;
     }
 
@@ -218,12 +233,12 @@ public class MessageRecord implements Serializable {
         this.flag = flag;
     }
 
-    public long getCreatetime() {
-        return createtime;
+    public long getCreateTime() {
+        return createTime;
     }
 
-    public void setCreatetime(long createtime) {
-        this.createtime = createtime;
+    public void setCreateTime(long createTime) {
+        this.createTime = createTime;
     }
 
     public Serializable getUserid() {
@@ -232,6 +247,14 @@ public class MessageRecord implements Serializable {
 
     public void setUserid(Serializable userid) {
         this.userid = userid;
+    }
+
+    public String getTraceid() {
+        return traceid;
+    }
+
+    public void setTraceid(String traceid) {
+        this.traceid = traceid;
     }
 
     public String getGroupid() {
@@ -250,12 +273,12 @@ public class MessageRecord implements Serializable {
         this.topic = topic;
     }
 
-    public String getResptopic() {
-        return resptopic;
+    public String getRespTopic() {
+        return respTopic;
     }
 
-    public void setResptopic(String resptopic) {
-        this.resptopic = resptopic;
+    public void setRespTopic(String respTopic) {
+        this.respTopic = respTopic;
     }
 
     public byte[] getContent() {
@@ -273,11 +296,11 @@ public class MessageRecord implements Serializable {
         sb.append("{\"seqid\":").append(this.seqid);
         sb.append(",\"version\":").append(this.version);
         if (this.flag != 0) sb.append(",\"flag\":").append(this.flag);
-        if (this.createtime != 0) sb.append(",\"createtime\":").append(this.createtime);
+        if (this.createTime != 0) sb.append(",\"createTime\":").append(this.createTime);
         if (this.userid != null) sb.append(",\"userid\":").append(this.userid);
         if (this.groupid != null) sb.append(",\"groupid\":\"").append(this.groupid).append("\"");
         if (this.topic != null) sb.append(",\"topic\":\"").append(this.topic).append("\"");
-        if (this.resptopic != null) sb.append(",\"resptopic\":\"").append(this.resptopic).append("\"");
+        if (this.respTopic != null) sb.append(",\"respTopic\":\"").append(this.respTopic).append("\"");
         if (this.content != null) {
             if (this.ctype == CTYPE_BSON_RESULT && this.content.length > SncpRequest.HEADER_SIZE) {
                 int offset = SncpRequest.HEADER_SIZE + 1; //循环占位符
@@ -292,8 +315,8 @@ public class MessageRecord implements Serializable {
                 sb.append(",\"content\":").append(req);
             } else if (this.ctype == CTYPE_HTTP_RESULT) {
                 sb.append(",\"content\":").append(HttpResultCoder.getInstance().decode(this.content));
-            } else if (localattach != null) {
-                sb.append(",\"attach\":").append(JsonConvert.root().convertTo(localattach));
+            } else if (localAttach != null) {
+                sb.append(",\"attach\":").append(JsonConvert.root().convertTo(localAttach));
             } else {
                 sb.append(",\"content\":\"").append(new String(this.content, StandardCharsets.UTF_8)).append("\"");
             }

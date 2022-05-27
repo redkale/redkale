@@ -39,6 +39,6 @@ module redkale {
     uses org.redkale.convert.ConvertProvider;
     uses org.redkale.source.CacheSourceProvider;
     uses org.redkale.source.DataSourceProvider;
-    uses org.redkale.util.ResourceInjectLoader;
+    uses org.redkale.util.ResourceAnnotationProvider;
     
 }

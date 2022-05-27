@@ -8,6 +8,7 @@ package org.redkale.net;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
 
@@ -28,7 +29,7 @@ public abstract class Request<C extends Context> {
 
     protected final JsonConvert jsonConvert;
 
-    protected long createtime;
+    protected long createTime;
 
     protected boolean keepAlive;
 
@@ -80,7 +81,7 @@ public abstract class Request<C extends Context> {
 
     protected void recycle() {
         hashid = 0;
-        createtime = 0;
+        createTime = 0;
         pipelineIndex = 0;
         pipelineCount = 0;
         pipelineOver = false;
@@ -139,8 +140,14 @@ public abstract class Request<C extends Context> {
         return this.context;
     }
 
+    @Deprecated //since 2.7.0 replace by getCreateTime()
+    @ConvertDisabled
     public long getCreatetime() {
-        return createtime;
+        return createTime;
+    }
+
+    public long getCreateTime() {
+        return createTime;
     }
 
     public int getHashid() {

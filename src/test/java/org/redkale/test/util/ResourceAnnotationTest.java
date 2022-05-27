@@ -10,6 +10,7 @@ import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.Field;
+import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
@@ -17,25 +18,35 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class ResourceInjectMain {
+public class ResourceAnnotationTest {
+
+    private boolean main;
 
     public static void main(String[] args) throws Throwable {
-        ResourceFactory factory = ResourceFactory.create();
-        factory.register(new CustomConfLoader());
-        InjectBean bean = new InjectBean();
-        factory.inject(bean);
+        ResourceAnnotationTest test = new ResourceAnnotationTest();
+        test.main = true;
+        test.run();
     }
 
-    public static class CustomConfLoader implements ResourceInjectLoader<CustomConf> {
+    @Test
+    public void run() throws Exception {
+        ResourceFactory factory = ResourceFactory.create();
+        factory.register(new CustomConfProvider());
+        InjectBean bean = new InjectBean();
+        factory.inject(bean);
+        if (!main) Assertions.assertEquals(new File("conf/test.xml").toString(), bean.conf.toString());
+    }
+
+    public static class CustomConfProvider implements ResourceAnnotationProvider<CustomConf> {
 
         @Override
-        public void load(ResourceFactory factory, Object src, CustomConf annotation, Field field, Object attachment) {
+        public void load(ResourceFactory factory, String srcResourceName, Object srcObj, CustomConf annotation, Field field, Object attachment) {
             try {
-                field.set(src, new File(annotation.path()));
+                field.set(srcObj, new File(annotation.path()));
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            System.out.println("对象是 src =" + src + ", path=" + annotation.path());
+            System.out.println("对象是 src =" + srcObj + ", path=" + annotation.path());
         }
 
         @Override

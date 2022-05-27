@@ -69,11 +69,11 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     public void finishHttpResult(Type type, HttpResult result) {
-        finishHttpResult(this.finest, ((HttpMessageRequest) this.request).getRespConvert(), type, this.message, this.callback, this.messageClient, this.producer, message.getResptopic(), result);
+        finishHttpResult(this.finest, ((HttpMessageRequest) this.request).getRespConvert(), type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
     }
 
     public void finishHttpResult(Type type, Convert respConvert, HttpResult result) {
-        finishHttpResult(this.finest, respConvert == null ? ((HttpMessageRequest) this.request).getRespConvert() : respConvert, type, this.message, this.callback, this.messageClient, this.producer, message.getResptopic(), result);
+        finishHttpResult(this.finest, respConvert == null ? ((HttpMessageRequest) this.request).getRespConvert() : respConvert, type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
     }
 
     public static void finishHttpResult(boolean finest, Convert respConvert, Type type, MessageRecord msg, Runnable callback, MessageClient messageClient, MessageProducer producer, String resptopic, HttpResult result) {
@@ -120,7 +120,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finishJson(final JsonConvert convert, final Object obj) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -130,7 +130,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finishJson(final Type type, final Object obj) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -139,7 +139,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -148,7 +148,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(Type type, org.redkale.service.RetResult ret) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -158,7 +158,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(final Convert convert, Type type, org.redkale.service.RetResult ret) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -167,7 +167,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(final Convert convert, final Type type, Object obj) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -176,7 +176,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(String obj) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -210,7 +210,7 @@ public class HttpMessageResponse extends HttpResponse {
         } else if (finest) {
             producer.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
         }
-        if (this.message.isEmptyResptopic()) {
+        if (this.message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -219,7 +219,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(final Convert convert, Type type, HttpResult result) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -229,7 +229,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(boolean kill, final byte[] bs, int offset, int length) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -242,7 +242,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -252,7 +252,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     protected <A> void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length, Consumer<A> consumer, A attachment) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -262,7 +262,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(boolean kill, ByteBuffer buffer) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }
@@ -273,7 +273,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     @Override
     public void finish(boolean kill, ByteBuffer... buffers) {
-        if (message.isEmptyResptopic()) {
+        if (message.isEmptyRespTopic()) {
             if (callback != null) callback.run();
             return;
         }

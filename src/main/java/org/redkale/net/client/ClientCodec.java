@@ -25,14 +25,17 @@ public abstract class ClientCodec<R extends ClientRequest, P> {
 
     protected final List<ClientResult<P>> results = new ArrayList<>();
 
-    public ClientCodec() {
+    protected final ClientConnection connection;
+
+    public ClientCodec(ClientConnection connection) {
+        this.connection = connection;
     }
 
     //返回true: array会clear, 返回false: buffer会clear
-    public abstract boolean codecResult(ClientConnection conn, ByteBuffer buffer, ByteArray array);
+    public abstract boolean codecResult(ByteBuffer buffer, ByteArray array);
 
-    protected Queue<ClientFuture> responseQueue(ClientConnection conn) {
-        return conn.responseQueue;
+    protected Queue<ClientFuture> responseQueue() {
+        return connection.responseQueue;
     }
 
     public List<ClientResult<P>> removeResults() {
@@ -40,6 +43,10 @@ public abstract class ClientCodec<R extends ClientRequest, P> {
         List<ClientResult<P>> rs = new ArrayList<>(results);
         this.results.clear();
         return rs;
+    }
+
+    public ClientConnection getConnection() {
+        return connection;
     }
 
     public void addResult(P result) {

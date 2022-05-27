@@ -29,7 +29,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     protected final Encodeable<Writer, Object> componentEncoder;
 
-    protected final boolean subtypefinal;
+    protected final boolean subTypeFinal;
 
     protected volatile boolean inited = false;
 
@@ -49,7 +49,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             factory.register(type, this);
             this.componentEncoder = factory.loadEncoder(this.componentType);
             this.anyEncoder = factory.getAnyEncoder();
-            this.subtypefinal = (this.componentType instanceof Class) && Modifier.isFinal(((Class) this.componentType).getModifiers());
+            this.subTypeFinal = (this.componentType instanceof Class) && Modifier.isFinal(((Class) this.componentType).getModifiers());
         } finally {
             inited = true;
             synchronized (lock) {
@@ -74,7 +74,8 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             out.writeArrayE();
             return;
         }
-        if (this.componentEncoder == null) {
+        Encodeable<Writer, Object> itemEncoder = this.componentEncoder;
+        if (itemEncoder == null) {
             if (!this.inited) {
                 synchronized (lock) {
                     try {
@@ -85,8 +86,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 }
             }
         }
-        Encodeable<Writer, Object> itemEncoder = this.componentEncoder;
-        if (subtypefinal) {
+        if (subTypeFinal) {
             if (out.writeArrayB(value.length, this, itemEncoder, value) < 0) {
                 for (int i = 0;; i++) {
                     writeMemberValue(out, member, itemEncoder, value[i], i);
@@ -122,6 +122,11 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
         return type;
     }
 
+    @Override
+    public boolean specifyable() {
+        return false;
+    }
+
     public Type getComponentType() {
         return componentType;
     }
@@ -129,5 +134,4 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
     public Encodeable<Writer, Object> getComponentEncoder() {
         return componentEncoder;
     }
-
 }

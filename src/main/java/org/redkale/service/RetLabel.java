@@ -79,7 +79,7 @@ public @interface RetLabel {
                 }
             }
             try {
-                File propPath = new File(System.getProperty(RESNAME_APP_CONF, new File(System.getProperty(RESNAME_APP_HOME, ""), "conf").getPath()));
+                File propPath = new File(System.getProperty(RESNAME_APP_CONF_DIR, new File(System.getProperty(RESNAME_APP_HOME, ""), "conf").getPath()));
                 if (propPath.isDirectory() && propPath.canRead()) {
                     final String prefix = clazz.getSimpleName().toLowerCase();
                     for (File propFile : propPath.listFiles(f -> f.getName().startsWith(prefix) && f.getName().endsWith(".properties"))) {

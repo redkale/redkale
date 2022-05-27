@@ -56,6 +56,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
+        if (context.rpcAuthenticator != null) {
+            context.rpcAuthenticator.init(context.rpcAuthenticatorConfig);
+        }
     }
 
     @Override
@@ -69,6 +72,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         if (this.dateScheduler != null) {
             this.dateScheduler.shutdownNow();
             this.dateScheduler = null;
+        }
+        if (context.rpcAuthenticator != null) {
+            context.rpcAuthenticator.destroy(context.rpcAuthenticatorConfig);
         }
     }
 
@@ -328,10 +334,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         String jsonContentType = null;
         HttpCookie defaultCookie = null;
         String remoteAddrHeader = null;
+        AnyValue rpcAuthenticatorConfig = null;
 
         if (config != null) {
             AnyValue reqs = config.getAnyValue("request");
             if (reqs != null) {
+                rpcAuthenticatorConfig = reqs.getAnyValue("rpc");
                 AnyValue raddr = reqs.getAnyValue("remoteaddr");
                 remoteAddrHeader = raddr == null ? null : raddr.getValue("value");
                 if (remoteAddrHeader != null) {
@@ -457,15 +465,40 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         respConfig.autoOptions = autoOptions;
         respConfig.dateSupplier = dateSupplier;
         respConfig.httpRender = httpRender;
+        respConfig.renderConfig = renderConfig;
         respConfig.init(config);
 
         final HttpContextConfig contextConfig = new HttpContextConfig();
         initContextConfig(contextConfig);
         contextConfig.remoteAddrHeader = addrHeader;
+        contextConfig.rpcAuthenticatorConfig = rpcAuthenticatorConfig;
+        if (rpcAuthenticatorConfig != null) {
+            String impl = rpcAuthenticatorConfig.getValue("authenticator", "").trim();
+            if (impl.isEmpty()) {
+                throw new RuntimeException("init HttpRpcAuthenticator(" + impl + ") error");
+            }
+            try {
+                Class implClass = serverClassLoader.loadClass(impl);
+                if (!HttpRpcAuthenticator.class.isAssignableFrom(implClass)) {
+                    throw new RuntimeException("" + impl + " not HttpRpcAuthenticator implement class");
+                }
+                RedkaleClassLoader.putReflectionPublicConstructors(implClass, implClass.getName());
+                contextConfig.rpcAuthenticator = (HttpRpcAuthenticator) implClass.getConstructor().newInstance();
+            } catch (RuntimeException ex) {
+                throw ex;
+            } catch (Exception e) {
+                throw new RuntimeException("init HttpRpcAuthenticator(" + impl + ") error", e);
+            }
+        }
+        return new HttpContext(contextConfig);
+    }
 
-        HttpContext c = new HttpContext(contextConfig);
-        if (httpRender != null) httpRender.init(c, renderConfig);
-        return c;
+    @Override
+    protected void postPrepareInit() {
+        HttpRender httpRender = this.respConfig.httpRender;
+        if (httpRender != null) {
+            httpRender.init(context, this.respConfig.renderConfig);
+        }
     }
 
     @Override

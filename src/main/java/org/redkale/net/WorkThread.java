@@ -5,6 +5,7 @@
  */
 package org.redkale.net;
 
+import java.util.Collection;
 import java.util.concurrent.*;
 import org.redkale.util.ThreadHashExecutor;
 
@@ -51,6 +52,19 @@ public class WorkThread extends Thread implements Executor {
     }
 
     public void execute(Runnable... commands) {
+        if (workExecutor == null) {
+            for (Runnable command : commands) {
+                command.run();
+            }
+        } else {
+            for (Runnable command : commands) {
+                workExecutor.execute(command);
+            }
+        }
+    }
+
+    public void execute(Collection<Runnable> commands) {
+        if (commands == null) return;
         if (workExecutor == null) {
             for (Runnable command : commands) {
                 command.run();

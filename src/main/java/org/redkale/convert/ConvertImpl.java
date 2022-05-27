@@ -19,18 +19,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     public String getName();
  * }
  *
- * 
+ *
  * public class OneImpl implements OneEntity {
  *     private String name;
  *     public String getName(){return name;}
  *     public void setName(String name){this.name=name;}
  * }
- * 
+ *
  *
  * String json = "{'name':'hello'}";
- * OneEntity one = JsonConvert.root.convertFrom(OneEntity.class, json);
+ * OneEntity one = JsonConvert.root().convertFrom(OneEntity.class, json);
  * //one instanceof OneImpl
- * 
+ *
  * </pre></blockquote>
  * <p>
  * 详情见: https://redkale.org
@@ -38,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author zhangjx
  * @since 2.5.0
  */
-@Inherited
+//一定不能标记Inherited
 @Documented
 @Target({TYPE})
 @Retention(RUNTIME)
@@ -49,5 +49,12 @@ public @interface ConvertImpl {
      *
      * @return String
      */
-    Class value();
+    Class value() default Object.class;
+
+    /**
+     * 实现类的集合
+     *
+     * @return Class[]
+     */
+    Class[] types() default {};
 }

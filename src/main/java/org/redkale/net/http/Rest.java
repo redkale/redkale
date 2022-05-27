@@ -40,7 +40,7 @@ public final class Rest {
 
     public static final String REST_HEADER_RESOURCE_NAME = "rest-resource-name";
 
-    public static final String REST_HEADER_RPC_NAME = "rest-rpc-name";
+    public static final String REST_HEADER_RPC = "rest-rpc";
 
     public static final String REST_HEADER_CURRUSERID_NAME = "rest-curruserid-name";
 
@@ -155,9 +155,13 @@ public final class Rest {
         }
     }
 
-    static JsonConvert createJsonConvert(RestConvert[] converts, RestConvertCoder[] coders) {
-        if ((converts == null || converts.length < 1) && (coders == null || coders.length < 1)) return JsonConvert.root();
-        final JsonFactory childFactory = JsonFactory.create();
+    public static JsonFactory createJsonFactory(RestConvert[] converts, RestConvertCoder[] coders) {
+        return createJsonFactory(true, converts, coders);
+    }
+
+    public static JsonFactory createJsonFactory(boolean tiny, RestConvert[] converts, RestConvertCoder[] coders) {
+        if ((converts == null || converts.length < 1) && (coders == null || coders.length < 1)) return JsonFactory.root();
+        final JsonFactory childFactory = JsonFactory.create().tiny(tiny);
         List<Class> types = new ArrayList<>();
         Set<Class> reloadTypes = new HashSet<>();
         if (coders != null) {
@@ -169,11 +173,14 @@ public final class Rest {
         if (converts != null) {
             for (RestConvert rc : converts) {
                 if (rc.type() == void.class || rc.type() == Void.class) {
-                    return JsonFactory.create().skipAllIgnore(true).getConvert();
+                    return JsonFactory.create().skipAllIgnore(true);
                 }
                 if (types.contains(rc.type())) throw new RuntimeException("@RestConvert type(" + rc.type() + ") repeat");
                 if (rc.skipIgnore()) {
                     childFactory.registerSkipIgnore(rc.type());
+                    childFactory.reloadCoder(rc.type());
+                } else if (rc.onlyColumns().length > 0) {
+                    childFactory.registerIgnoreAll(rc.type(), rc.onlyColumns());
                     childFactory.reloadCoder(rc.type());
                 } else {
                     childFactory.register(rc.type(), false, rc.convertColumns());
@@ -181,13 +188,13 @@ public final class Rest {
                     childFactory.reloadCoder(rc.type());
                 }
                 types.add(rc.type());
-                childFactory.tiny(rc.tiny());
+                if (tiny) childFactory.tiny(rc.tiny());
             }
         }
         for (Class type : reloadTypes) {
             childFactory.reloadCoder(type);
         }
-        return childFactory.getConvert();
+        return childFactory;
     }
 
     static String getWebModuleNameLowerCase(Class<? extends Service> serviceType) {
@@ -916,6 +923,10 @@ public final class Rest {
         final String multiContextDesc = Type.getDescriptor(MultiContext.class);
         final String multiContextName = MultiContext.class.getName().replace('.', '/');
         final String mappingDesc = Type.getDescriptor(HttpMapping.class);
+        final String restConvertDesc = Type.getDescriptor(RestConvert.class);
+        final String restConvertsDesc = Type.getDescriptor(RestConvert.RestConverts.class);
+        final String restConvertCoderDesc = Type.getDescriptor(RestConvertCoder.class);
+        final String restConvertCodersDesc = Type.getDescriptor(RestConvertCoder.RestConvertCoders.class);
         final String httpParamDesc = Type.getDescriptor(HttpParam.class);
         final String httpParamsDesc = Type.getDescriptor(HttpParam.HttpParams.class);
         final String sourcetypeDesc = Type.getDescriptor(HttpParam.HttpParameterStyle.class);
@@ -1277,7 +1288,7 @@ public final class Rest {
                 genField.setAccessible(true);
                 Object[] rc = restConverts.get(i);
 
-                genField.set(obj, createJsonConvert((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]));
+                genField.set(obj, createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]).getConvert());
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
             typesfield.setAccessible(true);
@@ -1574,6 +1585,7 @@ public final class Rest {
                     n = annhead.name();
                     radix = annhead.radix();
                     comment = annhead.comment();
+                    required = false;
                     if (n.isEmpty()) throw new RuntimeException("@RestHeader.value is illegal in " + method);
                 }
                 RestCookie anncookie = param.getAnnotation(RestCookie.class);
@@ -1583,6 +1595,7 @@ public final class Rest {
                     n = anncookie.name();
                     radix = anncookie.radix();
                     comment = anncookie.comment();
+                    required = false;
                     if (n.isEmpty()) throw new RuntimeException("@RestCookie.value is illegal in " + method);
                 }
                 RestSessionid annsid = param.getAnnotation(RestSessionid.class);
@@ -1590,6 +1603,7 @@ public final class Rest {
                     if (annhead != null) throw new RuntimeException("@RestSessionid and @RestHeader cannot on the same Parameter in " + method);
                     if (anncookie != null) throw new RuntimeException("@RestSessionid and @RestCookie cannot on the same Parameter in " + method);
                     if (ptype != String.class) throw new RuntimeException("@RestSessionid must on String Parameter in " + method);
+                    required = false;
                 }
                 RestAddress annaddr = param.getAnnotation(RestAddress.class);
                 if (annaddr != null) {
@@ -1598,6 +1612,7 @@ public final class Rest {
                     if (annsid != null) throw new RuntimeException("@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
                     if (ptype != String.class) throw new RuntimeException("@RestAddress must on String Parameter in " + method);
                     comment = annaddr.comment();
+                    required = false;
                 }
                 RestBody annbody = param.getAnnotation(RestBody.class);
                 if (annbody != null) {
@@ -1644,6 +1659,7 @@ public final class Rest {
                     if (annfile != null) throw new RuntimeException("@RestUserid and @RestUploadFile cannot on the same Parameter in " + method);
                     if (!ptype.isPrimitive() && !java.io.Serializable.class.isAssignableFrom(ptype)) throw new RuntimeException("@RestUserid must on java.io.Serializable Parameter in " + method);
                     comment = "";
+                    required = false;
                 }
 
                 RestHeaders annheaders = param.getAnnotation(RestHeaders.class);
@@ -1657,6 +1673,7 @@ public final class Rest {
                     if (userid != null) throw new RuntimeException("@RestHeaders and @RestUserid cannot on the same Parameter in " + method);
                     if (!TYPE_MAP_STRING_STRING.equals(param.getParameterizedType())) throw new RuntimeException("@RestHeaders must on Map<String, String> Parameter in " + method);
                     comment = "";
+                    required = false;
                 }
                 RestParams annparams = param.getAnnotation(RestParams.class);
                 if (annparams != null) {
@@ -1710,6 +1727,7 @@ public final class Rest {
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
+            java.lang.reflect.Type returnGenericNoFutureType = TypeToken.getGenericType(method.getGenericReturnType(), serviceType);
             { // 设置 Annotation
                 //设置 HttpMapping
                 boolean reqpath = false;
@@ -1741,23 +1759,22 @@ public final class Rest {
                 }
                 av1.visitEnd();
 
-                java.lang.reflect.Type grt = TypeToken.getGenericType(method.getGenericReturnType(), serviceType);
                 Class rtc = returnType;
                 if (rtc == void.class) {
                     rtc = RetResult.class;
-                    grt = TYPE_RETRESULT_STRING;
+                    returnGenericNoFutureType = TYPE_RETRESULT_STRING;
                 } else if (CompletionStage.class.isAssignableFrom(returnType)) {
-                    ParameterizedType ptgrt = (ParameterizedType) grt;
-                    grt = ptgrt.getActualTypeArguments()[0];
-                    rtc = TypeToken.typeToClass(grt);
+                    ParameterizedType ptgrt = (ParameterizedType) returnGenericNoFutureType;
+                    returnGenericNoFutureType = ptgrt.getActualTypeArguments()[0];
+                    rtc = TypeToken.typeToClass(returnGenericNoFutureType);
                     if (rtc == null) rtc = Object.class; //应该不会发生吧?
                 }
                 av0.visit("result", Type.getType(Type.getDescriptor(rtc)));
-                if (grt != rtc) {
-                    String refid = typeRefs.get(grt);
+                if (returnGenericNoFutureType != rtc) {
+                    String refid = typeRefs.get(returnGenericNoFutureType);
                     if (refid == null) {
                         refid = "_typeref_" + typeRefs.size();
-                        typeRefs.put(grt, refid);
+                        typeRefs.put(returnGenericNoFutureType, refid);
                     }
                     av0.visit("resultref", refid);
                 }
@@ -1770,10 +1787,52 @@ public final class Rest {
                 mappingMap.put("actionid", entry.actionid);
                 mappingMap.put("comment", entry.comment);
                 mappingMap.put("methods", entry.methods);
-                mappingMap.put("result", grt == returnType ? returnType.getName() : String.valueOf(grt));
+                mappingMap.put("result", returnGenericNoFutureType == returnType ? returnType.getName() : String.valueOf(returnGenericNoFutureType));
                 entry.mappingurl = url;
             }
-
+            if (rcs != null && rcs.length > 0) { // 设置 Annotation
+                av0 = mv.visitAnnotation(restConvertsDesc, true);
+                AnnotationVisitor av1 = av0.visitArray("value");
+                //设置 RestConvert
+                for (RestConvert rc : rcs) {
+                    AnnotationVisitor av2 = av1.visitAnnotation(null, restConvertDesc);
+                    av2.visit("tiny", rc.tiny());
+                    av2.visit("skipIgnore", rc.skipIgnore());
+                    av2.visit("type", Type.getType(Type.getDescriptor(rc.type())));
+                    AnnotationVisitor av3 = av2.visitArray("onlyColumns");
+                    for (String s : rc.onlyColumns()) {
+                        av3.visit(null, s);
+                    }
+                    av3.visitEnd();
+                    av3 = av2.visitArray("ignoreColumns");
+                    for (String s : rc.ignoreColumns()) {
+                        av3.visit(null, s);
+                    }
+                    av3.visitEnd();
+                    av3 = av2.visitArray("convertColumns");
+                    for (String s : rc.convertColumns()) {
+                        av3.visit(null, s);
+                    }
+                    av3.visitEnd();
+                    av2.visitEnd();
+                }
+                av1.visitEnd();
+                av0.visitEnd();
+            }
+            if (rcc != null && rcc.length > 0) { // 设置 Annotation
+                av0 = mv.visitAnnotation(restConvertCodersDesc, true);
+                AnnotationVisitor av1 = av0.visitArray("value");
+                //设置 RestConvertCoder
+                for (RestConvertCoder rc : rcc) {
+                    AnnotationVisitor av2 = av1.visitAnnotation(null, restConvertCoderDesc);
+                    av2.visit("type", Type.getType(Type.getDescriptor(rc.type())));
+                    av2.visit("field", rc.field());
+                    av2.visit("coder", Type.getType(Type.getDescriptor(rc.coder())));
+                    av2.visitEnd();
+                }
+                av1.visitEnd();
+                av0.visitEnd();
+            }
             { // 设置 Annotation
                 av0 = mv.visitAnnotation(httpParamsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
@@ -2251,7 +2310,7 @@ public final class Rest {
                     mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
-                    JsonFactory.root().loadDecoder(param.getParameterizedType());
+                    JsonFactory.root().loadDecoder(pgentype);
 
                     //构建 RestHeader、RestCookie、RestAddress 等赋值操作
                     Class loop = ptype;
@@ -2572,22 +2631,34 @@ public final class Rest {
             } else if (CompletionStage.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); //response
-                if (rcs != null && rcs.length > 0) {
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
-                    mv.visitInsn(AALOAD);
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
+                if (returnGenericNoFutureType == HttpScope.class) {
+                    if (rcs != null && rcs.length > 0) {
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                        mv.visitVarInsn(ALOAD, maxLocals);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScope", "(" + convertDesc + stageDesc + ")V", false);
+                    } else {
+                        mv.visitVarInsn(ALOAD, maxLocals);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScope", "(" + stageDesc + ")V", false);
+                    }
                 } else {
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
-                    mv.visitInsn(AALOAD);
-                    mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + stageDesc + ")V", false);
+                    if (rcs != null && rcs.length > 0) {
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
+                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        mv.visitInsn(AALOAD);
+                        mv.visitVarInsn(ALOAD, maxLocals);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
+                    } else {
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
+                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        mv.visitInsn(AALOAD);
+                        mv.visitVarInsn(ALOAD, maxLocals);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + stageDesc + ")V", false);
+                    }
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -2872,7 +2943,7 @@ public final class Rest {
                 Field genField = newClazz.getDeclaredField(REST_CONVERT_FIELD_PREFIX + (i + 1));
                 genField.setAccessible(true);
                 Object[] rc = restConverts.get(i);
-                genField.set(obj, createJsonConvert((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]));
+                genField.set(obj, createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]).getConvert());
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), genField);
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
