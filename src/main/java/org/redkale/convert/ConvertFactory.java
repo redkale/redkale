@@ -61,6 +61,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private final Set<Class> skipIgnores = new HashSet();
 
+    final Set<String> ignoreMapColumns = new HashSet();
+
     //key:需要屏蔽的字段；value：排除的字段名
     private final ConcurrentHashMap<Class, Set<String>> ignoreAlls = new ConcurrentHashMap();
 
@@ -707,7 +709,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         if (set == null) {
             ignoreAlls.put(type, new HashSet<>(Arrays.asList(excludeColumns)));
         } else {
-            set.addAll(Arrays.asList(excludeColumns));
+            synchronized (set) {
+                set.addAll(Arrays.asList(excludeColumns));
+            }
         }
     }
 
@@ -716,17 +720,47 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         if (set == null) {
             ignoreAlls.put(type, new HashSet<>(excludeColumns));
         } else {
-            set.addAll(new ArrayList(excludeColumns));
+            synchronized (set) {
+                set.addAll(new ArrayList(excludeColumns));
+            }
         }
     }
 
     public final void register(final Class type, boolean ignore, String... columns) {
+        if (type == Map.class) {
+            synchronized (ignoreMapColumns) {
+                if (ignore) {
+                    for (String column : columns) {
+                        ignoreMapColumns.add(column);
+                    }
+                } else {
+                    for (String column : columns) {
+                        ignoreMapColumns.remove(column);
+                    }
+                }
+            }
+            return;
+        }
         for (String column : columns) {
             register(type, column, new ConvertColumnEntry(column, ignore));
         }
     }
 
     public final void register(final Class type, boolean ignore, Collection<String> columns) {
+        if (type == Map.class) {
+            synchronized (ignoreMapColumns) {
+                if (ignore) {
+                    for (String column : columns) {
+                        ignoreMapColumns.add(column);
+                    }
+                } else {
+                    for (String column : columns) {
+                        ignoreMapColumns.remove(column);
+                    }
+                }
+            }
+            return;
+        }
         for (String column : columns) {
             register(type, column, new ConvertColumnEntry(column, ignore));
         }

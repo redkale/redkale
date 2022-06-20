@@ -732,7 +732,10 @@ public final class Application {
                     if (key.startsWith("redkale.datasource[") || key.startsWith("redkale.cachesource[")) {
                         sourceProperties.put(key, value);
                     } else if (key.startsWith("system.property.")) {
-                        System.setProperty(key.substring("system.property.".length()), value);
+                        String propName = key.substring("system.property.".length());
+                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
+                            System.setProperty(propName, value);
+                        }
                     } else if (key.startsWith("mimetype.property.")) {
                         MimeType.add(key.substring("mimetype.property.".length()), value);
                     } else if (key.startsWith("property.")) {

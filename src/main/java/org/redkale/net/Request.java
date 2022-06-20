@@ -57,6 +57,19 @@ public abstract class Request<C extends Context> {
         this.jsonConvert = context.getJsonConvert();
     }
 
+    protected Request(Request<C> request) {
+        this.context = request.context;
+        this.bsonConvert = request.bsonConvert;
+        this.jsonConvert = request.jsonConvert;
+        this.createTime = request.createTime;
+        this.keepAlive = request.keepAlive;
+        this.pipelineIndex = request.pipelineIndex;
+        this.pipelineCount = request.pipelineCount;
+        this.pipelineOver = request.pipelineOver;
+        this.hashid = request.hashid;
+        this.channel = request.channel;
+    }
+
     protected Request copyHeader() {
         return null;
     }

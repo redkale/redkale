@@ -25,6 +25,9 @@ public abstract class Writer {
     //convertTo时是否以指定Type的ObjectEncoder进行处理
     protected Type specify;
 
+    //对某个key值进行动态处理，仅供MapEncoder使用
+    protected BiFunction<Object, Object, Object> mapFieldFunc;
+
     //对某个字段值进行动态处理
     protected BiFunction<Attribute, Object, Object> objFieldFunc;
 

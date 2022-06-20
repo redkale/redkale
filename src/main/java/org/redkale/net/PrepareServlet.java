@@ -62,6 +62,7 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
             Set<S> newservlets = new HashSet<>(servlets);
             newservlets.remove(servlet);
             this.servlets = newservlets;
+            doAfterRemove(servlet);
         }
     }
 
@@ -95,8 +96,9 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
         synchronized (lock2) {
             if (mappings.containsKey(key)) {
                 Map<K, S> newmappings = new HashMap<>(mappings);
-                newmappings.remove(key);
+                S s = newmappings.remove(key);
                 this.mappings = newmappings;
+                doAfterRemove(s);
             }
         }
     }
@@ -112,7 +114,11 @@ public abstract class PrepareServlet<K extends Serializable, C extends Context, 
             }
             for (K key : keys) newmappings.remove(key);
             this.mappings = newmappings;
+            doAfterRemove(servlet);
         }
+    }
+
+    protected void doAfterRemove(S servlet) {
     }
 
     protected S mappingServlet(K key) {

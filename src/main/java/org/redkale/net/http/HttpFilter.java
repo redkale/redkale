@@ -21,4 +21,24 @@ public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpRe
     //Server执行start后运行此方法
     public void postStart(HttpContext context, AnyValue config) {
     }
+
+    protected void setMethod(HttpRequest request, String method) {
+        request.setMethod(method);
+    }
+
+    protected void setRequestURI(HttpRequest request, String requestURI) {
+        request.setRequestURI(requestURI);
+    }
+
+    protected void setRemoteAddr(HttpRequest request, String remoteAddr) {
+        request.setRemoteAddr(remoteAddr);
+    }
+
+    protected void setParameter(HttpRequest request, String name, String value) {
+        request.setParameter(name, value);
+    }
+
+    protected void setHeader(HttpRequest request, String name, String value) {
+        request.setHeader(name, value);
+    }
 }

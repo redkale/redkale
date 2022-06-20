@@ -840,6 +840,32 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
+    protected HttpRequest setMethod(String method) {
+        this.method = method;
+        this.getmethod = "GET".equalsIgnoreCase(method);
+        return this;
+    }
+
+    protected HttpRequest setRequestURI(String requestURI) {
+        this.requestURI = requestURI;
+        return this;
+    }
+
+    protected HttpRequest setRemoteAddr(String remoteAddr) {
+        this.remoteAddr = remoteAddr;
+        return this;
+    }
+
+    protected HttpRequest setParameter(String name, String value) {
+        this.params.put(name, value);
+        return this;
+    }
+
+    protected HttpRequest setHeader(String name, String value) {
+        this.headers.put(name, value);
+        return this;
+    }
+
     protected static String toDecodeString(ByteArray array, int offset, int len, final Charset charset) {
         byte[] content = array.content();
         int start = offset;
@@ -2471,14 +2497,14 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取翻页对象 同 getFlipper("flipper", needcreate, 0);
+     * 获取翻页对象 同 getFlipper("flipper", autoCreate, 0);
      *
-     * @param needcreate 无参数时是否创建新Flipper对象
+     * @param autoCreate 无参数时是否创建新Flipper对象
      *
      * @return Flipper翻页对象
      */
-    public org.redkale.source.Flipper getFlipper(boolean needcreate) {
-        return getFlipper(needcreate, 0);
+    public org.redkale.source.Flipper getFlipper(boolean autoCreate) {
+        return getFlipper(autoCreate, 0);
     }
 
     /**
@@ -2493,44 +2519,46 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取翻页对象 同 getFlipper("flipper", needcreate, maxLimit)
+     * 获取翻页对象 同 getFlipper("flipper", autoCreate, maxLimit)
      *
-     * @param needcreate 无参数时是否创建新Flipper对象
+     * @param autoCreate 无参数时是否创建新Flipper对象
      * @param maxLimit   最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
      *
      * @return Flipper翻页对象
      */
-    public org.redkale.source.Flipper getFlipper(boolean needcreate, int maxLimit) {
-        return getFlipper("flipper", needcreate, maxLimit);
+    public org.redkale.source.Flipper getFlipper(boolean autoCreate, int maxLimit) {
+        return getFlipper("flipper", autoCreate, maxLimit);
     }
 
     /**
-     * 获取翻页对象 https://redkale.org/pipes/users/list/offset:0/limit:20/sort:createtime%20ASC  <br>
-     * https://redkale.org/pipes/users/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'}  <br>
-     * 以上两种接口都可以获取到翻页对象
+     * 获取翻页对象 https://redkale.org/pipes/users/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'}  <br>
      *
      *
      * @param name       Flipper对象的参数名，默认为 "flipper"
-     * @param needcreate 无参数时是否创建新Flipper对象
+     * @param autoCreate 无参数时是否创建新Flipper对象
      * @param maxLimit   最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
      *
      * @return Flipper翻页对象
      */
-    public org.redkale.source.Flipper getFlipper(String name, boolean needcreate, int maxLimit) {
+    public org.redkale.source.Flipper getFlipper(String name, boolean autoCreate, int maxLimit) {
         org.redkale.source.Flipper flipper = getJsonParameter(org.redkale.source.Flipper.class, name);
         if (flipper == null) {
-            if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
-            int limit = getRequstURIPath("limit:", 0);
-            int offset = getRequstURIPath("offset:", 0);
-            String sort = getRequstURIPath("sort:", "");
-            if (limit > 0) {
-                if (limit > maxLimit) limit = maxLimit;
-                flipper = new org.redkale.source.Flipper(limit, offset, sort);
-            }
+//            if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
+//            String limitstr = getParameter("limit");
+//            if (limitstr != null && !limitstr.isEmpty()) {
+//                String offsetstr = getParameter("offset");
+//                if (offsetstr != null && !offsetstr.isEmpty()) {
+//                    int limit = Integer.parseInt(limitstr);
+//                    int offset = Integer.parseInt(offsetstr);
+//                    String sort = getParameter("sort");
+//                    if (limit > maxLimit) limit = maxLimit;
+//                    flipper = new org.redkale.source.Flipper(limit, offset, sort);
+//                }
+//            }
         } else if (flipper.getLimit() < 1 || (maxLimit > 0 && flipper.getLimit() > maxLimit)) {
             flipper.setLimit(maxLimit);
         }
-        if (flipper != null || !needcreate) return flipper;
+        if (flipper != null || !autoCreate) return flipper;
         if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
         return new org.redkale.source.Flipper(maxLimit);
     }

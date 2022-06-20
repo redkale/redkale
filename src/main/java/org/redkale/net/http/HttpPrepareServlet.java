@@ -50,6 +50,8 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     private BiPredicate<String, String>[] forbidURIPredicates; //禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
 
+    private HttpServlet lastRunServlet;
+
     private List<HttpServlet> removeHttpServlet(final Predicate<MappingEntry> predicateEntry, final Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter) {
         List<HttpServlet> servlets = new ArrayList<>();
         synchronized (allMapStrings) {
@@ -91,6 +93,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                     allMapStrings.remove(key);
                 }
             }
+            this.lastRunServlet = null;
         }
         return servlets;
     }
@@ -365,7 +368,7 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
                 } else if (mappingpath != null && !mappingpath.isEmpty()) {
                     if (servlet._actionmap != null && servlet._actionmap.containsKey(mappingpath)) {
                         //context.addRequestURINode(mappingpath);
-                        putMapping(mappingpath, new HttpServlet.HttpActionServlet(servlet._actionmap.get(mappingpath), servlet));
+                        putMapping(mappingpath, new HttpServlet.HttpActionServlet(servlet._actionmap.get(mappingpath), servlet, mappingpath));
                     } else {
                         putMapping(mappingpath, servlet);
                     }
@@ -432,6 +435,22 @@ public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, Http
 
     public Stream<HttpServlet> filterServlets(Predicate<HttpServlet> predicate) {
         return predicate == null ? servletStream() : servletStream().filter(predicate);
+    }
+
+    @Override
+    protected HttpServlet mappingServlet(String key) {
+        HttpServlet last = this.lastRunServlet;
+        if (last != null && last._actionSimpleMappingUrl != null && last._actionSimpleMappingUrl.equalsIgnoreCase(key)) {
+            return last;
+        }
+        HttpServlet s = super.mappingServlet(key);
+        this.lastRunServlet = s;
+        return s;
+    }
+
+    @Override
+    protected void doAfterRemove(HttpServlet servlet) {
+        this.lastRunServlet = null;
     }
 
     @Override

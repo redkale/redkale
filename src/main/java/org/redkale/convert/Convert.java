@@ -42,6 +42,13 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return writer;
     }
 
+    protected <S extends W> S fieldFunc(S writer, BiFunction<Object, Object, Object> mapFieldFunc, BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+        writer.mapFieldFunc = mapFieldFunc;
+        writer.objFieldFunc = objFieldFunc;
+        writer.objExtFunc = objExtFunc;
+        return writer;
+    }
+
     public abstract Convert<R, W> newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc);
 
     public abstract Convert<R, W> newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc);

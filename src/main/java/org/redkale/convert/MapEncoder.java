@@ -7,7 +7,8 @@ package org.redkale.convert;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * Map的序列化操作类
@@ -32,6 +33,8 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
     protected final Object lock = new Object();
 
+    protected final Set<String> ignoreMapColumns;
+
     public MapEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
         try {
@@ -42,6 +45,9 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
             } else {
                 this.keyEncoder = factory.getAnyEncoder();
                 this.valueEncoder = factory.getAnyEncoder();
+            }
+            synchronized (factory.ignoreMapColumns) {
+                this.ignoreMapColumns = factory.ignoreMapColumns.isEmpty() ? null : new HashSet<>(factory.ignoreMapColumns);
             }
         } finally {
             inited = true;
@@ -74,11 +80,15 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
                 }
             }
         }
+        Set<String> ignoreColumns = this.ignoreMapColumns;
+        BiFunction<K, V, V> mapFieldFunc = (BiFunction) out.mapFieldFunc;
         if (out.writeMapB(values.size(), (Encodeable) keyEncoder, (Encodeable) valueEncoder, value) < 0) {
             boolean first = true;
             for (Map.Entry<K, V> en : values.entrySet()) {
+                if (ignoreColumns != null && ignoreColumns.contains(en.getKey())) continue;
+                V v = mapFieldFunc == null ? en.getValue() : mapFieldFunc.apply(en.getKey(), en.getValue());
                 if (!first) out.writeArrayMark();
-                writeMemberValue(out, member, en.getKey(), en.getValue(), first);
+                writeMemberValue(out, member, en.getKey(), v, first);
                 if (first) first = false;
             }
         }

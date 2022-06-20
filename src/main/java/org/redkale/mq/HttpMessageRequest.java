@@ -34,8 +34,10 @@ public class HttpMessageRequest extends HttpRequest {
         return this;
     }
 
-    public void setRequestURI(String uri) {
+    @Override
+    public HttpMessageRequest setRequestURI(String uri) {
         this.requestURI = uri;
+        return this;
     }
 
     @Override

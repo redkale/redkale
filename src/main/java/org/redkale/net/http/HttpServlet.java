@@ -33,6 +33,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     public static final int RET_METHOD_ERROR = 1200_0002;
 
+    String _actionSimpleMappingUrl; //只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如 /json /createRecord, 不能是 /user/** 
+
     String _prefix = ""; //当前HttpServlet的path前缀
 
     String _reqtopic; //根据RestService+MQ生成的值 @since 2.5.0
@@ -454,9 +456,12 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
         final HttpServlet servlet;
 
-        public HttpActionServlet(ActionEntry actionEntry, HttpServlet servlet) {
+        public HttpActionServlet(ActionEntry actionEntry, HttpServlet servlet, String actionSimpleMappingUrl) {
             this.action = actionEntry;
             this.servlet = servlet;
+            if (actionSimpleMappingUrl != null && !Utility.contains(actionSimpleMappingUrl, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) {
+                this._actionSimpleMappingUrl = actionSimpleMappingUrl;
+            }
         }
 
         @Override

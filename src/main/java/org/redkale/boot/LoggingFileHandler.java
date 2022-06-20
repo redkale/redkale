@@ -50,6 +50,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
         public LoggingConsoleHandler() {
             super();
+            setFormatter(new LoggingFormater());
             configure();
         }
 
