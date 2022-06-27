@@ -112,7 +112,7 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     Inflater inflater; //解压
 
-    long createtime = System.currentTimeMillis();
+    long createTime = System.currentTimeMillis();
 
     List<WebSocketPacket> delayPackets;
 
@@ -148,8 +148,8 @@ public abstract class WebSocket<G extends Serializable, T> {
         return sendPacket(new WebSocketPacket(FrameType.PONG, data));
     }
 
-    public final long getCreatetime() {
-        return createtime;
+    public final long getCreateTime() {
+        return createTime;
     }
 
     /**

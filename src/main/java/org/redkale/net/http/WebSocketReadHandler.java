@@ -278,7 +278,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
     @Override
     public void completed(Integer count, ByteBuffer readBuffer) {
         if (count < 1) {
-            if (debug) logger.log(Level.FINEST, "WebSocket(" + webSocket + ") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds");
+            if (debug) logger.log(Level.FINEST, "WebSocket(" + webSocket + ") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds");
             webSocket.kill(CLOSECODE_ILLPACKET, "read buffer count is " + count);
             return;
         }
@@ -353,7 +353,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
     public void failed(Throwable exc, ByteBuffer attachment2) {
         if (webSocket.initiateClosed) return;
         if (exc != null) {
-            if (debug) context.getLogger().log(Level.FINEST, "WebSocket(" + webSocket + ") read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreatetime()) / 1000 + " seconds", exc);
+            if (debug) context.getLogger().log(Level.FINEST, "WebSocket(" + webSocket + ") read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds", exc);
             webSocket.kill(CLOSECODE_WSEXCEPTION, "read websocket-packet failed");
         } else {
             webSocket.kill(CLOSECODE_WSEXCEPTION, "decode websocket-packet error");

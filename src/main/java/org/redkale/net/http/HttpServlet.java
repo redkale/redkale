@@ -155,7 +155,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
      *          if (sessionid != null) request.setCurrentUserid(userService.currentUserid(sessionid));
      *
      *          if (finer) response.recycleListener((req, resp) -&#62; {  //记录处理时间比较长的请求
-     *              long e = System.currentTimeMillis() - ((HttpRequest) req).getCreatetime();
+     *              long e = System.currentTimeMillis() - ((HttpRequest) req).getCreateTime();
      *              if (e &#62; 200) logger.finer("http-execute-cost-time: " + e + " ms. request = " + req);
      *          });
      *          response.nextEvent();
