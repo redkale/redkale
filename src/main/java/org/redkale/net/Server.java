@@ -172,6 +172,12 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected static long parseLenth(String value, long defValue) {
         if (value == null) return defValue;
         value = value.toUpperCase().replace("B", "");
+        if (value.indexOf('.') >= 0) {
+            if (value.endsWith("G")) return (long) (Float.parseFloat(value.replace("G", "")) * 1024 * 1024 * 1024);
+            if (value.endsWith("M")) return (long) (Float.parseFloat(value.replace("M", "")) * 1024 * 1024);
+            if (value.endsWith("K")) return (long) (Float.parseFloat(value.replace("K", "")) * 1024);
+            return (long) Float.parseFloat(value);
+        }
         if (value.endsWith("G")) return Long.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
         if (value.endsWith("M")) return Long.decode(value.replace("M", "")) * 1024 * 1024;
         if (value.endsWith("K")) return Long.decode(value.replace("K", "")) * 1024;
