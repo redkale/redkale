@@ -1084,7 +1084,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         for (Entry<String> en : this.header.getStringEntrys()) {
             headerArray.put((en.name + ": " + en.getValue() + "\r\n").getBytes());
         }
-        if (request.newsessionid != null) {
+        if (request.newSessionid != null) {
             String domain = defaultCookie == null ? null : defaultCookie.getDomain();
             if (domain == null || domain.isEmpty()) {
                 domain = "";
@@ -1093,10 +1093,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             }
             String path = defaultCookie == null ? null : defaultCookie.getPath();
             if (path == null || path.isEmpty()) path = "/";
-            if (request.newsessionid.isEmpty()) {
+            if (request.newSessionid.isEmpty()) {
                 headerArray.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; " + domain + "Path=/; Max-Age=0; HttpOnly\r\n").getBytes());
             } else {
-                headerArray.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=" + request.newsessionid + "; " + domain + "Path=/; HttpOnly\r\n").getBytes());
+                headerArray.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=" + request.newSessionid + "; " + domain + "Path=/; HttpOnly\r\n").getBytes());
             }
         }
         if (this.cookies != null) {

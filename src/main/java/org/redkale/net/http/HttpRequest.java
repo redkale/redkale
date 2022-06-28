@@ -118,7 +118,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected byte[] queryBytes;
 
-    protected String newsessionid;
+    protected String newSessionid;
 
     protected final Map<String, String> params = new HashMap<>();
 
@@ -789,7 +789,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.respConvertType = null;
         this.headers.clear();
         //其他
-        this.newsessionid = null;
+        this.newSessionid = null;
         this.method = null;
         this.getmethod = false;
         this.protocol = null;
@@ -1278,16 +1278,16 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取sessionid
      *
-     * @param create 无sessionid是否自动创建
+     * @param autoCreate 无sessionid是否自动创建
      *
      * @return sessionid
      */
     @ConvertDisabled
-    public String getSessionid(boolean create) {
+    public String getSessionid(boolean autoCreate) {
         String sessionid = getCookie(SESSIONID_NAME, null);
-        if (create && (sessionid == null || sessionid.isEmpty())) {
+        if (autoCreate && (sessionid == null || sessionid.isEmpty())) {
             sessionid = context.createSessionid();
-            this.newsessionid = sessionid;
+            this.newSessionid = sessionid;
         }
         return sessionid;
     }
@@ -1298,27 +1298,27 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 新的sessionid值
      */
     public String changeSessionid() {
-        this.newsessionid = context.createSessionid();
-        return newsessionid;
+        this.newSessionid = context.createSessionid();
+        return newSessionid;
     }
 
     /**
      * 指定值更新sessionid
      *
-     * @param newsessionid 新sessionid值
+     * @param newSessionid 新sessionid值
      *
      * @return 新的sessionid值
      */
-    public String changeSessionid(String newsessionid) {
-        this.newsessionid = newsessionid == null ? context.createSessionid() : newsessionid.trim();
-        return newsessionid;
+    public String changeSessionid(String newSessionid) {
+        this.newSessionid = newSessionid == null ? context.createSessionid() : newSessionid.trim();
+        return newSessionid;
     }
 
     /**
      * 使sessionid失效
      */
     public void invalidateSession() {
-        this.newsessionid = ""; //为空表示删除sessionid
+        this.newSessionid = ""; //为空表示删除sessionid
     }
 
     /**
