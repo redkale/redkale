@@ -967,6 +967,7 @@ public final class Application {
     }
 
     CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
+        long st = System.currentTimeMillis();
         CacheSource old = resourceFactory.find(sourceName, CacheSource.class);
         if (old != null) return old;
         final AnyValue sourceConf = cacheResources.get(sourceName);
@@ -977,7 +978,7 @@ public final class Application {
             resourceFactory.register(sourceName, CacheSource.class, source);
             resourceFactory.inject(sourceName, source);
             if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
-            logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source);
+            logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
             return source;
         }
         String classval = sourceConf.getValue("type");
@@ -1019,7 +1020,7 @@ public final class Application {
             resourceFactory.register(sourceName, source);
             resourceFactory.inject(sourceName, source);
             if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
-            logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source);
+            logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
             return source;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "load application CaheSource error: " + sourceConf, e);

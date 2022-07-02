@@ -438,9 +438,10 @@ public abstract class NodeServer {
             }
 
         }
-
+        long et = System.currentTimeMillis();
         application.servicecdl.countDown();
         application.servicecdl.await();
+        logger.info(this.getClass().getSimpleName() + " construct services in " + (et - starts) + " ms and await " + (System.currentTimeMillis() - et) + " ms");
 
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         //---------------- inject ----------------
