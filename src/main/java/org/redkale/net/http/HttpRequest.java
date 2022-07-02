@@ -868,6 +868,11 @@ public class HttpRequest extends Request<HttpContext> {
         return this;
     }
 
+    protected HttpRequest setLocale(String locale) {
+        this.locale = locale;
+        return this;
+    }
+
     protected HttpRequest setParameter(String name, String value) {
         this.params.put(name, value);
         return this;

@@ -34,6 +34,10 @@ public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpRe
         request.setRemoteAddr(remoteAddr);
     }
 
+    protected void setLocale(HttpRequest request, String locale) {
+        request.setLocale(locale);
+    }
+
     protected void setParameter(HttpRequest request, String name, String value) {
         request.setParameter(name, value);
     }
