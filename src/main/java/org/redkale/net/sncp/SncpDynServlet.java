@@ -618,7 +618,9 @@ public final class SncpDynServlet extends SncpServlet {
                 if (originalReturnType != void.class && originalReturnType != Void.class) {
                     if (boolReturnTypeFuture && method.getReturnType() != method.getGenericReturnType()) {
                         java.lang.reflect.Type t = ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0];
-                        if (t != Void.class && t != java.lang.reflect.Type.class) BsonFactory.root().loadEncoder(t);
+                        if (t != Void.class && t != java.lang.reflect.Type.class) {
+                            BsonFactory.root().loadEncoder(t);
+                        }
                     } else {
                         try {
                             BsonFactory.root().loadEncoder(originalReturnType);
