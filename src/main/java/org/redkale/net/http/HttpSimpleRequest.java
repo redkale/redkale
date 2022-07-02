@@ -55,28 +55,32 @@ public class HttpSimpleRequest implements java.io.Serializable {
     protected String remoteAddr;
 
     @ConvertColumn(index = 8)
+    @Comment("Locale国际化")
+    protected String locale;
+
+    @ConvertColumn(index = 9)
     @Comment("会话ID")
     protected String sessionid;
 
-    @ConvertColumn(index = 9)
+    @ConvertColumn(index = 10)
     @Comment("Content-Type")
     protected String contentType;
 
-    @ConvertColumn(index = 10)
+    @ConvertColumn(index = 11)
     protected int hashid;
 
-    @ConvertColumn(index = 11) //@since 2.5.0 由int改成Serializable, 具体数据类型只能是int、long、String
+    @ConvertColumn(index = 12) //@since 2.5.0 由int改成Serializable, 具体数据类型只能是int、long、String
     protected Serializable currentUserid;
 
-    @ConvertColumn(index = 12)
+    @ConvertColumn(index = 13)
     @Comment("http header信息")
     protected Map<String, String> headers;
 
-    @ConvertColumn(index = 13)
+    @ConvertColumn(index = 14)
     @Comment("参数信息")
     protected Map<String, String> params;
 
-    @ConvertColumn(index = 14)
+    @ConvertColumn(index = 15)
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
@@ -149,6 +153,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public HttpSimpleRequest remoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
+        return this;
+    }
+
+    public HttpSimpleRequest locale(String locale) {
+        this.locale = locale;
         return this;
     }
 
@@ -266,6 +275,11 @@ public class HttpSimpleRequest implements java.io.Serializable {
         return this;
     }
 
+    public HttpSimpleRequest clearLocale() {
+        this.locale = null;
+        return this;
+    }
+
     public HttpSimpleRequest clearSessionid() {
         this.sessionid = null;
         return this;
@@ -314,6 +328,14 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     public void setRemoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
+    }
+
+    public String getLocale() {
+        return locale;
+    }
+
+    public void setLocale(String locale) {
+        this.locale = locale;
     }
 
     public int getHashid() {

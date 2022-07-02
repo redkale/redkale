@@ -30,6 +30,10 @@ public class HttpContext extends Context {
 
     protected final String remoteAddrHeader;
 
+    protected final String localHeader;
+
+    protected final String localParameter;
+
     protected final HttpRpcAuthenticator rpcAuthenticator;
 
     protected final AnyValue rpcAuthenticatorConfig;
@@ -40,6 +44,8 @@ public class HttpContext extends Context {
     public HttpContext(HttpContextConfig config) {
         super(config);
         this.remoteAddrHeader = config.remoteAddrHeader;
+        this.localHeader = config.localHeader;
+        this.localParameter = config.localParameter;
         this.rpcAuthenticator = config.rpcAuthenticator;
         this.rpcAuthenticatorConfig = config.rpcAuthenticatorConfig;
         random.setSeed(Math.abs(System.nanoTime()));
@@ -189,6 +195,10 @@ public class HttpContext extends Context {
     public static class HttpContextConfig extends ContextConfig {
 
         public String remoteAddrHeader;
+
+        public String localHeader;
+
+        public String localParameter;
 
         public HttpRpcAuthenticator rpcAuthenticator;
 

@@ -132,6 +132,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String remoteAddr;
 
+    protected String locale;
+
     private String lastRequestURIString;
 
     private byte[] lastRequestURIBytes;
@@ -146,6 +148,10 @@ public class HttpRequest extends Request<HttpContext> {
 
     private final String remoteAddrHeader;
 
+    private final String localHeader;
+
+    private final String localParameter;
+
     final HttpRpcAuthenticator rpcAuthenticator;
 
     HttpServlet.ActionEntry actionEntry;  //仅供HttpServlet传递Entry使用
@@ -158,6 +164,8 @@ public class HttpRequest extends Request<HttpContext> {
         super(context);
         this.array = array;
         this.remoteAddrHeader = context.remoteAddrHeader;
+        this.localHeader = context.localHeader;
+        this.localParameter = context.localParameter;
         this.rpcAuthenticator = context.rpcAuthenticator;
     }
 
@@ -166,6 +174,8 @@ public class HttpRequest extends Request<HttpContext> {
         super(context);
         this.array = new ByteArray();
         this.remoteAddrHeader = null;
+        this.localHeader = null;
+        this.localParameter = null;
         this.rpcAuthenticator = null;
         if (req != null) initSimpleRequest(req, true);
     }
@@ -185,6 +195,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (req.getCurrentUserid() != null) this.currentUserid = req.getCurrentUserid();
             this.contentType = req.getContentType();
             this.remoteAddr = req.getRemoteAddr();
+            this.locale = req.getLocale();
             if (needPath) {
                 this.requestURI = (req.getPath() == null || req.getPath().isEmpty()) ? req.getRequestURI() : (req.getPath() + req.getRequestURI());
             } else {
@@ -214,6 +225,7 @@ public class HttpRequest extends Request<HttpContext> {
         parseBody();
         req.setParams(params.isEmpty() ? null : params);
         req.setRemoteAddr(getRemoteAddr());
+        req.setLocale(getLocale());
         req.setContentType(getContentType());
         req.setPath(prefix);
         String uri = this.requestURI;
@@ -1138,6 +1150,30 @@ public class HttpRequest extends Request<HttpContext> {
         }
         this.remoteAddr = String.valueOf(addr);
         return this.remoteAddr;
+    }
+
+    /**
+     * 获取国际化Locale，值可以取之于header或parameter
+     *
+     * @return 国际化Locale
+     */
+    public String getLocale() {
+        if (this.locale != null) return this.locale;
+        if (localHeader != null) {
+            String val = getHeader(localHeader);
+            if (val != null) {
+                this.locale = val;
+                return val;
+            }
+        }
+        if (localParameter != null) {
+            String val = getParameter(localParameter);
+            if (val != null) {
+                this.locale = val;
+                return val;
+            }
+        }
+        return this.locale;
     }
 
     /**

@@ -334,6 +334,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         String jsonContentType = null;
         HttpCookie defaultCookie = null;
         String remoteAddrHeader = null;
+        String localHeader = null;
+        String localParameter = null;
         AnyValue rpcAuthenticatorConfig = null;
 
         if (config != null) {
@@ -347,6 +349,17 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                         remoteAddrHeader = remoteAddrHeader.substring("request.headers.".length());
                     } else {
                         remoteAddrHeader = null;
+                    }
+                }
+                AnyValue rlocale = reqs.getAnyValue("locale");
+                String vlocale = rlocale == null ? null : rlocale.getValue("value");
+                if (vlocale != null && !vlocale.isEmpty()) {
+                    if (vlocale.startsWith("request.headers.")) {
+                        localHeader = vlocale.substring("request.headers.".length());
+                    } else if (vlocale.startsWith("request.parameters.")) {
+                        localParameter = vlocale.substring("request.parameters.".length());
+                    } else {
+                        logger.log(Level.SEVERE, "request config locale.value not start with request.headers. or request.parameters. but " + vlocale);
                     }
                 }
             }
@@ -471,6 +484,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final HttpContextConfig contextConfig = new HttpContextConfig();
         initContextConfig(contextConfig);
         contextConfig.remoteAddrHeader = addrHeader;
+        contextConfig.localHeader = localHeader;
+        contextConfig.localParameter = localParameter;
         contextConfig.rpcAuthenticatorConfig = rpcAuthenticatorConfig;
         if (rpcAuthenticatorConfig != null) {
             String impl = rpcAuthenticatorConfig.getValue("authenticator", "").trim();

@@ -12,7 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * 配合 &#64;HttpMapping 使用。
  * 用于对&#64;HttpMapping方法中参数描述 <br>
- * 从RestService生成过来的HttpMapping，标记为&#64;RestUserid、&#64;RestAddress的参数不会生成HttpParam
+ * 从RestService生成过来的HttpMapping，标记为&#64;RestUserid、&#64;RestAddress、&#64;RestLocale的参数不会生成HttpParam
  *
  * <p>
  * 详情见: https://redkale.org
