@@ -18,15 +18,15 @@ import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
- * HTTP Servlet的总入口，请求在HttpPrepareServlet中进行分流。  <br>
- * 一个HttpServer只有一个HttpPrepareServlet， 用于管理所有HttpServlet。  <br>
+ * HTTP Servlet的总入口，请求在HttpDispatcherServlet中进行分流。  <br>
+ * 一个HttpServer只有一个HttpDispatcherServlet， 用于管理所有HttpServlet。  <br>
  *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public class HttpPrepareServlet extends PrepareServlet<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
+public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 

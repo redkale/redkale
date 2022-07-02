@@ -50,7 +50,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     public HttpServer(Application application, long serverStartTime, ResourceFactory resourceFactory) {
-        super(application, serverStartTime, "TCP", resourceFactory, new HttpPrepareServlet());
+        super(application, serverStartTime, "TCP", resourceFactory, new HttpDispatcherServlet());
     }
 
     @Override
@@ -63,7 +63,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     @Override
     protected void postStart() {
-        ((HttpPrepareServlet) this.prepare).postStart(this.context, config);
+        ((HttpDispatcherServlet) this.dispatcher).postStart(this.context, config);
     }
 
     @Override
@@ -79,11 +79,11 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     public List<HttpServlet> getHttpServlets() {
-        return this.prepare.getServlets();
+        return this.dispatcher.getServlets();
     }
 
     public List<HttpFilter> getHttpFilters() {
-        return this.prepare.getFilters();
+        return this.dispatcher.getFilters();
     }
 
     public HttpResponseConfig getResponseConfig() {
@@ -96,7 +96,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return HttpServlet
      */
     public HttpResourceServlet getResourceServlet() {
-        return (HttpResourceServlet) ((HttpPrepareServlet) this.prepare).resourceHttpServlet;
+        return (HttpResourceServlet) ((HttpDispatcherServlet) this.dispatcher).resourceHttpServlet;
     }
 
     /**
@@ -107,7 +107,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return HttpServlet
      */
     public HttpServlet removeHttpServlet(Service service) {
-        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(service);
+        return ((HttpDispatcherServlet) this.dispatcher).removeHttpServlet(service);
     }
 
     /**
@@ -119,7 +119,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return HttpServlet
      */
     public <T extends WebSocket> HttpServlet removeHttpServlet(Class<T> websocketOrServletType) {
-        return ((HttpPrepareServlet) this.prepare).removeHttpServlet(websocketOrServletType);
+        return ((HttpDispatcherServlet) this.dispatcher).removeHttpServlet(websocketOrServletType);
     }
 
     /**
@@ -130,7 +130,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return 是否成功
      */
     public boolean addForbidURIReg(final String urlreg) {
-        return ((HttpPrepareServlet) this.prepare).addForbidURIReg(urlreg);
+        return ((HttpDispatcherServlet) this.dispatcher).addForbidURIReg(urlreg);
     }
 
     /**
@@ -141,7 +141,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return 是否成功
      */
     public boolean removeForbidURIReg(final String urlreg) {
-        return ((HttpPrepareServlet) this.prepare).removeForbidURIReg(urlreg);
+        return ((HttpDispatcherServlet) this.dispatcher).removeForbidURIReg(urlreg);
     }
 
     /**
@@ -153,7 +153,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return HttpFilter
      */
     public <T extends HttpFilter> T removeHttpFilter(Class<T> filterClass) {
-        return (T) this.prepare.removeFilter(filterClass);
+        return (T) this.dispatcher.removeFilter(filterClass);
     }
 
     /**
@@ -165,7 +165,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return HttpServer
      */
     public HttpServer addHttpFilter(HttpFilter filter, AnyValue conf) {
-        this.prepare.addFilter(filter, conf);
+        this.dispatcher.addFilter(filter, conf);
         return this;
     }
 
@@ -179,7 +179,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return HttpServer
      */
     public HttpServer addHttpServlet(String prefix, HttpServlet servlet, String... mappings) {
-        this.prepare.addServlet(servlet, prefix, null, mappings);
+        this.dispatcher.addServlet(servlet, prefix, null, mappings);
         return this;
     }
 
@@ -192,7 +192,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return HttpServer
      */
     public HttpServer addHttpServlet(HttpServlet servlet, String... mappings) {
-        this.prepare.addServlet(servlet, null, null, mappings);
+        this.dispatcher.addServlet(servlet, null, null, mappings);
         return this;
     }
 
@@ -207,7 +207,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return HttpServer
      */
     public HttpServer addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
-        this.prepare.addServlet(servlet, prefix, conf, mappings);
+        this.dispatcher.addServlet(servlet, prefix, conf, mappings);
         return this;
     }
 
@@ -226,7 +226,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      */
     public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(final ClassLoader classLoader, final Class<S> webSocketType, MessageAgent messageAgent, final String prefix, final AnyValue conf) {
         T servlet = Rest.createRestWebSocketServlet(classLoader, webSocketType, messageAgent);
-        if (servlet != null) this.prepare.addServlet(servlet, prefix, conf);
+        if (servlet != null) this.dispatcher.addServlet(servlet, prefix, conf);
         return servlet;
     }
 
@@ -268,7 +268,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final String resname = name == null ? (sncp ? Sncp.getResourceName(service) : "") : name;
         final Class<S> serviceType = Sncp.getServiceType(service);
         if (name != null) {
-            for (final HttpServlet item : ((HttpPrepareServlet) this.prepare).getServlets()) {
+            for (final HttpServlet item : ((HttpDispatcherServlet) this.dispatcher).getServlets()) {
                 if (!(item instanceof HttpServlet)) continue;
                 if (item.getClass().getAnnotation(Rest.RestDyn.class) == null) continue;
                 try {
@@ -316,7 +316,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         } catch (Exception e) {
             throw new RuntimeException(serviceType + " generate rest servlet error", e);
         }
-        if (first) this.prepare.addServlet(servlet, prefix, sncp ? Sncp.getConf(service) : null);
+        if (first) this.dispatcher.addServlet(servlet, prefix, sncp ? Sncp.getConf(service) : null);
         return servlet;
     }
 

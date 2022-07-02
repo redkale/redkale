@@ -91,7 +91,7 @@ public final class ApiDocCommand {
             if (plainContentType == null || plainContentType.isEmpty()) plainContentType = "application/json";
             if (plainContentType.indexOf(';') > 0) plainContentType = plainContentType.substring(0, plainContentType.indexOf(';'));
 
-            for (HttpServlet servlet : server.getPrepareServlet().getServlets()) {
+            for (HttpServlet servlet : server.getDispatcherServlet().getServlets()) {
                 if (!(servlet instanceof HttpServlet)) continue;
                 if (servlet instanceof WebSocketServlet) continue;
                 if (servlet.getClass().getAnnotation(MessageMultiConsumer.class) != null) {

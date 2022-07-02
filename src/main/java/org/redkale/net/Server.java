@@ -55,7 +55,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected final ResourceFactory resourceFactory;
 
     //服务的根Servlet
-    protected final PrepareServlet<K, C, R, P, S> prepare;
+    protected final DispatcherServlet<K, C, R, P, S> dispatcher;
 
     //ClassLoader
     protected RedkaleClassLoader serverClassLoader;
@@ -108,13 +108,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //IO写入 的超时秒数，小于1视为不设置
     protected int writeTimeoutSeconds;
 
-    protected Server(Application application, long serverStartTime, String netprotocol, ResourceFactory resourceFactory, PrepareServlet<K, C, R, P, S> servlet) {
+    protected Server(Application application, long serverStartTime, String netprotocol, ResourceFactory resourceFactory, DispatcherServlet<K, C, R, P, S> servlet) {
         this.application = application;
         this.serverStartTime = serverStartTime;
         this.netprotocol = netprotocol;
         this.resourceFactory = resourceFactory;
-        this.prepare = servlet;
-        this.prepare.application = application;
+        this.dispatcher = servlet;
+        this.dispatcher.application = application;
     }
 
     public void init(final AnyValue config) throws Exception {
@@ -193,7 +193,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     public void destroy(final AnyValue config) throws Exception {
-        this.prepare.destroy(context, config);
+        this.dispatcher.destroy(context, config);
     }
 
     public ResourceFactory getResourceFactory() {
@@ -216,8 +216,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return this.logger;
     }
 
-    public PrepareServlet<K, C, R, P, S> getPrepareServlet() {
-        return this.prepare;
+    public DispatcherServlet<K, C, R, P, S> getDispatcherServlet() {
+        return this.dispatcher;
     }
 
     public C getContext() {
@@ -270,11 +270,11 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     @SuppressWarnings("unchecked")
     public void addServlet(S servlet, final Object attachment, AnyValue conf, K... mappings) {
-        this.prepare.addServlet(servlet, attachment, conf, mappings);
+        this.dispatcher.addServlet(servlet, attachment, conf, mappings);
     }
 
     public void start() throws IOException {
-        this.prepare.init(this.context, config); //不能在init方法内执行，因Server.init执行后会调用loadService,loadServlet, 再执行Server.start
+        this.dispatcher.init(this.context, config); //不能在init方法内执行，因Server.init执行后会调用loadService,loadServlet, 再执行Server.start
         this.postPrepareInit();
         this.serverChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
         if (application != null) { //main函数调试时可能为null
@@ -378,7 +378,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         contextConfig.maxbody = this.maxbody;
         contextConfig.charset = this.charset;
         contextConfig.address = this.address;
-        contextConfig.prepare = this.prepare;
+        contextConfig.prepare = this.dispatcher;
         contextConfig.resourceFactory = this.resourceFactory;
         contextConfig.aliveTimeoutSeconds = this.aliveTimeoutSeconds;
         contextConfig.readTimeoutSeconds = this.readTimeoutSeconds;
@@ -399,7 +399,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         } catch (Exception e) {
         }
         logger.info(this.getClass().getSimpleName() + "-" + this.netprotocol + " shutdow prepare servlet");
-        this.prepare.destroy(this.context, config);
+        this.dispatcher.destroy(this.context, config);
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + "-" + this.netprotocol + " shutdown in " + e + " ms");
     }
@@ -421,7 +421,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
      * @return boolean
      */
     public <T extends Filter> boolean containsFilter(Class<T> filterClass) {
-        return this.prepare.containsFilter(filterClass);
+        return this.dispatcher.containsFilter(filterClass);
     }
 
     /**
@@ -433,7 +433,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
      * @return boolean
      */
     public <T extends Filter> boolean containsFilter(String filterClassName) {
-        return this.prepare.containsFilter(filterClassName);
+        return this.dispatcher.containsFilter(filterClassName);
     }
 
     /**
@@ -444,7 +444,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
      * @return boolean
      */
     public boolean containsServlet(Class<? extends S> servletClass) {
-        return this.prepare.containsServlet(servletClass);
+        return this.dispatcher.containsServlet(servletClass);
     }
 
     /**
@@ -455,7 +455,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
      * @return boolean
      */
     public boolean containsServlet(String servletClassName) {
-        return this.prepare.containsServlet(servletClassName);
+        return this.dispatcher.containsServlet(servletClassName);
     }
 
     /**
@@ -464,7 +464,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
      * @param servlet Servlet
      */
     public void destroyServlet(S servlet) {
-        servlet.destroy(context, this.prepare.getServletConf(servlet));
+        servlet.destroy(context, this.dispatcher.getServletConf(servlet));
     }
 
     //创建数

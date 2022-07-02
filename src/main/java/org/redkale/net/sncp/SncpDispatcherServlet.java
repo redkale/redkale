@@ -5,7 +5,7 @@
  */
 package org.redkale.net.sncp;
 
-import org.redkale.net.PrepareServlet;
+import org.redkale.net.DispatcherServlet;
 import org.redkale.util.AnyValue;
 import java.io.IOException;
 import org.redkale.service.Service;
@@ -18,7 +18,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class SncpPrepareServlet extends PrepareServlet<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
+public class SncpDispatcherServlet extends DispatcherServlet<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
     private final Object sncplock = new Object();
 

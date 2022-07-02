@@ -69,16 +69,16 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         return httpServer().getContext();
     }
 
-    protected HttpPrepareServlet prepareServlet() {
-        return (HttpPrepareServlet) httpServer().getPrepareServlet();
+    protected HttpDispatcherServlet dispatcherServlet() {
+        return (HttpDispatcherServlet) httpServer().getDispatcherServlet();
     }
 
     protected HttpServlet findHttpServlet(String topic) {
-        return prepareServlet().findServletByTopic(topic);
+        return dispatcherServlet().findServletByTopic(topic);
     }
 
     protected HttpServlet findHttpServlet(HttpSimpleRequest request) {
-        return prepareServlet().findServletByTopic(generateHttpReqTopic(request, request.getPath()));
+        return dispatcherServlet().findServletByTopic(generateHttpReqTopic(request, request.getPath()));
     }
 
     @Override
@@ -141,7 +141,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
     @Override
     public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        HttpPrepareServlet ps = prepareServlet();
+        HttpDispatcherServlet ps = dispatcherServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);
         if (servlet == null) {
             if (fine) logger.log(Level.FINE, "produceMessage: request=" + request + ", not found servlet");
@@ -159,7 +159,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
     @Override
     public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
-        HttpPrepareServlet ps = prepareServlet();
+        HttpDispatcherServlet ps = dispatcherServlet();
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
         Traces.createTraceid();

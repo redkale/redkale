@@ -1456,7 +1456,7 @@ public final class Application {
                         if (!singletonMode && !compileMode) {
                             server.start();
                         } else if (compileMode) {
-                            server.getServer().getPrepareServlet().init(server.getServer().getContext(), serconf);
+                            server.getServer().getDispatcherServlet().init(server.getServer().getContext(), serconf);
                         }
                         servers.add(server);
                         timecd.countDown();

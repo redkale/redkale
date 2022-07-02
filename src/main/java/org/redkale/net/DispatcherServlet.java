@@ -16,7 +16,7 @@ import org.redkale.util.*;
 
 /**
  * 根Servlet， 一个Server只能存在一个根Servlet
- *
+ * 由之前PrepareServlet更名而来，since 2.7.0
  * 用于分发Request请求
  *
  * <p>
@@ -29,7 +29,7 @@ import org.redkale.util.*;
  * @param <P> Response的子类型
  * @param <S> Servlet的子类型
  */
-public abstract class PrepareServlet<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>, S extends Servlet<C, R, P>> extends Servlet<C, R, P> {
+public abstract class DispatcherServlet<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>, S extends Servlet<C, R, P>> extends Servlet<C, R, P> {
 
     protected final LongAdder executeCounter = new LongAdder(); //执行请求次数
 

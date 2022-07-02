@@ -42,7 +42,7 @@ public class Context {
     protected final int bufferCapacity;
 
     //服务的根Servlet
-    protected final PrepareServlet prepare;
+    protected final DispatcherServlet prepare;
 
     //日志Logger
     protected final Logger logger;
@@ -85,7 +85,7 @@ public class Context {
 
     public Context(long serverStartTime, Logger logger, ExecutorService workExecutor, SSLBuilder sslBuilder, SSLContext sslContext,
         int bufferCapacity, final int maxconns, final int maxbody, Charset charset, InetSocketAddress address,
-        ResourceFactory resourceFactory, PrepareServlet prepare, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
+        ResourceFactory resourceFactory, DispatcherServlet prepare, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.workExecutor = workExecutor;
@@ -110,7 +110,7 @@ public class Context {
         }
     }
 
-    protected void executePrepareServlet(Request request, Response response) {
+    protected void executeDispatcher(Request request, Response response) {
         if (workHashExecutor != null) {
             workHashExecutor.execute(request.getHashid(), () -> prepare.prepare(request, response));
         } else if (workExecutor != null) {
@@ -234,7 +234,7 @@ public class Context {
         public int bufferCapacity;
 
         //服务的根Servlet
-        public PrepareServlet prepare;
+        public DispatcherServlet prepare;
 
         //服务的监听地址
         public InetSocketAddress address;

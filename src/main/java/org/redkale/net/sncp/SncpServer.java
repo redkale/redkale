@@ -39,7 +39,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     public SncpServer(Application application, long serverStartTime, AnyValue serconf, ResourceFactory resourceFactory) {
-        super(application, serverStartTime, netprotocol(serconf), resourceFactory, new SncpPrepareServlet());
+        super(application, serverStartTime, netprotocol(serconf), resourceFactory, new SncpDispatcherServlet());
     }
 
     private static String netprotocol(AnyValue serconf) {
@@ -55,11 +55,11 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     public List<SncpServlet> getSncpServlets() {
-        return this.prepare.getServlets();
+        return this.dispatcher.getServlets();
     }
 
     public List<SncpFilter> getSncpFilters() {
-        return this.prepare.getFilters();
+        return this.dispatcher.getFilters();
     }
 
     /**
@@ -71,7 +71,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
      * @return SncpFilter
      */
     public <T extends SncpFilter> T removeSncpFilter(Class<T> filterClass) {
-        return (T) this.prepare.removeFilter(filterClass);
+        return (T) this.dispatcher.removeFilter(filterClass);
     }
 
     /**
@@ -83,7 +83,7 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
      * @return SncpServer
      */
     public SncpServer addSncpFilter(SncpFilter filter, AnyValue conf) {
-        this.prepare.addFilter(filter, conf);
+        this.dispatcher.addFilter(filter, conf);
         return this;
     }
 
@@ -95,14 +95,14 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
      * @return SncpServlet
      */
     public SncpServlet removeSncpServlet(Service sncpService) {
-        return ((SncpPrepareServlet) this.prepare).removeSncpServlet(sncpService);
+        return ((SncpDispatcherServlet) this.dispatcher).removeSncpServlet(sncpService);
     }
 
     public SncpDynServlet addSncpServlet(Service sncpService) {
         if (!Sncp.isSncpDyn(sncpService)) return null;
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService),
             Sncp.getResourceType(sncpService), sncpService, maxTypeLength, maxNameLength);
-        this.prepare.addServlet(sds, null, Sncp.getConf(sncpService));
+        this.dispatcher.addServlet(sds, null, Sncp.getConf(sncpService));
         return sds;
     }
 

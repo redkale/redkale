@@ -165,7 +165,7 @@ public class NodeHttpServer extends NodeServer {
     @SuppressWarnings("unchecked")
     protected void loadHttpServlet(final ClassFilter<? extends Servlet> servletFilter, ClassFilter<? extends WebSocket> webSocketFilter) throws Exception {
         RedkaleClassLoader.putReflectionPublicClasses(HttpServlet.class.getName());
-        RedkaleClassLoader.putReflectionPublicClasses(HttpPrepareServlet.class.getName());
+        RedkaleClassLoader.putReflectionPublicClasses(HttpDispatcherServlet.class.getName());
         RedkaleClassLoader.putReflectionDeclaredConstructors(HttpResourceServlet.class, HttpResourceServlet.class.getName());
         final AnyValue servletsConf = this.serverConf.getAnyValue("servlets");
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;

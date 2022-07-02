@@ -134,7 +134,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         final Request request = response.request;
         final int rs = request.readHeader(buffer, lastreq);
         if (rs < 0) {  //表示数据格式不正确
-            final PrepareServlet preparer = context.prepare;
+            final DispatcherServlet preparer = context.prepare;
             LongAdder ec = preparer.executeCounter;
             if (ec != null) ec.increment();
             channel.offerBuffer(buffer);
@@ -144,7 +144,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 context.logger.log(Level.FINEST, "request.readHeader erroneous (" + rs + "), force to close channel ");
             }
         } else if (rs == 0) {
-            final PrepareServlet preparer = context.prepare;
+            final DispatcherServlet preparer = context.prepare;
             LongAdder ec = preparer.executeCounter;
             if (ec != null) ec.increment();
             int pindex = pipelineIndex;
@@ -159,7 +159,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 request.pipeline(pindex, pindex);
                 channel.setReadBuffer((ByteBuffer) buffer.clear());
             }
-            context.executePrepareServlet(request, response);
+            context.executeDispatcher(request, response);
             if (pipeline) {
                 final Response pipelineResponse = createResponse();
                 try {
