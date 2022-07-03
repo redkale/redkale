@@ -1449,12 +1449,23 @@ public final class Rest {
                     }
                 }
                 if (defmodulename.isEmpty() || (!pound && entrys.size() <= 2)) {
+                    Set<String> startWiths = new HashSet<>();
                     for (MappingEntry entry : entrys) {
                         String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name;
                         if ("//".equals(suburl)) {
                             suburl = "/";
                         } else if (suburl.length() > 2 && suburl.endsWith("/")) {
+                            startWiths.add(suburl);
                             suburl += "*";
+                        } else {
+                            boolean match = false;
+                            for (String s : startWiths) {
+                                if (suburl.startsWith(s)) {
+                                    match = true;
+                                    break;
+                                }
+                            }
+                            if (match) continue;
                         }
                         urlpath += "," + suburl;
                         av1.visit(null, suburl);
