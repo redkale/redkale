@@ -277,6 +277,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             sb.append("CREATE TABLE IF NOT EXISTS ").append(info.getOriginTable()).append("(\n");
             EntityColumn primary = null;
             T one = info.constructorAttributes == null ? info.getCreator().create() : null;
+            List<String> comments = new ArrayList<>();
+            if (table != null && !table.comment().isEmpty()) {
+                comments.add("COMMENT ON TABLE " + info.getOriginTable() + " IS '" + table.comment().replace('\'', '"') + "'");
+            }
             for (EntityColumn column : info.getDDLColumns()) {
                 if (column.primary) primary = column;
                 String sqltype = "VARCHAR(" + column.length + ")";
@@ -356,13 +360,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
                 sb.append("   ").append(column.column).append(" ").append(sqltype).append(" ").append(sqlnull);
                 if (column.comment != null && !column.comment.isEmpty()) {
-                    //postgresql不支持DDL中带comment
+                    //postgresql不支持DDL中直接带comment
+                    comments.add("COMMENT ON COLUMN " + info.getOriginTable() + "." + column.column + " IS '" + column.comment.replace('\'', '"') + "'");
                 }
                 sb.append(",\n");
             }
             sb.append("   PRIMARY KEY (").append(primary.column).append(")\n");
             sb.append(")");
-            return Utility.ofArray(sb.toString());
+            return Utility.append(Utility.ofArray(sb.toString()), comments);
         }
         return null;
     }
