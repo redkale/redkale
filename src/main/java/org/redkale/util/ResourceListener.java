@@ -29,13 +29,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  *    public static void main(String[] args) throws Exception {
  *        ResourceFactory factory = ResourceFactory.root();
- *        factory.register("record.id", "2345"); 
- *        factory.register("record.name", "my old name"); 
+ *        factory.register("record.id", "2345");
+ *        factory.register("record.name", "my old name");
  *        Record record = new Record();
  *        factory.inject(record);
- *        factory.register("record.name", "my new name"); 
+ *        factory.register("record.name", "my new name");
  *   }
- * 
+ *
  * }
  * </pre></blockquote>
  *
@@ -49,4 +49,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface ResourceListener {
 
+    /**
+     * 新旧值是否不同时才回调方法 <br>
+     * true: 新值与旧值不同时才回调ResourceListener方法
+     * false: 只要执行了ResourceFactory.register 就回调ResourceListener方法
+     *
+     * @since 2.7.0
+     * @return boolean
+     */
+    boolean different() default true;
 }

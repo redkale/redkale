@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.Resource;
@@ -847,7 +848,9 @@ public final class ResourceFactory {
                     }
                     if (element.listener != null) {
                         try {
-                            element.listener.invoke(dest, name, rs, oldVal);
+                            if (!element.different || !Objects.equals(rs, oldVal)) {
+                                element.listener.invoke(dest, name, rs, oldVal);
+                            }
                         } catch (Exception e) {
                             logger.log(Level.SEVERE, dest + " resource change listener error", e);
                         }
@@ -869,16 +872,20 @@ public final class ResourceFactory {
 
         public final Method listener;
 
+        public final boolean different;
+
         public ResourceElement(T dest, Field field) {
             this.dest = new WeakReference(dest);
             this.field = field;
             this.fieldType = field.getType();
             Class t = dest.getClass();
             String tn = t.getName();
-            this.listener = tn.startsWith("java.") || tn.startsWith("javax.") ? null : findListener(t, field.getType());
+            AtomicBoolean diff = new AtomicBoolean();
+            this.listener = tn.startsWith("java.") || tn.startsWith("javax.") ? null : findListener(t, field.getType(), diff);
+            this.different = diff.get();
         }
 
-        private static Method findListener(Class clazz, Class fieldType) {
+        private static Method findListener(Class clazz, Class fieldType, AtomicBoolean diff) {
             synchronized (listenerMethods) {
                 Class loop = clazz;
                 Method m = listenerMethods.get(clazz.getName() + "-" + fieldType.getName());
@@ -893,6 +900,7 @@ public final class ResourceFactory {
                             && method.getParameterTypes()[1].isAssignableFrom(fieldType)) {
                             m = method;
                             m.setAccessible(true);
+                            diff.set(method.getAnnotation(ResourceListener.class).different());
                             RedkaleClassLoader.putReflectionMethod(loop.getName(), method);
                             break;
                         }
