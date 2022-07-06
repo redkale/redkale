@@ -419,6 +419,40 @@ public final class ResourceFactory {
      * @return 旧资源对象
      */
     public <A> A register(final boolean autoSync, final String name, final Type clazz, final A rs) {
+        return register(autoSync, name, clazz, rs, null);
+    }
+
+    /**
+     * 将多个以指定资源名的String对象注入到资源池中
+     *
+     * @param properties 资源键值对
+     *
+     */
+    public void register(Properties properties) {
+        if (properties == null) return;
+        List<ResourceChangeWrapper> wrappers = new ArrayList<>();
+        properties.forEach((k, v) -> register(true, k.toString(), String.class, v, wrappers));
+        if (wrappers.isEmpty()) return;
+        Map<Object, List<ResourceChangeWrapper>> map = new LinkedHashMap<>();
+        for (ResourceChangeWrapper wrapper : wrappers) {
+            map.computeIfAbsent(wrapper.dest, k -> new ArrayList<>()).add(wrapper);
+        }
+        map.forEach((dest, list) -> {
+            Method listener = list.get(0).listener;
+            try {
+                ResourceEvent[] events = new ResourceEvent[list.size()];
+                for (int i = 0; i < list.size(); i++) {
+                    events[i] = list.get(i).event;
+                }
+                Object[] ps = new Object[]{events};
+                listener.invoke(dest, ps);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, dest + " resource change listener error", e);
+            }
+        });
+    }
+
+    private <A> A register(final boolean autoSync, final String name, final Type clazz, final A rs, List<ResourceChangeWrapper> wrappers) {
         checkResourceName(name);
         Class clz = TypeToken.typeToClass(clazz);
         if (clz != null && !clz.isPrimitive() && rs != null && !clz.isAssignableFrom(rs.getClass())) {
@@ -438,7 +472,7 @@ public final class ResourceFactory {
         if (re == null) {
             map.put(name, new ResourceEntry(name, rs));
         } else {
-            map.put(name, new ResourceEntry(name, rs, re.elements, autoSync));
+            map.put(name, new ResourceEntry(name, rs, re.elements, wrappers, autoSync));
         }
         return re == null ? null : (A) re.value;
     }
@@ -805,7 +839,7 @@ public final class ResourceFactory {
             this.elements = new CopyOnWriteArrayList<>();
         }
 
-        public ResourceEntry(final String name, T value, final List<ResourceElement> elements, boolean sync) {
+        public ResourceEntry(final String name, T value, final List<ResourceElement> elements, List<ResourceChangeWrapper> wrappers, boolean sync) {
             this.name = name;
             this.value = value;
             this.elements = elements == null ? new CopyOnWriteArrayList<>() : elements;
@@ -853,8 +887,12 @@ public final class ResourceFactory {
                     if (element.listener != null) {
                         try {
                             if (!element.different || !Objects.equals(newVal, oldVal)) {
-                                Object[] ps = new Object[]{new ResourceEvent[]{new ResourceChangeEvent(name, newVal, oldVal)}};
-                                element.listener.invoke(dest, ps);
+                                if (wrappers == null) {
+                                    Object[] ps = new Object[]{new ResourceEvent[]{new ResourceChangeEvent(name, newVal, oldVal)}};
+                                    element.listener.invoke(dest, ps);
+                                } else {
+                                    wrappers.add(new ResourceChangeWrapper(dest, element.listener, new ResourceChangeEvent(name, newVal, oldVal)));
+                                }
                             }
                         } catch (Exception e) {
                             logger.log(Level.SEVERE, dest + " resource change listener error", e);
@@ -907,7 +945,7 @@ public final class ResourceFactory {
                             RedkaleClassLoader.putReflectionMethod(loop.getName(), method);
                             break;
                         } else {
-                            System.err.println("@" + ResourceListener.class.getSimpleName() + " must on method with " + ResourceEvent.class.getSimpleName() + "[] parameter type");
+                            logger.log(Level.SEVERE, "@" + ResourceListener.class.getSimpleName() + " must on method with " + ResourceEvent.class.getSimpleName() + "[] parameter type");
                         }
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
@@ -915,6 +953,26 @@ public final class ResourceFactory {
                 return m;
             }
         }
+    }
+
+    private static class ResourceChangeWrapper {
+
+        public Object dest;
+
+        public Method listener;
+
+        public ResourceChangeEvent event;
+
+        public ResourceChangeWrapper(Object dest, Method listener, ResourceChangeEvent event) {
+            this.dest = dest;
+            this.listener = listener;
+            this.event = event;
+        }
+
+        public Object getDest() {
+            return dest;
+        }
+
     }
 
     private static class ResourceChangeEvent<T> implements ResourceEvent<T> {

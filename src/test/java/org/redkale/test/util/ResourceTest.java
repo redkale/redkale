@@ -6,6 +6,7 @@
 package org.redkale.test.util;
 
 import java.math.*;
+import java.util.Properties;
 import javax.annotation.*;
 import org.junit.jupiter.api.Test;
 import org.redkale.util.*;
@@ -48,6 +49,11 @@ public class ResourceTest {
         System.out.println(aservice); //输出结果为：{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}
         System.out.println(bservice); //输出结果为：{name:"eeeee", id: 6789, aserivce:{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}}
 
+        Properties props = new Properties();
+        props.put("property.id", "5555");
+        props.put("property.desc", "my desc");
+        factory.register(props);
+        
         bservice = new BService("ffff");
         factory.register(bservice);   //更新Resource池内name=""的BService资源, 同时ResourceFactory会自动更新aservice的bservice对象
         factory.inject(bservice);
@@ -62,6 +68,9 @@ class BService {
     @Resource(name = "property.id")
     private String id;
 
+    @Resource(name = "property.desc")
+    private String desc;
+
     @Resource
     private AService aservice;
 
@@ -70,7 +79,7 @@ class BService {
     @ResourceListener
     private void changeResource(ResourceEvent[] events) {
         for (ResourceEvent event : events) {
-            System.out.println("@Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
+            System.out.println(getClass().getSimpleName() + " @Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
         }
     }
 
