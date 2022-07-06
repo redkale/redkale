@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 /**
- * 环境变量, 相当于只读的Properties
+ * 环境变量, 只读版Properties
  *
  * 详情见: https://redkale.org
  *

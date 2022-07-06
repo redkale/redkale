@@ -184,8 +184,10 @@ public final class Application {
     //@since 2.7.0
     private PropertiesAgent propertiesAgent;
 
+    //所有的配置信息都在里面，包含 redkale.port, redkale.lib等
     final Properties appProperties = new Properties();
 
+    //配置信息，只读版Properties
     final Environment appEnvironment;
 
     //第三方服务发现管理接口
