@@ -853,7 +853,8 @@ public final class ResourceFactory {
                     if (element.listener != null) {
                         try {
                             if (!element.different || !Objects.equals(newVal, oldVal)) {
-                                element.listener.invoke(dest, name, newVal, oldVal);
+                                Object[] ps = new Object[]{new ResourceEvent[]{new ResourceChangeEvent(name, newVal, oldVal)}};
+                                element.listener.invoke(dest, ps);
                             }
                         } catch (Exception e) {
                             logger.log(Level.SEVERE, dest + " resource change listener error", e);
@@ -897,22 +898,57 @@ public final class ResourceFactory {
                 do {
                     RedkaleClassLoader.putReflectionDeclaredMethods(loop.getName());
                     for (Method method : loop.getDeclaredMethods()) {
-                        if (method.getAnnotation(ResourceListener.class) != null
-                            && method.getParameterCount() == 3
-                            && String.class.isAssignableFrom(method.getParameterTypes()[0])
-                            && method.getParameterTypes()[1] == method.getParameterTypes()[2]
-                            && method.getParameterTypes()[1].isAssignableFrom(fieldType)) {
+                        ResourceListener rl = method.getAnnotation(ResourceListener.class);
+                        if (rl == null) continue;
+                        if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == ResourceEvent[].class) {
                             m = method;
                             m.setAccessible(true);
-                            diff.set(method.getAnnotation(ResourceListener.class).different());
+                            diff.set(rl.different());
                             RedkaleClassLoader.putReflectionMethod(loop.getName(), method);
                             break;
+                        } else {
+                            System.err.println("@" + ResourceListener.class.getSimpleName() + " must on method with " + ResourceEvent.class.getSimpleName() + "[] parameter type");
                         }
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
                 listenerMethods.put(clazz.getName() + "-" + fieldType.getName(), m);
                 return m;
             }
+        }
+    }
+
+    private static class ResourceChangeEvent<T> implements ResourceEvent<T> {
+
+        public String name;
+
+        public T newValue;
+
+        public T oldValue;
+
+        public ResourceChangeEvent(String name, T newValue, T oldValue) {
+            this.name = name;
+            this.newValue = newValue;
+            this.oldValue = oldValue;
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public T newValue() {
+            return newValue;
+        }
+
+        @Override
+        public T oldValue() {
+            return oldValue;
+        }
+
+        @Override
+        public String toString() {
+            return "{name = " + name() + ", newValue = " + newValue() + ", oldValue = " + oldValue() + "}";
         }
     }
 

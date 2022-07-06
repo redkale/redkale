@@ -7,6 +7,7 @@ package org.redkale.test.util;
 
 import java.math.*;
 import javax.annotation.*;
+import org.junit.jupiter.api.Test;
 import org.redkale.util.*;
 
 /**
@@ -15,7 +16,16 @@ import org.redkale.util.*;
  */
 public class ResourceTest {
 
-    public static void main(String[] args) throws Exception {
+    private boolean main;
+
+    public static void main(String[] args) throws Throwable {
+        ResourceTest test = new ResourceTest();
+        test.main = true;
+        test.run();
+    }
+
+    @Test
+    public void run() throws Exception {
         ResourceFactory factory = ResourceFactory.create();
         factory.register("property.id", "2345"); //注入String类型的property.id
         AService aservice = new AService();
@@ -58,8 +68,10 @@ class BService {
     private String name = "";
 
     @ResourceListener
-    private void changeResource(String name, Object newVal, Object oldVal) {
-        System.out.println("@Resource = " + name + " 资源变更:  newVal = " + newVal + ", oldVal = " + oldVal);
+    private void changeResource(ResourceEvent[] events) {
+        for (ResourceEvent event : events) {
+            System.out.println("@Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
+        }
     }
 
     @ConstructorParameters({"name"})
