@@ -228,6 +228,8 @@ public final class Application {
     //进程根目录
     private final File home;
 
+    private final String homePath;
+
     //配置文件目录
     private final URI confPath;
 
@@ -274,6 +276,7 @@ public final class Application {
                 System.setProperty(RESNAME_APP_HOME, root.getCanonicalPath());
             }
             this.home = root.getCanonicalFile();
+            this.homePath = this.home.getPath();
             String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
             if (confDir.contains("://") || confDir.startsWith("file:") || confDir.startsWith("resource:") || confDir.contains("!")) { //graalvm native-image startwith resource:META-INF
                 this.confPath = new URI(confDir);
@@ -667,7 +670,6 @@ public final class Application {
         System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
 
         final String confDir = this.confPath.toString();
-        final String homepath = this.home.getCanonicalPath();
 //        String pidstr = "";
 //        try { //JDK 9+
 //            Class phclass = Thread.currentThread().getContextClassLoader().loadClass("java.lang.ProcessHandle");
@@ -684,11 +686,11 @@ public final class Application {
             + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
             + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
             + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
-            + RESNAME_APP_HOME + "     = " + homepath + "\r\n"
+            + RESNAME_APP_HOME + "     = " + homePath + "\r\n"
             + RESNAME_APP_CONF_DIR + " = " + confDir.substring(confDir.indexOf('!') + 1));
 
         if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
-            String lib = config.getValue("lib", "${APP_HOME}/libs/*").trim().replace("${APP_HOME}", homepath);
+            String lib = replaceValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
             lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
             Server.loadLib(classLoader, logger, lib);
         }
@@ -740,7 +742,7 @@ public final class Application {
                     String value = prop.getValue("value");
                     if (key == null || value == null) continue;
                     appProperties.put(key, value);
-                    value = value.replace("${APP_HOME}", homepath);
+                    value = replaceValue(value);
                     if (key.startsWith("redkale.datasource[") || key.startsWith("redkale.cachesource[")) {
                         sourceProperties.put(key, value);
                     } else if (key.startsWith("system.property.")) {
@@ -771,9 +773,9 @@ public final class Application {
                                 appProperties.putAll(ps);
                                 ps.forEach((x, y) -> {
                                     if (x.toString().startsWith("redkale.datasource[") || x.toString().startsWith("redkale.cachesource[")) {
-                                        sourceProperties.put(x, y.toString().replace("${APP_HOME}", homepath));
+                                        sourceProperties.put(x, replaceValue(y.toString()));
                                     } else {
-                                        resourceFactory.register("property." + x, y.toString().replace("${APP_HOME}", homepath));
+                                        resourceFactory.register("property." + x, replaceValue(y.toString()));
                                     }
                                 });
                             } catch (Exception e) {
@@ -1683,6 +1685,10 @@ public final class Application {
             System.exit(1);
         }
         System.exit(0); //必须要有
+    }
+
+    private String replaceValue(String value) {
+        return value == null ? value : value.replace("${APP_HOME}", homePath).replace("${APP_NAME}", name);
     }
 
     private static String generateHelp() {
