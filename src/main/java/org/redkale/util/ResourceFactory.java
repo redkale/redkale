@@ -8,6 +8,7 @@ package org.redkale.util;
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
+import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -809,30 +810,33 @@ public final class ResourceFactory {
             this.value = value;
             this.elements = elements == null ? new CopyOnWriteArrayList<>() : elements;
             if (sync && elements != null && !elements.isEmpty()) {
-
                 for (ResourceElement element : elements) {
                     Object dest = element.dest.get();
-                    if (dest == null) continue;
-                    Object rs = value;
-                    final Class classtype = element.fieldType;
-                    if (rs != null && !rs.getClass().isPrimitive() && classtype.isPrimitive()) {
-                        if (classtype == int.class) {
-                            rs = Integer.decode(rs.toString());
-                        } else if (classtype == long.class) {
-                            rs = Long.decode(rs.toString());
-                        } else if (classtype == short.class) {
-                            rs = Short.decode(rs.toString());
-                        } else if (classtype == boolean.class) {
-                            rs = "true".equalsIgnoreCase(rs.toString());
-                        } else if (classtype == byte.class) {
-                            rs = Byte.decode(rs.toString());
-                        } else if (classtype == float.class) {
-                            rs = Float.parseFloat(rs.toString());
-                        } else if (classtype == double.class) {
-                            rs = Double.parseDouble(rs.toString());
+                    if (dest == null) continue;  //依赖对象可能被销毁了
+                    Object newVal = value;
+                    final Class classType = element.fieldType;
+                    if (newVal != null && !newVal.getClass().isPrimitive() && (classType.isPrimitive() || Number.class.isAssignableFrom(classType))) {
+                        if (classType == int.class || classType == Integer.class) {
+                            newVal = Integer.decode(newVal.toString());
+                        } else if (classType == long.class || classType == Long.class) {
+                            newVal = Long.decode(newVal.toString());
+                        } else if (classType == short.class || classType == Short.class) {
+                            newVal = Short.decode(newVal.toString());
+                        } else if (classType == boolean.class || classType == Boolean.class) {
+                            newVal = "true".equalsIgnoreCase(newVal.toString());
+                        } else if (classType == byte.class || classType == Byte.class) {
+                            newVal = Byte.decode(newVal.toString());
+                        } else if (classType == float.class || classType == Float.class) {
+                            newVal = Float.parseFloat(newVal.toString());
+                        } else if (classType == double.class || classType == Double.class) {
+                            newVal = Double.parseDouble(newVal.toString());
+                        } else if (classType == BigInteger.class) {
+                            newVal = new BigInteger(newVal.toString());
+                        } else if (classType == BigDecimal.class) {
+                            newVal = new BigDecimal(newVal.toString());
                         }
                     }
-                    if (rs == null && classtype.isPrimitive()) rs = Array.get(Array.newInstance(classtype, 1), 0);
+                    if (newVal == null && classType.isPrimitive()) newVal = Array.get(Array.newInstance(classType, 1), 0);
                     Object oldVal = null;
                     if (element.listener != null) {
                         try {
@@ -842,14 +846,14 @@ public final class ResourceFactory {
                         }
                     }
                     try {
-                        element.field.set(dest, rs);
+                        element.field.set(dest, newVal);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     if (element.listener != null) {
                         try {
-                            if (!element.different || !Objects.equals(rs, oldVal)) {
-                                element.listener.invoke(dest, name, rs, oldVal);
+                            if (!element.different || !Objects.equals(newVal, oldVal)) {
+                                element.listener.invoke(dest, name, newVal, oldVal);
                             }
                         } catch (Exception e) {
                             logger.log(Level.SEVERE, dest + " resource change listener error", e);
