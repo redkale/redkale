@@ -112,6 +112,13 @@ public final class Application {
     public static final String RESNAME_APP_ASYNCGROUP = "APP_ASYNCGROUP";
 
     /**
+     * 环境变量， 类型：Environment
+     *
+     * @since 2.7.0
+     */
+    public static final String RESNAME_APP_ENV = "APP_ENV";
+
+    /**
      * 当前Service所属的SNCP Server的地址 类型: SocketAddress、InetSocketAddress、String <br>
      */
     public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
@@ -178,6 +185,8 @@ public final class Application {
     private PropertiesAgent propertiesAgent;
 
     final Properties appProperties = new Properties();
+
+    final Environment appEnvironment;
 
     //第三方服务发现管理接口
     //@since 2.1.0
@@ -248,6 +257,7 @@ public final class Application {
         this.compileMode = compileMode;
         this.config = config;
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
+        this.appEnvironment = new Environment(this.appProperties);
         System.setProperty("redkale.version", Redkale.getDotedVersion());
 
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
@@ -291,7 +301,7 @@ public final class Application {
             this.resourceFactory.register(RESNAME_APP_CONF_DIR, File.class, confFile);
             this.resourceFactory.register(RESNAME_APP_CONF_DIR, Path.class, confFile.toPath());
         }
-
+        this.resourceFactory.register(RESNAME_APP_ENV, Environment.class, appEnvironment);
         {
             int nid = config.getIntValue("nodeid", 0);
             this.nodeid = nid;
