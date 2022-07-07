@@ -8,7 +8,7 @@ rm -fr src
 rm -fr bin
 rm -fr conf
 
-git clone https://gitee.com/redkale/redkale.git
+git clone https://github.com/redkale/redkale.git
 
 cp -fr redkale/src ./
 cp -fr redkale/bin ./
