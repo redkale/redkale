@@ -743,7 +743,8 @@ public final class Application {
                     if (key == null || value == null) continue;
                     appProperties.put(key, value);
                     value = replaceValue(value);
-                    if (key.startsWith("redkale.datasource[") || key.startsWith("redkale.cachesource[")) {
+                    if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
+                        || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
                         sourceProperties.put(key, value);
                     } else if (key.startsWith("system.property.")) {
                         String propName = key.substring("system.property.".length());
@@ -772,7 +773,8 @@ public final class Application {
                                 if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
                                 appProperties.putAll(ps);
                                 ps.forEach((x, y) -> {
-                                    if (x.toString().startsWith("redkale.datasource[") || x.toString().startsWith("redkale.cachesource[")) {
+                                    if (x.toString().startsWith("redkale.datasource.") || x.toString().startsWith("redkale.datasource[")
+                                        || x.toString().startsWith("redkale.cachesource.") || x.toString().startsWith("redkale.cachesource[")) {
                                         sourceProperties.put(x, replaceValue(y.toString()));
                                     } else {
                                         resourceFactory.register("property." + x, replaceValue(y.toString()));
