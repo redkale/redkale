@@ -16,7 +16,6 @@ import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.boot.Application;
 import org.redkale.net.*;
-import org.redkale.service.RetResult;
 import org.redkale.util.*;
 
 /**
@@ -29,8 +28,10 @@ import org.redkale.util.*;
  */
 public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse> {
 
+    @Deprecated  //@since 2.8.0
     public static final int RET_SERVER_ERROR = 1200_0001;
 
+    @Deprecated  //@since 2.8.0
     public static final int RET_METHOD_ERROR = 1200_0002;
 
     String _actionSimpleMappingUrl; //只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如 /json /createRecord, 不能是 /user/** 
@@ -82,7 +83,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             if (request.actionEntry != null) {
                 ActionEntry entry = request.actionEntry;
                 if (!entry.checkMethod(request.getMethod())) {
-                    response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
+                    //response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
+                    response.finish405();
                     return;
                 }
                 request.moduleid = entry.moduleid;
@@ -100,7 +102,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 if (request.getRequestURI().startsWith(en.getKey())) {
                     ActionEntry entry = en.getValue();
                     if (!entry.checkMethod(request.getMethod())) {
-                        response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
+                        //response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
+                        response.finish405();
                         return;
                     }
                     request.actionEntry = entry;
@@ -332,7 +335,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
         final String name;
 
-        final String[] methods;
+        final String[] methods; //不能为null，长度为0表示容许所有method
 
         final HttpServlet servlet;
 

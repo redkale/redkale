@@ -42,6 +42,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected static final byte[] bytes404 = "HTTP/1.1 404 Not Found\r\nContent-Length:0\r\n\r\n".getBytes();
 
+    protected static final byte[] bytes405 = "HTTP/1.1 405 Method Not Allowed\r\nContent-Length:0\r\n\r\n".getBytes();
+
     protected static final byte[] bytes500 = "HTTP/1.1 500 Internal Server Error\r\nContent-Length:0\r\n\r\n".getBytes();
 
     protected static final byte[] bytes504 = "HTTP/1.1 504 Gateway Timeout\r\nContent-Length:0\r\n\r\n".getBytes();
@@ -981,6 +983,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finish404() {
         skipHeader();
         super.finish(false, bytes404);
+    }
+
+    /**
+     * 以405状态码输出
+     */
+    public void finish405() {
+        skipHeader();
+        super.finish(false, bytes405);
     }
 
     /**
