@@ -28,10 +28,10 @@ import org.redkale.util.*;
  */
 public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse> {
 
-    @Deprecated  //@since 2.8.0
+    @Deprecated  //@deprecated 2.8.0
     public static final int RET_SERVER_ERROR = 1200_0001;
 
-    @Deprecated  //@since 2.8.0
+    @Deprecated  //@deprecated 2.8.0
     public static final int RET_METHOD_ERROR = 1200_0002;
 
     String _actionSimpleMappingUrl; //只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如 /json /createRecord, 不能是 /user/** 
@@ -53,7 +53,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             ActionEntry entry = request.actionEntry;
             if (entry.rpconly) {
                 if (!request.rpc) {
-                    response.finish(404, null);
+                    finish404(request, response);
                     return;
                 } else if (request.rpcAuthenticator != null) {
                     if (!request.rpcAuthenticator.auth(request, response)) {
@@ -84,7 +84,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 ActionEntry entry = request.actionEntry;
                 if (!entry.checkMethod(request.getMethod())) {
                     //response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
-                    response.finish405();
+                    finish405(request, response);
                     return;
                 }
                 request.moduleid = entry.moduleid;
@@ -103,7 +103,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     ActionEntry entry = en.getValue();
                     if (!entry.checkMethod(request.getMethod())) {
                         //response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
-                        response.finish405();
+                        finish405(request, response);
                         return;
                     }
                     request.actionEntry = entry;
@@ -119,7 +119,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     return;
                 }
             }
-            response.finish404();
+            finish404(request, response);
             //throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
         }
     };
@@ -145,6 +145,32 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     //Server执行start后运行此方法
     public void postStart(HttpContext context, AnyValue config) {
+    }
+
+    /**
+     * 提供404状态码的可定制接口
+     *
+     * @since 2.8.0
+     * @param request  HttpRequest
+     * @param response HttpResponse
+     *
+     * @throws IOException IOException
+     */
+    protected void finish404(HttpRequest request, HttpResponse response) throws IOException {
+        response.finish404();
+    }
+
+    /**
+     * 提供405状态码的可定制接口
+     *
+     * @since 2.8.0
+     * @param request  HttpRequest
+     * @param response HttpResponse
+     *
+     * @throws IOException IOException
+     */
+    protected void finish405(HttpRequest request, HttpResponse response) throws IOException {
+        response.finish405();
     }
 
     /**

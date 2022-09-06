@@ -300,8 +300,8 @@
         <response>
             <content-type plain="text/plain; charset=utf-8" json="application/json; charset=utf-8"/>            
             <defcookie domain="" path=""/>  
-            <addheader name="Access-Control-Allow-Origin" value="request.headers.Origin" /> 
-            <setheader name="Access-Control-Allow-Headers" value="request.headers.Access-Control-Request-Headers"/>
+            <addheader name="Access-Control-Allow-Origin" value="request.headers.Origin" />  <!-- 可多节点 -->
+            <setheader name="Access-Control-Allow-Headers" value="request.headers.Access-Control-Request-Headers"/>  <!-- 可多节点 -->
             <setheader name="Access-Control-Allow-Credentials" value="true"/>
             <options auto="true" />
             <date period="0" />

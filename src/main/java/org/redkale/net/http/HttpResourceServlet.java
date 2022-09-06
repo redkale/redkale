@@ -194,7 +194,7 @@ public class HttpResourceServlet extends HttpServlet {
         String uri = request.getRequestURI();
         if (uri.contains("../")) {
             if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "Not found resource (404) be " + uri + ", request = " + request);
-            response.finish404();
+            finish404(request, response);
             return;
         }
         if (locationRewrites != null) {
@@ -217,7 +217,7 @@ public class HttpResourceServlet extends HttpServlet {
             String suri = uri.toLowerCase();
             for (String suffix : renderSuffixs) {
                 if (suri.endsWith(suffix)) {
-                    response.finish404();
+                    finish404(request, response);
                     return;
                 }
             }
@@ -231,7 +231,7 @@ public class HttpResourceServlet extends HttpServlet {
         }
         if (entry == null) {
             if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "Not found resource (404), url = " + request.getRequestURI());
-            response.finish404();
+            finish404(request, response);
         } else {
             //file = null 表示资源内容在内存而不是在File中
             //file = null 时必须传 filename
@@ -288,7 +288,7 @@ public class HttpResourceServlet extends HttpServlet {
             int pos;
             while ((pos = in.read(bytes)) != -1) {
                 out.put(bytes, 0, pos);
-            }  
+            }
             this.servlet = servlet;
             this.file = null;
             this.filename = filename;
@@ -307,7 +307,7 @@ public class HttpResourceServlet extends HttpServlet {
             if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) return; //超过缓存总容量
             try {
                 FileInputStream in = new FileInputStream(file);
-                 ByteArray out = new ByteArray((int) file.length());
+                ByteArray out = new ByteArray((int) file.length());
                 byte[] bytes = new byte[10240];
                 int pos;
                 while ((pos = in.read(bytes)) != -1) {
