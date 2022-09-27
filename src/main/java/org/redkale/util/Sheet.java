@@ -52,8 +52,9 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
     public Sheet<T> copyTo(Sheet<T> copy) {
         if (copy == null) return copy;
         copy.total = this.total;
-        if (this.getRows() != null) {
-            copy.setRows(new ArrayList(this.getRows()));
+        Collection<T> data = this.getRows();
+        if (data != null) {
+            copy.setRows(new ArrayList(data));
         } else {
             copy.rows = null;
         }
@@ -67,7 +68,8 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
      */
     @ConvertColumn(index = 3)
     public boolean isEmpty() {
-        return this.rows == null || this.rows.isEmpty();
+        Collection<T> data = this.rows;
+        return data == null || data.isEmpty();
     }
 
     @Override
@@ -92,8 +94,9 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
     }
 
     public List<T> list(boolean created) {
-        if (this.rows == null) return created ? new ArrayList() : null;
-        return (this.rows instanceof List) ? (List<T>) this.rows : new ArrayList(this.rows);
+        Collection<T> data = this.rows;
+        if (data == null) return created ? new ArrayList() : null;
+        return (data instanceof List) ? (List<T>) data : new ArrayList(data);
     }
 
     public void setRows(Collection<? extends T> data) {
@@ -102,53 +105,63 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return (this.rows == null) ? new ArrayList<T>().iterator() : this.rows.iterator();
+        Collection<T> data = this.rows;
+        return (data == null) ? new ArrayList<T>().iterator() : data.iterator();
     }
 
     @Override
     public void forEach(final Consumer<? super T> consumer) {
-        if (consumer != null && this.rows != null && !this.rows.isEmpty()) {
-            this.rows.forEach(consumer);
+        Collection<T> data = this.rows;
+        if (consumer != null && data != null && !data.isEmpty()) {
+            data.forEach(consumer);
         }
     }
 
     public <R> Sheet<R> map(Function<T, R> mapper) {
-        if (this.isEmpty()) return (Sheet) this;
+        Collection<T> data = this.rows;
+        if (data == null || data.isEmpty()) return (Sheet) this;
         final List<R> list = new ArrayList<>();
-        for (T item : this.rows) {
+        for (T item : data) {
             list.add(mapper.apply(item));
         }
         return new Sheet<>(getTotal(), list);
     }
 
     public void forEachParallel(final Consumer<? super T> consumer) {
-        if (consumer != null && this.rows != null && !this.rows.isEmpty()) {
-            this.rows.parallelStream().forEach(consumer);
+        Collection<T> data = this.rows;
+        if (consumer != null && data != null && !data.isEmpty()) {
+            data.parallelStream().forEach(consumer);
         }
     }
 
     @Override
     public Spliterator<T> spliterator() {
-        return (this.rows == null) ? new ArrayList<T>().spliterator() : this.rows.spliterator();
+        Collection<T> data = this.rows;
+        return (data == null) ? new ArrayList<T>().spliterator() : data.spliterator();
     }
 
     public Stream<T> stream() {
-        return (this.rows == null) ? new ArrayList<T>().stream() : this.rows.stream();
+        Collection<T> data = this.rows;
+        return (data == null) ? new ArrayList<T>().stream() : data.stream();
     }
 
     public Stream<T> parallelStream() {
-        return (this.rows == null) ? new ArrayList<T>().parallelStream() : this.rows.parallelStream();
+        Collection<T> data = this.rows;
+        return (data == null) ? new ArrayList<T>().parallelStream() : data.parallelStream();
     }
 
     public Object[] toArray() {
-        return (this.rows == null) ? new ArrayList<T>().toArray() : this.rows.toArray();
+        Collection<T> data = this.rows;
+        return (data == null) ? new ArrayList<T>().toArray() : data.toArray();
     }
 
     public <E> E[] toArray(E[] a) {
-        return (this.rows == null) ? new ArrayList<E>().toArray(a) : this.rows.toArray(a);
+        Collection<T> data = this.rows;
+        return (data == null) ? new ArrayList<E>().toArray(a) : data.toArray(a);
     }
 
     public <E> E[] toArray(IntFunction<E[]> generator) {
-        return (this.rows == null) ? new ArrayList<E>().toArray(generator.apply(0)) : this.rows.toArray(generator.apply(this.rows.size()));
+        Collection<T> data = this.rows;
+        return (data == null) ? new ArrayList<E>().toArray(generator.apply(0)) : data.toArray(generator.apply(data.size()));
     }
 }
