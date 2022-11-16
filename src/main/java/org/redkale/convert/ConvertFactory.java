@@ -243,7 +243,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     public abstract ConvertFactory createChild(boolean tiny);
 
     protected SimpledCoder createEnumSimpledCoder(Class enumClass) {
-        return new EnumSimpledCoder(enumClass);
+        return new EnumSimpledCoder(this, enumClass);
     }
 
     protected Type formatObjectType(Type type) {
