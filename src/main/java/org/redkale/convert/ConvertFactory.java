@@ -42,7 +42,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     protected Convert<R, W> convert;
 
-    protected boolean tiny; //String类型值为""，Boolean类型值为false时是否需要输出， 默认为true
+    protected boolean tiny; //String类型值为""，Boolean类型值为false时是否需要输出， 默认为false
 
     private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
 

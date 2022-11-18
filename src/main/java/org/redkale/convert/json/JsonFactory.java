@@ -24,7 +24,7 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
-    private static final JsonFactory instance = new JsonFactory(null, getSystemPropertyBoolean("redkale.convert.json.tiny", "redkale.convert.tiny", true));
+    private static final JsonFactory instance = new JsonFactory(null, getSystemPropertyBoolean("redkale.convert.json.tiny", "redkale.convert.tiny", false));
 
     static {
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
@@ -65,7 +65,7 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     }
 
     public static JsonFactory create() {
-        return new JsonFactory(null, getSystemPropertyBoolean("redkale.convert.json.tiny", "redkale.convert.tiny", true));
+        return new JsonFactory(null, getSystemPropertyBoolean("redkale.convert.json.tiny", "redkale.convert.tiny", false));
     }
 
     @Override

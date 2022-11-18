@@ -10,7 +10,9 @@ import javax.annotation.Priority;
 import org.redkale.util.*;
 
 /**
- * 协议拦截器类
+ * 协议拦截器类, 类似JavaEE中的javax.servlet.Filter <br>
+ * javax.servlet.Filter方法doFilter是同步操作，此Filter.doFilter则是异步操作，方法return前需要调用Response.nextEvent()方可执行下一个Filter <br>
+ * 通过给Filter标记注解&#064;Priority来确定执行的顺序, Priority.value值越大越先执行
  *
  * <p>
  * 详情见: https://redkale.org

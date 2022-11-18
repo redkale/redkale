@@ -24,7 +24,7 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
-    private static final BsonFactory instance = new BsonFactory(null, getSystemPropertyBoolean("redkale.convert.bson.tiny", "redkale.convert.tiny", true));
+    private static final BsonFactory instance = new BsonFactory(null, getSystemPropertyBoolean("redkale.convert.bson.tiny", "redkale.convert.tiny", false));
 
     static final Decodeable objectDecoder = instance.loadDecoder(Object.class);
 
@@ -73,7 +73,7 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     }
 
     public static BsonFactory create() {
-        return new BsonFactory(null, getSystemPropertyBoolean("redkale.convert.bson.tiny", "redkale.convert.tiny", true));
+        return new BsonFactory(null, getSystemPropertyBoolean("redkale.convert.bson.tiny", "redkale.convert.tiny", false));
     }
 
     @Override

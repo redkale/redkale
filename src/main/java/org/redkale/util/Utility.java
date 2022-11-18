@@ -244,6 +244,14 @@ public final class Utility {
         }
     }
 
+    public static <T> CompletableFuture<T> orTimeout(CompletableFuture future, Duration timeout) {
+        return future.orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    public static <T> CompletableFuture<T> completeOnTimeout(CompletableFuture future, T value, Duration timeout) {
+        return future.completeOnTimeout(value, timeout.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
     public static <T> CompletableFuture<T> orTimeout(CompletableFuture future, long timeout, TimeUnit unit) {
         return future.orTimeout(timeout, unit);
     }

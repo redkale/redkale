@@ -130,7 +130,7 @@
                System.setProperty("redkale.net.transport.poolmaxconns", "100");
                System.setProperty("redkale.net.transport.pinginterval", "30");
                System.setProperty("redkale.net.transport.checkinterval", "30");
-               System.setProperty("redkale.convert.tiny", "true");
+               System.setProperty("redkale.convert.tiny", "false");
                System.setProperty("redkale.convert.pool.size", "128");
                System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
                
