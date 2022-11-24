@@ -44,7 +44,7 @@ public class BsonMainTest {
         SimpleChildEntity entry = SimpleChildEntity.create();
         byte[] bytes = convert.convertTo(SimpleEntity.class, entry);
         System.out.println("长度: " + bytes.length);
-        Assertions.assertEquals(271, bytes.length);
+        Assertions.assertEquals(260, bytes.length);
         BsonByteBufferWriter writer = convert.pollBsonWriter(() -> ByteBuffer.allocate(1));
         convert.convertTo(writer, SimpleEntity.class, entry);
         ByteBuffer[] buffers = writer.toBuffers();
@@ -58,7 +58,7 @@ public class BsonMainTest {
             b.flip();
         }
         System.out.println("长度: " + len);
-        Assertions.assertEquals(271, len);
+        Assertions.assertEquals(260, len);
         SimpleChildEntity entry2 = convert.convertFrom(SimpleChildEntity.class, buffers);
         System.out.println(entry);
         Assertions.assertEquals(entry.toString(), entry2.toString());
@@ -81,7 +81,7 @@ public class BsonMainTest {
         convert.convertTo(writer, bean);
         bytes2 = writer.toArray();
         System.out.println(convert.convertFrom(ComplextEntity.class, bytes2).toString());
-        Assertions.assertEquals("{\"chname\":\"\",\"flag\":true,\"userid\":0}", convert.convertFrom(ComplextEntity.class, bytes2).toString());
+        Assertions.assertEquals("{\"flag\":true,\"userid\":0}", convert.convertFrom(ComplextEntity.class, bytes2).toString());
     }
 
     @Test
