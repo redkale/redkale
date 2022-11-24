@@ -54,8 +54,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected Properties writeConfProps;
 
-    @Resource(name = RESNAME_APP_ASYNCGROUP)
-    protected AsyncGroup asyncGroup;
+    @Resource(name = RESNAME_APP_CLIENT_ASYNCGROUP)
+    protected AsyncGroup clientAsyncGroup;
 
     @Resource(name = RESNAME_APP_EXECUTOR)
     protected ExecutorService workExecutor;
