@@ -839,6 +839,7 @@ public final class ResourceFactory {
             this.elements = new CopyOnWriteArrayList<>();
         }
 
+        //wrappers=null时才会触发listener的ResourceChangeEvent事件
         public ResourceEntry(final String name, T value, final List<ResourceElement> elements, List<ResourceChangeWrapper> wrappers, boolean sync) {
             this.name = name;
             this.value = value;
