@@ -875,13 +875,13 @@ public final class ResourceFactory {
                     if (element.listener != null) {
                         try {
                             oldVal = element.field.get(dest);
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
                             e.printStackTrace();
                         }
                     }
                     try {
                         element.field.set(dest, newVal);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         e.printStackTrace();
                     }
                     if (element.listener != null) {
@@ -894,7 +894,7 @@ public final class ResourceFactory {
                                     wrappers.add(new ResourceChangeWrapper(dest, element.listener, new ResourceChangeEvent(name, newVal, oldVal)));
                                 }
                             }
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
                             logger.log(Level.SEVERE, dest + " resource change listener error", e);
                         }
                     }

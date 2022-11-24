@@ -17,10 +17,20 @@ import org.redkale.util.*;
  */
 public abstract class PropertiesAgent {
 
+    public static final String PROP_KEY_URL = "url";
+
+    public static final String PROP_KEY_NAMESPACE = "namespace";
+
+    public static final String PROP_NAMESPACE_APPLICATION = "application";
+
     public void compile(AnyValue conf) {
     }
 
     public abstract void init(ResourceFactory factory, Properties appProperties, AnyValue conf);
 
     public abstract void destroy(AnyValue conf);
+
+    protected String getKeyResourceName(String key) {
+        return key.startsWith("property.") ? key : ("property." + key);
+    }
 }
