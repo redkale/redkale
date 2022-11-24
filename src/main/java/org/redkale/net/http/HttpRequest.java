@@ -87,6 +87,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected boolean rpc;
 
+    protected String traceid;
+
     protected int readState = READ_STATE_ROUTE;
 
     // @since 2.1.0
@@ -183,6 +185,7 @@ public class HttpRequest extends Request<HttpContext> {
     protected HttpRequest initSimpleRequest(HttpSimpleRequest req, boolean needPath) {
         if (req != null) {
             this.rpc = req.rpc;
+            this.traceid = req.traceid;
             if (req.getBody() != null) this.array.put(req.getBody());
             if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
             this.frombody = req.isFrombody();
@@ -236,6 +239,7 @@ public class HttpRequest extends Request<HttpContext> {
         req.setRequestURI(uri);
         req.setSessionid(getSessionid(false));
         req.setRpc(this.rpc);
+        req.setTraceid(this.traceid);
         return req;
     }
 
@@ -303,6 +307,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.keepAlive = httplast.keepAlive;
                 this.maybews = httplast.maybews;
                 this.rpc = httplast.rpc;
+                this.traceid = httplast.traceid;
                 this.hashid = httplast.hashid;
                 this.currentUserid = httplast.currentUserid;
                 this.frombody = httplast.frombody;
@@ -760,6 +765,7 @@ public class HttpRequest extends Request<HttpContext> {
         req.keepAlive = this.keepAlive;
         req.maybews = this.maybews;
         req.rpc = this.rpc;
+        req.traceid = this.traceid;
         req.hashid = this.hashid;
         req.currentUserid = this.currentUserid;
         req.currentUserSupplier = this.currentUserSupplier;
@@ -791,6 +797,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.cookies = null;
         this.maybews = false;
         this.rpc = false;
+        this.traceid = null;
         this.readState = READ_STATE_ROUTE;
         this.currentUserid = CURRUSERID_NIL;
         this.currentUserSupplier = null;

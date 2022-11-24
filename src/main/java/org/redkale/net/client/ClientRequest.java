@@ -7,7 +7,7 @@ package org.redkale.net.client;
 
 import java.util.function.*;
 import org.redkale.net.WorkThread;
-import org.redkale.util.ByteArray;
+import org.redkale.util.*;
 
 /**
  *
@@ -24,10 +24,16 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
 
     protected WorkThread workThread;
 
+    protected String traceid;
+
     ClientFuture respFuture;
 
     public long getCreateTime() {
         return createTime;
+    }
+
+    public String getTraceid() {
+        return traceid;
     }
 
     public <T extends ClientRequest> T currThread(WorkThread thread) {
@@ -56,10 +62,12 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
 
     protected void prepare() {
         this.createTime = System.currentTimeMillis();
+        this.traceid = Traces.currTraceid();
     }
 
     protected boolean recycle() {
         this.createTime = 0;
+        this.traceid = null;
         return true;
     }
 }

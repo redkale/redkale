@@ -677,6 +677,7 @@ public final class Application {
         System.setProperty("redkale.convert.tiny", "true");
         System.setProperty("redkale.convert.pool.size", "128");
         System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
+        System.setProperty("redkale.trace.enable", "false");
 
         final String confDir = this.confPath.toString();
 //        String pidstr = "";

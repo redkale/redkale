@@ -178,8 +178,16 @@ public abstract class MessageClient {
         return new MessageRecord(msgSeqno.incrementAndGet(), ctype, topic, resptopic, Traces.createTraceid(), content);
     }
 
+    protected MessageRecord createMessageRecord(byte ctype, String topic, String resptopic, String traceid, byte[] content) {
+        return new MessageRecord(msgSeqno.incrementAndGet(), ctype, topic, resptopic, traceid, content);
+    }
+
     protected MessageRecord createMessageRecord(long seqid, byte ctype, String topic, String resptopic, byte[] content) {
         return new MessageRecord(seqid, ctype, topic, resptopic, Traces.createTraceid(), content);
+    }
+
+    protected MessageRecord createMessageRecord(long seqid, byte ctype, String topic, String resptopic, String traceid, byte[] content) {
+        return new MessageRecord(seqid, ctype, topic, resptopic, traceid, content);
     }
 
     private byte ctype(Convert convert, Object bean) {

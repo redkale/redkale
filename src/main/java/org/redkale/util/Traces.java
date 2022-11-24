@@ -2,6 +2,8 @@
  */
 package org.redkale.util;
 
+import java.util.function.Supplier;
+
 /**
  * 创建traceid工具类
  *
@@ -15,21 +17,23 @@ public class Traces {
 
     private static final boolean disabled = !Boolean.getBoolean("redkale.trace.enable");
 
-    private static ThreadLocal<String> localTrace = new ThreadLocal<>();
+    private static final ThreadLocal<String> localTrace = new ThreadLocal<>();
+
+    private static final Supplier<String> tidSupplier = () -> Utility.uuid();
 
     public static boolean enable() {
         return !disabled;
     }
 
     public static String onceTraceid() {
-        return disabled ? null : Utility.uuid();
+        return disabled ? null : tidSupplier.get();
     }
 
     public static String createTraceid() {
         if (disabled) return null;
         String traceid = localTrace.get();
         if (traceid == null) {
-            traceid = Utility.uuid();
+            traceid = tidSupplier.get();
             localTrace.set(traceid);
         }
         return traceid;

@@ -30,6 +30,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
 
     @Override
     public byte[] encode(HttpSimpleRequest data) {
+        byte[] traceid = MessageCoder.getBytes(data.getTraceid());//short-string
         byte[] requestURI = MessageCoder.getBytes(data.getRequestURI()); //long-string
         byte[] path = MessageCoder.getBytes(data.getPath()); //short-string
         byte[] remoteAddr = MessageCoder.getBytes(data.getRemoteAddr());//short-string
@@ -39,11 +40,11 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         byte[] params = MessageCoder.getBytes(data.getParams());
         byte[] body = MessageCoder.getBytes(data.getBody());
         byte[] userid = MessageCoder.encodeUserid(data.getCurrentUserid());
-        int count = 1 //rpc
-            + 1 //frombody
+        int count = 1 //rpc + frombody
             + 4 //hashid
             + 4 //reqConvertType
             + 4 //respConvertType
+            + 2 + traceid.length
             + 4 + requestURI.length
             + 2 + path.length
             + 2 + remoteAddr.length
@@ -54,11 +55,12 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
             + 4 + body.length;
         byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
-        buffer.put((byte) (data.isRpc() ? 'T' : 'F'));
-        buffer.put((byte) (data.isFrombody() ? 'T' : 'F'));
+        buffer.put((byte) ((data.isRpc() ? 0b01 : 0) | (data.isFrombody() ? 0b10 : 0)));
         buffer.putInt(data.getHashid());
         buffer.putInt(data.getReqConvertType() == null ? 0 : data.getReqConvertType().getValue());
         buffer.putInt(data.getRespConvertType() == null ? 0 : data.getRespConvertType().getValue());
+        buffer.putChar((char) traceid.length);
+        if (traceid.length > 0) buffer.put(traceid);
         buffer.putInt(requestURI.length);
         if (requestURI.length > 0) buffer.put(requestURI);
         buffer.putChar((char) path.length);
@@ -83,13 +85,15 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         if (data == null) return null;
         ByteBuffer buffer = ByteBuffer.wrap(data);
         HttpSimpleRequest req = new HttpSimpleRequest();
-        req.setRpc(buffer.get() == 'T');
-        req.setFrombody(buffer.get() == 'T');
+        byte opt = buffer.get();
+        req.setRpc((opt & 0b01) > 0);
+        req.setFrombody((opt & 0b10) > 0);
         req.setHashid(buffer.getInt());
         int reqformat = buffer.getInt();
         int respformat = buffer.getInt();
         if (reqformat != 0) req.setReqConvertType(ConvertType.find(reqformat));
         if (respformat != 0) req.setRespConvertType(ConvertType.find(respformat));
+        req.setTraceid(MessageCoder.getShortString(buffer));
         req.setRequestURI(MessageCoder.getLongString(buffer));
         req.setPath(MessageCoder.getShortString(buffer));
         req.setRemoteAddr(MessageCoder.getShortString(buffer));
