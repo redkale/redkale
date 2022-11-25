@@ -17,4 +17,12 @@ public interface ResourceEvent<T> {
     public T newValue();
 
     public T oldValue();
+
+    public static boolean containsName(ResourceEvent[] events, String... names) {
+        if (events == null || events.length == 0 || names.length == 0) return false;
+        for (ResourceEvent event : events) {
+            if (Utility.contains(names, event.name())) return true;
+        }
+        return false;
+    }
 }
