@@ -807,13 +807,15 @@ public final class Application {
                         }
                     }
                     for (PropertiesAgentProvider provider : InstanceProvider.sort(providers)) {
+                        long s = System.currentTimeMillis();
                         this.propertiesAgent = provider.createInstance();
                         this.resourceFactory.inject(this.propertiesAgent);
                         if (compileMode) {
                             this.propertiesAgent.compile(propertiesConf);
                         } else {
-                            this.propertiesAgent.init(resourceFactory, appProperties, propertiesConf);
+                            this.propertiesAgent.init(resourceFactory, appProperties, sourceProperties, propertiesConf);
                         }
+                        logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
                         break;
                     }
                 }
