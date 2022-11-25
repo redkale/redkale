@@ -112,13 +112,6 @@ public final class Application {
     public static final String RESNAME_APP_CLIENT_ASYNCGROUP = "APP_CLIENT_ASYNCGROUP";
 
     /**
-     * 环境变量， 类型：Environment
-     *
-     * @since 2.7.0
-     */
-    public static final String RESNAME_APP_ENV = "APP_ENV";
-
-    /**
      * 当前Service所属的SNCP Server的地址 类型: SocketAddress、InetSocketAddress、String <br>
      */
     public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
@@ -306,7 +299,7 @@ public final class Application {
             this.resourceFactory.register(RESNAME_APP_CONF_DIR, File.class, confFile);
             this.resourceFactory.register(RESNAME_APP_CONF_DIR, Path.class, confFile.toPath());
         }
-        this.resourceFactory.register(RESNAME_APP_ENV, Environment.class, appEnvironment);
+        this.resourceFactory.register(Environment.class, appEnvironment);
         {
             int nid = config.getIntValue("nodeid", 0);
             this.nodeid = nid;
@@ -749,23 +742,24 @@ public final class Application {
                     String key = prop.getValue("name");
                     String value = prop.getValue("value");
                     if (key == null || value == null) continue;
-                    appProperties.put(key, value);
-                    value = replaceValue(value);
-                    if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
-                        || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
-                        sourceProperties.put(key, value);
-                    } else if (key.startsWith("system.property.")) {
-                        String propName = key.substring("system.property.".length());
-                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
-                            System.setProperty(propName, value);
-                        }
-                    } else if (key.startsWith("mimetype.property.")) {
-                        MimeType.add(key.substring("mimetype.property.".length()), value);
-                    } else if (key.startsWith("property.")) {
-                        resourceFactory.register(key, value);
-                    } else {
-                        resourceFactory.register("property." + key, value);
-                    }
+                    putResourceProperties(key, value, null);
+//                    appProperties.put(key, value);
+//                    value = replaceValue(value);
+//                    if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
+//                        || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
+//                        sourceProperties.put(key, value);
+//                    } else if (key.startsWith("system.property.")) {
+//                        String propName = key.substring("system.property.".length());
+//                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
+//                            System.setProperty(propName, value);
+//                        }
+//                    } else if (key.startsWith("mimetype.property.")) {
+//                        MimeType.add(key.substring("mimetype.property.".length()), value);
+//                    } else if (key.startsWith("property.")) {
+//                        resourceFactory.register(key, value);
+//                    } else {
+//                        resourceFactory.register("property." + key, value);
+//                    }
                 }
                 String dfloads = propertiesConf.getValue("load");
                 if (dfloads != null) {
@@ -779,14 +773,8 @@ public final class Application {
                                 ps.load(in);
                                 in.close();
                                 if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
-                                appProperties.putAll(ps);
                                 ps.forEach((x, y) -> {
-                                    if (x.toString().startsWith("redkale.datasource.") || x.toString().startsWith("redkale.datasource[")
-                                        || x.toString().startsWith("redkale.cachesource.") || x.toString().startsWith("redkale.cachesource[")) {
-                                        sourceProperties.put(x, replaceValue(y.toString()));
-                                    } else {
-                                        resourceFactory.register("property." + x, replaceValue(y.toString()));
-                                    }
+                                    putResourceProperties(x.toString(), y, null);
                                 });
                             } catch (Exception e) {
                                 logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
@@ -813,7 +801,7 @@ public final class Application {
                         if (compileMode) {
                             this.propertiesAgent.compile(propertiesConf);
                         } else {
-                            this.propertiesAgent.init(this, resourceFactory, propertiesConf);
+                            this.propertiesAgent.init(this, propertiesConf);
                         }
                         logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
                         break;
@@ -1698,6 +1686,35 @@ public final class Application {
 
     private String replaceValue(String value) {
         return value == null ? value : value.replace("${APP_HOME}", homePath).replace("${APP_NAME}", name);
+    }
+
+    void putResourceProperties(String key, Object value, Properties cache) {
+        if (key == null || value == null) return;
+        appProperties.put(key, value);
+        value = replaceValue(value.toString());
+        if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
+            || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
+            sourceProperties.put(key, value);
+        } else if (key.startsWith("system.property.")) {
+            String propName = key.substring("system.property.".length());
+            if (System.getProperty(propName) == null) { //命令行传参数优先级高
+                System.setProperty(propName, String.valueOf(value));
+            }
+        } else if (key.startsWith("mimetype.property.")) {
+            MimeType.add(key.substring("mimetype.property.".length()), String.valueOf(value));
+        } else if (key.startsWith("property.")) {
+            if (cache == null) {
+                resourceFactory.register(key, value);
+            } else {
+                cache.put(key, value);
+            }
+        } else {
+            if (cache == null) {
+                resourceFactory.register("property." + key, value);
+            } else {
+                cache.put("property." + key, value);
+            }
+        }
     }
 
     private static String generateHelp() {
