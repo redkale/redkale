@@ -795,14 +795,14 @@ public final class Application {
                     }
                 }
 
-                if ((dfloads == null && propertiesConf.getStringEntrys().length > 0) || (dfloads != null && propertiesConf.getStringEntrys().length > 1)) {
+                { //可能通过系统环境变量配置信息
                     Iterator<PropertiesAgentProvider> it = ServiceLoader.load(PropertiesAgentProvider.class, classLoader).iterator();
                     RedkaleClassLoader.putServiceLoader(PropertiesAgentProvider.class);
                     List<PropertiesAgentProvider> providers = new ArrayList<>();
                     while (it.hasNext()) {
                         PropertiesAgentProvider provider = it.next();
-                        if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
                         if (provider != null && provider.acceptsConf(propertiesConf)) {
+                            RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
                             providers.add(provider);
                         }
                     }
