@@ -18,8 +18,6 @@ import org.redkale.util.*;
  */
 public abstract class PropertiesAgent {
 
-    public static final String PROP_KEY_NAMESPACE = "namespace";
-
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     /**
