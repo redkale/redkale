@@ -1239,7 +1239,9 @@ public final class Utility {
      * @return 新数组
      */
     public static long[] remove(final long[] array, boolean repeat, final long... items) {
-        if (array == null || array.length == 0 || items == null || items.length == 0) return array;
+        if (array == null || array.length == 0 || items == null || items.length == 0) {
+            return array;
+        }
         final long[] news = new long[array.length];
         long[] subs = items;
         int index = 0;
@@ -1271,6 +1273,31 @@ public final class Utility {
     }
 
     /**
+     * 将符合条件的元素从集合中删除
+     *
+     * @param <T>    泛型
+     * @param objs   原集合
+     * @param filter Predicate
+     *
+     * @return 新集合
+     */
+    public static <T> Collection<T> remove(final Collection<T> objs, Predicate filter) {
+        if (objs == null || filter == null) {
+            return objs;
+        }
+        List<T> list = new ArrayList<>();
+        for (T t : objs) {
+            if (filter.test(t)) {
+                list.add(t);
+            }
+        }
+        if (!list.isEmpty()) {
+            objs.removeAll(list);
+        }
+        return objs;
+    }
+
+    /**
      * 判断字符串是否包含指定的字符，包含返回true
      *
      * @param string 字符串
@@ -1299,8 +1326,7 @@ public final class Utility {
      */
     public static <T> boolean equalsElement(T[] array1, T[] array2) {
         if (array1 == null && array2 == null) return true;
-        if (array1 == null && array2 != null) return false;
-        if (array1 != null && array2 == null) return false;
+        if (array1 == null || array2 == null) return false;
         if (array1.length != array2.length) return false;
         return equalsElement(ofList(array1), ofList(array2));
     }
@@ -1316,8 +1342,7 @@ public final class Utility {
      */
     public static <T> boolean equalsElement(Collection<T> col1, Collection<T> col2) {
         if (col1 == null && col2 == null) return true;
-        if (col1 == null && col2 != null) return false;
-        if (col1 != null && col2 == null) return false;
+        if (col1 == null || col2 == null) return false;
         if (col1.size() != col2.size()) return false;
         //{1,2,2}, {1,1,2}
         List<T> list = new ArrayList<>(col2);
@@ -1339,8 +1364,7 @@ public final class Utility {
      */
     public static <K, V> boolean equalsElement(Map<K, V> map1, Map<K, V> map2) {
         if (map1 == null && map2 == null) return true;
-        if (map1 == null && map2 != null) return false;
-        if (map1 != null && map2 == null) return false;
+        if (map1 == null || map2 == null) return false;
         if (map1.size() != map2.size()) return false;
         for (Map.Entry<K, V> en : map1.entrySet()) {
             if (!Objects.equals(en.getValue(), map2.get(en.getKey()))) return false;
