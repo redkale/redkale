@@ -813,7 +813,7 @@ public final class Application {
                         if (compileMode) {
                             this.propertiesAgent.compile(propertiesConf);
                         } else {
-                            this.propertiesAgent.init(resourceFactory, appProperties, sourceProperties, propertiesConf);
+                            this.propertiesAgent.init(this, resourceFactory, propertiesConf);
                         }
                         logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
                         break;

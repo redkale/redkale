@@ -40,12 +40,11 @@ public abstract class PropertiesAgent {
     /**
      * 初始化配置源，配置项需要写入appProperties，并监听配置项的变化
      *
-     * @param factory          依赖注入资源工厂
-     * @param appProperties    全局property.开头的配置项
-     * @param sourceProperties 全局source数据源的配置项
-     * @param conf             节点配置
+     * @param application Application
+     * @param factory     依赖注入资源工厂
+     * @param conf        节点配置
      */
-    public abstract void init(ResourceFactory factory, Properties appProperties, Properties sourceProperties, AnyValue conf);
+    public abstract void init(Application application, ResourceFactory factory, AnyValue conf);
 
     /**
      * 销毁动作
@@ -61,15 +60,15 @@ public abstract class PropertiesAgent {
             || key.startsWith("mimetype.property.") ? key : ("property." + key);
     }
 
-    protected void putProperties(Properties appProperties, Properties sourceProperties, Properties newProps) {
-        newProps.forEach((k, v) -> putProperties(appProperties, sourceProperties, k.toString(), v));
+    protected void putResourceProperties(Application application, Properties newProps) {
+        newProps.forEach((k, v) -> putResourceProperties(application, k.toString(), v));
     }
 
-    protected void putProperties(Properties appProperties, Properties sourceProperties, String key, Object value) {
+    protected void putResourceProperties(Application application, String key, Object value) {
         if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
             || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
-            sourceProperties.put(key, value);
+            application.sourceProperties.put(key, value);
         }
-        appProperties.put(key, value);
+        application.appProperties.put(key, value);
     }
 }
