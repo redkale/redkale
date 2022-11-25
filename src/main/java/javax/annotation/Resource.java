@@ -31,6 +31,13 @@ public @interface Resource {
 //         */
 //        APPLICATION
 //    }
+//    
+    /**
+     * 是否必须存在
+     *
+     * @return boolean
+     */
+    public boolean required() default false;
 
     /**
      * 资源名称

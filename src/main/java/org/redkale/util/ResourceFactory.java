@@ -748,9 +748,12 @@ public final class ResourceFactory {
                             register(rcname, genctype, null); //自动注入null的值
                             re = findEntry(rcname, genctype);
                         }
-                        if (re == null) continue;
-                        re.elements.add(new ResourceElement<>(srcObj, field));
-                        rs = re.value;
+                        if (re != null) {
+                            re.elements.add(new ResourceElement<>(srcObj, field));
+                            rs = re.value;
+                        } else {
+                            rs = null;
+                        }
                     }
                     if (rs != null && !rs.getClass().isPrimitive() && classtype.isPrimitive()) {
                         if (classtype == int.class) {
@@ -770,9 +773,14 @@ public final class ResourceFactory {
                         }
                     }
                     if (rs != null) field.set(srcObj, rs);
+                    if (rs == null && rc.required()) {
+                        throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ", field=" + field.getName() + ", name=" + rcname + ") must exists in " + srcObj.getClass().getName());
+                    }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             return true;
+        } catch (ResourceInjectException e) {
+            throw e;
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "inject " + srcObj + " error", ex);
             return false;
@@ -823,6 +831,25 @@ public final class ResourceFactory {
     public ResourceTypeLoader findTypeLoader(Type ft, Field field) {
         ResourceTypeLoader it = this.findMatchTypeLoader(ft, field);
         return it == null ? findRegxTypeLoader(ft, field) : it;
+    }
+
+    private static class ResourceInjectException extends RuntimeException {
+
+        public ResourceInjectException() {
+            super();
+        }
+
+        public ResourceInjectException(String s) {
+            super(s);
+        }
+
+        public ResourceInjectException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public ResourceInjectException(Throwable cause) {
+            super(cause);
+        }
     }
 
     private static class ResourceEntry<T> {
