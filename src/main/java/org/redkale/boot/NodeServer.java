@@ -15,6 +15,7 @@ import java.net.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.logging.*;
 import javax.annotation.*;
@@ -357,6 +358,7 @@ public abstract class NodeServer {
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
         final ResourceFactory appResourceFactory = application.getResourceFactory();
         final TransportFactory appSncpTransFactory = application.getSncpTransportFactory();
+        final AtomicInteger serviceCount = new AtomicInteger();
         for (FilterEntry<? extends Service> entry : entrys) { //service实现类
             final Class<? extends Service> serviceImplClass = entry.getType();
             if (Modifier.isFinal(serviceImplClass.getModifiers())) continue; //修饰final的类跳过
@@ -422,6 +424,7 @@ public abstract class NodeServer {
                         interceptorServices.add(service);
                         if (consumer != null) consumer.accept(agent, service);
                     }
+                    serviceCount.incrementAndGet();
                 } catch (RuntimeException ex) {
                     throw ex;
                 } catch (Exception e) {
@@ -502,7 +505,7 @@ public abstract class NodeServer {
             for (String s : wlist) {
                 sb.append(s);
             }
-            sb.append(localThreadName).append("All Services load cost ").append(System.currentTimeMillis() - starts).append(" ms" + LINE_SEPARATOR);
+            sb.append(localThreadName).append("All " + localServices.size() + " Services load cost ").append(System.currentTimeMillis() - starts).append(" ms");
         }
         if (sb != null && preinite > 10) sb.append(localThreadName).append(ClusterAgent.class.getSimpleName()).append(" register ").append(preinite).append(" ms" + LINE_SEPARATOR);
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());

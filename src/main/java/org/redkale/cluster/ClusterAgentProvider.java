@@ -5,7 +5,7 @@
  */
 package org.redkale.cluster;
 
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  * 自定义的ClusterAgent加载器
@@ -17,9 +17,6 @@ import org.redkale.util.AnyValue;
  * @author zhangjx
  * @since 2.5.0
  */
-public interface ClusterAgentProvider {
+public interface ClusterAgentProvider extends InstanceProvider<ClusterAgent> {
 
-    public boolean acceptsConf(AnyValue config);
-
-    public Class<? extends ClusterAgent> agentClass();
 }

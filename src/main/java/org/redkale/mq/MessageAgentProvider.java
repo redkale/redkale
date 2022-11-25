@@ -5,7 +5,7 @@
  */
 package org.redkale.mq;
 
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  * 自定义的MessageAgent加载器
@@ -17,9 +17,6 @@ import org.redkale.util.AnyValue;
  * @author zhangjx
  * @since 2.5.0
  */
-public interface MessageAgentProvider {
+public interface MessageAgentProvider extends InstanceProvider<MessageAgent> {
 
-    public boolean acceptsConf(AnyValue config);
-
-    public Class<? extends MessageAgent> agentClass();
 }

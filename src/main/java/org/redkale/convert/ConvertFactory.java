@@ -531,8 +531,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 }
                 if (coder == null) {
                     try {
-                        coder = (SimpledCoder) clazz1.getConstructor().newInstance();
                         RedkaleClassLoader.putReflectionPublicConstructors(clazz1, clazz1.getName());
+                        coder = (SimpledCoder) clazz1.getConstructor().newInstance();
                     } catch (Throwable t) {
                         t.printStackTrace();
                         continue;

@@ -5,7 +5,7 @@
  */
 package org.redkale.source;
 
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  *
@@ -17,9 +17,6 @@ import org.redkale.util.AnyValue;
  * @author zhangjx
  * @since 2.5.0
  */
-public interface CacheSourceProvider {
+public interface CacheSourceProvider extends InstanceProvider<CacheSource> {
 
-    public boolean acceptsConf(AnyValue config);
-
-    public Class<? extends CacheSource> sourceClass();
 }

@@ -3,6 +3,7 @@
 package org.redkale.boot;
 
 import java.util.Properties;
+import java.util.logging.Logger;
 import org.redkale.util.*;
 
 /**
@@ -17,11 +18,9 @@ import org.redkale.util.*;
  */
 public abstract class PropertiesAgent {
 
-    public static final String PROP_KEY_URL = "url";
-
     public static final String PROP_KEY_NAMESPACE = "namespace";
 
-    public static final String PROP_NAMESPACE_APPLICATION = "application";
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     /**
      * 编译时进行的操作
@@ -30,6 +29,15 @@ public abstract class PropertiesAgent {
      */
     public void compile(AnyValue conf) {
     }
+
+    /**
+     * ServiceLoader时判断配置是否符合当前实现类
+     *
+     * @param config 节点配置
+     *
+     * @return boolean
+     */
+    public abstract boolean acceptsConf(AnyValue config);
 
     /**
      * 初始化配置源，配置项需要写入appProperties，并监听配置项的变化

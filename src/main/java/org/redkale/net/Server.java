@@ -288,7 +288,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())
             + ", cpu: " + Utility.cpus() + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
             + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxbody)
-            + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms");
+            + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms\r\n");
     }
 
     protected void postPrepareInit() {

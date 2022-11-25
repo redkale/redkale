@@ -494,11 +494,10 @@ public final class Application {
                         Iterator<ClusterAgentProvider> it = ServiceLoader.load(ClusterAgentProvider.class, classLoader).iterator();
                         RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
                         while (it.hasNext()) {
-                            ClusterAgentProvider agent = it.next();
-                            if (agent != null) RedkaleClassLoader.putReflectionPublicConstructors(agent.getClass(), agent.getClass().getName()); //loader class
-                            if (agent != null && agent.acceptsConf(clusterConf)) {
-                                RedkaleClassLoader.putReflectionPublicConstructors(agent.getClass(), agent.agentClass().getName()); //agent class
-                                cluster = agent.agentClass().getConstructor().newInstance();
+                            ClusterAgentProvider provider = it.next();
+                            if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
+                            if (provider != null && provider.acceptsConf(clusterConf)) {
+                                cluster = provider.createInstance();
                                 cluster.setConfig(clusterConf);
                                 break;
                             }
@@ -550,11 +549,10 @@ public final class Application {
                             Iterator<MessageAgentProvider> it = ServiceLoader.load(MessageAgentProvider.class, classLoader).iterator();
                             RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
                             while (it.hasNext()) {
-                                MessageAgentProvider messageAgent = it.next();
-                                if (messageAgent != null) RedkaleClassLoader.putReflectionPublicConstructors(messageAgent.getClass(), messageAgent.getClass().getName()); //loader class
-                                if (messageAgent != null && messageAgent.acceptsConf(mqConf)) {
-                                    RedkaleClassLoader.putReflectionPublicConstructors(messageAgent.getClass(), messageAgent.agentClass().getName()); //agent class
-                                    mqs[i] = messageAgent.agentClass().getConstructor().newInstance();
+                                MessageAgentProvider provider = it.next();
+                                if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
+                                if (provider != null && provider.acceptsConf(mqConf)) {
+                                    mqs[i] = provider.createInstance();
                                     mqs[i].setConfig(mqConf);
                                     break;
                                 }
@@ -797,19 +795,26 @@ public final class Application {
                     }
                 }
 
-                String agent = propertiesConf.getValue("agent");
-                if (agent != null && !agent.isEmpty() && !PropertiesAgent.class.getName().equals(agent)) {
-                    Class<PropertiesAgent> clazz = (Class) classLoader.loadClass(agent);
-                    if (!PropertiesAgent.class.isAssignableFrom(clazz)) {
-                        throw new RuntimeException("PropertiesAgent class (" + agent + ") is not " + PropertiesAgent.class.getName() + " impl class");
+                if ((dfloads == null && propertiesConf.getStringEntrys().length > 0) || (dfloads != null && propertiesConf.getStringEntrys().length > 1)) {
+                    Iterator<PropertiesAgentProvider> it = ServiceLoader.load(PropertiesAgentProvider.class, classLoader).iterator();
+                    RedkaleClassLoader.putServiceLoader(PropertiesAgentProvider.class);
+                    List<PropertiesAgentProvider> providers = new ArrayList<>();
+                    while (it.hasNext()) {
+                        PropertiesAgentProvider provider = it.next();
+                        if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
+                        if (provider != null && provider.acceptsConf(propertiesConf)) {
+                            providers.add(provider);
+                        }
                     }
-                    RedkaleClassLoader.putReflectionPublicConstructors(clazz, clazz.getName());
-                    this.propertiesAgent = clazz.getConstructor().newInstance();
-                    this.resourceFactory.inject(this.propertiesAgent);
-                    if (compileMode) {
-                        this.propertiesAgent.compile(propertiesConf);
-                    } else {
-                        this.propertiesAgent.init(resourceFactory, appProperties, propertiesConf);
+                    for (PropertiesAgentProvider provider : InstanceProvider.sort(providers)) {
+                        this.propertiesAgent = provider.createInstance();
+                        this.resourceFactory.inject(this.propertiesAgent);
+                        if (compileMode) {
+                            this.propertiesAgent.compile(propertiesConf);
+                        } else {
+                            this.propertiesAgent.init(resourceFactory, appProperties, propertiesConf);
+                        }
+                        break;
                     }
                 }
             }
@@ -1009,39 +1014,34 @@ public final class Application {
         }
         String classval = sourceConf.getValue("type");
         try {
-            Class sourceType = null;
+            CacheSource source = null;
             if (classval == null || classval.isEmpty()) {
                 RedkaleClassLoader.putServiceLoader(CacheSourceProvider.class);
                 List<CacheSourceProvider> providers = new ArrayList<>();
                 Iterator<CacheSourceProvider> it = ServiceLoader.load(CacheSourceProvider.class, serverClassLoader).iterator();
                 while (it.hasNext()) {
-                    CacheSourceProvider s = it.next();
-                    if (s != null) RedkaleClassLoader.putReflectionPublicConstructors(s.getClass(), s.getClass().getName());
-                    if (s != null && s.acceptsConf(sourceConf)) {
-                        providers.add(s);
+                    CacheSourceProvider provider = it.next();
+                    if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                    if (provider != null && provider.acceptsConf(sourceConf)) {
+                        providers.add(provider);
                     }
                 }
-                Collections.sort(providers, (a, b) -> {
-                    Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
-                    Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
-                    return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
-                });
-                for (CacheSourceProvider provider : providers) {
-                    sourceType = provider.sourceClass();
-                    if (sourceType != null) break;
+                for (CacheSourceProvider provider : InstanceProvider.sort(providers)) {
+                    source = provider.createInstance();
+                    if (source != null) break;
                 }
-                if (sourceType == null) {
+                if (source == null) {
                     if (CacheMemorySource.acceptsConf(sourceConf)) {
-                        sourceType = CacheMemorySource.class;
+                        source = new CacheMemorySource(sourceName);
                     }
                 }
             } else {
-                sourceType = serverClassLoader.loadClass(classval);
+                Class sourceType = serverClassLoader.loadClass(classval);
+                RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
+                source = (CacheSource) sourceType.getConstructor().newInstance();
             }
-            if (sourceType == null) throw new RuntimeException("Not found CacheSourceProvider for config=" + sourceConf);
+            if (source == null) throw new RuntimeException("Not found CacheSourceProvider for config=" + sourceConf);
 
-            RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
-            CacheSource source = sourceType == CacheMemorySource.class ? new CacheMemorySource(sourceName) : (CacheSource) sourceType.getConstructor().newInstance();
             cacheSources.add(source);
             resourceFactory.register(sourceName, source);
             resourceFactory.inject(sourceName, source);
@@ -1070,45 +1070,40 @@ public final class Application {
         }
         String classval = sourceConf.getValue("type");
         try {
-            Class sourceType = null;
+            DataSource source = null;
             if (classval == null || classval.isEmpty()) {
                 if (DataJdbcSource.acceptsConf(sourceConf)) {
-                    sourceType = DataJdbcSource.class;
+                    source = new DataJdbcSource();
                 } else {
                     RedkaleClassLoader.putServiceLoader(DataSourceProvider.class);
                     List<DataSourceProvider> providers = new ArrayList<>();
                     Iterator<DataSourceProvider> it = ServiceLoader.load(DataSourceProvider.class, serverClassLoader).iterator();
                     while (it.hasNext()) {
-                        DataSourceProvider s = it.next();
-                        if (s != null) RedkaleClassLoader.putReflectionPublicConstructors(s.getClass(), s.getClass().getName());
-                        if (s != null && s.acceptsConf(sourceConf)) {
-                            providers.add(s);
+                        DataSourceProvider provider = it.next();
+                        if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                        if (provider != null && provider.acceptsConf(sourceConf)) {
+                            providers.add(provider);
                         }
                     }
-                    Collections.sort(providers, (a, b) -> {
-                        Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
-                        Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
-                        return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
-                    });
-                    for (DataSourceProvider provider : providers) {
-                        sourceType = provider.sourceClass();
-                        if (sourceType != null) break;
+                    for (DataSourceProvider provider : InstanceProvider.sort(providers)) {
+                        source = provider.createInstance();
+                        if (source != null) break;
                     }
-                    if (sourceType == null) {
+                    if (source == null) {
                         if (DataMemorySource.acceptsConf(sourceConf)) {
-                            sourceType = DataMemorySource.class;
+                            source = new DataMemorySource(sourceName);
                         }
                     }
                 }
             } else {
-                sourceType = serverClassLoader.loadClass(classval);
+                Class sourceType = serverClassLoader.loadClass(classval);
+                RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
+                source = (DataSource) sourceType.getConstructor().newInstance();
             }
-            if (sourceType == null) throw new RuntimeException("Not found DataSourceProvider for config=" + sourceConf);
+            if (source == null) throw new RuntimeException("Not found DataSourceProvider for config=" + sourceConf);
 
-            RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
-            DataSource source = sourceType == DataMemorySource.class ? new DataMemorySource(sourceName) : (DataSource) sourceType.getConstructor().newInstance();
             dataSources.add(source);
-            if (sourceType == DataMemorySource.class && DataMemorySource.isSearchType(sourceConf)) {
+            if (source instanceof DataMemorySource && DataMemorySource.isSearchType(sourceConf)) {
                 resourceFactory.register(sourceName, SearchSource.class, source);
             } else {
                 resourceFactory.register(sourceName, source);

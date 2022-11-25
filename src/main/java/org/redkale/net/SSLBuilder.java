@@ -57,10 +57,12 @@ public class SSLBuilder {
         Provider jsseProvider = null;
         if (sslProviderImpl != null) {
             Class<Provider> providerClass = (Class) Thread.currentThread().getContextClassLoader().loadClass(sslProviderImpl);
+            RedkaleClassLoader.putReflectionPublicConstructors(providerClass, providerClass.getName());
             sslProvider = providerClass.getConstructor().newInstance();
         }
         if (jsseProviderImpl != null) {
             Class<Provider> providerClass = (Class) Thread.currentThread().getContextClassLoader().loadClass(jsseProviderImpl);
+            RedkaleClassLoader.putReflectionPublicConstructors(providerClass, providerClass.getName());
             jsseProvider = providerClass.getConstructor().newInstance();
         }
 
@@ -126,7 +128,7 @@ public class SSLBuilder {
             }
             if (!unset.isEmpty()) {
                 logger.log(Level.WARNING, "protocols " + unset + " is not supported, only support: " + Arrays.toString(protocolArray));
-            } 
+            }
         }
         if (!enabledCiphers.isEmpty()) {
             HashSet<String> set = new HashSet<>();

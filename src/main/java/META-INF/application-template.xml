@@ -124,8 +124,8 @@
             如果name是system.property.开头的值将会在进程启动时进行System.setProperty("yyyy", "YYYYYY")操作。
             如果name是mimetype.property.开头的值将会在进程启动时进行MimeType.add("yyyy", "YYYYYY")操作。
             先加载子节点property，再加载load文件， 最后加载agent的实现子类。
-            agent: 实现类名，必须是org.redkale.boot.PropertiesAgent的子类
             load:  加载文件，多个用;隔开。
+            其他属性: 供org.redkale.boot.PropertiesAgentProvider使用判断
             默认置入的system.property.的有：
                System.setProperty("redkale.net.transport.poolmaxconns", "100");
                System.setProperty("redkale.net.transport.pinginterval", "30");
@@ -138,7 +138,7 @@
             <properties>节点下也可包含非<property>节点.
             非<property>其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]
         -->
-        <properties load="config.properties" agent="">
+        <properties load="config.properties">
             <property name="system.property.yyyy" value="YYYYYY"/>
             <property name="xxxxxx" value="XXXXXXXX"/>
             <property name="xxxxxx" value="XXXXXXXX"/>

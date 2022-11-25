@@ -86,7 +86,13 @@ public abstract class ClusterAgent {
     public void destroy(AnyValue config) {
     }
 
-    //ServiceLoader时判断配置是否符合当前实现类
+    /**
+     * ServiceLoader时判断配置是否符合当前实现类
+     *
+     * @param config 节点配置
+     *
+     * @return boolean
+     */
     public abstract boolean acceptsConf(AnyValue config);
 
     public boolean containsProtocol(String protocol) {
