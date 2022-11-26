@@ -97,7 +97,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         HttpServlet servlet = findHttpServlet(topic);
         CompletableFuture future = new CompletableFuture();
         if (servlet == null) {
-            if (fine) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
+            if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
             future.completeExceptionally(new RuntimeException("404 Not Found " + topic));
             return future;
         }
@@ -116,7 +116,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         HttpServlet servlet = findHttpServlet(topic);
         if (servlet == null) {
-            if (fine) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
+            if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
             return CompletableFuture.completedFuture(new HttpResult().status(404));
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
@@ -144,7 +144,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);
         if (servlet == null) {
-            if (fine) logger.log(Level.FINE, "produceMessage: request=" + request + ", not found servlet");
+            if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "produceMessage: request=" + request + ", not found servlet");
             return;
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);

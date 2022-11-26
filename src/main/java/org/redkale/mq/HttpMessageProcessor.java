@@ -25,12 +25,6 @@ import org.redkale.util.*;
  */
 public class HttpMessageProcessor implements MessageProcessor {
 
-    protected final boolean finest;
-
-    protected final boolean finer;
-
-    protected final boolean fine;
-
     protected final Logger logger;
 
     protected HttpMessageClient messageClient;
@@ -65,9 +59,6 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     public HttpMessageProcessor(Logger logger, HttpMessageClient messageClient, MessageProducers producers, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
-        this.finest = logger.isLoggable(Level.FINEST);
-        this.finer = logger.isLoggable(Level.FINER);
-        this.fine = logger.isLoggable(Level.FINE);
         this.messageClient = messageClient;
         this.producers = producers;
         this.server = server;
@@ -110,16 +101,16 @@ public class HttpMessageProcessor implements MessageProcessor {
 
             server.getHttpServer().getContext().execute(servlet, request, response);
             long o = System.currentTimeMillis() - now;
-            if ((cha > 1000 || e > 100 || o > 1000) && fine) {
+            if ((cha > 1000 || e > 100 || o > 1000) && logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, "HttpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms) message: " + message);
-            } else if ((cha > 50 || e > 10 || o > 50) && finer) {
+            } else if ((cha > 50 || e > 10 || o > 50) && logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, "HttpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
-            } else if (finest) {
+            } else if (logger.isLoggable(Level.FINEST)) {
                 logger.log(Level.FINEST, "HttpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
             }
         } catch (Throwable ex) {
             if (message.getRespTopic() != null && !message.getRespTopic().isEmpty()) {
-                HttpMessageResponse.finishHttpResult(finest, request == null ? null : request.getRespConvert(),
+                HttpMessageResponse.finishHttpResult(logger.isLoggable(Level.FINEST), request == null ? null : request.getRespConvert(),
                     null, message, callback, messageClient, producers.getProducer(message), message.getRespTopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);

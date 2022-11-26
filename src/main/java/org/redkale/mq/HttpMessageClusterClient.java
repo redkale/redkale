@@ -52,9 +52,6 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         Objects.requireNonNull(clusterAgent);
         this.localClient = new HttpMessageLocalClient(application, resourceName);
         this.clusterAgent = clusterAgent;
-        this.finest = logger.isLoggable(Level.FINEST);
-        this.finer = logger.isLoggable(Level.FINER);
-        this.fine = logger.isLoggable(Level.FINE);
     }
 
     @Override
@@ -89,7 +86,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         final String localModule = module;
         return clusterAgent.queryMqtpAddress("mqtp", module, resname).thenCompose(addrmap -> {
             if (addrmap == null || addrmap.isEmpty()) {
-                if (fine) logger.log(Level.FINE, "mqtpAsync.broadcastMessage: module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "mqtpAsync.broadcastMessage: module=" + localModule + ", resname=" + resname + ", addrmap is empty");
                 return new HttpResult<byte[]>().status(404).toFuture();
             }
             final Map<String, String> clientHeaders = new LinkedHashMap<>();
@@ -118,7 +115,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 if (paramstr != null) clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
             }
             List<CompletableFuture> futures = new ArrayList<>();
-            if (finest) logger.log(Level.FINEST, "mqtpAsync: module=" + localModule + ", resname=" + resname + ", addrmap=" + addrmap);
+            if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "mqtpAsync: module=" + localModule + ", resname=" + resname + ", addrmap=" + addrmap);
             for (Map.Entry<String, Collection<InetSocketAddress>> en : addrmap.entrySet()) {
                 String realmodule = en.getKey();
                 Collection<InetSocketAddress> addrs = en.getValue();
@@ -126,7 +123,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 String suburi = req.getRequestURI();
                 suburi = suburi.substring(1); //跳过 /
                 suburi = "/" + realmodule + suburi.substring(suburi.indexOf('/'));
-                futures.add(forEachCollectionFuture(finest, userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + suburi, clientHeaders, clientBody, addrs.iterator()));
+                futures.add(forEachCollectionFuture(logger.isLoggable(Level.FINEST), userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + suburi, clientHeaders, clientBody, addrs.iterator()));
             }
             if (futures.isEmpty()) return CompletableFuture.completedFuture(null);
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).thenApply(v -> null);
@@ -140,10 +137,10 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         Map<String, String> headers = req.getHeaders();
         String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
         final String localModule = module;
-        if (finest) logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);
+        if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);
         return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
             if (addrs == null || addrs.isEmpty()) {
-                if (fine) logger.log(Level.FINE, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + ": module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + ": module=" + localModule + ", resname=" + resname + ", addrmap is empty");
                 return new HttpResult<byte[]>().status(404).toFuture();
             }
             final Map<String, String> clientHeaders = new LinkedHashMap<>();
@@ -176,8 +173,8 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 String paramstr = req.getParametersToString();
                 if (paramstr != null) clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
             }
-            if (finest) logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
-            return forEachCollectionFuture(finest, userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(), clientHeaders, clientBody, addrs.iterator());
+            if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
+            return forEachCollectionFuture(logger.isLoggable(Level.FINEST), userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(), clientHeaders, clientBody, addrs.iterator());
         });
     }
 

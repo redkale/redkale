@@ -380,7 +380,6 @@ public class NodeHttpServer extends NodeServer {
                 }
             }
             final ClassFilter restFilter = ClassFilter.create(serverClassLoader, null, application.isCompileMode() ? "" : restConf.getValue("includes", ""), application.isCompileMode() ? "" : restConf.getValue("excludes", ""), includeValues, excludeValues);
-            final boolean finest = logger.isLoggable(Level.FINEST);
 
             List<FilterEntry<? extends WebSocket>> list = new ArrayList(webSocketFilter.getFilterEntrys());
             for (FilterEntry<? extends WebSocket> en : list) {
@@ -412,7 +411,9 @@ public class NodeHttpServer extends NodeServer {
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
                 if (ws != null && !ws.repair()) prefix2 = "";
                 resourceFactory.inject(servlet, NodeHttpServer.this);
-                if (finest) logger.finest(localThreadName + " " + stype.getName() + " create a RestWebSocketServlet");
+                if (logger.isLoggable(Level.FINEST)) {
+                    logger.finest(localThreadName + " " + stype.getName() + " create a RestWebSocketServlet");
+                }
                 if (webss != null) {
                     String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                     for (int i = 0; i < mappings.length; i++) {

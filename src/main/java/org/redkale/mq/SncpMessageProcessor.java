@@ -24,12 +24,6 @@ import org.redkale.util.Traces;
  */
 public class SncpMessageProcessor implements MessageProcessor {
 
-    protected final boolean finest;
-
-    protected final boolean finer;
-
-    protected final boolean fine;
-
     protected final Logger logger;
 
     protected MessageClient messageClient;
@@ -52,9 +46,6 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     public SncpMessageProcessor(Logger logger, SncpMessageClient messageClient, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
-        this.finest = logger.isLoggable(Level.FINEST);
-        this.finer = logger.isLoggable(Level.FINER);
-        this.fine = logger.isLoggable(Level.FINE);
         this.messageClient = messageClient;
         this.producer = producer;
         this.server = server;
@@ -86,11 +77,11 @@ public class SncpMessageProcessor implements MessageProcessor {
 
             context.execute(servlet, request, response);
             long o = System.currentTimeMillis() - now;
-            if ((cha > 1000 || e > 100 || o > 1000) && fine) {
+            if ((cha > 1000 || e > 100 || o > 1000) && logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, "SncpMessageProcessor.process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms) message: " + message);
-            } else if ((cha > 50 || e > 10 || o > 50) && finer) {
+            } else if ((cha > 50 || e > 10 || o > 50) && logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, "SncpMessageProcessor.process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
-            } else if (finest) {
+            } else if (logger.isLoggable(Level.FINEST)) {
                 logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
             }
         } catch (Throwable ex) {

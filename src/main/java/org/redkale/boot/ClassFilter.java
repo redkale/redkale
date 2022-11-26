@@ -33,8 +33,6 @@ public final class ClassFilter<T> {
 
     private static final Logger logger = Logger.getLogger(ClassFilter.class.getName()); //日志对象
 
-    private static final boolean finest = logger.isLoggable(Level.FINEST); //日志级别
-
     private final Set<FilterEntry<T>> entrys = new HashSet<>(); //符合条件的结果
 
     private final Set<FilterEntry<T>> expectEntrys = new HashSet<>(); //准备符合条件的结果
@@ -210,7 +208,7 @@ public final class ClassFilter<T> {
                 entrys.add(new FilterEntry(clazz, autoscan, false, property));
             }
         } catch (Throwable cfe) {
-            if (finest && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
+            if (logger.isLoggable(Level.FINEST) && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
                 && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.") && !clazzname.startsWith("META-INF")
                 && !clazzname.startsWith("com.mysql.") && !clazzname.startsWith("com.microsoft.") && !clazzname.startsWith("freemarker.")
                 && !clazzname.startsWith("org.redkale") && (clazzname.contains("Service") || clazzname.contains("Servlet"))) {

@@ -30,8 +30,6 @@ public abstract class Client<R extends ClientRequest, P> {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected final boolean finest = logger.isLoggable(Level.FINEST);
-
     protected final AsyncGroup group; //连接构造器
 
     protected final boolean tcp; //是否TCP协议

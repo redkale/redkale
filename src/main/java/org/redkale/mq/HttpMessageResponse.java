@@ -36,8 +36,6 @@ public class HttpMessageResponse extends HttpResponse {
 
     protected MessageProducer producer;
 
-    protected boolean finest;
-
     protected Runnable callback;
 
     public HttpMessageResponse(HttpContext context, HttpMessageClient messageClient, final Supplier<HttpMessageResponse> respSupplier, final Consumer<HttpMessageResponse> respConsumer) {
@@ -61,7 +59,6 @@ public class HttpMessageResponse extends HttpResponse {
         this.message = message;
         this.callback = callback;
         this.producer = producer;
-        this.finest = producer.logger.isLoggable(Level.FINEST);
     }
 
     public HttpMessageRequest request() {
@@ -69,11 +66,11 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     public void finishHttpResult(Type type, HttpResult result) {
-        finishHttpResult(this.finest, ((HttpMessageRequest) this.request).getRespConvert(), type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
+        finishHttpResult(producer.logger.isLoggable(Level.FINEST), ((HttpMessageRequest) this.request).getRespConvert(), type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
     }
 
     public void finishHttpResult(Type type, Convert respConvert, HttpResult result) {
-        finishHttpResult(this.finest, respConvert == null ? ((HttpMessageRequest) this.request).getRespConvert() : respConvert, type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
+        finishHttpResult(producer.logger.isLoggable(Level.FINEST), respConvert == null ? ((HttpMessageRequest) this.request).getRespConvert() : respConvert, type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
     }
 
     public static void finishHttpResult(boolean finest, Convert respConvert, Type type, MessageRecord msg, Runnable callback, MessageClient messageClient, MessageProducer producer, String resptopic, HttpResult result) {
@@ -109,7 +106,6 @@ public class HttpMessageResponse extends HttpResponse {
         this.message = null;
         this.producer = null;
         this.callback = null;
-        this.finest = false;
         return rs;
     }
 
@@ -207,7 +203,7 @@ public class HttpMessageResponse extends HttpResponse {
     public void finish(int status, String msg) {
         if (status > 400) {
             producer.logger.log(Level.WARNING, "HttpMessageResponse.finish status: " + status + ", uri: " + this.request.getRequestURI() + ", message: " + this.message);
-        } else if (finest) {
+        } else if (producer.logger.isLoggable(Level.FINEST)) {
             producer.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
         }
         if (this.message.isEmptyRespTopic()) {

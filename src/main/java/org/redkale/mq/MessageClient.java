@@ -38,20 +38,11 @@ public abstract class MessageClient {
 
     protected String respConsumerid;
 
-    protected boolean finest;
-
-    protected boolean finer;
-
-    protected boolean fine;
-
     private final String clazzName;
 
     protected MessageClient(MessageAgent messageAgent) {
         this.messageAgent = messageAgent;
         this.msgSeqno = messageAgent == null ? new AtomicLong() : messageAgent.msgSeqno;
-        this.finest = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINEST);
-        this.finer = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINER);
-        this.fine = messageAgent == null ? false : messageAgent.logger.isLoggable(Level.FINE);
         this.clazzName = getClass().getSimpleName();
     }
 
@@ -62,6 +53,7 @@ public abstract class MessageClient {
 
     protected CompletableFuture<MessageRecord> sendMessage(final MessageRecord message, boolean needresp, AtomicLong counter) {
         CompletableFuture<MessageRecord> future = new CompletableFuture<>();
+        boolean finest = messageAgent != null && messageAgent.logger.isLoggable(Level.FINEST);
         try {
             if (this.respConsumer == null) {
                 synchronized (this) {
@@ -81,9 +73,9 @@ public abstract class MessageClient {
                             if (finest) messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.receive (mq.delay = " + cha + "ms, mq.seqid = " + msg.getSeqid() + ")");
                             node.future.complete(msg);
                             long cha2 = System.currentTimeMillis() - now;
-                            if ((cha > 1000 || cha2 > 1000) && fine) {
+                            if ((cha > 1000 || cha2 > 1000) && messageAgent != null && messageAgent.logger.isLoggable(Level.FINE)) {
                                 messageAgent.logger.log(Level.FINE, clazzName + ".MessageRespFutureNode.complete (mqs.delays = " + cha + "ms, mqs.completes = " + cha2 + "ms, mqs.counters = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
-                            } else if ((cha > 50 || cha2 > 50) && finer) {
+                            } else if ((cha > 50 || cha2 > 50) && messageAgent != null && messageAgent.logger.isLoggable(Level.FINER)) {
                                 messageAgent.logger.log(Level.FINER, clazzName + ".MessageRespFutureNode.complete (mq.delays = " + cha + "ms, mq.completes = " + cha2 + "ms, mq.counters = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
                             } else if (finest) {
                                 messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.complete (mq.delay = " + cha + "ms, mq.complete = " + cha2 + "ms, mq.counter = " + ncer + ") mqresp.msg: " + formatRespMessage(msg));
