@@ -212,6 +212,10 @@ public final class ClassFilter<T> {
                 && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.") && !clazzname.startsWith("META-INF")
                 && !clazzname.startsWith("com.mysql.") && !clazzname.startsWith("com.microsoft.") && !clazzname.startsWith("freemarker.")
                 && !clazzname.startsWith("org.redkale") && (clazzname.contains("Service") || clazzname.contains("Servlet"))) {
+                if (cfe instanceof NoClassDefFoundError) {
+                    String msg = ((NoClassDefFoundError) cfe).getMessage();
+                    if (msg.startsWith("java.lang.NoClassDefFoundError: java") || msg.startsWith("javax/")) return;
+                }
                 //&& (!(cfe instanceof NoClassDefFoundError) || (cfe instanceof UnsupportedClassVersionError) || ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
                 logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzname + (url == null ? "" : (" in " + url)), cfe);
             }
@@ -530,7 +534,7 @@ public final class ClassFilter<T> {
                 Set<String> classes = cache.get(url);
                 if (classes == null) {
                     classes = new LinkedHashSet<>();
-                    try (JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8))) {
+                    try ( JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8))) {
                         Enumeration<JarEntry> it = jar.entries();
                         while (it.hasMoreElements()) {
                             String entryname = it.nextElement().getName().replace('/', '.');

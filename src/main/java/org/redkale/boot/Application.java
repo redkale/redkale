@@ -394,7 +394,18 @@ public final class Application {
                     if (properties.getProperty("java.util.logging.ConsoleHandler.denyreg") != null && !compileMode) {
                         final String handlers = properties.getProperty("handlers");
                         if (handlers != null && handlers.contains("java.util.logging.ConsoleHandler")) {
-                            properties.setProperty("handlers", handlers.replace("java.util.logging.ConsoleHandler", LoggingFileHandler.LoggingConsoleHandler.class.getName()));
+                            final String consoleHandlerClass = LoggingFileHandler.LoggingConsoleHandler.class.getName();
+                            properties.setProperty("handlers", handlers.replace("java.util.logging.ConsoleHandler", consoleHandlerClass));
+                            Properties prop = new Properties();
+                            String prefix = consoleHandlerClass + ".";
+                            properties.entrySet().forEach(x -> {
+                                if (x.getKey().toString().startsWith("java.util.logging.ConsoleHandler.")) {
+                                    prop.put(x.getKey().toString().replace("java.util.logging.ConsoleHandler.", prefix), x.getValue());
+                                }
+                            });
+                            prop.entrySet().forEach(x -> {
+                                properties.put(x.getKey(), x.getValue());
+                            });
                         }
                     }
                     String fileHandlerPattern = properties.getProperty("java.util.logging.FileHandler.pattern");
