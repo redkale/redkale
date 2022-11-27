@@ -61,4 +61,8 @@ public abstract class PropertiesAgent {
     protected void putResourceProperties(Application application, String key, Object value) {
         application.putResourceProperties(key, value, null);
     }
+
+    protected void reconfigLogging(Application application, Properties loggingProperties) {
+        application.reconfigLogging(loggingProperties);
+    }
 }

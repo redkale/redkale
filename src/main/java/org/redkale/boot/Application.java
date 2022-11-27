@@ -354,97 +354,11 @@ public final class Application {
             }
             if (!"file".equals(confPath.getScheme()) || logConfFile != null) {
                 try {
-                    final String rootpath = root.getCanonicalPath().replace('\\', '/');
                     InputStream fin = logConfURI.toURL().openStream();
                     Properties properties0 = new Properties();
                     properties0.load(fin);
                     fin.close();
-                    String searchRawHandler = "java.util.logging.SearchHandler";
-                    String searchReadHandler = LoggingSearchHandler.class.getName();
-                    Properties properties = new Properties();
-                    properties0.entrySet().forEach(x -> {
-                        properties.put(x.getKey().toString().replace(searchRawHandler, searchReadHandler),
-                            x.getValue().toString()
-                                .replace("%m", "%tY%tm").replace("%d", "%tY%tm%td") //兼容旧时间格式
-                                .replace("${" + RESNAME_APP_NAME + "}", getName())
-                                .replace("${" + RESNAME_APP_HOME + "}", rootpath)
-                                .replace(searchRawHandler, searchReadHandler)
-                        );
-                    });
-                    if (properties.getProperty("java.util.logging.FileHandler.formatter") == null) {
-                        if (compileMode) {
-                            properties.setProperty("java.util.logging.FileHandler.formatter", SimpleFormatter.class.getName());
-                            if (properties.getProperty("java.util.logging.SimpleFormatter.format") == null) {
-                                properties.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
-                            }
-                        } else {
-                            properties.setProperty("java.util.logging.FileHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
-                        }
-                    }
-                    if (properties.getProperty("java.util.logging.ConsoleHandler.formatter") == null) {
-                        if (compileMode) {
-                            properties.setProperty("java.util.logging.ConsoleHandler.formatter", SimpleFormatter.class.getName());
-                            if (properties.getProperty("java.util.logging.SimpleFormatter.format") == null) {
-                                properties.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
-                            }
-                        } else {
-                            properties.setProperty("java.util.logging.ConsoleHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
-                        }
-                    }
-                    if (properties.getProperty("java.util.logging.ConsoleHandler.denyreg") != null && !compileMode) {
-                        final String handlers = properties.getProperty("handlers");
-                        if (handlers != null && handlers.contains("java.util.logging.ConsoleHandler")) {
-                            final String consoleHandlerClass = LoggingFileHandler.LoggingConsoleHandler.class.getName();
-                            properties.setProperty("handlers", handlers.replace("java.util.logging.ConsoleHandler", consoleHandlerClass));
-                            Properties prop = new Properties();
-                            String prefix = consoleHandlerClass + ".";
-                            properties.entrySet().forEach(x -> {
-                                if (x.getKey().toString().startsWith("java.util.logging.ConsoleHandler.")) {
-                                    prop.put(x.getKey().toString().replace("java.util.logging.ConsoleHandler.", prefix), x.getValue());
-                                }
-                            });
-                            prop.entrySet().forEach(x -> {
-                                properties.put(x.getKey(), x.getValue());
-                            });
-                        }
-                    }
-                    String fileHandlerPattern = properties.getProperty("java.util.logging.FileHandler.pattern");
-                    if (fileHandlerPattern != null && fileHandlerPattern.contains("%")) { //带日期格式
-                        final String fileHandlerClass = LoggingFileHandler.class.getName();
-                        Properties prop = new Properties();
-                        final String handlers = properties.getProperty("handlers");
-                        if (handlers != null && handlers.contains("java.util.logging.FileHandler")) {
-                            //singletonrun模式下不输出文件日志
-                            prop.setProperty("handlers", handlers.replace("java.util.logging.FileHandler", singletonMode || compileMode ? "" : fileHandlerClass));
-                        }
-                        if (!prop.isEmpty()) {
-                            String prefix = fileHandlerClass + ".";
-                            properties.entrySet().forEach(x -> {
-                                if (x.getKey().toString().startsWith("java.util.logging.FileHandler.")) {
-                                    prop.put(x.getKey().toString().replace("java.util.logging.FileHandler.", prefix), x.getValue());
-                                }
-                            });
-                            prop.entrySet().forEach(x -> {
-                                properties.put(x.getKey(), x.getValue());
-                            });
-                        }
-                        if (!compileMode) {
-                            properties.put(SncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
-                        }
-                    }
-                    if (compileMode) {
-                        properties.put("handlers", "java.util.logging.ConsoleHandler");
-                        Map newprop = new HashMap(properties);
-                        newprop.forEach((k, v) -> {
-                            if (k.toString().startsWith("java.util.logging.FileHandler.")) {
-                                properties.remove(k);
-                            }
-                        });
-                    }
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    final PrintStream ps = new PrintStream(out);
-                    properties.forEach((x, y) -> ps.println(x + "=" + y));
-                    LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(out.toByteArray()));
+                    reconfigLogging(properties0);
                 } catch (Exception e) {
                     Logger.getLogger(this.getClass().getSimpleName()).log(Level.WARNING, "init logger configuration error", e);
                 }
@@ -636,6 +550,98 @@ public final class Application {
             this.serverClassLoader = this.classLoader;
         } else {
             this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
+        }
+    }
+
+    void reconfigLogging(Properties properties0) {
+        String searchRawHandler = "java.util.logging.SearchHandler";
+        String searchReadHandler = LoggingSearchHandler.class.getName();
+        Properties properties = new Properties();
+        properties0.entrySet().forEach(x -> {
+            properties.put(x.getKey().toString().replace(searchRawHandler, searchReadHandler),
+                x.getValue().toString()
+                    .replace("%m", "%tY%tm").replace("%d", "%tY%tm%td") //兼容旧时间格式
+                    .replace("${" + RESNAME_APP_NAME + "}", getName())
+                    .replace("${" + RESNAME_APP_HOME + "}", getHome().getPath().replace('\\', '/'))
+                    .replace(searchRawHandler, searchReadHandler)
+            );
+        });
+        if (properties.getProperty("java.util.logging.FileHandler.formatter") == null) {
+            if (compileMode) {
+                properties.setProperty("java.util.logging.FileHandler.formatter", SimpleFormatter.class.getName());
+                if (properties.getProperty("java.util.logging.SimpleFormatter.format") == null) {
+                    properties.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
+                }
+            } else {
+                properties.setProperty("java.util.logging.FileHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
+            }
+        }
+        if (properties.getProperty("java.util.logging.ConsoleHandler.formatter") == null) {
+            if (compileMode) {
+                properties.setProperty("java.util.logging.ConsoleHandler.formatter", SimpleFormatter.class.getName());
+                if (properties.getProperty("java.util.logging.SimpleFormatter.format") == null) {
+                    properties.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
+                }
+            } else {
+                properties.setProperty("java.util.logging.ConsoleHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
+            }
+        }
+        if (properties.getProperty("java.util.logging.ConsoleHandler.denyreg") != null && !compileMode) {
+            final String handlers = properties.getProperty("handlers");
+            if (handlers != null && handlers.contains("java.util.logging.ConsoleHandler")) {
+                final String consoleHandlerClass = LoggingFileHandler.LoggingConsoleHandler.class.getName();
+                properties.setProperty("handlers", handlers.replace("java.util.logging.ConsoleHandler", consoleHandlerClass));
+                Properties prop = new Properties();
+                String prefix = consoleHandlerClass + ".";
+                properties.entrySet().forEach(x -> {
+                    if (x.getKey().toString().startsWith("java.util.logging.ConsoleHandler.")) {
+                        prop.put(x.getKey().toString().replace("java.util.logging.ConsoleHandler.", prefix), x.getValue());
+                    }
+                });
+                prop.entrySet().forEach(x -> {
+                    properties.put(x.getKey(), x.getValue());
+                });
+            }
+        }
+        String fileHandlerPattern = properties.getProperty("java.util.logging.FileHandler.pattern");
+        if (fileHandlerPattern != null && fileHandlerPattern.contains("%")) { //带日期格式
+            final String fileHandlerClass = LoggingFileHandler.class.getName();
+            Properties prop = new Properties();
+            final String handlers = properties.getProperty("handlers");
+            if (handlers != null && handlers.contains("java.util.logging.FileHandler")) {
+                //singletonrun模式下不输出文件日志
+                prop.setProperty("handlers", handlers.replace("java.util.logging.FileHandler", singletonMode || compileMode ? "" : fileHandlerClass));
+            }
+            if (!prop.isEmpty()) {
+                String prefix = fileHandlerClass + ".";
+                properties.entrySet().forEach(x -> {
+                    if (x.getKey().toString().startsWith("java.util.logging.FileHandler.")) {
+                        prop.put(x.getKey().toString().replace("java.util.logging.FileHandler.", prefix), x.getValue());
+                    }
+                });
+                prop.entrySet().forEach(x -> {
+                    properties.put(x.getKey(), x.getValue());
+                });
+            }
+            if (!compileMode) {
+                properties.put(SncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
+            }
+        }
+        if (compileMode) {
+            properties.put("handlers", "java.util.logging.ConsoleHandler");
+            Map newprop = new HashMap(properties);
+            newprop.forEach((k, v) -> {
+                if (k.toString().startsWith("java.util.logging.FileHandler.")) {
+                    properties.remove(k);
+                }
+            });
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final PrintStream ps = new PrintStream(out);
+        properties.forEach((x, y) -> ps.println(x + "=" + y));
+        try {
+            LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(out.toByteArray()));
+        } catch (IOException e) {
         }
     }
 
