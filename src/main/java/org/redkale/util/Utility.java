@@ -3363,120 +3363,120 @@ public final class Utility {
         return remoteHttpContent("POST", url, 0, null, null).toString(StandardCharsets.UTF_8);
     }
 
-    public static String postHttpContent(String url, int timeout) throws IOException {
-        return remoteHttpContent("POST", url, timeout, null, null).toString(StandardCharsets.UTF_8);
+    public static String postHttpContent(String url, int timeoutMs) throws IOException {
+        return remoteHttpContent("POST", url, timeoutMs, null, null).toString(StandardCharsets.UTF_8);
     }
 
     public static String postHttpContent(String url, String body) throws IOException {
         return remoteHttpContent("POST", url, 0, null, body).toString(StandardCharsets.UTF_8);
     }
 
-    public static String postHttpContent(String url, int timeout, String body) throws IOException {
-        return remoteHttpContent("POST", url, timeout, null, body).toString(StandardCharsets.UTF_8);
+    public static String postHttpContent(String url, int timeoutMs, String body) throws IOException {
+        return remoteHttpContent("POST", url, timeoutMs, null, body).toString(StandardCharsets.UTF_8);
     }
 
     public static String postHttpContent(String url, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent("POST", url, 0, headers, body).toString(StandardCharsets.UTF_8);
     }
 
-    public static String postHttpContent(String url, int timeout, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent("POST", url, timeout, headers, body).toString(StandardCharsets.UTF_8);
+    public static String postHttpContent(String url, int timeoutMs, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent("POST", url, timeoutMs, headers, body).toString(StandardCharsets.UTF_8);
     }
 
     public static String postHttpContent(String url, Charset charset) throws IOException {
         return remoteHttpContent("POST", url, 0, null, null).toString(charset.name());
     }
 
-    public static String postHttpContent(String url, int timeout, Charset charset) throws IOException {
-        return remoteHttpContent("POST", url, timeout, null, null).toString(charset.name());
+    public static String postHttpContent(String url, int timeoutMs, Charset charset) throws IOException {
+        return remoteHttpContent("POST", url, timeoutMs, null, null).toString(charset.name());
     }
 
     public static String postHttpContent(String url, Charset charset, String body) throws IOException {
         return remoteHttpContent("POST", url, 0, null, body).toString(charset.name());
     }
 
-    public static String postHttpContent(String url, int timeout, Charset charset, String body) throws IOException {
-        return remoteHttpContent("POST", url, timeout, null, body).toString(charset.name());
+    public static String postHttpContent(String url, int timeoutMs, Charset charset, String body) throws IOException {
+        return remoteHttpContent("POST", url, timeoutMs, null, body).toString(charset.name());
     }
 
     public static String postHttpContent(String url, Charset charset, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent("POST", url, 0, headers, body).toString(charset.name());
     }
 
-    public static String postHttpContent(String url, int timeout, Charset charset, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent("POST", url, timeout, headers, body).toString(charset.name());
+    public static String postHttpContent(String url, int timeoutMs, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent("POST", url, timeoutMs, headers, body).toString(charset.name());
     }
 
     public static byte[] postHttpBytesContent(String url) throws IOException {
         return remoteHttpContent("POST", url, 0, null, null).toByteArray();
     }
 
-    public static byte[] postHttpBytesContent(String url, int timeout) throws IOException {
-        return remoteHttpContent("POST", url, timeout, null, null).toByteArray();
+    public static byte[] postHttpBytesContent(String url, int timeoutMs) throws IOException {
+        return remoteHttpContent("POST", url, timeoutMs, null, null).toByteArray();
     }
 
     public static byte[] postHttpBytesContent(String url, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent("POST", url, 0, headers, body).toByteArray();
     }
 
-    public static byte[] postHttpBytesContent(String url, int timeout, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent("POST", url, timeout, headers, body).toByteArray();
+    public static byte[] postHttpBytesContent(String url, int timeoutMs, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent("POST", url, timeoutMs, headers, body).toByteArray();
     }
 
     public static String getHttpContent(String url) throws IOException {
         return remoteHttpContent("GET", url, 0, null, null).toString(StandardCharsets.UTF_8);
     }
 
-    public static String getHttpContent(String url, int timeout) throws IOException {
-        return remoteHttpContent("GET", url, timeout, null, null).toString(StandardCharsets.UTF_8);
+    public static String getHttpContent(String url, int timeoutMs) throws IOException {
+        return remoteHttpContent("GET", url, timeoutMs, null, null).toString(StandardCharsets.UTF_8);
     }
 
     public static String getHttpContent(String url, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent("GET", url, 0, headers, body).toString(StandardCharsets.UTF_8);
     }
 
-    public static String getHttpContent(String url, int timeout, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent("GET", url, timeout, headers, body).toString(StandardCharsets.UTF_8);
+    public static String getHttpContent(String url, int timeoutMs, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent("GET", url, timeoutMs, headers, body).toString(StandardCharsets.UTF_8);
     }
 
     public static String getHttpContent(String url, Charset charset) throws IOException {
         return remoteHttpContent("GET", url, 0, null, null).toString(charset.name());
     }
 
-    public static String getHttpContent(String url, int timeout, Charset charset) throws IOException {
-        return remoteHttpContent("GET", url, timeout, null, null).toString(charset.name());
+    public static String getHttpContent(String url, int timeoutMs, Charset charset) throws IOException {
+        return remoteHttpContent("GET", url, timeoutMs, null, null).toString(charset.name());
     }
 
     public static String getHttpContent(String url, Charset charset, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent("GET", url, 0, headers, body).toString(charset.name());
     }
 
-    public static String getHttpContent(String url, int timeout, Charset charset, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent("GET", url, timeout, headers, body).toString(charset.name());
+    public static String getHttpContent(String url, int timeoutMs, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent("GET", url, timeoutMs, headers, body).toString(charset.name());
     }
 
     public static byte[] getHttpBytesContent(String url) throws IOException {
         return remoteHttpContent("GET", url, 0, null, null).toByteArray();
     }
 
-    public static byte[] getHttpBytesContent(String url, int timeout) throws IOException {
-        return remoteHttpContent("GET", url, timeout, null, null).toByteArray();
+    public static byte[] getHttpBytesContent(String url, int timeoutMs) throws IOException {
+        return remoteHttpContent("GET", url, timeoutMs, null, null).toByteArray();
     }
 
     public static byte[] getHttpBytesContent(String url, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent("GET", url, 0, headers, body).toByteArray();
     }
 
-    public static byte[] getHttpBytesContent(String url, int timeout, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContent("GET", url, timeout, headers, body).toByteArray();
+    public static byte[] getHttpBytesContent(String url, int timeoutMs, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContent("GET", url, timeoutMs, headers, body).toByteArray();
     }
 
     public static String remoteHttpContent(HttpClient client, String method, String url, Charset charset) throws IOException {
         return remoteHttpContentAsync(client, method, url, 0, null, null).thenApply(out -> out.toString(charset == null ? StandardCharsets.UTF_8 : charset)).join();
     }
 
-    public static String remoteHttpContent(HttpClient client, String method, String url, int timeout, Charset charset) throws IOException {
-        return remoteHttpContentAsync(client, method, url, timeout, null, null).thenApply(out -> out.toString(charset == null ? StandardCharsets.UTF_8 : charset)).join();
+    public static String remoteHttpContent(HttpClient client, String method, String url, int timeoutMs, Charset charset) throws IOException {
+        return remoteHttpContentAsync(client, method, url, timeoutMs, null, null).thenApply(out -> out.toString(charset == null ? StandardCharsets.UTF_8 : charset)).join();
     }
 
     public static String remoteHttpContent(HttpClient client, String method, String url, Charset charset, Map<String, String> headers) throws IOException {
@@ -3487,36 +3487,36 @@ public final class Utility {
         return remoteHttpContentAsync(client, method, url, 0, headers, body).thenApply(out -> out.toString(charset == null ? StandardCharsets.UTF_8 : charset)).join();
     }
 
-    public static String remoteHttpContent(HttpClient client, String method, String url, int timeout, Charset charset, Map<String, String> headers) throws IOException {
-        return remoteHttpContentAsync(client, method, url, timeout, headers, null).thenApply(out -> out.toString(charset == null ? StandardCharsets.UTF_8 : charset)).join();
+    public static String remoteHttpContent(HttpClient client, String method, String url, int timeoutMs, Charset charset, Map<String, String> headers) throws IOException {
+        return remoteHttpContentAsync(client, method, url, timeoutMs, headers, null).thenApply(out -> out.toString(charset == null ? StandardCharsets.UTF_8 : charset)).join();
     }
 
-    public static String remoteHttpContent(HttpClient client, String method, String url, int timeout, Charset charset, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContentAsync(client, method, url, timeout, headers, body).thenApply(out -> out.toString(charset == null ? StandardCharsets.UTF_8 : charset)).join();
+    public static String remoteHttpContent(HttpClient client, String method, String url, int timeoutMs, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContentAsync(client, method, url, timeoutMs, headers, body).thenApply(out -> out.toString(charset == null ? StandardCharsets.UTF_8 : charset)).join();
     }
 
     public static byte[] remoteHttpBytesContent(HttpClient client, String method, String url, Charset charset, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContentAsync(client, method, url, 0, headers, body).thenApply(out -> out.toByteArray()).join();
     }
 
-    public static byte[] remoteHttpBytesContent(HttpClient client, String method, String url, int timeout, Charset charset, Map<String, String> headers) throws IOException {
-        return remoteHttpContentAsync(client, method, url, timeout, headers, null).thenApply(out -> out.toByteArray()).join();
+    public static byte[] remoteHttpBytesContent(HttpClient client, String method, String url, int timeoutMs, Charset charset, Map<String, String> headers) throws IOException {
+        return remoteHttpContentAsync(client, method, url, timeoutMs, headers, null).thenApply(out -> out.toByteArray()).join();
     }
 
-    public static byte[] remoteHttpBytesContent(HttpClient client, String method, String url, int timeout, Charset charset, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContentAsync(client, method, url, timeout, headers, body).thenApply(out -> out.toByteArray()).join();
+    public static byte[] remoteHttpBytesContent(HttpClient client, String method, String url, int timeoutMs, Charset charset, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContentAsync(client, method, url, timeoutMs, headers, body).thenApply(out -> out.toByteArray()).join();
     }
 
     public static ByteArrayOutputStream remoteHttpContent(String method, String url, Map<String, String> headers, String body) throws IOException {
         return remoteHttpContent(method, url, 0, headers, body);
     }
 
-    public static ByteArrayOutputStream remoteHttpContent(String method, String url, int timeout, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContentAsync(method, url, timeout, headers, body).join();
+    public static ByteArrayOutputStream remoteHttpContent(String method, String url, int timeoutMs, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContentAsync(method, url, timeoutMs, headers, body).join();
     }
 
-    public static ByteArrayOutputStream remoteHttpContent(HttpClient client, String method, String url, int timeout, Map<String, String> headers, String body) throws IOException {
-        return remoteHttpContentAsync(client, method, url, timeout, headers, body).join();
+    public static ByteArrayOutputStream remoteHttpContent(HttpClient client, String method, String url, int timeoutMs, Map<String, String> headers, String body) throws IOException {
+        return remoteHttpContentAsync(client, method, url, timeoutMs, headers, body).join();
     }
 
     public static CompletableFuture<String> postHttpContentAsync(String url) {
@@ -3527,12 +3527,12 @@ public final class Utility {
         return remoteHttpContentAsync("POST", url, 0, null, null, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout) {
-        return remoteHttpContentAsync("POST", url, timeout, null, null).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, null).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("POST", url, timeout, null, null, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, null, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
     public static CompletableFuture<String> postHttpContentAsync(String url, String body) {
@@ -3543,12 +3543,12 @@ public final class Utility {
         return remoteHttpContentAsync("POST", url, 0, null, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, String body) {
-        return remoteHttpContentAsync("POST", url, timeout, null, body).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, String body) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, body).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("POST", url, timeout, null, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
     public static CompletableFuture<String> postHttpContentAsync(String url, Map<String, String> headers, String body) {
@@ -3559,12 +3559,12 @@ public final class Utility {
         return remoteHttpContentAsync("POST", url, 0, headers, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Map<String, String> headers, String body) {
-        return remoteHttpContentAsync("POST", url, timeout, headers, body).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Map<String, String> headers, String body) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, headers, body).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Map<String, String> headers, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("POST", url, timeout, headers, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, headers, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
     public static CompletableFuture<String> postHttpContentAsync(String url, Charset charset) {
@@ -3575,12 +3575,12 @@ public final class Utility {
         return remoteHttpContentAsync("POST", url, 0, null, null, respHeaders).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Charset charset) {
-        return remoteHttpContentAsync("POST", url, timeout, null, null).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Charset charset) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, null).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Charset charset, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("POST", url, timeout, null, null, respHeaders).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Charset charset, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, null, respHeaders).thenApply(out -> out.toString(charset));
     }
 
     public static CompletableFuture<String> postHttpContentAsync(String url, Charset charset, String body) {
@@ -3615,12 +3615,12 @@ public final class Utility {
         return remoteHttpContentAsync(client, "POST", url, 0, headers, body, respHeaders).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Charset charset, String body) {
-        return remoteHttpContentAsync("POST", url, timeout, null, body).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Charset charset, String body) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, body).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Charset charset, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("POST", url, timeout, null, body, respHeaders).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Charset charset, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, body, respHeaders).thenApply(out -> out.toString(charset));
     }
 
     public static CompletableFuture<String> postHttpContentAsync(String url, Charset charset, Map<String, String> headers, String body) {
@@ -3631,12 +3631,12 @@ public final class Utility {
         return remoteHttpContentAsync("POST", url, 0, headers, body, respHeaders).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Charset charset, Map<String, String> headers, String body) {
-        return remoteHttpContentAsync("POST", url, timeout, headers, body).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Charset charset, Map<String, String> headers, String body) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, headers, body).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> postHttpContentAsync(String url, int timeout, Charset charset, Map<String, String> headers, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("POST", url, timeout, headers, body, respHeaders).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> postHttpContentAsync(String url, int timeoutMs, Charset charset, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, headers, body, respHeaders).thenApply(out -> out.toString(charset));
     }
 
     public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url) {
@@ -3647,12 +3647,12 @@ public final class Utility {
         return remoteHttpContentAsync("POST", url, 0, null, null, respHeaders).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, int timeout) {
-        return remoteHttpContentAsync("POST", url, timeout, null, null).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, int timeoutMs) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, null).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, int timeout, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("POST", url, timeout, null, null, respHeaders).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, int timeoutMs, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, null, null, respHeaders).thenApply(out -> out.toByteArray());
     }
 
     public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, Map<String, String> headers, String body) {
@@ -3663,12 +3663,12 @@ public final class Utility {
         return remoteHttpContentAsync("POST", url, 0, headers, body, respHeaders).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, int timeout, Map<String, String> headers, String body) {
-        return remoteHttpContentAsync("POST", url, timeout, headers, body).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, int timeoutMs, Map<String, String> headers, String body) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, headers, body).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, int timeout, Map<String, String> headers, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("POST", url, timeout, headers, body, respHeaders).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> postHttpBytesContentAsync(String url, int timeoutMs, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("POST", url, timeoutMs, headers, body, respHeaders).thenApply(out -> out.toByteArray());
     }
 
     public static CompletableFuture<String> getHttpContentAsync(String url) {
@@ -3679,12 +3679,12 @@ public final class Utility {
         return remoteHttpContentAsync("GET", url, 0, null, null, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> getHttpContentAsync(String url, int timeout) {
-        return remoteHttpContentAsync("GET", url, timeout, null, null).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> getHttpContentAsync(String url, int timeoutMs) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, null, null).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> getHttpContentAsync(String url, int timeout, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("GET", url, timeout, null, null, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> getHttpContentAsync(String url, int timeoutMs, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, null, null, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
     public static CompletableFuture<String> getHttpContentAsync(String url, Map<String, String> headers, String body) {
@@ -3695,12 +3695,12 @@ public final class Utility {
         return remoteHttpContentAsync("GET", url, 0, headers, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> getHttpContentAsync(String url, int timeout, Map<String, String> headers, String body) {
-        return remoteHttpContentAsync("GET", url, timeout, headers, body).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> getHttpContentAsync(String url, int timeoutMs, Map<String, String> headers, String body) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, headers, body).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
-    public static CompletableFuture<String> getHttpContentAsync(String url, int timeout, Map<String, String> headers, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("GET", url, timeout, headers, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
+    public static CompletableFuture<String> getHttpContentAsync(String url, int timeoutMs, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, headers, body, respHeaders).thenApply(out -> out.toString(StandardCharsets.UTF_8));
     }
 
     public static CompletableFuture<String> getHttpContentAsync(String url, Charset charset) {
@@ -3711,12 +3711,12 @@ public final class Utility {
         return remoteHttpContentAsync("GET", url, 0, null, null, respHeaders).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> getHttpContentAsync(String url, int timeout, Charset charset) {
-        return remoteHttpContentAsync("GET", url, timeout, null, null).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> getHttpContentAsync(String url, int timeoutMs, Charset charset) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, null, null).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> getHttpContentAsync(String url, int timeout, Charset charset, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("GET", url, timeout, null, null, respHeaders).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> getHttpContentAsync(String url, int timeoutMs, Charset charset, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, null, null, respHeaders).thenApply(out -> out.toString(charset));
     }
 
     public static CompletableFuture<String> getHttpContentAsync(String url, Charset charset, Map<String, String> headers, String body) {
@@ -3727,12 +3727,12 @@ public final class Utility {
         return remoteHttpContentAsync("GET", url, 0, headers, body, respHeaders).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> getHttpContentAsync(String url, int timeout, Charset charset, Map<String, String> headers, String body) {
-        return remoteHttpContentAsync("GET", url, timeout, headers, body).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> getHttpContentAsync(String url, int timeoutMs, Charset charset, Map<String, String> headers, String body) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, headers, body).thenApply(out -> out.toString(charset));
     }
 
-    public static CompletableFuture<String> getHttpContentAsync(String url, int timeout, Charset charset, Map<String, String> headers, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("GET", url, timeout, headers, body, respHeaders).thenApply(out -> out.toString(charset));
+    public static CompletableFuture<String> getHttpContentAsync(String url, int timeoutMs, Charset charset, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, headers, body, respHeaders).thenApply(out -> out.toString(charset));
     }
 
     public static CompletableFuture<String> getHttpContentAsync(java.net.http.HttpClient client, String url, String body, Map<String, String> respHeaders) {
@@ -3755,12 +3755,12 @@ public final class Utility {
         return remoteHttpContentAsync("GET", url, 0, null, null, respHeaders).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, int timeout) {
-        return remoteHttpContentAsync("GET", url, timeout, null, null).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, int timeoutMs) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, null, null).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, int timeout, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("GET", url, timeout, null, null, respHeaders).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, int timeoutMs, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, null, null, respHeaders).thenApply(out -> out.toByteArray());
     }
 
     public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, Map<String, String> headers, String body) {
@@ -3771,16 +3771,16 @@ public final class Utility {
         return remoteHttpContentAsync("GET", url, 0, headers, body, respHeaders).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, int timeout, Map<String, String> headers, String body) {
-        return remoteHttpContentAsync("GET", url, timeout, headers, body).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, int timeoutMs, Map<String, String> headers, String body) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, headers, body).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, int timeout, Map<String, String> headers, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync("GET", url, timeout, headers, body, respHeaders).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> getHttpBytesContentAsync(String url, int timeoutMs, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync("GET", url, timeoutMs, headers, body, respHeaders).thenApply(out -> out.toByteArray());
     }
 
-    public static CompletableFuture<byte[]> getHttpBytesContentAsync(java.net.http.HttpClient client, String url, int timeout, Map<String, String> headers, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync(client, "GET", url, timeout, headers, body, respHeaders).thenApply(out -> out.toByteArray());
+    public static CompletableFuture<byte[]> getHttpBytesContentAsync(java.net.http.HttpClient client, String url, int timeoutMs, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync(client, "GET", url, timeoutMs, headers, body, respHeaders).thenApply(out -> out.toByteArray());
     }
 
     public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(String method, String url, Map<String, String> headers, String body) {
@@ -3791,21 +3791,21 @@ public final class Utility {
         return remoteHttpContentAsync(method, url, 0, headers, body, respHeaders);
     }
 
-    public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(String method, String url, int timeout, Map<String, String> headers, String body) {
-        return remoteHttpContentAsync(httpClient, method, url, timeout, headers, body);
+    public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(String method, String url, int timeoutMs, Map<String, String> headers, String body) {
+        return remoteHttpContentAsync(httpClient, method, url, timeoutMs, headers, body);
     }
 
-    public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(String method, String url, int timeout, Map<String, String> headers, String body, Map<String, String> respHeaders) {
-        return remoteHttpContentAsync(httpClient, method, url, timeout, headers, body, respHeaders);
+    public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(String method, String url, int timeoutMs, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+        return remoteHttpContentAsync(httpClient, method, url, timeoutMs, headers, body, respHeaders);
     }
 
-    public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(java.net.http.HttpClient client, String method, String url, int timeout, Map<String, String> headers, String body) {
-        return remoteHttpContentAsync(client, method, url, timeout, headers, body, null);
+    public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(java.net.http.HttpClient client, String method, String url, int timeoutMs, Map<String, String> headers, String body) {
+        return remoteHttpContentAsync(client, method, url, timeoutMs, headers, body, null);
     }
 
-    public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(java.net.http.HttpClient client, String method, String url, int timeout, Map<String, String> headers, String body, Map<String, String> respHeaders) {
+    public static CompletableFuture<ByteArrayOutputStream> remoteHttpContentAsync(java.net.http.HttpClient client, String method, String url, int timeoutMs, Map<String, String> headers, String body, Map<String, String> respHeaders) {
         java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().uri(URI.create(url))
-            .timeout(Duration.ofMillis(timeout > 0 ? timeout : 6000))
+            .timeout(Duration.ofMillis(timeoutMs > 0 ? timeoutMs : 6000))
             .method(method, body == null ? java.net.http.HttpRequest.BodyPublishers.noBody() : java.net.http.HttpRequest.BodyPublishers.ofString(body));
         if (headers != null) headers.forEach((n, v) -> builder.header(n, v));
         java.net.http.HttpClient c = client == null ? httpClient : client;
@@ -3823,7 +3823,7 @@ public final class Utility {
                 if (rs == 301 || rs == 302) {
                     Optional<String> opt = resp.headers().firstValue("Location");
                     if (opt.isPresent()) {
-                        return remoteHttpContentAsync(client, method, opt.get(), timeout, headers, body);
+                        return remoteHttpContentAsync(client, method, opt.get(), timeoutMs, headers, body);
                     } else {
                         return CompletableFuture.failedFuture(new IOException(url + " httpcode = " + rs + ", but not found Localtion"));
                     }
@@ -3854,12 +3854,12 @@ public final class Utility {
             });
     }
 //
-//    public static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, int timeout, Map<String, String> headers, String body) throws IOException {
+//    public static ByteArrayOutputStream remoteHttpContent(SSLContext ctx, String method, String url, int timeoutMs, Map<String, String> headers, String body) throws IOException {
 //        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 //        boolean opening = true;
 //        try {
-//            conn.setConnectTimeout(timeout > 0 ? timeout : 3000);
-//            conn.setReadTimeout(timeout > 0 ? timeout : 3000);
+//            conn.setConnectTimeout(timeoutMs > 0 ? timeoutMs : 3000);
+//            conn.setReadTimeout(timeoutMs > 0 ? timeoutMs : 3000);
 //            if (conn instanceof HttpsURLConnection) {
 //                HttpsURLConnection httpsconn = ((HttpsURLConnection) conn);
 //                httpsconn.setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
@@ -3882,7 +3882,7 @@ public final class Utility {
 //                String newurl = conn.getHeaderField("Location");
 //                conn.disconnect();
 //                opening = false;
-//                return remoteHttpContent(ctx, method, newurl, timeout, headers, body);
+//                return remoteHttpContent(ctx, method, newurl, timeoutMs, headers, body);
 //            }
 //            InputStream in = (rs < 400 || rs == 404) && rs != 405 ? conn.getInputStream() : conn.getErrorStream();
 //            if ("gzip".equalsIgnoreCase(conn.getContentEncoding())) in = new GZIPInputStream(in);
