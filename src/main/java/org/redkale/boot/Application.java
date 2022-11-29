@@ -773,7 +773,7 @@ public final class Application {
                     String key = prop.getValue("name");
                     String value = prop.getValue("value");
                     if (key == null || value == null) continue;
-                    putEnvironmentProperty(key, value, null);
+                    updateEnvironmentProperty(key, value, null);
                 }
                 String dfloads = propertiesConf.getValue("load");
                 if (dfloads != null) {
@@ -788,7 +788,7 @@ public final class Application {
                                 in.close();
                                 if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
                                 ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
-                                    putEnvironmentProperty(x.toString(), y, null);
+                                    updateEnvironmentProperty(x.toString(), y, null);
                                 });
                             } catch (Exception e) {
                                 logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
@@ -1703,10 +1703,10 @@ public final class Application {
         return value == null ? value : value.replace("${APP_HOME}", homePath).replace("${APP_NAME}", name);
     }
 
-    //初始化加载时：notifyCache=null
-    //配置项动态变更时 notifyCache!=null, 由调用方统一执行ResourceFactory.register(notifyCache)
+    //初始化加载时：changeCache=null
+    //配置项动态变更时 changeCache!=null, 由调用方统一执行ResourceFactory.register(notifyCache)
     //key只会是system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
-    void putEnvironmentProperty(String key, Object value, Properties notifyCache) {
+    void updateEnvironmentProperty(String key, Object value, Properties changeCache) {
         if (key == null || value == null) return;
         String val = replaceValue(value.toString());
         if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
@@ -1714,26 +1714,26 @@ public final class Application {
             sourceProperties.put(key, val);
         } else if (key.startsWith("system.property.")) {
             String propName = key.substring("system.property.".length());
-            if (notifyCache != null || System.getProperty(propName) == null) { //命令行传参数优先级高
+            if (changeCache != null || System.getProperty(propName) == null) { //命令行传参数优先级高
                 System.setProperty(propName, val);
             }
         } else if (key.startsWith("mimetype.property.")) {
             MimeType.add(key.substring("mimetype.property.".length()), val);
         } else if (key.startsWith("property.")) {
-            if (notifyCache == null) {
+            if (changeCache == null) {
                 resourceFactory.register(key, val);
             } else {
-                notifyCache.put(key, val);
+                changeCache.put(key, val);
             }
         } else {
             if (key.startsWith("redkale.")) {
                 throw new RuntimeException("property " + key + " cannot redkale. startsWith");
             }
             envProperties.put(key, val);
-            if (notifyCache == null) {
+            if (changeCache == null) {
                 resourceFactory.register("property." + key, val);
             } else {
-                notifyCache.put("property." + key, val);
+                changeCache.put("property." + key, val);
             }
         }
     }
