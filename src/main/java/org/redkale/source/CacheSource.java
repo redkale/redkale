@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.convert.*;
+import org.redkale.util.Resourcable;
 
 /**
  * Redkale中缓存数据源的核心类。 主要供业务开发者使用， 技术开发者提供CacheSource的实现。<br>
@@ -25,7 +26,7 @@ import org.redkale.convert.*;
  *
  * @author zhangjx
  */
-public interface CacheSource {
+public interface CacheSource extends Resourcable {
 
     public String getType();
 

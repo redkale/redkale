@@ -149,7 +149,7 @@ public final class Application {
     //@since 2.3.0
     final ExecutorService workExecutor;
 
-    //Source 原始的配置资源
+    //Source 原始的配置资源, 只会存在redkale.datasource(.|[) redkale.cachesource(.|[)开头的配置项
     final Properties sourceProperties = new Properties();
 
     //CacheSource 配置信息
@@ -177,7 +177,7 @@ public final class Application {
     //@since 2.7.0
     private PropertiesAgent propertiesAgent;
 
-    //所有的配置信息都在里面，包含 redkale.port, redkale.lib等
+    //只存放system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
     final Properties appProperties = new Properties();
 
     //配置信息，只读版Properties
@@ -718,8 +718,15 @@ public final class Application {
             File sourceFile = new File(new File(confPath), "source.properties");
             if (sourceFile.isFile() && sourceFile.canRead()) {
                 InputStream in = new FileInputStream(sourceFile);
-                sourceProperties.load(in);
+                Properties props = new Properties();
+                props.load(in);
                 in.close();
+                props.forEach((key, val) -> {
+                    if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
+                        || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
+                        sourceProperties.put(key, val);
+                    }
+                });
             } else {
                 //兼容 persistence.xml 【已废弃】
                 File persist = new File(new File(confPath), "persistence.xml");
@@ -734,8 +741,15 @@ public final class Application {
             try {
                 final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "source.properties");
                 InputStream in = sourceURI.toURL().openStream();
-                sourceProperties.load(in);
+                Properties props = new Properties();
+                props.load(in);
                 in.close();
+                props.forEach((key, val) -> {
+                    if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
+                        || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
+                        sourceProperties.put(key, val);
+                    }
+                });
             } catch (Exception e) { //没有文件 跳过
             }
             //兼容 persistence.xml 【已废弃】
@@ -759,24 +773,7 @@ public final class Application {
                     String key = prop.getValue("name");
                     String value = prop.getValue("value");
                     if (key == null || value == null) continue;
-                    putResourceProperties(key, value, null);
-//                    appProperties.put(key, value);
-//                    value = replaceValue(value);
-//                    if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
-//                        || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
-//                        sourceProperties.put(key, value);
-//                    } else if (key.startsWith("system.property.")) {
-//                        String propName = key.substring("system.property.".length());
-//                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
-//                            System.setProperty(propName, value);
-//                        }
-//                    } else if (key.startsWith("mimetype.property.")) {
-//                        MimeType.add(key.substring("mimetype.property.".length()), value);
-//                    } else if (key.startsWith("property.")) {
-//                        resourceFactory.register(key, value);
-//                    } else {
-//                        resourceFactory.register("property." + key, value);
-//                    }
+                    putEnvironmentProperties(key, value, null);
                 }
                 String dfloads = propertiesConf.getValue("load");
                 if (dfloads != null) {
@@ -790,8 +787,8 @@ public final class Application {
                                 ps.load(in);
                                 in.close();
                                 if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
-                                ps.forEach((x, y) -> {
-                                    putResourceProperties(x.toString(), y, null);
+                                ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
+                                    putEnvironmentProperties(x.toString(), y, null);
                                 });
                             } catch (Exception e) {
                                 logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
@@ -835,8 +832,8 @@ public final class Application {
             }
         }
         if (!sourceProperties.isEmpty()) {
-            AnyValue propConf = AnyValue.loadFromProperties(sourceProperties);
-            AnyValue redNode = propConf.getAnyValue("redkale");
+            AnyValue sourceConf = AnyValue.loadFromProperties(sourceProperties);
+            AnyValue redNode = sourceConf.getAnyValue("redkale");
             if (redNode != null) {
                 AnyValue cacheNode = redNode.getAnyValue("cachesource");
                 if (cacheNode != null) cacheNode.forEach(null, (k, v) -> {
@@ -1705,31 +1702,38 @@ public final class Application {
         return value == null ? value : value.replace("${APP_HOME}", homePath).replace("${APP_NAME}", name);
     }
 
-    void putResourceProperties(String key, Object value, Properties cache) {
+    //初始化加载时：notifyCache=null
+    //配置项动态变更时 notifyCache!=null, 由调用方统一执行ResourceFactory.register(notifyCache)
+    //key只会是system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
+    void putEnvironmentProperties(String key, Object value, Properties notifyCache) {
         if (key == null || value == null) return;
-        appProperties.put(key, value);
-        value = replaceValue(value.toString());
+        String val = replaceValue(value.toString());
         if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
             || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
-            sourceProperties.put(key, value);
+            appProperties.put(key, val);
+            sourceProperties.put(key, val);
         } else if (key.startsWith("system.property.")) {
             String propName = key.substring("system.property.".length());
-            if (System.getProperty(propName) == null) { //命令行传参数优先级高
-                System.setProperty(propName, String.valueOf(value));
+            if (notifyCache != null || System.getProperty(propName) == null) { //命令行传参数优先级高
+                System.setProperty(propName, val);
             }
         } else if (key.startsWith("mimetype.property.")) {
-            MimeType.add(key.substring("mimetype.property.".length()), String.valueOf(value));
+            MimeType.add(key.substring("mimetype.property.".length()), val);
         } else if (key.startsWith("property.")) {
-            if (cache == null) {
-                resourceFactory.register(key, value);
+            if (notifyCache == null) {
+                resourceFactory.register(key, val);
             } else {
-                cache.put(key, value);
+                notifyCache.put(key, val);
             }
         } else {
-            if (cache == null) {
-                resourceFactory.register("property." + key, value);
+            if (key.startsWith("redkale.")) {
+                throw new RuntimeException("property " + key + " cannot redkale. startsWith");
+            }
+            appProperties.put(key, val);
+            if (notifyCache == null) {
+                resourceFactory.register("property." + key, val);
             } else {
-                cache.put("property." + key, value);
+                notifyCache.put("property." + key, val);
             }
         }
     }

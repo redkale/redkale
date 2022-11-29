@@ -7,6 +7,7 @@ import java.util.function.BiConsumer;
 
 /**
  * 环境变量, 只读版Properties
+ * 只存放system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
  *
  * 详情见: https://redkale.org
  *

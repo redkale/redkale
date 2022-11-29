@@ -52,14 +52,14 @@ public abstract class PropertiesAgent {
      */
     public abstract void destroy(AnyValue conf);
 
-    protected void putResourceProperties(Application application, Properties props) {
-        Properties cache = new Properties();
-        props.forEach((k, v) -> application.putResourceProperties(k.toString(), v, cache));
-        application.resourceFactory.register(cache);
+    protected void putEnvironmentProperties(Application application, Properties props) {
+        Properties notifyCache = new Properties();
+        props.forEach((k, v) -> application.putEnvironmentProperties(k.toString(), v, notifyCache));
+        application.resourceFactory.register(notifyCache);
     }
 
-    protected void putResourceProperties(Application application, String key, Object value) {
-        application.putResourceProperties(key, value, null);
+    protected void putEnvironmentProperties(Application application, String key, Object value) {
+        application.putEnvironmentProperties(key, value, null);
     }
 
     protected void reconfigLogging(Application application, Properties loggingProperties) {

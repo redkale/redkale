@@ -40,7 +40,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public interface DataSource {
+public interface DataSource extends Resourcable {
 
     /**
      * 获取数据源类型
