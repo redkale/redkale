@@ -38,7 +38,7 @@ public abstract class PropertiesAgent {
     public abstract boolean acceptsConf(AnyValue config);
 
     /**
-     * 初始化配置源，配置项需要写入appProperties，并监听配置项的变化
+     * 初始化配置源，配置项需要写入envProperties，并监听配置项的变化
      *
      * @param application Application
      * @param conf        节点配置
@@ -54,12 +54,12 @@ public abstract class PropertiesAgent {
 
     protected void putEnvironmentProperties(Application application, Properties props) {
         Properties notifyCache = new Properties();
-        props.forEach((k, v) -> application.putEnvironmentProperties(k.toString(), v, notifyCache));
+        props.forEach((k, v) -> application.putEnvironmentProperty(k.toString(), v, notifyCache));
         application.resourceFactory.register(notifyCache);
     }
 
-    protected void putEnvironmentProperties(Application application, String key, Object value) {
-        application.putEnvironmentProperties(key, value, null);
+    protected void putEnvironmentProperty(Application application, String key, Object value) {
+        application.putEnvironmentProperty(key, value, null);
     }
 
     protected void reconfigLogging(Application application, Properties loggingProperties) {

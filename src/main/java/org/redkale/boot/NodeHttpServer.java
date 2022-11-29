@@ -430,7 +430,7 @@ public class NodeHttpServer extends NodeServer {
 
     @Override //loadServlet执行之后调用
     protected void postLoadServlets() {
-        final ClusterAgent cluster = application.clusterAgent;
+        final ClusterAgent cluster = application.getClusterAgent();
         if (!application.isCompileMode() && cluster != null) {
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();

@@ -128,7 +128,7 @@ public abstract class NodeServer {
         if (isSNCP()) { // SNCP协议
             String host = this.serverConf.getValue("host", isWATCH() ? "127.0.0.1" : "0.0.0.0").replace("0.0.0.0", "");
             this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getAddress().getHostAddress() : host, this.serverConf.getIntValue("port"));
-            this.sncpGroup = application.sncpTransportFactory.findGroupName(this.sncpAddress);
+            this.sncpGroup = application.getSncpTransportFactory().findGroupName(this.sncpAddress);
             //单向SNCP服务不需要对等group
             //if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
@@ -518,7 +518,7 @@ public abstract class NodeServer {
 
     //Service.init执行之前调用
     protected void preInitServices(Set<Service> localServices, Set<Service> remoteServices) {
-        final ClusterAgent cluster = application.clusterAgent;
+        final ClusterAgent cluster = application.getClusterAgent();
         if (!application.isCompileMode() && cluster != null) {
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();
@@ -535,8 +535,8 @@ public abstract class NodeServer {
 
     //Service.destroy执行之前调用
     protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices) {
-        if (!application.isCompileMode() && application.clusterAgent != null) { //服务注销
-            final ClusterAgent cluster = application.clusterAgent;
+        if (!application.isCompileMode() && application.getClusterAgent() != null) { //服务注销
+            final ClusterAgent cluster = application.getClusterAgent();
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();
             if (cluster.containsProtocol(protocol) && cluster.containsPort(server.getSocketAddress().getPort())) {

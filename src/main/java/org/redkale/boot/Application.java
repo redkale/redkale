@@ -168,37 +168,37 @@ public final class Application {
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
     //SNCP传输端的TransportFactory, 注意： 只给SNCP使用
-    final TransportFactory sncpTransportFactory;
+    private final TransportFactory sncpTransportFactory;
 
     //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
-    final AsyncGroup clientAsyncGroup;
+    private final AsyncGroup clientAsyncGroup;
 
     //配置源管理接口
     //@since 2.7.0
     private PropertiesAgent propertiesAgent;
 
-    //只存放system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
-    final Properties appProperties = new Properties();
+    //只存放不以system.property.、mimetype.property.、redkale.开头的配置项
+    private final Properties envProperties = new Properties();
 
     //配置信息，只读版Properties
-    final Environment appEnvironment;
+    private final Environment environment;
 
     //第三方服务发现管理接口
     //@since 2.1.0
-    final ClusterAgent clusterAgent;
+    private final ClusterAgent clusterAgent;
 
     //MQ管理接口
     //@since 2.1.0
-    final MessageAgent[] messageAgents;
+    private final MessageAgent[] messageAgents;
+
+    //是否从/META-INF中读取配置
+    private final boolean configFromCache;
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.create();
 
     //服务配置项
     final AnyValue config;
-
-    //是否从/META-INF中读取配置
-    final boolean configFromCache;
 
     //排除的jar路径
     final String excludelibs;
@@ -254,7 +254,7 @@ public final class Application {
         this.compileMode = compileMode;
         this.config = config;
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
-        this.appEnvironment = new Environment(this.appProperties);
+        this.environment = new Environment(this.envProperties);
         System.setProperty("redkale.version", Redkale.getDotedVersion());
 
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
@@ -299,7 +299,7 @@ public final class Application {
             this.resourceFactory.register(RESNAME_APP_CONF_DIR, File.class, confFile);
             this.resourceFactory.register(RESNAME_APP_CONF_DIR, Path.class, confFile.toPath());
         }
-        this.resourceFactory.register(Environment.class, appEnvironment);
+        this.resourceFactory.register(Environment.class, environment);
         {
             int nid = config.getIntValue("nodeid", 0);
             this.nodeid = nid;
@@ -737,7 +737,7 @@ public final class Application {
                     in.close();
                 }
             }
-        } else {
+        } else { //从url或jar文件中resources读取
             try {
                 final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "source.properties");
                 InputStream in = sourceURI.toURL().openStream();
@@ -773,7 +773,7 @@ public final class Application {
                     String key = prop.getValue("name");
                     String value = prop.getValue("value");
                     if (key == null || value == null) continue;
-                    putEnvironmentProperties(key, value, null);
+                    putEnvironmentProperty(key, value, null);
                 }
                 String dfloads = propertiesConf.getValue("load");
                 if (dfloads != null) {
@@ -788,7 +788,7 @@ public final class Application {
                                 in.close();
                                 if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
                                 ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
-                                    putEnvironmentProperties(x.toString(), y, null);
+                                    putEnvironmentProperty(x.toString(), y, null);
                                 });
                             } catch (Exception e) {
                                 logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
@@ -831,6 +831,7 @@ public final class Application {
                 }
             }
         }
+        //sourceProperties转换成cacheResources、dataResources的AnyValue
         if (!sourceProperties.isEmpty()) {
             AnyValue sourceConf = AnyValue.loadFromProperties(sourceProperties);
             AnyValue redNode = sourceConf.getAnyValue("redkale");
@@ -1705,12 +1706,11 @@ public final class Application {
     //初始化加载时：notifyCache=null
     //配置项动态变更时 notifyCache!=null, 由调用方统一执行ResourceFactory.register(notifyCache)
     //key只会是system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
-    void putEnvironmentProperties(String key, Object value, Properties notifyCache) {
+    void putEnvironmentProperty(String key, Object value, Properties notifyCache) {
         if (key == null || value == null) return;
         String val = replaceValue(value.toString());
         if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
             || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
-            appProperties.put(key, val);
             sourceProperties.put(key, val);
         } else if (key.startsWith("system.property.")) {
             String propName = key.substring("system.property.".length());
@@ -1729,7 +1729,7 @@ public final class Application {
             if (key.startsWith("redkale.")) {
                 throw new RuntimeException("property " + key + " cannot redkale. startsWith");
             }
-            appProperties.put(key, val);
+            envProperties.put(key, val);
             if (notifyCache == null) {
                 resourceFactory.register("property." + key, val);
             } else {
