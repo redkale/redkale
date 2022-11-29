@@ -1720,20 +1720,28 @@ public final class Application {
         } else if (key.startsWith("mimetype.property.")) {
             MimeType.add(key.substring("mimetype.property.".length()), val);
         } else if (key.startsWith("property.")) {
-            if (changeCache == null) {
-                resourceFactory.register(key, val);
-            } else {
-                changeCache.put(key, val);
+            Object old = resourceFactory.find(key, String.class);
+            if (!Objects.equals(val, old)) {
+                envProperties.put(key, val);
+                if (changeCache == null) {
+                    resourceFactory.register(key, val);
+                } else {
+                    changeCache.put(key, val);
+                }
             }
         } else {
             if (key.startsWith("redkale.")) {
                 throw new RuntimeException("property " + key + " cannot redkale. startsWith");
             }
-            envProperties.put(key, val);
-            if (changeCache == null) {
-                resourceFactory.register("property." + key, val);
-            } else {
-                changeCache.put("property." + key, val);
+            String newkey = "property." + key;
+            Object old = resourceFactory.find(newkey, String.class);
+            if (!Objects.equals(val, old)) {
+                envProperties.put(key, val);
+                if (changeCache == null) {
+                    resourceFactory.register(newkey, val);
+                } else {
+                    changeCache.put(newkey, val);
+                }
             }
         }
     }
