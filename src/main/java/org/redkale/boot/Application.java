@@ -1160,6 +1160,9 @@ public final class Application {
     }
 
     private void startSelfServer() throws Exception {
+        if (config.getValue("port", "").isEmpty() || "0".equals(config.getValue("port"))) {
+            return; //没有配置port则不启动进程自身的监听
+        }
         final Application application = this;
         new Thread() {
             {
@@ -1473,7 +1476,9 @@ public final class Application {
                                 }
                             }
                             Class<? extends NodeServer> nodeClass = nodeClasses.get(protocol);
-                            if (nodeClass != null) server = NodeServer.create(nodeClass, Application.this, serconf);
+                            if (nodeClass != null) {
+                                server = NodeServer.create(nodeClass, Application.this, serconf);
+                            }
                         }
                         if (server == null) {
                             logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
@@ -1542,8 +1547,12 @@ public final class Application {
             T service = server.resourceFactory.find(name, serviceClass);
             if (service != null) return service;
         }
-        if (Modifier.isAbstract(serviceClass.getModifiers())) throw new IllegalArgumentException("abstract class not allowed");
-        if (serviceClass.isInterface()) throw new IllegalArgumentException("interface class not allowed");
+        if (Modifier.isAbstract(serviceClass.getModifiers())) {
+            throw new IllegalArgumentException("abstract class not allowed");
+        }
+        if (serviceClass.isInterface()) {
+            throw new IllegalArgumentException("interface class not allowed");
+        }
         throw new IllegalArgumentException(serviceClass.getName() + " maybe have zero not-final public method");
     }
 
@@ -1571,7 +1580,7 @@ public final class Application {
         }
         String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
         URI appConfFile;
-        boolean fromcache = false;
+        boolean fromCache = false;
         if (confDir.contains("://")) { //jar内部资源
             appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.xml");
             try {
@@ -1597,7 +1606,7 @@ public final class Application {
                         appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
                     }
                     confDir = appConfFile.toString().replace("/application.xml", "").replace("/application.properties", "");
-                    fromcache = true;
+                    fromCache = true;
                 }
             }
         } else { //相对路径
@@ -1618,14 +1627,14 @@ public final class Application {
                         appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
                     }
                     confDir = appConfFile.toString().replace("/application.xml", "").replace("/application.properties", "");
-                    fromcache = true;
+                    fromCache = true;
                 }
             }
         }
         System.setProperty(RESNAME_APP_CONF_DIR, confDir);
         String text = Utility.readThenClose(appConfFile.toURL().openStream());
         AnyValue conf = text.trim().startsWith("<") ? AnyValue.loadFromXml(text, (k, v) -> v.replace("${APP_HOME}", home)).getAnyValue("application") : AnyValue.loadFromProperties(text).getAnyValue("redkale");
-        if (fromcache) ((DefaultAnyValue) conf).addValue("[config-from-cache]", "true");
+        if (fromCache) ((DefaultAnyValue) conf).addValue("[config-from-cache]", "true");
         return conf;
     }
 
