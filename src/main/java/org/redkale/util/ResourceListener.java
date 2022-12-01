@@ -10,7 +10,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * &#64;Resource资源被更新时的监听事件。本注解只能标记在方法参数为ResourceEvent[]上。
+ * &#64;Resource资源被更新时的监听事件, 本注解只能标记在方法参数为ResourceEvent[]上 <br>
+ * 注意: 一个类只能存在一个&#64;ResourceResourceListener的方法， 多余的会被忽略。
  * 方法在资源被更新以后调用。
  *
  * <blockquote><pre>
@@ -24,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  *    &#64;ResourceListener
  *    private void changeResource(ResourceEvent[] events) {
- *        for(ResourceEvent event : events) {  
+ *        for(ResourceEvent event : events) {
  *            System.out.println("@Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
  *        }
  *    }

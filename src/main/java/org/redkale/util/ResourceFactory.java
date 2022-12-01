@@ -347,12 +347,12 @@ public final class ResourceFactory {
      *
      * @param <A>  泛型
      * @param name 资源名
-     * @param rs   资源对象
+     * @param val  资源对象
      *
      * @return 旧资源对象
      */
-    public <A> A register(final String name, final A rs) {
-        return register(true, name, rs);
+    public <A> A register(final String name, final A val) {
+        return register(true, name, val);
     }
 
     /**
@@ -361,19 +361,19 @@ public final class ResourceFactory {
      * @param <A>      泛型
      * @param autoSync 是否同步已被注入的资源
      * @param name     资源名
-     * @param rs       资源对象
+     * @param val      资源对象
      *
      * @return 旧资源对象
      */
-    public <A> A register(final boolean autoSync, final String name, final A rs) {
+    public <A> A register(final boolean autoSync, final String name, final A val) {
         checkResourceName(name);
-        final Class<?> claz = rs.getClass();
+        final Class<?> claz = val.getClass();
         ResourceType rtype = claz.getAnnotation(ResourceType.class);
         if (rtype == null) {
-            return (A) register(autoSync, name, claz, rs);
+            return (A) register(autoSync, name, claz, val);
         } else {
             A old = null;
-            A t = (A) register(autoSync, name, rtype.value(), rs);
+            A t = (A) register(autoSync, name, rtype.value(), val);
             if (t != null) old = t;
             return old;
         }
@@ -385,12 +385,12 @@ public final class ResourceFactory {
      * @param <A>   泛型
      * @param name  资源名
      * @param clazz 资源类型
-     * @param rs    资源对象
+     * @param val   资源对象
      *
      * @return 旧资源对象
      */
-    public <A> A register(final String name, final Class<? extends A> clazz, final A rs) {
-        return register(true, name, clazz, rs);
+    public <A> A register(final String name, final Class<? extends A> clazz, final A val) {
+        return register(true, name, clazz, val);
     }
 
     /**
@@ -399,12 +399,12 @@ public final class ResourceFactory {
      * @param <A>   泛型
      * @param name  资源名
      * @param clazz 资源类型
-     * @param rs    资源对象
+     * @param val   资源对象
      *
      * @return 旧资源对象
      */
-    public <A> A register(final String name, final Type clazz, final A rs) {
-        return register(true, name, clazz, rs);
+    public <A> A register(final String name, final Type clazz, final A val) {
+        return register(true, name, clazz, val);
     }
 
     /**
@@ -414,12 +414,12 @@ public final class ResourceFactory {
      * @param autoSync 是否同步已被注入的资源
      * @param name     资源名
      * @param clazz    资源类型
-     * @param rs       资源对象
+     * @param val      资源对象
      *
      * @return 旧资源对象
      */
-    public <A> A register(final boolean autoSync, final String name, final Type clazz, final A rs) {
-        return register(autoSync, name, clazz, rs, null);
+    public <A> A register(final boolean autoSync, final String name, final Type clazz, final A val) {
+        return register(autoSync, name, clazz, val, null);
     }
 
     /**
@@ -429,50 +429,85 @@ public final class ResourceFactory {
      *
      */
     public void register(Properties properties) {
+        register(properties, null, null);
+    }
+
+    /**
+     * 将多个以指定资源名的String对象注入到资源池中
+     *
+     * @param properties      资源键值对
+     * @param environmentName 额外的资源名
+     * @param environmentType 额外的类名
+     *
+     */
+    public <A> void register(Properties properties, String environmentName, Class<A> environmentType) {
         if (properties == null) return;
         List<ResourceChangeWrapper> wrappers = new ArrayList<>();
-        properties.forEach((k, v) -> register(true, k.toString(), String.class, v, wrappers));
-        if (wrappers.isEmpty()) return;
+        List<ResourceEvent> environmentEventList = new ArrayList<>();
+        properties.forEach((k, v) -> {
+            Object old = register(true, k.toString(), String.class, v, wrappers);
+            if (!Objects.equals(v, old)) {
+                environmentEventList.add(new ResourceChangeEvent(k.toString(), v, old));
+            }
+        });
+        Map<Object, Method> envListenMap = new LinkedHashMap<>();
+        if (!environmentEventList.isEmpty() && environmentName != null && environmentType != null) {
+            ResourceEntry<A> entry = findEntry(environmentName, environmentType);
+            if (entry != null && entry.elements != null) {
+                for (ResourceElement element : entry.elements) {
+                    Object dest = element.dest.get();
+                    if (dest != null && element.listener != null) {
+                        envListenMap.put(dest, element.listener);
+                    }
+                }
+            }
+        }
+        if (wrappers.isEmpty() && envListenMap.isEmpty()) return;
         Map<Object, List<ResourceChangeWrapper>> map = new LinkedHashMap<>();
         for (ResourceChangeWrapper wrapper : wrappers) {
             map.computeIfAbsent(wrapper.dest, k -> new ArrayList<>()).add(wrapper);
         }
-        map.forEach((dest, list) -> {
-            Method listener = list.get(0).listener;
-            try {
-                ResourceEvent[] events = new ResourceEvent[list.size()];
-                for (int i = 0; i < list.size(); i++) {
-                    events[i] = list.get(i).event;
+        if (!map.isEmpty()) {
+            map.forEach((dest, list) -> {
+                if (envListenMap.containsKey(dest)) return; //跳过含有@Resource Environment字段的对象
+                Method listener = list.get(0).listener;
+                try {
+                    ResourceEvent[] events = new ResourceEvent[list.size()];
+                    for (int i = 0; i < list.size(); i++) {
+                        events[i] = list.get(i).event;
+                    }
+                    Object[] ps = new Object[]{events};
+                    listener.invoke(dest, ps);
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, dest + " resource change listener error", e);
                 }
-                Object[] ps = new Object[]{events};
-                listener.invoke(dest, ps);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, dest + " resource change listener error", e);
-            }
-        });
+            });
+        }
+        if (!envListenMap.isEmpty()) { //含有@Resource Environment字段的对象进行变更响应
+            ResourceEvent[] environmentEvents = environmentEventList.toArray(new ResourceEvent[environmentEventList.size()]);
+            envListenMap.forEach((dest, listener) -> {
+                try {
+                    Object[] ps = new Object[]{environmentEvents};
+                    listener.invoke(dest, ps);
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, dest + " resource change listener error", e);
+                }
+            });
+        }
     }
 
-    private <A> A register(final boolean autoSync, final String name, final Type clazz, final A rs, List<ResourceChangeWrapper> wrappers) {
+    private <A> A register(final boolean autoSync, final String name, final Type clazz, final A val, List<ResourceChangeWrapper> wrappers) {
         checkResourceName(name);
         Class clz = TypeToken.typeToClass(clazz);
-        if (clz != null && !clz.isPrimitive() && rs != null && !clz.isAssignableFrom(rs.getClass())) {
-            throw new RuntimeException(clz + "not isAssignableFrom (" + rs + ") class " + rs.getClass());
+        if (clz != null && !clz.isPrimitive() && val != null && !clz.isAssignableFrom(val.getClass())) {
+            throw new RuntimeException(clz + "not isAssignableFrom (" + val + ") class " + val.getClass());
         }
-        ConcurrentHashMap<String, ResourceEntry> map = this.store.get(clazz);
-        if (map == null) {
-            synchronized (clazz) {
-                map = this.store.get(clazz);
-                if (map == null) {
-                    map = new ConcurrentHashMap();
-                    store.put(clazz, map);
-                }
-            }
-        }
+        ConcurrentHashMap<String, ResourceEntry> map = this.store.computeIfAbsent(clazz, k -> new ConcurrentHashMap());
         ResourceEntry re = map.get(name);
         if (re == null) {
-            map.put(name, new ResourceEntry(name, rs));
+            map.put(name, new ResourceEntry(name, val));
         } else {
-            map.put(name, new ResourceEntry(name, rs, re.elements, wrappers, autoSync));
+            map.put(name, new ResourceEntry(name, val, re.elements, wrappers, autoSync));
         }
         return re == null ? null : (A) re.value;
     }
@@ -630,11 +665,11 @@ public final class ResourceFactory {
         int pos = name.indexOf("{system.property.");
         if (pos < 0) return (name.contains(RESOURCE_PARENT_NAME) && parent != null) ? name.replace(RESOURCE_PARENT_NAME, parent) : name;
         String prefix = name.substring(0, pos);
-        String subname = name.substring(pos + "{system.property.".length());
-        pos = subname.lastIndexOf('}');
+        String subName = name.substring(pos + "{system.property.".length());
+        pos = subName.lastIndexOf('}');
         if (pos < 0) return (name.contains(RESOURCE_PARENT_NAME) && parent != null) ? name.replace(RESOURCE_PARENT_NAME, parent) : name;
-        String postfix = subname.substring(pos + 1);
-        String property = subname.substring(0, pos);
+        String postfix = subName.substring(pos + 1);
+        String property = subName.substring(0, pos);
         return formatResourceName(parent, prefix + System.getProperty(property, "") + postfix);
     }
 
@@ -704,7 +739,7 @@ public final class ResourceFactory {
                         }
 
                     }
-                    boolean autoregnull = true;
+                    boolean autoRegNull = true;
                     final String rcname = formatResourceName(srcResourceName, tname);
                     Object rs;
                     if (rcname.startsWith("system.property.")) {
@@ -722,7 +757,7 @@ public final class ResourceFactory {
                             ResourceTypeLoader it = findTypeLoader(genctype, field);
                             if (it != null) {
                                 it.load(this, srcResourceName, srcObj, rcname, field, attachment);
-                                autoregnull = it.autoNone();
+                                autoRegNull = it.autoNone();
                                 re = findEntry(rcname, genctype);
                             }
                         }
@@ -739,12 +774,12 @@ public final class ResourceFactory {
                                 ResourceTypeLoader it = findTypeLoader(classtype, field);
                                 if (it != null) {
                                     it.load(this, srcResourceName, srcObj, rcname, field, attachment);
-                                    autoregnull = it.autoNone();
+                                    autoRegNull = it.autoNone();
                                     re = findEntry(rcname, classtype);
                                 }
                             }
                         }
-                        if (re == null && autoregnull) {
+                        if (re == null && autoRegNull) {
                             register(rcname, genctype, null); //自动注入null的值
                             re = findEntry(rcname, genctype);
                         }
@@ -867,7 +902,7 @@ public final class ResourceFactory {
         }
 
         //wrappers=null时才会触发listener的ResourceChangeEvent事件
-        public ResourceEntry(final String name, T value, final List<ResourceElement> elements, List<ResourceChangeWrapper> wrappers, boolean sync) {
+        public ResourceEntry(final String name, T value, final List<ResourceElement> elements, Collection<ResourceChangeWrapper> wrappers, boolean sync) {
             this.name = name;
             this.value = value;
             this.elements = elements == null ? new CopyOnWriteArrayList<>() : elements;
@@ -999,6 +1034,24 @@ public final class ResourceFactory {
 
         public Object getDest() {
             return dest;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 97 * hash + Objects.hashCode(this.dest);
+            hash = 97 * hash + Objects.hashCode(this.listener);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
+            final ResourceChangeWrapper other = (ResourceChangeWrapper) obj;
+            if (!Objects.equals(this.dest, other.dest)) return false;
+            return Objects.equals(this.listener, other.listener);
         }
 
     }
