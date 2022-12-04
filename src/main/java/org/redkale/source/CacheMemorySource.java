@@ -62,6 +62,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return "memory";
     }
 
+    @Override
+    public void onChange(ResourceEvent[] events) {
+    }
+
     public static boolean acceptsConf(AnyValue config) {
         return config.getValue(CACHE_SOURCE_URL).startsWith("memory:");
     }

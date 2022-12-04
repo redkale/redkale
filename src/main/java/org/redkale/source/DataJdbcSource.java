@@ -49,6 +49,11 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
+    public void onChange(ResourceEvent[] events) {
+        
+    }
+
+    @Override
     public void destroy(AnyValue config) {
         if (readPool != null) readPool.close();
         if (writePool != null) writePool.close();
@@ -1079,7 +1084,7 @@ public class DataJdbcSource extends DataSqlSource {
         };
     }
 
-    protected class ConnectionPool implements AutoCloseable {
+    protected class ConnectionPool implements AutoCloseable, SourceChangeable {
 
         protected final LongAdder closeCounter = new LongAdder(); //已关闭连接数
 
@@ -1095,7 +1100,7 @@ public class DataJdbcSource extends DataSqlSource {
 
         protected final Properties connectAttrs;
 
-        protected final ArrayBlockingQueue<Connection> queue;
+        protected ArrayBlockingQueue<Connection> queue;
 
         protected int connectTimeoutSeconds;
 
@@ -1117,6 +1122,23 @@ public class DataJdbcSource extends DataSqlSource {
                 this.driver = DriverManager.getDriver(this.url);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void onChange(ResourceEvent[] events) {
+            for (ResourceEvent event : events) {
+                if (event.name().equals(DATA_SOURCE_CONNECTTIMEOUT_SECONDS) || event.name().endsWith("." + DATA_SOURCE_CONNECTTIMEOUT_SECONDS)) {
+                    this.connectTimeoutSeconds = Integer.decode(event.newValue().toString());
+                } else if (event.name().equals(DATA_SOURCE_URL) || event.name().endsWith("." + DATA_SOURCE_URL)) {
+                    this.url = event.newValue().toString();
+                } else if (event.name().equals(DATA_SOURCE_USER) || event.name().endsWith("." + DATA_SOURCE_USER)) {
+                    this.connectAttrs.put("user", event.newValue().toString());
+                } else if (event.name().equals(DATA_SOURCE_PASSWORD) || event.name().endsWith("." + DATA_SOURCE_PASSWORD)) {
+                    this.connectAttrs.put("password", event.newValue().toString());
+                } else if (event.name().equals(DATA_SOURCE_MAXCONNS) || event.name().endsWith("." + DATA_SOURCE_MAXCONNS)) {
+                    logger.log(Level.WARNING, event.name() + " (new-value: " + event.newValue() + ") will not take effect");
+                }
             }
         }
 

@@ -30,7 +30,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(DataSource.class)
-public abstract class AbstractDataSource extends AbstractService implements DataSource, AutoCloseable, Resourcable {
+public abstract class AbstractDataSource extends AbstractService implements DataSource, AutoCloseable, Resourcable, SourceChangeable {
 
     //@since 2.7.0 格式: x.x.x.x:yyyy
     public static final String DATA_SOURCE_PROXY_ADDRESS = "proxy-address";

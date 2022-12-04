@@ -151,6 +151,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     @Override
+    public void onChange(ResourceEvent[] events) {
+    }
+
+    @Override
     public String toString() {
         if (readConfProps == null) return getClass().getSimpleName() + "{}"; //compileMode模式下会为null
         if (readConfProps == writeConfProps) {

@@ -43,6 +43,10 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
         return "memory";
     }
 
+    @Override
+    public void onChange(ResourceEvent[] events) {
+    }
+
     public static boolean acceptsConf(AnyValue config) {
         return config.getValue(DATA_SOURCE_URL).startsWith("memory:");
     }
@@ -56,8 +60,8 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
         return getClass().getSimpleName() + "{type=memory, name='" + resourceName() + "'}";
     }
 
-    @Override
     @Local
+    @Override
     public <T> void compile(Class<T> clazz) {
         EntityInfo entityInfo = EntityInfo.compile(clazz, this);
         if (entityInfo.getCache() == null) new EntityCache<>(entityInfo, null).clear();
