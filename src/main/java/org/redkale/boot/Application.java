@@ -1777,7 +1777,7 @@ public final class Application {
                 AnyValue old = findSourceConfig(name, "cachesource");
                 conf.forEach((k, v) -> {
                     events.add(ResourceEvent.create(k, v, old == null ? null : old.getValue(k)));
-                    ((DefaultAnyValue) old).setValue(k, v);
+                    if (old != null) ((DefaultAnyValue) old).setValue(k, v);
                 });
                 ((AbstractCacheSource) source).onChange(events.toArray(new ResourceEvent[events.size()]));
             });
@@ -1791,7 +1791,7 @@ public final class Application {
                 AnyValue old = findSourceConfig(name, "datasource");
                 conf.forEach((k, v) -> {
                     events.add(ResourceEvent.create(k, v, old == null ? null : old.getValue(k)));
-                    ((DefaultAnyValue) old).setValue(k, v);
+                    if (old != null) ((DefaultAnyValue) old).setValue(k, v);
                 });
                 ((AbstractDataSource) source).onChange(events.toArray(new ResourceEvent[events.size()]));
             });

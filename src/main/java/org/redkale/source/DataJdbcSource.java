@@ -50,7 +50,7 @@ public class DataJdbcSource extends DataSqlSource {
 
     @Override
     public void onChange(ResourceEvent[] events) {
-        
+
     }
 
     @Override
@@ -1035,6 +1035,21 @@ public class DataJdbcSource extends DataSqlSource {
             public boolean next() {
                 try {
                     return rr.next();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public List<String> getColumnLabels() {
+                try {
+                    ResultSetMetaData meta = rr.getMetaData();
+                    int count = meta.getColumnCount();
+                    List<String> labels = new ArrayList<>(count);
+                    for (int i = 1; i <= count; i++) {
+                        labels.add(meta.getColumnLabel(i));
+                    }
+                    return labels;
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }

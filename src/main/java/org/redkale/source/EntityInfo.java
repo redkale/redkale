@@ -1393,15 +1393,17 @@ public final class EntityInfo<T> {
         //index从1开始
         public Object getObject(int index);
 
-        public Object getObject(String column);
+        public Object getObject(String columnLabel);
 
         //index从1开始
-        default <T> Serializable getObject(Attribute<T, Serializable> attr, int index, String column) {
-            return DataResultSet.getRowColumnValue(this, attr, index, column);
+        default <T> Serializable getObject(Attribute<T, Serializable> attr, int index, String columnLabel) {
+            return DataResultSet.getRowColumnValue(this, attr, index, columnLabel);
         }
 
         //判断当前行值是否为null
         public boolean wasNull();
+
+        public List<String> getColumnLabels();
     }
 
     public static class EntityColumn {
