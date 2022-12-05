@@ -53,13 +53,19 @@ public abstract class PropertiesAgent {
     public abstract void destroy(AnyValue conf);
 
     protected void updateEnvironmentProperties(Application application, Properties props) {
-        Properties changeCache = new Properties();
-        props.forEach((k, v) -> application.updateEnvironmentProperty(k.toString(), v, changeCache));
-        application.resourceFactory.register(changeCache, "", Environment.class);
+        Properties envChangeCache = new Properties();
+        Properties sourceChangeCache = new Properties();
+        props.forEach((k, v) -> application.updateEnvironmentProperty(k.toString(), v, envChangeCache, sourceChangeCache));
+        if (!envChangeCache.isEmpty()) {
+            application.resourceFactory.register(envChangeCache, "", Environment.class);
+        }
+        if (!sourceChangeCache.isEmpty()) {
+            application.updateSourceProperties(sourceChangeCache);
+        }
     }
 
     protected void putEnvironmentProperty(Application application, String key, Object value) {
-        application.updateEnvironmentProperty(key, value, null);
+        application.updateEnvironmentProperty(key, value, null, null);
     }
 
     protected void reconfigLogging(Application application, Properties loggingProperties) {

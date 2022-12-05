@@ -447,7 +447,7 @@ public final class ResourceFactory {
         properties.forEach((k, v) -> {
             Object old = register(true, k.toString(), String.class, v, wrappers);
             if (!Objects.equals(v, old)) {
-                environmentEventList.add(new ResourceChangeEvent(k.toString(), v, old));
+                environmentEventList.add(ResourceEvent.create(k.toString(), v, old));
             }
         });
         Map<Object, Method> envListenMap = new LinkedHashMap<>();
@@ -901,7 +901,7 @@ public final class ResourceFactory {
             this.elements = new CopyOnWriteArrayList<>();
         }
 
-        //wrappers=null时才会触发listener的ResourceChangeEvent事件
+        //wrappers=null时才会触发listener的ResourceEvent事件
         public ResourceEntry(final String name, T value, final List<ResourceElement> elements, Collection<ResourceChangeWrapper> wrappers, boolean sync) {
             this.name = name;
             this.value = value;
@@ -951,10 +951,10 @@ public final class ResourceFactory {
                         try {
                             if (!element.different || !Objects.equals(newVal, oldVal)) {
                                 if (wrappers == null) {
-                                    Object[] ps = new Object[]{new ResourceEvent[]{new ResourceChangeEvent(name, newVal, oldVal)}};
+                                    Object[] ps = new Object[]{new ResourceEvent[]{ResourceEvent.create(name, newVal, oldVal)}};
                                     element.listener.invoke(dest, ps);
                                 } else {
-                                    wrappers.add(new ResourceChangeWrapper(dest, element.listener, new ResourceChangeEvent(name, newVal, oldVal)));
+                                    wrappers.add(new ResourceChangeWrapper(dest, element.listener, ResourceEvent.create(name, newVal, oldVal)));
                                 }
                             }
                         } catch (Throwable e) {
@@ -1024,9 +1024,9 @@ public final class ResourceFactory {
 
         public Method listener;
 
-        public ResourceChangeEvent event;
+        public ResourceEvent event;
 
-        public ResourceChangeWrapper(Object dest, Method listener, ResourceChangeEvent event) {
+        public ResourceChangeWrapper(Object dest, Method listener, ResourceEvent event) {
             this.dest = dest;
             this.listener = listener;
             this.event = event;
@@ -1054,41 +1054,6 @@ public final class ResourceFactory {
             return Objects.equals(this.listener, other.listener);
         }
 
-    }
-
-    private static class ResourceChangeEvent<T> implements ResourceEvent<T> {
-
-        public String name;
-
-        public T newValue;
-
-        public T oldValue;
-
-        public ResourceChangeEvent(String name, T newValue, T oldValue) {
-            this.name = name;
-            this.newValue = newValue;
-            this.oldValue = oldValue;
-        }
-
-        @Override
-        public String name() {
-            return name;
-        }
-
-        @Override
-        public T newValue() {
-            return newValue;
-        }
-
-        @Override
-        public T oldValue() {
-            return oldValue;
-        }
-
-        @Override
-        public String toString() {
-            return "{name = " + name() + ", newValue = " + newValue() + ", oldValue = " + oldValue() + "}";
-        }
     }
 
 //    public static class SimpleResourceTypeLoader implements ResourceTypeLoader {

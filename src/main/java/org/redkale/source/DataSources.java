@@ -9,7 +9,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import org.redkale.util.AnyValue;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.RedkaleClassLoader;
 
 /**
@@ -228,27 +227,28 @@ public final class DataSources {
         return createDataSource(unitName, readprop, writeprop);
     }
 
-    //@since 2.7.0
-    public static Map<String, AnyValue> loadAnyValuePersistenceXml(final InputStream in) {
+    //@since 2.8.0 临时给Application使用，直到DataSources整个类移除
+    public static Properties loadSourceProperties(final InputStream in) {
         try {
             Map<String, Properties> map = loadPersistenceXml(in);
-            Map<String, AnyValue> rs = new HashMap<>();
+            final Properties sourceProperties = new Properties();
             map.forEach((unitName, prop) -> {
                 if (unitName.endsWith(".write")) return;
-                DefaultAnyValue v = parseProperties(prop);
                 if (unitName.endsWith(".read")) {
                     String name = unitName.replace(".read", "");
-                    DefaultAnyValue parent = DefaultAnyValue.create();
-                    parent.addValue("read", v);
-                    parent.addValue("write", parseProperties(map.get(name + ".write")));
-                    parent.setValue("name", name);
-                    rs.put(name, parent);
+                    prop.forEach((k, v) -> {
+                        sourceProperties.put("redkale.datasource[" + name + "].read." + transferKeyName(k.toString()), v);
+                    });
+                    map.get(name + ".write").forEach((k, v) -> {
+                        sourceProperties.put("redkale.datasource[" + name + "].write." + transferKeyName(k.toString()), v);
+                    });
                 } else {
-                    v.setValue("name", unitName);
-                    rs.put(unitName, v);
+                    prop.forEach((k, v) -> {
+                        sourceProperties.put("redkale.datasource[" + unitName + "]." + transferKeyName(k.toString()), v);
+                    });
                 }
             });
-            return rs;
+            return sourceProperties;
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception ex) {
@@ -256,52 +256,44 @@ public final class DataSources {
         }
     }
 
-    private static DefaultAnyValue parseProperties(Properties prop) {
-        DefaultAnyValue v = DefaultAnyValue.create();
-        prop.forEach((x, y) -> {
-            if (JDBC_TABLE_AUTODDL.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_TABLE_AUTODDL;
-            } else if (JDBC_CACHE_MODE.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_CACHEMODE;
-            } else if (JDBC_CONNECTIONS_LIMIT.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_MAXCONNS;
-            } else if (JDBC_CONNECTIONSCAPACITY.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_CONNECTIONS_CAPACITY;
-            } else if (JDBC_CONTAIN_SQLTEMPLATE.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_CONTAIN_SQLTEMPLATE;
-            } else if (JDBC_NOTCONTAIN_SQLTEMPLATE.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE;
-            } else if (JDBC_TABLENOTEXIST_SQLSTATES.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_TABLENOTEXIST_SQLSTATES;
-            } else if (JDBC_TABLECOPY_SQLTEMPLATE.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_TABLECOPY_SQLTEMPLATE;
-            } else if (JDBC_CONNECTTIMEOUT_SECONDS.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_CONNECTTIMEOUT_SECONDS;
-            } else if (JDBC_URL.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_URL;
-            } else if (JDBC_USER.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_USER;
-            } else if (JDBC_PWD.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_PASSWORD;
-            } else if (JDBC_AUTO_MAPPING.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_AUTOMAPPING;
-            } else if (JDBC_ENCODING.equalsIgnoreCase(x.toString())) {
-                x = AbstractDataSource.DATA_SOURCE_ENCODING;
-            }
-            v.addValue(x.toString(), y.toString());
-        });
-        return v;
+    private static String transferKeyName(String key) {
+        if (JDBC_TABLE_AUTODDL.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_TABLE_AUTODDL;
+        } else if (JDBC_CACHE_MODE.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_CACHEMODE;
+        } else if (JDBC_CONNECTIONS_LIMIT.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_MAXCONNS;
+        } else if (JDBC_CONNECTIONSCAPACITY.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_CONNECTIONS_CAPACITY;
+        } else if (JDBC_CONTAIN_SQLTEMPLATE.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_CONTAIN_SQLTEMPLATE;
+        } else if (JDBC_NOTCONTAIN_SQLTEMPLATE.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE;
+        } else if (JDBC_TABLENOTEXIST_SQLSTATES.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_TABLENOTEXIST_SQLSTATES;
+        } else if (JDBC_TABLECOPY_SQLTEMPLATE.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_TABLECOPY_SQLTEMPLATE;
+        } else if (JDBC_CONNECTTIMEOUT_SECONDS.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_CONNECTTIMEOUT_SECONDS;
+        } else if (JDBC_URL.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_URL;
+        } else if (JDBC_USER.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_USER;
+        } else if (JDBC_PWD.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_PASSWORD;
+        } else if (JDBC_AUTO_MAPPING.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_AUTOMAPPING;
+        } else if (JDBC_ENCODING.equalsIgnoreCase(key)) {
+            return AbstractDataSource.DATA_SOURCE_ENCODING;
+        }
+        return key;
     }
 
     @Deprecated //@deprecated @since 2.7.0
     public static Map<String, Properties> loadPersistenceXml(final InputStream in0) {
         final Map<String, Properties> map = new TreeMap<>();
-
-        boolean flag = false;
         try (final InputStream in = in0) {
-
             AnyValue config = AnyValue.loadFromXml(in).getAnyValue("persistence");
-
             for (AnyValue conf : config.getAnyValues("persistence-unit")) {
                 Properties result = new Properties();
                 conf.forEach(null, (n, c) -> {

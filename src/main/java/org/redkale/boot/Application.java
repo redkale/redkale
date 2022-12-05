@@ -152,11 +152,8 @@ public final class Application {
     //Source 原始的配置资源, 只会存在redkale.datasource(.|[) redkale.cachesource(.|[)开头的配置项
     final Properties sourceProperties = new Properties();
 
-    //CacheSource 配置信息
-    final Map<String, AnyValue> cacheResources = new ConcurrentHashMap<>();
-
-    //DataSource 配置信息
-    final Map<String, AnyValue> dataResources = new ConcurrentHashMap<>();
+    //sourceProperties对应的AnyValue类型对象
+    AnyValue sourceConfig;
 
     //CacheSource 资源
     final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
@@ -733,7 +730,7 @@ public final class Application {
                 if (persist.isFile() && persist.canRead()) {
                     logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
                     InputStream in = new FileInputStream(persist);
-                    dataResources.putAll(DataSources.loadAnyValuePersistenceXml(in));
+                    sourceProperties.putAll(DataSources.loadSourceProperties(in));
                     in.close();
                 }
             }
@@ -756,7 +753,7 @@ public final class Application {
             try {
                 final URI xmlURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "persistence.xml");
                 InputStream in = xmlURI.toURL().openStream();
-                dataResources.putAll(DataSources.loadAnyValuePersistenceXml(in));
+                sourceProperties.putAll(DataSources.loadSourceProperties(in));
                 in.close();
                 logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
             } catch (Exception e) { //没有文件 跳过
@@ -773,7 +770,7 @@ public final class Application {
                     String key = prop.getValue("name");
                     String value = prop.getValue("value");
                     if (key == null || value == null) continue;
-                    updateEnvironmentProperty(key, value, null);
+                    updateEnvironmentProperty(key, value, null, null);
                 }
                 String dfloads = propertiesConf.getValue("load");
                 if (dfloads != null) {
@@ -788,7 +785,7 @@ public final class Application {
                                 in.close();
                                 if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
                                 ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
-                                    updateEnvironmentProperty(x.toString(), y, null);
+                                    updateEnvironmentProperty(x.toString(), y, null, null);
                                 });
                             } catch (Exception e) {
                                 logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
@@ -824,30 +821,8 @@ public final class Application {
             }
             final AnyValue[] sourceConfs = resources.getAnyValues("source");
             if (sourceConfs != null && sourceConfs.length > 0) {
-                //兼容 <source>节点 【已废弃】
-                logger.log(Level.WARNING, "<source> in application.xml is deprecated, replaced by source.properties");
-                for (AnyValue sourceConf : sourceConfs) {
-                    cacheResources.put(sourceConf.getValue("name"), sourceConf);
-                }
-            }
-        }
-        //sourceProperties转换成cacheResources、dataResources的AnyValue
-        if (!sourceProperties.isEmpty()) {
-            AnyValue sourceConf = AnyValue.loadFromProperties(sourceProperties);
-            AnyValue redNode = sourceConf.getAnyValue("redkale");
-            if (redNode != null) {
-                AnyValue cacheNode = redNode.getAnyValue("cachesource");
-                if (cacheNode != null) cacheNode.forEach(null, (k, v) -> {
-                        if (v.getValue("name") != null) logger.log(Level.WARNING, "cachesource[" + k + "].name " + v.getValue("name") + " replaced by " + k);
-                        ((DefaultAnyValue) v).setValue("name", k);
-                        cacheResources.put(k, v);
-                    });
-                AnyValue dataNode = redNode.getAnyValue("datasource");
-                if (dataNode != null) dataNode.forEach(null, (k, v) -> {
-                        if (v.getValue("name") != null) logger.log(Level.WARNING, "datasource[" + k + "].name " + v.getValue("name") + " replaced by " + k);
-                        ((DefaultAnyValue) v).setValue("name", k);
-                        dataResources.put(k, v);
-                    });
+                //<source>节点 【已废弃】
+                throw new RuntimeException("<source> in application.xml is deprecated, replaced by source.properties");
             }
         }
 
@@ -1002,11 +977,29 @@ public final class Application {
         initResources();
     }
 
+    private AnyValue findSourceConfig(String sourceName, String sourceType) {
+        if (sourceConfig == null) {
+            synchronized ((sourceProperties)) {
+                if (sourceConfig == null) {
+                    sourceConfig = AnyValue.loadFromProperties(sourceProperties);
+                }
+            }
+        }
+        AnyValue redNode = sourceConfig.getAnyValue("redkale");
+        if (redNode != null) {
+            AnyValue sourceNode = redNode.getAnyValue(sourceType);
+            if (sourceNode != null) {
+                return sourceNode.getAnyValue(sourceName);
+            }
+        }
+        return null;
+    }
+
     CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
         long st = System.currentTimeMillis();
         CacheSource old = resourceFactory.find(sourceName, CacheSource.class);
         if (old != null) return old;
-        final AnyValue sourceConf = cacheResources.get(sourceName);
+        final AnyValue sourceConf = findSourceConfig(sourceName, "cachesource");
         if (sourceConf == null) {
             if (!autoMemory) return null;
             CacheSource source = new CacheMemorySource(sourceName);
@@ -1017,10 +1010,10 @@ public final class Application {
             logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
             return source;
         }
-        String classval = sourceConf.getValue("type");
+        String classVal = sourceConf.getValue("type");
         try {
             CacheSource source = null;
-            if (classval == null || classval.isEmpty()) {
+            if (classVal == null || classVal.isEmpty()) {
                 RedkaleClassLoader.putServiceLoader(CacheSourceProvider.class);
                 List<CacheSourceProvider> providers = new ArrayList<>();
                 Iterator<CacheSourceProvider> it = ServiceLoader.load(CacheSourceProvider.class, serverClassLoader).iterator();
@@ -1041,7 +1034,7 @@ public final class Application {
                     }
                 }
             } else {
-                Class sourceType = serverClassLoader.loadClass(classval);
+                Class sourceType = serverClassLoader.loadClass(classVal);
                 RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
                 source = (CacheSource) sourceType.getConstructor().newInstance();
             }
@@ -1062,7 +1055,7 @@ public final class Application {
     DataSource loadDataSource(final String sourceName, boolean autoMemory) {
         DataSource old = resourceFactory.find(sourceName, DataSource.class);
         if (old != null) return old;
-        final AnyValue sourceConf = dataResources.get(sourceName);
+        final AnyValue sourceConf = findSourceConfig(sourceName, "datasource");
         if (sourceConf == null) {
             if (!autoMemory) return null;
             DataSource source = new DataMemorySource(sourceName);
@@ -1712,18 +1705,22 @@ public final class Application {
         return value == null ? value : value.replace("${APP_HOME}", homePath).replace("${APP_NAME}", name);
     }
 
-    //初始化加载时：changeCache=null
-    //配置项动态变更时 changeCache!=null, 由调用方统一执行ResourceFactory.register(notifyCache)
+    //初始化加载时：envChangeCache=null
+    //配置项动态变更时 envChangeCache!=null, 由调用方统一执行ResourceFactory.register(envChangeCache)
     //key只会是system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
-    void updateEnvironmentProperty(String key, Object value, Properties changeCache) {
+    void updateEnvironmentProperty(String key, Object value, Properties envChangeCache, Properties sourceChangeCache) {
         if (key == null || value == null) return;
         String val = replaceValue(value.toString());
         if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
             || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
-            sourceProperties.put(key, val);
+            if (sourceChangeCache == null) {
+                sourceProperties.put(key, val);
+            } else {
+                sourceChangeCache.put(key, val);
+            }
         } else if (key.startsWith("system.property.")) {
             String propName = key.substring("system.property.".length());
-            if (changeCache != null || System.getProperty(propName) == null) { //命令行传参数优先级高
+            if (envChangeCache != null || System.getProperty(propName) == null) { //命令行传参数优先级高
                 System.setProperty(propName, val);
             }
         } else if (key.startsWith("mimetype.property.")) {
@@ -1732,10 +1729,10 @@ public final class Application {
             Object old = resourceFactory.find(key, String.class);
             if (!Objects.equals(val, old)) {
                 envProperties.put(key, val);
-                if (changeCache == null) {
+                if (envChangeCache == null) {
                     resourceFactory.register(key, val);
                 } else {
-                    changeCache.put(key, val);
+                    envChangeCache.put(key, val);
                 }
             }
         } else {
@@ -1746,13 +1743,60 @@ public final class Application {
             Object old = resourceFactory.find(newkey, String.class);
             if (!Objects.equals(val, old)) {
                 envProperties.put(key, val);
-                if (changeCache == null) {
+                if (envChangeCache == null) {
                     resourceFactory.register(newkey, val);
                 } else {
-                    changeCache.put(newkey, val);
+                    envChangeCache.put(newkey, val);
                 }
             }
         }
+    }
+
+    void updateSourceProperties(Properties sourceChangeCache) {
+        if (sourceChangeCache == null || sourceChangeCache.isEmpty()) return;
+        boolean same = true;
+        for (Map.Entry<Object, Object> en : sourceChangeCache.entrySet()) {
+            String key = en.getKey().toString();
+            if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
+                || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
+                if (!Objects.equals(en.getValue(), sourceProperties.get(key))) {
+                    same = false;
+                }
+            } else {
+                throw new RuntimeException("source properties contains illegal key: " + key);
+            }
+        }
+        if (same) return; //无内容改变
+        AnyValue redNode = AnyValue.loadFromProperties(sourceChangeCache).getAnyValue("redkale");
+        AnyValue cacheNode = redNode.getAnyValue("cachesource");
+        if (cacheNode != null) {
+            cacheNode.forEach(null, (name, conf) -> {
+                CacheSource source = Utility.find(cacheSources, s -> Objects.equals(s.resourceName(), name));
+                if (source == null) return;
+                List<ResourceEvent> events = new ArrayList<>();
+                AnyValue old = findSourceConfig(name, "cachesource");
+                conf.forEach((k, v) -> {
+                    events.add(ResourceEvent.create(k, v, old == null ? null : old.getValue(k)));
+                    ((DefaultAnyValue) old).setValue(k, v);
+                });
+                ((AbstractCacheSource) source).onChange(events.toArray(new ResourceEvent[events.size()]));
+            });
+        }
+        AnyValue sourceNode = redNode.getAnyValue("datasource");
+        if (sourceNode != null) {
+            sourceNode.forEach(null, (name, conf) -> {
+                DataSource source = Utility.find(dataSources, s -> Objects.equals(s.resourceName(), name));
+                if (source == null) return;
+                List<ResourceEvent> events = new ArrayList<>();
+                AnyValue old = findSourceConfig(name, "datasource");
+                conf.forEach((k, v) -> {
+                    events.add(ResourceEvent.create(k, v, old == null ? null : old.getValue(k)));
+                    ((DefaultAnyValue) old).setValue(k, v);
+                });
+                ((AbstractDataSource) source).onChange(events.toArray(new ResourceEvent[events.size()]));
+            });
+        }
+        sourceProperties.putAll(sourceChangeCache);
     }
 
     private static String generateHelp() {
