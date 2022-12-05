@@ -1754,49 +1754,59 @@ public final class Application {
 
     void updateSourceProperties(Properties sourceChangeCache) {
         if (sourceChangeCache == null || sourceChangeCache.isEmpty()) return;
-        boolean same = true;
-        for (Map.Entry<Object, Object> en : sourceChangeCache.entrySet()) {
-            String key = en.getKey().toString();
-            if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
-                || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
-                if (!Objects.equals(en.getValue(), sourceProperties.get(key))) {
-                    same = false;
+        synchronized (sourceProperties) {
+            boolean same = true;
+            for (Map.Entry<Object, Object> en : sourceChangeCache.entrySet()) {
+                String key = en.getKey().toString();
+                if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
+                    || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
+                    if (!Objects.equals(en.getValue(), sourceProperties.get(key))) {
+                        same = false;
+                    }
+                } else {
+                    throw new RuntimeException("source properties contains illegal key: " + key);
                 }
-            } else {
-                throw new RuntimeException("source properties contains illegal key: " + key);
             }
-        }
-        if (same) return; //无内容改变
-        AnyValue redNode = AnyValue.loadFromProperties(sourceChangeCache).getAnyValue("redkale");
-        AnyValue cacheNode = redNode.getAnyValue("cachesource");
-        if (cacheNode != null) {
-            cacheNode.forEach(null, (name, conf) -> {
-                CacheSource source = Utility.find(cacheSources, s -> Objects.equals(s.resourceName(), name));
-                if (source == null) return;
-                List<ResourceEvent> events = new ArrayList<>();
-                AnyValue old = findSourceConfig(name, "cachesource");
-                conf.forEach((k, v) -> {
-                    events.add(ResourceEvent.create(k, v, old == null ? null : old.getValue(k)));
-                    if (old != null) ((DefaultAnyValue) old).setValue(k, v);
+            if (same) return; //无内容改变
+            AnyValue redNode = AnyValue.loadFromProperties(sourceChangeCache).getAnyValue("redkale");
+            AnyValue cacheNode = redNode.getAnyValue("cachesource");
+            if (cacheNode != null) {
+                cacheNode.forEach(null, (name, conf) -> {
+                    CacheSource source = Utility.find(cacheSources, s -> Objects.equals(s.resourceName(), name));
+                    if (source == null) return;
+                    List<ResourceEvent> events = new ArrayList<>();
+                    AnyValue old = findSourceConfig(name, "cachesource");
+                    conf.forEach((k, v) -> {
+                        if (old != null) {
+                            events.add(ResourceEvent.create(k, v, old.getValue(k)));
+                            ((DefaultAnyValue) old).setValue(k, v);
+                        } else {
+                            events.add(ResourceEvent.create(k, v, null));
+                        }
+                    });
+                    ((AbstractCacheSource) source).onChange(old == null ? conf : old, events.toArray(new ResourceEvent[events.size()]));
                 });
-                ((AbstractCacheSource) source).onChange(events.toArray(new ResourceEvent[events.size()]));
-            });
-        }
-        AnyValue sourceNode = redNode.getAnyValue("datasource");
-        if (sourceNode != null) {
-            sourceNode.forEach(null, (name, conf) -> {
-                DataSource source = Utility.find(dataSources, s -> Objects.equals(s.resourceName(), name));
-                if (source == null) return;
-                List<ResourceEvent> events = new ArrayList<>();
-                AnyValue old = findSourceConfig(name, "datasource");
-                conf.forEach((k, v) -> {
-                    events.add(ResourceEvent.create(k, v, old == null ? null : old.getValue(k)));
-                    if (old != null) ((DefaultAnyValue) old).setValue(k, v);
+            }
+            AnyValue sourceNode = redNode.getAnyValue("datasource");
+            if (sourceNode != null) {
+                sourceNode.forEach(null, (name, conf) -> {
+                    DataSource source = Utility.find(dataSources, s -> Objects.equals(s.resourceName(), name));
+                    if (source == null) return;
+                    List<ResourceEvent> events = new ArrayList<>();
+                    AnyValue old = findSourceConfig(name, "datasource");
+                    conf.forEach((k, v) -> {
+                        if (old != null) {
+                            events.add(ResourceEvent.create(k, v, old.getValue(k)));
+                            ((DefaultAnyValue) old).setValue(k, v);
+                        } else {
+                            events.add(ResourceEvent.create(k, v, null));
+                        }
+                    });
+                    ((AbstractDataSource) source).onChange(old == null ? conf : old, events.toArray(new ResourceEvent[events.size()]));
                 });
-                ((AbstractDataSource) source).onChange(events.toArray(new ResourceEvent[events.size()]));
-            });
+            }
+            sourceProperties.putAll(sourceChangeCache);
         }
-        sourceProperties.putAll(sourceChangeCache);
     }
 
     private static String generateHelp() {

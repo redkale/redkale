@@ -119,6 +119,11 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
     }
 
+    @Override
+    public void onChange(AnyValue newConf, ResourceEvent[] events) {
+        //@TODO  待实现
+    }
+
     //解密可能存在的加密字段, 可重载
     protected void decryptProperties(Properties props) {
 
@@ -148,10 +153,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 props.setProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42P01;3F000");
             }
         }
-    }
-
-    @Override
-    public void onChange(ResourceEvent[] events) {
     }
 
     @Override

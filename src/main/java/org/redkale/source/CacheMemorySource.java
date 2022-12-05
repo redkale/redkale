@@ -63,7 +63,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public void onChange(ResourceEvent[] events) {
+    public void onChange(AnyValue newConf, ResourceEvent[] events) {
     }
 
     public static boolean acceptsConf(AnyValue config) {

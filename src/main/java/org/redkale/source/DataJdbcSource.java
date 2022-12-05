@@ -49,8 +49,8 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    public void onChange(ResourceEvent[] events) {
-
+    public void onChange(AnyValue newConf, ResourceEvent[] events) {
+        //@TODO  待实现
     }
 
     @Override
@@ -1141,7 +1141,7 @@ public class DataJdbcSource extends DataSqlSource {
         }
 
         @Override
-        public void onChange(ResourceEvent[] events) {
+        public void onChange(AnyValue newConf, ResourceEvent[] events) {
             for (ResourceEvent event : events) {
                 if (event.name().equals(DATA_SOURCE_CONNECTTIMEOUT_SECONDS) || event.name().endsWith("." + DATA_SOURCE_CONNECTTIMEOUT_SECONDS)) {
                     this.connectTimeoutSeconds = Integer.decode(event.newValue().toString());

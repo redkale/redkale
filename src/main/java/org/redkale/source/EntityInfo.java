@@ -1400,9 +1400,18 @@ public final class EntityInfo<T> {
             return DataResultSet.getRowColumnValue(this, attr, index, columnLabel);
         }
 
-        //判断当前行值是否为null
+        /**
+         * 判断当前行值是否为null
+         *
+         * @return boolean
+         */
         public boolean wasNull();
 
+        /**
+         * 获取字段名集合，尽量不要多次调用
+         *
+         * @return List
+         */
         public List<String> getColumnLabels();
     }
 
