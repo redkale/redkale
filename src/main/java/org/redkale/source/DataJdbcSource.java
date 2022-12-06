@@ -49,55 +49,18 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    @ResourceListener
-    public void onResourceChange(ResourceEvent[] events) {
-        super.onResourceChange(events);
-        StringBuilder sb = new StringBuilder();
-        if (readConfProps == writeConfProps) {
-            List<ResourceEvent> allEvents = new ArrayList<>();
-            for (ResourceEvent event : events) { //可能需要解密
-                allEvents.add(ResourceEvent.create(event.name(), decryptProperty(event.name(), event.newValue().toString()), event.oldValue()));
-            }
-            this.readPool.onResourceChange(allEvents.toArray(new ResourceEvent[allEvents.size()]));
-            for (ResourceEvent event : allEvents) {
-                this.readConfProps.put(event.name(), event.newValue());
-                sb.append("DataSource(name=").append(resourceName()).append(") the ").append(event.name()).append(" resource changed\r\n");
-            }
-        } else {
-            List<ResourceEvent> readEvents = new ArrayList<>();
-            List<ResourceEvent> writeEvents = new ArrayList<>();
-            for (ResourceEvent event : events) {
-                if (event.name().startsWith("read.")) {
-                    String newName = event.name().substring("read.".length());
-                    readEvents.add(ResourceEvent.create(newName, decryptProperty(newName, event.newValue().toString()), event.oldValue()));
-                } else {
-                    String newName = event.name().substring("write.".length());
-                    writeEvents.add(ResourceEvent.create(newName, decryptProperty(newName, event.newValue().toString()), event.oldValue()));
-                }
-                sb.append("DataSource(name=").append(resourceName()).append(") the ").append(event.name()).append(" resource changed\r\n");
-            }
-            if (!readEvents.isEmpty()) {
-                this.readPool.onResourceChange(readEvents.toArray(new ResourceEvent[readEvents.size()]));
-            }
-            if (!writeEvents.isEmpty()) {
-                this.writePool.onResourceChange(writeEvents.toArray(new ResourceEvent[writeEvents.size()]));
-            }
-            //更新Properties
-            if (!readEvents.isEmpty()) {
-                for (ResourceEvent event : readEvents) {
-                    this.readConfProps.put(event.name(), event.newValue());
-                }
-            }
-            if (!writeEvents.isEmpty()) {
-                for (ResourceEvent event : writeEvents) {
-                    this.writeConfProps.put(event.name(), event.newValue());
-                }
-            }
-        }
-        initSqlAttributes();
-        if (!sb.isEmpty()) {
-            logger.log(Level.INFO, sb.toString());
-        }
+    protected void updateOneResourceChange(Properties newProps, ResourceEvent[] events) {
+        this.readPool.onResourceChange(events);
+    }
+
+    @Override
+    protected void updateReadResourceChange(Properties newReadProps, ResourceEvent[] events) {
+        this.readPool.onResourceChange(events);
+    }
+
+    @Override
+    protected void updateWriteResourceChange(Properties newWriteProps, ResourceEvent[] events) {
+        this.writePool.onResourceChange(events);
     }
 
     @Override
