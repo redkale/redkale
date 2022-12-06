@@ -989,7 +989,11 @@ public final class Application {
         if (redNode != null) {
             AnyValue sourceNode = redNode.getAnyValue(sourceType);
             if (sourceNode != null) {
-                return sourceNode.getAnyValue(sourceName);
+                AnyValue confNode = sourceNode.getAnyValue(sourceName);
+                if (confNode != null) { //必须要设置name属性
+                    ((DefaultAnyValue) confNode).setValue("name", sourceName);
+                }
+                return confNode;
             }
         }
         return null;
@@ -1762,6 +1766,9 @@ public final class Application {
                     || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
                     if (!Objects.equals(en.getValue(), sourceProperties.get(key))) {
                         same = false;
+                        if (key.endsWith(".name")) { //不更改source.name属性
+                            throw new RuntimeException("source properties contains illegal key: " + key);
+                        }
                     }
                 } else {
                     throw new RuntimeException("source properties contains illegal key: " + key);
@@ -1770,39 +1777,64 @@ public final class Application {
             if (same) return; //无内容改变
             AnyValue redNode = AnyValue.loadFromProperties(sourceChangeCache).getAnyValue("redkale");
             AnyValue cacheNode = redNode.getAnyValue("cachesource");
+            Map<String, String> back = new HashMap<>();
             if (cacheNode != null) {
-                cacheNode.forEach(null, (name, conf) -> {
-                    CacheSource source = Utility.find(cacheSources, s -> Objects.equals(s.resourceName(), name));
+                cacheNode.forEach(null, (key, conf) -> {
+                    CacheSource source = Utility.find(cacheSources, s -> Objects.equals(s.resourceName(), key));
                     if (source == null) return;
+                    back.clear();
                     List<ResourceEvent> events = new ArrayList<>();
-                    AnyValue old = findSourceConfig(name, "cachesource");
+                    DefaultAnyValue old = (DefaultAnyValue) findSourceConfig(key, "cachesource");
                     conf.forEach((k, v) -> {
                         if (old != null) {
-                            events.add(ResourceEvent.create(k, v, old.getValue(k)));
-                            ((DefaultAnyValue) old).setValue(k, v);
+                            String o = old.getValue(k);
+                            back.put(k, o);
+                            events.add(ResourceEvent.create(k, v, o));
+                            old.setValue(k, v);
                         } else {
                             events.add(ResourceEvent.create(k, v, null));
                         }
                     });
-                    ((AbstractCacheSource) source).onResourceChange(events.toArray(new ResourceEvent[events.size()]));
+                    try {
+                        ((AbstractCacheSource) source).onResourceChange(events.toArray(new ResourceEvent[events.size()]));
+                    } catch (RuntimeException e) {
+                        if (old != null) { //回退
+                            back.forEach((k, v) -> {
+                                old.setValue(k, v);
+                            });
+                        }
+                        throw e;
+                    }
                 });
             }
             AnyValue sourceNode = redNode.getAnyValue("datasource");
             if (sourceNode != null) {
-                sourceNode.forEach(null, (name, conf) -> {
-                    DataSource source = Utility.find(dataSources, s -> Objects.equals(s.resourceName(), name));
+                sourceNode.forEach(null, (key, conf) -> {
+                    DataSource source = Utility.find(dataSources, s -> Objects.equals(s.resourceName(), key));
                     if (source == null) return;
+                    back.clear();
                     List<ResourceEvent> events = new ArrayList<>();
-                    AnyValue old = findSourceConfig(name, "datasource");
+                    DefaultAnyValue old = (DefaultAnyValue) findSourceConfig(key, "datasource");
                     conf.forEach((k, v) -> {
                         if (old != null) {
-                            events.add(ResourceEvent.create(k, v, old.getValue(k)));
-                            ((DefaultAnyValue) old).setValue(k, v);
+                            String o = old.getValue(k);
+                            back.put(k, o);
+                            events.add(ResourceEvent.create(k, v, o));
+                            old.setValue(k, v);
                         } else {
                             events.add(ResourceEvent.create(k, v, null));
                         }
                     });
-                    ((AbstractDataSource) source).onResourceChange(events.toArray(new ResourceEvent[events.size()]));
+                    try {
+                        ((AbstractDataSource) source).onResourceChange(events.toArray(new ResourceEvent[events.size()]));
+                    } catch (RuntimeException e) {
+                        if (old != null) { //回退
+                            back.forEach((k, v) -> {
+                                old.setValue(k, v);
+                            });
+                        }
+                        throw e;
+                    }
                 });
             }
             sourceProperties.putAll(sourceChangeCache);

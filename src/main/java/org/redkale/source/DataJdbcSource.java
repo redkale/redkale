@@ -51,13 +51,59 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     @ResourceListener
     public void onResourceChange(ResourceEvent[] events) {
-        //@TODO  待实现
+        super.onResourceChange(events);
+        StringBuilder sb = new StringBuilder();
+        if (readConfProps == writeConfProps) {
+            List<ResourceEvent> allEvents = new ArrayList<>();
+            for (ResourceEvent event : events) { //可能需要解密
+                allEvents.add(ResourceEvent.create(event.name(), decryptProperty(event.name(), event.newValue().toString()), event.oldValue()));
+            }
+            this.readPool.onResourceChange(allEvents.toArray(new ResourceEvent[allEvents.size()]));
+            for (ResourceEvent event : allEvents) {
+                this.readConfProps.put(event.name(), event.newValue());
+                sb.append("DataSource(name=").append(resourceName()).append(") the ").append(event.name()).append(" resource changed\r\n");
+            }
+        } else {
+            List<ResourceEvent> readEvents = new ArrayList<>();
+            List<ResourceEvent> writeEvents = new ArrayList<>();
+            for (ResourceEvent event : events) {
+                if (event.name().startsWith("read.")) {
+                    String newName = event.name().substring("read.".length());
+                    readEvents.add(ResourceEvent.create(newName, decryptProperty(newName, event.newValue().toString()), event.oldValue()));
+                } else {
+                    String newName = event.name().substring("write.".length());
+                    writeEvents.add(ResourceEvent.create(newName, decryptProperty(newName, event.newValue().toString()), event.oldValue()));
+                }
+                sb.append("DataSource(name=").append(resourceName()).append(") the ").append(event.name()).append(" resource changed\r\n");
+            }
+            if (!readEvents.isEmpty()) {
+                this.readPool.onResourceChange(readEvents.toArray(new ResourceEvent[readEvents.size()]));
+            }
+            if (!writeEvents.isEmpty()) {
+                this.writePool.onResourceChange(writeEvents.toArray(new ResourceEvent[writeEvents.size()]));
+            }
+            //更新Properties
+            if (!readEvents.isEmpty()) {
+                for (ResourceEvent event : readEvents) {
+                    this.readConfProps.put(event.name(), event.newValue());
+                }
+            }
+            if (!writeEvents.isEmpty()) {
+                for (ResourceEvent event : writeEvents) {
+                    this.writeConfProps.put(event.name(), event.newValue());
+                }
+            }
+        }
+        initSqlAttributes();
+        if (!sb.isEmpty()) {
+            logger.log(Level.INFO, sb.toString());
+        }
     }
 
     @Override
     public void destroy(AnyValue config) {
         if (readPool != null) readPool.close();
-        if (writePool != null) writePool.close();
+        if (writePool != null && writePool != readPool) writePool.close();
     }
 
     @Local
@@ -65,7 +111,7 @@ public class DataJdbcSource extends DataSqlSource {
     public void close() throws Exception {
         super.close();
         if (readPool != null) readPool.close();
-        if (writePool != null) writePool.close();
+        if (writePool != null && writePool != readPool) writePool.close();
     }
 
     public static boolean acceptsConf(AnyValue conf) {
@@ -1124,6 +1170,10 @@ public class DataJdbcSource extends DataSqlSource {
 
         protected String url;
 
+        protected int urlVersion;
+
+        protected Properties clientInfo = new Properties();
+
         public ConnectionPool(Properties prop) {
             this.connectTimeoutSeconds = Integer.decode(prop.getProperty(DATA_SOURCE_CONNECTTIMEOUT_SECONDS, "6"));
             this.maxconns = Math.max(1, Integer.decode(prop.getProperty(DATA_SOURCE_MAXCONNS, "" + Utility.cpus() * 4)));
@@ -1139,21 +1189,48 @@ public class DataJdbcSource extends DataSqlSource {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+            clientInfo.put("version", urlVersion);
         }
 
         @ResourceListener
-        public void onResourceChange(ResourceEvent[] events) {
+        public synchronized void onResourceChange(ResourceEvent[] events) {
+            String newUrl = this.url;
+            int newConnectTimeoutSeconds = this.connectTimeoutSeconds;
+            int newMaxconns = this.maxconns;
+            String newUser = this.connectAttrs.getProperty("user");
+            String newPassword = this.connectAttrs.getProperty("password");
             for (ResourceEvent event : events) {
-                if (event.name().equals(DATA_SOURCE_CONNECTTIMEOUT_SECONDS) || event.name().endsWith("." + DATA_SOURCE_CONNECTTIMEOUT_SECONDS)) {
-                    this.connectTimeoutSeconds = Integer.decode(event.newValue().toString());
-                } else if (event.name().equals(DATA_SOURCE_URL) || event.name().endsWith("." + DATA_SOURCE_URL)) {
-                    this.url = event.newValue().toString();
+                if (event.name().equals(DATA_SOURCE_URL) || event.name().endsWith("." + DATA_SOURCE_URL)) {
+                    newUrl = event.newValue().toString();
+                } else if (event.name().equals(DATA_SOURCE_CONNECTTIMEOUT_SECONDS) || event.name().endsWith("." + DATA_SOURCE_CONNECTTIMEOUT_SECONDS)) {
+                    newConnectTimeoutSeconds = Integer.decode(event.newValue().toString());
                 } else if (event.name().equals(DATA_SOURCE_USER) || event.name().endsWith("." + DATA_SOURCE_USER)) {
-                    this.connectAttrs.put("user", event.newValue().toString());
+                    newUser = event.newValue().toString();
                 } else if (event.name().equals(DATA_SOURCE_PASSWORD) || event.name().endsWith("." + DATA_SOURCE_PASSWORD)) {
-                    this.connectAttrs.put("password", event.newValue().toString());
+                    newPassword = event.newValue().toString();
                 } else if (event.name().equals(DATA_SOURCE_MAXCONNS) || event.name().endsWith("." + DATA_SOURCE_MAXCONNS)) {
-                    logger.log(Level.WARNING, event.name() + " (new-value: " + event.newValue() + ") will not take effect");
+                    newMaxconns = Math.max(1, Integer.decode(event.newValue().toString()));
+                }
+            }
+            if (!Objects.equals(newUser, this.connectAttrs.get("user"))
+                || !Objects.equals(newPassword, this.connectAttrs.get("password")) || !Objects.equals(newUrl, url)) {
+                this.urlVersion++;
+                Properties newClientInfo = new Properties();
+                newClientInfo.put("version", urlVersion);
+                this.clientInfo = newClientInfo;
+            }
+            this.url = newUrl;
+            this.connectTimeoutSeconds = newConnectTimeoutSeconds;
+            this.connectAttrs.put("user", newUser);
+            this.connectAttrs.put("password", newPassword);
+            if (newMaxconns != this.maxconns) {
+                ArrayBlockingQueue<Connection> newQueue = new ArrayBlockingQueue<>(newMaxconns);
+                ArrayBlockingQueue<Connection> oldQueue = this.queue;
+                this.queue = newQueue;
+                this.maxconns = newMaxconns;
+                Connection conn;
+                while ((conn = oldQueue.poll()) != null) {
+                    offerConnection(conn);
                 }
             }
         }
@@ -1183,6 +1260,7 @@ public class DataJdbcSource extends DataSqlSource {
             }
             try {
                 conn = driver.connect(url, connectAttrs);
+                conn.setClientInfo(clientInfo);
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
@@ -1210,7 +1288,11 @@ public class DataJdbcSource extends DataSqlSource {
 
         protected boolean checkValid(Connection conn) {
             try {
-                return !conn.isClosed() && conn.isValid(1);
+                boolean rs = !conn.isClosed() && conn.isValid(1);
+                if (!rs) return rs;
+                Properties prop = conn.getClientInfo();
+                if (prop == null) return false;
+                return prop == clientInfo || Objects.equals(prop.getProperty("version"), clientInfo.getProperty("version"));
             } catch (SQLException ex) {
                 if (!"08S01".equals(ex.getSQLState())) {//MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException
                     logger.log(Level.FINER, "result.getConnection from pooled connection abort [" + ex.getSQLState() + "]", ex);

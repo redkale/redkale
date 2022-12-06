@@ -90,7 +90,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             Properties rwConf = new Properties();
             conf.forEach((k, v) -> rwConf.put(k, v));
             this.dbtype = parseDbtype(rwConf.getProperty(DATA_SOURCE_URL));
-            decryptProperties(rwConf);
+            rwConf.forEach((k, v) -> {
+                String n = decryptProperty(k.toString(), v == null ? null : v.toString());
+                if (!Objects.equals(n, v)) rwConf.put(k, n);
+            });
             initProperties(rwConf);
             this.readConfProps = rwConf;
             this.writeConfProps = rwConf;
@@ -100,8 +103,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             conf.getAnyValue("read").forEach((k, v) -> readConf.put(k, v));
             conf.getAnyValue("write").forEach((k, v) -> writeConf.put(k, v));
             this.dbtype = parseDbtype(readConf.getProperty(DATA_SOURCE_URL));
-            decryptProperties(readConf);
-            decryptProperties(writeConf);
+            readConf.forEach((k, v) -> {
+                String n = decryptProperty(k.toString(), v == null ? null : v.toString());
+                if (!Objects.equals(n, v)) readConf.put(k, n);
+            });
+            writeConf.forEach((k, v) -> {
+                String n = decryptProperty(k.toString(), v == null ? null : v.toString());
+                if (!Objects.equals(n, v)) writeConf.put(k, n);
+            });
             initProperties(readConf);
             initProperties(writeConf);
             this.readConfProps = readConf;
@@ -109,6 +118,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         this.name = conf.getValue("name", "");
         this.sqlFormatter = (info, val) -> formatValueToString(info, val);
+        initSqlAttributes();
+    }
+
+    protected void initSqlAttributes() {
         this.autoddl = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false").trim());
 
         this.containSQL = readConfProps.getProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
@@ -119,14 +132,24 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
     }
 
+    @Override
     @ResourceListener
     public void onResourceChange(ResourceEvent[] events) {
-        //@TODO  待实现
+        if (events == null || events.length < 1) return;
+        //不支持读写分离模式的动态切换
+        if (readConfProps == writeConfProps
+            && (events[0].name().startsWith("read.") || events[0].name().startsWith("write."))) {
+            throw new RuntimeException("DataSource(name=" + resourceName() + ") not support to change to read/write separation mode");
+        }
+        if (readConfProps != writeConfProps
+            && (!events[0].name().startsWith("read.") && !events[0].name().startsWith("write."))) {
+            throw new RuntimeException("DataSource(name=" + resourceName() + ") not support to change to non read/write separation mode");
+        }
     }
 
     //解密可能存在的加密字段, 可重载
-    protected void decryptProperties(Properties props) {
-
+    protected String decryptProperty(String key, String value) {
+        return value;
     }
 
     protected void initProperties(Properties props) {

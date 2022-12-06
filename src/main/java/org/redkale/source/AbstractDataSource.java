@@ -94,7 +94,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     @ResourceListener
     public abstract void onResourceChange(ResourceEvent[] events);
-    
+
     public static String parseDbtype(String url) {
         String dbtype = null;
         if (url == null) return dbtype;
@@ -121,8 +121,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return dbtype;
     }
 
-    protected UrlInfo parseUrl(final String url) {
-        final UrlInfo info = new UrlInfo();
+    protected SourceUrlInfo parseSourceUrl(final String url) {
+        final SourceUrlInfo info = new SourceUrlInfo();
         info.url = url;
         if (url.startsWith("jdbc:h2:")) return info;
         String url0 = url.substring(url.indexOf("://") + 3);
@@ -154,7 +154,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return info;
     }
 
-    protected static class UrlInfo {
+    public static class SourceUrlInfo {
 
         public Properties attributes = new Properties();
 
@@ -163,6 +163,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public String database;
 
         public InetSocketAddress servaddr;
+
+        public String username;
+
+        public String password;
+        
+        public String encoding;
 
         @Override
         public String toString() {
