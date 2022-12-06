@@ -404,8 +404,8 @@ public final class Application {
             AnyValue clusterConf = resources.getAnyValue("cluster");
             if (clusterConf != null) {
                 try {
-                    String classval = clusterConf.getValue("type", clusterConf.getValue("value")); //兼容value字段
-                    if (classval == null || classval.isEmpty()) {
+                    String classVal = clusterConf.getValue("type", clusterConf.getValue("value")); //兼容value字段
+                    if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: consul, nacos
                         Iterator<ClusterAgentProvider> it = ServiceLoader.load(ClusterAgentProvider.class, classLoader).iterator();
                         RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
                         while (it.hasNext()) {
@@ -426,7 +426,7 @@ public final class Application {
                         }
                         if (cluster == null) logger.log(Level.SEVERE, "load application cluster resource, but not found name='type' value error: " + clusterConf);
                     } else {
-                        Class type = classLoader.loadClass(classval);
+                        Class type = classLoader.loadClass(classVal);
                         if (!ClusterAgent.class.isAssignableFrom(type)) {
                             logger.log(Level.SEVERE, "load application cluster resource, but not found " + ClusterAgent.class.getSimpleName() + " implements class error: " + clusterConf);
                         } else {
@@ -459,8 +459,8 @@ public final class Application {
                         }
                     }
                     try {
-                        String classval = mqConf.getValue("type", mqConf.getValue("value")); //兼容value字段
-                        if (classval == null || classval.isEmpty()) {
+                        String classVal = mqConf.getValue("type", mqConf.getValue("value")); //兼容value字段
+                        if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: kafka, pulsar
                             Iterator<MessageAgentProvider> it = ServiceLoader.load(MessageAgentProvider.class, classLoader).iterator();
                             RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
                             while (it.hasNext()) {
@@ -474,7 +474,7 @@ public final class Application {
                             }
                             if (mqs[i] == null) logger.log(Level.SEVERE, "load application mq resource, but not found name='value' value error: " + mqConf);
                         } else {
-                            Class type = classLoader.loadClass(classval);
+                            Class type = classLoader.loadClass(classVal);
                             if (!MessageAgent.class.isAssignableFrom(type)) {
                                 logger.log(Level.SEVERE, "load application mq resource, but not found " + MessageAgent.class.getSimpleName() + " implements class error: " + mqConf);
                             } else {
@@ -1066,10 +1066,10 @@ public final class Application {
             logger.info("[" + Thread.currentThread().getName() + "] Load DataSource resourceName = " + sourceName + ", source = " + source);
             return source;
         }
-        String classval = sourceConf.getValue("type");
+        String classVal = sourceConf.getValue("type");
         try {
             DataSource source = null;
-            if (classval == null || classval.isEmpty()) {
+            if (classVal == null || classVal.isEmpty()) {
                 if (DataJdbcSource.acceptsConf(sourceConf)) {
                     source = new DataJdbcSource();
                 } else {
@@ -1094,7 +1094,7 @@ public final class Application {
                     }
                 }
             } else {
-                Class sourceType = serverClassLoader.loadClass(classval);
+                Class sourceType = serverClassLoader.loadClass(classVal);
                 RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
                 source = (DataSource) sourceType.getConstructor().newInstance();
             }
@@ -1784,7 +1784,7 @@ public final class Application {
                             events.add(ResourceEvent.create(k, v, null));
                         }
                     });
-                    ((AbstractCacheSource) source).onChange(old == null ? conf : old, events.toArray(new ResourceEvent[events.size()]));
+                    ((AbstractCacheSource) source).onResourceChange(events.toArray(new ResourceEvent[events.size()]));
                 });
             }
             AnyValue sourceNode = redNode.getAnyValue("datasource");
@@ -1802,7 +1802,7 @@ public final class Application {
                             events.add(ResourceEvent.create(k, v, null));
                         }
                     });
-                    ((AbstractDataSource) source).onChange(old == null ? conf : old, events.toArray(new ResourceEvent[events.size()]));
+                    ((AbstractDataSource) source).onResourceChange(events.toArray(new ResourceEvent[events.size()]));
                 });
             }
             sourceProperties.putAll(sourceChangeCache);

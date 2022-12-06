@@ -62,8 +62,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return "memory";
     }
 
-    @Override
-    public void onChange(AnyValue newConf, ResourceEvent[] events) {
+    @ResourceListener
+    public void onResourceChange(ResourceEvent[] events) {
     }
 
     public static boolean acceptsConf(AnyValue config) {

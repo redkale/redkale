@@ -49,7 +49,8 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    public void onChange(AnyValue newConf, ResourceEvent[] events) {
+    @ResourceListener
+    public void onResourceChange(ResourceEvent[] events) {
         //@TODO  待实现
     }
 
@@ -1099,7 +1100,7 @@ public class DataJdbcSource extends DataSqlSource {
         };
     }
 
-    protected class ConnectionPool implements AutoCloseable, SourceChangeable {
+    protected class ConnectionPool implements AutoCloseable {
 
         protected final LongAdder closeCounter = new LongAdder(); //已关闭连接数
 
@@ -1140,8 +1141,8 @@ public class DataJdbcSource extends DataSqlSource {
             }
         }
 
-        @Override
-        public void onChange(AnyValue newConf, ResourceEvent[] events) {
+        @ResourceListener
+        public void onResourceChange(ResourceEvent[] events) {
             for (ResourceEvent event : events) {
                 if (event.name().equals(DATA_SOURCE_CONNECTTIMEOUT_SECONDS) || event.name().endsWith("." + DATA_SOURCE_CONNECTTIMEOUT_SECONDS)) {
                     this.connectTimeoutSeconds = Integer.decode(event.newValue().toString());

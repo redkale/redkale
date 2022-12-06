@@ -18,7 +18,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(CacheSource.class)
-public abstract class AbstractCacheSource extends AbstractService implements CacheSource, AutoCloseable, Resourcable, SourceChangeable {
+public abstract class AbstractCacheSource extends AbstractService implements CacheSource, AutoCloseable, Resourcable {
 
     //@since 2.7.0
     public static final String CACHE_SOURCE_URL = "url";
@@ -44,4 +44,6 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
     //@since 2.7.0
     public static final String CACHE_SOURCE_PIPELINES = "pipelines";
 
+    @ResourceListener
+    public abstract void onResourceChange(ResourceEvent[] events);
 }

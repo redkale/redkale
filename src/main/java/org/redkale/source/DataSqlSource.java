@@ -119,8 +119,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
     }
 
-    @Override
-    public void onChange(AnyValue newConf, ResourceEvent[] events) {
+    @ResourceListener
+    public void onResourceChange(ResourceEvent[] events) {
         //@TODO  待实现
     }
 

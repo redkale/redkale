@@ -44,7 +44,8 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    public void onChange(AnyValue newConf, ResourceEvent[] events) {
+    @ResourceListener
+    public void onResourceChange(ResourceEvent[] events) {
     }
 
     public static boolean acceptsConf(AnyValue config) {
