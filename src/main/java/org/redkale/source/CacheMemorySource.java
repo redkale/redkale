@@ -335,7 +335,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public String getSetString(String key, String value) {
+    public String setGetString(String key, String value) {
         String old = getString(key);
         setString(key, value);
         return old;
@@ -350,7 +350,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public long getSetLong(String key, long value, long defValue) {
+    public long setGetLong(String key, long value, long defValue) {
         long old = getLong(key, defValue);
         setLong(key, value);
         return old;
@@ -474,8 +474,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Long> getSetLongAsync(final String key, long value, long defValue) {
-        return CompletableFuture.supplyAsync(() -> getSetLong(key, value, defValue), getExecutor());
+    public CompletableFuture<Long> setGetLongAsync(final String key, long value, long defValue) {
+        return CompletableFuture.supplyAsync(() -> setGetLong(key, value, defValue), getExecutor());
     }
 
     @Override
@@ -584,14 +584,14 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> T getSet(String key, Type type, T value) {
+    public <T> T setGet(String key, Type type, T value) {
         T old = get(key, type);
         set(CacheEntryType.OBJECT, key, value);
         return old;
     }
 
     @Override
-    public <T> T getSet(String key, Convert convert, Type type, T value) {
+    public <T> T setGet(String key, Convert convert, Type type, T value) {
         T old = get(key, type);
         set(CacheEntryType.OBJECT, key, value);
         return old;
@@ -623,13 +623,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<T> getSetAsync(String key, Type type, T value) {
-        return CompletableFuture.runAsync(() -> getSet(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<T> setGetAsync(String key, Type type, T value) {
+        return CompletableFuture.runAsync(() -> setGet(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public <T> CompletableFuture<T> getSetAsync(String key, Convert convert, Type type, T value) {
-        return CompletableFuture.runAsync(() -> getSet(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<T> setGetAsync(String key, Convert convert, Type type, T value) {
+        return CompletableFuture.runAsync(() -> setGet(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -638,8 +638,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<String> getSetStringAsync(String key, String value) {
-        return CompletableFuture.runAsync(() -> getSetString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<String> setGetStringAsync(String key, String value) {
+        return CompletableFuture.runAsync(() -> setGetString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1243,7 +1243,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public byte[] getSetBytes(final String key, byte[] value) {
+    public byte[] setGetBytes(final String key, byte[] value) {
         byte[] old = getBytes(key);
         setBytes(key, value);
         return old;
@@ -1255,8 +1255,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<byte[]> getSetBytesAsync(final String key, byte[] value) {
-        return CompletableFuture.supplyAsync(() -> getSetBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<byte[]> setGetBytesAsync(final String key, byte[] value) {
+        return CompletableFuture.supplyAsync(() -> setGetBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
