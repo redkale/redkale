@@ -2,6 +2,9 @@
  */
 package org.redkale.util;
 
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+
 /**
  * 详情见: https://redkale.org
  *
@@ -18,6 +21,14 @@ public interface ResourceEvent<T> {
 
     public T oldValue();
 
+    default String coverNewValue() {
+        return ResourceChangeEvent.cover(newValue());
+    }
+
+    default String coverOldValue() {
+        return ResourceChangeEvent.cover(oldValue());
+    }
+
     public static boolean containsName(ResourceEvent[] events, String... names) {
         if (events == null || events.length == 0 || names.length == 0) return false;
         for (ResourceEvent event : events) {
@@ -32,11 +43,21 @@ public interface ResourceEvent<T> {
 
     public static class ResourceChangeEvent<T> implements ResourceEvent<T> {
 
+        private static final Predicate<String> numRegx = Pattern.compile("^(\\-|\\+)?\\d+(\\.\\d+)?$").asPredicate();
+
         protected String name;
 
         protected T newValue;
 
         protected T oldValue;
+
+        static <T> String cover(T val) {
+            if (val == null) return null;
+            String str = val.toString();
+            if (str.length() <= 4) return str;
+            if (numRegx.test(str)) return str;
+            return str.substring(0, 2) + "***" + str.substring(str.length() - 2);
+        }
 
         @ConstructorParameters({"name", "newValue", "oldValue"})
         public ResourceChangeEvent(String name, T newValue, T oldValue) {

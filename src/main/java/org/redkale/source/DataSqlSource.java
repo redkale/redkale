@@ -142,7 +142,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 String newValue = decryptProperty(event.name(), event.newValue().toString());
                 allEvents.add(ResourceEvent.create(event.name(), newValue, event.oldValue()));
                 newProps.put(event.name(), newValue);
-                sb.append("DataSource(name=").append(resourceName()).append(") the ").append(event.name()).append(" resource changed\r\n");
+                sb.append("DataSource(name=").append(resourceName()).append(") change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
             }
             updateOneResourceChange(newProps, allEvents.toArray(new ResourceEvent[allEvents.size()]));
             for (ResourceEvent event : allEvents) {
@@ -165,7 +165,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                     writeEvents.add(ResourceEvent.create(newName, newValue, event.oldValue()));
                     newWriteProps.put(event.name(), newValue);
                 }
-                sb.append("DataSource(name=").append(resourceName()).append(") the ").append(event.name()).append(" resource changed\r\n");
+                sb.append("DataSource(name=").append(resourceName()).append(") change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
             }
             if (!readEvents.isEmpty()) {
                 updateReadResourceChange(newReadProps, readEvents.toArray(new ResourceEvent[readEvents.size()]));
