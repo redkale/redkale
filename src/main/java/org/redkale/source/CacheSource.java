@@ -90,9 +90,9 @@ public interface CacheSource extends Resourcable {
 
     public <T> void set(final String key, final Convert convert, final Type type, final T value);
 
-    public <T> T setGet(final String key, final Type type, final T value);
+    public <T> T getSet(final String key, final Type type, final T value);
 
-    public <T> T setGet(final String key, final Convert convert, final Type type, final T value);
+    public <T> T getSet(final String key, final Convert convert, final Type type, final T value);
 
     public <T> void set(final int expireSeconds, final String key, final Convert convert, final T value);
 
@@ -138,7 +138,7 @@ public interface CacheSource extends Resourcable {
 
     public byte[] getBytes(final String key);
 
-    public byte[] setGetBytes(final String key, final byte[] value);
+    public byte[] getSetBytes(final String key, final byte[] value);
 
     public byte[] getBytesAndRefresh(final String key, final int expireSeconds);
 
@@ -160,7 +160,7 @@ public interface CacheSource extends Resourcable {
 
     public String getString(final String key);
 
-    public String setGetString(final String key, final String value);
+    public String getSetString(final String key, final String value);
 
     public String getStringAndRefresh(final String key, final int expireSeconds);
 
@@ -194,7 +194,7 @@ public interface CacheSource extends Resourcable {
 
     public long getLong(final String key, long defValue);
 
-    public long setGetLong(final String key, long value, long defValue);
+    public long getSetLong(final String key, long value, long defValue);
 
     public long getLongAndRefresh(final String key, final int expireSeconds, long defValue);
 
@@ -241,9 +241,9 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final Type type, final T value);
 
-    public <T> CompletableFuture<T> setGetAsync(final String key, final Type type, final T value);
+    public <T> CompletableFuture<T> getSetAsync(final String key, final Type type, final T value);
 
-    public <T> CompletableFuture<T> setGetAsync(final String key, final Convert convert, final Type type, final T value);
+    public <T> CompletableFuture<T> getSetAsync(final String key, final Convert convert, final Type type, final T value);
 
     public <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final T value);
 
@@ -331,7 +331,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<byte[]> getBytesAsync(final String key);
 
-    public CompletableFuture<byte[]> setGetBytesAsync(final String key, final byte[] value);
+    public CompletableFuture<byte[]> getSetBytesAsync(final String key, final byte[] value);
 
     public CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds);
 
@@ -353,7 +353,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<String> getStringAsync(final String key);
 
-    public CompletableFuture<String> setGetStringAsync(final String key, final String value);
+    public CompletableFuture<String> getSetStringAsync(final String key, final String value);
 
     public CompletableFuture<String> getStringAndRefreshAsync(final String key, final int expireSeconds);
 
@@ -387,7 +387,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Long> getLongAsync(final String key, long defValue);
 
-    public CompletableFuture<Long> setGetLongAsync(final String key, long value, long defValue);
+    public CompletableFuture<Long> getSetLongAsync(final String key, long value, long defValue);
 
     public CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue);
 
