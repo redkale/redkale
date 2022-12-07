@@ -162,7 +162,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             }
             if (!skip) {
                 if (this.joinClass == null) {
-                    node = FilterNode.filter(column, express, itemand, val);
+                    node = FilterNode.create(column, express, itemand, val);
                 } else {
                     node = FilterJoinNode.create(joinClass, joinColumns, column, express, itemand, val);
                 }

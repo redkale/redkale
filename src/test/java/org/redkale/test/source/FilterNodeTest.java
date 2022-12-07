@@ -105,7 +105,7 @@ public class FilterNodeTest {
         FilterNode joinNode1 = FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "username", LIKE, bean.username)
             .or(FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "createtime", GREATERTHAN, bean.createtime));
         FilterNode joinNode2 = FilterJoinNode.create(CarTypeTestTable.class, "cartype", "typename", LIKE, bean.typename);
-        final FilterNode node = CarTestBean.caridTransient() ? (joinNode2.or(joinNode1)) : FilterNode.filter("carid", GREATERTHAN, bean.carid).and(joinNode1).or(joinNode2);
+        final FilterNode node = CarTestBean.caridTransient() ? (joinNode2.or(joinNode1)) : FilterNode.create("carid", GREATERTHAN, bean.carid).and(joinNode1).or(joinNode2);
         final FilterNode beanNode = FilterNodeBean.createFilterNode(bean);
         System.out.println("node.string = " + node);
         System.out.println("bean.string = " + beanNode);

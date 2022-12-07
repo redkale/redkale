@@ -299,32 +299,29 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return rs;
     }
 
-    @Deprecated //@deprecated @since 2.7.0  使用 filter 方法替换
     public static FilterNode create(String column, Serializable value) {
-        return filter(column, null, value);
+        return create(column, null, value);
     }
 
-    @Deprecated //@deprecated @since 2.7.0  使用 filter 方法替换
     public static FilterNode create(String column, FilterExpress express, Serializable value) {
-        return filter(column, express, true, value);
+        return create(column, express, true, value);
     }
 
-    @Deprecated //@deprecated @since 2.7.0  使用 filter 方法替换
     public static FilterNode create(String column, FilterExpress express, boolean itemand, Serializable value) {
         return new FilterNode(column, express, itemand, value);
     }
 
-    //@since 2.6.0  create不利于import static
+    @Deprecated //@deprecated @since 2.8.0
     public static FilterNode filter(String column, Serializable value) {
-        return filter(column, null, value);
+        return create(column, null, value);
     }
 
-    //@since 2.6.0  create不利于import static
+    @Deprecated //@deprecated @since 2.8.0
     public static FilterNode filter(String column, FilterExpress express, Serializable value) {
-        return filter(column, express, true, value);
+        return create(column, express, true, value);
     }
 
-    //@since 2.6.0  create不利于import static
+    @Deprecated //@deprecated @since 2.8.0
     public static FilterNode filter(String column, FilterExpress express, boolean itemand, Serializable value) {
         return new FilterNode(column, express, itemand, value);
     }

@@ -1565,7 +1565,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         String column = info.getPrimary().field();
         int c = 0;
         for (Serializable id : pks) {
-            Sheet<T> sheet = querySheetCompose(false, true, false, clazz, null, FLIPPER_ONE, FilterNode.filter(column, id)).join();
+            Sheet<T> sheet = querySheetCompose(false, true, false, clazz, null, FLIPPER_ONE, FilterNode.create(column, id)).join();
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
             if (value != null) c += cache.update(value);
         }
@@ -1862,7 +1862,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected <T> CompletableFuture<T[]> findsComposeAsync(final EntityInfo<T> info, final SelectColumn selects, Serializable... pks) {
         final Attribute<T, Serializable> primary = info.getPrimary();
-        return queryListAsync(info.getType(), selects, null, FilterNode.filter(info.getPrimarySQLColumn(), FilterExpress.IN, pks)).thenApply(list -> {
+        return queryListAsync(info.getType(), selects, null, FilterNode.create(info.getPrimarySQLColumn(), FilterExpress.IN, pks)).thenApply(list -> {
             T[] rs = info.getArrayer().apply(pks.length);
             for (int i = 0; i < rs.length; i++) {
                 T t = null;
@@ -1888,7 +1888,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     public <D extends Serializable, T> CompletableFuture<List<T>> findsListAsync(final Class<T> clazz, final Stream<D> pks) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         Serializable[] ids = pks.toArray(v -> new Serializable[v]);
-        return queryListAsync(info.getType(), null, null, FilterNode.filter(info.getPrimarySQLColumn(), FilterExpress.IN, ids));
+        return queryListAsync(info.getType(), null, null, FilterNode.create(info.getPrimarySQLColumn(), FilterExpress.IN, ids));
     }
 
     @Override
@@ -2210,7 +2210,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final ArrayList<K> ids = new ArrayList<>();
         keyStream.forEach(k -> ids.add(k));
         final Attribute<T, Serializable> primary = info.getPrimary();
-        List<T> rs = queryList(clazz, FilterNode.filter(primary.field(), ids));
+        List<T> rs = queryList(clazz, FilterNode.create(primary.field(), ids));
         Map<K, T> map = new LinkedHashMap<>();
         if (rs.isEmpty()) return new LinkedHashMap<>();
         for (T item : rs) {
@@ -2226,7 +2226,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final ArrayList<K> pks = new ArrayList<>();
         keyStream.forEach(k -> pks.add(k));
         final Attribute<T, Serializable> primary = info.getPrimary();
-        return queryListAsync(clazz, FilterNode.filter(primary.field(), pks)).thenApply((List<T> rs) -> {
+        return queryListAsync(clazz, FilterNode.create(primary.field(), pks)).thenApply((List<T> rs) -> {
             Map<K, T> map = new LinkedHashMap<>();
             if (rs.isEmpty()) return new LinkedHashMap<>();
             for (T item : rs) {

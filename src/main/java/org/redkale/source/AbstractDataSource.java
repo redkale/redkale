@@ -544,12 +544,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     @Override
     public <T> T find(final Class<T> clazz, final String column, final Serializable colval) {
-        return find(clazz, null, FilterNode.filter(column, colval));
+        return find(clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final String column, final Serializable colval) {
-        return findAsync(clazz, null, FilterNode.filter(column, colval));
+        return findAsync(clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
@@ -635,12 +635,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     //-----------------------list set----------------------------
     @Override
     public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
-        return queryColumnSet(selectedColumn, clazz, null, FilterNode.filter(column, colval));
+        return queryColumnSet(selectedColumn, clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
     public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
-        return queryColumnSetAsync(selectedColumn, clazz, null, FilterNode.filter(column, colval));
+        return queryColumnSetAsync(selectedColumn, clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
@@ -675,12 +675,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     @Override
     public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
-        return queryColumnList(selectedColumn, clazz, null, FilterNode.filter(column, colval));
+        return queryColumnList(selectedColumn, clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
     public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
-        return queryColumnListAsync(selectedColumn, clazz, null, FilterNode.filter(column, colval));
+        return queryColumnListAsync(selectedColumn, clazz, null, FilterNode.create(column, colval));
     }
 
     @Override
@@ -832,12 +832,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      */
     @Override
     public <T> Set<T> querySet(final Class<T> clazz, final String column, final Serializable colval) {
-        return querySet(clazz, (SelectColumn) null, null, FilterNode.filter(column, colval));
+        return querySet(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
     }
 
     @Override
     public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final String column, final Serializable colval) {
-        return querySetAsync(clazz, (SelectColumn) null, null, FilterNode.filter(column, colval));
+        return querySetAsync(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
     }
 
     @Override
@@ -911,12 +911,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     @Override
     public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
-        return querySet(clazz, null, flipper, FilterNode.filter(column, colval));
+        return querySet(clazz, null, flipper, FilterNode.create(column, colval));
     }
 
     @Override
     public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
-        return querySetAsync(clazz, null, flipper, FilterNode.filter(column, colval));
+        return querySetAsync(clazz, null, flipper, FilterNode.create(column, colval));
     }
 
     @Override
@@ -961,12 +961,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      */
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final String column, final Serializable colval) {
-        return queryList(clazz, (SelectColumn) null, null, FilterNode.filter(column, colval));
+        return queryList(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
     }
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final String column, final Serializable colval) {
-        return queryListAsync(clazz, (SelectColumn) null, null, FilterNode.filter(column, colval));
+        return queryListAsync(clazz, (SelectColumn) null, null, FilterNode.create(column, colval));
     }
 
     @Override
@@ -1040,12 +1040,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
-        return queryList(clazz, null, flipper, FilterNode.filter(column, colval));
+        return queryList(clazz, null, flipper, FilterNode.create(column, colval));
     }
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
-        return queryListAsync(clazz, null, flipper, FilterNode.filter(column, colval));
+        return queryListAsync(clazz, null, flipper, FilterNode.create(column, colval));
     }
 
     @Override
