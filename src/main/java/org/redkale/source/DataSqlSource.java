@@ -81,11 +81,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     //用于复制表结构使用
     protected String tablecopySQL;
 
+    protected AnyValue config;
+
     public DataSqlSource() {
     }
 
     @Override
     public void init(AnyValue conf) {
+        this.config = conf;
         if (conf.getAnyValue("read") == null) { //没有读写分离
             Properties rwConf = new Properties();
             conf.forEach((k, v) -> rwConf.put(k, decryptProperty(k, v)));
