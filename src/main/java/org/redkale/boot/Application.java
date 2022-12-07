@@ -1714,13 +1714,15 @@ public final class Application {
     //key只会是system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
     void updateEnvironmentProperty(String key, Object value, Properties envChangeCache, Properties sourceChangeCache) {
         if (key == null || value == null) return;
-        String val = replaceValue(value.toString());
+        String val = replaceValue(value.toString()).trim();
         if (key.startsWith("redkale.datasource.") || key.startsWith("redkale.datasource[")
             || key.startsWith("redkale.cachesource.") || key.startsWith("redkale.cachesource[")) {
-            if (sourceChangeCache == null) {
-                sourceProperties.put(key, val);
-            } else {
-                sourceChangeCache.put(key, val);
+            if (!Objects.equals(val, sourceProperties.getProperty(key))) {
+                if (sourceChangeCache == null) {
+                    sourceProperties.put(key, val);
+                } else {
+                    sourceChangeCache.put(key, val);
+                }
             }
         } else if (key.startsWith("system.property.")) {
             String propName = key.substring("system.property.".length());

@@ -54,6 +54,7 @@ public interface ResourceEvent<T> {
         static <T> String cover(T val) {
             if (val == null) return null;
             String str = val.toString();
+            if ("false".equalsIgnoreCase(str)) return str;
             if (str.length() <= 4) return str;
             if (numRegx.test(str)) return str;
             return str.substring(0, 2) + "***" + str.substring(str.length() - 2);

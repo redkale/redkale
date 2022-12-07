@@ -1152,7 +1152,7 @@ public class DataJdbcSource extends DataSqlSource {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-            clientInfo.put("version", urlVersion);
+            clientInfo.put("version", String.valueOf(urlVersion));
         }
 
         @ResourceListener
@@ -1179,7 +1179,7 @@ public class DataJdbcSource extends DataSqlSource {
                 || !Objects.equals(newPassword, this.connectAttrs.get("password")) || !Objects.equals(newUrl, url)) {
                 this.urlVersion++;
                 Properties newClientInfo = new Properties();
-                newClientInfo.put("version", urlVersion);
+                newClientInfo.put("version", String.valueOf(urlVersion));
                 this.clientInfo = newClientInfo;
             }
             this.url = newUrl;

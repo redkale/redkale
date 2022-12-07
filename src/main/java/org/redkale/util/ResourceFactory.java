@@ -447,7 +447,11 @@ public final class ResourceFactory {
         properties.forEach((k, v) -> {
             Object old = register(true, k.toString(), String.class, v, wrappers);
             if (!Objects.equals(v, old)) {
-                environmentEventList.add(ResourceEvent.create(k.toString(), v, old));
+                String key = k.toString();
+                if (key.startsWith("property.")) {
+                    key = key.substring("property.".length());
+                }
+                environmentEventList.add(ResourceEvent.create(key, v, old));
             }
         });
         Map<Object, Method> envListenMap = new LinkedHashMap<>();

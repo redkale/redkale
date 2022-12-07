@@ -53,9 +53,10 @@ public abstract class PropertiesAgent {
     public abstract void destroy(AnyValue conf);
 
     protected void updateEnvironmentProperties(Application application, Properties props) {
+        if (props.isEmpty()) return;
         Properties envChangeCache = new Properties();
         Properties sourceChangeCache = new Properties();
-        props.forEach((k, v) -> application.updateEnvironmentProperty(k.toString(), v, envChangeCache, sourceChangeCache));
+        props.forEach((k, v) -> application.updateEnvironmentProperty(k.toString(), v.toString().trim(), envChangeCache, sourceChangeCache));
         if (!envChangeCache.isEmpty()) {
             application.resourceFactory.register(envChangeCache, "", Environment.class);
         }
