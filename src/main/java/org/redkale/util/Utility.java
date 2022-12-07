@@ -2241,7 +2241,7 @@ public final class Utility {
         } catch (NoSuchAlgorithmException ex) {
             throw new RuntimeException("Couldn't find a MD5 provider", ex);
         }
-        return md5.digest(str.getBytes());
+        return md5.digest(str.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
