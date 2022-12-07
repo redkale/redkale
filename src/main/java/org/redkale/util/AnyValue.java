@@ -54,6 +54,8 @@ public abstract class AnyValue {
 
         private Entry<DefaultAnyValue>[] anyEntrys = new Entry[0];
 
+        private int parentArrayIndex = -1; //只可能被loadFromProperties方法赋值
+
         /**
          * 创建空的DefaultAnyValue对象
          *
@@ -136,6 +138,76 @@ public abstract class AnyValue {
         }
 
         /**
+         * 复制一份对象
+         *
+         * @return DefaultAnyValue对象
+         */
+        @Override
+        public DefaultAnyValue copy() {
+            DefaultAnyValue rs = new DefaultAnyValue(this.ignoreCase);
+            if (this.stringEntrys != null) {
+                rs.stringEntrys = new Entry[this.stringEntrys.length];
+                for (int i = 0; i < rs.stringEntrys.length; i++) {
+                    Entry<String> en = this.stringEntrys[i];
+                    if (en == null) continue;
+                    rs.stringEntrys[i] = new Entry(en.name, en.value);
+                }
+            }
+            if (this.anyEntrys != null) {
+                rs.anyEntrys = new Entry[this.anyEntrys.length];
+                for (int i = 0; i < rs.anyEntrys.length; i++) {
+                    Entry<DefaultAnyValue> en = this.anyEntrys[i];
+                    if (en == null) continue;
+                    rs.anyEntrys[i] = new Entry(en.name, en.value == null ? null : en.value.copy());
+                }
+            }
+            return rs;
+        }
+
+        /**
+         * 将另一个对象合并过来
+         *
+         * @param node0 代合并对象
+         *
+         * @return AnyValue
+         */
+        @Override
+        public DefaultAnyValue merge(AnyValue node0) {
+            if (node0 == null) return this;
+            if (node0 == this) throw new IllegalArgumentException();
+            DefaultAnyValue node = (DefaultAnyValue) node0;
+            if (node.stringEntrys != null) {
+                for (Entry<String> en : node.stringEntrys) {
+                    if (en == null) continue;
+                    setValue(en.name, en.value);
+                }
+            }
+            if (node.anyEntrys != null) {
+                for (Entry<DefaultAnyValue> en : node.anyEntrys) {
+                    if (en == null) continue;
+                    AnyValue[] ns = getAnyValues(en.name);
+                    if (ns == null || ns.length < 1) {
+                        addValue(en.name, en.value);
+                    } else {
+                        boolean ok = false;
+                        for (AnyValue item : ns) {
+                            if (item == null) continue;
+                            if (en.value.parentArrayIndex == ((DefaultAnyValue) item).parentArrayIndex) {
+                                item.merge(en.value);
+                                ok = true;
+                                break;
+                            }
+                        }
+                        if (!ok) {
+                            addValue(en.name, en.value);
+                        }
+                    }
+                }
+            }
+            return this;
+        }
+
+        /**
          * 合并两个AnyValue对象， 会去重， 没有的才增加
          *
          * @param av AnyValue
@@ -147,7 +219,7 @@ public abstract class AnyValue {
             final Entry<String>[] strings = av.getStringEntrys();
             if (strings == null) return this;
             for (Entry<String> en : strings) {
-                if (getValue(en.name) == null) this.addValue(en.name, en.value);
+                if (!existsValue(en.name)) this.addValue(en.name, en.value);
             }
             return this;
         }
@@ -311,7 +383,11 @@ public abstract class AnyValue {
 
         @Override
         public String toString() {
-            return toString(0);
+            return toString(0, (any, space) -> {
+                int index = ((DefaultAnyValue) any).parentArrayIndex;
+                if (index < 0) return null;
+                return new StringBuilder().append(space).append("    $index: ").append(index).append(",\r\n");
+            });
         }
 
         public DefaultAnyValue clear() {
@@ -322,7 +398,7 @@ public abstract class AnyValue {
 
         public DefaultAnyValue setValue(String name, String value) {
             if (name == null) return this;
-            if (getValue(name) == null) {
+            if (!existsValue(name)) {
                 this.addValue(name, value);
             } else {
                 for (Entry<String> en : this.stringEntrys) {
@@ -337,7 +413,7 @@ public abstract class AnyValue {
 
         public DefaultAnyValue setValue(String name, AnyValue value) {
             if (name == null) return this;
-            if (getValue(name) == null) {
+            if (!existsValue(name)) {
                 this.addValue(name, value);
             } else {
                 for (Entry<DefaultAnyValue> en : this.anyEntrys) {
@@ -419,6 +495,14 @@ public abstract class AnyValue {
             return null;
         }
 
+        public boolean existsValue(String name) {
+            for (Entry<String> en : this.stringEntrys) {
+                if (predicate.test(en.name, name)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /**
@@ -662,8 +746,15 @@ public abstract class AnyValue {
                         parent = child;
                     } else { //数组或Map结构, []中间是数字开头的视为数组，其他视为map
                         String itemField = item.substring(0, pos);  //[前面一部分
-                        String itemIndex = item.substring(pos + 1, item.indexOf(']'));
-                        if (!itemIndex.isEmpty() && itemIndex.charAt(0) >= '0' && itemIndex.charAt(0) <= '9') { //数组
+                        String keyOrIndex = item.substring(pos + 1, item.indexOf(']'));
+                        int realIndex = -1;
+                        if (!keyOrIndex.isEmpty() && keyOrIndex.charAt(0) >= '0' && keyOrIndex.charAt(0) <= '9') {
+                            try {
+                                realIndex = Integer.parseInt(keyOrIndex);
+                            } catch (NumberFormatException e) {
+                            }
+                        }
+                        if (realIndex >= 0) { //数组
                             String prefixKey = "";
                             for (int j = 0; j < i; j++) {
                                 prefixKey += keys[j] + ".";
@@ -684,7 +775,9 @@ public abstract class AnyValue {
                                     if (!keymap.containsKey(prefixKey2)) {
                                         DefaultAnyValue vv = new DefaultAnyValue();
                                         keymap.put(prefixKey2, vv);
-                                        sortmap.put(Integer.parseInt(ks[ii].substring(ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']'))), vv);
+                                        int aindex = Integer.parseInt(ks[ii].substring(ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']')));
+                                        vv.parentArrayIndex = aindex;
+                                        sortmap.put(aindex, vv);
                                     }
                                 });
                                 prefixArray.putAll(keymap);
@@ -699,11 +792,11 @@ public abstract class AnyValue {
                                 field = new DefaultAnyValue();
                                 parent.addValue(itemField, field);
                             }
-                            DefaultAnyValue index = (DefaultAnyValue) field.getAnyValue(itemIndex);
+                            DefaultAnyValue index = (DefaultAnyValue) field.getAnyValue(keyOrIndex);
                             if (index == null) {
                                 index = new DefaultAnyValue();
-                                if (nameName != null) index.setValue(nameName, itemIndex);
-                                field.addValue(itemIndex, index);
+                                if (nameName != null) index.setValue(nameName, keyOrIndex);
+                                field.addValue(keyOrIndex, index);
                             }
                             parent = index;
                         }
@@ -838,24 +931,45 @@ public abstract class AnyValue {
     /**
      * 当前AnyValue对象字符串化
      *
-     * @param indent 缩进长度
+     * @param indent     缩进长度
+     * @param prefixFunc 扩展函数
      *
      * @return String
      */
-    public String toString(int indent) { //indent: 缩进长度
+    public String toString(int indent, BiFunction<AnyValue, String, CharSequence> prefixFunc) { //indent: 缩进长度
         if (indent < 0) indent = 0;
         final String space = " ".repeat(indent);
         StringBuilder sb = new StringBuilder();
         sb.append("{\r\n");
+        if (prefixFunc != null) {
+            CharSequence v = prefixFunc.apply(this, space);
+            if (v != null) sb.append(v);
+        }
         for (Entry<String> en : getStringEntrys()) {
             sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("',\r\n");
         }
         for (Entry<AnyValue> en : getAnyEntrys()) {
-            sb.append(space).append("    '").append(en.name).append("': ").append(en.value.toString(indent + 4)).append(",\r\n");
+            sb.append(space).append("    '").append(en.name).append("': ").append(en.value.toString(indent + 4, prefixFunc)).append(",\r\n");
         }
         sb.append(space).append('}');
         return sb.toString();
     }
+
+    /**
+     * 复制一份
+     *
+     * @return AnyValue
+     */
+    public abstract AnyValue copy();
+
+    /**
+     * 将另一个对象合并过来
+     *
+     * @param node 代合并对象
+     *
+     * @return AnyValue
+     */
+    public abstract AnyValue merge(AnyValue node);
 
     /**
      * 回调子节点

@@ -34,46 +34,76 @@ public class AnyValuePropertiesTest {
         properties.put("redkale.mmm.node[20]", "n20");
 
         String result = "{\r\n"
-            + "    'redkale': '{\r\n"
-            + "        'source': '{\r\n"
-            + "            'my': '{\r\n"
+            + "    'redkale': {\r\n"
+            + "        'source': {\r\n"
+            + "            'my': {\r\n"
             + "                'sss': 'my s',\r\n"
             + "                'ttt': 'my t',\r\n"
-            + "            }',\r\n"
-            + "            'you': '{\r\n"
+            + "            },\r\n"
+            + "            'you': {\r\n"
             + "                'ttt': 'you t',\r\n"
             + "                'sss': 'you s',\r\n"
-            + "            }',\r\n"
-            + "        }',\r\n"
-            + "        'ddd': '{\r\n"
+            + "            },\r\n"
+            + "        },\r\n"
+            + "        'ddd': {\r\n"
+            + "            $index: 0,\r\n"
             + "            'ww': 'ww 0',\r\n"
             + "            'nn': 'nn 0',\r\n"
-            + "        }',\r\n"
-            + "        'ddd': '{\r\n"
+            + "        },\r\n"
+            + "        'ddd': {\r\n"
+            + "            $index: 2,\r\n"
             + "            'ww': 'ww 2',\r\n"
             + "            'nn': 'nn 2',\r\n"
-            + "        }',\r\n"
-            + "        'ddd': '{\r\n"
+            + "        },\r\n"
+            + "        'ddd': {\r\n"
+            + "            $index: 10,\r\n"
             + "            'ww': 'ww 10',\r\n"
             + "            'nn': 'nn 10',\r\n"
-            + "        }',\r\n"
-            + "        'mmm': '{\r\n"
+            + "        },\r\n"
+            + "        'mmm': {\r\n"
             + "            'node': 'n0',\r\n"
             + "            'node': 'n5',\r\n"
             + "            'node': 'n20',\r\n"
-            + "        }',\r\n"
-            + "        'bbb': '{\r\n"
+            + "        },\r\n"
+            + "        'bbb': {\r\n"
             + "            'sss': 'value s',\r\n"
-            + "            'qqq': '{\r\n"
+            + "            'qqq': {\r\n"
             + "                'rrr': 'value r',\r\n"
-            + "            }',\r\n"
-            + "        }',\r\n"
-            + "        'aaa': '{\r\n"
+            + "            },\r\n"
+            + "        },\r\n"
+            + "        'aaa': {\r\n"
             + "            'ppp': 'value p',\r\n"
             + "            'ooo': 'value o',\r\n"
-            + "        }',\r\n"
-            + "    }',\r\n"
+            + "        },\r\n"
+            + "    },\r\n"
             + "}";
         Assertions.assertEquals(result, AnyValue.loadFromProperties(properties).toString());
+    }
+
+    @Test
+    public void run2() {
+        Properties prop = new Properties();
+        prop.put("redkale.name", "myname");
+        prop.put("redkale.node[3].id", "333");
+        prop.put("redkale.node[3].desc", "haha3");
+        prop.put("redkale.node[1].id", "111");
+        prop.put("redkale.node[1].desc", "haha1");
+        prop.put("redkale.node[2].id", "222");
+        prop.put("redkale.node[2].desc", "haha2");
+
+        AnyValue conf = AnyValue.loadFromProperties(prop);
+        //System.out.println(conf);
+
+        Properties prop2 = new Properties();
+        prop2.put("redkale.name", "myname too");
+        prop2.put("redkale.node[3].id", "999");
+        prop2.put("redkale.node[3].desc", "haha9");
+        prop2.put("redkale.node[4].id", "444");
+        prop2.put("redkale.node[4].desc", "haha4");
+        AnyValue conf2 = AnyValue.loadFromProperties(prop2);
+        //System.out.println(conf2);
+
+        //System.out.println(conf.copy().merge(conf2));
+        //System.out.println(conf);
     }
 }
