@@ -356,7 +356,7 @@ public final class Application {
                     properties0.load(fin);
                     fin.close();
                     reconfigLogging(properties0);
-                } catch (Exception e) {
+                } catch (IOException e) {
                     Logger.getLogger(this.getClass().getSimpleName()).log(Level.WARNING, "init logger configuration error", e);
                 }
             }
@@ -374,7 +374,55 @@ public final class Application {
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
         this.shutdownLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
         logger.log(Level.INFO, colorMessage(logger, 36, 1, "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
-        //------------------配置 <transport> 节点 ------------------
+
+        //------------------------------------ 基本设置 ------------------------------------   
+        System.setProperty("redkale.net.transport.poolmaxconns", "100");
+        System.setProperty("redkale.net.transport.pinginterval", "30");
+        System.setProperty("redkale.net.transport.checkinterval", "30");
+        System.setProperty("redkale.convert.tiny", "true");
+        System.setProperty("redkale.convert.pool.size", "128");
+        System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
+        System.setProperty("redkale.trace.enable", "false");
+
+        final String confDir = this.confPath.toString();
+//        String pidstr = "";
+//        try { //JDK 9+
+//            Class phclass = Thread.currentThread().getContextClassLoader().loadClass("java.lang.ProcessHandle");
+//            Object phobj = phclass.getMethod("current").invoke(null);
+//            Object pid = phclass.getMethod("pid").invoke(phobj);
+//            pidstr = "APP_PID  = " + pid + "\r\n";
+//        } catch (Throwable t) {
+//        }
+
+        logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
+            + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
+            + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
+            + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
+            + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
+            + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
+            + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
+            + RESNAME_APP_HOME + "     = " + homePath + "\r\n"
+            + RESNAME_APP_CONF_DIR + " = " + confDir.substring(confDir.indexOf('!') + 1));
+
+        if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
+            String lib = replaceValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
+            lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
+            Server.loadLib(classLoader, logger, lib);
+        }
+
+        this.resourceFactory.register(BsonFactory.root());
+        this.resourceFactory.register(JsonFactory.root());
+        this.resourceFactory.register(BsonFactory.root().getConvert());
+        this.resourceFactory.register(JsonFactory.root().getConvert());
+        this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
+        this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
+        //------------------------------------ 读取配置 ------------------------------------
+        try {
+            loadResourceProperties();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        //------------------------------------ 配置 <transport> 节点 ------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         TransportStrategy strategy = null;
         String excludelib0 = null;
@@ -550,6 +598,125 @@ public final class Application {
         }
     }
 
+    private void loadResourceProperties() throws IOException {
+        final String confDir = this.confPath.toString();
+        //------------------------------------ 读取本地DataSource、CacheSource配置 ------------------------------------
+        if ("file".equals(this.confPath.getScheme())) {
+            File sourceFile = new File(new File(confPath), "source.properties");
+            if (sourceFile.isFile() && sourceFile.canRead()) {
+                InputStream in = new FileInputStream(sourceFile);
+                Properties props = new Properties();
+                props.load(in);
+                in.close();
+                props.forEach((key, val) -> {
+                    if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
+                        || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
+                        sourceProperties.put(key, val);
+                    }
+                });
+            } else {
+                //兼容 persistence.xml 【已废弃】
+                File persist = new File(new File(confPath), "persistence.xml");
+                if (persist.isFile() && persist.canRead()) {
+                    logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
+                    InputStream in = new FileInputStream(persist);
+                    sourceProperties.putAll(DataSources.loadSourceProperties(in));
+                    in.close();
+                }
+            }
+        } else { //从url或jar文件中resources读取
+            try {
+                final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "source.properties");
+                InputStream in = sourceURI.toURL().openStream();
+                Properties props = new Properties();
+                props.load(in);
+                in.close();
+                props.forEach((key, val) -> {
+                    if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
+                        || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
+                        sourceProperties.put(key, val);
+                    }
+                });
+            } catch (Exception e) { //没有文件 跳过
+            }
+            //兼容 persistence.xml 【已废弃】
+            try {
+                final URI xmlURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "persistence.xml");
+                InputStream in = xmlURI.toURL().openStream();
+                sourceProperties.putAll(DataSources.loadSourceProperties(in));
+                in.close();
+                logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
+            } catch (Exception e) { //没有文件 跳过
+            }
+        }
+
+        //------------------------------------ 读取配置中心 ------------------------------------
+        final AnyValue resources = config.getAnyValue("resources");
+        if (resources != null) {
+            resourceFactory.register(RESNAME_APP_GRES, AnyValue.class, resources);
+            final AnyValue propertiesConf = resources.getAnyValue("properties");
+            if (propertiesConf != null) {
+                for (AnyValue prop : propertiesConf.getAnyValues("property")) {
+                    String key = prop.getValue("name");
+                    String value = prop.getValue("value");
+                    if (key == null || value == null) continue;
+                    updateEnvironmentProperty(key, value, null, null);
+                }
+                String dfloads = propertiesConf.getValue("load");
+                if (dfloads != null) {
+                    for (String dfload : dfloads.split(";")) {
+                        if (dfload.trim().isEmpty()) continue;
+                        final URI df = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, dfload.trim());
+                        if (df != null && (!"file".equals(df.getScheme()) || df.toString().contains("!") || new File(df).isFile())) {
+                            Properties ps = new Properties();
+                            try {
+                                InputStream in = df.toURL().openStream();
+                                ps.load(in);
+                                in.close();
+                                if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
+                                ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
+                                    updateEnvironmentProperty(x.toString(), y, null, null);
+                                });
+                            } catch (Exception e) {
+                                logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
+                            }
+                        }
+                    }
+                }
+
+                { //可能通过系统环境变量配置信息
+                    Iterator<PropertiesAgentProvider> it = ServiceLoader.load(PropertiesAgentProvider.class, classLoader).iterator();
+                    RedkaleClassLoader.putServiceLoader(PropertiesAgentProvider.class);
+                    List<PropertiesAgentProvider> providers = new ArrayList<>();
+                    while (it.hasNext()) {
+                        PropertiesAgentProvider provider = it.next();
+                        if (provider != null && provider.acceptsConf(propertiesConf)) {
+                            RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                            providers.add(provider);
+                        }
+                    }
+                    for (PropertiesAgentProvider provider : InstanceProvider.sort(providers)) {
+                        long s = System.currentTimeMillis();
+                        this.propertiesAgent = provider.createInstance();
+                        this.resourceFactory.inject(this.propertiesAgent);
+                        if (compileMode) {
+                            this.propertiesAgent.compile(propertiesConf);
+                        } else {
+                            this.propertiesAgent.init(this, propertiesConf);
+                        }
+                        logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
+                        break;
+                    }
+                }
+            }
+            final AnyValue[] sourceConfs = resources.getAnyValues("source");
+            if (sourceConfs != null && sourceConfs.length > 0) {
+                //<source>节点 【已废弃】
+                throw new RuntimeException("<source> in application.xml is deprecated, replaced by source.properties");
+            }
+        }
+    }
+
     void reconfigLogging(Properties properties0) {
         String searchRawHandler = "java.util.logging.SearchHandler";
         String searchReadHandler = LoggingSearchHandler.class.getName();
@@ -676,162 +843,6 @@ public final class Application {
     }
 
     public void init() throws Exception {
-        System.setProperty("redkale.net.transport.poolmaxconns", "100");
-        System.setProperty("redkale.net.transport.pinginterval", "30");
-        System.setProperty("redkale.net.transport.checkinterval", "30");
-        System.setProperty("redkale.convert.tiny", "true");
-        System.setProperty("redkale.convert.pool.size", "128");
-        System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
-        System.setProperty("redkale.trace.enable", "false");
-
-        final String confDir = this.confPath.toString();
-//        String pidstr = "";
-//        try { //JDK 9+
-//            Class phclass = Thread.currentThread().getContextClassLoader().loadClass("java.lang.ProcessHandle");
-//            Object phobj = phclass.getMethod("current").invoke(null);
-//            Object pid = phclass.getMethod("pid").invoke(phobj);
-//            pidstr = "APP_PID  = " + pid + "\r\n";
-//        } catch (Throwable t) {
-//        }
-
-        logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
-            + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
-            + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
-            + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
-            + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
-            + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
-            + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
-            + RESNAME_APP_HOME + "     = " + homePath + "\r\n"
-            + RESNAME_APP_CONF_DIR + " = " + confDir.substring(confDir.indexOf('!') + 1));
-
-        if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
-            String lib = replaceValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
-            lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
-            Server.loadLib(classLoader, logger, lib);
-        }
-
-        //---------------------------- 读取 DataSource、CacheSource 配置 --------------------------------------------
-        if ("file".equals(this.confPath.getScheme())) {
-            File sourceFile = new File(new File(confPath), "source.properties");
-            if (sourceFile.isFile() && sourceFile.canRead()) {
-                InputStream in = new FileInputStream(sourceFile);
-                Properties props = new Properties();
-                props.load(in);
-                in.close();
-                props.forEach((key, val) -> {
-                    if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
-                        || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
-                        sourceProperties.put(key, val);
-                    }
-                });
-            } else {
-                //兼容 persistence.xml 【已废弃】
-                File persist = new File(new File(confPath), "persistence.xml");
-                if (persist.isFile() && persist.canRead()) {
-                    logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
-                    InputStream in = new FileInputStream(persist);
-                    sourceProperties.putAll(DataSources.loadSourceProperties(in));
-                    in.close();
-                }
-            }
-        } else { //从url或jar文件中resources读取
-            try {
-                final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "source.properties");
-                InputStream in = sourceURI.toURL().openStream();
-                Properties props = new Properties();
-                props.load(in);
-                in.close();
-                props.forEach((key, val) -> {
-                    if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
-                        || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
-                        sourceProperties.put(key, val);
-                    }
-                });
-            } catch (Exception e) { //没有文件 跳过
-            }
-            //兼容 persistence.xml 【已废弃】
-            try {
-                final URI xmlURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, "persistence.xml");
-                InputStream in = xmlURI.toURL().openStream();
-                sourceProperties.putAll(DataSources.loadSourceProperties(in));
-                in.close();
-                logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
-            } catch (Exception e) { //没有文件 跳过
-            }
-        }
-
-        //------------------------------------------------------------------------
-        final AnyValue resources = config.getAnyValue("resources");
-        if (resources != null) {
-            resourceFactory.register(RESNAME_APP_GRES, AnyValue.class, resources);
-            final AnyValue propertiesConf = resources.getAnyValue("properties");
-            if (propertiesConf != null) {
-                for (AnyValue prop : propertiesConf.getAnyValues("property")) {
-                    String key = prop.getValue("name");
-                    String value = prop.getValue("value");
-                    if (key == null || value == null) continue;
-                    updateEnvironmentProperty(key, value, null, null);
-                }
-                String dfloads = propertiesConf.getValue("load");
-                if (dfloads != null) {
-                    for (String dfload : dfloads.split(";")) {
-                        if (dfload.trim().isEmpty()) continue;
-                        final URI df = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : confDir, dfload.trim());
-                        if (df != null && (!"file".equals(df.getScheme()) || df.toString().contains("!") || new File(df).isFile())) {
-                            Properties ps = new Properties();
-                            try {
-                                InputStream in = df.toURL().openStream();
-                                ps.load(in);
-                                in.close();
-                                if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
-                                ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
-                                    updateEnvironmentProperty(x.toString(), y, null, null);
-                                });
-                            } catch (Exception e) {
-                                logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
-                            }
-                        }
-                    }
-                }
-
-                { //可能通过系统环境变量配置信息
-                    Iterator<PropertiesAgentProvider> it = ServiceLoader.load(PropertiesAgentProvider.class, classLoader).iterator();
-                    RedkaleClassLoader.putServiceLoader(PropertiesAgentProvider.class);
-                    List<PropertiesAgentProvider> providers = new ArrayList<>();
-                    while (it.hasNext()) {
-                        PropertiesAgentProvider provider = it.next();
-                        if (provider != null && provider.acceptsConf(propertiesConf)) {
-                            RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
-                            providers.add(provider);
-                        }
-                    }
-                    for (PropertiesAgentProvider provider : InstanceProvider.sort(providers)) {
-                        long s = System.currentTimeMillis();
-                        this.propertiesAgent = provider.createInstance();
-                        this.resourceFactory.inject(this.propertiesAgent);
-                        if (compileMode) {
-                            this.propertiesAgent.compile(propertiesConf);
-                        } else {
-                            this.propertiesAgent.init(this, propertiesConf);
-                        }
-                        logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
-                        break;
-                    }
-                }
-            }
-            final AnyValue[] sourceConfs = resources.getAnyValues("source");
-            if (sourceConfs != null && sourceConfs.length > 0) {
-                //<source>节点 【已废弃】
-                throw new RuntimeException("<source> in application.xml is deprecated, replaced by source.properties");
-            }
-        }
-
-        this.resourceFactory.register(BsonFactory.root());
-        this.resourceFactory.register(JsonFactory.root());
-        this.resourceFactory.register(BsonFactory.root().getConvert());
-        this.resourceFactory.register(JsonFactory.root().getConvert());
-        this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
-        this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
         //只有WatchService才能加载Application、WatchFactory
         final Application application = this;
         this.resourceFactory.register(new ResourceTypeLoader() {
@@ -896,7 +907,7 @@ public final class Application {
 
         }, Application.class, ResourceFactory.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
 
-        //------------------------------------- 注册 java.net.http.HttpClient --------------------------------------------------------        
+        //------------------------------------ 注册 java.net.http.HttpClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
@@ -914,7 +925,7 @@ public final class Application {
                 logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] java.net.http.HttpClient inject error", e);
             }
         }, java.net.http.HttpClient.class);
-        //------------------------------------- 注册 HttpSimpleClient --------------------------------------------------------        
+        //------------------------------------ 注册 HttpSimpleClient ------------------------------------       
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;
@@ -955,7 +966,7 @@ public final class Application {
             }
             logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
         }
-        //------------------------------------- 注册 HttpMessageClient --------------------------------------------------------        
+        //------------------------------------ 注册 HttpMessageClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null) return;

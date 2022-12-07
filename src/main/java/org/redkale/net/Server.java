@@ -482,24 +482,28 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return serverChannel == null ? -1 : serverChannel.getLivingConnectionCount();
     }
 
-    public static URL[] loadLib(final RedkaleClassLoader classLoader, final Logger logger, final String lib) throws Exception {
+    public static URL[] loadLib(final RedkaleClassLoader classLoader, final Logger logger, final String lib) {
         if (lib == null || lib.isEmpty()) return new URL[0];
         final Set<URL> set = new HashSet<>();
-        for (String s : lib.split(";")) {
-            if (s.isEmpty()) continue;
-            if (s.endsWith("*")) {
-                File root = new File(s.substring(0, s.length() - 1));
-                if (root.isDirectory()) {
-                    File[] lfs = root.listFiles();
-                    if (lfs == null) throw new RuntimeException("File(" + root + ") cannot listFiles()");
-                    for (File f : lfs) {
-                        set.add(f.toURI().toURL());
+        try {
+            for (String s : lib.split(";")) {
+                if (s.isEmpty()) continue;
+                if (s.endsWith("*")) {
+                    File root = new File(s.substring(0, s.length() - 1));
+                    if (root.isDirectory()) {
+                        File[] lfs = root.listFiles();
+                        if (lfs == null) throw new RuntimeException("File(" + root + ") cannot listFiles()");
+                        for (File f : lfs) {
+                            set.add(f.toURI().toURL());
+                        }
                     }
+                } else {
+                    File f = new File(s);
+                    if (f.canRead()) set.add(f.toURI().toURL());
                 }
-            } else {
-                File f = new File(s);
-                if (f.canRead()) set.add(f.toURI().toURL());
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         if (set.isEmpty()) return new URL[0];
         for (URL url : set) {
