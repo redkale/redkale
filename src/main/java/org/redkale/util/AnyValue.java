@@ -31,9 +31,13 @@ public abstract class AnyValue {
      * merge两节点是否覆盖的判断函数
      *
      */
-    public static interface MergeReplacePredicate {
+    public static interface MergeFunction {
 
-        public boolean test(String name, AnyValue val1, AnyValue val2);
+        public static final int REPLACE = 1;
+
+        public static final int MERGE = 2;
+
+        public int apply(String name, AnyValue val1, AnyValue val2);
     }
 
     /**
@@ -176,13 +180,13 @@ public abstract class AnyValue {
         /**
          * 将另一个对象合并过来
          *
-         * @param node0     代合并对象
-         * @param predicate 判断是否覆盖的函数
+         * @param node0 代合并对象
+         * @param func  判断覆盖方式的函数
          *
          * @return AnyValue
          */
         @Override
-        public DefaultAnyValue merge(AnyValue node0, MergeReplacePredicate predicate) {
+        public DefaultAnyValue merge(AnyValue node0, MergeFunction func) {
             if (node0 == null) return this;
             if (node0 == this) throw new IllegalArgumentException();
             DefaultAnyValue node = (DefaultAnyValue) node0;
@@ -194,19 +198,30 @@ public abstract class AnyValue {
             }
             if (node.anyEntrys != null) {
                 for (Entry<DefaultAnyValue> en : node.anyEntrys) {
-                    if (en == null) continue;
-                    AnyValue[] ns = getAnyValues(en.name);
+                    if (en == null || en.value == null) continue;
+                    Entry<AnyValue>[] ns = getAnyValueEntrys(en.name);
                     if (ns == null || ns.length < 1) {
                         addValue(en.name, en.value);
                     } else {
                         boolean ok = false;
-                        for (AnyValue item : ns) {
+                        for (Entry<AnyValue> item : ns) {
                             if (item == null) continue;
-                            if (en.value.parentArrayIndex == ((DefaultAnyValue) item).parentArrayIndex) {
-                                if (predicate == null || predicate.test(en.name, en.value, item)) {
-                                    item.merge(en.value, predicate);
+                            if (item.value != null && en.value.parentArrayIndex == ((DefaultAnyValue) item.value).parentArrayIndex) {
+                                if (func == null) {
+                                    item.value.merge(en.value, func);
                                     ok = true;
                                     break;
+                                } else {
+                                    int funcVal = func.apply(en.name, en.value, item.value);
+                                    if (funcVal == MergeFunction.MERGE) {
+                                        item.value.merge(en.value, func);
+                                        ok = true;
+                                        break;
+                                    } else if (funcVal == MergeFunction.REPLACE) {
+                                        item.value = en.value.copy();
+                                        ok = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -375,22 +390,26 @@ public abstract class AnyValue {
 
         @Override
         public String[] getValues(String... names) {
-            return Entry.getStringValues(this.predicate, this.stringEntrys, names);
+            return Entry.getStringArray(this.predicate, this.stringEntrys, names);
         }
 
         @Override
         public AnyValue[] getAnyValues(String... names) {
-            return Entry.getAnyValueValues(this.predicate, this.anyEntrys, names);
+            return Entry.getAnyValueArray(this.predicate, this.anyEntrys, names);
         }
 
         @Override
         public String[] getValues(String name) {
-            return Entry.getStringValues(this.predicate, this.stringEntrys, name);
+            return Entry.getStringArray(this.predicate, this.stringEntrys, name);
         }
 
         @Override
         public AnyValue[] getAnyValues(String name) {
-            return Entry.getAnyValueValues(this.predicate, this.anyEntrys, name);
+            return Entry.getAnyValueArray(this.predicate, this.anyEntrys, name);
+        }
+
+        protected Entry<AnyValue>[] getAnyValueEntrys(String name) {
+            return Entry.getEntryAnyValueArray(this.predicate, this.anyEntrys, name);
         }
 
         @Override
@@ -555,7 +574,25 @@ public abstract class AnyValue {
             return value;
         }
 
-        static String[] getStringValues(BiPredicate<String, String> comparison, Entry<String>[] entitys, String name) {
+        static Entry<AnyValue>[] getEntryAnyValueArray(BiPredicate<String, String> comparison, Entry<DefaultAnyValue>[] entitys, String name) {
+            int len = 0;
+            for (Entry en : entitys) {
+                if (comparison.test(en.name, name)) {
+                    ++len;
+                }
+            }
+            if (len == 0) return new Entry[len];
+            Entry[] rs = new Entry[len];
+            int i = 0;
+            for (Entry<DefaultAnyValue> en : entitys) {
+                if (comparison.test(en.name, name)) {
+                    rs[i++] = en;
+                }
+            }
+            return rs;
+        }
+
+        static String[] getStringArray(BiPredicate<String, String> comparison, Entry<String>[] entitys, String name) {
             int len = 0;
             for (Entry en : entitys) {
                 if (comparison.test(en.name, name)) {
@@ -573,7 +610,7 @@ public abstract class AnyValue {
             return rs;
         }
 
-        static AnyValue[] getAnyValueValues(BiPredicate<String, String> comparison, Entry<DefaultAnyValue>[] entitys, String name) {
+        static AnyValue[] getAnyValueArray(BiPredicate<String, String> comparison, Entry<DefaultAnyValue>[] entitys, String name) {
             int len = 0;
             for (Entry en : entitys) {
                 if (comparison.test(en.name, name)) {
@@ -591,7 +628,7 @@ public abstract class AnyValue {
             return rs;
         }
 
-        static String[] getStringValues(BiPredicate<String, String> comparison, Entry<String>[] entitys, String... names) {
+        static String[] getStringArray(BiPredicate<String, String> comparison, Entry<String>[] entitys, String... names) {
             int len = 0;
             for (Entry en : entitys) {
                 for (String name : names) {
@@ -615,7 +652,7 @@ public abstract class AnyValue {
             return rs;
         }
 
-        static AnyValue[] getAnyValueValues(BiPredicate<String, String> comparison, Entry<DefaultAnyValue>[] entitys, String... names) {
+        static AnyValue[] getAnyValueArray(BiPredicate<String, String> comparison, Entry<DefaultAnyValue>[] entitys, String... names) {
             int len = 0;
             for (Entry en : entitys) {
                 for (String name : names) {
@@ -961,24 +998,28 @@ public abstract class AnyValue {
         Entry<AnyValue>[] anyArray = getAnyEntrys();
         int size = (stringArray == null ? 0 : stringArray.length) + (anyArray == null ? 0 : anyArray.length);
         int index = 0;
-        for (Entry<String> en : stringArray) {
-            if (en.value == null) {
-                sb.append(space).append("    '").append(en.name).append("': null");
-            } else {
-                sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("'");
-            }
-            if (++index >= size) {
-                sb.append("\r\n");
-            } else {
-                sb.append(",\r\n");
+        if (stringArray != null) {
+            for (Entry<String> en : stringArray) {
+                if (en.value == null) {
+                    sb.append(space).append("    '").append(en.name).append("': null");
+                } else {
+                    sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("'");
+                }
+                if (++index >= size) {
+                    sb.append("\r\n");
+                } else {
+                    sb.append(",\r\n");
+                }
             }
         }
-        for (Entry<AnyValue> en : anyArray) {
-            sb.append(space).append("    '").append(en.name).append("': ").append(en.value.toString(indent + 4, prefixFunc));
-            if (++index >= size) {
-                sb.append("\r\n");
-            } else {
-                sb.append(",\r\n");
+        if (anyArray != null) {
+            for (Entry<AnyValue> en : anyArray) {
+                sb.append(space).append("    '").append(en.name).append("': ").append(en.value.toString(indent + 4, prefixFunc));
+                if (++index >= size) {
+                    sb.append("\r\n");
+                } else {
+                    sb.append(",\r\n");
+                }
             }
         }
         sb.append(space).append('}');
@@ -1006,12 +1047,12 @@ public abstract class AnyValue {
     /**
      * 将另一个对象合并过来
      *
-     * @param node      代合并对象
-     * @param predicate 判断是否覆盖的函数
+     * @param node 代合并对象
+     * @param func 判断覆盖方式的函数
      *
      * @return AnyValue
      */
-    public abstract AnyValue merge(AnyValue node, MergeReplacePredicate predicate);
+    public abstract AnyValue merge(AnyValue node, MergeFunction func);
 
     /**
      * 回调子节点
