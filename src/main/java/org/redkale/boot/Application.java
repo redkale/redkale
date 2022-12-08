@@ -241,11 +241,12 @@ public final class Application {
     //Server根ClassLoader
     private final RedkaleClassLoader serverClassLoader;
 
+    //config: 不带redkale的配置项
     Application(final AnyValue config) {
         this(false, false, config);
     }
 
-    @SuppressWarnings("UseSpecificCatch")
+    @SuppressWarnings("UseSpecificCatch") //config: 不带redkale的配置项
     Application(final boolean singletonMode, boolean compileMode, final AnyValue config) {
         this.singletonMode = singletonMode;
         this.compileMode = compileMode;
@@ -269,7 +270,7 @@ public final class Application {
             this.homePath = this.home.getPath();
             String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
             if (confDir.contains("://") || confDir.startsWith("file:") || confDir.startsWith("resource:") || confDir.contains("!")) { //graalvm native-image startwith resource:META-INF
-                this.confPath = new URI(confDir);
+                this.confPath = URI.create(confDir);
                 if (confDir.startsWith("file:")) {
                     confFile = new File(this.confPath.getPath()).getCanonicalFile();
                 }
@@ -280,7 +281,7 @@ public final class Application {
                 confFile = new File(this.home, confDir).getCanonicalFile();
                 this.confPath = confFile.toURI();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         String localaddr = config.getValue("address", "").trim();
@@ -297,18 +298,17 @@ public final class Application {
             this.resourceFactory.register(RESNAME_APP_CONF_DIR, Path.class, confFile.toPath());
         }
         this.resourceFactory.register(Environment.class, environment);
-        {
+        { //设置系统变量
             int nid = config.getIntValue("nodeid", 0);
             this.nodeid = nid;
             this.resourceFactory.register(RESNAME_APP_NODEID, nid);
             System.setProperty(RESNAME_APP_NODEID, "" + nid);
-        }
-        {
+
             this.name = checkName(config.getValue("name", ""));
             this.resourceFactory.register(RESNAME_APP_NAME, name);
             System.setProperty(RESNAME_APP_NAME, name);
         }
-        {
+        { //初始化ClassLoader
             ClassLoader currClassLoader = Thread.currentThread().getContextClassLoader();
             if (currClassLoader instanceof RedkaleClassLoader) {
                 this.classLoader = (RedkaleClassLoader) currClassLoader;
@@ -336,8 +336,7 @@ public final class Application {
                 Thread.currentThread().setContextClassLoader(this.classLoader);
             }
         }
-        //以下是初始化日志配置
-        {
+        { //以下是初始化日志配置
             URI logConfURI;
             File logConfFile = null;
             if (configFromCache) {
@@ -376,46 +375,39 @@ public final class Application {
         logger.log(Level.INFO, colorMessage(logger, 36, 1, "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
 
         //------------------------------------ 基本设置 ------------------------------------   
-        System.setProperty("redkale.net.transport.poolmaxconns", "100");
-        System.setProperty("redkale.net.transport.pinginterval", "30");
-        System.setProperty("redkale.net.transport.checkinterval", "30");
-        System.setProperty("redkale.convert.tiny", "true");
-        System.setProperty("redkale.convert.pool.size", "128");
-        System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
-        System.setProperty("redkale.trace.enable", "false");
+        {
+            final String confDir = this.confPath.toString();
+            logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
+                + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
+                + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
+                + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
+                + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
+                + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
+                + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
+                + RESNAME_APP_HOME + "     = " + homePath + "\r\n"
+                + RESNAME_APP_CONF_DIR + " = " + confDir.substring(confDir.indexOf('!') + 1));
 
-        final String confDir = this.confPath.toString();
-//        String pidstr = "";
-//        try { //JDK 9+
-//            Class phclass = Thread.currentThread().getContextClassLoader().loadClass("java.lang.ProcessHandle");
-//            Object phobj = phclass.getMethod("current").invoke(null);
-//            Object pid = phclass.getMethod("pid").invoke(phobj);
-//            pidstr = "APP_PID  = " + pid + "\r\n";
-//        } catch (Throwable t) {
-//        }
+            if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
+                String lib = replaceValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
+                lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
+                Server.loadLib(classLoader, logger, lib);
+            }
 
-        logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
-            + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
-            + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
-            + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
-            + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
-            + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
-            + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
-            + RESNAME_APP_HOME + "     = " + homePath + "\r\n"
-            + RESNAME_APP_CONF_DIR + " = " + confDir.substring(confDir.indexOf('!') + 1));
+            System.setProperty("redkale.net.transport.poolmaxconns", "100");
+            System.setProperty("redkale.net.transport.pinginterval", "30");
+            System.setProperty("redkale.net.transport.checkinterval", "30");
+            System.setProperty("redkale.convert.tiny", "true");
+            System.setProperty("redkale.convert.pool.size", "128");
+            System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
+            System.setProperty("redkale.trace.enable", "false");
 
-        if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
-            String lib = replaceValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
-            lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
-            Server.loadLib(classLoader, logger, lib);
+            this.resourceFactory.register(BsonFactory.root());
+            this.resourceFactory.register(JsonFactory.root());
+            this.resourceFactory.register(BsonFactory.root().getConvert());
+            this.resourceFactory.register(JsonFactory.root().getConvert());
+            this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
+            this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
         }
-
-        this.resourceFactory.register(BsonFactory.root());
-        this.resourceFactory.register(JsonFactory.root());
-        this.resourceFactory.register(BsonFactory.root().getConvert());
-        this.resourceFactory.register(JsonFactory.root().getConvert());
-        this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
-        this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
         //------------------------------------ 读取配置 ------------------------------------
         try {
             loadResourceProperties();

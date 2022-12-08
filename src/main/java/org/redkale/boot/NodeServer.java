@@ -287,16 +287,16 @@ public abstract class NodeServer {
                     final Service srcService = (Service) srcObj;
                     SncpClient client = Sncp.getSncpClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                    final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService) && sncpAddr != null;
+                    //final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService) && sncpAddr != null; //不配置SNCP服务会导致ws=false时没有注入CacheMemorySource
+                    final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
                     CacheSource source = application.loadCacheSource(resourceName, ws);
                     field.set(srcObj, source);
 
-                    if (ws) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
+                    if (ws && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
                         NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
-                        if (source != null && source.getClass().getAnnotation(Local.class) == null) { //本地模式的Service不生成SncpServlet
+                        if (sncpServer != null && source != null && source.getClass().getAnnotation(Local.class) == null) { //本地模式的Service不生成SncpServlet
                             sncpServer.getSncpServer().addSncpServlet((Service) source);
                         }
-                        //logger.info("[" + Thread.currentThread().getName() + "] Load Service " + source);
                     }
                     logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
                 } catch (Exception e) {

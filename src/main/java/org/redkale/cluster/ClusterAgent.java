@@ -24,7 +24,7 @@ import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
- * 第三方服务发现管理接口cluster
+ * 服务注册中心管理类cluster
  *
  *
  * 详情见: https://redkale.org
