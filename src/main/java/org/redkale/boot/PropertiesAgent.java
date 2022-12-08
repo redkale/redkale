@@ -8,6 +8,8 @@ import org.redkale.util.*;
 
 /**
  * 配置源Agent, 在init方法内需要实现读取配置信息，如果支持配置更改通知，也需要在init里实现监听
+ * 
+ * 配置项优先级:  本地配置 &#60; 配置中心 &#60; 环境变量
  *
  *
  * 详情见: https://redkale.org

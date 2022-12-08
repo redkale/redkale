@@ -642,7 +642,7 @@ public final class Application {
             }
         }
 
-        //------------------------------------ 读取配置中心 ------------------------------------
+        //------------------------------------ 读取配置项 ------------------------------------
         final AnyValue resources = config.getAnyValue("resources");
         if (resources != null) {
             resourceFactory.register(RESNAME_APP_GRES, AnyValue.class, resources);

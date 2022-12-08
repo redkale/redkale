@@ -28,6 +28,15 @@ public abstract class AnyValue {
     public static final String XML_TEXT_NODE_NAME = "";
 
     /**
+     * merge两节点是否覆盖的判断函数
+     *
+     */
+    public static interface MergeReplacePredicate {
+
+        public boolean test(String name, AnyValue val1, AnyValue val2);
+    }
+
+    /**
      * 可读写的AnyValue默认实现类
      *
      * @author zhangjx
@@ -167,12 +176,13 @@ public abstract class AnyValue {
         /**
          * 将另一个对象合并过来
          *
-         * @param node0 代合并对象
+         * @param node0     代合并对象
+         * @param predicate 判断是否覆盖的函数
          *
          * @return AnyValue
          */
         @Override
-        public DefaultAnyValue merge(AnyValue node0) {
+        public DefaultAnyValue merge(AnyValue node0, MergeReplacePredicate predicate) {
             if (node0 == null) return this;
             if (node0 == this) throw new IllegalArgumentException();
             DefaultAnyValue node = (DefaultAnyValue) node0;
@@ -193,9 +203,11 @@ public abstract class AnyValue {
                         for (AnyValue item : ns) {
                             if (item == null) continue;
                             if (en.value.parentArrayIndex == ((DefaultAnyValue) item).parentArrayIndex) {
-                                item.merge(en.value);
-                                ok = true;
-                                break;
+                                if (predicate == null || predicate.test(en.name, en.value, item)) {
+                                    item.merge(en.value, predicate);
+                                    ok = true;
+                                    break;
+                                }
                             }
                         }
                         if (!ok) {
@@ -969,7 +981,19 @@ public abstract class AnyValue {
      *
      * @return AnyValue
      */
-    public abstract AnyValue merge(AnyValue node);
+    public AnyValue merge(AnyValue node) {
+        return merge(node, null);
+    }
+
+    /**
+     * 将另一个对象合并过来
+     *
+     * @param node      代合并对象
+     * @param predicate 判断是否覆盖的函数
+     *
+     * @return AnyValue
+     */
+    public abstract AnyValue merge(AnyValue node, MergeReplacePredicate predicate);
 
     /**
      * 回调子节点
