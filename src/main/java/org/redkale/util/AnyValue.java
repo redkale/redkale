@@ -398,7 +398,7 @@ public abstract class AnyValue {
             return toString(0, (any, space) -> {
                 int index = ((DefaultAnyValue) any).parentArrayIndex;
                 if (index < 0) return null;
-                return new StringBuilder().append(space).append("    $index: ").append(index).append(",\r\n");
+                return new StringBuilder().append(space).append("    '$index': ").append(index).append(",\r\n");
             });
         }
 
@@ -957,11 +957,29 @@ public abstract class AnyValue {
             CharSequence v = prefixFunc.apply(this, space);
             if (v != null) sb.append(v);
         }
-        for (Entry<String> en : getStringEntrys()) {
-            sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("',\r\n");
+        Entry<String>[] stringArray = getStringEntrys();
+        Entry<AnyValue>[] anyArray = getAnyEntrys();
+        int size = (stringArray == null ? 0 : stringArray.length) + (anyArray == null ? 0 : anyArray.length);
+        int index = 0;
+        for (Entry<String> en : stringArray) {
+            if (en.value == null) {
+                sb.append(space).append("    '").append(en.name).append("': null");
+            } else {
+                sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("'");
+            }
+            if (++index >= size) {
+                sb.append("\r\n");
+            } else {
+                sb.append(",\r\n");
+            }
         }
-        for (Entry<AnyValue> en : getAnyEntrys()) {
-            sb.append(space).append("    '").append(en.name).append("': ").append(en.value.toString(indent + 4, prefixFunc)).append(",\r\n");
+        for (Entry<AnyValue> en : anyArray) {
+            sb.append(space).append("    '").append(en.name).append("': ").append(en.value.toString(indent + 4, prefixFunc));
+            if (++index >= size) {
+                sb.append("\r\n");
+            } else {
+                sb.append(",\r\n");
+            }
         }
         sb.append(space).append('}');
         return sb.toString();
