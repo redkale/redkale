@@ -28,124 +28,124 @@
 <application nodeid="1000" port="6560" lib="">  
     
     <!-- 
-        【节点全局唯一】
+        【已废弃，不再需要此节点】
         所有服务所需的资源 
     -->
-    <resources>  
-        
-        <!--
-           【节点全局唯一】 @since 2.3.0
-            全局Serivce执行的线程池， Application.workExecutor, 没配置该节点将自动创建一个。
-            threads： 线程数，为0表示不启用workExecutor，只用IO线程。默认: CPU核数, 核数=1的情况下默认值为2
-            hash:     是否使用ThreadHashExecutor作为线程池，默认值为：false
-        -->
-        <executor threads="4" hash="false"/>
-        
-        <!--
-            【节点全局唯一】
-            transport节点只能有一个，用于配置所有Transport的池参数，没配置该节点将自动创建一个。
-            threads：            线程总数， 默认: <group>节点数*CPU核数*2
-            bufferCapacity:      ByteBuffer的初始化大小， 默认: 32K; 
-            bufferPoolSize：     ByteBuffer池的大小，默认: 线程总数*4
-            readTimeoutSeconds:  TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
-            writeTimeoutSeconds: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制
-            strategy:            远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
-        -->
-        <transport bufferCapacity="32K" bufferPoolSize="32" threads="32" readTimeoutSeconds="6" writeTimeoutSeconds="6"/>
-        
-        <!--
-           【节点全局唯一】
-            自动扫描时排除部分包路径
-            value：    排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
-        -->
-        <excludelibs value="^.*mysql.*$;^.*kafka.*$"/>
-        
-        <!--
-           【节点全局唯一】
-            第三方服务发现管理接口
-            type：          类名，必须是org.redkale.cluster.ClusterAgent的子类
-            waits:          注销服务后是否需要等待检查周期时间后再进行Service销毁，默认值为：false
-                            当一个Service进行服务注销后，不能立刻销毁Service，因为健康检测是有间隔时间差的，
-                            需要等待一个健康检测周期时间，让其他进程都更新完服务列表。
-                            如果使用MQ，可以设置为false，如果对服务健壮性要求高，建议设置为true
-            protocols:      服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
-            ports:          服务发现可以处理的端口， 多个端口用分号;隔开
-            ttls:           心跳频率，多少秒一次
-            xxxx:           自定义的字段属性，例如：CacheClusterAgent有source字段; ConsulClusterAgent有apiurl字段;
-        -->
-        <cluster type="org.redkalex.cluster.consul.ConsulClusterAgent" waits="false" protocols="SNCP" ports="7070;7071" xxx="xxx" />
-
-        <!--
-            MQ管理接口配置
-            不同MQ节点所配置的MQ集群不能重复。
-            MQ跟着协议走，所以mq的属性值需要被赋值在rest节点上, 由于SncpServlet是自动生成的，故SNCP协议下，mq属性值被赋值在service/services节点上
-            name:   服务的名称，用于监控识别，多个mq节点时只能有一个name为空的节点，mq.name不能重复,命名规则: 字母、数字、下划线
-            type： 实现类名，必须是org.redkale.mq.MessageAgent的子类
-            coder: MessageRecord的解析器类，必须是org.redkale.mq.MessageCoder<MessageRecord>的实现类, 
-                   可对数据包进行加密解密，默认值：org.redkale.mq.MessageRecordCoder
-            MQ节点下的子节点配置没有固定格式, 根据MessageAgent实现方的定义来配置
-        -->
-        <mq name="" type="org.redkalex.mq.kafka.KafkaMessageAgent">
-            <servers value="127.0.0.1:9101"/>
-            <consumer>
-                <property name="xxxxxx" value="XXXXXXXX"/>
-            </consumer>
-            <producer>
-                <property name="xxxxxx" value="XXXXXXXX"/>
-            </producer>
-        </mq>
-        
-        <!--
-            一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
-            一个group节点对应一个 Transport 对象。
-            name:         服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
-            protocol：    值范围：UDP TCP， 默认TCP
-            注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。
-        -->
-        <group name="" protocol="TCP">
-            <!--
-                需要将本地node的addr与port列在此处。
-                同一个<node>节点值只能存在一个<group>节点内，即同一个addr+port只能属于一个group。
-                addr: required IP地址
-                port: required 端口
-            -->
-            <node addr="127.0.0.1" port="7070"/>
-        </group>
-
-        <!--
-           Application启动的监听事件,可配置多个节点
-           value: 类名，必须是ApplicationListener的子类
-        -->
-        <listener value="org.redkalex.xxx.XXXApplicationListener"/>
-        
-        <!-- 
-            【节点全局唯一】
-            全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入<property>的信息, 被注解的字段类型只能是String、primitive class
-            如果name是system.property.开头的值将会在进程启动时进行System.setProperty("yyyy", "YYYYYY")操作。
-            如果name是mimetype.property.开头的值将会在进程启动时进行MimeType.add("yyyy", "YYYYYY")操作。
-            先加载子节点property，再加载load文件， 最后加载agent的实现子类。
-            load:  加载文件，多个用;隔开。
-            其他属性: 供org.redkale.boot.PropertiesAgentProvider使用判断
-            默认置入的system.property.的有：
-               System.setProperty("redkale.net.transport.poolmaxconns", "100");
-               System.setProperty("redkale.net.transport.pinginterval", "30");
-               System.setProperty("redkale.net.transport.checkinterval", "30");
-               System.setProperty("redkale.convert.tiny", "true");
-               System.setProperty("redkale.convert.pool.size", "128");
-               System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
-               System.setProperty("redkale.trace.enable", "false");
-               
-            <properties>节点下也可包含非<property>节点.
-            非<property>其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]
-        -->
-        <properties load="config.properties">
-            <property name="system.property.yyyy" value="YYYYYY"/>
-            <property name="xxxxxx" value="XXXXXXXX"/>
-            <property name="xxxxxx" value="XXXXXXXX"/>
-            <property name="xxxxxx" value="XXXXXXXX"/>
-        </properties>
-                
+    <resources>          
     </resources> 
+    
+    <!--
+       【节点全局唯一】 @since 2.3.0
+        全局Serivce执行的线程池， Application.workExecutor, 没配置该节点将自动创建一个。
+        threads： 线程数，为0表示不启用workExecutor，只用IO线程。默认: CPU核数, 核数=1的情况下默认值为2
+        hash:     是否使用ThreadHashExecutor作为线程池，默认值为：false
+    -->
+    <executor threads="4" hash="false"/>
+        
+    <!--
+        【节点全局唯一】
+        transport节点只能有一个，用于配置所有Transport的池参数，没配置该节点将自动创建一个。
+        threads：            线程总数， 默认: <group>节点数*CPU核数*2
+        bufferCapacity:      ByteBuffer的初始化大小， 默认: 32K; 
+        bufferPoolSize：     ByteBuffer池的大小，默认: 线程总数*4
+        readTimeoutSeconds:  TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
+        writeTimeoutSeconds: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制
+        strategy:            远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
+    -->
+    <transport bufferCapacity="32K" bufferPoolSize="32" threads="32" readTimeoutSeconds="6" writeTimeoutSeconds="6"/>
+        
+    <!--
+       【节点全局唯一】
+        自动扫描时排除部分包路径
+        value：    排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
+    -->
+    <excludelibs value="^.*mysql.*$;^.*kafka.*$"/>
+        
+    <!--
+       【节点全局唯一】
+        第三方服务发现管理接口
+        type：          类名，必须是org.redkale.cluster.ClusterAgent的子类
+        waits:          注销服务后是否需要等待检查周期时间后再进行Service销毁，默认值为：false
+                        当一个Service进行服务注销后，不能立刻销毁Service，因为健康检测是有间隔时间差的，
+                        需要等待一个健康检测周期时间，让其他进程都更新完服务列表。
+                        如果使用MQ，可以设置为false，如果对服务健壮性要求高，建议设置为true
+        protocols:      服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
+        ports:          服务发现可以处理的端口， 多个端口用分号;隔开
+        ttls:           心跳频率，多少秒一次
+        xxxx:           自定义的字段属性，例如：CacheClusterAgent有source字段; ConsulClusterAgent有apiurl字段;
+    -->
+    <cluster type="org.redkalex.cluster.consul.ConsulClusterAgent" waits="false" protocols="SNCP" ports="7070;7071" xxx="xxx" />
+
+    <!--
+        MQ管理接口配置
+        不同MQ节点所配置的MQ集群不能重复。
+        MQ跟着协议走，所以mq的属性值需要被赋值在rest节点上, 由于SncpServlet是自动生成的，故SNCP协议下，mq属性值被赋值在service/services节点上
+        name:   服务的名称，用于监控识别，多个mq节点时只能有一个name为空的节点，mq.name不能重复,命名规则: 字母、数字、下划线
+        type： 实现类名，必须是org.redkale.mq.MessageAgent的子类
+        coder: MessageRecord的解析器类，必须是org.redkale.mq.MessageCoder<MessageRecord>的实现类, 
+               可对数据包进行加密解密，默认值：org.redkale.mq.MessageRecordCoder
+        MQ节点下的子节点配置没有固定格式, 根据MessageAgent实现方的定义来配置
+    -->
+    <mq name="" type="org.redkalex.mq.kafka.KafkaMessageAgent">
+        <servers value="127.0.0.1:9101"/>
+        <consumer>
+            <property name="xxxxxx" value="XXXXXXXX"/>
+        </consumer>
+        <producer>
+            <property name="xxxxxx" value="XXXXXXXX"/>
+        </producer>
+    </mq>
+        
+    <!--
+        一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
+        一个group节点对应一个 Transport 对象。
+        name:         服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
+        protocol：    值范围：UDP TCP， 默认TCP
+        注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。
+    -->
+    <group name="" protocol="TCP">
+        <!--
+            需要将本地node的addr与port列在此处。
+            同一个<node>节点值只能存在一个<group>节点内，即同一个addr+port只能属于一个group。
+            addr: required IP地址
+            port: required 端口
+        -->
+        <node addr="127.0.0.1" port="7070"/>
+    </group>
+
+    <!--
+       Application启动的监听事件,可配置多个节点
+       value: 类名，必须是ApplicationListener的子类
+    -->
+    <listener value="org.redkalex.xxx.XXXApplicationListener"/>
+        
+    <!-- 
+        【节点全局唯一】
+        全局的参数配置, 可以通过@Resource(name="property.xxxxxx") 进行注入<property>的信息, 被注解的字段类型只能是String、primitive class
+        如果name是system.property.开头的值将会在进程启动时进行System.setProperty("yyyy", "YYYYYY")操作。
+        如果name是mimetype.property.开头的值将会在进程启动时进行MimeType.add("yyyy", "YYYYYY")操作。
+        先加载子节点property，再加载load文件， 最后加载agent的实现子类。
+        load:  加载文件，多个用;隔开。
+        其他属性: 供org.redkale.boot.PropertiesAgentProvider使用判断
+        默认置入的system.property.的有：
+           System.setProperty("redkale.net.transport.poolmaxconns", "100");
+           System.setProperty("redkale.net.transport.pinginterval", "30");
+           System.setProperty("redkale.net.transport.checkinterval", "30");
+           System.setProperty("redkale.convert.tiny", "true");
+           System.setProperty("redkale.convert.pool.size", "128");
+           System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
+           System.setProperty("redkale.trace.enable", "false");
+           
+        <properties>节点下也可包含非<property>节点.
+        非<property>其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]
+    -->
+    <properties load="config.properties">
+        <property name="system.property.yyyy" value="YYYYYY"/>
+        <property name="xxxxxx" value="XXXXXXXX"/>
+        <property name="xxxxxx" value="XXXXXXXX"/>
+        <property name="xxxxxx" value="XXXXXXXX"/>
+    </properties>
+        
     <!--
         protocol: required   server所启动的协议，Redkale内置的有HTTP、SNCP、WATCH。协议均使用TCP实现; WATCH服务只能存在一个。
         name:                服务的名称，用于监控识别，一个配置文件中的server.name不能重复,命名规则: 字母、数字、下划线
@@ -366,4 +366,5 @@
         <!-- 参数完全同上 -->
         <services autoload="true" includes="" excludes="" />
     </server>
+    
 </application>

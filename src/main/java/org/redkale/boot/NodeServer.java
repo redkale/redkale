@@ -211,7 +211,6 @@ public abstract class NodeServer {
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
         final TransportFactory appSncpTranFactory = application.getSncpTransportFactory();
-        final AnyValue resources = application.config.getAnyValue("resources");
         final String confURI = appResFactory.find(RESNAME_APP_CONF_DIR, String.class);
         //------------------------------------- 注册 Resource --------------------------------------------------------
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
@@ -222,7 +221,7 @@ public abstract class NodeServer {
                 Class type = field.getType();
                 if (type != AnyValue.class && type != AnyValue[].class) return;
                 Object resource = null;
-                final AnyValue properties = resources == null ? null : resources.getAnyValue("properties");
+                final AnyValue properties = application.getAppConfig().getAnyValue("properties");
                 if (properties != null && type == AnyValue.class) {
                     resource = properties.getAnyValue(res.name().substring("properties.".length()));
                     appResFactory.register(resourceName, AnyValue.class, resource);
@@ -780,4 +779,114 @@ public abstract class NodeServer {
     public String getThreadName() {
         return this.threadName;
     }
+
+    static final AnyValue.MergeFunction appConfigmergeFunction = (path, key, val1, val2) -> {
+        if ("".equals(path)) {
+            if ("executor".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("transport".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("excludelibs".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("cluster".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("listener".equals(key)) {
+                if (Objects.equals(val1.getValue("value"), val2.getValue("value"))) {
+                    return AnyValue.MergeFunction.SKIP;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+            if ("mq".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+            if ("group".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+            if ("server".equals(key)) {
+                if (Objects.equals(val1.getValue("name", val1.getValue("protocol") + "_" + val1.getValue("port")),
+                    val2.getValue("name", val2.getValue("protocol") + "_" + val2.getValue("port")))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+        }
+        if ("cachesource".equals(path)) {
+            return AnyValue.MergeFunction.REPLACE;
+        }
+        if ("datasource".equals(path)) {
+            return AnyValue.MergeFunction.REPLACE;
+        }
+        if ("properties".equals(path)) {
+            if ("property".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+        }
+        if ("server".equals(path)) {
+            if ("ssl".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("render".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("resource-servlet".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+        }
+        if ("server.request".equals(path)) {
+            if ("remoteaddr".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("rpc".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("locale".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+        }
+        if ("server.response".equals(path)) {
+            if ("content-type".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("defcookie".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("options".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("date".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("addheader".equals(key) || "setheader".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+        }
+        return AnyValue.MergeFunction.MERGE;
+    };
+
 }

@@ -2,6 +2,7 @@
  */
 package org.redkale.util;
 
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -35,6 +36,31 @@ public interface ResourceEvent<T> {
             if (Utility.contains(names, event.name())) return true;
         }
         return false;
+    }
+
+    public static List<ResourceEvent> create(Properties oldProps, Properties newProps) {
+        List<ResourceEvent> rs = new ArrayList<>();
+        if (oldProps == null && newProps == null) {
+            return rs;
+        }
+        if (oldProps == null) {
+            newProps.forEach((k, v) -> rs.add(ResourceEvent.create(k.toString(), v, null)));
+        } else if (newProps == null) {
+            oldProps.forEach((k, v) -> rs.add(ResourceEvent.create(k.toString(), null, v)));
+        } else {
+            newProps.forEach((k, v) -> {
+                String oldVal = oldProps.getProperty(k.toString());
+                if (!Objects.equals(v, oldVal)) {
+                    rs.add(ResourceEvent.create(k.toString(), v, oldVal));
+                }
+            });
+            oldProps.forEach((k, v) -> {
+                if (!newProps.containsKey(k)) {
+                    rs.add(ResourceEvent.create(k.toString(), null, v));
+                }
+            });
+        }
+        return rs;
     }
 
     public static <V> ResourceEvent<V> create(String name, V newValue, V oldValue) {

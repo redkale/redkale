@@ -434,6 +434,7 @@ public final class ResourceFactory {
 
     /**
      * 将多个以指定资源名的String对象注入到资源池中
+     * properties的key一般以"property."开头
      *
      * @param properties      资源键值对
      * @param environmentName 额外的资源名
@@ -441,7 +442,7 @@ public final class ResourceFactory {
      *
      */
     public <A> void register(Properties properties, String environmentName, Class<A> environmentType) {
-        if (properties == null) return;
+        if (properties == null || properties.isEmpty()) return;
         List<ResourceChangeWrapper> wrappers = new ArrayList<>();
         List<ResourceEvent> environmentEventList = new ArrayList<>();
         properties.forEach((k, v) -> {

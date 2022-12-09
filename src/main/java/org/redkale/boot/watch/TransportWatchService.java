@@ -75,7 +75,7 @@ public class TransportWatchService extends AbstractWatchService {
                 }
             }
             DefaultAnyValue node = DefaultAnyValue.create("addr", addr).addValue("port", port);
-            for (AnyValue groupconf : application.getAppConfig().getAnyValue("resources").getAnyValues("group")) {
+            for (AnyValue groupconf : application.getAppConfig().getAnyValues("group")) {
                 if (group.equals(groupconf.getValue("name"))) {
                     ((DefaultAnyValue) groupconf).addValue("node", node);
                     break;
@@ -107,7 +107,7 @@ public class TransportWatchService extends AbstractWatchService {
                     }
                 }
             }
-            for (AnyValue groupconf : application.getAppConfig().getAnyValue("resources").getAnyValues("group")) {
+            for (AnyValue groupconf : application.getAppConfig().getAnyValues("group")) {
                 if (group.equals(groupconf.getValue("name"))) {
                     ((DefaultAnyValue) groupconf).removeValue("node", DefaultAnyValue.create("addr", addr).addValue("port", port));
                     break;

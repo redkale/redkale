@@ -33,11 +33,15 @@ public abstract class AnyValue {
      */
     public static interface MergeFunction {
 
+        public static final int NONE = 0;
+
         public static final int REPLACE = 1;
 
         public static final int MERGE = 2;
 
-        public int apply(String name, AnyValue val1, AnyValue val2);
+        public static final int SKIP = 3;
+
+        public int apply(String path, String name, AnyValue val1, AnyValue val2);
     }
 
     /**
@@ -158,6 +162,8 @@ public abstract class AnyValue {
         @Override
         public DefaultAnyValue copy() {
             DefaultAnyValue rs = new DefaultAnyValue(this.ignoreCase);
+            rs.predicate = this.predicate;
+            rs.parentArrayIndex = this.parentArrayIndex;
             if (this.stringEntrys != null) {
                 rs.stringEntrys = new Entry[this.stringEntrys.length];
                 for (int i = 0; i < rs.stringEntrys.length; i++) {
@@ -178,15 +184,39 @@ public abstract class AnyValue {
         }
 
         /**
-         * 将另一个对象合并过来
+         * 将另一个对象替换本对象
          *
-         * @param node0 代合并对象
-         * @param func  判断覆盖方式的函数
+         * @param node 替换的对象
          *
          * @return AnyValue
          */
         @Override
-        public DefaultAnyValue merge(AnyValue node0, MergeFunction func) {
+        public DefaultAnyValue replace(AnyValue node) {
+            if (node != null) {
+                DefaultAnyValue rs = (DefaultAnyValue) node;
+                this.ignoreCase = rs.ignoreCase;
+                this.predicate = rs.predicate;
+                this.parentArrayIndex = rs.parentArrayIndex;
+                this.stringEntrys = rs.stringEntrys;
+                this.anyEntrys = rs.anyEntrys;
+            }
+            return this;
+        }
+
+        /**
+         * 将另一个对象合并过来
+         *
+         * @param node 代合并对象
+         * @param func 判断覆盖方式的函数
+         *
+         * @return AnyValue
+         */
+        @Override
+        public DefaultAnyValue merge(AnyValue node, MergeFunction func) {
+            return merge(node, "", func);
+        }
+
+        protected DefaultAnyValue merge(AnyValue node0, String path, MergeFunction func) {
             if (node0 == null) return this;
             if (node0 == this) throw new IllegalArgumentException();
             DefaultAnyValue node = (DefaultAnyValue) node0;
@@ -212,13 +242,17 @@ public abstract class AnyValue {
                                     ok = true;
                                     break;
                                 } else {
-                                    int funcVal = func.apply(en.name, en.value, item.value);
+                                    int funcVal = func.apply(path, en.name, en.value, item.value);
                                     if (funcVal == MergeFunction.MERGE) {
-                                        item.value.merge(en.value, func);
+                                        String subPath = path.isEmpty() ? en.name : (path + "." + en.name);
+                                        ((DefaultAnyValue) item.value).merge(en.value, subPath, func);
                                         ok = true;
                                         break;
                                     } else if (funcVal == MergeFunction.REPLACE) {
                                         item.value = en.value.copy();
+                                        ok = true;
+                                        break;
+                                    } else if (funcVal == MergeFunction.SKIP) {
                                         ok = true;
                                         break;
                                     }
@@ -489,9 +523,29 @@ public abstract class AnyValue {
             return this;
         }
 
+        public void clearParentArrayIndex(String name) {
+            for (Entry<AnyValue> item : getAnyValueEntrys(name)) {
+                if (item.value != null) {
+                    ((DefaultAnyValue) item.value).parentArrayIndex = -1;
+                }
+            }
+        }
+
+        public DefaultAnyValue removeAnyValues(String name) {
+            if (name == null || this.anyEntrys == null) return this;
+            this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name));
+            return this;
+        }
+
         public DefaultAnyValue removeValue(String name, AnyValue value) {
             if (name == null || value == null || this.anyEntrys == null) return this;
             this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
+            return this;
+        }
+
+        public DefaultAnyValue removeStringValues(String name) {
+            if (name == null || this.stringEntrys == null) return this;
+            this.stringEntrys = Utility.remove(this.stringEntrys, (t) -> name.equals(((Entry) t).name));
             return this;
         }
 
@@ -794,7 +848,7 @@ public abstract class AnyValue {
                         }
                         parent = child;
                     } else { //数组或Map结构, []中间是数字开头的视为数组，其他视为map
-                        String itemField = item.substring(0, pos);  //[前面一部分
+                        String itemField = item.substring(0, pos);  //[前面一部分'sources[1]'中'sources'
                         String keyOrIndex = item.substring(pos + 1, item.indexOf(']'));
                         int realIndex = -1;
                         if (!keyOrIndex.isEmpty() && keyOrIndex.charAt(0) >= '0' && keyOrIndex.charAt(0) <= '9') {
@@ -808,7 +862,7 @@ public abstract class AnyValue {
                             for (int j = 0; j < i; j++) {
                                 prefixKey += keys[j] + ".";
                             }
-                            DefaultAnyValue array = prefixArray.get(prefixKey + item);
+                            DefaultAnyValue array = prefixArray.get(prefixKey + item); //item: [1]
                             if (array == null) {
                                 final int ii = i;
                                 String findkey = prefixKey + itemField + "[";
@@ -1034,21 +1088,19 @@ public abstract class AnyValue {
     public abstract AnyValue copy();
 
     /**
-     * 将另一个对象合并过来
+     * 将另一个对象替换本对象
      *
-     * @param node 代合并对象
+     * @param node 替换的对象
      *
      * @return AnyValue
      */
-    public AnyValue merge(AnyValue node) {
-        return merge(node, null);
-    }
+    public abstract AnyValue replace(AnyValue node);
 
     /**
      * 将另一个对象合并过来
      *
      * @param node 代合并对象
-     * @param func 判断覆盖方式的函数
+     * @param func 覆盖方式的函数
      *
      * @return AnyValue
      */

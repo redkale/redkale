@@ -2,14 +2,14 @@
  */
 package org.redkale.boot;
 
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
 import org.redkale.util.*;
 
 /**
  * 配置源Agent, 在init方法内需要实现读取配置信息，如果支持配置更改通知，也需要在init里实现监听
- * 
- * 配置项优先级:  本地配置 &#60; 配置中心 &#60; 环境变量
+ *
+ * 配置项优先级: 本地配置 &#60; 配置中心 &#60; 环境变量
  *
  *
  * 详情见: https://redkale.org
@@ -44,8 +44,10 @@ public abstract class PropertiesAgent {
      *
      * @param application Application
      * @param conf        节点配置
+     *
+     * @return 加载的配置项
      */
-    public abstract void init(Application application, AnyValue conf);
+    public abstract Properties init(Application application, AnyValue conf);
 
     /**
      * 销毁动作
@@ -54,21 +56,18 @@ public abstract class PropertiesAgent {
      */
     public abstract void destroy(AnyValue conf);
 
-    protected void updateEnvironmentProperties(Application application, Properties props) {
-        if (props.isEmpty()) return;
-        Properties envChangeCache = new Properties();
-        Properties sourceChangeCache = new Properties();
-        props.forEach((k, v) -> application.updateEnvironmentProperty(k.toString(), v.toString().trim(), envChangeCache, sourceChangeCache));
-        if (!envChangeCache.isEmpty()) {
-            application.resourceFactory.register(envChangeCache, "", Environment.class);
-        }
-        if (!sourceChangeCache.isEmpty()) {
-            application.updateSourceProperties(sourceChangeCache);
-        }
-    }
-
-    protected void putEnvironmentProperty(Application application, String key, Object value) {
-        application.updateEnvironmentProperty(key, value, null, null);
+    protected void updateEnvironmentProperties(Application application, List<ResourceEvent> events) {
+        if (events == null || events.isEmpty()) return;
+        application.updateEnvironmentProperties(events);
+//        Properties envChangeCache = new Properties();
+//        Properties sourceChangeCache = new Properties();
+//        //props.forEach((k, v) -> application.updateEnvironmentProperty(k.toString(), v.toString().trim(), envChangeCache, sourceChangeCache));
+//        if (!envChangeCache.isEmpty()) {
+//            application.resourceFactory.register(envChangeCache, "", Environment.class);
+//        }
+//        if (!sourceChangeCache.isEmpty()) {
+//            application.updateSourceProperties(sourceChangeCache);
+//        } 
     }
 
     protected void reconfigLogging(Application application, Properties loggingProperties) {
