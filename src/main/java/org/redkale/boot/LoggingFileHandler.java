@@ -31,8 +31,6 @@ public class LoggingFileHandler extends LoggingBaseHandler {
     //public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s%n%5$s%6$s%n";
     public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s\r\n%5$s%6$s\r\n";
 
-    static boolean traceflag = false; //防止设置system.property前调用Traces类导致enable提前初始化
-
     /**
      * SNCP的日志输出Handler
      */
@@ -46,7 +44,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     public static class LoggingConsoleHandler extends ConsoleHandler {
 
-        private Pattern denyreg;
+        private Pattern denyRegx;
 
         public LoggingConsoleHandler() {
             super();
@@ -56,10 +54,13 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
         private void configure() {
             LogManager manager = LogManager.getLogManager();
-            String denyregstr = manager.getProperty("java.util.logging.ConsoleHandler.denyreg");
+            String denyregstr = manager.getProperty(LoggingConsoleHandler.class.getName() + ".denyreg");
+            if (denyregstr == null) {
+                denyregstr = manager.getProperty("java.util.logging.ConsoleHandler.denyreg");
+            }
             try {
                 if (denyregstr != null && !denyregstr.trim().isEmpty()) {
-                    denyreg = Pattern.compile(denyregstr);
+                    this.denyRegx = Pattern.compile(denyregstr);
                 }
             } catch (Exception e) {
             }
@@ -67,20 +68,8 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
         @Override
         public void publish(LogRecord log) {
-            if (denyreg != null && denyreg.matcher(log.getMessage()).find()) return;
-            if (traceflag && Traces.enable()) {
-                String traceid = Traces.currTraceid();
-                if (traceid == null || traceid.isEmpty()) {
-                    traceid = "[TID:N/A] ";
-                } else {
-                    traceid = "[TID:" + traceid + "] ";
-                }
-                if (log.getMessage() == null) {
-                    log.setMessage(traceid);
-                } else {
-                    log.setMessage(traceid + log.getMessage());
-                }
-            }
+            if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) return;
+            fillLogRecord(log);
             super.publish(log);
         }
     }

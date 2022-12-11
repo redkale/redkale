@@ -254,8 +254,17 @@ public final class Application {
         this.config = config;
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
         this.environment = new Environment(this.envProperties);
-        System.setProperty("redkale.version", Redkale.getDotedVersion());
+        { //设置系统变量
+            System.setProperty("redkale.version", Redkale.getDotedVersion());
+            int nid = config.getIntValue("nodeid", 0);
+            this.nodeid = nid;
+            this.resourceFactory.register(RESNAME_APP_NODEID, nid);
+            System.setProperty(RESNAME_APP_NODEID, "" + nid);
 
+            this.name = checkName(config.getValue("name", ""));
+            this.resourceFactory.register(RESNAME_APP_NAME, name);
+            System.setProperty(RESNAME_APP_NAME, name);
+        }
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
         this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
@@ -299,16 +308,7 @@ public final class Application {
             this.resourceFactory.register(RESNAME_APP_CONF_DIR, Path.class, confFile.toPath());
         }
         this.resourceFactory.register(Environment.class, environment);
-        { //设置系统变量
-            int nid = config.getIntValue("nodeid", 0);
-            this.nodeid = nid;
-            this.resourceFactory.register(RESNAME_APP_NODEID, nid);
-            System.setProperty(RESNAME_APP_NODEID, "" + nid);
 
-            this.name = checkName(config.getValue("name", ""));
-            this.resourceFactory.register(RESNAME_APP_NAME, name);
-            System.setProperty(RESNAME_APP_NAME, name);
-        }
         { //初始化ClassLoader
             ClassLoader currClassLoader = Thread.currentThread().getContextClassLoader();
             if (currClassLoader instanceof RedkaleClassLoader) {
@@ -878,7 +878,7 @@ public final class Application {
                 properties.setProperty("java.util.logging.ConsoleHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
             }
         }
-        if (properties.getProperty("java.util.logging.ConsoleHandler.denyreg") != null && !compileMode) {
+        if (!compileMode) { //ConsoleHandler替换成LoggingConsoleHandler
             final String handlers = properties.getProperty("handlers");
             if (handlers != null && handlers.contains("java.util.logging.ConsoleHandler")) {
                 final String consoleHandlerClass = LoggingFileHandler.LoggingConsoleHandler.class.getName();
@@ -1530,7 +1530,7 @@ public final class Application {
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
         logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale started in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n");
-        LoggingFileHandler.traceflag = true;
+        LoggingBaseHandler.traceflag = true;
 
         for (ApplicationListener listener : this.listeners) {
             listener.postStart(this);

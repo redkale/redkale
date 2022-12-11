@@ -10,6 +10,7 @@ import java.util.logging.*;
 import java.util.logging.Formatter;
 import java.util.regex.Pattern;
 import javax.persistence.*;
+import static org.redkale.boot.Application.RESNAME_APP_NAME;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.*;
@@ -37,7 +38,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     protected String pattern;
 
-    protected Pattern denyreg;
+    protected Pattern denyRegx;
 
     protected String sourceResourceName;
 
@@ -134,8 +135,8 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         String tagstr = manager.getProperty(cname + ".tag");
         if (tagstr != null && !tagstr.isEmpty()) {
             if (!checkTagName(tagstr.replaceAll("\\$\\{.+\\}", ""))) throw new RuntimeException("found illegal logging.property " + cname + ".tag = " + tagstr);
-            this.tag = tagstr;
-            if (tagstr.contains("%")) {
+            this.tag = tagstr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty(RESNAME_APP_NAME, ""));
+            if (this.tag.contains("%")) {
                 this.tagDateFormat = this.tag;
                 Utility.formatTime(this.tagDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
             }
@@ -178,7 +179,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         String denyregstr = manager.getProperty(cname + ".denyreg");
         try {
             if (denyregstr != null && !denyregstr.trim().isEmpty()) {
-                denyreg = Pattern.compile(denyregstr);
+                denyRegx = Pattern.compile(denyregstr);
             }
         } catch (Exception e) {
         }
@@ -197,8 +198,9 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 break;
             }
         }
-        if (denyreg != null && denyreg.matcher(log.getMessage()).find()) return;
+        if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) return;
         String rawTag = tagDateFormat == null ? tag : Utility.formatTime(tagDateFormat, -1, log.getInstant().toEpochMilli());
+        fillLogRecord(log);
         logqueue.offer(new SearchLogRecord(rawTag, log));
     }
 
