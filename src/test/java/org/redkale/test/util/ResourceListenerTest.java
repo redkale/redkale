@@ -62,10 +62,10 @@ public class ResourceListenerTest {
 
         public final AtomicInteger counter = new AtomicInteger();
 
-        @Resource(name = "property.id")
+        @Resource(name = "property.id", required = false)
         private String id;
 
-        @Resource(name = "property.desc")
+        @Resource(name = "property.desc", required = false)
         private String desc;
 
         @ResourceListener
@@ -107,7 +107,7 @@ public class ResourceListenerTest {
 
         public final AtomicInteger counter = new AtomicInteger();
 
-        @Resource(name = "property.id")
+        @Resource(name = "property.id", required = false)
         private String id;
 
         @Resource

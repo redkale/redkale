@@ -41,10 +41,10 @@ public class HttpMessageClusterClient extends HttpMessageClient {
 
     protected ClusterAgent clusterAgent;
 
-    @Resource(name = "cluster.httpClient")
+    @Resource(name = "cluster.httpClient", required = false)
     protected java.net.http.HttpClient httpClient;
 
-    @Resource(name = "cluster.httpClient")
+    @Resource(name = "cluster.httpClient", required = false)
     protected HttpSimpleClient httpSimpleClient;
 
     public HttpMessageClusterClient(Application application, String resourceName, ClusterAgent clusterAgent) {

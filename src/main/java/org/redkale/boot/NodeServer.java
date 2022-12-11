@@ -216,10 +216,10 @@ public abstract class NodeServer {
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
                 Resource res = field.getAnnotation(Resource.class);
-                if (res == null || !res.name().startsWith("properties.")) return;
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不得注入 DataSource
+                if (res == null || !res.name().startsWith("properties.")) return null;
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 DataSource
                 Class type = field.getType();
-                if (type != AnyValue.class && type != AnyValue[].class) return;
+                if (type != AnyValue.class && type != AnyValue[].class) return null;
                 Object resource = null;
                 final AnyValue properties = application.getAppConfig().getAnyValue("properties");
                 if (properties != null && type == AnyValue.class) {
@@ -230,8 +230,10 @@ public abstract class NodeServer {
                     appResFactory.register(resourceName, AnyValue[].class, resource);
                 }
                 field.set(srcObj, resource);
+                return resource;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Resource inject error", e);
+                return null;
             }
         }, AnyValue.class, AnyValue[].class);
 
@@ -239,13 +241,13 @@ public abstract class NodeServer {
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             Class<Service> resServiceType = Service.class;
             try {
-                if (field.getAnnotation(Resource.class) == null) return;
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不得注入 AutoLoad Service
-                if (!Service.class.isAssignableFrom(field.getType())) return;
+                if (field.getAnnotation(Resource.class) == null) return null;
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 AutoLoad Service
+                if (!Service.class.isAssignableFrom(field.getType())) return null;
                 resServiceType = (Class) field.getType();
-                if (resServiceType.getAnnotation(Local.class) == null) return;
+                if (resServiceType.getAnnotation(Local.class) == null) return null;
                 AutoLoad al = resServiceType.getAnnotation(AutoLoad.class);
-                if (al == null || al.value()) return;
+                if (al == null || al.value()) return null;
 
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
                 SncpClient client = srcObj instanceof Service ? Sncp.getSncpClient((Service) srcObj) : null;
@@ -258,31 +260,35 @@ public abstract class NodeServer {
                 rf.inject(resourceName, service, self); // 给其可能包含@Resource的字段赋值;
                 if (!application.isCompileMode()) service.init(null);
                 logger.info("[" + Thread.currentThread().getName() + "] Load Service(@Local @AutoLoad service = " + resServiceType.getSimpleName() + ", resourceName = '" + resourceName + "')");
+                return service;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] Load @Local @AutoLoad(false) Service inject " + resServiceType + " to " + srcObj + " error", e);
+                return null;
             }
         }, Service.class);
 
         //------------------------------------- 注册 DataSource --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return;
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不得注入 DataSource
+                if (field.getAnnotation(Resource.class) == null) return null;
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 DataSource
                 DataSource source = application.loadDataSource(resourceName, false);
                 field.set(srcObj, source);
+                return source;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] DataSource inject to " + srcObj + " error", e);
+                return null;
             }
         }, DataSource.class);
 
         //------------------------------------- 注册 CacheSource --------------------------------------------------------
         resourceFactory.register(new ResourceTypeLoader() {
             @Override
-            public void load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
-                    if (field.getAnnotation(Resource.class) == null) return;
+                    if (field.getAnnotation(Resource.class) == null) return null;
                     if (!(srcObj instanceof Service)) throw new RuntimeException("CacheSource must be inject in Service, cannot " + srcObj);
-                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不需要注入 CacheSource 
+                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不需要注入 CacheSource 
                     final Service srcService = (Service) srcObj;
                     SncpClient client = Sncp.getSncpClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
@@ -298,8 +304,10 @@ public abstract class NodeServer {
                         }
                     }
                     logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
+                    return source;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "DataSource inject error", e);
+                    return null;
                 }
             }
 
@@ -312,10 +320,10 @@ public abstract class NodeServer {
         //------------------------------------- 注册 WebSocketNode --------------------------------------------------------
         resourceFactory.register(new ResourceTypeLoader() {
             @Override
-            public void load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
-                    if (field.getAnnotation(Resource.class) == null) return;
-                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return; //远程模式不需要注入 WebSocketNode 
+                    if (field.getAnnotation(Resource.class) == null) return null;
+                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不需要注入 WebSocketNode 
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
@@ -336,8 +344,10 @@ public abstract class NodeServer {
                         interceptorServices.add(nodeService);
                         if (consumer != null) consumer.accept(null, nodeService);
                     }
+                    return nodeService;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "WebSocketNode inject error", e);
+                    return null;
                 }
             }
 
@@ -388,7 +398,7 @@ public abstract class NodeServer {
                         if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
                             logger.log(Level.FINE, serviceImplClass + " cannot load because not found less one public non-final method");
                         }
-                        return;
+                        return null;
                     }
                     RedkaleClassLoader.putReflectionPublicMethods(serviceImplClass.getName());
                     MessageAgent agent = null;
@@ -424,6 +434,7 @@ public abstract class NodeServer {
                         if (consumer != null) consumer.accept(agent, service);
                     }
                     serviceCount.incrementAndGet();
+                    return service;
                 } catch (RuntimeException ex) {
                     throw ex;
                 } catch (Exception e) {

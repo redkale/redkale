@@ -434,7 +434,6 @@ public final class ResourceFactory {
 
     /**
      * 将多个以指定资源名的String对象注入到资源池中
-     * properties的key一般以"property."开头
      *
      * @param properties      资源键值对
      * @param environmentName 额外的资源名
@@ -448,11 +447,7 @@ public final class ResourceFactory {
         properties.forEach((k, v) -> {
             Object old = register(true, k.toString(), String.class, v, wrappers);
             if (!Objects.equals(v, old)) {
-                String key = k.toString();
-                if (key.startsWith("property.")) {
-                    key = key.substring("property.".length());
-                }
-                environmentEventList.add(ResourceEvent.create(key, v, old));
+                environmentEventList.add(ResourceEvent.create(k.toString(), v, old));
             }
         });
         Map<Object, Method> envListenMap = new LinkedHashMap<>();
@@ -695,12 +690,12 @@ public final class ResourceFactory {
                 for (Field field : clazz.getDeclaredFields()) {
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     field.setAccessible(true);
-                    final Class classtype = field.getType();
+                    final Class classType = field.getType();
                     Resource rc = field.getAnnotation(Resource.class);
                     if (rc == null) {  //深度注入
-                        if (Convert.class.isAssignableFrom(classtype)) continue;
-                        if (ConvertFactory.class.isAssignableFrom(classtype)) continue;
-                        if (ResourceFactory.class.isAssignableFrom(classtype)) continue;
+                        if (Convert.class.isAssignableFrom(classType)) continue;
+                        if (ConvertFactory.class.isAssignableFrom(classType)) continue;
+                        if (ResourceFactory.class.isAssignableFrom(classType)) continue;
                         boolean flag = true; //是否没有重复
                         Object ns = field.get(srcObj);
                         for (Object o : list) {
@@ -726,7 +721,7 @@ public final class ResourceFactory {
                     }
                     if (Modifier.isFinal(field.getModifiers())) continue;
                     RedkaleClassLoader.putReflectionField(cname, field);
-                    final Type genctype = TypeToken.containsUnknownType(field.getGenericType())
+                    final Type gencType = TypeToken.containsUnknownType(field.getGenericType())
                         ? TypeToken.getGenericType(field.getGenericType(), srcObj.getClass()) : field.getGenericType();
                     if (consumer != null) consumer.accept(srcObj, field);
                     String tname = rc.name();
@@ -746,75 +741,95 @@ public final class ResourceFactory {
                     }
                     boolean autoRegNull = true;
                     final String rcname = formatResourceName(srcResourceName, tname);
-                    Object rs;
+                    Object rs = null;
                     if (rcname.startsWith("system.property.")) {
                         rs = System.getProperty(rcname.substring("system.property.".length()));
                     } else {
-                        ResourceEntry re = findEntry(rcname, genctype);
+                        ResourceEntry re = findEntry(rcname, gencType);
                         if (re == null) {
-                            if (rcname.startsWith("property.")) {
+                            if (classType.isPrimitive() || classType == Integer.class
+                                || classType == Long.class || classType == Short.class
+                                || classType == Boolean.class || classType == Byte.class
+                                || classType == Float.class || classType == Double.class || classType == BigInteger.class) {
                                 re = findEntry(rcname, String.class);
+                                if (re == null && rcname.startsWith("property.")) { //兼容2.8.0之前版本自动追加property.开头的配置项
+                                    re = findEntry(rcname.substring("property.".length()), String.class);
+                                }
+                            } else if (classType == String.class && rcname.startsWith("property.")) {//兼容2.8.0之前版本自动追加property.开头的配置项
+                                re = findEntry(rcname.substring("property.".length()), String.class);
                             } else {
-                                re = findEntry(rcname, classtype);
+                                re = findEntry(rcname, classType);
                             }
                         }
                         if (re == null) {
-                            ResourceTypeLoader it = findTypeLoader(genctype, field);
+                            ResourceTypeLoader it = findTypeLoader(gencType, field);
                             if (it != null) {
-                                it.load(this, srcResourceName, srcObj, rcname, field, attachment);
+                                rs = it.load(this, srcResourceName, srcObj, rcname, field, attachment);
                                 autoRegNull = it.autoNone();
-                                re = findEntry(rcname, genctype);
+                                if (rs == null) {
+                                    re = findEntry(rcname, gencType);
+                                }
                             }
                         }
-                        if (re == null && genctype != classtype) {
-                            re = findEntry(rcname, classtype);
+                        if (rs == null && re == null && gencType != classType) {
+                            re = findEntry(rcname, classType);
                             if (re == null) {
-                                if (rcname.startsWith("property.")) {
+                                if (classType.isPrimitive() || classType == Integer.class
+                                    || classType == Long.class || classType == Short.class
+                                    || classType == Boolean.class || classType == Byte.class
+                                    || classType == Float.class || classType == Double.class
+                                    || classType == BigInteger.class) {
                                     re = findEntry(rcname, String.class);
                                 } else {
-                                    re = findEntry(rcname, classtype);
+                                    re = findEntry(rcname, classType);
                                 }
                             }
                             if (re == null) {
-                                ResourceTypeLoader it = findTypeLoader(classtype, field);
+                                ResourceTypeLoader it = findTypeLoader(classType, field);
                                 if (it != null) {
-                                    it.load(this, srcResourceName, srcObj, rcname, field, attachment);
+                                    rs = it.load(this, srcResourceName, srcObj, rcname, field, attachment);
                                     autoRegNull = it.autoNone();
-                                    re = findEntry(rcname, classtype);
+                                    if (rs == null) {
+                                        re = findEntry(rcname, classType);
+                                    }
                                 }
                             }
                         }
-                        if (re == null && autoRegNull) {
-                            register(rcname, genctype, null); //自动注入null的值
-                            re = findEntry(rcname, genctype);
+                        if (rs == null && re == null && autoRegNull) {
+                            register(rcname, gencType, null); //自动注入null的值
+                            re = findEntry(rcname, gencType);
                         }
                         if (re != null) {
                             re.elements.add(new ResourceElement<>(srcObj, field));
                             rs = re.value;
-                        } else {
-                            rs = null;
                         }
                     }
-                    if (rs != null && !rs.getClass().isPrimitive() && classtype.isPrimitive()) {
-                        if (classtype == int.class) {
+                    if (rs != null && !rs.getClass().isPrimitive() && (classType.isPrimitive()
+                        || classType == Integer.class || classType == Long.class
+                        || classType == Short.class || classType == Boolean.class
+                        || classType == Byte.class || classType == Float.class
+                        || classType == Double.class || classType == BigInteger.class)) {
+                        if (classType == int.class || classType == Integer.class) {
                             rs = Integer.decode(rs.toString());
-                        } else if (classtype == long.class) {
+                        } else if (classType == long.class || classType == Long.class) {
                             rs = Long.decode(rs.toString());
-                        } else if (classtype == short.class) {
+                        } else if (classType == short.class || classType == Short.class) {
                             rs = Short.decode(rs.toString());
-                        } else if (classtype == boolean.class) {
+                        } else if (classType == boolean.class || classType == Boolean.class) {
                             rs = "true".equalsIgnoreCase(rs.toString());
-                        } else if (classtype == byte.class) {
+                        } else if (classType == byte.class || classType == Byte.class) {
                             rs = Byte.decode(rs.toString());
-                        } else if (classtype == float.class) {
+                        } else if (classType == float.class || classType == Float.class) {
                             rs = Float.parseFloat(rs.toString());
-                        } else if (classtype == double.class) {
+                        } else if (classType == double.class || classType == Double.class) {
                             rs = Double.parseDouble(rs.toString());
+                        } else if (classType == BigInteger.class) {
+                            rs = new BigInteger(rs.toString());
                         }
                     }
                     if (rs != null) field.set(srcObj, rs);
                     if (rs == null && rc.required()) {
-                        throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ", field=" + field.getName() + ", name=" + rcname + ") must exists in " + srcObj.getClass().getName());
+                        throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + srcObj.getClass().getName());
                     }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);

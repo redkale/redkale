@@ -40,7 +40,7 @@ public abstract class WebSocketNode {
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     //"SNCP_ADDR" 如果不是分布式(没有SNCP) 值为null
-    @Resource(name = Application.RESNAME_SNCP_ADDR)
+    @Resource(name = Application.RESNAME_SNCP_ADDR, required = false)
     protected InetSocketAddress localSncpAddress;  //为SncpServer的服务address
 
     protected WebSocketAddress wsNodeAddress;
@@ -51,13 +51,13 @@ public abstract class WebSocketNode {
     @RpcRemote
     protected WebSocketNode remoteNode;
 
-    @Resource(name = "$_sendconvert")
+    @Resource(name = "$_sendconvert", required = false)
     protected Convert sendConvert;
 
     //存放所有用户分布在节点上的队列信息,Set<WebSocketAddress> 为 sncpnode 的集合， key: groupid
     //集合包含 localSncpAddress
     //如果不是分布式(没有SNCP)，source 将不会被用到
-    @Resource(name = "$")
+    @Resource(name = "$", required = false)
     protected CacheSource source;
 
     //当前节点的本地WebSocketEngine

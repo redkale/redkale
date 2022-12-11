@@ -53,7 +53,7 @@ public class ResourceTest {
         props.put("property.id", "5555");
         props.put("property.desc", "my desc");
         factory.register(props);
-        
+
         bservice = new BService("ffff");
         factory.register(bservice);   //更新Resource池内name=""的BService资源, 同时ResourceFactory会自动更新aservice的bservice对象
         factory.inject(bservice);
@@ -68,7 +68,7 @@ class BService {
     @Resource(name = "property.id")
     private String id;
 
-    @Resource(name = "property.desc")
+    @Resource(name = "property.desc", required = false)
     private String desc;
 
     @Resource
@@ -126,10 +126,10 @@ class AService {
     @Resource(name = "property.id") //property.开头的资源名允许String自动转换成primitive数值类型
     private int intid;
 
-    @Resource(name = "bigint")
+    @Resource(name = "bigint", required = false)
     private BigInteger bigint;
 
-    @Resource(name = "seqid")
+    @Resource(name = "seqid", required = false)
     private int seqid;
 
     @Resource

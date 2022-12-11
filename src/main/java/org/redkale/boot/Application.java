@@ -124,7 +124,7 @@ public final class Application {
     /**
      * 当前Server的ResourceFactory
      */
-    public static final String RESNAME_SERVER_RESFACTORY = Server.RESNAME_SERVER_RESFACTORY;
+    public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
 
     private static final int UDP_CAPACITY = 1024;
 
@@ -682,10 +682,10 @@ public final class Application {
                             in.close();
                             if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
                             ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
-                                if (!x.toString().startsWith("redkale.") && !x.toString().startsWith("property.")) {
+                                if (!x.toString().startsWith("redkale.")) {
                                     agentEnvs.put(x, y);
                                 } else {
-                                    logger.log(Level.WARNING, "skip illegal(startswith redkale. or property.) key " + x + " in properties file");
+                                    logger.log(Level.WARNING, "skip illegal(startswith 'redkale.') key " + x + " in properties file");
                                 }
                             });
                         } catch (Exception e) {
@@ -737,17 +737,11 @@ public final class Application {
                 String key = prop.getValue("name");
                 String value = prop.getValue("value");
                 if (key == null || value == null) continue;
-                if (key.startsWith("property.")) {
-                    logger.log(Level.WARNING, "property key (" + key + ") startswith 'property.' is illegal, auto remove the prefix 'property.'");
-                    key = key.substring("property.".length());
-                }
                 oldEnvs.put(key, value);
             }
             agentEnvs.forEach((k, v) -> {
                 if (k.toString().startsWith("redkale.")) {
                     dyncProps.put(k, v);
-                } else if (k.toString().startsWith("property.")) {
-                    logger.log(Level.WARNING, "skip illegal(startswith property.) key " + k + " in remote properties agent");
                 } else {
                     oldEnvs.put(k, v);  //新配置项会覆盖旧的
                 }
@@ -830,12 +824,9 @@ public final class Application {
                     }
                 } else if (key.startsWith("mimetype.property.")) {
                     MimeType.add(key.substring("mimetype.property.".length()), value);
-                } else if (key.startsWith("property.")) {
-                    this.envProperties.put(key, value);
-                    resourceFactory.register(key, value);
                 } else {
                     this.envProperties.put(key, value);
-                    resourceFactory.register(false, "property." + key, value);
+                    resourceFactory.register(false, key, value);
                 }
             }
         }
@@ -987,19 +978,23 @@ public final class Application {
         this.resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public void load(ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) {
+            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) {
                 try {
                     Resource res = field.getAnnotation(Resource.class);
-                    if (res == null) return;
-                    if (srcObj instanceof Service && Sncp.isRemote((Service) srcObj)) return; //远程模式不得注入 
+                    if (res == null) return null;
+                    if (srcObj instanceof Service && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(srcObj, application);
+                        return application;
                     } else if (type == ResourceFactory.class) {
                         boolean serv = RESNAME_SERVER_RESFACTORY.equals(res.name()) || res.name().equalsIgnoreCase("server");
-                        field.set(srcObj, serv ? rf : (res.name().isEmpty() ? application.resourceFactory : null));
+                        ResourceFactory rs = serv ? rf : (res.name().isEmpty() ? application.resourceFactory : null);
+                        field.set(srcObj, rs);
+                        return rs;
                     } else if (type == TransportFactory.class) {
                         field.set(srcObj, application.sncpTransportFactory);
+                        return application.sncpTransportFactory;
                     } else if (type == NodeSncpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
@@ -1010,6 +1005,7 @@ public final class Application {
                             }
                         }
                         field.set(srcObj, server);
+                        return server;
                     } else if (type == NodeHttpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
@@ -1020,6 +1016,7 @@ public final class Application {
                             }
                         }
                         field.set(srcObj, server);
+                        return server;
                     } else if (type == NodeWatchServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
@@ -1030,12 +1027,15 @@ public final class Application {
                             }
                         }
                         field.set(srcObj, server);
+                        return server;
                     }
 //                    if (type == WatchFactory.class) {
 //                        field.set(src, application.watchFactory);
 //                    }
+                    return null;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
+                    return null;
                 }
             }
 
@@ -1049,7 +1049,7 @@ public final class Application {
         //------------------------------------ 注册 java.net.http.HttpClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return;
+                if (field.getAnnotation(Resource.class) == null) return null;
                 java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
                 if (resourceName.endsWith(".1.1")) {
                     builder.version(HttpClient.Version.HTTP_1_1);
@@ -1060,20 +1060,24 @@ public final class Application {
                 field.set(srcObj, httpClient);
                 rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
                 rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
+                return httpClient;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] java.net.http.HttpClient inject error", e);
+                return null;
             }
         }, java.net.http.HttpClient.class);
         //------------------------------------ 注册 HttpSimpleClient ------------------------------------       
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return;
+                if (field.getAnnotation(Resource.class) == null) return null;
                 HttpSimpleClient httpClient = HttpSimpleClient.create(clientAsyncGroup);
                 field.set(srcObj, httpClient);
                 rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
                 rf.register(resourceName, HttpSimpleClient.class, httpClient);
+                return httpClient;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpClient inject error", e);
+                return null;
             }
         }, HttpSimpleClient.class);
         //--------------------------------------------------------------------------
@@ -1108,20 +1112,22 @@ public final class Application {
         //------------------------------------ 注册 HttpMessageClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return;
+                if (field.getAnnotation(Resource.class) == null) return null;
                 if (clusterAgent == null) {
                     HttpMessageClient messageClient = new HttpMessageLocalClient(application, resourceName);
                     field.set(srcObj, messageClient);
                     rf.inject(resourceName, messageClient, null); // 给其可能包含@Resource的字段赋值;
                     rf.register(resourceName, HttpMessageClient.class, messageClient);
-                    return;
+                    return messageClient;
                 }
                 HttpMessageClient messageClient = new HttpMessageClusterClient(application, resourceName, clusterAgent);
                 field.set(srcObj, messageClient);
                 rf.inject(resourceName, messageClient, null); // 给其可能包含@Resource的字段赋值;
                 rf.register(resourceName, HttpMessageClient.class, messageClient);
+                return messageClient;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpMessageClient inject error", e);
+                return null;
             }
         }, HttpMessageClient.class);
         initResources();
@@ -1943,22 +1949,11 @@ public final class Application {
                     if (event.newValue() != null) {
                         MimeType.add(propName, event.newValue());
                     }
-                } else if (event.name().startsWith("property.")) {
-                    if (!Objects.equals(event.newValue(), this.envProperties.getProperty(event.name()))) {
-                        envRegisterProps.put(event.name(), event.newValue());
-                        if (event.newValue() == null) {
-                            if (this.envProperties.containsKey(event.name())) {
-                                envRemovedKeys.add(event.name());
-                            }
-                        } else {
-                            envChangedProps.put(event.name(), event.newValue());
-                        }
-                    }
                 } else if (event.name().startsWith("redkale.")) {
                     logger.log(Level.WARNING, "not support the environment property key " + event.name() + " on change event");
                 } else {
                     if (!Objects.equals(event.newValue(), this.envProperties.getProperty(event.name()))) {
-                        envRegisterProps.put("property." + event.name(), event.newValue());
+                        envRegisterProps.put(event.name(), event.newValue());
                         if (event.newValue() == null) {
                             if (this.envProperties.containsKey(event.name())) {
                                 envRemovedKeys.add(event.name());

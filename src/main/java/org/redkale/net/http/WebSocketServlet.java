@@ -18,6 +18,7 @@ import java.util.logging.*;
 import java.util.zip.*;
 import javax.annotation.*;
 import org.redkale.boot.Application;
+import static org.redkale.boot.Application.RESNAME_SERVER_RESFACTORY;
 import org.redkale.convert.Convert;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
@@ -103,22 +104,22 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected MessageAgent messageAgent;
 
-    @Resource(name = "jsonconvert")
+    @Resource(name = "jsonconvert", required = false)
     protected Convert jsonConvert;
 
-    @Resource(name = "$_textconvert")
+    @Resource(name = "$_textconvert", required = false)
     protected Convert textConvert;
 
-    @Resource(name = "$_binaryconvert")
+    @Resource(name = "$_binaryconvert", required = false)
     protected Convert binaryConvert;
 
-    @Resource(name = "$_sendconvert")
+    @Resource(name = "$_sendconvert", required = false)
     protected Convert sendConvert;
 
     @Resource(name = "$")
     protected WebSocketNode node;
 
-    @Resource(name = "SERVER_RESFACTORY")
+    @Resource(name = RESNAME_SERVER_RESFACTORY)
     protected ResourceFactory resourceFactory;
 
     protected WebSocketServlet() {
