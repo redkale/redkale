@@ -29,7 +29,7 @@ import org.redkale.util.*;
  *
  * @since 2.1.0
  */
-public abstract class MessageAgent {
+public abstract class MessageAgent implements Resourcable {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -93,6 +93,9 @@ public abstract class MessageAgent {
         this.timeoutExecutor.setRemoveOnCancelPolicy(true);
     }
 
+    @ResourceListener
+    public abstract void onResourceChange(ResourceEvent[] events);
+
     public CompletableFuture<Map<String, Long>> start() {
         final LinkedHashMap<String, Long> map = new LinkedHashMap<>();
         final List<CompletableFuture> futures = new ArrayList<>();
@@ -141,6 +144,11 @@ public abstract class MessageAgent {
         one = this.sncpMessageClient == null ? null : this.sncpMessageClient.getProducer();
         if (one != null) producers.addAll(Utility.ofList(one.producers));
         return producers;
+    }
+
+    @Override
+    public String resourceName() {
+        return name;
     }
 
     public MessageCoder<MessageRecord> getMessageCoder() {

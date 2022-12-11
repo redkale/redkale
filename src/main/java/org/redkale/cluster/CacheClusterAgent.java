@@ -37,6 +37,8 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     protected ScheduledThreadPoolExecutor scheduler;
 
+    protected ScheduledFuture taskFuture;
+
     //可能被HttpMessageClient用到的服务 key: serviceName
     protected final ConcurrentHashMap<String, Collection<InetSocketAddress>> httpAddressMap = new ConcurrentHashMap<>();
 
@@ -46,11 +48,35 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     @Override
     public void init(ResourceFactory factory, AnyValue config) {
         super.init(factory, config);
-
         this.sourceName = getSourceName();
-
         this.ttls = config.getIntValue("ttls", 10);
         if (this.ttls < 5) this.ttls = 10;
+    }
+
+    @Override
+    @ResourceListener
+    public void onResourceChange(ResourceEvent[] events) {
+        StringBuilder sb = new StringBuilder();
+        int newTtls = this.ttls;
+        for (ResourceEvent event : events) {
+            if ("ttls".equals(event.name())) {
+                newTtls = Integer.parseInt(event.newValue().toString());
+                if (newTtls < 5) {
+                    sb.append(CacheClusterAgent.class.getSimpleName()).append("(name=").append(resourceName()).append(") cannot change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
+                } else {
+                    sb.append(CacheClusterAgent.class.getSimpleName()).append("(name=").append(resourceName()).append(") change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
+                }
+            } else {
+                sb.append(CacheClusterAgent.class.getSimpleName()).append("(name=").append(resourceName()).append(") skip change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
+            }
+        }
+        if (newTtls != this.ttls) {
+            this.ttls = newTtls;
+            start();
+        }
+        if (!sb.isEmpty()) {
+            logger.log(Level.INFO, sb.toString());
+        }
     }
 
     @Override
@@ -88,22 +114,29 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
                 return t;
             });
 
-            this.scheduler.scheduleAtFixedRate(() -> {
-                try {
-                    checkApplicationHealth();
-                    checkHttpAddressHealth();
-                    loadMqtpAddressHealth();
-                    localEntrys.values().stream().filter(e -> !e.canceled).forEach(entry -> {
-                        checkLocalHealth(entry);
-                    });
-                    remoteEntrys.values().stream().filter(entry -> "SNCP".equalsIgnoreCase(entry.protocol)).forEach(entry -> {
-                        updateSncpTransport(entry);
-                    });
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "scheduleAtFixedRate check error", e instanceof CompletionException ? ((CompletionException) e).getCause() : e);
-                }
-            }, Math.max(2000, ttls * 1000), Math.max(2000, ttls * 1000), TimeUnit.MILLISECONDS);
         }
+        if (this.taskFuture != null) {
+            this.taskFuture.cancel(true);
+        }
+        this.taskFuture = this.scheduler.scheduleAtFixedRate(newTask(), Math.max(2000, ttls * 1000), Math.max(2000, ttls * 1000), TimeUnit.MILLISECONDS);
+    }
+
+    private Runnable newTask() {
+        return () -> {
+            try {
+                checkApplicationHealth();
+                checkHttpAddressHealth();
+                loadMqtpAddressHealth();
+                localEntrys.values().stream().filter(e -> !e.canceled).forEach(entry -> {
+                    checkLocalHealth(entry);
+                });
+                remoteEntrys.values().stream().filter(entry -> "SNCP".equalsIgnoreCase(entry.protocol)).forEach(entry -> {
+                    updateSncpTransport(entry);
+                });
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "scheduleAtFixedRate check error", e instanceof CompletionException ? ((CompletionException) e).getCause() : e);
+            }
+        };
     }
 
     protected void loadMqtpAddressHealth() {

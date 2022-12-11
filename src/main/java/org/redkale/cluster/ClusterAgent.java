@@ -83,6 +83,9 @@ public abstract class ClusterAgent {
         }
     }
 
+    @ResourceListener
+    public abstract void onResourceChange(ResourceEvent[] events);
+
     public void destroy(AnyValue config) {
     }
 
