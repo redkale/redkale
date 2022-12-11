@@ -393,14 +393,27 @@ public final class Application {
                 lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
                 Server.loadLib(classLoader, logger, lib);
             }
-
-            System.setProperty("redkale.net.transport.poolmaxconns", "100");
-            System.setProperty("redkale.net.transport.pinginterval", "30");
-            System.setProperty("redkale.net.transport.checkinterval", "30");
-            System.setProperty("redkale.convert.tiny", "true");
-            System.setProperty("redkale.convert.pool.size", "128");
-            System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
-            System.setProperty("redkale.trace.enable", "false");
+            if (System.getProperty("redkale.net.transport.poolmaxconns") == null) {
+                System.setProperty("redkale.net.transport.poolmaxconns", "100");
+            }
+            if (System.getProperty("redkale.net.transport.pinginterval") == null) {
+                System.setProperty("redkale.net.transport.pinginterval", "30");
+            }
+            if (System.getProperty("redkale.net.transport.checkinterval") == null) {
+                System.setProperty("redkale.net.transport.checkinterval", "30");
+            }
+            if (System.getProperty("redkale.convert.tiny") == null) {
+                System.setProperty("redkale.convert.tiny", "true");
+            }
+            if (System.getProperty("redkale.convert.pool.size") == null) {
+                System.setProperty("redkale.convert.pool.size", "128");
+            }
+            if (System.getProperty("redkale.convert.writer.buffer.defsize") == null) {
+                System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
+            }
+            if (System.getProperty("redkale.trace.enable") == null) {
+                System.setProperty("redkale.trace.enable", "false");
+            }
 
             this.resourceFactory.register(BsonFactory.root());
             this.resourceFactory.register(JsonFactory.root());
@@ -740,7 +753,7 @@ public final class Application {
                 }
             });
             //原有properties节点上的属性同步到dyncEnvs
-            propertiesConf.forEach((k, v) -> dyncProps.put("redkale.properties." + k, v));
+            propertiesConf.forEach((k, v) -> dyncProps.put("redkale.properties[" + k + "]", v));
             oldEnvs.forEach((k, v) -> { //去重后的配置项
                 String prefix = "redkale.properties.property[" + propertyIndex.getAndIncrement() + "]";
                 dyncProps.put(prefix + ".name", k);
@@ -786,16 +799,16 @@ public final class Application {
                     if (key.toString().endsWith(".name")) {
                         logger.log(Level.WARNING, "skip illegal key " + key + " in source config, key cannot endsWith '.name'");
                     } else {
-                        sourceProperties.put(key, val);
+                        this.sourceProperties.put(key, val);
                     }
                 } else if (key.toString().startsWith("redkale.mq.") || key.toString().startsWith("redkale.mq[")) {
                     if (key.toString().endsWith(".name")) {
                         logger.log(Level.WARNING, "skip illegal key " + key + " in mq config, key cannot endsWith '.name'");
                     } else {
-                        messageProperties.put(key, val);
+                        this.messageProperties.put(key, val);
                     }
                 } else if (key.toString().startsWith("redkale.cluster.")) {
-                    clusterProperties.put(key, val);
+                    this.clusterProperties.put(key, val);
                 }
             });
         }
@@ -818,10 +831,10 @@ public final class Application {
                 } else if (key.startsWith("mimetype.property.")) {
                     MimeType.add(key.substring("mimetype.property.".length()), value);
                 } else if (key.startsWith("property.")) {
-                    envProperties.put(key, value);
+                    this.envProperties.put(key, value);
                     resourceFactory.register(key, value);
                 } else {
-                    envProperties.put(key, value);
+                    this.envProperties.put(key, value);
                     resourceFactory.register(false, "property." + key, value);
                 }
             }
@@ -921,8 +934,8 @@ public final class Application {
         try {
             LogManager manager = LogManager.getLogManager();
             manager.readConfiguration(new ByteArrayInputStream(out.toByteArray()));
-            loggingProperties.clear();
-            loggingProperties.putAll(properties);
+            this.loggingProperties.clear();
+            this.loggingProperties.putAll(properties);
             Enumeration<String> en = manager.getLoggerNames();
             while (en.hasMoreElements()) {
                 for (Handler handler : manager.getLogger(en.nextElement()).getHandlers()) {
@@ -1772,6 +1785,7 @@ public final class Application {
             conf = AnyValue.loadFromProperties(text).getAnyValue("redkale");
         }
         if (fromCache) ((DefaultAnyValue) conf).addValue("[config-from-cache]", "true");
+
         return conf;
     }
 
@@ -1870,7 +1884,7 @@ public final class Application {
             for (ResourceEvent<String> event : events) {
                 if (namespace != null && namespace.startsWith("logging")) {
                     if (event.newValue() == null) {
-                        if (loggingProperties.containsKey(event.name())) {
+                        if (this.loggingProperties.containsKey(event.name())) {
                             loggingRemovedKeys.add(event.name());
                         }
                     } else {
@@ -1883,9 +1897,9 @@ public final class Application {
                     if (event.name().endsWith(".name")) {
                         logger.log(Level.WARNING, "skip illegal key " + event.name() + " in source config " + (namespace == null ? "" : namespace) + ", key cannot endsWith '.name'");
                     } else {
-                        if (!Objects.equals(event.newValue(), sourceProperties.getProperty(event.name()))) {
+                        if (!Objects.equals(event.newValue(), this.sourceProperties.getProperty(event.name()))) {
                             if (event.newValue() == null) {
-                                if (sourceProperties.containsKey(event.name())) {
+                                if (this.sourceProperties.containsKey(event.name())) {
                                     sourceRemovedKeys.add(event.name());
                                 }
                             } else {
@@ -1897,9 +1911,9 @@ public final class Application {
                     if (event.name().endsWith(".name")) {
                         logger.log(Level.WARNING, "skip illegal key " + event.name() + " in mq config " + (namespace == null ? "" : namespace) + ", key cannot endsWith '.name'");
                     } else {
-                        if (!Objects.equals(event.newValue(), messageProperties.getProperty(event.name()))) {
+                        if (!Objects.equals(event.newValue(), this.messageProperties.getProperty(event.name()))) {
                             if (event.newValue() == null) {
-                                if (messageProperties.containsKey(event.name())) {
+                                if (this.messageProperties.containsKey(event.name())) {
                                     messageRemovedKeys.add(event.name());
                                 }
                             } else {
@@ -1908,9 +1922,9 @@ public final class Application {
                         }
                     }
                 } else if (event.name().startsWith("redkale.cluster.")) {
-                    if (!Objects.equals(event.newValue(), clusterProperties.getProperty(event.name()))) {
+                    if (!Objects.equals(event.newValue(), this.clusterProperties.getProperty(event.name()))) {
                         if (event.newValue() == null) {
-                            if (clusterProperties.containsKey(event.name())) {
+                            if (this.clusterProperties.containsKey(event.name())) {
                                 clusterRemovedKeys.add(event.name());
                             }
                         } else {
@@ -1930,10 +1944,10 @@ public final class Application {
                         MimeType.add(propName, event.newValue());
                     }
                 } else if (event.name().startsWith("property.")) {
-                    if (!Objects.equals(event.newValue(), envProperties.getProperty(event.name()))) {
+                    if (!Objects.equals(event.newValue(), this.envProperties.getProperty(event.name()))) {
                         envRegisterProps.put(event.name(), event.newValue());
                         if (event.newValue() == null) {
-                            if (envProperties.containsKey(event.name())) {
+                            if (this.envProperties.containsKey(event.name())) {
                                 envRemovedKeys.add(event.name());
                             }
                         } else {
@@ -1941,12 +1955,12 @@ public final class Application {
                         }
                     }
                 } else if (event.name().startsWith("redkale.")) {
-                    logger.log(Level.WARNING, "not support the env property key " + event.name() + " on change event");
+                    logger.log(Level.WARNING, "not support the environment property key " + event.name() + " on change event");
                 } else {
-                    if (!Objects.equals(event.newValue(), envProperties.getProperty(event.name()))) {
+                    if (!Objects.equals(event.newValue(), this.envProperties.getProperty(event.name()))) {
                         envRegisterProps.put("property." + event.name(), event.newValue());
                         if (event.newValue() == null) {
-                            if (envProperties.containsKey(event.name())) {
+                            if (this.envProperties.containsKey(event.name())) {
                                 envRemovedKeys.add(event.name());
                             }
                         } else {
@@ -1955,11 +1969,17 @@ public final class Application {
                     }
                 }
             }
-
             //普通配置项的变更
             if (!envRegisterProps.isEmpty()) {
-                envProperties.putAll(envChangedProps);
-                envRemovedKeys.forEach(k -> envProperties.remove(k));
+                this.envProperties.putAll(envChangedProps);
+                envRemovedKeys.forEach(k -> this.envProperties.remove(k));
+                DefaultAnyValue oldConf = (DefaultAnyValue) this.config.getAnyValue("properties");
+                DefaultAnyValue newConf = new DefaultAnyValue();
+                oldConf.forEach((k, v) -> newConf.addValue(k, v));
+                this.envProperties.forEach((k, v) -> {
+                    newConf.addValue("property", new DefaultAnyValue().addValue("name", k.toString()).addValue("value", v.toString()));
+                });
+                oldConf.replace(newConf);
                 resourceFactory.register(envRegisterProps, "", Environment.class);
             }
 
@@ -1970,7 +1990,7 @@ public final class Application {
                     try {
                         Level logLevel = Level.parse(loggingChangedProps.getProperty(".level"));
                         Logger.getGlobal().setLevel(logLevel);
-                        loggingProperties.putAll(loggingChangedProps);
+                        this.loggingProperties.putAll(loggingChangedProps);
                         logger.log(Level.INFO, "reconfig logging level to " + logLevel);
                     } catch (Exception e) {
                         logger.log(Level.WARNING, "reconfig logging level error, new level is " + loggingChangedProps.getProperty(".level"));
@@ -2009,7 +2029,7 @@ public final class Application {
                     if (source == null) continue;  //多余的数据源
                     final DefaultAnyValue old = (DefaultAnyValue) findSourceConfig(sourceName, "cachesource");
                     Properties newProps = new Properties();
-                    sourceProperties.forEach((k, v) -> {
+                    this.sourceProperties.forEach((k, v) -> {
                         final String key = k.toString();
                         String prefix = "redkale.cachesource[" + sourceName + "].";
                         int pos = key.indexOf(prefix);
@@ -2031,7 +2051,7 @@ public final class Application {
                         }
                         if (pos < 0) return; //不是同一name数据源配置项
                         newProps.put(k, v);
-                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, sourceProperties.getProperty(key)));
+                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
                     });
                     sourceRemovedKeys.forEach(k -> {
                         final String key = k;
@@ -2043,7 +2063,7 @@ public final class Application {
                         }
                         if (pos < 0) return;
                         newProps.remove(k); //不是同一name数据源配置项
-                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, sourceProperties.getProperty(key)));
+                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
                     });
                     if (!changeEvents.isEmpty()) {
                         DefaultAnyValue back = old.copy();
@@ -2062,7 +2082,7 @@ public final class Application {
                     if (source == null) continue;  //多余的数据源
                     DefaultAnyValue old = (DefaultAnyValue) findSourceConfig(sourceName, "datasource");
                     Properties newProps = new Properties();
-                    sourceProperties.forEach((k, v) -> {
+                    this.sourceProperties.forEach((k, v) -> {
                         final String key = k.toString();
                         String prefix = "redkale.datasource[" + sourceName + "].";
                         int pos = key.indexOf(prefix);
@@ -2084,7 +2104,7 @@ public final class Application {
                         }
                         if (pos < 0) return; //不是同一name数据源配置项
                         newProps.put(k, v);
-                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, sourceProperties.getProperty(key)));
+                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
                     });
                     sourceRemovedKeys.forEach(k -> {
                         final String key = k;
@@ -2096,7 +2116,7 @@ public final class Application {
                         }
                         if (pos < 0) return;
                         newProps.remove(k); //不是同一name数据源配置项
-                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, sourceProperties.getProperty(key)));
+                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
                     });
                     if (!changeEvents.isEmpty()) {
                         DefaultAnyValue back = old.copy();
@@ -2109,8 +2129,8 @@ public final class Application {
                         }
                     }
                 }
-                sourceRemovedKeys.forEach(k -> sourceProperties.remove(k));
-                sourceProperties.putAll(sourceChangedProps);
+                sourceRemovedKeys.forEach(k -> this.sourceProperties.remove(k));
+                this.sourceProperties.putAll(sourceChangedProps);
             }
 
             //MQ配置项的变更
@@ -2132,7 +2152,7 @@ public final class Application {
                     if (agent == null) continue;  //多余的数据源
                     final DefaultAnyValue old = (DefaultAnyValue) findMQConfig(mqName);
                     Properties newProps = new Properties();
-                    messageProperties.forEach((k, v) -> {
+                    this.messageProperties.forEach((k, v) -> {
                         final String key = k.toString();
                         String prefix = "redkale.mq[" + mqName + "].";
                         int pos = key.indexOf(prefix);
@@ -2154,7 +2174,7 @@ public final class Application {
                         }
                         if (pos < 0) return; //不是同一name数据源配置项
                         newProps.put(k, v);
-                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, messageProperties.getProperty(key)));
+                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.messageProperties.getProperty(key)));
                     });
                     messageRemovedKeys.forEach(k -> {
                         final String key = k;
@@ -2166,7 +2186,7 @@ public final class Application {
                         }
                         if (pos < 0) return;
                         newProps.remove(k); //不是同一name数据源配置项
-                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, messageProperties.getProperty(key)));
+                        changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.messageProperties.getProperty(key)));
                     });
                     if (!changeEvents.isEmpty()) {
                         DefaultAnyValue back = old.copy();
@@ -2179,8 +2199,8 @@ public final class Application {
                         }
                     }
                 }
-                messageRemovedKeys.forEach(k -> messageProperties.remove(k));
-                messageProperties.putAll(messageChangedProps);
+                messageRemovedKeys.forEach(k -> this.messageProperties.remove(k));
+                this.messageProperties.putAll(messageChangedProps);
             }
 
             //第三方服务注册配置项的变更
@@ -2193,12 +2213,12 @@ public final class Application {
                     clusterChangedProps.forEach((k, v) -> {
                         final String key = k.toString();
                         newProps.put(k, v);
-                        changeEvents.add(ResourceEvent.create(key.substring("redkale.cluster.".length()), v, clusterProperties.getProperty(key)));
+                        changeEvents.add(ResourceEvent.create(key.substring("redkale.cluster.".length()), v, this.clusterProperties.getProperty(key)));
                     });
                     clusterRemovedKeys.forEach(k -> {
                         final String key = k;
                         newProps.remove(k);
-                        changeEvents.add(ResourceEvent.create(key.substring("redkale.cluster.".length()), null, clusterProperties.getProperty(key)));
+                        changeEvents.add(ResourceEvent.create(key.substring("redkale.cluster.".length()), null, this.clusterProperties.getProperty(key)));
                     });
                     if (!changeEvents.isEmpty()) {
                         DefaultAnyValue back = old.copy();
@@ -2222,8 +2242,8 @@ public final class Application {
                         logger.log(Level.INFO, sb.toString());
                     }
                 }
-                clusterRemovedKeys.forEach(k -> clusterProperties.remove(k));
-                clusterProperties.putAll(clusterChangedProps);
+                clusterRemovedKeys.forEach(k -> this.clusterProperties.remove(k));
+                this.clusterProperties.putAll(clusterChangedProps);
             }
         }
     }

@@ -462,7 +462,7 @@ public abstract class AnyValue {
         }
 
         public DefaultAnyValue setValue(String name, String value) {
-            if (name == null) return this;
+            Objects.requireNonNull(name);
             if (!existsValue(name)) {
                 this.addValue(name, value);
             } else {
@@ -477,7 +477,7 @@ public abstract class AnyValue {
         }
 
         public DefaultAnyValue setValue(String name, AnyValue value) {
-            if (name == null) return this;
+            Objects.requireNonNull(name);
             if (!existsValue(name)) {
                 this.addValue(name, value);
             } else {
@@ -513,12 +513,13 @@ public abstract class AnyValue {
         }
 
         public DefaultAnyValue addValue(String name, String value) {
+            Objects.requireNonNull(name);
             this.stringEntrys = Utility.append(this.stringEntrys, new Entry(name, value));
             return this;
         }
 
         public DefaultAnyValue addValue(String name, AnyValue value) {
-            if (name == null || value == null) return this;
+            Objects.requireNonNull(name);
             this.anyEntrys = Utility.append(this.anyEntrys, new Entry(name, value));
             return this;
         }
@@ -532,25 +533,29 @@ public abstract class AnyValue {
         }
 
         public DefaultAnyValue removeAnyValues(String name) {
-            if (name == null || this.anyEntrys == null) return this;
+            Objects.requireNonNull(name);
+            if (this.anyEntrys == null) return this;
             this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name));
             return this;
         }
 
         public DefaultAnyValue removeValue(String name, AnyValue value) {
-            if (name == null || value == null || this.anyEntrys == null) return this;
+            Objects.requireNonNull(name);
+            if (value == null || this.anyEntrys == null) return this;
             this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
             return this;
         }
 
         public DefaultAnyValue removeStringValues(String name) {
-            if (name == null || this.stringEntrys == null) return this;
+            Objects.requireNonNull(name);
+            if (this.stringEntrys == null) return this;
             this.stringEntrys = Utility.remove(this.stringEntrys, (t) -> name.equals(((Entry) t).name));
             return this;
         }
 
         public DefaultAnyValue removeValue(String name, String value) {
-            if (name == null || value == null || this.stringEntrys == null) return this;
+            Objects.requireNonNull(name);
+            if (value == null || this.stringEntrys == null) return this;
             this.stringEntrys = Utility.remove(this.stringEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
             return this;
         }
@@ -605,9 +610,9 @@ public abstract class AnyValue {
         T value;
 
         @ConstructorParameters({"name", "value"})
-        public Entry(String name0, T value0) {
-            this.name = name0;
-            this.value = value0;
+        public Entry(String name, T value) {
+            this.name = name;
+            this.value = value;
         }
 
         /**
@@ -832,9 +837,26 @@ public abstract class AnyValue {
     public static AnyValue loadFromProperties(Properties properties, String nameName) {
         if (properties == null) return null;
         DefaultAnyValue conf = new DefaultAnyValue();
+        final char splitChar = (char) 2;
         Map<String, DefaultAnyValue> prefixArray = new TreeMap<>(); //已处理的数组key，如 redkale.source[0].xx  存redkale.source[0]
         properties.forEach((key, value) -> {
-            String[] keys = key.toString().split("\\.");
+            StringBuilder temp = new StringBuilder();
+            boolean flag = false;
+            for (char ch : key.toString().toCharArray()) { //替换redkale.properties[my.name]中括号里的'.'
+                if (ch == '[') {
+                    flag = true;
+                    temp.append(ch);
+                } else if (ch == ']') {
+                    flag = false;
+                    temp.append(ch);
+                } else {
+                    temp.append(flag && ch == '.' ? splitChar : ch);
+                }
+            }
+            String[] keys = temp.toString().split("\\.");
+            for (int i = 0; i < keys.length; i++) {
+                keys[i] = keys[i].replace(splitChar, '.');
+            }
             DefaultAnyValue parent = conf;
             if (keys.length > 1) {
                 for (int i = 0; i < keys.length - 1; i++) {
@@ -849,7 +871,7 @@ public abstract class AnyValue {
                         parent = child;
                     } else { //数组或Map结构, []中间是数字开头的视为数组，其他视为map
                         String itemField = item.substring(0, pos);  //[前面一部分'sources[1]'中'sources'
-                        String keyOrIndex = item.substring(pos + 1, item.indexOf(']'));
+                        String keyOrIndex = item.substring(pos + 1, item.indexOf(']')); //'sources[1]'中'1'
                         int realIndex = -1;
                         if (!keyOrIndex.isEmpty() && keyOrIndex.charAt(0) >= '0' && keyOrIndex.charAt(0) <= '9') {
                             try {
@@ -857,7 +879,7 @@ public abstract class AnyValue {
                             } catch (NumberFormatException e) {
                             }
                         }
-                        if (realIndex >= 0) { //数组
+                        if (realIndex >= 0) { //数组结构
                             String prefixKey = "";
                             for (int j = 0; j < i; j++) {
                                 prefixKey += keys[j] + ".";
@@ -889,7 +911,7 @@ public abstract class AnyValue {
                                 array = prefixArray.get(prefixKey + item);
                             }
                             parent = array;
-                        } else { //Map
+                        } else { //Map结构
                             DefaultAnyValue field = (DefaultAnyValue) parent.getAnyValue(itemField);
                             if (field == null) {
                                 field = new DefaultAnyValue();
