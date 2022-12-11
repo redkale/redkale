@@ -14,7 +14,4 @@ import java.util.logging.Handler;
  */
 public abstract class LoggingBaseHandler extends Handler {
 
-    protected Application currentApplication() {
-        return Application.currentApplication; //不能直接暴露外界访问
-    }
 }

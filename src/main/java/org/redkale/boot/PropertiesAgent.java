@@ -45,9 +45,9 @@ public abstract class PropertiesAgent {
      * @param application Application
      * @param conf        节点配置
      *
-     * @return 加载的配置项
+     * @return 加载的配置项, key:namespace
      */
-    public abstract Properties init(Application application, AnyValue conf);
+    public abstract Map<String, Properties> init(Application application, AnyValue conf);
 
     /**
      * 销毁动作
@@ -56,18 +56,9 @@ public abstract class PropertiesAgent {
      */
     public abstract void destroy(AnyValue conf);
 
-    protected void updateEnvironmentProperties(Application application, List<ResourceEvent> events) {
+    protected void updateEnvironmentProperties(Application application, String namespace, List<ResourceEvent> events) {
         if (events == null || events.isEmpty()) return;
-        application.updateEnvironmentProperties(events);
-//        Properties envChangeCache = new Properties();
-//        Properties sourceChangeCache = new Properties();
-//        //props.forEach((k, v) -> application.updateEnvironmentProperty(k.toString(), v.toString().trim(), envChangeCache, sourceChangeCache));
-//        if (!envChangeCache.isEmpty()) {
-//            application.resourceFactory.register(envChangeCache, "", Environment.class);
-//        }
-//        if (!sourceChangeCache.isEmpty()) {
-//            application.updateSourceProperties(sourceChangeCache);
-//        } 
+        application.updateEnvironmentProperties(namespace, events);
     }
 
     protected void reconfigLogging(Application application, Properties loggingProperties) {

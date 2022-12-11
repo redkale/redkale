@@ -43,6 +43,9 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     protected SearchSource source;
 
+    //在LogManager.getLogManager().readConfiguration执行完后，通过反射注入Application
+    protected Application application;
+
     public LoggingSearchHandler() {
         configure();
         open();
@@ -95,7 +98,10 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         if (retryCount.get() < 1) return;
         try {
             Utility.sleep(3000); //如果SearchSource自身在打印日志，需要停顿一点时间让SearchSource初始化完成
-            Application application = currentApplication();
+            if (application == null) {
+                Utility.sleep(3000);
+            }
+            if (application == null) return;
             this.source = (SearchSource) application.loadDataSource(sourceResourceName, false);
             if (retryCount.get() == 1 && this.source == null) System.err.println("ERROR: not load logging.source(" + sourceResourceName + ")");
         } catch (Exception t) {
