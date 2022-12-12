@@ -22,7 +22,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public static final int RETCODE_ILLSERVICEID = (1 << 1); //无效serviceid
 
-    public static final int RETCODE_ILLSERVICEVER = (1 << 2); //无效serviceversion
+    public static final int RETCODE_ILLSERVICEVER = (1 << 2); //无效serviceVersion
 
     public static final int RETCODE_ILLACTIONID = (1 << 3); //无效actionid
 
@@ -34,7 +34,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public static String getRetCodeInfo(int retcode) {
         if (retcode == RETCODE_ILLSERVICEID) return "The serviceid is invalid";
-        if (retcode == RETCODE_ILLSERVICEVER) return "The serviceversion is invalid";
+        if (retcode == RETCODE_ILLSERVICEVER) return "The serviceVersion is invalid";
         if (retcode == RETCODE_ILLACTIONID) return "The actionid is invalid";
         if (retcode == RETCODE_THROWEXCEPTION) return "Inner exception";
         return null;
@@ -84,7 +84,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         offset += 2;
         DLong.write(buffer, offset, request.getServiceid());
         offset += 16;
-        buffer.putInt(offset, request.getServiceversion());
+        buffer.putInt(offset, request.getServiceVersion());
         offset += 4;
         DLong.write(buffer, offset, request.getActionid());
         offset += 16;
@@ -105,7 +105,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 //        buffer.putLong(request.getSeqid());
 //        buffer.putChar((char) SncpRequest.HEADER_SIZE);
 //        DLong.write(buffer, request.getServiceid());
-//        buffer.putInt(request.getServiceversion());
+//        buffer.putInt(request.getServiceVersion());
 //        DLong.write(buffer, request.getActionid());
 //        buffer.put(addrBytes);
 //        buffer.putChar((char) this.addrPort);

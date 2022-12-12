@@ -52,7 +52,7 @@ public final class SncpClient {
 
     protected final DLong serviceid;
 
-    protected final int serviceversion;
+    protected final int serviceVersion;
 
     protected final SncpAction[] actions;
 
@@ -83,7 +83,7 @@ public final class SncpClient {
         Class<?> tn = serviceTypeOrImplClass;
         Version ver = tn.getAnnotation(Version.class);
         this.serviceClass = serviceClass;
-        this.serviceversion = ver == null ? 0 : ver.value();
+        this.serviceVersion = ver == null ? 0 : ver.value();
         this.clientSncpAddress = clientSncpAddress;
         this.name = serviceName;
         tn = ResourceFactory.getResourceType(tn);
@@ -120,8 +120,8 @@ public final class SncpClient {
         return serviceid;
     }
 
-    public int getServiceversion() {
-        return serviceversion;
+    public int getServiceVersion() {
+        return serviceVersion;
     }
 
     public int getActionCount() {
@@ -148,7 +148,7 @@ public final class SncpClient {
     public String toString() {
         String service = serviceClass.getName();
         if (remote) service = service.replace("DynLocalService", "DynRemoteService");
-        return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", serviceversion = " + serviceversion + ", name = '" + name
+        return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", serviceVersion = " + serviceVersion + ", name = '" + name
             + "', address = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
             + ", actions.size = " + actions.length + ")";
     }
@@ -160,7 +160,7 @@ public final class SncpClient {
         }
         String service = serviceClass.getAnnotation(SncpDyn.class) ==null? serviceClass.getName() : serviceClass.getSuperclass().getSimpleName();
         if (remote) service = service.replace("DynLocalService", "DynRemoteService");
-        return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceversion = " + serviceversion
+        return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = " + serviceVersion
             + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
             + ((remoteGroups == null || remoteGroups.isEmpty()) ? "" : ", remoteGroups = " + remoteGroups)
             + (remoteGroupTransport == null ? "" : ", remoteGroupTransport = " + Arrays.toString(remoteGroupTransport.getRemoteAddresses()))
@@ -460,7 +460,7 @@ public final class SncpClient {
         DLong rserviceid = DLong.read(buffer);
         if (!rserviceid.equals(this.serviceid)) throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
         int version = buffer.getInt();
-        if (version != this.serviceversion) throw new RuntimeException("sncp(" + action.method + ") response.serviceversion = " + serviceversion + ", but request.serviceversion =" + version);
+        if (version != this.serviceVersion) throw new RuntimeException("sncp(" + action.method + ") response.serviceVersion = " + serviceVersion + ", but request.serviceVersion =" + version);
         DLong raction = DLong.read(buffer);
         DLong actid = action.actionid;
         if (!actid.equals(raction)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
@@ -477,7 +477,7 @@ public final class SncpClient {
         offset += 2;
         DLong.write(buffer, offset, this.serviceid);
         offset += 16;
-        buffer.putInt(offset, this.serviceversion);
+        buffer.putInt(offset, this.serviceVersion);
         offset += 4;
         DLong.write(buffer, offset, actionid);
         offset += 16;
@@ -498,7 +498,7 @@ public final class SncpClient {
 //        buffer.putLong(seqid); //序列号
 //        buffer.putChar((char) HEADER_SIZE); //header长度
 //        DLong.write(buffer, this.serviceid);
-//        buffer.putInt(this.serviceversion);
+//        buffer.putInt(this.serviceVersion);
 //        DLong.write(buffer, actionid);
 //        buffer.put(addrBytes);
 //        buffer.putChar((char) this.addrPort);

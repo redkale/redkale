@@ -40,21 +40,21 @@ public class SncpRequest extends Request<SncpContext> {
 
     protected int readState = READ_STATE_ROUTE;
 
-    private int serviceversion;
+    private int serviceVersion;
 
     private DLong serviceid;
 
     private DLong actionid;
 
-    private int bodylength;
+    private int bodyLength;
 
-    private int bodyoffset;
+    private int bodyOffset;
 
     private boolean ping;
 
     private byte[] body;
 
-    private byte[] addrbytes = new byte[6];
+    private final byte[] addrBytes = new byte[6];
 
     protected SncpRequest(SncpContext context) {
         super(context);
@@ -78,38 +78,30 @@ public class SncpRequest extends Request<SncpContext> {
                 return -1;
             }
             this.serviceid = DLong.read(buffer); //16
-            this.serviceversion = buffer.getInt(); //4
+            this.serviceVersion = buffer.getInt(); //4
             this.actionid = DLong.read(buffer); //16
-            buffer.get(addrbytes); //ipaddr   //6
-            this.bodylength = buffer.getInt(); //4
+            buffer.get(addrBytes); //ipaddr   //6
+            this.bodyLength = buffer.getInt(); //4
 
             if (buffer.getInt() != 0) { //4
                 if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.retcode not 0");
                 return -1;
             }
-            this.body = new byte[this.bodylength];
+            this.body = new byte[this.bodyLength];
             this.readState = READ_STATE_BODY;
         }
         //---------------------body----------------------------------
         if (this.readState == READ_STATE_BODY) {
-            int len = Math.min(this.bodylength, buffer.remaining());
+            int len = Math.min(this.bodyLength, buffer.remaining());
             buffer.get(body, 0, len);
-            this.bodyoffset = len;
-            int rs = bodylength - len;
+            this.bodyOffset = len;
+            int rs = bodyLength - len;
             if (rs == 0) this.readState = READ_STATE_END;
             return rs;
         }
         return 0;
     }
 
-//    @Override
-//    protected int readBody(ByteBuffer buffer, int length) {
-//        final int framelen = buffer.remaining();
-//        int len = Math.min(framelen, length);
-//        buffer.get(this.body, this.bodyoffset, len);
-//        this.bodyoffset += len;
-//        return len;
-//    }
     @Override
     protected void prepare() {
         this.keepAlive = true;
@@ -122,9 +114,9 @@ public class SncpRequest extends Request<SncpContext> {
     @Override
     public String toString() {
         return SncpRequest.class.getSimpleName() + "{seqid=" + this.seqid
-            + ",serviceversion=" + this.serviceversion + ",serviceid=" + this.serviceid
-            + ",actionid=" + this.actionid + ",bodylength=" + this.bodylength
-            + ",bodyoffset=" + this.bodyoffset + ",remoteAddress=" + getRemoteAddress() + "}";
+            + ",serviceVersion=" + this.serviceVersion + ",serviceid=" + this.serviceid
+            + ",actionid=" + this.actionid + ",bodyLength=" + this.bodyLength
+            + ",bodyOffset=" + this.bodyOffset + ",remoteAddress=" + getRemoteAddress() + "}";
     }
 
     @Override
@@ -132,13 +124,13 @@ public class SncpRequest extends Request<SncpContext> {
         this.seqid = 0;
         this.readState = READ_STATE_ROUTE;
         this.serviceid = null;
-        this.serviceversion = 0;
+        this.serviceVersion = 0;
         this.actionid = null;
-        this.bodylength = 0;
-        this.bodyoffset = 0;
+        this.bodyLength = 0;
+        this.bodyOffset = 0;
         this.body = null;
         this.ping = false;
-        this.addrbytes[0] = 0;
+        this.addrBytes[0] = 0;
         super.recycle();
     }
 
@@ -154,8 +146,8 @@ public class SncpRequest extends Request<SncpContext> {
         return seqid;
     }
 
-    public int getServiceversion() {
-        return serviceversion;
+    public int getServiceVersion() {
+        return serviceVersion;
     }
 
     public DLong getServiceid() {
@@ -167,9 +159,9 @@ public class SncpRequest extends Request<SncpContext> {
     }
 
     public InetSocketAddress getRemoteAddress() {
-        if (addrbytes[0] == 0) return null;
-        return new InetSocketAddress((0xff & addrbytes[0]) + "." + (0xff & addrbytes[1]) + "." + (0xff & addrbytes[2]) + "." + (0xff & addrbytes[3]),
-            ((0xff00 & (addrbytes[4] << 8)) | (0xff & addrbytes[5])));
+        if (addrBytes[0] == 0) return null;
+        return new InetSocketAddress((0xff & addrBytes[0]) + "." + (0xff & addrBytes[1]) + "." + (0xff & addrBytes[2]) + "." + (0xff & addrBytes[3]),
+            ((0xff00 & (addrBytes[4] << 8)) | (0xff & addrBytes[5])));
     }
 
 }
