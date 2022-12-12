@@ -255,6 +255,42 @@ public final class Application {
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
         this.environment = new Environment(this.envProperties);
         { //设置系统变量
+            AnyValue propertiesConf = this.config.getAnyValue("properties");
+            if (propertiesConf != null) { //设置配置文件中的系统变量
+                for (AnyValue prop : propertiesConf.getAnyValues("property")) {
+                    String key = prop.getValue("name", "");
+                    if (key.startsWith("system.property.")) {
+                        String propName = key.substring("system.property.".length());
+                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
+                            String value = prop.getValue("value");
+                            System.setProperty(propName, value == null ? value : replaceValue(value));
+                        }
+                    }
+                }
+            }
+            //设置默认系统变量
+            if (System.getProperty("redkale.net.transport.poolmaxconns") == null) {
+                System.setProperty("redkale.net.transport.poolmaxconns", "100");
+            }
+            if (System.getProperty("redkale.net.transport.pinginterval") == null) {
+                System.setProperty("redkale.net.transport.pinginterval", "30");
+            }
+            if (System.getProperty("redkale.net.transport.checkinterval") == null) {
+                System.setProperty("redkale.net.transport.checkinterval", "30");
+            }
+            if (System.getProperty("redkale.convert.tiny") == null) {
+                System.setProperty("redkale.convert.tiny", "true");
+            }
+            if (System.getProperty("redkale.convert.pool.size") == null) {
+                System.setProperty("redkale.convert.pool.size", "128");
+            }
+            if (System.getProperty("redkale.convert.writer.buffer.defsize") == null) {
+                System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
+            }
+            if (System.getProperty("redkale.trace.enable") == null) {
+                System.setProperty("redkale.trace.enable", "false");
+            }
+
             System.setProperty("redkale.version", Redkale.getDotedVersion());
             int nid = config.getIntValue("nodeid", 0);
             this.nodeid = nid;
@@ -264,6 +300,7 @@ public final class Application {
             this.name = checkName(config.getValue("name", ""));
             this.resourceFactory.register(RESNAME_APP_NAME, name);
             System.setProperty(RESNAME_APP_NAME, name);
+
         }
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
@@ -392,27 +429,6 @@ public final class Application {
                 String lib = replaceValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
                 lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
                 Server.loadLib(classLoader, logger, lib);
-            }
-            if (System.getProperty("redkale.net.transport.poolmaxconns") == null) {
-                System.setProperty("redkale.net.transport.poolmaxconns", "100");
-            }
-            if (System.getProperty("redkale.net.transport.pinginterval") == null) {
-                System.setProperty("redkale.net.transport.pinginterval", "30");
-            }
-            if (System.getProperty("redkale.net.transport.checkinterval") == null) {
-                System.setProperty("redkale.net.transport.checkinterval", "30");
-            }
-            if (System.getProperty("redkale.convert.tiny") == null) {
-                System.setProperty("redkale.convert.tiny", "true");
-            }
-            if (System.getProperty("redkale.convert.pool.size") == null) {
-                System.setProperty("redkale.convert.pool.size", "128");
-            }
-            if (System.getProperty("redkale.convert.writer.buffer.defsize") == null) {
-                System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
-            }
-            if (System.getProperty("redkale.trace.enable") == null) {
-                System.setProperty("redkale.trace.enable", "false");
             }
 
             this.resourceFactory.register(BsonFactory.root());
