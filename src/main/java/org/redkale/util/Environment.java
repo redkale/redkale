@@ -3,7 +3,7 @@
 package org.redkale.util;
 
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.function.*;
 
 /**
  * 环境变量, 只读版Properties
@@ -45,6 +45,11 @@ public class Environment implements java.io.Serializable {
 
     public void forEach(BiConsumer<String, String> action) {
         properties.forEach((BiConsumer) action);
+    }
+
+    public void forEach(Predicate<String> predicate, BiConsumer<String, String> action) {
+        properties.entrySet().stream().filter(en -> predicate.test(en.getKey().toString()))
+            .forEach(en -> action.accept(en.getKey().toString(), en.getValue() == null ? null : en.getValue().toString()));
     }
 
     public boolean getBooleanProperty(String key) {
