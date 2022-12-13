@@ -1132,4 +1132,330 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return querySheetAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
+    protected static class DefaultDataBatch implements DataBatch {
+
+        //-------------------- 新增操作 --------------------
+        @Comment("新增Entity对象")
+        public Map<Class, List> insertEntitys;
+
+        //-------------------- 删除操作 --------------------
+        @Comment("删除Entity对象")
+        public Map<Class, List> deleteEntitys;
+
+        @Comment("根据主键值删除")
+        public Map<Class, List<DeleteBatchAction1>> deleteActions1;
+
+        @Comment("根据FilterNode删除")
+        public Map<Class, List<DeleteBatchAction2>> deleteActions2;
+
+        //-------------------- 修改操作 --------------------
+        @Comment("修改Entity对象")
+        public Map<Class, List> updateEntitys;
+
+        @Comment("根据主键值修改部分字段")
+        public Map<Class, List<UpdateBatchAction1>> updateActions1;
+
+        @Comment("根据FilterNode修改部分字段")
+        public Map<Class, List<UpdateBatchAction2>> updateActions2;
+
+        @Comment("根据FilterNode修改Entity部分字段")
+        public Map<Class, List<UpdateBatchAction3>> updateActions3;
+
+        @Comment("根据FilterNode修改Entity的SelectColumn选定字段")
+        public Map<Class, List<UpdateBatchAction4>> updateActions4;
+
+        protected DefaultDataBatch() {
+        }
+
+        @Override
+        public <T> DataBatch insert(T... entitys) {
+            if (this.insertEntitys == null) {
+                this.insertEntitys = new HashMap<>();
+            }
+            for (T t : entitys) {
+                Objects.requireNonNull(t);
+                if (t.getClass().getAnnotation(Entity.class) == null) {
+                    throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                }
+                this.insertEntitys.computeIfAbsent(t.getClass(), c -> new ArrayList<>()).add(t);
+            }
+            return this;
+        }
+
+        @Override
+        public <T> DataBatch delete(T... entitys) {
+            if (this.deleteEntitys == null) {
+                this.deleteEntitys = new HashMap<>();
+            }
+            for (T t : entitys) {
+                Objects.requireNonNull(t);
+                if (t.getClass().getAnnotation(Entity.class) == null) {
+                    throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                }
+                this.deleteEntitys.computeIfAbsent(t.getClass(), c -> new ArrayList<>()).add(t);
+            }
+            return this;
+        }
+
+        @Override
+        public <T> DataBatch delete(Class<T> clazz, Serializable... pks) {
+            Objects.requireNonNull(clazz);
+            if (clazz.getAnnotation(Entity.class) == null) {
+                throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+            }
+            if (pks.length < 1) {
+                throw new RuntimeException("delete pk length is zero ");
+            }
+            for (Serializable pk : pks) {
+                Objects.requireNonNull(pk);
+            }
+            if (this.deleteActions1 == null) {
+                this.deleteActions1 = new HashMap<>();
+            }
+            this.deleteActions1.computeIfAbsent(clazz, c -> new ArrayList<>()).add(new DeleteBatchAction1(clazz, pks));
+            return this;
+        }
+
+        @Override
+        public <T> DataBatch delete(Class<T> clazz, FilterNode node) {
+            return delete(clazz, node, (Flipper) null);
+        }
+
+        @Override
+        public <T> DataBatch delete(Class<T> clazz, FilterNode node, Flipper flipper) {
+            Objects.requireNonNull(clazz);
+            if (clazz.getAnnotation(Entity.class) == null) {
+                throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+            }
+            if (this.deleteActions2 == null) {
+                this.deleteActions2 = new HashMap<>();
+            }
+            this.deleteActions2.computeIfAbsent(clazz, c -> new ArrayList<>()).add(new DeleteBatchAction2(clazz, node, flipper));
+            return this;
+        }
+
+        @Override
+        public <T> DataBatch update(T... entitys) {
+            if (this.updateEntitys == null) {
+                this.updateEntitys = new HashMap<>();
+            }
+            for (T t : entitys) {
+                Objects.requireNonNull(t);
+                if (t.getClass().getAnnotation(Entity.class) == null) {
+                    throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                }
+                this.updateEntitys.computeIfAbsent(t.getClass(), c -> new ArrayList<>()).add(t);
+            }
+            return this;
+        }
+
+        @Override
+        public <T> DataBatch update(Class<T> clazz, Serializable pk, String column, Serializable value) {
+            return update(clazz, pk, ColumnValue.mov(column, value));
+        }
+
+        @Override
+        public <T> DataBatch update(Class<T> clazz, Serializable pk, ColumnValue... values) {
+            Objects.requireNonNull(clazz);
+            if (clazz.getAnnotation(Entity.class) == null) {
+                throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+            }
+            Objects.requireNonNull(pk);
+            if (values.length < 1) {
+                throw new RuntimeException("update column-value length is zero ");
+            }
+            for (ColumnValue val : values) {
+                Objects.requireNonNull(val);
+            }
+            if (this.updateActions1 == null) {
+                this.updateActions1 = new HashMap<>();
+            }
+            this.updateActions1.computeIfAbsent(clazz, c -> new ArrayList<>()).add(new UpdateBatchAction1(clazz, pk, values));
+            return this;
+        }
+
+        @Override
+        public <T> DataBatch update(Class<T> clazz, FilterNode node, String column, Serializable value) {
+            return update(clazz, node, (Flipper) null, ColumnValue.mov(column, value));
+        }
+
+        @Override
+        public <T> DataBatch update(Class<T> clazz, FilterNode node, ColumnValue... values) {
+            return update(clazz, node, (Flipper) null, values);
+        }
+
+        @Override
+        public <T> DataBatch update(Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
+            Objects.requireNonNull(clazz);
+            if (clazz.getAnnotation(Entity.class) == null) {
+                throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+            }
+            if (values.length < 1) {
+                throw new RuntimeException("update column-value length is zero ");
+            }
+            for (ColumnValue val : values) {
+                Objects.requireNonNull(val);
+            }
+            if (this.updateActions2 == null) {
+                this.updateActions2 = new HashMap<>();
+            }
+            this.updateActions2.computeIfAbsent(clazz, c -> new ArrayList<>()).add(new UpdateBatchAction2(clazz, node, flipper, values));
+            return this;
+        }
+
+        @Override
+        public <T> DataBatch updateColumn(T entity, final String... columns) {
+            return updateColumn(entity, (FilterNode) null, columns);
+        }
+
+        @Override
+        public <T> DataBatch updateColumn(T entity, final FilterNode node, final String... columns) {
+            Objects.requireNonNull(entity);
+            if (entity.getClass().getAnnotation(Entity.class) == null) {
+                throw new RuntimeException("Entity Class " + entity.getClass() + " must be on Annotation @Entity");
+            }
+            if (columns.length < 1) {
+                throw new RuntimeException("update column length is zero ");
+            }
+            for (String val : columns) {
+                Objects.requireNonNull(val);
+            }
+            if (this.updateActions3 == null) {
+                this.updateActions3 = new HashMap<>();
+            }
+            this.updateActions3.computeIfAbsent(entity.getClass(), c -> new ArrayList<>()).add(new UpdateBatchAction3(entity, node, columns));
+            return this;
+        }
+
+        @Override
+        public <T> DataBatch updateColumn(T entity, SelectColumn selects) {
+            return updateColumn(entity, (FilterNode) null, selects);
+        }
+
+        @Override
+        public <T> DataBatch updateColumn(T entity, final FilterNode node, SelectColumn selects) {
+            Objects.requireNonNull(entity);
+            if (entity.getClass().getAnnotation(Entity.class) == null) {
+                throw new RuntimeException("Entity Class " + entity.getClass() + " must be on Annotation @Entity");
+            }
+            Objects.requireNonNull(selects);
+            if (this.updateActions4 == null) {
+                this.updateActions4 = new HashMap<>();
+            }
+            this.updateActions4.computeIfAbsent(entity.getClass(), c -> new ArrayList<>()).add(new UpdateBatchAction4(entity, node, selects));
+            return this;
+        }
+
+    }
+
+    protected static class DeleteBatchAction1 {
+
+        public Class clazz;
+
+        public Serializable[] pks;
+
+        public DeleteBatchAction1(Class clazz, Serializable... pks) {
+            this.clazz = clazz;
+            this.pks = pks;
+        }
+    }
+
+    protected static class DeleteBatchAction2 {
+
+        public Class clazz;
+
+        public FilterNode node;
+
+        public Flipper flipper;
+
+        public DeleteBatchAction2(Class clazz, FilterNode node) {
+            this.clazz = clazz;
+            this.node = node;
+        }
+
+        public DeleteBatchAction2(Class clazz, FilterNode node, Flipper flipper) {
+            this.clazz = clazz;
+            this.node = node;
+            this.flipper = flipper;
+        }
+    }
+
+    protected static class UpdateBatchAction1 {
+
+        public Class clazz;
+
+        public Serializable pk;
+
+        public ColumnValue[] values;
+
+        public UpdateBatchAction1(Class clazz, Serializable pk, ColumnValue... values) {
+            this.clazz = clazz;
+            this.pk = pk;
+            this.values = values;
+        }
+    }
+
+    protected static class UpdateBatchAction2 {
+
+        public Class clazz;
+
+        public FilterNode node;
+
+        public Flipper flipper;
+
+        public ColumnValue[] values;
+
+        public UpdateBatchAction2(Class clazz, FilterNode node, ColumnValue... values) {
+            this.clazz = clazz;
+            this.node = node;
+            this.values = values;
+        }
+
+        public UpdateBatchAction2(Class clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
+            this.clazz = clazz;
+            this.node = node;
+            this.flipper = flipper;
+            this.values = values;
+        }
+    }
+
+    protected static class UpdateBatchAction3 {
+
+        public Object entity;
+
+        public FilterNode node;
+
+        public String[] columns;
+
+        public UpdateBatchAction3(Object entity, String... columns) {
+            this.entity = entity;
+            this.columns = columns;
+        }
+
+        public UpdateBatchAction3(Object entity, FilterNode node, String... columns) {
+            this.entity = entity;
+            this.node = node;
+            this.columns = columns;
+        }
+    }
+
+    protected static class UpdateBatchAction4 {
+
+        public Object entity;
+
+        public FilterNode node;
+
+        public SelectColumn selects;
+
+        public UpdateBatchAction4(Object entity, SelectColumn selects) {
+            this.entity = entity;
+            this.selects = selects;
+        }
+
+        public UpdateBatchAction4(Object entity, FilterNode node, SelectColumn selects) {
+            this.entity = entity;
+            this.node = node;
+            this.selects = selects;
+        }
+    }
 }
