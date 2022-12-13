@@ -58,8 +58,26 @@ public interface DataSource extends Resourcable {
      */
     public <T> void compile(Class<T> clazz);
 
+    //----------------------batchAsync-----------------------------
+    /**
+     * 增删改的批量操作
+     *
+     * @param bath 批量对象
+     *
+     * @return -1表示失败，正数为成功
+     */
+    //public int batch(final DataBatch bath);
+
+    /**
+     * 增删改的批量操作
+     *
+     * @param bath 批量对象
+     *
+     * @return -1表示失败，正数为成功
+     */
+    //public CompletableFuture<Integer> batchAsync(final DataBatch bath);
+
     //----------------------insertAsync-----------------------------
-    //insert 暂时不支持Collection、Stream， 因为存在@RpcCall问题
     /**
      * 新增记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
      *

@@ -167,7 +167,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public String username;
 
         public String password;
-        
+
         public String encoding;
 
         @Override
@@ -297,7 +297,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         for (T val : entitys) {
             if (clazz == null) {
                 clazz = val.getClass();
-                if (clazz.getAnnotation(Entity.class) == null) throw new RuntimeException("Entity Class " + clazz + " must be on annotation @Entity");
+                if (clazz.getAnnotation(Entity.class) == null) {
+                    throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+                }
                 continue;
             }
             if (clazz != val.getClass()) {

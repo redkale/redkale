@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import java.util.Objects;
 import static org.redkale.source.ColumnExpress.*;
 
 /**
@@ -34,6 +35,7 @@ public class ColumnValue {
     }
 
     public ColumnValue(String column, ColumnExpress express, Serializable value) {
+        Objects.requireNonNull(column);
         this.column = column;
         this.express = express == null ? ColumnExpress.MOV : express;
         this.value = value;
