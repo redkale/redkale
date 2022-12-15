@@ -111,14 +111,26 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
+    public CompletableFuture<Integer> batchAsync(final DataBatch batch) {
+        return CompletableFuture.supplyAsync(() -> batch(batch), getExecutor());
+    }
+
+    @Override
+    public int batch(final DataBatch batch) {
+        Objects.requireNonNull(batch);
+        final List<BatchAction> actions = ((DefaultDataBatch) batch).actions;
+        final DefaultBatchInfo batchInfo = parseBatchInfo((DefaultDataBatch) batch, this);
+
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
     protected <T> CompletableFuture<Integer> insertDB(EntityInfo<T> info, T... entitys) {
         Connection conn = null;
         try {
             int c = 0;
             conn = writePool.pollConnection();
             final String sql = info.getInsertQuestionPrepareSQL(entitys[0]);
-            final Class primaryType = info.getPrimary().type();
-            final Attribute primary = info.getPrimary();
             Attribute<T, Serializable>[] attrs = info.insertAttributes;
             conn.setReadOnly(false);
             conn.setAutoCommit(true);
@@ -149,14 +161,14 @@ public class DataJdbcSource extends DataSqlSource {
                     synchronized (info.disTableLock()) {
                         final String catalog = conn.getCatalog();
                         final String newTable = info.getTable(entitys[0]);
-                        final String tablekey = newTable.indexOf('.') > 0 ? newTable : (catalog + '.' + newTable);
-                        if (!info.containsDisTable(tablekey)) {
+                        final String tableKey = newTable.indexOf('.') > 0 ? newTable : (catalog + '.' + newTable);
+                        if (!info.containsDisTable(tableKey)) {
                             try {
                                 //执行一遍复制表操作
                                 Statement st = conn.createStatement();
                                 st.execute(getTableCopySQL(info, newTable));
                                 st.close();
-                                info.addDisTable(tablekey);
+                                info.addDisTable(tableKey);
                             } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
                                 if (isTableNotExist(info, sqle.getSQLState())) {
                                     if (newTable.indexOf('.') < 0) {
@@ -176,7 +188,7 @@ public class DataJdbcSource extends DataSqlSource {
                                             st = conn.createStatement();
                                             st.execute(getTableCopySQL(info, newTable));
                                             st.close();
-                                            info.addDisTable(tablekey);
+                                            info.addDisTable(tableKey);
                                         }
                                     } else { //需要先建库
                                         Statement st;
@@ -192,7 +204,7 @@ public class DataJdbcSource extends DataSqlSource {
                                             st = conn.createStatement();
                                             st.execute(getTableCopySQL(info, newTable));
                                             st.close();
-                                            info.addDisTable(tablekey);
+                                            info.addDisTable(tableKey);
                                         } catch (SQLException sqle2) {
                                             if (isTableNotExist(info, sqle2.getSQLState())) {
                                                 String[] tablesqls = createTableSqls(info);
@@ -211,7 +223,7 @@ public class DataJdbcSource extends DataSqlSource {
                                                     st = conn.createStatement();
                                                     st.execute(getTableCopySQL(info, newTable));
                                                     st.close();
-                                                    info.addDisTable(tablekey);
+                                                    info.addDisTable(tableKey);
                                                 }
                                             } else {
                                                 logger.log(Level.SEVERE, "create table2(" + getTableCopySQL(info, newTable) + ") error", sqle2);

@@ -314,6 +314,134 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return null;
     }
 
+    protected DefaultBatchInfo parseBatchInfo(DefaultDataBatch batch, Function<Class, EntityInfo> func) {
+        final List<BatchAction> actions = ((DefaultDataBatch) batch).actions;
+        final Map<Class, EntityInfo> infos = new HashMap<>();
+        final Map<String, EntityInfo> notInsertDisTables = new HashMap<>();
+        final Map<String, EntityInfo> notUpDelDisTables = new HashMap<>();
+        for (BatchAction action : actions) {
+            if (action instanceof InsertBatchAction1) {
+                InsertBatchAction1 act = (InsertBatchAction1) action;
+                Object entity = act.entity;
+                Class clazz = entity.getClass();
+                if (!infos.containsKey(clazz)) {
+                    EntityInfo info = func.apply(clazz);
+                    infos.put(clazz, info);
+                    if (info.getTableStrategy() != null) {
+                        String tableKey = info.getTable(entity);
+                        if (!info.containsDisTable(tableKey)) {
+                            notInsertDisTables.put(tableKey, info);
+                        }
+                    }
+                }
+            } else if (action instanceof DeleteBatchAction1) {
+                DeleteBatchAction1 act = (DeleteBatchAction1) action;
+                Object entity = act.entity;
+                Class clazz = entity.getClass();
+                if (!infos.containsKey(clazz)) {
+                    EntityInfo info = func.apply(clazz);
+                    infos.put(clazz, info);
+                    if (info.getTableStrategy() != null) {
+                        String tableKey = info.getTable(entity);
+                        if (!info.containsDisTable(tableKey)) {
+                            notUpDelDisTables.put(tableKey, info);
+                        }
+                    }
+                }
+            } else if (action instanceof DeleteBatchAction2) {
+                DeleteBatchAction2 act = (DeleteBatchAction2) action;
+                Class clazz = act.clazz;
+                if (!infos.containsKey(clazz)) {
+                    EntityInfo info = func.apply(clazz);
+                    infos.put(clazz, info);
+                    if (info.getTableStrategy() != null) {
+                        String tableKey = info.getTable(act.pk);
+                        if (!info.containsDisTable(tableKey)) {
+                            notUpDelDisTables.put(tableKey, info);
+                        }
+                    }
+                }
+            } else if (action instanceof DeleteBatchAction3) {
+                DeleteBatchAction3 act = (DeleteBatchAction3) action;
+                Class clazz = act.clazz;
+                if (!infos.containsKey(clazz)) {
+                    EntityInfo info = func.apply(clazz);
+                    infos.put(clazz, info);
+                    if (info.getTableStrategy() != null) {
+                        String tableKey = info.getTable(act.node);
+                        if (!info.containsDisTable(tableKey)) {
+                            notUpDelDisTables.put(tableKey, info);
+                        }
+                    }
+                }
+            } else if (action instanceof UpdateBatchAction1) {
+                UpdateBatchAction1 act = (UpdateBatchAction1) action;
+                Object entity = act.entity;
+                Class clazz = entity.getClass();
+                if (!infos.containsKey(clazz)) {
+                    EntityInfo info = func.apply(clazz);
+                    infos.put(clazz, info);
+                    if (info.getTableStrategy() != null) {
+                        String tableKey = info.getTable(entity);
+                        if (!info.containsDisTable(tableKey)) {
+                            notUpDelDisTables.put(tableKey, info);
+                        }
+                    }
+                }
+            } else if (action instanceof UpdateBatchAction2) {
+                UpdateBatchAction2 act = (UpdateBatchAction2) action;
+                Class clazz = act.clazz;
+                if (!infos.containsKey(clazz)) {
+                    EntityInfo info = func.apply(clazz);
+                    infos.put(clazz, info);
+                    if (info.getTableStrategy() != null) {
+                        String tableKey = info.getTable(act.pk);
+                        if (!info.containsDisTable(tableKey)) {
+                            notUpDelDisTables.put(tableKey, info);
+                        }
+                    }
+                }
+            } else if (action instanceof UpdateBatchAction3) {
+                UpdateBatchAction3 act = (UpdateBatchAction3) action;
+                Class clazz = act.clazz;
+                if (!infos.containsKey(clazz)) {
+                    EntityInfo info = func.apply(clazz);
+                    infos.put(clazz, info);
+                    if (info.getTableStrategy() != null) {
+                        String tableKey = info.getTable(act.node);
+                        if (!info.containsDisTable(tableKey)) {
+                            notUpDelDisTables.put(tableKey, info);
+                        }
+                    }
+                }
+            } else if (action instanceof UpdateBatchAction4) {
+                UpdateBatchAction4 act = (UpdateBatchAction4) action;
+                Class clazz = act.entity.getClass();
+                if (!infos.containsKey(clazz)) {
+                    EntityInfo info = func.apply(clazz);
+                    infos.put(clazz, info);
+                    if (info.getTableStrategy() != null) {
+                        String tableKey = act.node == null ? info.getTable(act.entity) : info.getTable(act.node);
+                        if (!info.containsDisTable(tableKey)) {
+                            notUpDelDisTables.put(tableKey, info);
+                        }
+                    }
+                }
+            }
+        }
+        return new DefaultBatchInfo(infos, notInsertDisTables, notUpDelDisTables);
+    }
+
+    @Override
+    public int batch(final DataBatch batch) {
+        return batchAsync(batch).join();
+    }
+
+    @Override
+    public CompletableFuture<Integer> batchAsync(final DataBatch batch) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     @Override
     public final <T> int insert(final Collection<T> entitys) {
         if (entitys == null || entitys.isEmpty()) return 0;
@@ -1134,65 +1262,32 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     protected static class DefaultDataBatch implements DataBatch {
 
-        //-------------------- 新增操作 --------------------
-        @Comment("新增Entity对象")
-        public Map<Class, List> insertEntitys;
-
-        //-------------------- 删除操作 --------------------
-        @Comment("删除Entity对象")
-        public Map<Class, List> deleteEntitys;
-
-        @Comment("根据主键值删除")
-        public Map<Class, List<DeleteBatchAction1>> deleteActions1;
-
-        @Comment("根据FilterNode删除")
-        public Map<Class, List<DeleteBatchAction2>> deleteActions2;
-
-        //-------------------- 修改操作 --------------------
-        @Comment("修改Entity对象")
-        public Map<Class, List> updateEntitys;
-
-        @Comment("根据主键值修改部分字段")
-        public Map<Class, List<UpdateBatchAction1>> updateActions1;
-
-        @Comment("根据FilterNode修改部分字段")
-        public Map<Class, List<UpdateBatchAction2>> updateActions2;
-
-        @Comment("根据FilterNode修改Entity部分字段")
-        public Map<Class, List<UpdateBatchAction3>> updateActions3;
-
-        @Comment("根据FilterNode修改Entity的SelectColumn选定字段")
-        public Map<Class, List<UpdateBatchAction4>> updateActions4;
+        @Comment("操作对象")
+        public final List<BatchAction> actions = new ArrayList();
 
         protected DefaultDataBatch() {
         }
 
-        @Override
+        @Override  //entitys不一定是同一表的数据
         public <T> DataBatch insert(T... entitys) {
-            if (this.insertEntitys == null) {
-                this.insertEntitys = new HashMap<>();
-            }
             for (T t : entitys) {
                 Objects.requireNonNull(t);
                 if (t.getClass().getAnnotation(Entity.class) == null) {
                     throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
-                this.insertEntitys.computeIfAbsent(t.getClass(), c -> new ArrayList<>()).add(t);
+                this.actions.add(new InsertBatchAction1(t));
             }
             return this;
         }
 
-        @Override
+        @Override  //entitys不一定是同一表的数据
         public <T> DataBatch delete(T... entitys) {
-            if (this.deleteEntitys == null) {
-                this.deleteEntitys = new HashMap<>();
-            }
             for (T t : entitys) {
                 Objects.requireNonNull(t);
                 if (t.getClass().getAnnotation(Entity.class) == null) {
                     throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
-                this.deleteEntitys.computeIfAbsent(t.getClass(), c -> new ArrayList<>()).add(t);
+                this.actions.add(new DeleteBatchAction1(t));
             }
             return this;
         }
@@ -1208,11 +1303,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             }
             for (Serializable pk : pks) {
                 Objects.requireNonNull(pk);
+                this.actions.add(new DeleteBatchAction2(clazz, pk));
             }
-            if (this.deleteActions1 == null) {
-                this.deleteActions1 = new HashMap<>();
-            }
-            this.deleteActions1.computeIfAbsent(clazz, c -> new ArrayList<>()).add(new DeleteBatchAction1(clazz, pks));
             return this;
         }
 
@@ -1227,24 +1319,18 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             if (clazz.getAnnotation(Entity.class) == null) {
                 throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
-            if (this.deleteActions2 == null) {
-                this.deleteActions2 = new HashMap<>();
-            }
-            this.deleteActions2.computeIfAbsent(clazz, c -> new ArrayList<>()).add(new DeleteBatchAction2(clazz, node, flipper));
+            this.actions.add(new DeleteBatchAction3(clazz, node, flipper));
             return this;
         }
 
-        @Override
+        @Override  //entitys不一定是同一表的数据
         public <T> DataBatch update(T... entitys) {
-            if (this.updateEntitys == null) {
-                this.updateEntitys = new HashMap<>();
-            }
             for (T t : entitys) {
                 Objects.requireNonNull(t);
                 if (t.getClass().getAnnotation(Entity.class) == null) {
                     throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
-                this.updateEntitys.computeIfAbsent(t.getClass(), c -> new ArrayList<>()).add(t);
+                this.actions.add(new UpdateBatchAction1(t));
             }
             return this;
         }
@@ -1267,10 +1353,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             for (ColumnValue val : values) {
                 Objects.requireNonNull(val);
             }
-            if (this.updateActions1 == null) {
-                this.updateActions1 = new HashMap<>();
-            }
-            this.updateActions1.computeIfAbsent(clazz, c -> new ArrayList<>()).add(new UpdateBatchAction1(clazz, pk, values));
+            this.actions.add(new UpdateBatchAction2(clazz, pk, values));
             return this;
         }
 
@@ -1296,35 +1379,24 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             for (ColumnValue val : values) {
                 Objects.requireNonNull(val);
             }
-            if (this.updateActions2 == null) {
-                this.updateActions2 = new HashMap<>();
-            }
-            this.updateActions2.computeIfAbsent(clazz, c -> new ArrayList<>()).add(new UpdateBatchAction2(clazz, node, flipper, values));
+            this.actions.add(new UpdateBatchAction3(clazz, node, flipper, values));
             return this;
         }
 
         @Override
         public <T> DataBatch updateColumn(T entity, final String... columns) {
-            return updateColumn(entity, (FilterNode) null, columns);
-        }
-
-        @Override
-        public <T> DataBatch updateColumn(T entity, final FilterNode node, final String... columns) {
-            Objects.requireNonNull(entity);
-            if (entity.getClass().getAnnotation(Entity.class) == null) {
-                throw new RuntimeException("Entity Class " + entity.getClass() + " must be on Annotation @Entity");
-            }
             if (columns.length < 1) {
                 throw new RuntimeException("update column length is zero ");
             }
             for (String val : columns) {
                 Objects.requireNonNull(val);
             }
-            if (this.updateActions3 == null) {
-                this.updateActions3 = new HashMap<>();
-            }
-            this.updateActions3.computeIfAbsent(entity.getClass(), c -> new ArrayList<>()).add(new UpdateBatchAction3(entity, node, columns));
-            return this;
+            return updateColumn(entity, (FilterNode) null, SelectColumn.includes(columns));
+        }
+
+        @Override
+        public <T> DataBatch updateColumn(T entity, final FilterNode node, final String... columns) {
+            return updateColumn(entity, node, SelectColumn.includes(columns));
         }
 
         @Override
@@ -1339,28 +1411,66 @@ public abstract class AbstractDataSource extends AbstractService implements Data
                 throw new RuntimeException("Entity Class " + entity.getClass() + " must be on Annotation @Entity");
             }
             Objects.requireNonNull(selects);
-            if (this.updateActions4 == null) {
-                this.updateActions4 = new HashMap<>();
-            }
-            this.updateActions4.computeIfAbsent(entity.getClass(), c -> new ArrayList<>()).add(new UpdateBatchAction4(entity, node, selects));
+            this.actions.add(new UpdateBatchAction4(entity, node, selects));
             return this;
         }
 
     }
 
-    protected static class DeleteBatchAction1 {
+    protected static class DefaultBatchInfo {
 
-        public Class clazz;
+        //EntityInfo对象
+        public Map<Class, EntityInfo> entityInfos;
 
-        public Serializable[] pks;
+        //新增操作可能不存在的分表
+        public Map<String, EntityInfo> notInsertDisTables;
 
-        public DeleteBatchAction1(Class clazz, Serializable... pks) {
-            this.clazz = clazz;
-            this.pks = pks;
+        //删除修改操作可能不存在的分表
+        public Map<String, EntityInfo> notUpDelDisTables;
+
+        public DefaultBatchInfo(Map<Class, EntityInfo> entityInfos, Map<String, EntityInfo> notInsertDisTables, Map<String, EntityInfo> notUpDelDisTables) {
+            this.entityInfos = entityInfos;
+            this.notInsertDisTables = notInsertDisTables;
+            this.notUpDelDisTables = notUpDelDisTables;
+        }
+
+    }
+
+    protected abstract static class BatchAction {
+
+    }
+
+    protected static class InsertBatchAction1 extends BatchAction {
+
+        public Object entity;
+
+        public InsertBatchAction1(Object entity) {
+            this.entity = entity;
         }
     }
 
-    protected static class DeleteBatchAction2 {
+    protected static class DeleteBatchAction1 extends BatchAction {
+
+        public Object entity;
+
+        public DeleteBatchAction1(Object entity) {
+            this.entity = entity;
+        }
+    }
+
+    protected static class DeleteBatchAction2 extends BatchAction {
+
+        public Class clazz;
+
+        public Serializable pk;
+
+        public DeleteBatchAction2(Class clazz, Serializable pk) {
+            this.clazz = clazz;
+            this.pk = pk;
+        }
+    }
+
+    protected static class DeleteBatchAction3 extends BatchAction {
 
         public Class clazz;
 
@@ -1368,19 +1478,28 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
         public Flipper flipper;
 
-        public DeleteBatchAction2(Class clazz, FilterNode node) {
+        public DeleteBatchAction3(Class clazz, FilterNode node) {
             this.clazz = clazz;
             this.node = node;
         }
 
-        public DeleteBatchAction2(Class clazz, FilterNode node, Flipper flipper) {
+        public DeleteBatchAction3(Class clazz, FilterNode node, Flipper flipper) {
             this.clazz = clazz;
             this.node = node;
             this.flipper = flipper;
         }
     }
 
-    protected static class UpdateBatchAction1 {
+    protected static class UpdateBatchAction1 extends BatchAction {
+
+        public Object entity;
+
+        public UpdateBatchAction1(Object entity) {
+            this.entity = entity;
+        }
+    }
+
+    protected static class UpdateBatchAction2 extends BatchAction {
 
         public Class clazz;
 
@@ -1388,14 +1507,14 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
         public ColumnValue[] values;
 
-        public UpdateBatchAction1(Class clazz, Serializable pk, ColumnValue... values) {
+        public UpdateBatchAction2(Class clazz, Serializable pk, ColumnValue... values) {
             this.clazz = clazz;
             this.pk = pk;
             this.values = values;
         }
     }
 
-    protected static class UpdateBatchAction2 {
+    protected static class UpdateBatchAction3 extends BatchAction {
 
         public Class clazz;
 
@@ -1405,13 +1524,13 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
         public ColumnValue[] values;
 
-        public UpdateBatchAction2(Class clazz, FilterNode node, ColumnValue... values) {
+        public UpdateBatchAction3(Class clazz, FilterNode node, ColumnValue... values) {
             this.clazz = clazz;
             this.node = node;
             this.values = values;
         }
 
-        public UpdateBatchAction2(Class clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
+        public UpdateBatchAction3(Class clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
             this.clazz = clazz;
             this.node = node;
             this.flipper = flipper;
@@ -1419,27 +1538,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         }
     }
 
-    protected static class UpdateBatchAction3 {
-
-        public Object entity;
-
-        public FilterNode node;
-
-        public String[] columns;
-
-        public UpdateBatchAction3(Object entity, String... columns) {
-            this.entity = entity;
-            this.columns = columns;
-        }
-
-        public UpdateBatchAction3(Object entity, FilterNode node, String... columns) {
-            this.entity = entity;
-            this.node = node;
-            this.columns = columns;
-        }
-    }
-
-    protected static class UpdateBatchAction4 {
+    protected static class UpdateBatchAction4 extends BatchAction {
 
         public Object entity;
 

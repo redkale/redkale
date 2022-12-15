@@ -62,20 +62,20 @@ public interface DataSource extends Resourcable {
     /**
      * 增删改的批量操作
      *
-     * @param bath 批量对象
+     * @param batch 批量对象
      *
      * @return -1表示失败，正数为成功
      */
-    //public int batch(final DataBatch bath);
+    public int batch(final DataBatch batch);
 
     /**
      * 增删改的批量操作
      *
-     * @param bath 批量对象
+     * @param batch 批量对象
      *
      * @return -1表示失败，正数为成功
      */
-    //public CompletableFuture<Integer> batchAsync(final DataBatch bath);
+    public CompletableFuture<Integer> batchAsync(final DataBatch batch);
 
     //----------------------insertAsync-----------------------------
     /**

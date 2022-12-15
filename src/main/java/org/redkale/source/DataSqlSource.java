@@ -7,7 +7,6 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.math.*;
-import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -41,14 +40,12 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected String name;
-
-    protected URL persistFile;
-
+    
     protected boolean cacheForbidden;
 
     protected String dbtype;
 
-    private boolean autoddl;
+    private boolean autoDDL;
 
     protected Properties readConfProps;
 
@@ -113,7 +110,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected void afterResourceChange() {
-        this.autoddl = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false").trim());
+        this.autoDDL = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false").trim());
 
         this.containSQL = readConfProps.getProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
         this.notContainSQL = readConfProps.getProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
@@ -252,7 +249,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     //生成创建表的SQL
     protected <T> String[] createTableSqls(EntityInfo<T> info) {
-        if (info == null || !autoddl) return null;
+        if (info == null || !autoDDL) return null;
         javax.persistence.Table table = info.getType().getAnnotation(javax.persistence.Table.class);
         if ("mysql".equals(dbtype())) {  //mysql
             StringBuilder sb = new StringBuilder();
@@ -463,9 +460,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     @Local
-    protected boolean isTableNotExist(EntityInfo info, String code) {
-        if (code == null || code.isEmpty()) return false;
-        return tableNotExistSqlstates.contains(';' + code + ';');
+    protected boolean isTableNotExist(EntityInfo info, String sqlCode) {
+        if (sqlCode == null || sqlCode.isEmpty()) return false;
+        return tableNotExistSqlstates.contains(';' + sqlCode + ';');
     }
 
     @Local
@@ -509,7 +506,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     @Local
     public final boolean autoddl() {
-        return autoddl;
+        return autoDDL;
     }
 
     @Local
@@ -821,9 +818,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Serializable... pks) {
+        String sql = deleteSql(info, pks);
+        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+        return deleteDB(info, null, sql);
+    }
+
+    protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
+        return deleteDB(info, flipper, deleteSql(info, flipper, node));
+    }
+
+    protected <T> String deleteSql(final EntityInfo<T> info, final Serializable... pks) {
         if (pks.length == 1) {
-            String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pks[0], sqlFormatter);
-            return deleteDB(info, null, sql);
+            return "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pks[0], sqlFormatter);
         }
         String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + " IN (";
         for (int i = 0; i < pks.length; i++) {
@@ -831,11 +837,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             sql += info.formatSQLValue(info.getPrimarySQLColumn(), pks[i], sqlFormatter);
         }
         sql += ")";
-        if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
-        return deleteDB(info, null, sql);
+        return sql;
     }
 
-    protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
+    protected <T> String deleteSql(final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
         boolean pgsql = "postgresql".equals(dbtype());
         Map<Class, String> joinTabalis = null;
         CharSequence join = null;
@@ -865,7 +870,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2)))) + info.createSQLOrderby(flipper)
                 + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
         }
-        return deleteDB(info, flipper, sql);
+        return sql;
     }
 
     //----------------------------- clearTableCompose -----------------------------
@@ -1099,13 +1104,22 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
         Attribute attr = info.getAttribute(column);
         Serializable val = getSQLAttrValue(info, attr, colval);
+        SqlInfo sql = updateSql(info, pk, column, colval);
         if (val instanceof byte[]) {
-            String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
-            return updateColumnDB(info, null, sql, true, val);
+            return updateColumnDB(info, null, sql.sql, true, val);
         } else {
-            String sql = "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
-                + info.formatSQLValue(column, val, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
-            return updateColumnDB(info, null, sql, false);
+            return updateColumnDB(info, null, sql.sql, false);
+        }
+    }
+
+    protected <T> SqlInfo updateSql(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
+        Attribute attr = info.getAttribute(column);
+        Serializable val = getSQLAttrValue(info, attr, colval);
+        if (val instanceof byte[]) {
+            return new SqlInfo("UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter), (byte[]) val);
+        } else {
+            return new SqlInfo("UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
+                + info.formatSQLValue(column, val, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter));
         }
     }
 
@@ -1156,6 +1170,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final String column, final Serializable colval, final FilterNode node) {
+        Attribute attr = info.getAttribute(column);
+        Serializable val = getSQLAttrValue(info, attr, colval);
+        SqlInfo sql = updateSql(info, column, colval, node);
+        if (val instanceof byte[]) {
+            return updateColumnDB(info, null, sql.sql, true, val);
+        } else {
+            return updateColumnDB(info, null, sql.sql, false);
+        }
+    }
+
+    protected <T> SqlInfo updateSql(final EntityInfo<T> info, final String column, final Serializable colval, final FilterNode node) {
         Map<Class, String> joinTabalis = node.getJoinTabalis();
         CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
         CharSequence where = node.createSQLExpress(this, info, joinTabalis);
@@ -1175,13 +1200,13 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 + " SET " + info.getSQLColumn(alias, column) + "=" + prepareParamSign(1)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            return updateColumnDB(info, null, sql, true, val);
+            return new SqlInfo(sql, (byte[]) val);
         } else {
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1))
                 + " SET " + info.getSQLColumn(alias, column) + "=" + info.formatSQLValue(val, sqlFormatter)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            return updateColumnDB(info, null, sql, false);
+            return new SqlInfo(sql);
         }
     }
 
@@ -1233,6 +1258,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final Serializable pk, final ColumnValue... values) {
+        SqlInfo sql = updateSql(info, pk, values);
+        if (sql.blobs == null || sql.blobs.isEmpty()) {
+            return updateColumnDB(info, null, sql.sql, false);
+        } else {
+            return updateColumnDB(info, null, sql.sql, true, sql.blobs.toArray());
+        }
+    }
+
+    protected <T> SqlInfo updateSql(final EntityInfo<T> info, final Serializable pk, final ColumnValue... values) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1250,10 +1284,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
             }
         }
-        if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
+        if (setsql.length() < 1) throw new RuntimeException("update non column-value array");
         String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
-        if (blobs == null) return updateColumnDB(info, null, sql, false);
-        return updateColumnDB(info, null, sql, true, blobs.toArray());
+        return new SqlInfo(sql, blobs);
     }
 
     @Override
@@ -1294,6 +1327,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
+        SqlInfo sql = updateSql(info, node, flipper, values);
+        if (sql.blobs == null || sql.blobs.isEmpty()) {
+            return updateColumnDB(info, flipper, sql.sql, false);
+        } else {
+            return updateColumnDB(info, flipper, sql.sql, true, sql.blobs.toArray());
+        }
+    }
+
+    protected <T> SqlInfo updateSql(final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1313,7 +1355,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
             }
         }
-        if (setsql.length() < 1) return CompletableFuture.completedFuture(0);
+        if (setsql.length() < 1) throw new RuntimeException("update non column-value array");
         Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         CharSequence join = node == null ? null : node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
         CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
@@ -1338,8 +1380,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 + info.createSQLOrderby(flipper)
                 + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
         }
-        if (blobs == null) return updateColumnDB(info, flipper, sql, false);
-        return updateColumnDB(info, flipper, sql, true, blobs.toArray());
+        return new SqlInfo(sql, blobs);
     }
 
     //返回不存在的字段名,null表示字段都合法;
@@ -1447,7 +1488,16 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final boolean neednode, final T entity, final FilterNode node, final SelectColumn selects) {
+    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
+        SqlInfo sql = updateSql(info, needNode, entity, node, selects);
+        if (sql.blobs == null || sql.blobs.isEmpty()) {
+            return updateColumnDB(info, null, sql.sql, false);
+        } else {
+            return updateColumnDB(info, null, sql.sql, true, sql.blobs.toArray());
+        }
+    }
+
+    protected <T> SqlInfo updateSql(final EntityInfo<T> info, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1467,7 +1517,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 setsql.append("=").append(sqlval);
             }
         }
-        if (neednode) {
+        if (needNode) {
             Map<Class, String> joinTabalis = node.getJoinTabalis();
             CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
             CharSequence where = node.createSQLExpress(this, info, joinTabalis);
@@ -1481,17 +1531,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             String sql = "UPDATE " + info.getTable(node) + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            if (blobs == null) return updateColumnDB(info, null, sql, false);
-            return updateColumnDB(info, null, sql, true, blobs.toArray());
+            return new SqlInfo(sql, blobs);
         } else {
             final Serializable id = (Serializable) info.getSQLValue(info.getPrimary(), entity);
             String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(id, sqlFormatter);
-            if (blobs == null) return updateColumnDB(info, null, sql, false);
-            return updateColumnDB(info, null, sql, true, blobs.toArray());
+            return new SqlInfo(sql, blobs);
         }
     }
 
-    protected <T> int updateCache(final EntityInfo<T> info, int count, final boolean neednode, final T entity, final FilterNode node, final SelectColumn selects) {
+    protected <T> int updateCache(final EntityInfo<T> info, int count, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
         final EntityCache<T> cache = info.getCache();
         if (cache == null) return count;
         final List<Attribute<T, Serializable>> attrs = new ArrayList<>();
@@ -1499,7 +1547,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             if (!selects.test(attr.field())) continue;
             attrs.add(attr);
         }
-        if (neednode) {
+        if (needNode) {
             T[] rs = cache.update(entity, attrs, node);
             return count >= 0 ? count : (rs == null ? 0 : rs.length);
         } else {
@@ -2324,8 +2372,26 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         return querySheetDB(info, readcache, needtotal, distinct, selects, flipper, node);
     }
 
-    protected static enum UpdateMode {
-        INSERT, DELETE, UPDATE, CLEAR, DROP, ALTER, OTHER;
-    }
+    protected static class SqlInfo {
 
+        public String sql;
+
+        public List<byte[]> blobs;
+
+        public SqlInfo(String sql, byte[]... blobs) {
+            this.sql = sql;
+            if (blobs.length > 0) {
+                this.blobs = new ArrayList<>();
+                for (byte[] bs : blobs) {
+                    this.blobs.add(bs);
+                }
+            }
+        }
+
+        public SqlInfo(String sql, List<byte[]> blobs) {
+            this.sql = sql;
+            this.blobs = blobs;
+        }
+
+    }
 }

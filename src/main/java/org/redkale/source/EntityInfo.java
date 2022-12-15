@@ -85,8 +85,8 @@ public final class EntityInfo<T> {
     //所有可更新字段，即排除了主键字段和标记为&#064;Column(updatable=false)的字段
     private final Map<String, Attribute<T, Serializable>> updateAttributeMap = new HashMap<>();
 
-    //用于存在database.table_20160202类似这种分布式表
-    private final Set<String> tables = new CopyOnWriteArraySet<>();
+    //用于存在database.table_20160202类似这种分布式表, 服务分布式部署时不存在的表名不一定真实不存在
+    private final Set<String> disTables = new CopyOnWriteArraySet<>();
 
     //不能为null的字段名
     private final Set<String> notNullColumns = new CopyOnWriteArraySet<>();
@@ -629,19 +629,19 @@ public final class EntityInfo<T> {
     }
 
     public Object disTableLock() {
-        return tables;
+        return disTables;
     }
 
-    public boolean containsDisTable(String tablekey) {
-        return tables.contains(tablekey);
+    public boolean containsDisTable(String tableKey) {
+        return disTables.contains(tableKey);
     }
 
-    public void addDisTable(String tablekey) {
-        tables.add(tablekey);
+    public void addDisTable(String tableKey) {
+        disTables.add(tableKey);
     }
 
-    public boolean removeDisTable(String tablekey) {
-        return tables.remove(tablekey);
+    public boolean removeDisTable(String tableKey) {
+        return disTables.remove(tableKey);
     }
 
     public EntityColumn[] getDDLColumns() {
