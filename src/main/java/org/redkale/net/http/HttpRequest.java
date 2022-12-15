@@ -55,6 +55,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final String KEY_HTTP_1_1 = "HTTP/1.1";
 
+    protected static final String KEY_HTTP_2_0 = "HTTP/2.0";
+
     protected static final String KEY_COOKIE = "Cookie";
 
     protected static final String KEY_CONNECTION = "Connection";
@@ -530,6 +532,8 @@ public class HttpRequest extends Request<HttpContext> {
         size = bytes.length();
         if (size == 8 && bytes.get(0) == 'H' && bytes.get(5) == '1' && bytes.get(7) == '1') {
             this.protocol = KEY_HTTP_1_1;
+        } else if (size == 8 && bytes.get(0) == 'H' && bytes.get(5) == '2' && bytes.get(7) == '0') {
+            this.protocol = KEY_HTTP_2_0;
         } else {
             this.protocol = bytes.toString(charset);
         }

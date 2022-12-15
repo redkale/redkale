@@ -130,7 +130,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return 是否成功
      */
     public boolean addForbidURIReg(final String urlreg) {
-        return ((HttpDispatcherServlet) this.dispatcher).addForbidURIReg(urlreg);
+        return ((HttpDispatcherServlet) this.dispatcher).addForbidURIRegx(urlreg);
     }
 
     /**

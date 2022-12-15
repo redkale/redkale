@@ -68,8 +68,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private static final ZoneId ZONE_GMT = ZoneId.of("GMT");
 
-    private static final OpenOption[] options = new OpenOption[]{StandardOpenOption.READ};
-
     private static final Map<Integer, String> httpCodes = new HashMap<>();
 
     private static final byte[][] contentLengthArray = new byte[cacheMaxContentLength][];
@@ -936,32 +934,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 super.finish(false, data.content(), 0, data.length());
             }
         }
-
-//        ByteArray data = headerArray;
-//        int pipelineIndex = request.getPipelineIndex();
-//        if (pipelineIndex > 0) {
-//            boolean over = this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data.content(), 0, data.length(), bs, offset, length);
-//            if (callback != null) callback.accept(attachment);
-//            if (cacheHandler != null) cacheHandler.accept(this, Utility.append(data.getBytes(), bs, offset, length));
-//
-//            if (over) {
-//                request.setPipelineOver(true);
-//                this.channel.flushPipelineData(this.pipelineWriteHandler);
-//            } else {
-//                removeChannel();
-//                this.responseConsumer.accept(this);
-//            }
-//        } else {   
-//            if (this.channel.hasPipelineData()) {
-//                this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data.content(), 0, data.length(), bs, offset, length);
-//                if (callback != null) callback.accept(attachment);
-//                if (cacheHandler != null) cacheHandler.accept(this, Utility.append(data.getBytes(), bs, offset, length));
-//                this.channel.flushPipelineData(this.pipelineWriteHandler);
-//            } else {
-//                //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finish
-//                super.finish(false, data.content(), 0, data.length(), bs, offset, length, callback, attachment);
-//            }
-//        }
     }
 
     @Override
