@@ -1788,7 +1788,7 @@ public final class Rest {
                 av0.visit("example", entry.example);
                 av0.visit("rpconly", entry.rpconly);
                 av0.visit("auth", entry.auth);
-                av0.visit("cacheseconds", entry.cacheseconds);
+                av0.visit("cacheSeconds", entry.cacheSeconds);
                 av0.visit("actionid", entry.actionid);
                 av0.visit("comment", entry.comment);
 
@@ -1815,14 +1815,14 @@ public final class Rest {
                         refid = "_typeref_" + typeRefs.size();
                         typeRefs.put(returnGenericNoFutureType, refid);
                     }
-                    av0.visit("resultref", refid);
+                    av0.visit("resultRef", refid);
                 }
 
                 av0.visitEnd();
                 mappingMap.put("url", url);
                 mappingMap.put("rpconly", entry.rpconly);
                 mappingMap.put("auth", entry.auth);
-                mappingMap.put("cacheseconds", entry.cacheseconds);
+                mappingMap.put("cacheSeconds", entry.cacheSeconds);
                 mappingMap.put("actionid", entry.actionid);
                 mappingMap.put("comment", entry.comment);
                 mappingMap.put("methods", entry.methods);
@@ -1928,8 +1928,8 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
                     mv.visitLdcInsn(mupload.maxLength());
-                    mv.visitLdcInsn(mupload.fileNameReg());
-                    mv.visitLdcInsn(mupload.contentTypeReg());
+                    mv.visitLdcInsn(mupload.fileNameRegx());
+                    mv.visitLdcInsn(mupload.contentTypeRegx());
                     mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFirstBytes", "(JLjava/lang/String;Ljava/lang/String;)[B", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
@@ -1939,8 +1939,8 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
                     mv.visitLdcInsn(mupload.maxLength());
-                    mv.visitLdcInsn(mupload.fileNameReg());
-                    mv.visitLdcInsn(mupload.contentTypeReg());
+                    mv.visitLdcInsn(mupload.fileNameRegx());
+                    mv.visitLdcInsn(mupload.contentTypeRegx());
                     mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFirstFile", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
@@ -1950,8 +1950,8 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
                     mv.visitLdcInsn(mupload.maxLength());
-                    mv.visitLdcInsn(mupload.fileNameReg());
-                    mv.visitLdcInsn(mupload.contentTypeReg());
+                    mv.visitLdcInsn(mupload.fileNameRegx());
+                    mv.visitLdcInsn(mupload.contentTypeRegx());
                     mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFiles", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
@@ -2867,7 +2867,7 @@ public final class Rest {
                 mv.visitInsn(ACONST_NULL); //method
                 mv.visitInsn(entry.rpconly ? ICONST_1 : ICONST_0); //rpconly
                 mv.visitInsn(entry.auth ? ICONST_1 : ICONST_0); //auth
-                MethodDebugVisitor.pushInt(mv, entry.cacheseconds); //cacheseconds
+                MethodDebugVisitor.pushInt(mv, entry.cacheSeconds); //cacheSeconds
                 mv.visitTypeInsn(NEW, newDynName + "$" + entry.newActionClassName);
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(ALOAD, 0);
@@ -3137,7 +3137,7 @@ public final class Rest {
             this.auth = mapping.auth();
             this.rpconly = serrpconly || mapping.rpconly();
             this.actionid = mapping.actionid();
-            this.cacheseconds = mapping.cacheseconds();
+            this.cacheSeconds = mapping.cacheSeconds();
             this.comment = mapping.comment();
             boolean pound = false;
             Parameter[] params = method.getParameters();
@@ -3177,7 +3177,7 @@ public final class Rest {
 
         public final int actionid;
 
-        public final int cacheseconds;
+        public final int cacheSeconds;
 
         public final boolean existsPound;  //是否包含#的参数
 

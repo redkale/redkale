@@ -149,8 +149,8 @@ public final class ApiDocCommand {
                         mappingMap.put("params", paramsList);
                         List<String> results = new ArrayList<>();
                         Type resultType = action.result();
-                        if (!action.resultref().isEmpty()) {
-                            Field f = servlet.getClass().getDeclaredField(action.resultref());
+                        if (!action.resultRef().isEmpty()) {
+                            Field f = servlet.getClass().getDeclaredField(action.resultRef());
                             f.setAccessible(true);
                             resultType = (Type) f.get(servlet);
                         }

@@ -229,6 +229,7 @@ public class RetResult<T> implements Serializable {
     @Deprecated
     public RetResult<T> attach(Map<String, String> attach) {
         this.attach = attach;
+        System.err.println("RetResult.attach is deprecated");
         return this;
     }
 

@@ -51,7 +51,7 @@ public @interface HttpMapping {
      *
      * @return int
      */
-    int cacheseconds() default 0;
+    int cacheSeconds() default 0;
 
     /**
      * 是否只接受RPC请求， 默认为false
@@ -95,7 +95,7 @@ public @interface HttpMapping {
      * @since 2.5.0
      * @return String
      */
-    String resultref() default "";
+    String resultRef() default "";
 
     /**
      * 输出结果的数据类型集合，由于结果类型可能是泛型而注解的参数值不支持泛型，因此加入明细数据类型集合

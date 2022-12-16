@@ -61,9 +61,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     }
                 }
             }
-            if (entry.cacheseconds > 0) {//有缓存设置
+            if (entry.cacheSeconds > 0) {//有缓存设置
                 CacheEntry ce = entry.modeOneCache ? entry.oneCache : entry.cache.get(request.getRequestURI());
-                if (ce != null && ce.time + entry.cacheseconds * 1000 > System.currentTimeMillis()) { //缓存有效
+                if (ce != null && ce.time + entry.cacheSeconds * 1000 > System.currentTimeMillis()) { //缓存有效
                     response.setStatus(ce.status);
                     response.setContentType(ce.contentType);
                     response.skipHeader();
@@ -276,12 +276,12 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     protected static final class ActionEntry {
 
         ActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
-            this(moduleid, actionid, name, methods, method, rpconly(method), auth(method), cacheseconds(method), servlet);
+            this(moduleid, actionid, name, methods, method, rpconly(method), auth(method), cacheSeconds(method), servlet);
             this.annotations = annotations(method);
         }
 
         //供Rest类使用，参数不能随便更改
-        public ActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean rpconly, boolean auth, int cacheseconds, HttpServlet servlet) {
+        public ActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean rpconly, boolean auth, int cacheSeconds, HttpServlet servlet) {
             this.moduleid = moduleid;
             this.actionid = actionid;
             this.name = name;
@@ -290,11 +290,11 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             this.servlet = servlet;
             this.rpconly = rpconly;
             this.auth = auth;
-            this.cacheseconds = cacheseconds;
+            this.cacheSeconds = cacheSeconds;
             if (Utility.contains(name, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\') || name.endsWith("/")) { //是否是正则表达式
                 this.modeOneCache = false;
-                this.cache = cacheseconds > 0 ? new ConcurrentHashMap<>() : null;
-                this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, byte[] content) -> {
+                this.cache = cacheSeconds > 0 ? new ConcurrentHashMap<>() : null;
+                this.cacheHandler = cacheSeconds > 0 ? (HttpResponse response, byte[] content) -> {
                     int status = response.getStatus();
                     if (status != 200) return;
                     CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), content);
@@ -303,7 +303,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             } else { //单一url
                 this.modeOneCache = true;
                 this.cache = null;
-                this.cacheHandler = cacheseconds > 0 ? (HttpResponse response, byte[] content) -> {
+                this.cacheHandler = cacheSeconds > 0 ? (HttpResponse response, byte[] content) -> {
                     int status = response.getStatus();
                     if (status != 200) return;
                     oneCache = new CacheEntry(response.getStatus(), response.getContentType(), content);
@@ -321,9 +321,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             return mapping == null || mapping.rpconly();
         }
 
-        protected static int cacheseconds(Method method) {
+        protected static int cacheSeconds(Method method) {
             HttpMapping mapping = method.getAnnotation(HttpMapping.class);
-            return mapping == null ? 0 : mapping.cacheseconds();
+            return mapping == null ? 0 : mapping.cacheSeconds();
         }
 
         //Rest.class会用到此方法
@@ -349,7 +349,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
         final boolean modeOneCache;
 
-        final int cacheseconds;
+        final int cacheSeconds;
 
         final boolean rpconly;
 

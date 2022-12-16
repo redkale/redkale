@@ -37,14 +37,14 @@ public @interface RestUploadFile {
      *
      * @return String
      */
-    String fileNameReg() default "";
+    String fileNameRegx() default "";
 
     /**
      * 可接收的ContentType正则表达式, 为空表示接收任何文件类型  <br>
      *
      * @return String
      */
-    String contentTypeReg() default "";
+    String contentTypeRegx() default "";
 
     /**
      * 备注描述, 对应&#64;HttpParam.comment

@@ -36,6 +36,8 @@ public @interface Resource {
      * 是否必须存在
      *
      * @return boolean
+     *
+     * @since 2.8.0
      */
     public boolean required() default false;
 

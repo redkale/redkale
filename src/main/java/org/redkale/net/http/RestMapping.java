@@ -67,11 +67,11 @@ public @interface RestMapping {
     int actionid() default 0;
 
     /**
-     * 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpMapping.cacheseconds
+     * 结果缓存的秒数, 为0表示不缓存, 对应&#64;HttpMapping.cacheSeconds
      *
      * @return int
      */
-    int cacheseconds() default 0;
+    int cacheSeconds() default 0;
 
     /**
      * 允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;HttpMapping.methods
