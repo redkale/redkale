@@ -88,15 +88,15 @@ public class MessageRecord implements Serializable {
     public MessageRecord() {
     }
 
-    protected MessageRecord(long seqid, byte ctype, String topic, String resptopic, String traceid, byte[] content) {
-        this(seqid, ctype, 1, 0, System.currentTimeMillis(), 0, null, topic, resptopic, traceid, content);
+    protected MessageRecord(long seqid, byte ctype, String topic, String respTopic, String traceid, byte[] content) {
+        this(seqid, ctype, 1, 0, System.currentTimeMillis(), 0, null, topic, respTopic, traceid, content);
     }
 
-    protected MessageRecord(long seqid, byte ctype, int flag, Serializable userid, String groupid, String topic, String resptopic, String traceid, byte[] content) {
-        this(seqid, ctype, 1, flag, System.currentTimeMillis(), userid, groupid, topic, resptopic, traceid, content);
+    protected MessageRecord(long seqid, byte ctype, int flag, Serializable userid, String groupid, String topic, String respTopic, String traceid, byte[] content) {
+        this(seqid, ctype, 1, flag, System.currentTimeMillis(), userid, groupid, topic, respTopic, traceid, content);
     }
 
-    protected MessageRecord(long seqid, byte ctype, int version, int flag, long createTime, Serializable userid, String groupid, String topic, String resptopic, String traceid, byte[] content) {
+    protected MessageRecord(long seqid, byte ctype, int version, int flag, long createTime, Serializable userid, String groupid, String topic, String respTopic, String traceid, byte[] content) {
         this.seqid = seqid;
         this.ctype = ctype;
         this.version = version;
@@ -105,7 +105,7 @@ public class MessageRecord implements Serializable {
         this.userid = userid;
         this.groupid = groupid;
         this.topic = topic;
-        this.respTopic = resptopic;
+        this.respTopic = respTopic;
         this.traceid = traceid;
         this.content = content;
     }

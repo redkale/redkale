@@ -89,8 +89,6 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected boolean rpc;
 
-    protected String traceid;
-
     protected int readState = READ_STATE_ROUTE;
 
     // @since 2.1.0
@@ -801,7 +799,6 @@ public class HttpRequest extends Request<HttpContext> {
         this.cookies = null;
         this.maybews = false;
         this.rpc = false;
-        this.traceid = null;
         this.readState = READ_STATE_ROUTE;
         this.currentUserid = CURRUSERID_NIL;
         this.currentUserSupplier = null;

@@ -32,7 +32,7 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         byte[] userid = MessageCoder.encodeUserid(data.getUserid());
         byte[] groupid = MessageCoder.getBytes(data.getGroupid());
         byte[] topic = MessageCoder.getBytes(data.getTopic());
-        byte[] resptopic = MessageCoder.getBytes(data.getRespTopic());
+        byte[] respTopic = MessageCoder.getBytes(data.getRespTopic());
         byte[] traceid = MessageCoder.getBytes(data.getTraceid());
         int count = 8 //seqid
             + 1 //ctype
@@ -42,7 +42,7 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
             + 2 + userid.length
             + 2 + groupid.length
             + 2 + topic.length
-            + 2 + resptopic.length
+            + 2 + respTopic.length
             + 2 + traceid.length
             + 4 + (data.getContent() == null ? 0 : data.getContent().length);
         final byte[] bs = new byte[count];
@@ -62,8 +62,8 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         buffer.putChar((char) topic.length);
         if (topic.length > 0) buffer.put(topic);
         
-        buffer.putChar((char) resptopic.length);
-        if (resptopic.length > 0) buffer.put(resptopic);
+        buffer.putChar((char) respTopic.length);
+        if (respTopic.length > 0) buffer.put(respTopic);
         
         buffer.putChar((char) traceid.length);
         if (traceid.length > 0) buffer.put(traceid);

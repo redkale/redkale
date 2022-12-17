@@ -221,7 +221,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     public final void prepare(final R request, final P response) {
         try {
-            Traces.createTraceid();
+            Traces.loadTraceid();
             request.prepare();
             response.filter = this.headFilter;
             response.servlet = this;

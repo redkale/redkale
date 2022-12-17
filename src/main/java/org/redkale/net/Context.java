@@ -125,6 +125,7 @@ public class Context {
             workHashExecutor.execute(request.getHashid(), () -> {
                 try {
                     long cha = System.currentTimeMillis() - request.getCreateTime();
+                    Traces.currTraceid(request.getTraceid());
                     servlet.execute(request, response);
                     if (cha > 1000 && response.context.logger.isLoggable(Level.WARNING)) {
                         response.context.logger.log(Level.WARNING, "hash execute servlet delays=" + cha + "ms, request=" + request);
@@ -139,6 +140,7 @@ public class Context {
         } else if (workExecutor != null) {
             workExecutor.execute(() -> {
                 try {
+                    Traces.currTraceid(request.getTraceid());
                     servlet.execute(request, response);
                 } catch (Throwable t) {
                     response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
@@ -147,6 +149,7 @@ public class Context {
             });
         } else {
             try {
+                Traces.currTraceid(request.getTraceid());
                 servlet.execute(request, response);
             } catch (Throwable t) {
                 response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);

@@ -15,22 +15,22 @@ import java.util.function.Supplier;
  */
 public class Traces {
 
-    private static final boolean disabled = !Boolean.getBoolean("redkale.trace.enable");
+    private static final boolean enable = !Boolean.getBoolean("redkale.trace.enable");
 
     private static final ThreadLocal<String> localTrace = new ThreadLocal<>();
 
     private static final Supplier<String> tidSupplier = () -> Utility.uuid();
 
     public static boolean enable() {
-        return !disabled;
+        return enable;
     }
 
     public static String onceTraceid() {
-        return disabled ? null : tidSupplier.get();
+        return enable ? tidSupplier.get() : null;
     }
 
-    public static String createTraceid() {
-        if (disabled) return null;
+    public static String loadTraceid() {
+        if (!enable) return null;
         String traceid = localTrace.get();
         if (traceid == null) {
             traceid = tidSupplier.get();
@@ -40,11 +40,13 @@ public class Traces {
     }
 
     public static void currTraceid(String traceid) {
-        localTrace.set(traceid);
+        if (enable) {
+            localTrace.set(traceid);
+        }
     }
 
     public static String currTraceid() {
-        return disabled ? null : localTrace.get();
+        return enable ? localTrace.get() : null;
     }
 
 }

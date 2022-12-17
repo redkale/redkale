@@ -41,6 +41,8 @@ public abstract class Request<C extends Context> {
 
     protected int hashid;
 
+    protected String traceid;
+
     protected AsyncConnection channel;
 
     /**
@@ -67,6 +69,7 @@ public abstract class Request<C extends Context> {
         this.pipelineCount = request.pipelineCount;
         this.pipelineOver = request.pipelineOver;
         this.hashid = request.hashid;
+        this.traceid = request.traceid;
         this.channel = request.channel;
     }
 
@@ -94,6 +97,7 @@ public abstract class Request<C extends Context> {
 
     protected void recycle() {
         hashid = 0;
+        traceid = null;
         createTime = 0;
         pipelineIndex = 0;
         pipelineCount = 0;
@@ -172,4 +176,12 @@ public abstract class Request<C extends Context> {
         return this;
     }
 
+    public String getTraceid() {
+        return traceid;
+    }
+
+    public Request<C> traceid(String traceid) {
+        this.traceid = traceid;
+        return this;
+    }
 }
