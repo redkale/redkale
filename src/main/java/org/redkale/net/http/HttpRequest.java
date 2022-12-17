@@ -926,8 +926,7 @@ public class HttpRequest extends Request<HttpContext> {
             start = 0;
             len = index;
         }
-        if (charset == null) return new String(bs, start, len, StandardCharsets.UTF_8);
-        return new String(bs, start, len, charset);
+        return new String(bs, start, len, charset == null ? StandardCharsets.UTF_8 : charset);
     }
 
     private static int hexBit(byte b) {

@@ -138,7 +138,9 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             LongAdder ec = preparer.executeCounter;
             if (ec != null) ec.increment();
             channel.offerBuffer(buffer);
-            if (rs != Integer.MIN_VALUE && preparer.illRequestCounter != null) preparer.illRequestCounter.increment();
+            if (rs != Integer.MIN_VALUE && preparer.illRequestCounter != null) {
+                preparer.illRequestCounter.increment();
+            }
             response.finish(true);
             if (context.logger.isLoggable(Level.FINEST)) {
                 context.logger.log(Level.FINEST, "request.readHeader erroneous (" + rs + "), force to close channel ");
@@ -186,7 +188,9 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
-                    if (context.prepare.illRequestCounter != null) context.prepare.illRequestCounter.increment();
+                    if (context.prepare.illRequestCounter != null) {
+                        context.prepare.illRequestCounter.increment();
+                    }
                     channel.offerBuffer(attachment);
                     response.finish(true);
                     if (exc != null) request.context.logger.log(Level.FINER, "Servlet read channel erroneous, force to close channel ", exc);

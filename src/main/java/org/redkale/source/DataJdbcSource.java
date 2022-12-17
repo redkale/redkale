@@ -127,6 +127,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Integer> insertDB(EntityInfo<T> info, T... entitys) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             int c = 0;
             conn = writePool.pollConnection();
@@ -268,6 +269,12 @@ public class DataJdbcSource extends DataSqlSource {
                     if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " insert sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
                 }
             } //打印结束
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             return CompletableFuture.failedFuture(e);
@@ -312,6 +319,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Integer> deleteDB(EntityInfo<T> info, Flipper flipper, String sql) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
@@ -321,6 +329,12 @@ public class DataJdbcSource extends DataSqlSource {
             final Statement stmt = conn.createStatement();
             int c = stmt.executeUpdate(sql);
             stmt.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -338,6 +352,12 @@ public class DataJdbcSource extends DataSqlSource {
                                 st.executeBatch();
                             }
                             st.close();
+                            if (slowms > 0) {
+                                long cost = System.currentTimeMillis() - s;
+                                if (cost > slowms) {
+                                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                                }
+                            }
                             return CompletableFuture.completedFuture(0);
                         } catch (SQLException e2) {
                             return CompletableFuture.failedFuture(e2);
@@ -354,6 +374,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, final String table, String sql) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
@@ -361,6 +382,12 @@ public class DataJdbcSource extends DataSqlSource {
             final Statement stmt = conn.createStatement();
             int c = stmt.executeUpdate(sql);
             stmt.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) return CompletableFuture.completedFuture(-1);
@@ -373,6 +400,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, final String table, String sql) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
@@ -383,6 +411,12 @@ public class DataJdbcSource extends DataSqlSource {
             if (info.getTableStrategy() != null) {
                 String tablekey = table.indexOf('.') > 0 ? table : (conn.getCatalog() + '.' + table);
                 info.removeDisTable(tablekey);
+            }
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
             }
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
@@ -396,6 +430,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Integer> updateEntityDB(EntityInfo<T> info, T... entitys) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
@@ -436,6 +471,12 @@ public class DataJdbcSource extends DataSqlSource {
                 if (p >= 0) c += p;
             }
             prestmt.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + updateSQL);
+                }
+            }
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -468,6 +509,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Integer> updateColumnDB(EntityInfo<T> info, Flipper flipper, String sql, boolean prepared, Object... params) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
@@ -482,12 +524,24 @@ public class DataJdbcSource extends DataSqlSource {
                 }
                 int c = prestmt.executeUpdate();
                 prestmt.close();
+                if (slowms > 0) {
+                    long cost = System.currentTimeMillis() - s;
+                    if (cost > slowms) {
+                        logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                    }
+                }
                 return CompletableFuture.completedFuture(c);
             } else {
                 if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 int c = stmt.executeUpdate(sql);
                 stmt.close();
+                if (slowms > 0) {
+                    long cost = System.currentTimeMillis() - s;
+                    if (cost > slowms) {
+                        logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                    }
+                }
                 return CompletableFuture.completedFuture(c);
             }
         } catch (SQLException e) {
@@ -522,6 +576,7 @@ public class DataJdbcSource extends DataSqlSource {
     protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDB(EntityInfo<T> info, String sql, FilterFuncColumn... columns) {
         Connection conn = null;
         final Map map = new HashMap<>();
+        final long s = System.currentTimeMillis();
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
@@ -540,6 +595,12 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             stmt.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(map);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -572,6 +633,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Number> getNumberResultDB(EntityInfo<T> info, String sql, Number defVal, String column) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
@@ -584,6 +646,12 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             stmt.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -616,6 +684,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDB(EntityInfo<T> info, String sql, String keyColumn) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         Map<K, N> rs = new LinkedHashMap<>();
         try {
             conn = readPool.pollConnection();
@@ -629,6 +698,12 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             stmt.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -662,6 +737,7 @@ public class DataJdbcSource extends DataSqlSource {
     protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDB(EntityInfo<T> info, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
         Connection conn = null;
         Map rs = new LinkedHashMap<>();
+        final long s = System.currentTimeMillis();
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
@@ -689,6 +765,12 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             stmt.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -721,6 +803,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<T> findDB(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
@@ -730,6 +813,12 @@ public class DataJdbcSource extends DataSqlSource {
             T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
             set.close();
             ps.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -762,6 +851,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Serializable> findColumnDB(EntityInfo<T> info, String sql, boolean onlypk, String column, Serializable defValue) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
@@ -775,6 +865,12 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             ps.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(val == null ? defValue : val);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -807,6 +903,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Boolean> existsDB(EntityInfo<T> info, String sql, boolean onlypk) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
@@ -816,6 +913,12 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             ps.close();
             if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -848,6 +951,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     protected <T> CompletableFuture<Sheet<T>> querySheetDB(EntityInfo<T> info, final boolean readcache, boolean needtotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
         Connection conn = null;
+        final long s = System.currentTimeMillis();
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
@@ -882,6 +986,12 @@ public class DataJdbcSource extends DataSqlSource {
                     if (set.next()) total = set.getLong(1);
                     set.close();
                     ps.close();
+                }
+                if (slowms > 0) {
+                    long cost = System.currentTimeMillis() - s;
+                    if (cost > slowms) {
+                        logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, sheet-content: " + listsql);
+                    }
                 }
                 return CompletableFuture.completedFuture(new Sheet<>(total, list));
             }
@@ -918,6 +1028,12 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             ps.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + listsql);
+                }
+            }
             return CompletableFuture.completedFuture(new Sheet<>(total, list));
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -973,6 +1089,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Override
     public int[] directExecute(String... sqls) {
         if (sqls.length == 0) return new int[0];
+        final long s = System.currentTimeMillis();
         Connection conn = writePool.pollConnection();
         try {
             conn.setReadOnly(false);
@@ -983,6 +1100,12 @@ public class DataJdbcSource extends DataSqlSource {
                 rs[++i] = stmt.execute(sql) ? 1 : 0;
             }
             stmt.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
+                }
+            }
             return rs;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -1004,6 +1127,7 @@ public class DataJdbcSource extends DataSqlSource {
     @Local
     @Override
     public <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
+        final long s = System.currentTimeMillis();
         final Connection conn = readPool.pollConnection();
         try {
             if (logger.isLoggable(Level.FINEST)) logger.finest("direct query sql=" + sql);
@@ -1014,6 +1138,12 @@ public class DataJdbcSource extends DataSqlSource {
             V rs = handler.apply(createDataResultSet(null, set));
             set.close();
             statement.close();
+            if (slowms > 0) {
+                long cost = System.currentTimeMillis() - s;
+                if (cost > slowms) {
+                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
+                }
+            }
             return rs;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

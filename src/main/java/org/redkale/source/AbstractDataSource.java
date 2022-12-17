@@ -65,6 +65,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     //@since 2.7.0
     public static final String DATA_SOURCE_PIPELINES = "pipelines";
 
+    //@since 2.7.0 //超过多少毫秒视为慢, 会打印警告级别的日志, 默认值: 3000
+    public static final String DATA_SOURCE_SLOWMS = "slowms";
+
     //@since 2.7.0
     public static final String DATA_SOURCE_AUTOMAPPING = "auto-mapping";
 

@@ -40,7 +40,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected String name;
-    
+
     protected boolean cacheForbidden;
 
     protected String dbtype;
@@ -65,6 +65,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, i)
         -> ((CompletableFuture<Sheet>) querySheetDB(i, false, false, false, null, null, (FilterNode) null)).thenApply(e -> e == null ? new ArrayList() : e.list(true));
+
+    //超过多少毫秒视为慢, 会打印警告级别的日志, 默认值: 3000
+    protected long slowms;
 
     //用于反向LIKE使用
     protected String containSQL;
@@ -117,7 +120,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
         this.tableNotExistSqlstates = ";" + readConfProps.getProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
         this.tablecopySQL = readConfProps.getProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} LIKE ${oldtable}");
+        
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
+        this.slowms = Integer.parseInt(readConfProps.getProperty(DATA_SOURCE_SLOWMS, "3000").trim());
     }
 
     @Override
