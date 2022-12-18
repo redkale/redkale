@@ -38,6 +38,8 @@ public final class ResourceFactory {
 
     public static final String RESOURCE_PARENT_NAME = "$";
 
+    private static final boolean skipCheckRequired = Boolean.getBoolean("redkale.resource.skip.check");
+
     private static final Logger logger = Logger.getLogger(ResourceFactory.class.getSimpleName());
 
     private final ResourceFactory parent;
@@ -828,7 +830,7 @@ public final class ResourceFactory {
                         }
                     }
                     if (rs != null) field.set(srcObj, rs);
-                    if (rs == null && rc.required()) {
+                    if (rs == null && !skipCheckRequired && rc.required()) {
                         throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + srcObj.getClass().getName());
                     }
                 }

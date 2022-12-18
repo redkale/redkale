@@ -16,7 +16,6 @@ import org.redkale.boot.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
-import org.redkale.util.Traces;
 
 /**
  * 没有配置MQ且也没有ClusterAgent的情况下实现的默认HttpMessageClient实例
@@ -103,7 +102,6 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, future);
-        Traces.computeCurrTraceid(request.getTraceid()); 
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -122,7 +120,6 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         CompletableFuture future = new CompletableFuture();
         HttpResponse resp = new HttpMessageLocalResponse(req, future);
-        Traces.computeCurrTraceid(request.getTraceid()); 
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -149,7 +146,6 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
-        Traces.computeCurrTraceid(request.getTraceid()); 
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -162,7 +158,6 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
-        Traces.computeCurrTraceid(request.getTraceid()); 
         ps.filterServletsByMmcTopic(topic).forEach(s -> {
             try {
                 s.execute(req, resp);

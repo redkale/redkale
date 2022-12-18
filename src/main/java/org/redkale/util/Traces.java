@@ -16,7 +16,7 @@ import java.util.function.Supplier;
  */
 public class Traces {
 
-    private static final boolean enable = !Boolean.getBoolean("redkale.trace.enable");
+    private static final boolean enable = Boolean.getBoolean("redkale.trace.enable");
 
     private static final ThreadLocal<String> localTrace = new ThreadLocal<>();
 
@@ -49,6 +49,7 @@ public class Traces {
 //        }
 //        return traceid;
 //    }
+    
     public static void currTraceid(String traceid) {
         if (enable) {
             localTrace.set(traceid);
