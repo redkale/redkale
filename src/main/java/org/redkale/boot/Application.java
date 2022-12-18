@@ -254,6 +254,36 @@ public final class Application {
         this.config = config;
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
         this.environment = new Environment(this.envProperties);
+        //设置APP_HOME、APP_NAME
+        final File root = new File(System.getProperty(RESNAME_APP_HOME));
+        this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
+        this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
+        this.resourceFactory.register(RESNAME_APP_HOME, File.class, root);
+        this.resourceFactory.register(RESNAME_APP_HOME, URI.class, root.toURI());
+        File confFile = null;
+        try { //设置APP_HOME
+            this.resourceFactory.register(RESNAME_APP_HOME, root.getCanonicalPath());
+            if (System.getProperty(RESNAME_APP_HOME) == null) {
+                System.setProperty(RESNAME_APP_HOME, root.getCanonicalPath());
+            }
+            this.home = root.getCanonicalFile();
+            this.homePath = this.home.getPath();
+            String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
+            if (confDir.contains("://") || confDir.startsWith("file:") || confDir.startsWith("resource:") || confDir.contains("!")) { //graalvm native-image startwith resource:META-INF
+                this.confPath = URI.create(confDir);
+                if (confDir.startsWith("file:")) {
+                    confFile = new File(this.confPath.getPath()).getCanonicalFile();
+                }
+            } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > 0) {
+                confFile = new File(confDir).getCanonicalFile();
+                this.confPath = confFile.toURI();
+            } else {
+                confFile = new File(this.home, confDir).getCanonicalFile();
+                this.confPath = confFile.toURI();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         { //设置系统变量
             AnyValue propertiesConf = this.config.getAnyValue("properties");
             if (propertiesConf != null) { //设置配置文件中的系统变量
@@ -263,6 +293,7 @@ public final class Application {
                         String propName = key.substring("system.property.".length());
                         if (System.getProperty(propName) == null) { //命令行传参数优先级高
                             String value = prop.getValue("value");
+                            //replaceValue调用前必须给home、name赋值
                             System.setProperty(propName, value == null ? value : replaceValue(value));
                         }
                     }
@@ -300,37 +331,8 @@ public final class Application {
             this.name = checkName(config.getValue("name", ""));
             this.resourceFactory.register(RESNAME_APP_NAME, name);
             System.setProperty(RESNAME_APP_NAME, name);
+        }
 
-        }
-        final File root = new File(System.getProperty(RESNAME_APP_HOME));
-        this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
-        this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
-        this.resourceFactory.register(RESNAME_APP_HOME, File.class, root);
-        this.resourceFactory.register(RESNAME_APP_HOME, URI.class, root.toURI());
-        File confFile = null;
-        try { //设置APP_HOME
-            this.resourceFactory.register(RESNAME_APP_HOME, root.getCanonicalPath());
-            if (System.getProperty(RESNAME_APP_HOME) == null) {
-                System.setProperty(RESNAME_APP_HOME, root.getCanonicalPath());
-            }
-            this.home = root.getCanonicalFile();
-            this.homePath = this.home.getPath();
-            String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
-            if (confDir.contains("://") || confDir.startsWith("file:") || confDir.startsWith("resource:") || confDir.contains("!")) { //graalvm native-image startwith resource:META-INF
-                this.confPath = URI.create(confDir);
-                if (confDir.startsWith("file:")) {
-                    confFile = new File(this.confPath.getPath()).getCanonicalFile();
-                }
-            } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > 0) {
-                confFile = new File(confDir).getCanonicalFile();
-                this.confPath = confFile.toURI();
-            } else {
-                confFile = new File(this.home, confDir).getCanonicalFile();
-                this.confPath = confFile.toURI();
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         String localaddr = config.getValue("address", "").trim();
         InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
         this.localAddress = new InetSocketAddress(addr, config.getIntValue("port"));
