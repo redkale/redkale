@@ -113,7 +113,7 @@ public final class Utility {
 
                     Class<Unsafe> unsafeClazz1 = null;
                     try {
-                        unsafeClazz1 = (Class) loader.loadClass("org.re" + "dkale.util.AnonymousUnsafe");
+                        unsafeClazz1 = (Class) loader.loadClass("org.redkale.util.AnonymousUnsafe");
                     } catch (Throwable t) {
                     }
                     if (unsafeClazz1 == null) {
@@ -122,7 +122,7 @@ public final class Utility {
                             public final Class<?> loadClass(String name, byte[] b) {
                                 return defineClass(name, b, 0, b.length);
                             }
-                        }.loadClass("org.re" + "dkale.util.AnonymousUnsafe", classBytes);
+                        }.loadClass("org.redkale.util.AnonymousUnsafe", classBytes);
                         RedkaleClassLoader.putDynClass(unsafeClazz1.getName(), classBytes, unsafeClazz1);
                     }
                     RedkaleClassLoader.putReflectionDeclaredConstructors(unsafeClazz1, unsafeClazz1.getName(), Object.class);
@@ -142,7 +142,7 @@ public final class Utility {
                 { //signalShutdown
                     Class<Consumer<Consumer<String>>> shutdownClazz1 = null;
                     try {
-                        shutdownClazz1 = (Class) loader.loadClass("org.re" + "dkale.util.SignalShutDown");
+                        shutdownClazz1 = (Class) loader.loadClass("org.redkale.util.SignalShutDown");
                     } catch (Throwable t) {
                     }
                     if (shutdownClazz1 == null) {
@@ -151,7 +151,7 @@ public final class Utility {
                             public final Class<?> loadClass(String name, byte[] b) {
                                 return defineClass(name, b, 0, b.length);
                             }
-                        }.loadClass("org.re" + "dkale.util.SignalShutDown", classBytes);
+                        }.loadClass("org.redkale.util.SignalShutDown", classBytes);
                         RedkaleClassLoader.putDynClass(shutdownClazz1.getName(), classBytes, shutdownClazz1);
                         RedkaleClassLoader.putReflectionDeclaredConstructors(shutdownClazz1, shutdownClazz1.getName());
                         signalShutdownConsumer0 = shutdownClazz1.getConstructor().newInstance();

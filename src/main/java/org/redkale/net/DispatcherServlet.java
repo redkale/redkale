@@ -37,11 +37,11 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     protected Application application;
 
-    private final Object lock1 = new Object();
+    private final Object servletLock = new Object();
 
     private Set<S> servlets = new HashSet<>();
 
-    private final Object lock2 = new Object();
+    private final Object mappingLock = new Object();
 
     private Map<K, S> mappings = new HashMap<>();
 
@@ -50,7 +50,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     protected Filter<C, R, P> headFilter;
 
     protected void putServlet(S servlet) {
-        synchronized (lock1) {
+        synchronized (servletLock) {
             Set<S> newservlets = new HashSet<>(servlets);
             newservlets.add(servlet);
             this.servlets = newservlets;
@@ -58,7 +58,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     protected void removeServlet(S servlet) {
-        synchronized (lock1) {
+        synchronized (servletLock) {
             Set<S> newservlets = new HashSet<>(servlets);
             newservlets.remove(servlet);
             this.servlets = newservlets;
@@ -67,7 +67,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     public boolean containsServlet(Class<? extends S> servletClass) {
-        synchronized (lock1) {
+        synchronized (servletLock) {
             for (S servlet : new HashSet<>(servlets)) {
                 if (servlet.getClass().equals(servletClass)) return true;
             }
@@ -76,7 +76,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     public boolean containsServlet(String servletClassName) {
-        synchronized (lock1) {
+        synchronized (servletLock) {
             for (S servlet : new HashSet<>(servlets)) {
                 if (servlet.getClass().getName().equals(servletClassName)) return true;
             }
@@ -85,7 +85,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     protected void putMapping(K key, S servlet) {
-        synchronized (lock2) {
+        synchronized (mappingLock) {
             Map<K, S> newmappings = new HashMap<>(mappings);
             newmappings.put(key, servlet);
             this.mappings = newmappings;
@@ -93,7 +93,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     protected void removeMapping(K key) {
-        synchronized (lock2) {
+        synchronized (mappingLock) {
             if (mappings.containsKey(key)) {
                 Map<K, S> newmappings = new HashMap<>(mappings);
                 S s = newmappings.remove(key);
@@ -104,7 +104,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     protected void removeMapping(S servlet) {
-        synchronized (lock2) {
+        synchronized (mappingLock) {
             List<K> keys = new ArrayList<>();
             Map<K, S> newmappings = new HashMap<>(mappings);
             for (Map.Entry<K, S> en : newmappings.entrySet()) {
@@ -221,7 +221,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     public final void prepare(final R request, final P response) {
         try {
-            Traces.loadTraceid();
+            Traces.computeCurrTraceid(request.getTraceid());
             request.prepare();
             response.filter = this.headFilter;
             response.servlet = this;

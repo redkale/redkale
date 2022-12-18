@@ -223,7 +223,7 @@ public final class Rest {
     }
 
     /**
-     * 判断HttpServlet是否为Rest动态生成的,且simple
+     * 判断HttpServlet是否为Rest动态生成的,且simple, 不需要读取http-header的方法视为simple=true
      *
      * @param servlet 检测的HttpServlet
      *
@@ -277,11 +277,19 @@ public final class Rest {
     }
 
     public static <T extends WebSocketServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType, MessageAgent messageAgent) {
-        if (webSocketType == null) throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
-        if (Modifier.isAbstract(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
-        if (Modifier.isFinal(webSocketType.getModifiers())) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
+        if (webSocketType == null) {
+            throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
+        }
+        if (Modifier.isAbstract(webSocketType.getModifiers())) {
+            throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
+        }
+        if (Modifier.isFinal(webSocketType.getModifiers())) {
+            throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
+        }
         final RestWebSocket rws = webSocketType.getAnnotation(RestWebSocket.class);
-        if (rws == null || rws.ignore()) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") have not @RestWebSocket or @RestWebSocket.ignore=true on createRestWebSocketServlet");
+        if (rws == null || rws.ignore()) {
+            throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") have not @RestWebSocket or @RestWebSocket.ignore=true on createRestWebSocketServlet");
+        }
         boolean valid = false;
         for (Constructor c : webSocketType.getDeclaredConstructors()) {
             if (c.getParameterCount() == 0 && (Modifier.isPublic(c.getModifiers()) || Modifier.isProtected(c.getModifiers()))) {
@@ -291,8 +299,12 @@ public final class Rest {
         }
         if (!valid) throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
         final String rwsname = ResourceFactory.formatResourceName(rws.name());
-        if (!checkName(rws.catalog())) throw new RuntimeException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
-        if (!checkName(rwsname)) throw new RuntimeException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (!checkName(rws.catalog())) {
+            throw new RuntimeException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+        }
+        if (!checkName(rwsname)) {
+            throw new RuntimeException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
+        }
 
         //----------------------------------------------------------------------------------------
         final Set<Field> resourcesFieldSet = new LinkedHashSet<>();
@@ -303,8 +315,12 @@ public final class Rest {
             for (Field field : clzz.getDeclaredFields()) {
                 if (field.getAnnotation(Resource.class) == null) continue;
                 if (resourcesFieldNameSet.contains(field.getName())) continue;
-                if (Modifier.isStatic(field.getModifiers())) throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
-                if (Modifier.isFinal(field.getModifiers())) throw new RuntimeException(field + " cannot final on createRestWebSocketServlet");
+                if (Modifier.isStatic(field.getModifiers())) {
+                    throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
+                }
+                if (Modifier.isFinal(field.getModifiers())) {
+                    throw new RuntimeException(field + " cannot final on createRestWebSocketServlet");
+                }
                 if (!Modifier.isPublic(field.getModifiers()) && !Modifier.isProtected(field.getModifiers())) {
                     throw new RuntimeException(field + " must be public or protected on createRestWebSocketServlet");
                 }

@@ -103,7 +103,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, future);
-        Traces.loadTraceid();
+        Traces.computeCurrTraceid(request.getTraceid()); 
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -122,7 +122,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         CompletableFuture future = new CompletableFuture();
         HttpResponse resp = new HttpMessageLocalResponse(req, future);
-        Traces.loadTraceid();
+        Traces.computeCurrTraceid(request.getTraceid()); 
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -149,7 +149,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
-        Traces.loadTraceid();
+        Traces.computeCurrTraceid(request.getTraceid()); 
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
@@ -162,7 +162,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
-        Traces.loadTraceid();
+        Traces.computeCurrTraceid(request.getTraceid()); 
         ps.filterServletsByMmcTopic(topic).forEach(s -> {
             try {
                 s.execute(req, resp);

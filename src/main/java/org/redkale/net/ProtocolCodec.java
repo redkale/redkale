@@ -23,9 +23,9 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
 
     private final Context context;
 
-    private Supplier<Response> responseSupplier;
+    private final Supplier<Response> responseSupplier;
 
-    private Consumer<Response> responseConsumer;
+    private final Consumer<Response> responseConsumer;
 
     private Response resp;
 
