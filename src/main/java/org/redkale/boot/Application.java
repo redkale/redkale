@@ -255,6 +255,10 @@ public final class Application {
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
         this.environment = new Environment(this.envProperties);
         //设置APP_HOME、APP_NAME
+        this.name = checkName(config.getValue("name", ""));
+        this.resourceFactory.register(RESNAME_APP_NAME, name);
+        System.setProperty(RESNAME_APP_NAME, name);
+
         final File root = new File(System.getProperty(RESNAME_APP_HOME));
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
         this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
@@ -327,10 +331,6 @@ public final class Application {
             this.nodeid = nid;
             this.resourceFactory.register(RESNAME_APP_NODEID, nid);
             System.setProperty(RESNAME_APP_NODEID, "" + nid);
-
-            this.name = checkName(config.getValue("name", ""));
-            this.resourceFactory.register(RESNAME_APP_NAME, name);
-            System.setProperty(RESNAME_APP_NAME, name);
         }
 
         String localaddr = config.getValue("address", "").trim();
