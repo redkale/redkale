@@ -26,6 +26,9 @@ public class PrepareCompiler {
 //        new PrepareCompiler().run();
 //    }
     public Application run() throws Exception {
+        //必须设置redkale.resource.skip.check=true
+        //因redkale-maven-plugin的maven-core依赖jsr250，会覆盖redkale的javax.annotation.Resource导致无法识别Resource.required方法
+        System.setProperty("redkale.resource.skip.check", "true");
         final Application application = new Application(false, true, Application.loadAppConfig());
         application.init();
         for (ApplicationListener listener : application.listeners) {
