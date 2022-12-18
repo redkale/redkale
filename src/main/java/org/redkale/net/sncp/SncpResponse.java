@@ -44,7 +44,9 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         super(context, request);
         this.addrBytes = context.getServerAddress().getAddress().getAddress();
         this.addrPort = context.getServerAddress().getPort();
-        if (this.addrBytes.length != 4) throw new RuntimeException("SNCP serverAddress only support IPv4");
+        if (this.addrBytes.length != 4) {
+            throw new RuntimeException("SNCP serverAddress only support IPv4");
+        }
     }
 
     @Override
@@ -76,41 +78,32 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     protected void fillHeader(ByteArray buffer, int bodyLength, int retcode) {
+        fillRespHeader(buffer, request.getSeqid(), request.getServiceid(), request.getServiceVersion(),
+            request.getActionid(), request.getTraceid(), this.addrBytes, this.addrPort, bodyLength, retcode);
+    }
+
+    protected static void fillRespHeader(ByteArray buffer, long seqid, DLong serviceid, int serviceVersion,
+        DLong actionid, String traceid, byte[] addrBytes, int addrPort, int bodyLength, int retcode) {
         //---------------------head----------------------------------
         int offset = 0;
-        buffer.putLong(offset, request.getSeqid());
+        buffer.putLong(offset, seqid);
         offset += 8;
         buffer.putChar(offset, (char) SncpRequest.HEADER_SIZE);
         offset += 2;
-        DLong.write(buffer, offset, request.getServiceid());
+        DLong.write(buffer, offset, serviceid);
         offset += 16;
-        buffer.putInt(offset, request.getServiceVersion());
+        buffer.putInt(offset, serviceVersion);
         offset += 4;
-        DLong.write(buffer, offset, request.getActionid());
+        DLong.write(buffer, offset, actionid);
         offset += 16;
         buffer.put(offset, addrBytes);
         offset += addrBytes.length; //4
-        buffer.putChar(offset, (char) this.addrPort);
+        buffer.putChar(offset, (char) addrPort);
         offset += 2;
         buffer.putInt(offset, bodyLength);
         offset += 4;
         buffer.putInt(offset, retcode);
-        //offset += 4;
+        offset += 4;
     }
 
-//    protected void fillHeader(ByteBuffer buffer, int bodyLength, int retcode) {
-//        //---------------------head----------------------------------
-//        final int currentpos = buffer.position();
-//        buffer.position(0);
-//        buffer.putLong(request.getSeqid());
-//        buffer.putChar((char) SncpRequest.HEADER_SIZE);
-//        DLong.write(buffer, request.getServiceid());
-//        buffer.putInt(request.getServiceVersion());
-//        DLong.write(buffer, request.getActionid());
-//        buffer.put(addrBytes);
-//        buffer.putChar((char) this.addrPort);
-//        buffer.putInt(bodyLength);
-//        buffer.putInt(retcode);
-//        buffer.position(currentpos);
-//    }
 }

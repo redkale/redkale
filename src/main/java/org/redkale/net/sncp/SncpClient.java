@@ -19,6 +19,7 @@ import org.redkale.convert.json.*;
 import org.redkale.mq.*;
 import org.redkale.net.*;
 import static org.redkale.net.sncp.SncpRequest.*;
+import static org.redkale.net.sncp.SncpResponse.fillRespHeader;
 import org.redkale.service.*;
 import org.redkale.util.*;
 import org.redkale.service.RpcCall;
@@ -154,11 +155,11 @@ public final class SncpClient {
     }
 
     public String toSimpleString() { //给Sncp产生的Service用
-        if(DataSource.class.isAssignableFrom(serviceClass)||CacheSource.class.isAssignableFrom(serviceClass)){
-             String service = serviceClass.getAnnotation(SncpDyn.class) ==null? serviceClass.getName() : serviceClass.getSuperclass().getSimpleName();
-             return service + "(serviceid=" + serviceid + ", name='" + name + "', actions.size=" + actions.length + ")";
+        if (DataSource.class.isAssignableFrom(serviceClass) || CacheSource.class.isAssignableFrom(serviceClass)) {
+            String service = serviceClass.getAnnotation(SncpDyn.class) == null ? serviceClass.getName() : serviceClass.getSuperclass().getSimpleName();
+            return service + "(serviceid=" + serviceid + ", name='" + name + "', actions.size=" + actions.length + ")";
         }
-        String service = serviceClass.getAnnotation(SncpDyn.class) ==null? serviceClass.getName() : serviceClass.getSuperclass().getSimpleName();
+        String service = serviceClass.getAnnotation(SncpDyn.class) == null ? serviceClass.getName() : serviceClass.getSuperclass().getSimpleName();
         if (remote) service = service.replace("DynLocalService", "DynRemoteService");
         return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = " + serviceVersion
             + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
@@ -262,6 +263,7 @@ public final class SncpClient {
     }
 
     private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+        final String traceid = Traces.currTraceid();
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
         if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientSncpAddress;
@@ -281,7 +283,7 @@ public final class SncpClient {
         final DLong actionid = action.actionid;
         if (messageAgent != null) { //MQ模式
             final ByteArray reqbytes = writer.toByteArray();
-            fillHeader(reqbytes, seqid, actionid, reqBodyLength);
+            fillHeader(reqbytes, seqid, actionid, traceid, reqBodyLength);
             String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
             if (targetTopic == null) targetTopic = this.topic;
             MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes.getBytes());
@@ -325,7 +327,7 @@ public final class SncpClient {
             }
             final AsyncConnection conn = conn0;
             final ByteArray array = writer.toByteArray();
-            fillHeader(array, seqid, actionid, reqBodyLength);
+            fillHeader(array, seqid, actionid, traceid, reqBodyLength);
 
             conn.write(array, new CompletionHandler<Integer, Void>() {
 
@@ -468,44 +470,11 @@ public final class SncpClient {
         buffer.getChar(); //端口
     }
 
-    private void fillHeader(ByteArray buffer, long seqid, DLong actionid, int bodyLength) {
-        //---------------------head----------------------------------
-        int offset = 0;
-        buffer.putLong(offset, seqid); //序列号
-        offset += 8;
-        buffer.putChar(offset, (char) HEADER_SIZE); //header长度
-        offset += 2;
-        DLong.write(buffer, offset, this.serviceid);
-        offset += 16;
-        buffer.putInt(offset, this.serviceVersion);
-        offset += 4;
-        DLong.write(buffer, offset, actionid);
-        offset += 16;
-        buffer.put(offset, addrBytes);
-        offset += addrBytes.length; //4
-        buffer.putChar(offset, (char) this.addrPort);
-        offset += 2;
-        buffer.putInt(offset, bodyLength); //body长度        
-        offset += 4;
-        buffer.putInt(offset, 0); //结果码， 请求方固定传0        
-        //offset += 4;
+    private void fillHeader(ByteArray buffer, long seqid, DLong actionid, String traceid, int bodyLength) {
+        fillRespHeader(buffer, seqid, this.serviceid, this.serviceVersion,
+            actionid, traceid, this.addrBytes, this.addrPort, bodyLength, 0); //结果码， 请求方固定传0  
     }
 
-//    private void fillHeader(ByteBuffer buffer, long seqid, DLong actionid, int bodyLength) {
-//        //---------------------head----------------------------------
-//        final int currentpos = buffer.position();
-//        buffer.position(0);
-//        buffer.putLong(seqid); //序列号
-//        buffer.putChar((char) HEADER_SIZE); //header长度
-//        DLong.write(buffer, this.serviceid);
-//        buffer.putInt(this.serviceVersion);
-//        DLong.write(buffer, actionid);
-//        buffer.put(addrBytes);
-//        buffer.putChar((char) this.addrPort);
-//        buffer.putInt(bodyLength); //body长度        
-//        buffer.putInt(0); //结果码， 请求方固定传0
-//        buffer.position(currentpos);
-//    }
     protected static final class SncpAction {
 
         protected final DLong actionid;

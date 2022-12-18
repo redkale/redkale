@@ -61,7 +61,7 @@ public class SncpRequest extends Request<SncpContext> {
         this.convert = context.getBsonConvert();
     }
 
-    @Override
+    @Override  //request.header与response.header数据格式保持一致
     protected int readHeader(ByteBuffer buffer, Request last) {
         if (buffer.remaining() == Sncp.PING_BUFFER.remaining()) {
             if (buffer.hasRemaining()) buffer.get(new byte[buffer.remaining()]);
