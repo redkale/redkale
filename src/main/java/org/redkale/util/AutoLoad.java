@@ -16,7 +16,9 @@ import java.lang.annotation.*;
  *
  * <p> 详情见: https://redkale.org
  * @author zhangjx
+ * @deprecated replaced by org.redkale.annotation.AutoLoad
  */
+@Deprecated
 @Documented
 @Target({TYPE})
 @Retention(RUNTIME)

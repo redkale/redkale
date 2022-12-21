@@ -15,8 +15,7 @@
 package javax.persistence;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Used in schema generation to specify creation of an index.
@@ -38,8 +37,11 @@ import java.lang.annotation.Target;
  * <code>ASC</code> (ascending order) is assumed.
  *
  * @since Java Persistence 2.1
+ * 
+ * @deprecated replace by org.redkale.persistence.Index
  *
  */
+@Deprecated
 @Target({})
 @Retention(RUNTIME)
 public @interface Index {

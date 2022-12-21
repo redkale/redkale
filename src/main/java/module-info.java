@@ -13,9 +13,7 @@ module redkale {
     requires java.sql;
     requires jdk.unsupported;  //sun.misc.Unsafe
 
-    exports javax.annotation;
-    exports javax.persistence;
-
+    exports org.redkale.annotation;
     exports org.redkale.asm;
     exports org.redkale.boot;
     exports org.redkale.boot.watch;
@@ -29,6 +27,7 @@ module redkale {
     exports org.redkale.net.client;
     exports org.redkale.net.http;
     exports org.redkale.net.sncp;
+    exports org.redkale.persistence;
     exports org.redkale.service;
     exports org.redkale.source;
     exports org.redkale.util;

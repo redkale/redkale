@@ -5,7 +5,7 @@
  */
 package org.redkale.source;
 
-import org.redkale.util.Bean;
+import org.redkale.annotation.Bean;
 
 /**
  * FilterBean用于过滤条件， 所有的FilterBean都必须可以转换成FilterNode  <br>

@@ -16,16 +16,16 @@
  */
 package javax.annotation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * 值越大，优先级越高
  *
  * @since Common Annotations 1.2
+ * 
+ * @deprecated replace by org.redkale.annotation.Priority
  */
+@Deprecated
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Priority {

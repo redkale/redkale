@@ -7,8 +7,10 @@ package org.redkale.test.util;
 
 import java.math.*;
 import java.util.Properties;
-import javax.annotation.*;
+import org.redkale.annotation.*;
 import org.junit.jupiter.api.Test;
+import org.redkale.annotation.ConstructorParameters;
+import org.redkale.annotation.ResourceListener;
 import org.redkale.util.*;
 
 /**

@@ -15,11 +15,9 @@
  ******************************************************************************/
 package javax.persistence;
 
-import java.lang.annotation.Target;
-import java.lang.annotation.Retention;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  * Specifies the primary key of an entity.
@@ -48,7 +46,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * see GeneratedValue
  *
  * @since Java Persistence 1.0
+ * 
+ * @deprecated replace by org.redkale.persistence.Id
  */
+@Deprecated
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 

@@ -7,7 +7,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
-import static org.redkale.net.http.WebSocketNode.WS_SOURCE_KEY_USERID_PREFIX;
+
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.ResourceType;
 import org.redkale.service.*;
 import org.redkale.util.*;
 

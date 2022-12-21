@@ -6,7 +6,9 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
-import javax.persistence.Column;
+
+import org.redkale.annotation.Comment;
+import org.redkale.persistence.Column;
 import org.redkale.source.FilterColumn;
 import org.redkale.util.*;
 

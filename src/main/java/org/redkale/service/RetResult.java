@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import javax.persistence.Column;
+import org.redkale.persistence.Column;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.*;

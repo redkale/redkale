@@ -6,7 +6,7 @@
 package org.redkale.test.sncp;
 
 import org.redkale.net.sncp.*;
-import org.redkale.util.ResourceType;
+import org.redkale.annotation.ResourceType;
 
 /**
  *

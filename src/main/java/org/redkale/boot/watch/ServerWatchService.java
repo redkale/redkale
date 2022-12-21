@@ -9,12 +9,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Stream;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.*;
 import org.redkale.net.Server;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
-import org.redkale.util.Comment;
+import org.redkale.annotation.Comment;
 
 /**
  *

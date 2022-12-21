@@ -6,6 +6,9 @@
 package org.redkale.service;
 
 import java.util.logging.Level;
+
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.ResourceType;
 import org.redkale.net.http.*;
 import org.redkale.util.*;
 

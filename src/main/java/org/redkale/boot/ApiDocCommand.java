@@ -13,11 +13,12 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
-import javax.persistence.*;
+import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.MessageMultiConsumer;
 import org.redkale.net.http.*;
+import org.redkale.persistence.*;
 import org.redkale.service.RetResult;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -261,14 +262,17 @@ public final class ApiDocCommand {
                                     Column col = field.getAnnotation(Column.class);
                                     FilterColumn fc = field.getAnnotation(FilterColumn.class);
                                     Comment comment = field.getAnnotation(Comment.class);
+                                    org.redkale.util.Comment comment2 = field.getAnnotation(org.redkale.util.Comment.class);
                                     if (comment != null) {
                                         fieldmap.put("comment", comment.value());
+                                    } else if (comment2 != null) {
+                                        fieldmap.put("comment", comment2.value());
                                     } else if (col != null) {
                                         fieldmap.put("comment", col.comment());
                                     } else if (fc != null) {
                                         fieldmap.put("comment", fc.comment());
                                     }
-                                    fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null));
+                                    fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null || field.getAnnotation(javax.persistence.Id.class) != null));
                                     fieldmap.put("updatable", (filter || col == null || col.updatable()));
 
                                     if (servlet.getClass().getAnnotation(Rest.RestDyn.class) != null) {
@@ -444,6 +448,8 @@ public final class ApiDocCommand {
                         }
                         if (desc.isEmpty() && member.getField().getAnnotation(Comment.class) != null) {
                             desc = member.getField().getAnnotation(Comment.class).value();
+                        } else if (desc.isEmpty() && member.getField().getAnnotation(org.redkale.util.Comment.class) != null) {
+                            desc = member.getField().getAnnotation(org.redkale.util.Comment.class).value();
                         }
                     } else if (member.getMethod() != null) {
                         Column col = member.getMethod().getAnnotation(Column.class);
@@ -459,6 +465,8 @@ public final class ApiDocCommand {
                         }
                         if (desc.isEmpty() && member.getMethod().getAnnotation(Comment.class) != null) {
                             desc = member.getMethod().getAnnotation(Comment.class).value();
+                        } else if (desc.isEmpty() && member.getMethod().getAnnotation(org.redkale.util.Comment.class) != null) {
+                            desc = member.getMethod().getAnnotation(org.redkale.util.Comment.class).value();
                         }
                     }
                     if (!desc.isEmpty()) schemaMap.put("description", desc);

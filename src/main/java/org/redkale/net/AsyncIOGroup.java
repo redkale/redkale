@@ -11,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+
+import org.redkale.annotation.ResourceType;
 import org.redkale.util.*;
 
 /**

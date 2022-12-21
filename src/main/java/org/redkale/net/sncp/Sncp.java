@@ -5,7 +5,6 @@
  */
 package org.redkale.net.sncp;
 
-import org.redkale.asm.MethodDebugVisitor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
@@ -13,7 +12,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.security.*;
 import java.util.*;
-import javax.annotation.Resource;
+import org.redkale.annotation.*;
+import org.redkale.annotation.ResourceType;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -100,25 +100,30 @@ public abstract class Sncp {
 
     public static int getVersion(Service service) {
         if (service == null) return -1;
-        Version ver = service.getClass().getAnnotation(Version.class);
-        return ver == null ? -1 : ver.value();
+        return -1; //暂不实现Version
     }
 
     public static String getResourceName(Service service) {
         if (service == null) return null;
         Resource res = service.getClass().getAnnotation(Resource.class);
-        return res == null ? null : res.name();
+        if (res != null) return res.name();
+        javax.annotation.Resource res2 = service.getClass().getAnnotation(javax.annotation.Resource.class);
+        return res2 == null ? null : res2.name();
     }
 
     public static Class getServiceType(Service service) {
         ResourceType rt = service.getClass().getAnnotation(ResourceType.class);
-        return rt == null ? service.getClass() : rt.value();
+        if (rt != null) return rt.value();
+        org.redkale.util.ResourceType rt2 = service.getClass().getAnnotation(org.redkale.util.ResourceType.class);
+        return rt2 == null ? service.getClass() : rt2.value();
     }
 
     public static Class getResourceType(Service service) {
         if (service == null) return null;
         ResourceType type = service.getClass().getAnnotation(ResourceType.class);
-        return type == null ? getServiceType(service) : type.value();
+        if (type != null) return type.value();
+        org.redkale.util.ResourceType rt2 = service.getClass().getAnnotation(org.redkale.util.ResourceType.class);
+        return rt2 == null ? getServiceType(service) : rt2.value();
     }
 
     public static AnyValue getConf(Service service) {
@@ -327,7 +332,7 @@ public abstract class Sncp {
         AnnotationVisitor av0;
 
         cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
-        {
+        { //给动态生成的Service类标记上Resource
             av0 = cw.visitAnnotation(resDesc, true);
             av0.visit("name", name);
             av0.visitEnd();
@@ -346,7 +351,8 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
             ResourceType rty = serviceImplClass.getAnnotation(ResourceType.class);
-            av0.visit("value", Type.getType(Type.getDescriptor(rty == null ? serviceImplClass : rty.value())));
+            org.redkale.util.ResourceType rty2 = serviceImplClass.getAnnotation(org.redkale.util.ResourceType.class);
+            av0.visit("value", Type.getType(Type.getDescriptor(rty != null ? rty.value() : (rty2 != null ? rty2.value() : serviceImplClass))));
             av0.visitEnd();
         }
         {
@@ -616,7 +622,7 @@ public abstract class Sncp {
         AnnotationVisitor av0;
 
         cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, serviceTypeOrImplClass.isInterface() ? new String[]{supDynName} : null);
-        {
+        { //给动态生成的Service类标记上Resource
             av0 = cw.visitAnnotation(resDesc, true);
             av0.visit("name", name);
             av0.visitEnd();
@@ -624,7 +630,8 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
             ResourceType rty = serviceTypeOrImplClass.getAnnotation(ResourceType.class);
-            av0.visit("value", Type.getType(Type.getDescriptor(rty == null ? serviceTypeOrImplClass : rty.value())));
+            org.redkale.util.ResourceType rty2 = serviceTypeOrImplClass.getAnnotation(org.redkale.util.ResourceType.class);
+            av0.visit("value", Type.getType(Type.getDescriptor(rty != null ? rty.value() : (rty2 != null ? rty2.value() : serviceTypeOrImplClass))));
             av0.visitEnd();
         }
         {

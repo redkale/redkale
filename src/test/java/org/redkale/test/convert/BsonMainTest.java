@@ -9,14 +9,16 @@ import java.io.*;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.bson.BsonByteBufferWriter;
 import org.redkale.convert.bson.BsonFactory;
+import org.redkale.persistence.Id;
+import org.redkale.persistence.Transient;
 import org.redkale.util.Utility;
 import org.redkale.convert.bson.BsonConvert;
 
 import java.nio.*;
 import java.util.*;
-import javax.persistence.*;
 
 import org.redkale.convert.json.*;
 import org.redkale.util.*;

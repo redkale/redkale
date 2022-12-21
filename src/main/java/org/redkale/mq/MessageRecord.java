@@ -12,7 +12,7 @@ import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.net.sncp.SncpRequest;
-import org.redkale.util.Comment;
+import org.redkale.annotation.Comment;
 
 /**
  * 存在MQ里面的数据结构<p>

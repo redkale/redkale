@@ -10,7 +10,9 @@ import java.net.*;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Resource;
+
+import org.redkale.annotation.Comment;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.*;
 import org.redkale.net.http.*;

@@ -5,10 +5,9 @@
  */
 package org.redkale.source;
 
-import java.lang.annotation.Target;
-import java.lang.annotation.Retention;
-import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  *
@@ -19,7 +18,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author zhangjx
  * @since 2.4.0
+ * 
+ * @deprecated  replaced by org.redkale.persistence.SearchColumn
  */
+@Deprecated
 @Target({FIELD})
 @Retention(RUNTIME)
 public @interface SearchColumn {

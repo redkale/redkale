@@ -11,7 +11,7 @@ import java.net.HttpCookie;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
-import javax.persistence.Transient;
+import org.redkale.persistence.Transient;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.TypeToken;

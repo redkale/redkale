@@ -3,7 +3,7 @@ package org.redkale.test.rest;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.net.http.*;
 
 import org.redkale.service.*;

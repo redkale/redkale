@@ -6,7 +6,7 @@
 package org.redkale.test.service;
 
 import java.nio.channels.CompletionHandler;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.service.*;
 import org.redkale.util.*;
 

@@ -5,8 +5,11 @@
  */
 package org.redkale.test.source;
 
+import org.redkale.persistence.Cacheable;
+import org.redkale.persistence.Id;
+import org.redkale.persistence.Transient;
 import org.redkale.source.*;
-import org.redkale.util.AutoLoad;
+import org.redkale.annotation.AutoLoad;
 
 import static org.redkale.source.FilterExpress.*;
 
@@ -14,7 +17,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
-import javax.persistence.*;
 
 import org.redkale.convert.json.*;
 

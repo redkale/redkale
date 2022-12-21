@@ -5,19 +5,19 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.asm.MethodDebugVisitor;
 import java.io.*;
-import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.concurrent.*;
-import javax.annotation.Resource;
-import org.redkale.asm.*;
+import java.util.concurrent.CompletionStage;
+import org.redkale.annotation.Comment;
+import org.redkale.annotation.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
@@ -26,8 +26,8 @@ import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
-import org.redkale.util.*;
 import org.redkale.source.Flipper;
+import org.redkale.util.*;
 
 /**
  * <p>
@@ -313,7 +313,7 @@ public final class Rest {
         Class clzz = webSocketType;
         do {
             for (Field field : clzz.getDeclaredFields()) {
-                if (field.getAnnotation(Resource.class) == null) continue;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) continue;
                 if (resourcesFieldNameSet.contains(field.getName())) continue;
                 if (Modifier.isStatic(field.getModifiers())) {
                     throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
@@ -478,11 +478,13 @@ public final class Rest {
             for (int i = 0; i < resourcesFields.size(); i++) {
                 Field field = resourcesFields.get(i);
                 Resource res = field.getAnnotation(Resource.class);
+                javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
                 java.lang.reflect.Type fieldType = field.getGenericType();
                 fv = cw.visitField(ACC_PRIVATE, "_redkale_resource_" + i, Type.getDescriptor(field.getType()), fieldType == field.getType() ? null : Utility.getTypeDescriptor(fieldType), null);
                 {
                     av0 = fv.visitAnnotation(resDesc, true);
-                    av0.visit("name", res.name());
+                    av0.visit("name", res != null ? res.name() : res2.name());
+                    av0.visit("required", res != null ? res.required() : false);
                     av0.visitEnd();
                 }
                 fv.visitEnd();

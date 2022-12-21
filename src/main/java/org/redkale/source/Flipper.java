@@ -8,7 +8,7 @@ package org.redkale.source;
 import java.io.Serializable;
 import java.util.Objects;
 import org.redkale.convert.ConvertColumn;
-import org.redkale.util.Comment;
+import org.redkale.annotation.Comment;
 
 /**
  * 翻页对象, offset从0开始, limit必须大于0

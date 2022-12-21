@@ -7,11 +7,11 @@ package org.redkale.boot.watch;
 
 import java.io.IOException;
 import java.util.List;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.*;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
-import org.redkale.util.Comment;
+import org.redkale.annotation.Comment;
 
 /**
  *

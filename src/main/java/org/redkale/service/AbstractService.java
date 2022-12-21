@@ -6,7 +6,7 @@
 package org.redkale.service;
 
 import java.util.concurrent.*;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp;

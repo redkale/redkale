@@ -2,6 +2,8 @@
  */
 package org.redkale.util;
 
+import org.redkale.annotation.ConstructorParameters;
+
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;

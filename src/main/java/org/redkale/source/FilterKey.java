@@ -6,7 +6,7 @@
 package org.redkale.source;
 
 import java.util.Objects;
-import org.redkale.util.ConstructorParameters;
+import org.redkale.annotation.ConstructorParameters;
 
 /**
  * FilterKey主要用于自身字段间的表达式, 如： a.recordid = a.parentid , a.parentid就需要FilterKey来表示 new FilterKey("parentid")

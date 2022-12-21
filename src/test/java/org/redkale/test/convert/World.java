@@ -5,7 +5,7 @@
  */
 package org.redkale.test.convert;
 
-import javax.persistence.Id;
+import org.redkale.persistence.Id;
 import org.redkale.convert.json.JsonConvert;
 
 /**

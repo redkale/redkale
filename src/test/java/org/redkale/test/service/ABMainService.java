@@ -12,7 +12,7 @@ import java.nio.channels.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;

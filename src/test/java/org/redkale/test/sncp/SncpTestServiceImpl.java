@@ -9,6 +9,8 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
+
+import org.redkale.annotation.ResourceType;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;

@@ -6,13 +6,14 @@
 package org.redkale.boot;
 
 import java.lang.reflect.Modifier;
-import javax.persistence.Entity;
+
+import org.redkale.annotation.Bean;
+import org.redkale.persistence.Entity;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Decodeable;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.source.*;
-import org.redkale.util.*;
 
 /**
  * 执行一次Application.run提前获取所有动态类

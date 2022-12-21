@@ -16,6 +16,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.regex.Pattern;
 import java.util.stream.*;
+
+import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.ext.*;
 import org.redkale.convert.json.JsonConvert;

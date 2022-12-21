@@ -5,15 +5,15 @@
  */
 package org.redkale.net.sncp;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.*;
-import java.nio.channels.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
@@ -21,10 +21,8 @@ import org.redkale.net.*;
 import static org.redkale.net.sncp.SncpRequest.*;
 import static org.redkale.net.sncp.SncpResponse.fillRespHeader;
 import org.redkale.service.*;
+import org.redkale.source.*;
 import org.redkale.util.*;
-import org.redkale.service.RpcCall;
-import org.redkale.source.CacheSource;
-import org.redkale.source.DataSource;
 
 /**
  *
@@ -82,9 +80,8 @@ public final class SncpClient {
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
         this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(service);
         Class<?> tn = serviceTypeOrImplClass;
-        Version ver = tn.getAnnotation(Version.class);
         this.serviceClass = serviceClass;
-        this.serviceVersion = ver == null ? 0 : ver.value();
+        this.serviceVersion = 0; //暂不实现Version
         this.clientSncpAddress = clientSncpAddress;
         this.name = serviceName;
         tn = ResourceFactory.getResourceType(tn);

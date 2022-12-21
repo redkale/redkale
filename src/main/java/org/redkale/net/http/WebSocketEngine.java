@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
+
+import org.redkale.annotation.Comment;
 import org.redkale.convert.Convert;
 import org.redkale.net.Cryptor;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;

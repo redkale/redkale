@@ -5,22 +5,23 @@
  */
 package org.redkale.boot;
 
-import org.redkale.cluster.ClusterAgent;
-import org.redkale.mq.MessageAgent;
-import org.redkale.util.RedkaleClassLoader;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.file.*;
+import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.*;
+import java.util.function.BiConsumer;
 import java.util.logging.*;
-import javax.annotation.*;
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.Command;
+import org.redkale.annotation.*;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.cluster.ClusterAgent;
+import org.redkale.mq.MessageAgent;
 import org.redkale.net.Filter;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
@@ -215,18 +216,25 @@ public abstract class NodeServer {
         //------------------------------------- 注册 Resource --------------------------------------------------------
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
+                String resName = null;
                 Resource res = field.getAnnotation(Resource.class);
-                if (res == null || !res.name().startsWith("properties.")) return null;
+                if (res != null) {
+                    resName = res.name();
+                } else {
+                    javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
+                    if (res2 != null) resName = res2.name();
+                }
+                if (resName == null || !resName.startsWith("properties.")) return null;
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 DataSource
                 Class type = field.getType();
                 if (type != AnyValue.class && type != AnyValue[].class) return null;
                 Object resource = null;
                 final AnyValue properties = application.getAppConfig().getAnyValue("properties");
                 if (properties != null && type == AnyValue.class) {
-                    resource = properties.getAnyValue(res.name().substring("properties.".length()));
+                    resource = properties.getAnyValue(resName.substring("properties.".length()));
                     appResFactory.register(resourceName, AnyValue.class, resource);
                 } else if (properties != null && type == AnyValue[].class) {
-                    resource = properties.getAnyValues(res.name().substring("properties.".length()));
+                    resource = properties.getAnyValues(resName.substring("properties.".length()));
                     appResFactory.register(resourceName, AnyValue[].class, resource);
                 }
                 field.set(srcObj, resource);
@@ -241,13 +249,17 @@ public abstract class NodeServer {
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             Class<Service> resServiceType = Service.class;
             try {
-                if (field.getAnnotation(Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 AutoLoad Service
                 if (!Service.class.isAssignableFrom(field.getType())) return null;
                 resServiceType = (Class) field.getType();
                 if (resServiceType.getAnnotation(Local.class) == null) return null;
+                boolean auto = true;
                 AutoLoad al = resServiceType.getAnnotation(AutoLoad.class);
-                if (al == null || al.value()) return null;
+                if (al != null) auto = al.value();
+                org.redkale.util.AutoLoad al2 = resServiceType.getAnnotation(org.redkale.util.AutoLoad.class);
+                if (al2 != null) auto = al2.value();
+                if (auto) return null;
 
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
                 SncpClient client = srcObj instanceof Service ? Sncp.getSncpClient((Service) srcObj) : null;
@@ -270,7 +282,7 @@ public abstract class NodeServer {
         //------------------------------------- 注册 DataSource --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 DataSource
                 DataSource source = application.loadDataSource(resourceName, false);
                 field.set(srcObj, source);
@@ -286,7 +298,7 @@ public abstract class NodeServer {
             @Override
             public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
-                    if (field.getAnnotation(Resource.class) == null) return null;
+                    if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
                     if (!(srcObj instanceof Service)) throw new RuntimeException("CacheSource must be inject in Service, cannot " + srcObj);
                     if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不需要注入 CacheSource 
                     final Service srcService = (Service) srcObj;
@@ -322,19 +334,33 @@ public abstract class NodeServer {
             @Override
             public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
-                    if (field.getAnnotation(Resource.class) == null) return null;
+                    if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
                     if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不需要注入 WebSocketNode 
                     Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
+                    MessageAgent messageAgent = null;
+                    if (srcObj instanceof Service) {
+                        messageAgent = Sncp.getMessageAgent((Service) srcObj);
+                    } else if (srcObj instanceof WebSocketServlet) {
+                        try {
+                            Field c = WebSocketServlet.class.getDeclaredField("messageAgent");
+                            RedkaleClassLoader.putReflectionField("messageAgent", c);
+                            c.setAccessible(true);
+                            messageAgent = (MessageAgent) c.get(srcObj);
+                        } catch (Exception ex) {
+                            logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
+                        }
+                    }
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) groups.add(NodeServer.this.sncpGroup);
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, Sncp.getMessageAgent((Service) srcObj), application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, messageAgent, application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
                         ((org.redkale.net.http.WebSocketNodeService) nodeService).setName(resourceName);
                     }
                     resourceFactory.inject(resourceName, nodeService, self);
-                    MessageAgent messageAgent = Sncp.getMessageAgent((Service) srcObj);
-                    if (messageAgent != null && Sncp.getMessageAgent(nodeService) == null) Sncp.setMessageAgent(nodeService, messageAgent);
+                    if (messageAgent != null && Sncp.getMessageAgent(nodeService) == null) {
+                        Sncp.setMessageAgent(nodeService, messageAgent);
+                    }
                     field.set(srcObj, nodeService);
                     if (Sncp.isRemote(nodeService)) {
                         remoteServices.add(nodeService);
@@ -394,7 +420,8 @@ public abstract class NodeServer {
             if (localed && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) continue; //本地模式不能实例化接口和抽象类的Service类
             final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
                 try {
-                    if (SncpClient.parseMethod(serviceImplClass).isEmpty() && serviceImplClass.getAnnotation(Priority.class) == null) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
+                    if (SncpClient.parseMethod(serviceImplClass).isEmpty()
+                        && (serviceImplClass.getAnnotation(Priority.class) == null && serviceImplClass.getAnnotation(javax.annotation.Priority.class) == null)) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
                         if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
                             logger.log(Level.FINE, serviceImplClass + " cannot load because not found less one public non-final method");
                         }
@@ -729,7 +756,8 @@ public abstract class NodeServer {
             //do {   public方法不用递归
             for (Method m : loop.getMethods()) {
                 Command c = m.getAnnotation(Command.class);
-                if (c == null) continue;
+                org.redkale.util.Command c2 = m.getAnnotation(org.redkale.util.Command.class);
+                if (c == null && c2 == null) continue;
                 if (Modifier.isStatic(m.getModifiers())) {
                     logger.log(Level.WARNING, m + " is static on @Command");
                     continue;

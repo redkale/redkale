@@ -13,6 +13,8 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
+
+import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
 import org.redkale.asm.Type;
 import static org.redkale.asm.Opcodes.*;

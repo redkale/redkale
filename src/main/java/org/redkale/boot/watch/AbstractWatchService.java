@@ -6,7 +6,7 @@
 package org.redkale.boot.watch;
 
 import org.redkale.service.AbstractService;
-import org.redkale.util.Comment;
+import org.redkale.annotation.Comment;
 import org.redkale.watch.WatchService;
 
 /**

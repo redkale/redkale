@@ -3,7 +3,7 @@
 package org.redkale.util;
 
 import java.util.*;
-import javax.annotation.Priority;
+import org.redkale.annotation.Priority;
 
 /**
  * 配置源Agent的Provider

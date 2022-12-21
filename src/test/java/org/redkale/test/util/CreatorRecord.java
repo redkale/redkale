@@ -5,6 +5,7 @@
  */
 package org.redkale.test.util;
 
+import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.json.*;
 import org.redkale.util.*;
 

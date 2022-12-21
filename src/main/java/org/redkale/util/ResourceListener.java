@@ -5,9 +5,9 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  * &#64;Resource资源被更新时的监听事件, 本注解只能标记在方法参数为ResourceEvent[]上 <br>
@@ -46,7 +46,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @deprecated replaced by org.redkale.annotation.ResourceListener
  */
+@Deprecated
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)

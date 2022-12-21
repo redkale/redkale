@@ -5,9 +5,10 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
 
 /**
  * 版本, 可用于标记Service的接口版本变化
@@ -18,7 +19,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @since 2.1.0
  *
  * @author zhangjx
+ *
+ * @deprecated 暂不实现
  */
+@Deprecated
 @Inherited
 @Documented
 @Target({TYPE, METHOD})

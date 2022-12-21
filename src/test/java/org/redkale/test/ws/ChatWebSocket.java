@@ -7,7 +7,7 @@ package org.redkale.test.ws;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import org.redkale.test.rest.*;

@@ -6,8 +6,11 @@
 package org.redkale.test.source;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
 import org.redkale.convert.*;
+import org.redkale.persistence.Column;
+import org.redkale.source.DistributeTable;
+import org.redkale.persistence.Id;
 import org.redkale.source.*;
 
 /**

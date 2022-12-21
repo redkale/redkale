@@ -7,7 +7,10 @@ package org.redkale.test.source;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import org.redkale.source.VirtualEntity;
+
+import org.redkale.persistence.Cacheable;
+import org.redkale.persistence.Id;
+import org.redkale.persistence.VirtualEntity;
 import org.redkale.source.FilterNodeBean;
 import org.redkale.source.FilterExpress;
 import org.redkale.source.FilterColumn;
@@ -18,7 +21,7 @@ import org.redkale.source.EntityInfo;
 import org.redkale.source.FilterNode;
 import java.util.concurrent.*;
 import java.util.function.BiFunction;
-import javax.persistence.*;
+
 import org.redkale.convert.json.*;
 import org.redkale.source.*;
 

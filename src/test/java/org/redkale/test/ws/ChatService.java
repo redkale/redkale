@@ -8,10 +8,10 @@ package org.redkale.test.ws;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.net.http.WebSocketNode;
 import org.redkale.service.*;
-import org.redkale.util.Comment;
+import org.redkale.annotation.Comment;
 
 /**
  *

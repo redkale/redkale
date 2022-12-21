@@ -8,7 +8,7 @@ package org.redkale.net;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.util.AnyValue;
 

@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-import javax.annotation.*;
+import org.redkale.annotation.*;
 import static org.redkale.boot.Application.RESNAME_SNCP_ADDR;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
@@ -20,7 +20,7 @@ import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.Sncp;
-import org.redkale.service.*;
+import org.redkale.service.Service;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 import org.redkale.watch.*;
@@ -104,7 +104,7 @@ public class NodeHttpServer extends NodeServer {
         final ResourceFactory regFactory = application.getResourceFactory();
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
             try {
-                if (field.getAnnotation(Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
                 if (!(srcObj instanceof WebSocketServlet)) return null;
                 ResourceTypeLoader loader = null;
                 ResourceFactory sncpResFactory = null;
@@ -114,9 +114,14 @@ public class NodeHttpServer extends NodeServer {
                     loader = sncpResFactory.findTypeLoader(WebSocketNode.class, field);
                     if (loader != null) break;
                 }
-                if (loader != null) loader.load(sncpResFactory, srcResourceName, srcObj, resourceName, field, attachment);
+                Service nodeService = null;
+                if (loader != null) {
+                    nodeService = (Service) loader.load(sncpResFactory, srcResourceName, srcObj, resourceName, field, attachment);
+                }
                 synchronized (regFactory) {
-                    Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
+                    if (nodeService == null) {
+                        nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
+                    }
                     if (sncpResFactory != null && resourceFactory.find(RESNAME_SNCP_ADDR, String.class) == null) {
                         resourceFactory.register(RESNAME_SNCP_ADDR, InetSocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDR, InetSocketAddress.class));
                         resourceFactory.register(RESNAME_SNCP_ADDR, SocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDR, SocketAddress.class));
@@ -126,6 +131,7 @@ public class NodeHttpServer extends NodeServer {
                         MessageAgent messageAgent = null;
                         try {
                             Field c = WebSocketServlet.class.getDeclaredField("messageAgent");
+                            RedkaleClassLoader.putReflectionField("messageAgent", c);
                             c.setAccessible(true);
                             messageAgent = (MessageAgent) c.get(srcObj);
                         } catch (Exception ex) {

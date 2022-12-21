@@ -9,6 +9,8 @@ import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
+
+import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertDisabled;
 
 /**

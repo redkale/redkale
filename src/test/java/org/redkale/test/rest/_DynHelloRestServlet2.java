@@ -7,7 +7,7 @@ package org.redkale.test.rest;
 
 import java.io.IOException;
 import java.util.Map;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import org.redkale.source.Flipper;

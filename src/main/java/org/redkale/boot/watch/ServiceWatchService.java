@@ -7,7 +7,9 @@ package org.redkale.boot.watch;
 
 import java.lang.reflect.*;
 import java.util.*;
-import javax.annotation.Resource;
+
+import org.redkale.annotation.Comment;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;

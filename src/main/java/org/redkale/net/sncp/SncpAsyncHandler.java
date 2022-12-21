@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.MethodDebugVisitor;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;

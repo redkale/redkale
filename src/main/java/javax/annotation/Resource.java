@@ -5,14 +5,14 @@
  */
 package javax.annotation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * @since Common Annotations 1.0
+ *
+ * @deprecated replace by org.redkale.annotation.Resource
  */
+@Deprecated
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
@@ -32,15 +32,6 @@ public @interface Resource {
 //        APPLICATION
 //    }
 //    
-    /**
-     * 是否必须存在
-     *
-     * @return boolean
-     *
-     * @since 2.8.0
-     */
-    public boolean required() default false;
-
     /**
      * 资源名称
      *

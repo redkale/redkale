@@ -5,15 +5,12 @@
  */
 package org.redkale.boot;
 
-import org.redkale.cluster.ClusterAgent;
-import org.redkale.util.RedkaleClassLoader;
-import org.redkale.net.TransportGroupInfo;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.net.http.HttpClient;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -21,8 +18,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.Consumer;
 import java.util.logging.*;
-import javax.annotation.*;
 import javax.net.ssl.SSLContext;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.*;
 import org.redkale.convert.Convert;
@@ -36,7 +33,7 @@ import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
-import org.redkale.watch.*;
+import org.redkale.watch.WatchServlet;
 
 /**
  *
@@ -998,16 +995,23 @@ public final class Application {
             @Override
             public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) {
                 try {
+                    String resName = null;
                     Resource res = field.getAnnotation(Resource.class);
-                    if (res == null) return null;
+                    if (res != null) {
+                        resName = res.name();
+                    } else {
+                        javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
+                        if (res2 != null) resName = res2.name();
+                    }
+                    if (resName == null) return null;
                     if (srcObj instanceof Service && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(srcObj, application);
                         return application;
                     } else if (type == ResourceFactory.class) {
-                        boolean serv = RESNAME_SERVER_RESFACTORY.equals(res.name()) || res.name().equalsIgnoreCase("server");
-                        ResourceFactory rs = serv ? rf : (res.name().isEmpty() ? application.resourceFactory : null);
+                        boolean serv = RESNAME_SERVER_RESFACTORY.equals(resName) || resName.equalsIgnoreCase("server");
+                        ResourceFactory rs = serv ? rf : (resName.isEmpty() ? application.resourceFactory : null);
                         field.set(srcObj, rs);
                         return rs;
                     } else if (type == TransportFactory.class) {
@@ -1017,7 +1021,7 @@ public final class Application {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
                             if (ns.getClass() != NodeSncpServer.class) continue;
-                            if (res.name().equals(ns.server.getName())) {
+                            if (resName.equals(ns.server.getName())) {
                                 server = ns;
                                 break;
                             }
@@ -1028,7 +1032,7 @@ public final class Application {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
                             if (ns.getClass() != NodeHttpServer.class) continue;
-                            if (res.name().equals(ns.server.getName())) {
+                            if (resName.equals(ns.server.getName())) {
                                 server = ns;
                                 break;
                             }
@@ -1039,7 +1043,7 @@ public final class Application {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
                             if (ns.getClass() != NodeWatchServer.class) continue;
-                            if (res.name().equals(ns.server.getName())) {
+                            if (resName.equals(ns.server.getName())) {
                                 server = ns;
                                 break;
                             }
@@ -1067,7 +1071,7 @@ public final class Application {
         //------------------------------------ 注册 java.net.http.HttpClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
                 java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
                 if (resourceName.endsWith(".1.1")) {
                     builder.version(HttpClient.Version.HTTP_1_1);
@@ -1087,7 +1091,7 @@ public final class Application {
         //------------------------------------ 注册 HttpSimpleClient ------------------------------------       
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
                 HttpSimpleClient httpClient = HttpSimpleClient.create(clientAsyncGroup);
                 field.set(srcObj, httpClient);
                 rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
@@ -1130,7 +1134,7 @@ public final class Application {
         //------------------------------------ 注册 HttpMessageClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
                 if (clusterAgent == null) {
                     HttpMessageClient messageClient = new HttpMessageLocalClient(application, resourceName);
                     field.set(srcObj, messageClient);

@@ -11,8 +11,12 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
-import javax.persistence.*;
+import org.redkale.annotation.Comment;
+import org.redkale.annotation.ConstructorParameters;
+import org.redkale.annotation.LogExcludeLevel;
+import org.redkale.annotation.LogLevel;
 import org.redkale.convert.json.*;
+import org.redkale.persistence.*;
 import org.redkale.util.*;
 
 /**
@@ -240,9 +244,24 @@ public final class EntityInfo<T> {
         //---------------------------------------------
 
         LogLevel ll = type.getAnnotation(LogLevel.class);
-        this.logLevel = ll == null ? Integer.MIN_VALUE : Level.parse(ll.value()).intValue();
+        org.redkale.util.LogLevel ll2 = type.getAnnotation(org.redkale.util.LogLevel.class);
+        String levelName = ll != null ? ll.value() : (ll2 != null ? ll2.value() : null);
+        this.logLevel = levelName == null ? Integer.MIN_VALUE : Level.parse(levelName).intValue();
         Map<Integer, HashSet<String>> logmap = new HashMap<>();
         for (LogExcludeLevel lel : type.getAnnotationsByType(LogExcludeLevel.class)) {
+            for (String onelevel : lel.levels()) {
+                int level = Level.parse(onelevel).intValue();
+                HashSet<String> set = logmap.get(level);
+                if (set == null) {
+                    set = new HashSet<>();
+                    logmap.put(level, set);
+                }
+                for (String key : lel.keys()) {
+                    set.add(key);
+                }
+            }
+        }
+        for (org.redkale.util.LogExcludeLevel lel : type.getAnnotationsByType(org.redkale.util.LogExcludeLevel.class)) {
             for (String onelevel : lel.levels()) {
                 int level = Level.parse(onelevel).intValue();
                 HashSet<String> set = logmap.get(level);
@@ -262,15 +281,26 @@ public final class EntityInfo<T> {
             logmap.forEach((l, set) -> excludeLogLevels.put(l, set.toArray(new String[set.size()])));
         }
         //---------------------------------------------
-        Table t = type.getAnnotation(Table.class);
-        if (type.getAnnotation(VirtualEntity.class) != null || (source == null || "memory".equalsIgnoreCase(source.getType()))) {
+        org.redkale.persistence.Table t1 = type.getAnnotation(org.redkale.persistence.Table.class);
+        javax.persistence.Table t2 = type.getAnnotation(javax.persistence.Table.class);
+        final String tableName0 = t1 != null ? t1.name() : (t2 != null ? t2.name() : null);
+        final String tableCcatalog0 = t1 != null ? t1.catalog() : (t2 != null ? t2.catalog() : null);
+
+        if (type.getAnnotation(org.redkale.persistence.VirtualEntity.class) != null
+            || type.getAnnotation(org.redkale.source.VirtualEntity.class) != null
+            || (source == null || "memory".equalsIgnoreCase(source.getType()))) {
             this.table = null;
             BiFunction<DataSource, EntityInfo, CompletableFuture<List>> loader = null;
             try {
-                VirtualEntity ve = type.getAnnotation(VirtualEntity.class);
+                org.redkale.persistence.VirtualEntity ve = type.getAnnotation(org.redkale.persistence.VirtualEntity.class);
                 if (ve != null) {
                     loader = ve.loader().getDeclaredConstructor().newInstance();
                     RedkaleClassLoader.putReflectionDeclaredConstructors(ve.loader(), ve.loader().getName());
+                }
+                org.redkale.source.VirtualEntity ve2 = type.getAnnotation(org.redkale.source.VirtualEntity.class);
+                if (ve2 != null) {
+                    loader = ve2.loader().getDeclaredConstructor().newInstance();
+                    RedkaleClassLoader.putReflectionDeclaredConstructors(ve2.loader(), ve2.loader().getName());
                 }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, type + " init @VirtualEntity.loader error", e);
@@ -278,8 +308,10 @@ public final class EntityInfo<T> {
             this.fullloader = loader;
         } else {
             this.fullloader = fullloader;
-            if (t != null && !t.name().isEmpty() && t.name().indexOf('.') >= 0) throw new RuntimeException(type + " have illegal table.name on @Table");
-            this.table = (t == null) ? type.getSimpleName().toLowerCase() : (t.catalog().isEmpty()) ? (t.name().isEmpty() ? type.getSimpleName().toLowerCase() : t.name()) : (t.catalog() + '.' + (t.name().isEmpty() ? type.getSimpleName().toLowerCase() : t.name()));
+            if (tableName0 != null && !tableName0.isEmpty() && tableName0.indexOf('.') >= 0) {
+                throw new RuntimeException(type + " have illegal table.name on @Table");
+            }
+            this.table = (tableCcatalog0 == null) ? type.getSimpleName().toLowerCase() : (tableCcatalog0.isEmpty()) ? (tableName0.isEmpty() ? type.getSimpleName().toLowerCase() : tableName0) : (tableCcatalog0 + '.' + (tableName0.isEmpty() ? type.getSimpleName().toLowerCase() : tableName0));
         }
         DistributeTable dt = type.getAnnotation(DistributeTable.class);
         DistributeTableStrategy dts = null;
@@ -293,16 +325,24 @@ public final class EntityInfo<T> {
 
         this.arrayer = Creator.arrayFunction(type);
         this.creator = Creator.create(type);
-        ConstructorParameters cp = null;
+        String[] cps = null;
         try {
             Method cm = this.creator.getClass().getMethod("create", Object[].class);
-            cp = cm.getAnnotation(ConstructorParameters.class);
             RedkaleClassLoader.putReflectionPublicMethods(this.creator.getClass().getName());
             RedkaleClassLoader.putReflectionMethod(this.creator.getClass().getName(), cm);
+            ConstructorParameters cp = cm.getAnnotation(ConstructorParameters.class);
+            if (cp != null && cp.value().length > 0) {
+                cps = cp.value();
+            } else {
+                org.redkale.util.ConstructorParameters cp2 = cm.getAnnotation(org.redkale.util.ConstructorParameters.class);
+                if (cp2 != null && cp2.value().length > 0) {
+                    cps = cp2.value();
+                }
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, type + " cannot find ConstructorParameters Creator", e);
         }
-        this.constructorParameters = (cp == null || cp.value().length < 1) ? null : cp.value();
+        this.constructorParameters = cps;
         Attribute idAttr0 = null;
         Map<String, String> aliasmap0 = null;
         Class cltmp = type;
@@ -322,6 +362,7 @@ public final class EntityInfo<T> {
                 if (Modifier.isStatic(field.getModifiers())) continue;
                 if (Modifier.isFinal(field.getModifiers())) continue;
                 if (field.getAnnotation(Transient.class) != null) continue;
+                if (field.getAnnotation(javax.persistence.Transient.class) != null) continue;
                 if (fields.contains(field.getName())) continue;
                 final String fieldname = field.getName();
                 final Column col = field.getAnnotation(Column.class);
@@ -336,7 +377,9 @@ public final class EntityInfo<T> {
                 } catch (RuntimeException e) {
                     continue;
                 }
-                if (field.getAnnotation(javax.persistence.Id.class) != null && idAttr0 == null) {
+
+                boolean idFlag = field.getAnnotation(Id.class) != null || field.getAnnotation(javax.persistence.Id.class) != null;
+                if (idFlag && idAttr0 == null) {
                     idAttr0 = attr;
                     insertcols.add(sqlfield);
                     insertattrs.add(attr);
@@ -355,14 +398,14 @@ public final class EntityInfo<T> {
                         notNullColumns.add(fieldname);
                     }
                 }
-                ddl.add(new EntityColumn(field.getAnnotation(javax.persistence.Id.class) != null, col, attr.field(), attr.type(), field.getAnnotation(Comment.class)));
+                ddl.add(new EntityColumn(idFlag, col, attr.field(), attr.type(), field.getAnnotation(Comment.class)));
                 querycols.add(sqlfield);
                 queryattrs.add(attr);
                 fields.add(fieldname);
                 attributeMap.put(fieldname, attr);
             }
         } while ((cltmp = cltmp.getSuperclass()) != Object.class);
-        if (idAttr0 == null) throw new RuntimeException(type.getName() + " have no primary column by @javax.persistence.Id");
+        if (idAttr0 == null) throw new RuntimeException(type.getName() + " have no primary column by @org.redkale.persistence.Id");
         cltmp = type;
         JsonConvert convert = DEFAULT_JSON_CONVERT;
         do {
@@ -536,9 +579,10 @@ public final class EntityInfo<T> {
             this.updateQuestionPrepareCaseSQLs = null;
         }
         //----------------cache--------------
-        Cacheable c = type.getAnnotation(Cacheable.class);
-        if (this.table == null || (!cacheForbidden && c != null && c.value())) {
-            this.cache = new EntityCache<>(this, c);
+        Cacheable c1 = type.getAnnotation(Cacheable.class);
+        javax.persistence.Cacheable c2 = type.getAnnotation(javax.persistence.Cacheable.class);
+        if (this.table == null || (!cacheForbidden && c1 != null && c1.value()) || (!cacheForbidden && c2 != null && c2.value())) {
+            this.cache = new EntityCache<>(this, c1 == null ? c2.interval() : c1.interval(), c1 == null ? c2.direct() : c1.direct());
         } else {
             this.cache = null;
         }

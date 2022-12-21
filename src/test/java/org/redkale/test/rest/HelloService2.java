@@ -5,7 +5,7 @@
  */
 package org.redkale.test.rest;
 
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.net.http.*;
 import org.redkale.service.*;
 import org.redkale.source.*;

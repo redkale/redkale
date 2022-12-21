@@ -7,8 +7,10 @@ package org.redkale.test.source;
 
 import java.io.Serializable;
 import java.util.*;
-import javax.persistence.*;
+
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.persistence.Column;
+import org.redkale.persistence.Id;
 import org.redkale.source.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 

@@ -14,6 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 2.5.0
  */
+@Deprecated
 @Inherited
 @Documented
 @Target(TYPE)

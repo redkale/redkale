@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.cluster.ClusterAgent;
 import org.redkale.net.http.*;

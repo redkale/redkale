@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
-import javax.persistence.*;
+import org.redkale.persistence.*;
 import static org.redkale.source.FilterFunc.*;
 import org.redkale.util.*;
 
@@ -79,19 +79,28 @@ public final class EntityCache<T> {
     private CompletableFuture<List<T>> loadFuture;
 
     public EntityCache(final EntityInfo<T> info, final Cacheable c) {
+        this(info, c != null ? c.interval() : 0, c != null && c.direct());
+    }
+
+    EntityCache(final EntityInfo<T> info, final int cacheInterval, final boolean cacheDirect) {
         this.info = info;
-        this.interval = c == null ? 0 : c.interval();
+        this.interval = cacheInterval < 0 ? 0 : cacheInterval;
         this.type = info.getType();
         this.arrayer = info.getArrayer();
         this.creator = info.getCreator();
         this.primary = info.primary;
-        VirtualEntity ve = info.getType().getAnnotation(VirtualEntity.class);
-        boolean direct = c != null && c.direct();
+        org.redkale.persistence.VirtualEntity ve = info.getType().getAnnotation(org.redkale.persistence.VirtualEntity.class);
+        boolean direct = cacheDirect;
         if (!direct) direct = ve != null && ve.direct();
+        { //兼容废弃类
+            org.redkale.source.VirtualEntity ve2 = info.getType().getAnnotation(org.redkale.source.VirtualEntity.class);
+            if (!direct && ve2 != null) direct = ve2.direct();
+        }
         this.needcopy = !direct;
         this.newReproduce = Reproduce.create(type, type, (m) -> {
             try {
-                return type.getDeclaredField(m).getAnnotation(Transient.class) == null;
+                java.lang.reflect.Field field = type.getDeclaredField(m);
+                return field.getAnnotation(Transient.class) == null && field.getAnnotation(javax.persistence.Transient.class) == null;
             } catch (Exception e) {
                 return true;
             }
@@ -100,6 +109,7 @@ public final class EntityCache<T> {
             try {
                 java.lang.reflect.Field field = type.getDeclaredField(m);
                 if (field.getAnnotation(Transient.class) != null) return false;
+                if (field.getAnnotation(javax.persistence.Transient.class) != null) return false;
                 Column column = field.getAnnotation(Column.class);
                 return (column == null || column.updatable());
             } catch (Exception e) {

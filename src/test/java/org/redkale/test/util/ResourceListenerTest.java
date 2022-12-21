@@ -4,8 +4,9 @@ package org.redkale.test.util;
 
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.junit.jupiter.api.*;
+import org.redkale.annotation.ResourceListener;
 import org.redkale.util.*;
 
 /**

@@ -1,6 +1,6 @@
 package org.redkale.test.rest;
 
-import javax.persistence.Id;
+import org.redkale.persistence.Id;
 import org.redkale.convert.json.JsonFactory;
 
 /**

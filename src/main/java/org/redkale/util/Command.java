@@ -19,6 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 2.1.0
  */
+@Deprecated
 @Inherited
 @Documented
 @Target({METHOD})

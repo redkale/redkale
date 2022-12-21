@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.function.BiConsumer;
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;

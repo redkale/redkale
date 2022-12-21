@@ -6,7 +6,7 @@
 package org.redkale.boot;
 
 import java.io.*;
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -15,10 +15,11 @@ import java.util.concurrent.*;
 import java.util.function.Predicate;
 import java.util.jar.*;
 import java.util.logging.*;
-import java.util.regex.*;
-import javax.annotation.Priority;
-import org.redkale.util.*;
+import java.util.regex.Pattern;
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.*;
 
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
@@ -164,10 +165,10 @@ public final class ClassFilter<T> {
      *
      * @param property  application.xml中对应class节点下的property属性项
      * @param clazzname class名称
-     * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
+     * @param autoScan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      * @param url       URL
      */
-    public final void filter(AnyValue property, String clazzname, boolean autoscan, URL url) {
+    public final void filter(AnyValue property, String clazzname, boolean autoScan, URL url) {
         boolean r = accept0(property, clazzname);
         ClassFilter cf = r ? this : null;
         if (r && ands != null) {
@@ -187,7 +188,7 @@ public final class ClassFilter<T> {
         if (cf == null || clazzname.startsWith("sun.") || clazzname.contains("module-info")) return;
         try {
             Class clazz = classLoader.loadClass(clazzname);
-            if (!cf.accept(property, clazz, autoscan)) return;
+            if (!cf.accept(property, clazz, autoScan)) return;
             if (cf.conf != null) {
                 if (property == null) {
                     property = cf.conf;
@@ -202,10 +203,12 @@ public final class ClassFilter<T> {
             }
 
             AutoLoad auto = (AutoLoad) clazz.getAnnotation(AutoLoad.class);
-            if ((expectPredicate != null && expectPredicate.test(clazzname)) || (autoscan && auto != null && !auto.value())) { //自动扫描且被标记为@AutoLoad(false)的
-                expectEntrys.add(new FilterEntry(clazz, autoscan, true, property));
+            org.redkale.util.AutoLoad auto2 = (org.redkale.util.AutoLoad) clazz.getAnnotation(org.redkale.util.AutoLoad.class);
+            if ((expectPredicate != null && expectPredicate.test(clazzname)) || (autoScan && auto != null && !auto.value())
+                || (autoScan && auto2 != null && !auto2.value())) { //自动扫描且被标记为@AutoLoad(false)的
+                expectEntrys.add(new FilterEntry(clazz, autoScan, true, property));
             } else {
-                entrys.add(new FilterEntry(clazz, autoscan, false, property));
+                entrys.add(new FilterEntry(clazz, autoScan, false, property));
             }
         } catch (Throwable cfe) {
             if (logger.isLoggable(Level.FINEST) && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
@@ -534,7 +537,7 @@ public final class ClassFilter<T> {
                 Set<String> classes = cache.get(url);
                 if (classes == null) {
                     classes = new LinkedHashSet<>();
-                    try ( JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8))) {
+                    try (JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8))) {
                         Enumeration<JarEntry> it = jar.entries();
                         while (it.hasMoreElements()) {
                             String entryname = it.nextElement().getName().replace('/', '.');

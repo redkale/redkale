@@ -14,7 +14,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.logging.*;
-import javax.annotation.Resource;
+import org.redkale.annotation.*;
+import org.redkale.annotation.ResourceListener;
+import org.redkale.annotation.ResourceType;
 import org.redkale.convert.*;
 
 /**
@@ -127,7 +129,9 @@ public final class ResourceFactory {
     public static Class getResourceType(Type type) {
         Class<?> clazz = TypeToken.typeToClass(type);
         ResourceType rt = clazz.getAnnotation(ResourceType.class);
-        return rt == null ? clazz : rt.value();
+        if (rt != null) return rt.value();
+        org.redkale.util.ResourceType rt2 = clazz.getAnnotation(org.redkale.util.ResourceType.class);
+        return rt2 == null ? clazz : rt2.value();
     }
 
     /**
@@ -370,12 +374,22 @@ public final class ResourceFactory {
     public <A> A register(final boolean autoSync, final String name, final A val) {
         checkResourceName(name);
         final Class<?> claz = val.getClass();
+
+        Class rt = null;
         ResourceType rtype = claz.getAnnotation(ResourceType.class);
-        if (rtype == null) {
+        if (rtype != null) {
+            rt = rtype.value();
+        } else {
+            org.redkale.util.ResourceType rtype2 = claz.getAnnotation(org.redkale.util.ResourceType.class);
+            if (rtype2 != null) {
+                rt = rtype2.value();
+            }
+        }
+        if (rt == null) {
             return (A) register(autoSync, name, claz, val);
         } else {
             A old = null;
-            A t = (A) register(autoSync, name, rtype.value(), val);
+            A t = (A) register(autoSync, name, rt, val);
             if (t != null) old = t;
             return old;
         }
@@ -693,8 +707,9 @@ public final class ResourceFactory {
                     if (Modifier.isStatic(field.getModifiers())) continue;
                     field.setAccessible(true);
                     final Class classType = field.getType();
-                    Resource rc = field.getAnnotation(Resource.class);
-                    if (rc == null) {  //深度注入
+                    Resource rc1 = field.getAnnotation(Resource.class);
+                    javax.annotation.Resource rc2 = field.getAnnotation(javax.annotation.Resource.class);
+                    if (rc1 == null && rc2 == null) {  //深度注入
                         if (Convert.class.isAssignableFrom(classType)) continue;
                         if (ConvertFactory.class.isAssignableFrom(classType)) continue;
                         if (ResourceFactory.class.isAssignableFrom(classType)) continue;
@@ -726,10 +741,11 @@ public final class ResourceFactory {
                     final Type gencType = TypeToken.containsUnknownType(field.getGenericType())
                         ? TypeToken.getGenericType(field.getGenericType(), srcObj.getClass()) : field.getGenericType();
                     if (consumer != null) consumer.accept(srcObj, field);
-                    String tname = rc.name();
+                    String tname = rc1 == null ? rc2.name() : rc1.name();
                     if (tname.contains(RESOURCE_PARENT_NAME)) {
-                        Resource res = srcObj.getClass().getAnnotation(Resource.class);
-                        String presname = res == null ? srcResourceName : res.name();
+                        Resource res1 = srcObj.getClass().getAnnotation(Resource.class);
+                        javax.annotation.Resource res2 = srcObj.getClass().getAnnotation(javax.annotation.Resource.class);
+                        String presname = res1 == null ? (res2 == null ? srcResourceName : res2.name()) : res1.name();
                         if (presname == null) {
                             if (srcObj instanceof Resourcable) {
                                 tname = tname.replace(RESOURCE_PARENT_NAME, ((Resourcable) srcObj).resourceName());
@@ -830,7 +846,7 @@ public final class ResourceFactory {
                         }
                     }
                     if (rs != null) field.set(srcObj, rs);
-                    if (rs == null && !skipCheckRequired && rc.required()) {
+                    if (rs == null && !skipCheckRequired && rc1 != null && rc1.required()) {
                         throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + srcObj.getClass().getName());
                     }
                 }
@@ -1022,11 +1038,12 @@ public final class ResourceFactory {
                     RedkaleClassLoader.putReflectionDeclaredMethods(loop.getName());
                     for (Method method : loop.getDeclaredMethods()) {
                         ResourceListener rl = method.getAnnotation(ResourceListener.class);
-                        if (rl == null) continue;
+                        org.redkale.util.ResourceListener rl2 = method.getAnnotation(org.redkale.util.ResourceListener.class);
+                        if (rl == null && rl2 == null) continue;
                         if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == ResourceEvent[].class) {
                             m = method;
                             m.setAccessible(true);
-                            diff.set(rl.different());
+                            diff.set(rl != null ? rl.different() : rl2.different());
                             RedkaleClassLoader.putReflectionMethod(loop.getName(), method);
                             break;
                         } else {

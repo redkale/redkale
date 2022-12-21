@@ -2,6 +2,9 @@
  */
 package org.redkale.source;
 
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.ResourceListener;
+import org.redkale.annotation.ResourceType;
 import org.redkale.service.*;
 import org.redkale.util.*;
 

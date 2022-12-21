@@ -6,9 +6,9 @@
 package org.redkale.test.sncp;
 
 import org.redkale.convert.bson.BsonFactory;
+import org.redkale.persistence.Id;
 import org.redkale.util.Utility;
 import org.redkale.source.FilterBean;
-import javax.persistence.*;
 import org.redkale.convert.json.*;
 
 /**

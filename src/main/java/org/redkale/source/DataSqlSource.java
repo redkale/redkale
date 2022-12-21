@@ -13,12 +13,17 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
-import javax.annotation.Resource;
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.*;
+import org.redkale.annotation.ResourceListener;
+import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.*;
 import org.redkale.net.AsyncGroup;
-import org.redkale.service.*;
+import org.redkale.persistence.Table;
+import org.redkale.service.Local;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
+
 
 /**
  * DataSource的SQL抽象实现类 <br>
@@ -255,7 +260,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     //生成创建表的SQL
     protected <T> String[] createTableSqls(EntityInfo<T> info) {
         if (info == null || !autoDDL) return null;
-        javax.persistence.Table table = info.getType().getAnnotation(javax.persistence.Table.class);
+        Table table = info.getType().getAnnotation(Table.class);
         if ("mysql".equals(dbtype())) {  //mysql
             StringBuilder sb = new StringBuilder();
             sb.append("CREATE TABLE IF NOT EXISTS `").append(info.getOriginTable()).append("`(\n");
@@ -611,7 +616,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     /**
-     * 将entity的对象全部加载到Cache中去，如果clazz没有被@javax.persistence.Cacheable注解则不做任何事
+     * 将entity的对象全部加载到Cache中去，如果clazz没有被@org.redkale.persistence.Cacheable注解则不做任何事
      *
      * @param <T>   Entity类泛型
      * @param clazz Entity类

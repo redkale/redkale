@@ -11,9 +11,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
-import org.redkale.boot.*;
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.*;
+import org.redkale.annotation.ResourceListener;
 import static org.redkale.boot.Application.*;
+import org.redkale.boot.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.MessageMultiConsumer;
@@ -153,6 +155,8 @@ public abstract class ClusterAgent {
         if ("SNCP".equalsIgnoreCase(protocol) && service.getClass().getAnnotation(Local.class) != null) return false;
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return false;
+        org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
+        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) return false;
         if (service instanceof WebSocketNode) {
             if (((WebSocketNode) service).getLocalWebSocketEngine() == null) return false;
         }

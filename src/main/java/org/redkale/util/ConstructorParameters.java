@@ -5,9 +5,10 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
 
 /**
  * 类似java.beans.ConstructorProperties, 必须配合Creator使用
@@ -16,7 +17,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @deprecated replaced by org.redkale.annotation.ConstructorParameters
  */
+@Deprecated
 @Documented
 @Target({METHOD, CONSTRUCTOR})
 @Retention(RUNTIME)

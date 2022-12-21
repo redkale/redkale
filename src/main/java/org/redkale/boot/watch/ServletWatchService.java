@@ -5,7 +5,7 @@
  */
 package org.redkale.boot.watch;
 
-import javax.annotation.Resource;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.http.*;

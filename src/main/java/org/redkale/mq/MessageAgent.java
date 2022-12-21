@@ -10,9 +10,11 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.*;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
-import org.redkale.boot.*;
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.*;
+import org.redkale.annotation.ResourceListener;
 import static org.redkale.boot.Application.RESNAME_APP_NODEID;
+import org.redkale.boot.*;
 import org.redkale.net.Servlet;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -252,6 +254,8 @@ public abstract class MessageAgent implements Resourcable {
     public final synchronized void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return;
+        org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
+        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) return;
         { //标记@RestService(name = " ") 需要跳过， 一般作为模板引擎
             RestService rest = service.getClass().getAnnotation(RestService.class);
             if (rest != null && !rest.name().isEmpty() && rest.name().trim().isEmpty()) return;
@@ -266,6 +270,8 @@ public abstract class MessageAgent implements Resourcable {
     public final synchronized void putService(NodeSncpServer ns, Service service, SncpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return;
+        org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
+        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) return;
         String topic = generateSncpReqTopic(service);
         String consumerid = generateSncpConsumerid(topic, service);
         if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");

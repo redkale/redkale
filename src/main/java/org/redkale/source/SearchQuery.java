@@ -12,7 +12,7 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * SearchQuery用于构建搜索过滤条件<br>
  *
- * 不被标记为&#64;javax.persistence.Transient 的字段均视为过滤条件   <br>
+ * 不被标记为&#64;org.redkale.persistence.Transient 的字段均视为过滤条件   <br>
  *
  * <p>
  * 详情见: https://redkale.org

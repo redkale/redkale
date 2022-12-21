@@ -7,7 +7,7 @@ package org.redkale.source;
 
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.Bean;
+import org.redkale.annotation.Bean;
 
 /**
  * 翻页对象与过滤条件Bean的组合对象

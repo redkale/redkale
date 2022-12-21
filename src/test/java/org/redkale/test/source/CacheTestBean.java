@@ -9,8 +9,9 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
-import javax.persistence.Id;
+import org.redkale.persistence.Id;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.persistence.VirtualEntity;
 import org.redkale.source.*;
 
 /**

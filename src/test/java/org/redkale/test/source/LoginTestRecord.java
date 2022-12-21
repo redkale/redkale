@@ -5,8 +5,8 @@
  */
 package org.redkale.test.source;
 
-import javax.persistence.*;
 import org.redkale.convert.json.*;
+import org.redkale.persistence.Id;
 
 /**
  * CREATE TABLE `LoginTestRecord` (
