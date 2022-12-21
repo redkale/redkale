@@ -102,6 +102,61 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     @ResourceListener
     public abstract void onResourceChange(ResourceEvent[] events);
 
+    //从Properties配置中创建DataSource
+    public static DataSource createDataSource(Properties sourceProperties, String sourceName) throws Exception {
+        AnyValue redConf = AnyValue.loadFromProperties(sourceProperties);
+        AnyValue sourceConf = redConf.getAnyValue("datasource").getAnyValue(sourceName);
+        return createDataSource(null, null, sourceConf, sourceName, false);
+    }
+
+    //根据配置中创建DataSource
+    public static DataSource createDataSource(ClassLoader serverClassLoader, ResourceFactory resourceFactory, AnyValue sourceConf, String sourceName, boolean compileMode) throws Exception {
+        DataSource source = null;
+        if (serverClassLoader == null) {
+            serverClassLoader = Thread.currentThread().getContextClassLoader();
+        }
+        String classVal = sourceConf.getValue("type");
+        if (classVal == null || classVal.isEmpty()) {
+            if (DataJdbcSource.acceptsConf(sourceConf)) {
+                source = new DataJdbcSource();
+            } else {
+                RedkaleClassLoader.putServiceLoader(DataSourceProvider.class);
+                List<DataSourceProvider> providers = new ArrayList<>();
+                Iterator<DataSourceProvider> it = ServiceLoader.load(DataSourceProvider.class, serverClassLoader).iterator();
+                while (it.hasNext()) {
+                    DataSourceProvider provider = it.next();
+                    if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                    if (provider != null && provider.acceptsConf(sourceConf)) {
+                        providers.add(provider);
+                    }
+                }
+                for (DataSourceProvider provider : InstanceProvider.sort(providers)) {
+                    source = provider.createInstance();
+                    if (source != null) break;
+                }
+                if (source == null) {
+                    if (DataMemorySource.acceptsConf(sourceConf)) {
+                        source = new DataMemorySource(sourceName);
+                    }
+                }
+            }
+        } else {
+            Class sourceType = serverClassLoader.loadClass(classVal);
+            RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
+            source = (DataSource) sourceType.getConstructor().newInstance();
+        }
+        if (source == null) {
+            throw new RuntimeException("Not found DataSourceProvider for config=" + sourceConf);
+        }
+        if (!compileMode && resourceFactory != null) {
+            resourceFactory.inject(sourceName, source);
+        }
+        if (!compileMode && source instanceof Service) {
+            ((Service) source).init(sourceConf);
+        }
+        return source;
+    }
+
     public static String parseDbtype(String url) {
         String dbtype = null;
         if (url == null) return dbtype;

@@ -1189,47 +1189,18 @@ public final class Application {
             CacheSource source = new CacheMemorySource(sourceName);
             cacheSources.add(source);
             resourceFactory.register(sourceName, CacheSource.class, source);
-            resourceFactory.inject(sourceName, source);
             if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
             logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
             return source;
         }
-        String classVal = sourceConf.getValue("type");
         try {
-            CacheSource source = null;
-            if (classVal == null || classVal.isEmpty()) {
-                RedkaleClassLoader.putServiceLoader(CacheSourceProvider.class);
-                List<CacheSourceProvider> providers = new ArrayList<>();
-                Iterator<CacheSourceProvider> it = ServiceLoader.load(CacheSourceProvider.class, serverClassLoader).iterator();
-                while (it.hasNext()) {
-                    CacheSourceProvider provider = it.next();
-                    if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
-                    if (provider != null && provider.acceptsConf(sourceConf)) {
-                        providers.add(provider);
-                    }
-                }
-                for (CacheSourceProvider provider : InstanceProvider.sort(providers)) {
-                    source = provider.createInstance();
-                    if (source != null) break;
-                }
-                if (source == null) {
-                    if (CacheMemorySource.acceptsConf(sourceConf)) {
-                        source = new CacheMemorySource(sourceName);
-                    }
-                }
-            } else {
-                Class sourceType = serverClassLoader.loadClass(classVal);
-                RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
-                source = (CacheSource) sourceType.getConstructor().newInstance();
-            }
-            if (source == null) throw new RuntimeException("Not found CacheSourceProvider for config=" + sourceConf);
-
+            CacheSource source = AbstractCacheSource.createCacheSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
             cacheSources.add(source);
             resourceFactory.register(sourceName, source);
-            resourceFactory.inject(sourceName, source);
-            if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
             logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
             return source;
+        } catch (RuntimeException ex) {
+            throw ex;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "load application CaheSource error: " + sourceConf, e);
         }
@@ -1243,55 +1214,23 @@ public final class Application {
         if (sourceConf == null) {
             if (!autoMemory) return null;
             DataSource source = new DataMemorySource(sourceName);
+            if (!compileMode && source instanceof Service) {
+                resourceFactory.inject(sourceName, source);
+                ((Service) source).init(sourceConf);
+            }
             dataSources.add(source);
             resourceFactory.register(sourceName, DataSource.class, source);
-            resourceFactory.inject(sourceName, source);
-            if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
             logger.info("[" + Thread.currentThread().getName() + "] Load DataSource resourceName = " + sourceName + ", source = " + source);
             return source;
         }
-        String classVal = sourceConf.getValue("type");
         try {
-            DataSource source = null;
-            if (classVal == null || classVal.isEmpty()) {
-                if (DataJdbcSource.acceptsConf(sourceConf)) {
-                    source = new DataJdbcSource();
-                } else {
-                    RedkaleClassLoader.putServiceLoader(DataSourceProvider.class);
-                    List<DataSourceProvider> providers = new ArrayList<>();
-                    Iterator<DataSourceProvider> it = ServiceLoader.load(DataSourceProvider.class, serverClassLoader).iterator();
-                    while (it.hasNext()) {
-                        DataSourceProvider provider = it.next();
-                        if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
-                        if (provider != null && provider.acceptsConf(sourceConf)) {
-                            providers.add(provider);
-                        }
-                    }
-                    for (DataSourceProvider provider : InstanceProvider.sort(providers)) {
-                        source = provider.createInstance();
-                        if (source != null) break;
-                    }
-                    if (source == null) {
-                        if (DataMemorySource.acceptsConf(sourceConf)) {
-                            source = new DataMemorySource(sourceName);
-                        }
-                    }
-                }
-            } else {
-                Class sourceType = serverClassLoader.loadClass(classVal);
-                RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
-                source = (DataSource) sourceType.getConstructor().newInstance();
-            }
-            if (source == null) throw new RuntimeException("Not found DataSourceProvider for config=" + sourceConf);
-
+            DataSource source = AbstractDataSource.createDataSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
             dataSources.add(source);
             if (source instanceof DataMemorySource && DataMemorySource.isSearchType(sourceConf)) {
                 resourceFactory.register(sourceName, SearchSource.class, source);
             } else {
                 resourceFactory.register(sourceName, source);
             }
-            resourceFactory.inject(sourceName, source);
-            if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
             logger.info("[" + Thread.currentThread().getName() + "] Load DataSource resourceName = " + sourceName + ", source = " + source);
             return source;
         } catch (RuntimeException ex) {
@@ -1655,7 +1594,7 @@ public final class Application {
                         }
                         if (server == null) {
                             logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
-                            System.exit(0);
+                            System.exit(1);
                         }
                         server.init(serconf);
                         if (!singletonMode && !compileMode) {
@@ -1669,6 +1608,7 @@ public final class Application {
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, serconf + " runServers error", ex);
                         Application.this.shutdownLatch.countDown();
+                        System.exit(1);
                     }
                 }
             };

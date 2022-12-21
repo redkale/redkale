@@ -24,7 +24,6 @@ import org.redkale.service.Local;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
 
-
 /**
  * DataSource的SQL抽象实现类 <br>
  * 注意: 所有的操作只能作用在一张表上，不能同时变更多张表
@@ -56,10 +55,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected Properties writeConfProps;
 
-    @Resource(name = RESNAME_APP_CLIENT_ASYNCGROUP)
+    @Resource(name = RESNAME_APP_CLIENT_ASYNCGROUP, required = false)
     protected AsyncGroup clientAsyncGroup;
 
-    @Resource(name = RESNAME_APP_EXECUTOR)
+    @Resource(name = RESNAME_APP_EXECUTOR, required = false)
     protected ExecutorService workExecutor;
 
     protected BiFunction<EntityInfo, Object, CharSequence> sqlFormatter;
@@ -125,7 +124,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
         this.tableNotExistSqlstates = ";" + readConfProps.getProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
         this.tablecopySQL = readConfProps.getProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} LIKE ${oldtable}");
-        
+
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
         this.slowms = Integer.parseInt(readConfProps.getProperty(DATA_SOURCE_SLOWMS, "3000").trim());
     }
