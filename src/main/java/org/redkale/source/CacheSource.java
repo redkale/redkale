@@ -38,14 +38,9 @@ public interface CacheSource extends Resourcable {
 
     public <T> T get(final String key, final Type type);
 
-    public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type);
+    public <T> T getex(final String key, final int expireSeconds, final Type type);
 
     //----------- hxxx --------------
-    @Deprecated
-    default int hremove(final String key, String... fields) {
-        return hdel(key, fields);
-    }
-
     public int hdel(final String key, String... fields);
 
     public List<String> hkeys(final String key);
@@ -97,8 +92,6 @@ public interface CacheSource extends Resourcable {
     public long hgetLong(final String key, final String field, long defValue);
     //----------- hxxx --------------
 
-    public void refresh(final String key, final int expireSeconds);
-
     public <T> void set(final String key, final Convert convert, final T value);
 
     public <T> void set(final String key, final Type type, final T value);
@@ -115,38 +108,13 @@ public interface CacheSource extends Resourcable {
 
     public <T> T getSet(final String key, final Convert convert, final Type type, final T value);
 
-    @Deprecated
-    default <T> void set(final int expireSeconds, final String key, final Convert convert, final T value) {
-        setex(expireSeconds, key, convert, value);
-    }
+    public <T> void setex(final String key, final int expireSeconds, final Convert convert, final T value);
 
-    @Deprecated
-    default <T> void set(final int expireSeconds, final String key, final Type type, final T value) {
-        setex(expireSeconds, key, type, value);
-    }
+    public <T> void setex(final String key, final int expireSeconds, final Type type, final T value);
 
-    @Deprecated
-    default <T> void set(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
-        setex(expireSeconds, key, convert, type, value);
-    }
-
-    public <T> void setex(final int expireSeconds, final String key, final Convert convert, final T value);
-
-    public <T> void setex(final int expireSeconds, final String key, final Type type, final T value);
-
-    public <T> void setex(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
-
-    @Deprecated
-    default void setExpireSeconds(final String key, final int expireSeconds) {
-        expire(key, expireSeconds);
-    }
+    public <T> void setex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
     public void expire(final String key, final int seconds);
-
-    @Deprecated
-    default int remove(final String key) {
-        return del(key);
-    }
 
     public int del(final String key);
 
@@ -166,7 +134,7 @@ public interface CacheSource extends Resourcable {
 
     public int getCollectionSize(final String key);
 
-    public <T> Collection<T> getCollectionAndRefresh(final String key, final int expireSeconds, final Type componentType);
+    public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType);
 
     public <T> void appendListItem(final String key, final Type componentType, final T value);
 
@@ -186,15 +154,15 @@ public interface CacheSource extends Resourcable {
 
     public byte[] getSetBytes(final String key, final byte[] value);
 
-    public byte[] getBytesAndRefresh(final String key, final int expireSeconds);
+    public byte[] getexBytes(final String key, final int expireSeconds);
 
     public void setBytes(final String key, final byte[] value);
 
-    public void setBytes(final int expireSeconds, final String key, final byte[] value);
+    public void setexBytes(final String key, final int expireSeconds, final byte[] value);
 
     public <T> void setBytes(final String key, final Convert convert, final Type type, final T value);
 
-    public <T> void setexBytes(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
+    public <T> void setexBytes(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
     public List<String> queryKeys();
 
@@ -208,18 +176,13 @@ public interface CacheSource extends Resourcable {
 
     public String getSetString(final String key, final String value);
 
-    public String getStringAndRefresh(final String key, final int expireSeconds);
+    public String getexString(final String key, final int expireSeconds);
 
     public void setString(final String key, final String value);
 
     public void setnxString(final String key, final String value);
 
-    @Deprecated
-    default void setString(final int expireSeconds, final String key, final String value) {
-        setexString(expireSeconds, key, value);
-    }
-
-    public void setexString(final int expireSeconds, final String key, final String value);
+    public void setexString(final String key, final int expireSeconds, final String value);
 
     public Map<String, String> getStringMap(final String... keys);
 
@@ -229,7 +192,7 @@ public interface CacheSource extends Resourcable {
 
     public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys);
 
-    public Collection<String> getStringCollectionAndRefresh(final String key, final int expireSeconds);
+    public Collection<String> getexStringCollection(final String key, final int expireSeconds);
 
     public void appendStringListItem(final String key, final String value);
 
@@ -249,18 +212,13 @@ public interface CacheSource extends Resourcable {
 
     public long getSetLong(final String key, long value, long defValue);
 
-    public long getLongAndRefresh(final String key, final int expireSeconds, long defValue);
+    public long getexLong(final String key, final int expireSeconds, long defValue);
 
     public void setLong(final String key, final long value);
 
     public void setnxLong(final String key, final long value);
 
-    @Deprecated
-    default void setLong(final int expireSeconds, final String key, final long value) {
-        setexLong(expireSeconds, key, value);
-    }
-
-    public void setexLong(final int expireSeconds, final String key, final long value);
+    public void setexLong(final String key, final int expireSeconds, final long value);
 
     public Map<String, Long> getLongMap(final String... keys);
 
@@ -270,7 +228,7 @@ public interface CacheSource extends Resourcable {
 
     public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys);
 
-    public Collection<Long> getLongCollectionAndRefresh(final String key, final int expireSeconds);
+    public Collection<Long> getexLongCollection(final String key, final int expireSeconds);
 
     public void appendLongListItem(final String key, final long value);
 
@@ -291,9 +249,7 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<T> getAsync(final String key, final Type type);
 
-    public <T> CompletableFuture<T> getAndRefreshAsync(final String key, final int expireSeconds, final Type type);
-
-    public CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds);
+    public <T> CompletableFuture<T> getexAsync(final String key, final int expireSeconds, final Type type);
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final T value);
 
@@ -311,38 +267,13 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<T> getSetAsync(final String key, final Convert convert, final Type type, final T value);
 
-    @Deprecated
-    default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final T value) {
-        return setexAsync(expireSeconds, key, convert, value);
-    }
+    public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Convert convert, final T value);
 
-    @Deprecated
-    default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Type type, final T value) {
-        return setexAsync(expireSeconds, key, type, value);
-    }
+    public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Type type, final T value);
 
-    @Deprecated
-    default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
-        return setexAsync(expireSeconds, key, convert, type, value);
-    }
-
-    public <T> CompletableFuture<Void> setexAsync(final int expireSeconds, final String key, final Convert convert, final T value);
-
-    public <T> CompletableFuture<Void> setexAsync(final int expireSeconds, final String key, final Type type, final T value);
-
-    public <T> CompletableFuture<Void> setexAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
-
-    @Deprecated
-    default CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds) {
-        return expireAsync(key, expireSeconds);
-    }
+    public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
     public CompletableFuture<Void> expireAsync(final String key, final int seconds);
-
-    @Deprecated
-    default CompletableFuture<Integer> removeAsync(final String key) {
-        return delAsync(key);
-    }
 
     public CompletableFuture<Integer> delAsync(final String key);
 
@@ -355,11 +286,6 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Long> decrAsync(final String key, long num);
 
     //----------- hxxx --------------
-    @Deprecated
-    default CompletableFuture<Integer> hremoveAsync(final String key, String... fields) {
-        return hdelAsync(key, fields);
-    }
-
     public CompletableFuture<Integer> hdelAsync(final String key, String... fields);
 
     public CompletableFuture<List<String>> hkeysAsync(final String key);
@@ -419,7 +345,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Integer> getCollectionSizeAsync(final String key);
 
-    public <T> CompletableFuture<Collection<T>> getCollectionAndRefreshAsync(final String key, final int expireSeconds, final Type componentType);
+    public <T> CompletableFuture<Collection<T>> getexCollectionAsync(final String key, final int expireSeconds, final Type componentType);
 
     public <T> CompletableFuture<T> spopSetItemAsync(final String key, final Type componentType);
 
@@ -439,15 +365,15 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<byte[]> getSetBytesAsync(final String key, final byte[] value);
 
-    public CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds);
+    public CompletableFuture<byte[]> getexBytesAsync(final String key, final int expireSeconds);
 
     public CompletableFuture<Void> setBytesAsync(final String key, final byte[] value);
 
-    public CompletableFuture<Void> setexBytesAsync(final int expireSeconds, final String key, final byte[] value);
+    public CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, final byte[] value);
 
     public <T> CompletableFuture<Void> setBytesAsync(final String key, final Convert convert, final Type type, final T value);
 
-    public <T> CompletableFuture<Void> setexBytesAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
+    public <T> CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
     public CompletableFuture<List<String>> queryKeysAsync();
 
@@ -461,13 +387,13 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<String> getSetStringAsync(final String key, final String value);
 
-    public CompletableFuture<String> getStringAndRefreshAsync(final String key, final int expireSeconds);
+    public CompletableFuture<String> getexStringAsync(final String key, final int expireSeconds);
 
     public CompletableFuture<Void> setStringAsync(final String key, final String value);
 
     public CompletableFuture<Void> setnxStringAsync(final String key, final String value);
 
-    public CompletableFuture<Void> setexStringAsync(final int expireSeconds, final String key, final String value);
+    public CompletableFuture<Void> setexStringAsync(final String key, final int expireSeconds, final String value);
 
     public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys);
 
@@ -477,7 +403,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys);
 
-    public CompletableFuture<Collection<String>> getStringCollectionAndRefreshAsync(final String key, final int expireSeconds);
+    public CompletableFuture<Collection<String>> getexStringCollectionAsync(final String key, final int expireSeconds);
 
     public CompletableFuture<Void> appendStringListItemAsync(final String key, final String value);
 
@@ -497,13 +423,13 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Long> getSetLongAsync(final String key, long value, long defValue);
 
-    public CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue);
+    public CompletableFuture<Long> getexLongAsync(final String key, final int expireSeconds, long defValue);
 
     public CompletableFuture<Void> setLongAsync(final String key, long value);
 
     public CompletableFuture<Void> setnxLongAsync(final String key, long value);
 
-    public CompletableFuture<Void> setexLongAsync(final int expireSeconds, final String key, final long value);
+    public CompletableFuture<Void> setexLongAsync(final String key, final int expireSeconds, final long value);
 
     public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys);
 
@@ -513,7 +439,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys);
 
-    public CompletableFuture<Collection<Long>> getLongCollectionAndRefreshAsync(final String key, final int expireSeconds);
+    public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds);
 
     public CompletableFuture<Void> appendLongListItemAsync(final String key, final long value);
 
@@ -533,4 +459,129 @@ public interface CacheSource extends Resourcable {
         return CompletableFuture.completedFuture(isOpen());
     }
 
+    //-------------------------- 过期方法 ----------------------------------
+    @Deprecated
+    default CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds) {
+        return expireAsync(key, expireSeconds);
+    }
+
+    @Deprecated
+    default CompletableFuture<Integer> hremoveAsync(final String key, String... fields) {
+        return hdelAsync(key, fields);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final T value) {
+        return setexAsync(key, expireSeconds, convert, value);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Type type, final T value) {
+        return setexAsync(key, expireSeconds, type, value);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
+        return setexAsync(key, expireSeconds, convert, type, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds) {
+        return expireAsync(key, expireSeconds);
+    }
+
+    @Deprecated
+    default CompletableFuture<Integer> removeAsync(final String key) {
+        return delAsync(key);
+    }
+
+    @Deprecated
+    default int hremove(final String key, String... fields) {
+        return hdel(key, fields);
+    }
+
+    @Deprecated
+    default void refresh(final String key, final int expireSeconds) {
+        expire(key, expireSeconds);
+    }
+
+    @Deprecated
+    default <T> void set(final int expireSeconds, final String key, final Convert convert, final T value) {
+        setex(key, expireSeconds, convert, value);
+    }
+
+    @Deprecated
+    default <T> void set(final int expireSeconds, final String key, final Type type, final T value) {
+        setex(key, expireSeconds, type, value);
+    }
+
+    @Deprecated
+    default <T> void set(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
+        setex(key, expireSeconds, convert, type, value);
+    }
+
+    @Deprecated
+    default void setExpireSeconds(final String key, final int expireSeconds) {
+        expire(key, expireSeconds);
+    }
+
+    @Deprecated
+    default int remove(final String key) {
+        return del(key);
+    }
+
+    @Deprecated
+    default void setString(final int expireSeconds, final String key, final String value) {
+        setexString(key, expireSeconds, value);
+    }
+
+    @Deprecated
+    default void setLong(final int expireSeconds, final String key, final long value) {
+        setexLong(key, expireSeconds, value);
+    }
+
+    @Deprecated
+    default void setBytes(final int expireSeconds, final String key, final byte[] value) {
+        setexBytes(key, expireSeconds, value);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<T> getAndRefreshAsync(final String key, final int expireSeconds, final Type type) {
+        return getexAsync(key, expireSeconds, type);
+    }
+
+    @Deprecated
+    default <T> T getAndRefresh(final String key, final int expireSeconds, final Type type) {
+        return getex(key, expireSeconds, type);
+    }
+
+    @Deprecated
+    default String getStringAndRefresh(final String key, final int expireSeconds) {
+        return getexString(key, expireSeconds);
+    }
+
+    @Deprecated
+    default long getLongAndRefresh(final String key, final int expireSeconds, long defValue) {
+        return getexLong(key, expireSeconds, defValue);
+    }
+
+    @Deprecated
+    default byte[] getBytesAndRefresh(final String key, final int expireSeconds) {
+        return getexBytes(key, expireSeconds);
+    }
+
+    @Deprecated
+    default CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue) {
+        return getexLongAsync(key, expireSeconds, defValue);
+    }
+
+    @Deprecated
+    default CompletableFuture<String> getStringAndRefreshAsync(final String key, final int expireSeconds) {
+        return getexStringAsync(key, expireSeconds);
+    }
+
+    @Deprecated
+    default CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds) {
+        return getexBytesAsync(key, expireSeconds);
+    }
 }

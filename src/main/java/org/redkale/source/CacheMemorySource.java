@@ -533,7 +533,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type) {
+    public <T> T getex(final String key, final int expireSeconds, final Type type) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return null;
@@ -546,7 +546,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     @SuppressWarnings("unchecked")
-    public String getStringAndRefresh(String key, final int expireSeconds) {
+    public String getexString(String key, final int expireSeconds) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return null;
@@ -556,7 +556,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public long getLongAndRefresh(String key, final int expireSeconds, long defValue) {
+    public long getexLong(String key, final int expireSeconds, long defValue) {
         if (key == null) return defValue;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return defValue;
@@ -567,18 +567,18 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<T> getAndRefreshAsync(final String key, final int expireSeconds, final Type type) {
-        return CompletableFuture.supplyAsync(() -> getAndRefresh(key, expireSeconds, type), getExecutor());
+    public <T> CompletableFuture<T> getexAsync(final String key, final int expireSeconds, final Type type) {
+        return CompletableFuture.supplyAsync(() -> getex(key, expireSeconds, type), getExecutor());
     }
 
     @Override
-    public CompletableFuture<String> getStringAndRefreshAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getStringAndRefresh(key, expireSeconds), getExecutor());
+    public CompletableFuture<String> getexStringAsync(final String key, final int expireSeconds) {
+        return CompletableFuture.supplyAsync(() -> getexString(key, expireSeconds), getExecutor());
     }
 
     @Override
-    public CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue) {
-        return CompletableFuture.supplyAsync(() -> getLongAndRefresh(key, expireSeconds, defValue), getExecutor());
+    public CompletableFuture<Long> getexLongAsync(final String key, final int expireSeconds, long defValue) {
+        return CompletableFuture.supplyAsync(() -> getexLong(key, expireSeconds, defValue), getExecutor());
     }
 
     @Override
@@ -790,53 +790,53 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void setex(final int expireSeconds, String key, Convert convert, T value) {
+    public <T> void setex(String key, int expireSeconds, Convert convert, T value) {
         set(CacheEntryType.OBJECT, expireSeconds, key, value);
     }
 
     @Override
-    public <T> void setex(final int expireSeconds, String key, Type type, T value) {
+    public <T> void setex(String key, int expireSeconds, Type type, T value) {
         set(CacheEntryType.OBJECT, expireSeconds, key, value);
     }
 
     @Override
-    public <T> void setex(final int expireSeconds, String key, Convert convert, Type type, T value) {
+    public <T> void setex(String key, int expireSeconds, Convert convert, Type type, T value) {
         set(CacheEntryType.OBJECT, expireSeconds, key, value);
     }
 
     @Override
-    public void setexString(int expireSeconds, String key, String value) {
+    public void setexString(String key, int expireSeconds, String value) {
         set(CacheEntryType.STRING, expireSeconds, key, value);
     }
 
     @Override
-    public void setexLong(int expireSeconds, String key, long value) {
+    public void setexLong(String key, int expireSeconds, long value) {
         set(CacheEntryType.LONG, expireSeconds, key, value);
     }
 
     @Override
-    public <T> CompletableFuture<Void> setexAsync(int expireSeconds, String key, Convert convert, T value) {
-        return CompletableFuture.runAsync(() -> setex(expireSeconds, key, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Convert convert, T value) {
+        return CompletableFuture.runAsync(() -> setex(key, expireSeconds, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public <T> CompletableFuture<Void> setexAsync(int expireSeconds, String key, Type type, T value) {
-        return CompletableFuture.runAsync(() -> setex(expireSeconds, key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Type type, T value) {
+        return CompletableFuture.runAsync(() -> setex(key, expireSeconds, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public <T> CompletableFuture<Void> setexAsync(int expireSeconds, String key, Convert convert, Type type, T value) {
-        return CompletableFuture.runAsync(() -> setex(expireSeconds, key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Convert convert, Type type, T value) {
+        return CompletableFuture.runAsync(() -> setex(key, expireSeconds, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> setexStringAsync(int expireSeconds, String key, String value) {
-        return CompletableFuture.runAsync(() -> setexString(expireSeconds, key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> setexStringAsync(String key, int expireSeconds, String value) {
+        return CompletableFuture.runAsync(() -> setexString(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> setexLongAsync(int expireSeconds, String key, long value) {
-        return CompletableFuture.runAsync(() -> setexLong(expireSeconds, key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> setexLongAsync(String key, int expireSeconds, long value) {
+        return CompletableFuture.runAsync(() -> setexLong(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1076,13 +1076,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> Collection<T> getCollectionAndRefresh(final String key, final int expireSeconds, final Type componentType) {
-        return (Collection<T>) getAndRefresh(key, expireSeconds, componentType);
+    public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType) {
+        return (Collection<T>) getex(key, expireSeconds, componentType);
     }
 
     @Override
-    public Collection<String> getStringCollectionAndRefresh(final String key, final int expireSeconds) {
-        return (Collection<String>) getAndRefresh(key, expireSeconds, String.class);
+    public Collection<String> getexStringCollection(final String key, final int expireSeconds) {
+        return (Collection<String>) getex(key, expireSeconds, String.class);
     }
 
     @Override
@@ -1119,23 +1119,23 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public Collection<Long> getLongCollectionAndRefresh(String key, int expireSeconds) {
-        return (Collection<Long>) getAndRefresh(key, expireSeconds, long.class);
+    public Collection<Long> getexLongCollection(String key, int expireSeconds) {
+        return (Collection<Long>) getex(key, expireSeconds, long.class);
     }
 
     @Override
-    public <T> CompletableFuture<Collection<T>> getCollectionAndRefreshAsync(final String key, final int expireSeconds, final Type componentType) {
-        return CompletableFuture.supplyAsync(() -> getCollectionAndRefresh(key, expireSeconds, componentType), getExecutor());
+    public <T> CompletableFuture<Collection<T>> getexCollectionAsync(final String key, final int expireSeconds, final Type componentType) {
+        return CompletableFuture.supplyAsync(() -> getexCollection(key, expireSeconds, componentType), getExecutor());
     }
 
     @Override
-    public CompletableFuture<Collection<String>> getStringCollectionAndRefreshAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getStringCollectionAndRefresh(key, expireSeconds), getExecutor());
+    public CompletableFuture<Collection<String>> getexStringCollectionAsync(final String key, final int expireSeconds) {
+        return CompletableFuture.supplyAsync(() -> getexStringCollection(key, expireSeconds), getExecutor());
     }
 
     @Override
-    public CompletableFuture<Collection<Long>> getLongCollectionAndRefreshAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getLongCollectionAndRefresh(key, expireSeconds), getExecutor());
+    public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds) {
+        return CompletableFuture.supplyAsync(() -> getexLongCollection(key, expireSeconds), getExecutor());
     }
 
     protected void appendListItem(CacheEntryType cacheType, String key, Object value) {
@@ -1389,7 +1389,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public byte[] getBytesAndRefresh(String key, final int expireSeconds) {
+    public byte[] getexBytes(String key, final int expireSeconds) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.isExpired()) return null;
@@ -1399,8 +1399,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getBytesAndRefresh(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<byte[]> getexBytesAsync(final String key, final int expireSeconds) {
+        return CompletableFuture.supplyAsync(() -> getexBytes(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1414,13 +1414,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public void setBytes(final int expireSeconds, final String key, final byte[] value) {
+    public void setexBytes(final String key, final int expireSeconds, final byte[] value) {
         set(CacheEntryType.BYTES, expireSeconds, key, value);
     }
 
     @Override
-    public CompletableFuture<Void> setexBytesAsync(final int expireSeconds, final String key, byte[] value) {
-        return CompletableFuture.runAsync(() -> setBytes(expireSeconds, key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, byte[] value) {
+        return CompletableFuture.runAsync(() -> setexBytes(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1434,13 +1434,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void setexBytes(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
+    public <T> void setexBytes(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
         set(CacheEntryType.BYTES, expireSeconds, key, convert.convertToBytes(type, value));
     }
 
     @Override
-    public <T> CompletableFuture<Void> setexBytesAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
-        return CompletableFuture.runAsync(() -> setexBytes(expireSeconds, key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
+        return CompletableFuture.runAsync(() -> setexBytes(key, expireSeconds, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
