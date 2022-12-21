@@ -1052,7 +1052,7 @@ public final class Application {
                         return server;
                     }
 //                    if (type == WatchFactory.class) {
-//                        field.set(src, application.watchFactory);
+//                        field.setex(src, application.watchFactory);
 //                    }
                     return null;
                 } catch (Exception e) {
