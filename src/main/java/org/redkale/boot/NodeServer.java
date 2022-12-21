@@ -299,8 +299,10 @@ public abstract class NodeServer {
             public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
                     if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
-                    if (!(srcObj instanceof Service)) throw new RuntimeException("CacheSource must be inject in Service, cannot " + srcObj);
                     if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) return null; //远程模式不需要注入 CacheSource 
+                    if (!(srcObj instanceof Service)) {
+                        throw new RuntimeException("CacheSource must be inject in Service, cannot in " + srcObj);
+                    }
                     final Service srcService = (Service) srcObj;
                     SncpClient client = Sncp.getSncpClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();

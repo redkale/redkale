@@ -8,7 +8,7 @@ package org.redkale.service;
 import java.util.concurrent.*;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
-import org.redkale.net.*;
+import org.redkale.net.WorkThread;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.util.ThreadHashExecutor;
 
@@ -18,7 +18,8 @@ import org.redkale.util.ThreadHashExecutor;
  */
 public abstract class AbstractService implements Service {
 
-    @Resource(name = Application.RESNAME_APP_EXECUTOR)
+    //配置<executor threads="0"> APP_EXECUTOR资源为null
+    @Resource(name = Application.RESNAME_APP_EXECUTOR, required = false)
     private ExecutorService workExecutor;
 
     /**

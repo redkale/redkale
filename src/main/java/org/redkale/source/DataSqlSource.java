@@ -58,6 +58,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     @Resource(name = RESNAME_APP_CLIENT_ASYNCGROUP, required = false)
     protected AsyncGroup clientAsyncGroup;
 
+    //配置<executor threads="0"> APP_EXECUTOR资源为null
     @Resource(name = RESNAME_APP_EXECUTOR, required = false)
     protected ExecutorService workExecutor;
 
