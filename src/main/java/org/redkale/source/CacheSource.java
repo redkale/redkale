@@ -41,7 +41,12 @@ public interface CacheSource extends Resourcable {
     public <T> T getAndRefresh(final String key, final int expireSeconds, final Type type);
 
     //----------- hxxx --------------
-    public int hremove(final String key, String... fields);
+    @Deprecated
+    default int hremove(final String key, String... fields) {
+        return hdel(key, fields);
+    }
+
+    public int hdel(final String key, String... fields);
 
     public List<String> hkeys(final String key);
 
@@ -116,9 +121,19 @@ public interface CacheSource extends Resourcable {
 
     public <T> void set(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
 
-    public void setExpireSeconds(final String key, final int expireSeconds);
+    @Deprecated
+    default void setExpireSeconds(final String key, final int expireSeconds) {
+        expire(key, expireSeconds);
+    }
 
-    public int remove(final String key);
+    public void expire(final String key, final int seconds);
+
+    @Deprecated
+    default int remove(final String key) {
+        return del(key);
+    }
+
+    public int del(final String key);
 
     public long incr(final String key);
 
@@ -277,9 +292,19 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds);
+    @Deprecated
+    default CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds) {
+        return expireAsync(key, expireSeconds);
+    }
 
-    public CompletableFuture<Integer> removeAsync(final String key);
+    public CompletableFuture<Void> expireAsync(final String key, final int seconds);
+
+    @Deprecated
+    default CompletableFuture<Integer> removeAsync(final String key) {
+        return delAsync(key);
+    }
+
+    public CompletableFuture<Integer> delAsync(final String key);
 
     public CompletableFuture<Long> incrAsync(final String key);
 
@@ -290,7 +315,12 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Long> decrAsync(final String key, long num);
 
     //----------- hxxx --------------
-    public CompletableFuture<Integer> hremoveAsync(final String key, String... fields);
+    @Deprecated
+    default CompletableFuture<Integer> hremoveAsync(final String key, String... fields) {
+        return hdelAsync(key, fields);
+    }
+
+    public CompletableFuture<Integer> hdelAsync(final String key, String... fields);
 
     public CompletableFuture<List<String>> hkeysAsync(final String key);
 

@@ -141,7 +141,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     //----------- hxxx --------------
     @Override
-    public int hremove(final String key, String... fields) {
+    public int hdel(final String key, String... fields) {
         int count = 0;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.mapValue == null) return 0;
@@ -387,8 +387,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     //----------- hxxx --------------
     @Override
-    public CompletableFuture<Integer> hremoveAsync(final String key, String... fields) {
-        return CompletableFuture.supplyAsync(() -> hremove(key, fields), getExecutor());
+    public CompletableFuture<Integer> hdelAsync(final String key, String... fields) {
+        return CompletableFuture.supplyAsync(() -> hdel(key, fields), getExecutor());
     }
 
     @Override
@@ -840,7 +840,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public void setExpireSeconds(String key, int expireSeconds) {
+    public void expire(String key, int expireSeconds) {
         if (key == null) return;
         CacheEntry entry = container.get(key);
         if (entry == null) return;
@@ -848,12 +848,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.runAsync(() -> setExpireSeconds(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> expireAsync(final String key, final int expireSeconds) {
+        return CompletableFuture.runAsync(() -> expire(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public int remove(String key) {
+    public int del(String key) {
         if (key == null) return 0;
         return container.remove(key) == null ? 0 : 1;
     }
@@ -909,8 +909,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Integer> removeAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> remove(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> delAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> del(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

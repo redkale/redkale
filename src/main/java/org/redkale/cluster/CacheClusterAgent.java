@@ -243,7 +243,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     @Override
     public void deregister(Application application) {
         String serviceName = generateApplicationServiceName();
-        source.remove(serviceName);
+        source.del(serviceName);
     }
 
     @Override
@@ -282,7 +282,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
                 }
             }
         }
-        source.hremove(serviceName, serviceid);
+        source.hdel(serviceName, serviceid);
         if (realcanceled && currEntry != null) currEntry.canceled = true;
         if (!"mqtp".equals(protocol) && currEntry != null && currEntry.submqtp) {
             deregister(ns, "mqtp", service, realcanceled);
