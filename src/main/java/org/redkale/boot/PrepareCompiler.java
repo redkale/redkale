@@ -6,13 +6,12 @@
 package org.redkale.boot;
 
 import java.lang.reflect.Modifier;
-
 import org.redkale.annotation.Bean;
-import org.redkale.persistence.Entity;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Decodeable;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
+import org.redkale.persistence.Entity;
 import org.redkale.source.*;
 
 /**
@@ -43,7 +42,9 @@ public class PrepareCompiler {
         final String[] exlibs = (application.excludelibs != null ? (application.excludelibs + ";") : "").split(";");
 
         final ClassFilter<?> entityFilter = new ClassFilter(application.getClassLoader(), Entity.class, Object.class, (Class[]) null);
+        final ClassFilter<?> entityFilter2 = new ClassFilter(application.getClassLoader(), javax.persistence.Entity.class, Object.class, (Class[]) null);
         final ClassFilter<?> beanFilter = new ClassFilter(application.getClassLoader(), Bean.class, Object.class, (Class[]) null);
+        final ClassFilter<?> beanFilter2 = new ClassFilter(application.getClassLoader(), org.redkale.util.Bean.class, Object.class, (Class[]) null);
         final ClassFilter<?> filterFilter = new ClassFilter(application.getClassLoader(), null, FilterBean.class, (Class[]) null);
 
         ClassFilter.Loader.load(application.getHome(), application.getClassLoader(), exlibs, entityFilter, beanFilter, filterFilter);
@@ -61,7 +62,32 @@ public class PrepareCompiler {
             } catch (Exception e) { //JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
             }
         }
+        for (FilterEntry en : entityFilter2.getFilterEntrys()) {
+            Class clz = en.getType();
+            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) continue;
+            try {
+                application.dataSources.forEach(source -> source.compile(clz));
+                JsonFactory.root().loadEncoder(clz);
+                if (hasSncp) BsonFactory.root().loadEncoder(clz);
+                Decodeable decoder = JsonFactory.root().loadDecoder(clz);
+                if (hasSncp) BsonFactory.root().loadDecoder(clz);
+                decoder.convertFrom(new JsonReader("{}"));
+            } catch (Exception e) { //JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
+            }
+        }
         for (FilterEntry en : beanFilter.getFilterEntrys()) {
+            Class clz = en.getType();
+            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) continue;
+            try {
+                JsonFactory.root().loadEncoder(clz);
+                if (hasSncp) BsonFactory.root().loadEncoder(clz);
+                Decodeable decoder = JsonFactory.root().loadDecoder(clz);
+                if (hasSncp) BsonFactory.root().loadDecoder(clz);
+                decoder.convertFrom(new JsonReader("{}"));
+            } catch (Exception e) { //JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
+            }
+        }
+        for (FilterEntry en : beanFilter2.getFilterEntrys()) {
             Class clz = en.getType();
             if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) continue;
             try {
