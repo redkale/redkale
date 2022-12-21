@@ -246,6 +246,31 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> void hsetnx(final String key, final String field, final Convert convert, final T value) {
+        hsetnx(CacheEntryType.MAP, key, field, value);
+    }
+
+    @Override
+    public <T> void hsetnx(final String key, final String field, final Type type, final T value) {
+        hsetnx(CacheEntryType.MAP, key, field, value);
+    }
+
+    @Override
+    public <T> void hsetnx(final String key, final String field, final Convert convert, final Type type, final T value) {
+        hsetnx(CacheEntryType.MAP, key, field, value);
+    }
+
+    @Override
+    public void hsetnxString(final String key, final String field, final String value) {
+        hsetnx(CacheEntryType.MAP, key, field, value);
+    }
+
+    @Override
+    public void hsetnxLong(final String key, final String field, final long value) {
+        hsetnx(CacheEntryType.MAP, key, field, value);
+    }
+
+    @Override
     public void hmset(final String key, final Serializable... values) {
         for (int i = 0; i < values.length; i += 2) {
             hset(CacheEntryType.MAP, key, (String) values[i], values[i + 1]);
@@ -427,6 +452,31 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Convert convert, final T value) {
+        return CompletableFuture.runAsync(() -> hsetnx(key, field, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Type type, final T value) {
+        return CompletableFuture.runAsync(() -> hsetnx(key, field, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value) {
+        return CompletableFuture.runAsync(() -> hsetnx(key, field, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Void> hsetnxStringAsync(final String key, final String field, final String value) {
+        return CompletableFuture.runAsync(() -> hsetnxString(key, field, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Void> hsetnxLongAsync(final String key, final String field, final long value) {
+        return CompletableFuture.runAsync(() -> hsetnxLong(key, field, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public CompletableFuture<Void> hmsetAsync(final String key, final Serializable... values) {
         return CompletableFuture.runAsync(() -> hmset(key, values), getExecutor()).whenComplete(futureCompleteConsumer);
     }
@@ -550,10 +600,22 @@ public final class CacheMemorySource extends AbstractCacheSource {
         CacheEntry entry = container.get(key);
         if (entry == null) {
             entry = new CacheEntry(cacheType, key, value, null, null, null);
-            container.putIfAbsent(key, entry);
+            container.put(key, entry);
         } else {
             entry.expireSeconds = 0;
             entry.objectValue = value;
+            entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
+        }
+    }
+
+    protected void setnx(CacheEntryType cacheType, String key, Object value) {
+        if (key == null) return;
+        CacheEntry entry = container.get(key);
+        if (entry == null) {
+            entry = new CacheEntry(cacheType, key, value, null, null, null);
+            container.putIfAbsent(key, entry);
+        } else {
+            entry.expireSeconds = 0;
             entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         }
     }
@@ -563,11 +625,24 @@ public final class CacheMemorySource extends AbstractCacheSource {
         CacheEntry entry = container.get(key);
         if (entry == null) {
             entry = new CacheEntry(CacheEntryType.MAP, key, value, null, null, new ConcurrentHashMap<>());
-            container.putIfAbsent(key, entry);
+            container.put(key, entry);
             entry.mapValue.put(field, value);
         } else {
             entry.expireSeconds = 0;
             entry.mapValue.put(field, value);
+            entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
+        }
+    }
+
+    protected void hsetnx(CacheEntryType cacheType, String key, String field, Object value) {
+        if (key == null) return;
+        CacheEntry entry = container.get(key);
+        if (entry == null) {
+            entry = new CacheEntry(CacheEntryType.MAP, key, value, null, null, new ConcurrentHashMap<>());
+            container.putIfAbsent(key, entry);
+            entry.mapValue.putIfAbsent(field, value);
+        } else {
+            entry.expireSeconds = 0;
             entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         }
     }
@@ -585,6 +660,21 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> void set(String key, Convert convert, Type type, T value) {
         set(CacheEntryType.OBJECT, key, value);
+    }
+
+    @Override
+    public <T> void setnx(String key, Convert convert, T value) {
+        setnx(CacheEntryType.OBJECT, key, value);
+    }
+
+    @Override
+    public <T> void setnx(String key, Type type, T value) {
+        setnx(CacheEntryType.OBJECT, key, value);
+    }
+
+    @Override
+    public <T> void setnx(String key, Convert convert, Type type, T value) {
+        setnx(CacheEntryType.OBJECT, key, value);
     }
 
     @Override
@@ -607,8 +697,18 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public void setnxString(String key, String value) {
+        setnx(CacheEntryType.STRING, key, value);
+    }
+
+    @Override
     public void setLong(String key, long value) {
         set(CacheEntryType.LONG, key, value);
+    }
+
+    @Override
+    public void setnxLong(String key, long value) {
+        setnx(CacheEntryType.LONG, key, value);
     }
 
     @Override
@@ -627,6 +727,21 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<Void> setnxAsync(String key, Convert convert, T value) {
+        return CompletableFuture.runAsync(() -> setnx(key, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> setnxAsync(String key, Type type, T value) {
+        return CompletableFuture.runAsync(() -> setnx(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> setnxAsync(String key, Convert convert, Type type, T value) {
+        return CompletableFuture.runAsync(() -> setnx(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public <T> CompletableFuture<T> getSetAsync(String key, Type type, T value) {
         return CompletableFuture.runAsync(() -> getSet(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
@@ -642,6 +757,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public CompletableFuture<Void> setnxStringAsync(String key, String value) {
+        return CompletableFuture.runAsync(() -> setnxString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public CompletableFuture<String> getSetStringAsync(String key, String value) {
         return CompletableFuture.runAsync(() -> getSetString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
@@ -649,6 +769,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public CompletableFuture<Void> setLongAsync(String key, long value) {
         return CompletableFuture.runAsync(() -> setLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Void> setnxLongAsync(String key, long value) {
+        return CompletableFuture.runAsync(() -> setnxLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     protected void set(CacheEntryType cacheType, int expireSeconds, String key, Object value) {

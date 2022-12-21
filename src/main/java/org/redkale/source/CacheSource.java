@@ -8,8 +8,8 @@ package org.redkale.source;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
-import java.util.concurrent.*;
-import org.redkale.convert.*;
+import java.util.concurrent.CompletableFuture;
+import org.redkale.convert.Convert;
 import org.redkale.util.Resourcable;
 
 /**
@@ -67,6 +67,16 @@ public interface CacheSource extends Resourcable {
 
     public void hsetLong(final String key, final String field, final long value);
 
+    public <T> void hsetnx(final String key, final String field, final Convert convert, final T value);
+
+    public <T> void hsetnx(final String key, final String field, final Type type, final T value);
+
+    public <T> void hsetnx(final String key, final String field, final Convert convert, final Type type, final T value);
+
+    public void hsetnxString(final String key, final String field, final String value);
+
+    public void hsetnxLong(final String key, final String field, final long value);
+
     public void hmset(final String key, final Serializable... values);
 
     public <T> List<T> hmget(final String key, final Type type, final String... fields);
@@ -89,6 +99,12 @@ public interface CacheSource extends Resourcable {
     public <T> void set(final String key, final Type type, final T value);
 
     public <T> void set(final String key, final Convert convert, final Type type, final T value);
+
+    public <T> void setnx(final String key, final Convert convert, final T value);
+
+    public <T> void setnx(final String key, final Type type, final T value);
+
+    public <T> void setnx(final String key, final Convert convert, final Type type, final T value);
 
     public <T> T getSet(final String key, final Type type, final T value);
 
@@ -166,6 +182,8 @@ public interface CacheSource extends Resourcable {
 
     public void setString(final String key, final String value);
 
+    public void setnxString(final String key, final String value);
+
     public void setString(final int expireSeconds, final String key, final String value);
 
     public Map<String, String> getStringMap(final String... keys);
@@ -199,6 +217,8 @@ public interface CacheSource extends Resourcable {
     public long getLongAndRefresh(final String key, final int expireSeconds, long defValue);
 
     public void setLong(final String key, final long value);
+
+    public void setnxLong(final String key, final long value);
 
     public void setLong(final int expireSeconds, final String key, final long value);
 
@@ -240,6 +260,12 @@ public interface CacheSource extends Resourcable {
     public <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value);
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final Type type, final T value);
+
+    public <T> CompletableFuture<Void> setnxAsync(final String key, final Convert convert, final T value);
+
+    public <T> CompletableFuture<Void> setnxAsync(final String key, final Type type, final T value);
+
+    public <T> CompletableFuture<Void> setnxAsync(final String key, final Convert convert, final Type type, final T value);
 
     public <T> CompletableFuture<T> getSetAsync(final String key, final Type type, final T value);
 
@@ -289,6 +315,16 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> hsetStringAsync(final String key, final String field, final String value);
 
     public CompletableFuture<Void> hsetLongAsync(final String key, final String field, final long value);
+
+    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Convert convert, final T value);
+
+    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Type type, final T value);
+
+    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value);
+
+    public CompletableFuture<Void> hsetnxStringAsync(final String key, final String field, final String value);
+
+    public CompletableFuture<Void> hsetnxLongAsync(final String key, final String field, final long value);
 
     public CompletableFuture<Void> hmsetAsync(final String key, final Serializable... values);
 
@@ -359,6 +395,8 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Void> setStringAsync(final String key, final String value);
 
+    public CompletableFuture<Void> setnxStringAsync(final String key, final String value);
+
     public CompletableFuture<Void> setStringAsync(final int expireSeconds, final String key, final String value);
 
     public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys);
@@ -392,6 +430,8 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue);
 
     public CompletableFuture<Void> setLongAsync(final String key, long value);
+
+    public CompletableFuture<Void> setnxLongAsync(final String key, long value);
 
     public CompletableFuture<Void> setLongAsync(final int expireSeconds, final String key, final long value);
 
