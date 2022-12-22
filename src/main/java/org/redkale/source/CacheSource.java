@@ -175,17 +175,23 @@ public interface CacheSource extends Resourcable {
     public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit, String pattern);
 
     //------------------------ list ------------------------
-    public <T> void appendListItem(final String key, final Type componentType, final T value);
+    public <T> List<T> lrange(final String key, final Type componentType);
 
-    public <T> int removeListItem(final String key, final Type componentType, final T value);
+    public <T> Map<String, List<T>> lrange(final Type componentType, final String... keys);
 
-    public void appendStringListItem(final String key, final String value);
+    public <T> void rpush(final String key, final Type componentType, final T value);
 
-    public int removeStringListItem(final String key, final String value);
+    public <T> int lrem(final String key, final Type componentType, final T value);
 
-    public void appendLongListItem(final String key, final long value);
+    //---------- list-string ----------
+    public void rpushString(final String key, final String value);
 
-    public int removeLongListItem(final String key, final long value);
+    public int lremString(final String key, final String value);
+
+    //---------- list-long ----------
+    public void rpushLong(final String key, final long value);
+
+    public int lremLong(final String key, final long value);
 
     //------------------------ set ------------------------     
     public <T> Set<T> smembers(final String key, final Type componentType);
@@ -203,26 +209,26 @@ public interface CacheSource extends Resourcable {
     public <T> Set<T> spop(final String key, final int count, final Type componentType);
 
     //---------- set-string ----------
-    public boolean existsStringSetItem(final String key, final String value);
+    public boolean sismemberString(final String key, final String value);
 
-    public void appendStringSetItem(final String key, final String value);
+    public void saddString(final String key, final String value);
 
-    public int removeStringSetItem(final String key, final String value);
+    public int sremString(final String key, final String value);
 
-    public String spopStringSetItem(final String key);
+    public String spopString(final String key);
 
-    public Set<String> spopStringSetItem(final String key, final int count);
+    public Set<String> spopString(final String key, final int count);
 
     //---------- set-long ----------
-    public boolean existsLongSetItem(final String key, final long value);
+    public boolean sismemberLong(final String key, final long value);
 
-    public void appendLongSetItem(final String key, final long value);
+    public void saddLong(final String key, final long value);
 
-    public int removeLongSetItem(final String key, final long value);
+    public int sremLong(final String key, final long value);
 
-    public Long spopLongSetItem(final String key);
+    public Long spopLong(final String key);
 
-    public Set<Long> spopLongSetItem(final String key, final int count);
+    public Set<Long> spopLong(final String key, final int count);
 
     //------------------------ collection ------------------------
     @Deprecated
@@ -419,18 +425,24 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit, String pattern);
 
-    //------------------------ listAsync ------------------------
-    public <T> CompletableFuture<Void> appendListItemAsync(final String key, final Type componentType, final T value);
+    //------------------------ listAsync ------------------------    
+    public <T> CompletableFuture<List<T>> lrangeAsync(final String key, final Type componentType);
 
-    public <T> CompletableFuture<Integer> removeListItemAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(final Type componentType, final String... keys);
 
-    public CompletableFuture<Void> appendStringListItemAsync(final String key, final String value);
+    public <T> CompletableFuture<Void> rpushAsync(final String key, final Type componentType, final T value);
 
-    public CompletableFuture<Integer> removeStringListItemAsync(final String key, final String value);
+    public <T> CompletableFuture<Integer> lremAsync(final String key, final Type componentType, final T value);
 
-    public CompletableFuture<Void> appendLongListItemAsync(final String key, final long value);
+    //---------- list-string ----------
+    public CompletableFuture<Void> rpushStringAsync(final String key, final String value);
 
-    public CompletableFuture<Integer> removeLongListItemAsync(final String key, final long value);
+    public CompletableFuture<Integer> lremStringAsync(final String key, final String value);
+
+    //---------- list-long ----------
+    public CompletableFuture<Void> rpushLongAsync(final String key, final long value);
+
+    public CompletableFuture<Integer> lremLongAsync(final String key, final long value);
 
     //------------------------ setAsync ------------------------
     public <T> CompletableFuture<Set<T>> smembersAsync(final String key, final Type componentType);
@@ -448,26 +460,26 @@ public interface CacheSource extends Resourcable {
     public <T> CompletableFuture<Set<T>> spopAsync(final String key, final int count, final Type componentType);
 
     //---------- set-string ----------
-    public CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value);
+    public CompletableFuture<Boolean> sismemberStringAsync(final String key, final String value);
 
-    public CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value);
+    public CompletableFuture<Void> saddStringAsync(final String key, final String value);
 
-    public CompletableFuture<Integer> removeStringSetItemAsync(final String key, final String value);
+    public CompletableFuture<Integer> sremStringAsync(final String key, final String value);
 
-    public CompletableFuture<String> spopStringSetItemAsync(final String key);
+    public CompletableFuture<String> spopStringAsync(final String key);
 
-    public CompletableFuture<Set<String>> spopStringSetItemAsync(final String key, final int count);
+    public CompletableFuture<Set<String>> spopStringAsync(final String key, final int count);
 
     //---------- set-long ----------
-    public CompletableFuture<Boolean> existsLongSetItemAsync(final String key, final long value);
+    public CompletableFuture<Boolean> sismemberLongAsync(final String key, final long value);
 
-    public CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value);
+    public CompletableFuture<Void> saddLongAsync(final String key, final long value);
 
-    public CompletableFuture<Integer> removeLongSetItemAsync(final String key, final long value);
+    public CompletableFuture<Integer> sremLongAsync(final String key, final long value);
 
-    public CompletableFuture<Long> spopLongSetItemAsync(final String key);
+    public CompletableFuture<Long> spopLongAsync(final String key);
 
-    public CompletableFuture<Set<Long>> spopLongSetItemAsync(final String key, final int count);
+    public CompletableFuture<Set<Long>> spopLongAsync(final String key, final int count);
 
     //------------------------ collectionAsync ------------------------
     @Deprecated
@@ -703,5 +715,165 @@ public interface CacheSource extends Resourcable {
     @Deprecated
     default <T> CompletableFuture<Set<T>> spopSetItemAsync(final String key, final int count, final Type componentType) {
         return spopAsync(key, count, componentType);
+    }
+
+    @Deprecated
+    default boolean existsStringSetItem(final String key, final String value) {
+        return sismemberString(key, value);
+    }
+
+    @Deprecated
+    default void appendStringSetItem(final String key, final String value) {
+        saddString(key, value);
+    }
+
+    @Deprecated
+    default int removeStringSetItem(final String key, final String value) {
+        return sremString(key, value);
+    }
+
+    @Deprecated
+    default String spopStringSetItem(final String key) {
+        return spopString(key);
+    }
+
+    @Deprecated
+    default Set<String> spopStringSetItem(final String key, final int count) {
+        return spopString(key, count);
+    }
+
+    @Deprecated
+    default boolean existsLongSetItem(final String key, final long value) {
+        return sismemberLong(key, value);
+    }
+
+    @Deprecated
+    default void appendLongSetItem(final String key, final long value) {
+        saddLong(key, value);
+    }
+
+    @Deprecated
+    default int removeLongSetItem(final String key, final long value) {
+        return sremLong(key, value);
+    }
+
+    @Deprecated
+    default Long spopLongSetItem(final String key) {
+        return spopLong(key);
+    }
+
+    @Deprecated
+    default Set<Long> spopLongSetItem(final String key, final int count) {
+        return spopLong(key, count);
+    }
+
+    @Deprecated
+    default CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value) {
+        return sismemberStringAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value) {
+        return saddStringAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Integer> removeStringSetItemAsync(final String key, final String value) {
+        return sremStringAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<String> spopStringSetItemAsync(final String key) {
+        return spopStringAsync(key);
+    }
+
+    @Deprecated
+    default CompletableFuture<Set<String>> spopStringSetItemAsync(final String key, final int count) {
+        return spopStringAsync(key, count);
+    }
+
+    @Deprecated
+    default CompletableFuture<Boolean> existsLongSetItemAsync(final String key, final long value) {
+        return sismemberLongAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value) {
+        return saddLongAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Integer> removeLongSetItemAsync(final String key, final long value) {
+        return sremLongAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Long> spopLongSetItemAsync(final String key) {
+        return spopLongAsync(key);
+    }
+
+    @Deprecated
+    default CompletableFuture<Set<Long>> spopLongSetItemAsync(final String key, final int count) {
+        return spopLongAsync(key, count);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Void> appendListItemAsync(final String key, final Type componentType, final T value) {
+        return rpushAsync(key, componentType, value);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Integer> removeListItemAsync(final String key, final Type componentType, final T value) {
+        return lremAsync(key, componentType, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Void> appendStringListItemAsync(final String key, final String value) {
+        return rpushStringAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Integer> removeStringListItemAsync(final String key, final String value) {
+        return lremStringAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Void> appendLongListItemAsync(final String key, final long value) {
+        return rpushLongAsync(key, value);
+    }
+
+    @Deprecated
+    default CompletableFuture<Integer> removeLongListItemAsync(final String key, final long value) {
+        return lremLongAsync(key, value);
+    }
+
+    @Deprecated
+    default <T> void appendListItem(final String key, final Type componentType, final T value) {
+        rpush(key, componentType, value);
+    }
+
+    @Deprecated
+    default <T> int removeListItem(final String key, final Type componentType, final T value) {
+        return lrem(key, componentType, value);
+    }
+
+    @Deprecated
+    default void appendStringListItem(final String key, final String value) {
+        rpushString(key, value);
+    }
+
+    @Deprecated
+    default int removeStringListItem(final String key, final String value) {
+        return lremString(key, value);
+    }
+
+    @Deprecated
+    default void appendLongListItem(final String key, final long value) {
+        rpushLong(key, value);
+    }
+
+    @Deprecated
+    default int removeLongListItem(final String key, final long value) {
+        return lremLong(key, value);
     }
 }

@@ -924,10 +924,25 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> List<T> lrange(final String key, final Type componentType) {
+        return (List<T>) get(key, componentType);
+    }
+
+    @Override
     public <T> Map<String, Set<T>> smembers(final Type componentType, final String... keys) {
         Map<String, Set<T>> map = new HashMap<>();
         for (String key : keys) {
             Set<T> s = (Set<T>) get(key, componentType);
+            if (s != null) map.put(key, s);
+        }
+        return map;
+    }
+
+    @Override
+    public <T> Map<String, List<T>> lrange(final Type componentType, final String... keys) {
+        Map<String, List<T>> map = new HashMap<>();
+        for (String key : keys) {
+            List<T> s = (List<T>) get(key, componentType);
             if (s != null) map.put(key, s);
         }
         return map;
@@ -1050,6 +1065,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(Type componentType, String... keys) {
+        return CompletableFuture.supplyAsync(() -> lrange(componentType, keys), getExecutor());
+    }
+
+    @Override
     public <T> CompletableFuture<Map<String, Set<T>>> smembersAsync(Type componentType, String... keys) {
         return CompletableFuture.supplyAsync(() -> smembers(componentType, keys), getExecutor());
     }
@@ -1090,6 +1110,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<List<T>> lrangeAsync(String key, Type componentType) {
+        return CompletableFuture.supplyAsync(() -> lrange(key, componentType), getExecutor());
+    }
+
+    @Override
     public int getCollectionSize(final String key) {
         Collection collection = (Collection) get(key, Object.class);
         return collection == null ? 0 : collection.size();
@@ -1122,25 +1147,25 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public boolean existsStringSetItem(final String key, final String value) {
+    public boolean sismemberString(final String key, final String value) {
         Collection<String> list = getStringCollection(key);
         return list != null && list.contains(value);
     }
 
     @Override
-    public CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value) {
-        return CompletableFuture.supplyAsync(() -> existsStringSetItem(key, value), getExecutor());
+    public CompletableFuture<Boolean> sismemberStringAsync(final String key, final String value) {
+        return CompletableFuture.supplyAsync(() -> sismemberString(key, value), getExecutor());
     }
 
     @Override
-    public boolean existsLongSetItem(final String key, final long value) {
+    public boolean sismemberLong(final String key, final long value) {
         Collection<Long> list = getLongCollection(key);
         return list != null && list.contains(value);
     }
 
     @Override
-    public CompletableFuture<Boolean> existsLongSetItemAsync(final String key, final long value) {
-        return CompletableFuture.supplyAsync(() -> existsLongSetItem(key, value), getExecutor());
+    public CompletableFuture<Boolean> sismemberLongAsync(final String key, final long value) {
+        return CompletableFuture.supplyAsync(() -> sismemberLong(key, value), getExecutor());
     }
 
     @Override
@@ -1178,37 +1203,37 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void appendListItem(String key, Type componentType, T value) {
+    public <T> void rpush(String key, Type componentType, T value) {
         appendListItem(CacheEntryType.OBJECT_LIST, key, value);
     }
 
     @Override
-    public void appendStringListItem(String key, String value) {
+    public void rpushString(String key, String value) {
         appendListItem(CacheEntryType.STRING_LIST, key, value);
     }
 
     @Override
-    public void appendLongListItem(String key, long value) {
+    public void rpushLong(String key, long value) {
         appendListItem(CacheEntryType.LONG_LIST, key, value);
     }
 
     @Override
-    public <T> CompletableFuture<Void> appendListItemAsync(final String key, final Type componentType, final T value) {
-        return CompletableFuture.runAsync(() -> appendListItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Void> rpushAsync(final String key, final Type componentType, final T value) {
+        return CompletableFuture.runAsync(() -> rpush(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> appendStringListItemAsync(final String key, final String value) {
-        return CompletableFuture.runAsync(() -> appendStringListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> rpushStringAsync(final String key, final String value) {
+        return CompletableFuture.runAsync(() -> rpushString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> appendLongListItemAsync(final String key, final long value) {
-        return CompletableFuture.runAsync(() -> appendLongListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> rpushLongAsync(final String key, final long value) {
+        return CompletableFuture.runAsync(() -> rpushLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public <T> int removeListItem(String key, final Type componentType, T value) {
+    public <T> int lrem(String key, final Type componentType, T value) {
         if (key == null) return 0;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.listValue == null) return 0;
@@ -1216,7 +1241,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public int removeStringListItem(String key, String value) {
+    public int lremString(String key, String value) {
         if (key == null) return 0;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.listValue == null) return 0;
@@ -1224,7 +1249,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public int removeLongListItem(String key, long value) {
+    public int lremLong(String key, long value) {
         if (key == null) return 0;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.listValue == null) return 0;
@@ -1232,37 +1257,37 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Integer> removeListItemAsync(final String key, final Type componentType, T value) {
-        return CompletableFuture.supplyAsync(() -> removeListItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Integer> lremAsync(final String key, final Type componentType, T value) {
+        return CompletableFuture.supplyAsync(() -> lrem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Integer> removeStringListItemAsync(final String key, final String value) {
-        return CompletableFuture.supplyAsync(() -> removeStringListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> lremStringAsync(final String key, final String value) {
+        return CompletableFuture.supplyAsync(() -> lremString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Integer> removeLongListItemAsync(final String key, final long value) {
-        return CompletableFuture.supplyAsync(() -> removeLongListItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> lremLongAsync(final String key, final long value) {
+        return CompletableFuture.supplyAsync(() -> lremLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public String spopStringSetItem(final String key) {
+    public String spopString(final String key) {
         return (String) spop(key, String.class);
     }
 
     @Override
-    public Set<String> spopStringSetItem(final String key, int count) {
+    public Set<String> spopString(final String key, int count) {
         return spop(key, count, String.class);
     }
 
     @Override
-    public Long spopLongSetItem(final String key) {
+    public Long spopLong(final String key) {
         return (Long) spop(key, long.class);
     }
 
     @Override
-    public Set<Long> spopLongSetItem(final String key, int count) {
+    public Set<Long> spopLong(final String key, int count) {
         return spop(key, count, long.class);
     }
 
@@ -1325,12 +1350,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public void appendStringSetItem(String key, String value) {
+    public void saddString(String key, String value) {
         appendSetItem(CacheEntryType.OBJECT_SET, key, value);
     }
 
     @Override
-    public void appendLongSetItem(String key, long value) {
+    public void saddLong(String key, long value) {
         appendSetItem(CacheEntryType.OBJECT_SET, key, value);
     }
 
@@ -1340,13 +1365,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value) {
-        return CompletableFuture.runAsync(() -> appendStringSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> saddStringAsync(final String key, final String value) {
+        return CompletableFuture.runAsync(() -> saddString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value) {
-        return CompletableFuture.runAsync(() -> appendLongSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> saddLongAsync(final String key, final long value) {
+        return CompletableFuture.runAsync(() -> saddLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1358,7 +1383,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public int removeStringSetItem(String key, String value) {
+    public int sremString(String key, String value) {
         if (key == null) return 0;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.csetValue == null) return 0;
@@ -1366,7 +1391,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public int removeLongSetItem(String key, long value) {
+    public int sremLong(String key, long value) {
         if (key == null) return 0;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.csetValue == null) return 0;
@@ -1379,13 +1404,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Integer> removeStringSetItemAsync(final String key, final String value) {
-        return CompletableFuture.supplyAsync(() -> removeStringSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> sremStringAsync(final String key, final String value) {
+        return CompletableFuture.supplyAsync(() -> sremString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Integer> removeLongSetItemAsync(final String key, final long value) {
-        return CompletableFuture.supplyAsync(() -> removeLongSetItem(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> sremLongAsync(final String key, final long value) {
+        return CompletableFuture.supplyAsync(() -> sremLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1525,23 +1550,23 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<String> spopStringSetItemAsync(String key) {
-        return CompletableFuture.supplyAsync(() -> spopStringSetItem(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<String> spopStringAsync(String key) {
+        return CompletableFuture.supplyAsync(() -> spopString(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Set<String>> spopStringSetItemAsync(String key, int count) {
-        return CompletableFuture.supplyAsync(() -> spopStringSetItem(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Set<String>> spopStringAsync(String key, int count) {
+        return CompletableFuture.supplyAsync(() -> spopString(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Long> spopLongSetItemAsync(String key) {
-        return CompletableFuture.supplyAsync(() -> spopLongSetItem(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Long> spopLongAsync(String key) {
+        return CompletableFuture.supplyAsync(() -> spopLong(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public CompletableFuture<Set<Long>> spopLongSetItemAsync(String key, int count) {
-        return CompletableFuture.supplyAsync(() -> spopLongSetItem(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Set<Long>> spopLongAsync(String key, int count) {
+        return CompletableFuture.supplyAsync(() -> spopLong(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     public static enum CacheEntryType {
