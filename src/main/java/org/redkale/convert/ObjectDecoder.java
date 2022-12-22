@@ -5,7 +5,6 @@
  */
 package org.redkale.convert;
 
-import org.redkale.util.Creator;
 import java.lang.reflect.*;
 import java.util.*;
 import org.redkale.convert.ext.StringSimpledCoder;
@@ -125,10 +124,10 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     if (Modifier.isStatic(method.getModifiers())) continue;
                     if (Modifier.isAbstract(method.getModifiers())) continue;
                     if (method.isSynthetic()) continue;
-                    if (method.getReturnType() != void.class) continue;
                     if (method.getParameterCount() != 1) continue;
                     if (method.getName().length() < 4) continue;
                     if (!method.getName().startsWith("set")) continue;
+                    if (method.getReturnType() != void.class && method.getReturnType() != clazz) continue;
                     if (factory.isConvertDisabled(method)) continue;
                     if (reversible && (cps == null || !ObjectEncoder.contains(cps, ConvertFactory.readGetSetFieldName(method)))) {
                         boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
