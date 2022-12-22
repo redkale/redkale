@@ -175,6 +175,8 @@ public interface CacheSource extends Resourcable {
     public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit, String pattern);
 
     //------------------------ list ------------------------
+    public int llen(final String key);
+
     public <T> List<T> lrange(final String key, final Type componentType);
 
     public <T> Map<String, List<T>> lrange(final Type componentType, final String... keys);
@@ -193,7 +195,9 @@ public interface CacheSource extends Resourcable {
 
     public int lremLong(final String key, final long value);
 
-    //------------------------ set ------------------------     
+    //------------------------ set ------------------------   
+    public int scard(final String key);
+
     public <T> Set<T> smembers(final String key, final Type componentType);
 
     public <T> Map<String, Set<T>> smembers(final Type componentType, final String... keys);
@@ -425,7 +429,9 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit, String pattern);
 
-    //------------------------ listAsync ------------------------    
+    //------------------------ listAsync ------------------------  
+    public CompletableFuture<Integer> llenAsync(final String key);
+
     public <T> CompletableFuture<List<T>> lrangeAsync(final String key, final Type componentType);
 
     public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(final Type componentType, final String... keys);
@@ -445,6 +451,8 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Integer> lremLongAsync(final String key, final long value);
 
     //------------------------ setAsync ------------------------
+    public CompletableFuture<Integer> scardAsync(final String key);
+
     public <T> CompletableFuture<Set<T>> smembersAsync(final String key, final Type componentType);
 
     public <T> CompletableFuture<Map<String, Set<T>>> smembersAsync(final Type componentType, final String... keys);

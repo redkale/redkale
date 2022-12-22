@@ -1121,6 +1121,28 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public int llen(final String key) {
+        Collection collection = (Collection) get(key, Object.class);
+        return collection == null ? 0 : collection.size();
+    }
+
+    @Override
+    public int scard(final String key) {
+        Collection collection = (Collection) get(key, Object.class);
+        return collection == null ? 0 : collection.size();
+    }
+
+    @Override
+    public CompletableFuture<Integer> llenAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> llen(key), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Integer> scardAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> scard(key), getExecutor());
+    }
+
+    @Override
     public CompletableFuture<Integer> getCollectionSizeAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> getCollectionSize(key), getExecutor());
     }
