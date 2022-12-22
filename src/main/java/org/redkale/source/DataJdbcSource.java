@@ -271,13 +271,8 @@ public class DataJdbcSource extends DataSqlSource {
                     String debugsql = sb.toString();
                     if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " insert sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
                 }
-            } //打印结束
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            } //打印结束            
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             return CompletableFuture.failedFuture(e);
@@ -332,12 +327,7 @@ public class DataJdbcSource extends DataSqlSource {
             final Statement stmt = conn.createStatement();
             int c = stmt.executeUpdate(sql);
             stmt.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -355,12 +345,7 @@ public class DataJdbcSource extends DataSqlSource {
                                 st.executeBatch();
                             }
                             st.close();
-                            if (slowms > 0) {
-                                long cost = System.currentTimeMillis() - s;
-                                if (cost > slowms) {
-                                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                                }
-                            }
+                            slowLog(s, sql);
                             return CompletableFuture.completedFuture(0);
                         } catch (SQLException e2) {
                             return CompletableFuture.failedFuture(e2);
@@ -385,12 +370,7 @@ public class DataJdbcSource extends DataSqlSource {
             final Statement stmt = conn.createStatement();
             int c = stmt.executeUpdate(sql);
             stmt.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) return CompletableFuture.completedFuture(-1);
@@ -415,12 +395,7 @@ public class DataJdbcSource extends DataSqlSource {
                 String tablekey = table.indexOf('.') > 0 ? table : (conn.getCatalog() + '.' + table);
                 info.removeDisTable(tablekey);
             }
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) return CompletableFuture.completedFuture(-1);
@@ -474,12 +449,7 @@ public class DataJdbcSource extends DataSqlSource {
                 if (p >= 0) c += p;
             }
             prestmt.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + updateSQL);
-                }
-            }
+            slowLog(s, updateSQL);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -527,24 +497,14 @@ public class DataJdbcSource extends DataSqlSource {
                 }
                 int c = prestmt.executeUpdate();
                 prestmt.close();
-                if (slowms > 0) {
-                    long cost = System.currentTimeMillis() - s;
-                    if (cost > slowms) {
-                        logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                    }
-                }
+                slowLog(s, sql);
                 return CompletableFuture.completedFuture(c);
             } else {
                 if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
                 int c = stmt.executeUpdate(sql);
                 stmt.close();
-                if (slowms > 0) {
-                    long cost = System.currentTimeMillis() - s;
-                    if (cost > slowms) {
-                        logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                    }
-                }
+                slowLog(s, sql);
                 return CompletableFuture.completedFuture(c);
             }
         } catch (SQLException e) {
@@ -598,12 +558,7 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             stmt.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(map);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -649,12 +604,7 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             stmt.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -701,12 +651,7 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             stmt.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -768,12 +713,7 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             stmt.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -816,12 +756,7 @@ public class DataJdbcSource extends DataSqlSource {
             T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
             set.close();
             ps.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -868,12 +803,7 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             ps.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(val == null ? defValue : val);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -916,12 +846,7 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             ps.close();
             if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -990,12 +915,7 @@ public class DataJdbcSource extends DataSqlSource {
                     set.close();
                     ps.close();
                 }
-                if (slowms > 0) {
-                    long cost = System.currentTimeMillis() - s;
-                    if (cost > slowms) {
-                        logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, sheet-content: " + listsql);
-                    }
-                }
+                slowLog(s, listsql);
                 return CompletableFuture.completedFuture(new Sheet<>(total, list));
             }
             final String listsql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
@@ -1031,12 +951,7 @@ public class DataJdbcSource extends DataSqlSource {
             }
             set.close();
             ps.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + listsql);
-                }
-            }
+            slowLog(s, listsql);
             return CompletableFuture.completedFuture(new Sheet<>(total, list));
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -1103,12 +1018,7 @@ public class DataJdbcSource extends DataSqlSource {
                 rs[++i] = stmt.execute(sql) ? 1 : 0;
             }
             stmt.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
-                }
-            }
+            slowLog(s, sqls);
             return rs;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -1141,12 +1051,7 @@ public class DataJdbcSource extends DataSqlSource {
             V rs = handler.apply(createDataResultSet(null, set));
             set.close();
             statement.close();
-            if (slowms > 0) {
-                long cost = System.currentTimeMillis() - s;
-                if (cost > slowms) {
-                    logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + sql);
-                }
-            }
+            slowLog(s, sql);
             return rs;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

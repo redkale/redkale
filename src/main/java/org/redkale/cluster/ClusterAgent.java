@@ -16,6 +16,7 @@ import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.*;
+import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.MessageMultiConsumer;
@@ -58,6 +59,8 @@ public abstract class ClusterAgent {
 
     protected AnyValue config;
 
+    protected Set<String> tags;
+
     protected TransportFactory transportFactory;
 
     protected final ConcurrentHashMap<String, ClusterEntry> localEntrys = new ConcurrentHashMap<>();
@@ -81,7 +84,18 @@ public abstract class ClusterAgent {
                 if (str.trim().isEmpty()) continue;
                 list.add(Integer.parseInt(str.trim()));
             }
-            if (!list.isEmpty()) this.ports = list.stream().mapToInt(x -> x).toArray();
+            if (!list.isEmpty()) {
+                this.ports = list.stream().mapToInt(x -> x).toArray();
+            }
+        }
+        Set<String> tags0 = new HashSet<>();
+        for (String str : config.getValue("tags", "").split(";|,")) {
+            if (!str.trim().isEmpty()) {
+                tags0.add(str.trim());
+            }
+        }
+        if (!tags0.isEmpty()) {
+            this.tags = tags0;
         }
     }
 

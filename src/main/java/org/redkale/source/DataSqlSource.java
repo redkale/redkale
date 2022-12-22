@@ -71,8 +71,11 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, i)
         -> ((CompletableFuture<Sheet>) querySheetDB(i, false, false, false, null, null, (FilterNode) null)).thenApply(e -> e == null ? new ArrayList() : e.list(true));
 
-    //超过多少毫秒视为慢, 会打印警告级别的日志, 默认值: 3000
-    protected long slowms;
+    //超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 2000
+    protected long slowmsWarn;
+
+    //超过多少毫秒视为很慢, 会打印错误级别的日志, 默认值: 3000
+    protected long slowmsError;
 
     //用于反向LIKE使用
     protected String containSQL;
@@ -127,7 +130,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         this.tablecopySQL = readConfProps.getProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} LIKE ${oldtable}");
 
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
-        this.slowms = Integer.parseInt(readConfProps.getProperty(DATA_SOURCE_SLOWMS, "3000").trim());
+        this.slowmsWarn = Integer.parseInt(readConfProps.getProperty(DATA_SOURCE_SLOWMS_WARN, "2000").trim());
+        this.slowmsError = Integer.parseInt(readConfProps.getProperty(DATA_SOURCE_SLOWMS_ERROR, "3000").trim());
     }
 
     @Override
@@ -214,6 +218,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected void updateWriteResourceChange(Properties newWriteProps, ResourceEvent[] events) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    protected void slowLog(long startTime, String... sqls) {
+        long cost = System.currentTimeMillis() - startTime;
+        if (slowmsError > 0 && cost > slowmsError) {
+            logger.log(Level.SEVERE, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
+        } else if (slowmsWarn > 0 && cost > slowmsWarn) {
+            logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') very slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
+        }
     }
 
     //解密可能存在的加密字段, 可重载
