@@ -161,7 +161,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public int hsize(final String key) {
+    public int hlen(final String key) {
         CacheEntry entry = container.get(key);
         if (entry == null || entry.mapValue == null) return 0;
         return entry.mapValue.keySet().size();
@@ -397,8 +397,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Integer> hsizeAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> hsize(key), getExecutor());
+    public CompletableFuture<Integer> hlenAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> hlen(key), getExecutor());
     }
 
     @Override
