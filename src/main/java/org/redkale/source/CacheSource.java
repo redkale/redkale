@@ -187,17 +187,22 @@ public interface CacheSource extends Resourcable {
 
     public int removeLongListItem(final String key, final long value);
 
-    //------------------------ set ------------------------
-    public <T> boolean existsSetItem(final String key, final Type componentType, final T value);
+    //------------------------ set ------------------------     
+    public <T> Set<T> smembers(final String key, final Type componentType);
 
-    public <T> void appendSetItem(final String key, final Type componentType, final T value);
+    public <T> Map<String, Set<T>> smembers(final Type componentType, final String... keys);
 
-    public <T> int removeSetItem(final String key, final Type componentType, final T value);
+    public <T> boolean sismember(final String key, final Type componentType, final T value);
 
-    public <T> T spopSetItem(final String key, final Type componentType);
+    public <T> void sadd(final String key, final Type componentType, final T value);
 
-    public <T> Set<T> spopSetItem(final String key, final int count, final Type componentType);
+    public <T> int srem(final String key, final Type componentType, final T value);
 
+    public <T> T spop(final String key, final Type componentType);
+
+    public <T> Set<T> spop(final String key, final int count, final Type componentType);
+
+    //---------- set-string ----------
     public boolean existsStringSetItem(final String key, final String value);
 
     public void appendStringSetItem(final String key, final String value);
@@ -208,6 +213,7 @@ public interface CacheSource extends Resourcable {
 
     public Set<String> spopStringSetItem(final String key, final int count);
 
+    //---------- set-long ----------
     public boolean existsLongSetItem(final String key, final long value);
 
     public void appendLongSetItem(final String key, final long value);
@@ -427,16 +433,21 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Integer> removeLongListItemAsync(final String key, final long value);
 
     //------------------------ setAsync ------------------------
-    public <T> CompletableFuture<Boolean> existsSetItemAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Set<T>> smembersAsync(final String key, final Type componentType);
 
-    public <T> CompletableFuture<Void> appendSetItemAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Map<String, Set<T>>> smembersAsync(final Type componentType, final String... keys);
 
-    public <T> CompletableFuture<Integer> removeSetItemAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Boolean> sismemberAsync(final String key, final Type componentType, final T value);
 
-    public <T> CompletableFuture<T> spopSetItemAsync(final String key, final Type componentType);
+    public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, final T value);
 
-    public <T> CompletableFuture<Set<T>> spopSetItemAsync(final String key, final int count, final Type componentType);
+    public <T> CompletableFuture<Integer> sremAsync(final String key, final Type componentType, final T value);
 
+    public <T> CompletableFuture<T> spopAsync(final String key, final Type componentType);
+
+    public <T> CompletableFuture<Set<T>> spopAsync(final String key, final int count, final Type componentType);
+
+    //---------- set-string ----------
     public CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value);
 
     public CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value);
@@ -447,6 +458,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Set<String>> spopStringSetItemAsync(final String key, final int count);
 
+    //---------- set-long ----------
     public CompletableFuture<Boolean> existsLongSetItemAsync(final String key, final long value);
 
     public CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value);
@@ -641,5 +653,55 @@ public interface CacheSource extends Resourcable {
     @Deprecated
     default CompletableFuture<Integer> hsizeAsync(final String key) {
         return hlenAsync(key);
+    }
+
+    @Deprecated
+    default <T> void appendSetItem(final String key, final Type componentType, final T value) {
+        sadd(key, componentType, value);
+    }
+
+    @Deprecated
+    default <T> int removeSetItem(final String key, final Type componentType, final T value) {
+        return srem(key, componentType, value);
+    }
+
+    @Deprecated
+    default <T> T spopSetItem(final String key, final Type componentType) {
+        return CacheSource.this.spop(key, componentType);
+    }
+
+    @Deprecated
+    default <T> Set<T> spopSetItem(final String key, final int count, final Type componentType) {
+        return spop(key, count, componentType);
+    }
+
+    @Deprecated
+    default <T> boolean existsSetItem(final String key, final Type componentType, final T value) {
+        return sismember(key, componentType, value);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Boolean> existsSetItemAsync(final String key, final Type componentType, final T value) {
+        return sismemberAsync(key, componentType, value);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Void> appendSetItemAsync(final String key, final Type componentType, final T value) {
+        return saddAsync(key, componentType, value);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Integer> removeSetItemAsync(final String key, final Type componentType, final T value) {
+        return sremAsync(key, componentType, value);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<T> spopSetItemAsync(final String key, final Type componentType) {
+        return spopAsync(key, componentType);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Set<T>> spopSetItemAsync(final String key, final int count, final Type componentType) {
+        return spopAsync(key, count, componentType);
     }
 }

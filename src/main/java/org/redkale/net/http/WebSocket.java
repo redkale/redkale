@@ -5,20 +5,20 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.net.http.WebSocketPacket.FrameType;
-import java.io.*;
+import java.io.Serializable;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import java.util.zip.*;
+import org.redkale.annotation.Comment;
 import org.redkale.convert.Convert;
 import org.redkale.net.AsyncConnection;
-import org.redkale.annotation.Comment;
+import org.redkale.net.http.WebSocketPacket.FrameType;
 
 /**
  * <blockquote><pre>
@@ -507,7 +507,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return 地址列表
      */
-    public CompletableFuture<Collection<WebSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
+    public CompletableFuture<Set<WebSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
         if (_engine.node == null) return CompletableFuture.completedFuture(null);
         return _engine.node.getRpcNodeAddresses(userid);
     }

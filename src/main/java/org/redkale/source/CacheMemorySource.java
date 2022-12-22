@@ -919,6 +919,21 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> Set<T> smembers(final String key, final Type componentType) {
+        return (Set<T>) get(key, componentType);
+    }
+
+    @Override
+    public <T> Map<String, Set<T>> smembers(final Type componentType, final String... keys) {
+        Map<String, Set<T>> map = new HashMap<>();
+        for (String key : keys) {
+            Set<T> s = (Set<T>) get(key, componentType);
+            if (s != null) map.put(key, s);
+        }
+        return map;
+    }
+
+    @Override
     public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys) {
         Map<String, Collection<T>> map = new HashMap<>();
         for (String key : keys) {
@@ -1035,6 +1050,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<Map<String, Set<T>>> smembersAsync(Type componentType, String... keys) {
+        return CompletableFuture.supplyAsync(() -> smembers(componentType, keys), getExecutor());
+    }
+
+    @Override
     public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(boolean set, Type componentType, String... keys) {
         return CompletableFuture.supplyAsync(() -> getCollectionMap(set, componentType, keys), getExecutor());
     }
@@ -1065,6 +1085,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<Set<T>> smembersAsync(String key, Type componentType) {
+        return CompletableFuture.supplyAsync(() -> smembers(key, componentType), getExecutor());
+    }
+
+    @Override
     public int getCollectionSize(final String key) {
         Collection collection = (Collection) get(key, Object.class);
         return collection == null ? 0 : collection.size();
@@ -1086,14 +1111,14 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> boolean existsSetItem(final String key, final Type type, final T value) {
+    public <T> boolean sismember(final String key, final Type type, final T value) {
         Collection list = getCollection(key, type);
         return list != null && list.contains(value);
     }
 
     @Override
-    public <T> CompletableFuture<Boolean> existsSetItemAsync(final String key, final Type type, final T value) {
-        return CompletableFuture.supplyAsync(() -> existsSetItem(key, type, value), getExecutor());
+    public <T> CompletableFuture<Boolean> sismemberAsync(final String key, final Type type, final T value) {
+        return CompletableFuture.supplyAsync(() -> sismember(key, type, value), getExecutor());
     }
 
     @Override
@@ -1223,26 +1248,26 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public String spopStringSetItem(final String key) {
-        return (String) spopSetItem(key, String.class);
+        return (String) spop(key, String.class);
     }
 
     @Override
     public Set<String> spopStringSetItem(final String key, int count) {
-        return spopSetItem(key, count, String.class);
+        return spop(key, count, String.class);
     }
 
     @Override
     public Long spopLongSetItem(final String key) {
-        return (Long) spopSetItem(key, long.class);
+        return (Long) spop(key, long.class);
     }
 
     @Override
     public Set<Long> spopLongSetItem(final String key, int count) {
-        return spopSetItem(key, count, long.class);
+        return spop(key, count, long.class);
     }
 
     @Override
-    public <T> T spopSetItem(final String key, final Type componentType) {
+    public <T> T spop(final String key, final Type componentType) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
@@ -1260,7 +1285,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> Set<T> spopSetItem(final String key, final int count, final Type componentType) {
+    public <T> Set<T> spop(final String key, final int count, final Type componentType) {
         if (key == null) return new LinkedHashSet<>();
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
@@ -1295,7 +1320,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void appendSetItem(String key, final Type componentType, T value) {
+    public <T> void sadd(String key, final Type componentType, T value) {
         appendSetItem(CacheEntryType.OBJECT_SET, key, value);
     }
 
@@ -1310,8 +1335,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Void> appendSetItemAsync(final String key, final Type componentType, T value) {
-        return CompletableFuture.runAsync(() -> appendSetItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, T value) {
+        return CompletableFuture.runAsync(() -> sadd(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1325,7 +1350,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> int removeSetItem(String key, Type type, T value) {
+    public <T> int srem(String key, Type type, T value) {
         if (key == null) return 0;
         CacheEntry entry = container.get(key);
         if (entry == null || entry.csetValue == null) return 0;
@@ -1349,8 +1374,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Integer> removeSetItemAsync(final String key, final Type componentType, final T value) {
-        return CompletableFuture.supplyAsync(() -> removeSetItem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Integer> sremAsync(final String key, final Type componentType, final T value) {
+        return CompletableFuture.supplyAsync(() -> srem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1490,13 +1515,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<T> spopSetItemAsync(String key, Type componentType) {
-        return CompletableFuture.supplyAsync(() -> spopSetItem(key, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<T> spopAsync(String key, Type componentType) {
+        return CompletableFuture.supplyAsync(() -> spop(key, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> spopSetItemAsync(String key, int count, Type componentType) {
-        return CompletableFuture.supplyAsync(() -> spopSetItem(key, count, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Set<T>> spopAsync(String key, int count, Type componentType) {
+        return CompletableFuture.supplyAsync(() -> spop(key, count, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
