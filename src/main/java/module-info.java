@@ -33,9 +33,10 @@ module redkale {
     exports org.redkale.util;
     exports org.redkale.watch;
     
-    uses org.redkale.mq.MessageAgent;
-    uses org.redkale.cluster.ClusterAgent;
+    uses org.redkale.boot.PropertiesAgentProvider;
+    uses org.redkale.cluster.ClusterAgentProvider;
     uses org.redkale.convert.ConvertProvider;
+    uses org.redkale.mq.MessageAgentProvider;
     uses org.redkale.source.CacheSourceProvider;
     uses org.redkale.source.DataSourceProvider;
     uses org.redkale.util.ResourceAnnotationProvider;

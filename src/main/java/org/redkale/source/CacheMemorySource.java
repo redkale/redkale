@@ -1486,6 +1486,26 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public void setnxBytes(final String key, final byte[] value) {
+        setnx(CacheEntryType.BYTES, key, value);
+    }
+
+    @Override
+    public CompletableFuture<Void> setnxBytesAsync(final String key, byte[] value) {
+        return CompletableFuture.runAsync(() -> setnxBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> void setnxBytes(final String key, final Convert convert, final Type type, final T value) {
+        setnx(CacheEntryType.BYTES, key, convert.convertToBytes(type, value));
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> setnxBytesAsync(final String key, final Convert convert, final Type type, final T value) {
+        return CompletableFuture.runAsync(() -> setnxBytes(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public void setexBytes(final String key, final int expireSeconds, final byte[] value) {
         set(CacheEntryType.BYTES, expireSeconds, key, value);
     }
