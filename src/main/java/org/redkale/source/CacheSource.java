@@ -73,6 +73,9 @@ public interface CacheSource extends Resourcable {
     public byte[] getSetBytes(final String key, final byte[] value);
 
     //------------------------ set ------------------------
+    //MSET key value [key value ...]
+    public void mset(final Object... keyVals);
+
     public <T> void set(final String key, final Convert convert, final T value);
 
     public <T> void set(final String key, final Type type, final T value);
@@ -347,6 +350,9 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<byte[]> getSetBytesAsync(final String key, final byte[] value);
 
     //------------------------ setAsync ------------------------
+    //MSET key value [key value ...]
+    public CompletableFuture<Void> msetAsync(final Object... keyVals);
+
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final T value);
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value);

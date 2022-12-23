@@ -635,6 +635,24 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public void mset(Object... keyVals) {
+        if (keyVals.length % 2 != 0) {
+            throw new RuntimeException("key value must be paired");
+        }
+        for (int i = 0; i < keyVals.length; i += 2) {
+            String key = keyVals[i].toString();
+            Object val = keyVals[i + 1];
+            if (val instanceof String) {
+                set(CacheEntryType.STRING, key, val);
+            } else if (val instanceof Number) {
+                set(CacheEntryType.LONG, key, ((Number) val).longValue());
+            } else {
+                set(CacheEntryType.OBJECT, key, val);
+            }
+        }
+    }
+
+    @Override
     public <T> void set(String key, Convert convert, T value) {
         set(CacheEntryType.OBJECT, key, value);
     }
@@ -696,6 +714,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public void setnxLong(String key, long value) {
         setnx(CacheEntryType.LONG, key, value);
+    }
+
+    @Override
+    public CompletableFuture<Void> msetAsync(final Object... keyVals) {
+        return CompletableFuture.runAsync(() -> mset(keyVals), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
