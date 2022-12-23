@@ -264,9 +264,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     public String toString() {
         if (readConfProps == null) return getClass().getSimpleName() + "{}"; //compileMode模式下会为null
         if (readConfProps == writeConfProps) {
-            return getClass().getSimpleName() + "{url=" + readConfProps.getProperty(DATA_SOURCE_URL) + "}";
+            String url = readConfProps.getProperty(DATA_SOURCE_URL);
+            int pos = url.indexOf('?');
+            if (pos > 0) url = url.substring(0, pos) + "...";
+            return getClass().getSimpleName() + "{url=" + url + "}";
         } else {
-            return getClass().getSimpleName() + "{readurl=" + readConfProps.getProperty(DATA_SOURCE_URL) + ",writeurl=" + writeConfProps.getProperty(DATA_SOURCE_URL) + "}";
+            String readUrl = readConfProps.getProperty(DATA_SOURCE_URL);
+            int pos = readUrl.indexOf('?');
+            if (pos > 0) readUrl = readUrl.substring(0, pos) + "...";
+            String writeUrl = writeConfProps.getProperty(DATA_SOURCE_URL);
+            pos = writeUrl.indexOf('?');
+            if (pos > 0) writeUrl = writeUrl.substring(0, pos) + "...";
+            return getClass().getSimpleName() + "{readurl=" + readUrl + ",writeurl=" + writeUrl + "}";
         }
     }
 

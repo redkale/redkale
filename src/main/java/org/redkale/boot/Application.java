@@ -418,6 +418,7 @@ public final class Application {
                 + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
                 + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
                 + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
+                + RESNAME_APP_NAME + "     = " + this.name + "\r\n"
                 + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
                 + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
                 + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
@@ -695,7 +696,9 @@ public final class Application {
                             InputStream in = df.toURL().openStream();
                             ps.load(in);
                             in.close();
-                            if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "load properties(" + dfload + ") size = " + ps.size());
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.log(Level.FINE, "load properties(" + dfload + ") size = " + ps.size());
+                            }
                             ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
                                 if (!x.toString().startsWith("redkale.")) {
                                     agentEnvs.put(x, y);
@@ -728,8 +731,10 @@ public final class Application {
                         this.propertiesAgent.compile(propertiesConf);
                     } else {
                         Map<String, Properties> propMap = this.propertiesAgent.init(this, propertiesConf);
+                        int propCount = 0;
                         if (propMap != null) {
                             for (Map.Entry<String, Properties> en : propMap.entrySet()) {
+                                propCount += en.getValue().size();
                                 if (en.getKey().startsWith("logging")) {
                                     if (logProps != null) {
                                         logger.log(Level.WARNING, "skip repeat logging config properties(" + en.getKey() + ")");
@@ -741,8 +746,8 @@ public final class Application {
                                 }
                             }
                         }
+                        logger.info("PropertiesAgent (type=" + this.propertiesAgent.getClass().getSimpleName() + ") load " + propCount + " data in " + (System.currentTimeMillis() - s) + " ms");
                     }
-                    logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
                     break;
                 }
             }

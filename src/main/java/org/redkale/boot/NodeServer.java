@@ -544,9 +544,9 @@ public abstract class NodeServer {
             for (String s : wlist) {
                 sb.append(s);
             }
-            sb.append(localThreadName).append("All " + localServices.size() + " Services load cost ").append(System.currentTimeMillis() - starts).append(" ms");
+            sb.append(localThreadName).append("All " + localServices.size() + " Services load in ").append(System.currentTimeMillis() - starts).append(" ms");
         }
-        if (sb != null && preinite > 10) sb.append(localThreadName).append(ClusterAgent.class.getSimpleName()).append(" register ").append(preinite).append(" ms" + LINE_SEPARATOR);
+        if (sb != null && preinite > 10) sb.append(localThreadName).append(ClusterAgent.class.getSimpleName()).append(" register in ").append(preinite).append(" ms" + LINE_SEPARATOR);
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 

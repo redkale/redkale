@@ -2,11 +2,9 @@
 
 <application nodeid="10000" port="2020">     
         
-    <resources>  
-        <properties load="config.properties">
-            <property name="system.property.redkale.convert.protobuf.enumtostring" value="true"/>
-        </properties>         
-    </resources> 
+    <properties load="config.properties">
+        <property name="system.property.redkale.convert.protobuf.enumtostring" value="true"/>
+    </properties>         
         
     <server protocol="HTTP" port="5050">                    
         <request>
