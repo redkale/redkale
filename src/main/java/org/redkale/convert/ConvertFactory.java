@@ -12,11 +12,10 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.*;
 import java.util.regex.Pattern;
 import java.util.stream.*;
-
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.ext.*;
@@ -575,7 +574,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                             if (params.length == 0) {
                                 encoder = (Encodeable) constructor.newInstance();
                             } else if (params.length == 1) {
-                                if (paramTypes[0] != Type.class) throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                if (paramTypes[0] != Type.class) throw new ConvertException(clazz2 + " not found public empty-parameter Constructor");
                                 encoder = (Encodeable) constructor.newInstance(colType);
                             } else if (params.length == 2) {
                                 if (paramTypes[0] == ConvertFactory.class && paramTypes[1] == Type.class) {
@@ -583,10 +582,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                                 } else if (paramTypes[0] == Type.class && paramTypes[1] == ConvertFactory.class) {
                                     encoder = (Encodeable) constructor.newInstance(colType, this);
                                 } else {
-                                    throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                    throw new ConvertException(clazz2 + " not found public empty-parameter Constructor");
                                 }
                             } else {
-                                throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                throw new ConvertException(clazz2 + " not found public empty-parameter Constructor");
                             }
                             RedkaleClassLoader.putReflectionPublicConstructors(clazz2, clazz2.getName());
                             if (encoderList == null) encoderList = new ArrayList<>();
@@ -620,7 +619,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                             if (params.length == 0) {
                                 decoder = (Decodeable) constructor.newInstance();
                             } else if (params.length == 1) {
-                                if (paramTypes[0] != Type.class) throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                if (paramTypes[0] != Type.class) throw new ConvertException(clazz2 + " not found public empty-parameter Constructor");
                                 decoder = (Decodeable) constructor.newInstance(colType);
                             } else if (params.length == 2) {
                                 if (paramTypes[0] == ConvertFactory.class && paramTypes[1] == Type.class) {
@@ -628,10 +627,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                                 } else if (paramTypes[0] == Type.class && paramTypes[1] == ConvertFactory.class) {
                                     decoder = (Decodeable) constructor.newInstance(colType, this);
                                 } else {
-                                    throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                    throw new ConvertException(clazz2 + " not found public empty-parameter Constructor");
                                 }
                             } else {
-                                throw new RuntimeException(clazz2 + " not found public empty-parameter Constructor");
+                                throw new ConvertException(clazz2 + " not found public empty-parameter Constructor");
                             }
                             RedkaleClassLoader.putReflectionPublicConstructors(clazz2, clazz2.getName());
                             if (decoderList == null) decoderList = new ArrayList<>();
@@ -866,7 +865,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         try {
             clazz.getDeclaredField(field);
         } catch (Exception e) {
-            throw new RuntimeException(clazz + " not found field(" + field + ")");
+            throw new ConvertException(clazz + " not found field(" + field + ")");
         }
         if (coder == null) {
             Map map = this.fieldCoders.get(clazz);

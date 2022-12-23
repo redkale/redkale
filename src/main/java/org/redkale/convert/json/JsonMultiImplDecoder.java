@@ -5,7 +5,7 @@ package org.redkale.convert.json;
 import java.lang.reflect.Type;
 import java.util.*;
 import org.redkale.convert.*;
-import org.redkale.util.*;
+import org.redkale.util.Attribute;
 
 /**
  * 抽象或接口类存在多种实现类的反序列化解析器 <br>
@@ -56,7 +56,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                 if (t == null) {
                     fieldTypes.put(name, member.getAttribute());
                 } else if (!member.getAttribute().genericType().equals(t.genericType())) {
-                    throw new RuntimeException("Field(" + name + ")'s Type is not same in " + member.getAttribute().declaringClass() + " and " + t.declaringClass());
+                    throw new ConvertException("Field(" + name + ")'s Type is not same in " + member.getAttribute().declaringClass() + " and " + t.declaringClass());
                 }
             }
             this.decoders[i] = decoder;

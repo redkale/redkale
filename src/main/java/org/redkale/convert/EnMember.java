@@ -6,11 +6,10 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
-
 import org.redkale.annotation.Comment;
 import org.redkale.persistence.Column;
 import org.redkale.source.FilterColumn;
-import org.redkale.util.*;
+import org.redkale.util.Attribute;
 
 /**
  * 字段的序列化操作类
@@ -106,7 +105,7 @@ public final class EnMember<W extends Writer, T, F> {
             Field field = clazz.getDeclaredField(fieldname);
             return new EnMember<>(Attribute.create(field), factory.loadEncoder(field.getGenericType()), field, null);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ConvertException(e);
         }
     }
 
@@ -115,7 +114,7 @@ public final class EnMember<W extends Writer, T, F> {
             Field field = clazz.getDeclaredField(fieldname);
             return new EnMember<>(Attribute.create(clazz, fieldname, fieldtype), factory.loadEncoder(fieldtype), field, null);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ConvertException(e);
         }
     }
 
@@ -179,7 +178,7 @@ public final class EnMember<W extends Writer, T, F> {
         if (o == null) return -1;
         if (this.position != o.position) return (this.position == 0 ? Integer.MAX_VALUE : this.position) - (o.position == 0 ? Integer.MAX_VALUE : o.position);
         if (this.index != o.index) return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
-        if (this.index != 0) throw new RuntimeException("fields (" + attribute.field() + ", " + o.attribute.field() + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
+        if (this.index != 0) throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field() + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
         return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
     }
 

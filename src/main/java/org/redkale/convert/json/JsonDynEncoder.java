@@ -8,8 +8,8 @@ package org.redkale.convert.json;
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
 import java.util.*;
-import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
@@ -705,7 +705,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             }
             return resultEncoder;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new ConvertException(ex);
         }
     }
 
