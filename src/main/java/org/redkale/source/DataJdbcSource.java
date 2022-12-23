@@ -1021,7 +1021,7 @@ public class DataJdbcSource extends DataSqlSource {
             slowLog(s, sqls);
             return rs;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
         }
@@ -1054,7 +1054,7 @@ public class DataJdbcSource extends DataSqlSource {
             slowLog(s, sql);
             return rs;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new SourceException(ex);
         } finally {
             if (conn != null) readPool.offerConnection(conn);
         }
@@ -1096,7 +1096,7 @@ public class DataJdbcSource extends DataSqlSource {
                 try {
                     return rr.next();
                 } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    throw new SourceException(e);
                 }
             }
 
@@ -1111,7 +1111,7 @@ public class DataJdbcSource extends DataSqlSource {
                     }
                     return labels;
                 } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    throw new SourceException(e);
                 }
             }
 
@@ -1120,7 +1120,7 @@ public class DataJdbcSource extends DataSqlSource {
                 try {
                     return rr.wasNull();
                 } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    throw new SourceException(e);
                 }
             }
 
@@ -1129,7 +1129,7 @@ public class DataJdbcSource extends DataSqlSource {
                 try {
                     rr.close();
                 } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    throw new SourceException(e);
                 }
             }
 
@@ -1138,7 +1138,7 @@ public class DataJdbcSource extends DataSqlSource {
                 try {
                     return rr.getObject(index);
                 } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    throw new SourceException(e);
                 }
             }
 
@@ -1147,7 +1147,7 @@ public class DataJdbcSource extends DataSqlSource {
                 try {
                     return rr.getObject(column);
                 } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    throw new SourceException(e);
                 }
             }
 
@@ -1200,7 +1200,7 @@ public class DataJdbcSource extends DataSqlSource {
             try {
                 this.driver = DriverManager.getDriver(this.url);
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                throw new SourceException(e);
             }
             clientInfo.put("version", String.valueOf(urlVersion));
         }
@@ -1257,7 +1257,7 @@ public class DataJdbcSource extends DataSqlSource {
                     } catch (InterruptedException t) {
                         logger.log(Level.WARNING, "take pooled connection error", t);
                     }
-                    if (conn == null) throw new RuntimeException("create pooled connection timeout");
+                    if (conn == null) throw new SourceException("create pooled connection timeout");
                 }
             }
             if (conn != null) {
@@ -1275,7 +1275,7 @@ public class DataJdbcSource extends DataSqlSource {
                 conn = driver.connect(url, connectAttrs);
                 conn.setClientInfo(clientInfo);
             } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+                throw new SourceException(ex);
             }
             usingCounter.increment();
             creatCounter.increment();

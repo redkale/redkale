@@ -309,7 +309,7 @@ public final class EntityInfo<T> {
         } else {
             this.fullloader = fullloader;
             if (tableName0 != null && !tableName0.isEmpty() && tableName0.indexOf('.') >= 0) {
-                throw new RuntimeException(type + " have illegal table.name on @Table");
+                throw new SourceException(type + " have illegal table.name on @Table");
             }
             this.table = (tableCcatalog0 == null) ? type.getSimpleName().toLowerCase() : (tableCcatalog0.isEmpty()) ? (tableName0.isEmpty() ? type.getSimpleName().toLowerCase() : tableName0) : (tableCcatalog0 + '.' + (tableName0.isEmpty() ? type.getSimpleName().toLowerCase() : tableName0));
         }
@@ -405,20 +405,20 @@ public final class EntityInfo<T> {
                 attributeMap.put(fieldname, attr);
             }
         } while ((cltmp = cltmp.getSuperclass()) != Object.class);
-        if (idAttr0 == null) throw new RuntimeException(type.getName() + " have no primary column by @org.redkale.persistence.Id");
+        if (idAttr0 == null) throw new SourceException(type.getName() + " have no primary column by @org.redkale.persistence.Id");
         cltmp = type;
         JsonConvert convert = DEFAULT_JSON_CONVERT;
         do {
             for (Method method : cltmp.getDeclaredMethods()) {
                 if (method.getAnnotation(SourceConvert.class) == null) continue;
-                if (!Modifier.isStatic(method.getModifiers())) throw new RuntimeException("@SourceConvert method(" + method + ") must be static");
-                if (method.getReturnType() != JsonConvert.class) throw new RuntimeException("@SourceConvert method(" + method + ") must be return JsonConvert.class");
-                if (method.getParameterCount() > 0) throw new RuntimeException("@SourceConvert method(" + method + ") must be 0 parameter");
+                if (!Modifier.isStatic(method.getModifiers())) throw new SourceException("@SourceConvert method(" + method + ") must be static");
+                if (method.getReturnType() != JsonConvert.class) throw new SourceException("@SourceConvert method(" + method + ") must be return JsonConvert.class");
+                if (method.getParameterCount() > 0) throw new SourceException("@SourceConvert method(" + method + ") must be 0 parameter");
                 try {
                     method.setAccessible(true);
                     convert = (JsonConvert) method.invoke(null);
                 } catch (Exception e) {
-                    throw new RuntimeException(method + " invoke error", e);
+                    throw new SourceException(method + " invoke error", e);
                 }
                 if (convert != null) break;
             }

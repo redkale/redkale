@@ -503,7 +503,7 @@ public final class EntityCache<T> {
                     OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).average();
                     return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
-                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
+                throw new SourceException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
             case COUNT:
                 return stream.count();
             case DISTINCTCOUNT:
@@ -526,7 +526,7 @@ public final class EntityCache<T> {
                     OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).max();
                     return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
-                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
+                throw new SourceException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
 
             case MIN:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
@@ -545,7 +545,7 @@ public final class EntityCache<T> {
                     OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).min();
                     return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
-                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
+                throw new SourceException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
 
             case SUM:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
@@ -559,7 +559,7 @@ public final class EntityCache<T> {
                 } else if (attrType == double.class || attrType == Double.class) {
                     return stream.mapToDouble(x -> (Double) attrFunc.apply(x)).sum();
                 }
-                throw new RuntimeException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
+                throw new SourceException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
         }
         return defResult;
     }
@@ -980,13 +980,13 @@ public final class EntityCache<T> {
                     } else if (pattr.type() == double.class || pattr.type() == Double.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).doubleValue());
                     } else {
-                        throw new RuntimeException("Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
+                        throw new SourceException("Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
                     }
                     attr = (Attribute<T, Serializable>) Attribute.create(pattr.declaringClass(), pattr.field(), pattr.type(), getter, (o, v) -> pattr.set(o, v));
                 } else if (func.isEmpty()) {
                     attr = pattr;
                 } else {
-                    throw new RuntimeException("Flipper not supported sort illegal function (" + flipper.getSort() + ")");
+                    throw new SourceException("Flipper not supported sort illegal function (" + flipper.getSort() + ")");
                 }
             }
             Comparator<T> c = (sub.length > 1 && sub[1].equalsIgnoreCase("DESC")) ? (T o1, T o2) -> {

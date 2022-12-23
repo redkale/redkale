@@ -8,8 +8,7 @@ package org.redkale.source;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import org.redkale.util.AnyValue;
-import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.*;
 
 /**
  * 常量放入 AbstractDataSource 类中，方法都已作废，persistence.xml 采用 source.properties 代替
@@ -117,7 +116,7 @@ public final class DataSources {
 //            }
 //            String url = readprop.getProperty(JDBC_URL);
 //            dbtype = AbstractDataSource.parseDbtype(url);
-//            if (dbtype == null) throw new RuntimeException("not found datasource implements class, url=" + url);
+//            if (dbtype == null) throw new SourceException("not found datasource implements class, url=" + url);
 //
 //            RedkaleClassLoader.putServiceLoader(DataSourceProvider.class);
 //            Class dsClass = null;
@@ -144,7 +143,7 @@ public final class DataSources {
 //                dsClass = provider.sourceClass();
 //                if (dsClass != null) break;
 //            }
-//            if (dsClass == null) throw new RuntimeException("not found datasource implements ServiceLoader, url=" + url);
+//            if (dsClass == null) throw new SourceException("not found datasource implements ServiceLoader, url=" + url);
 //            impl = dsClass.getName();
 //        }
 //        try {
@@ -252,7 +251,7 @@ public final class DataSources {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new SourceException(ex);
         }
     }
 
@@ -316,7 +315,7 @@ public final class DataSources {
             }
             in.close();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new SourceException(ex);
         }
         return map;
     }

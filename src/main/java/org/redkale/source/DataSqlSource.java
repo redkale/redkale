@@ -141,11 +141,11 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         //不支持读写分离模式的动态切换
         if (readConfProps == writeConfProps
             && (events[0].name().startsWith("read.") || events[0].name().startsWith("write."))) {
-            throw new RuntimeException("DataSource(name=" + resourceName() + ") not support to change to read/write separation mode");
+            throw new SourceException("DataSource(name=" + resourceName() + ") not support to change to read/write separation mode");
         }
         if (readConfProps != writeConfProps
             && (!events[0].name().startsWith("read.") && !events[0].name().startsWith("write."))) {
-            throw new RuntimeException("DataSource(name=" + resourceName() + ") not support to change to non read/write separation mode");
+            throw new SourceException("DataSource(name=" + resourceName() + ") not support to change to non read/write separation mode");
         }
 
         StringBuilder sb = new StringBuilder();
@@ -1305,7 +1305,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         for (ColumnValue col : values) {
             if (col == null) continue;
             Attribute<T, Serializable> attr = info.getUpdateAttribute(col.getColumn());
-            if (attr == null) throw new RuntimeException(info.getType() + " cannot found column " + col.getColumn());
+            if (attr == null) throw new SourceException(info.getType() + " cannot found column " + col.getColumn());
             if (setsql.length() > 0) setsql.append(", ");
             String sqlColumn = info.getSQLColumn(null, col.getColumn());
             if (col.getValue() instanceof byte[]) {
@@ -1316,7 +1316,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
             }
         }
-        if (setsql.length() < 1) throw new RuntimeException("update non column-value array");
+        if (setsql.length() < 1) throw new SourceException("update non column-value array");
         String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
         return new SqlInfo(sql, blobs);
     }
@@ -1387,7 +1387,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
             }
         }
-        if (setsql.length() < 1) throw new RuntimeException("update non column-value array");
+        if (setsql.length() < 1) throw new SourceException("update non column-value array");
         Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         CharSequence join = node == null ? null : node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
         CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
@@ -1433,7 +1433,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final EntityInfo<T> info = loadEntityInfo(clazz);
         String illegalColumn = checkIllegalColumn(info, selects);
         if (illegalColumn != null) {
-            throw new RuntimeException(info.getType() + " cannot found column " + illegalColumn);
+            throw new SourceException(info.getType() + " cannot found column " + illegalColumn);
         }
         if (isOnlyCache(info)) return updateCache(info, -1, false, entity, null, selects);
         return this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
@@ -1480,7 +1480,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final EntityInfo<T> info = loadEntityInfo(clazz);
         String illegalColumn = checkIllegalColumn(info, selects);
         if (illegalColumn != null) {
-            throw new RuntimeException(info.getType() + " cannot found column " + illegalColumn);
+            throw new SourceException(info.getType() + " cannot found column " + illegalColumn);
         }
         if (isOnlyCache(info)) return updateCache(info, -1, true, entity, node, selects);
         return this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {

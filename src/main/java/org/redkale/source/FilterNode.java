@@ -170,7 +170,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     protected FilterNode any(FilterNode node, boolean signor) {
-        if (this.readOnly) throw new RuntimeException("FilterNode(" + this + ") is ReadOnly");
+        if (this.readOnly) throw new SourceException("FilterNode(" + this + ") is ReadOnly");
         Objects.requireNonNull(node);
         if (this.column == null) {
             this.column = node.column;
@@ -692,7 +692,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             if (len == 0 && express == NOTIN) return null;
             final Class compType = valtype.getComponentType();
             if (atype != compType && len > 0) {
-                if (!compType.isPrimitive() && Number.class.isAssignableFrom(compType)) throw new RuntimeException("param(" + val0 + ") type not match " + atype + " for column " + column);
+                if (!compType.isPrimitive() && Number.class.isAssignableFrom(compType)) throw new SourceException("param(" + val0 + ") type not match " + atype + " for column " + column);
                 if (atype == int.class || atype == Integer.class) {
                     int[] vs = new int[len];
                     for (int i = 0; i < len; i++) {
@@ -786,7 +786,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         final Serializable val = (Serializable) val0;
         final boolean fk = (val instanceof FilterKey);
         final Attribute<T, Serializable> fkattr = fk ? cache.getAttribute(((FilterKey) val).getColumn()) : null;
-        if (fk && fkattr == null) throw new RuntimeException(cache.getType() + " not found column(" + ((FilterKey) val).getColumn() + ")");
+        if (fk && fkattr == null) throw new SourceException(cache.getType() + " not found column(" + ((FilterKey) val).getColumn() + ")");
         switch (express) {
             case EQUAL:
                 return fk ? new Predicate<T>() {
@@ -1075,7 +1075,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             }
                         };
                     default:
-                        throw new RuntimeException("(" + fv0 + ")'s express illegal, must be =, !=, <, >, <=, >=");
+                        throw new SourceException("(" + fv0 + ")'s express illegal, must be =, !=, <, >, <=, >=");
                 }
             case FV_DIV:
                 FilterValue fv1 = (FilterValue) val;
@@ -1159,7 +1159,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             }
                         };
                     default:
-                        throw new RuntimeException("(" + fv1 + ")'s express illegal, must be =, !=, <, >, <=, >=");
+                        throw new SourceException("(" + fv1 + ")'s express illegal, must be =, !=, <, >, <=, >=");
                 }
             case OPAND:
                 return fk ? new Predicate<T>() {

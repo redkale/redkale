@@ -227,7 +227,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                     if (groups.length == 0) groups = new String[]{"[AND]"};
                     for (String key : groups) {
                         if (!key.startsWith("[AND]") && !key.startsWith("[OR]")) {
-                            throw new RuntimeException(field + "'s FilterGroup.value(" + key + ") illegal, must be [AND] or [OR] startsWith");
+                            throw new SourceException(field + "'s FilterGroup.value(" + key + ") illegal, must be [AND] or [OR] startsWith");
                         }
                         FilterNodeBean node = nodemap.get(key);
                         if (node == null) {

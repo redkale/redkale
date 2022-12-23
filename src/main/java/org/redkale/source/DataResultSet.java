@@ -152,7 +152,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException(row.getEntityInfo() + "." + attr.field() + ".value=" + o + ": " + e.getMessage(), e.getCause());
+            throw new SourceException(row.getEntityInfo() + "." + attr.field() + ".value=" + o + ": " + e.getMessage(), e.getCause());
         }
         return o;
     }

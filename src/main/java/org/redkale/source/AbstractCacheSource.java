@@ -91,7 +91,7 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
             source = (CacheSource) sourceType.getConstructor().newInstance();
         }
         if (source == null) {
-            throw new RuntimeException("Not found CacheSourceProvider for config=" + sourceConf);
+            throw new SourceException("Not found CacheSourceProvider for config=" + sourceConf);
         }
         if (!compileMode && resourceFactory != null) {
             resourceFactory.inject(sourceName, source);

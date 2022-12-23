@@ -647,7 +647,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public void mset(Object... keyVals) {
         if (keyVals.length % 2 != 0) {
-            throw new RuntimeException("key value must be paired");
+            throw new SourceException("key value must be paired");
         }
         for (int i = 0; i < keyVals.length; i += 2) {
             String key = keyVals[i].toString();

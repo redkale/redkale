@@ -746,7 +746,7 @@ public final class Application {
                                 }
                             }
                         }
-                        logger.info("PropertiesAgent (type=" + this.propertiesAgent.getClass().getSimpleName() + ") load " + propCount + " data in " + (System.currentTimeMillis() - s) + " ms");
+                        logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName() + ") load " + propCount + " data in " + (System.currentTimeMillis() - s) + " ms");
                     }
                     break;
                 }

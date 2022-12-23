@@ -149,7 +149,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             source = (DataSource) sourceType.getConstructor().newInstance();
         }
         if (source == null) {
-            throw new RuntimeException("Not found DataSourceProvider for config=" + sourceConf);
+            throw new SourceException("Not found DataSourceProvider for config=" + sourceConf);
         }
         if (!compileMode && resourceFactory != null) {
             resourceFactory.inject(sourceName, source);
@@ -214,7 +214,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         } else if (url.startsWith("https://")) {
             info.servaddr = new InetSocketAddress(url0, 443);
         } else {
-            throw new RuntimeException(url + " parse port error");
+            throw new SourceException(url + " parse port error");
         }
         return info;
     }
@@ -363,7 +363,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             if (clazz == null) {
                 clazz = val.getClass();
                 if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
-                    throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+                    throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
                 }
                 continue;
             }
@@ -373,7 +373,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
                     future.completeExceptionally(new RuntimeException("DataSource." + action + " must the same Class Entity, but diff is " + clazz + " and " + val.getClass()));
                     return future;
                 }
-                throw new RuntimeException("DataSource." + action + " must the same Class Entity, but diff is " + clazz + " and " + val.getClass());
+                throw new SourceException("DataSource." + action + " must the same Class Entity, but diff is " + clazz + " and " + val.getClass());
             }
         }
         return null;
@@ -1338,7 +1338,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             for (T t : entitys) {
                 Objects.requireNonNull(t);
                 if (t.getClass().getAnnotation(Entity.class) == null && t.getClass().getAnnotation(javax.persistence.Entity.class) == null) {
-                    throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                    throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
                 this.actions.add(new InsertBatchAction1(t));
             }
@@ -1350,7 +1350,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             for (T t : entitys) {
                 Objects.requireNonNull(t);
                 if (t.getClass().getAnnotation(Entity.class) == null && t.getClass().getAnnotation(javax.persistence.Entity.class) == null) {
-                    throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                    throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
                 this.actions.add(new DeleteBatchAction1(t));
             }
@@ -1361,10 +1361,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public <T> DataBatch delete(Class<T> clazz, Serializable... pks) {
             Objects.requireNonNull(clazz);
             if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
-                throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+                throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
             if (pks.length < 1) {
-                throw new RuntimeException("delete pk length is zero ");
+                throw new SourceException("delete pk length is zero ");
             }
             for (Serializable pk : pks) {
                 Objects.requireNonNull(pk);
@@ -1382,7 +1382,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public <T> DataBatch delete(Class<T> clazz, FilterNode node, Flipper flipper) {
             Objects.requireNonNull(clazz);
             if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
-                throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+                throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
             this.actions.add(new DeleteBatchAction3(clazz, node, flipper));
             return this;
@@ -1393,7 +1393,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             for (T t : entitys) {
                 Objects.requireNonNull(t);
                 if (t.getClass().getAnnotation(Entity.class) == null && t.getClass().getAnnotation(javax.persistence.Entity.class) == null) {
-                    throw new RuntimeException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                    throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
                 this.actions.add(new UpdateBatchAction1(t));
             }
@@ -1409,11 +1409,11 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public <T> DataBatch update(Class<T> clazz, Serializable pk, ColumnValue... values) {
             Objects.requireNonNull(clazz);
             if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
-                throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+                throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
             Objects.requireNonNull(pk);
             if (values.length < 1) {
-                throw new RuntimeException("update column-value length is zero ");
+                throw new SourceException("update column-value length is zero ");
             }
             for (ColumnValue val : values) {
                 Objects.requireNonNull(val);
@@ -1436,10 +1436,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public <T> DataBatch update(Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
             Objects.requireNonNull(clazz);
             if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
-                throw new RuntimeException("Entity Class " + clazz + " must be on Annotation @Entity");
+                throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
             if (values.length < 1) {
-                throw new RuntimeException("update column-value length is zero ");
+                throw new SourceException("update column-value length is zero ");
             }
             for (ColumnValue val : values) {
                 Objects.requireNonNull(val);
@@ -1451,7 +1451,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         @Override
         public <T> DataBatch updateColumn(T entity, final String... columns) {
             if (columns.length < 1) {
-                throw new RuntimeException("update column length is zero ");
+                throw new SourceException("update column length is zero ");
             }
             for (String val : columns) {
                 Objects.requireNonNull(val);
@@ -1473,7 +1473,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public <T> DataBatch updateColumn(T entity, final FilterNode node, SelectColumn selects) {
             Objects.requireNonNull(entity);
             if (entity.getClass().getAnnotation(Entity.class) == null && entity.getClass().getAnnotation(javax.persistence.Entity.class) == null) {
-                throw new RuntimeException("Entity Class " + entity.getClass() + " must be on Annotation @Entity");
+                throw new SourceException("Entity Class " + entity.getClass() + " must be on Annotation @Entity");
             }
             Objects.requireNonNull(selects);
             this.actions.add(new UpdateBatchAction4(entity, node, selects));
