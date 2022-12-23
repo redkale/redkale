@@ -748,7 +748,10 @@ public final class ResourceFactory {
                         String presname = res1 == null ? (res2 == null ? srcResourceName : res2.name()) : res1.name();
                         if (presname == null) {
                             if (srcObj instanceof Resourcable) {
-                                tname = tname.replace(RESOURCE_PARENT_NAME, ((Resourcable) srcObj).resourceName());
+                                String oname = ((Resourcable) srcObj).resourceName();
+                                if (oname != null) {
+                                    tname = tname.replace(RESOURCE_PARENT_NAME, oname);
+                                }
                             } else {
                                 logger.log(Level.SEVERE, srcObj.getClass().getName() + " not found @Resource on Class or not implements Resourcable");
                             }
@@ -813,7 +816,7 @@ public final class ResourceFactory {
                                 }
                             }
                         }
-                        if (rs == null && re == null && autoRegNull) {
+                        if (rs == null && re == null && autoRegNull && rcname.indexOf('$') < 0) {
                             register(rcname, gencType, null); //自动注入null的值
                             re = findEntry(rcname, gencType);
                         }

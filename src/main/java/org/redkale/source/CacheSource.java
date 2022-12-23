@@ -43,6 +43,15 @@ public interface CacheSource extends Resourcable {
 
     public byte[] getBytes(final String key);
 
+    //------------------------ mget ------------------------    
+    public <T> Map<String, T> mget(final Type componentType, final String... keys);
+
+    public Map<String, String> mgetString(final String... keys);
+
+    public Map<String, Long> mgetLong(final String... keys);
+
+    public Map<String, byte[]> mgetBytes(final String... keys);
+
     //------------------------ getex ------------------------
     public <T> T getex(final String key, final int expireSeconds, final Type type);
 
@@ -190,6 +199,10 @@ public interface CacheSource extends Resourcable {
     public <T> int lrem(final String key, final Type componentType, final T value);
 
     //---------- list-string ----------
+    default List<String> lrangeString(final String key) {
+        return lrange(key, String.class);
+    }
+
     public void rpushString(final String key, final String value);
 
     public int lremString(final String key, final String value);
@@ -217,6 +230,10 @@ public interface CacheSource extends Resourcable {
     public <T> Set<T> spop(final String key, final int count, final Type componentType);
 
     //---------- set-string ----------
+    default Set<String> smembersString(final String key) {
+        return smembers(key, String.class);
+    }
+
     public boolean sismemberString(final String key, final String value);
 
     public void saddString(final String key, final String value);
@@ -251,13 +268,7 @@ public interface CacheSource extends Resourcable {
 
     public int getKeySize();
 
-    public <T> Map<String, T> getMap(final Type componentType, final String... keys);
-
-    public Map<String, String> getStringMap(final String... keys);
-
     public String[] getStringArray(final String... keys);
-
-    public Map<String, Long> getLongMap(final String... keys);
 
     public Long[] getLongArray(final String... keys);
 
@@ -305,6 +316,15 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Long> getLongAsync(final String key, long defValue);
 
     public CompletableFuture<byte[]> getBytesAsync(final String key);
+
+    //------------------------ mgetAsync ------------------------    
+    public <T> CompletableFuture<Map<String, T>> mgetAsync(final Type componentType, final String... keys);
+
+    public CompletableFuture<Map<String, String>> mgetStringAsync(final String... keys);
+
+    public CompletableFuture<Map<String, Long>> mgetLongAsync(final String... keys);
+
+    public CompletableFuture<Map<String, byte[]>> mgetBytesAsync(final String... keys);
 
     //------------------------ getexAsync ------------------------
     public <T> CompletableFuture<T> getexAsync(final String key, final int expireSeconds, final Type type);
@@ -480,6 +500,10 @@ public interface CacheSource extends Resourcable {
     public <T> CompletableFuture<Set<T>> spopAsync(final String key, final int count, final Type componentType);
 
     //---------- set-string ----------
+    default CompletableFuture<Set<String>> smembersStringAsync(final String key) {
+        return smembersAsync(key, String.class);
+    }
+
     public CompletableFuture<Boolean> sismemberStringAsync(final String key, final String value);
 
     public CompletableFuture<Void> saddStringAsync(final String key, final String value);
@@ -512,15 +536,9 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<List<String>> keysAsync(String pattern);
 
-    public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys);
-
     public CompletableFuture<Integer> getKeySizeAsync();
 
-    public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys);
-
     public CompletableFuture<String[]> getStringArrayAsync(final String... keys);
-
-    public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys);
 
     public CompletableFuture<Long[]> getLongArrayAsync(final String... keys);
 
@@ -929,5 +947,35 @@ public interface CacheSource extends Resourcable {
     @Deprecated
     default CompletableFuture<List<String>> queryKeysEndsWithAsync(String endsWith) {
         return keysAsync("*" + endsWith);
+    }
+
+    @Deprecated
+    default <T> Map<String, T> getMap(final Type componentType, final String... keys) {
+        return mget(componentType, keys);
+    }
+
+    @Deprecated
+    default Map<String, String> getStringMap(final String... keys) {
+        return mgetString(keys);
+    }
+
+    @Deprecated
+    default Map<String, Long> getLongMap(final String... keys) {
+        return mgetLong(keys);
+    }
+
+    @Deprecated
+    default <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys) {
+        return mgetAsync(componentType, keys);
+    }
+
+    @Deprecated
+    default CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys) {
+        return mgetStringAsync(keys);
+    }
+
+    @Deprecated
+    default CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
+        return mgetLongAsync(keys);
     }
 }

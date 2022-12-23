@@ -992,6 +992,65 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> Map<String, T> mget(final Type componentType, final String... keys) {
+        Map<String, T> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            map.put(key, (T) get(key, componentType));
+        }
+        return map;
+    }
+
+    @Override
+    public Map<String, String> mgetString(final String... keys) {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            Object n = get(key, String.class);
+            map.put(key, n == null ? null : n.toString());
+        }
+        return map;
+    }
+
+    @Override
+    public Map<String, Long> mgetLong(final String... keys) {
+        Map<String, Long> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            Number n = (Number) get(key, long.class);
+            map.put(key, n == null ? null : n.longValue());
+        }
+        return map;
+    }
+
+    @Override
+    public Map<String, byte[]> mgetBytes(final String... keys) {
+        Map<String, byte[]> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            byte[] n = get(key, byte[].class);
+            map.put(key, get(key, byte[].class));
+        }
+        return map;
+    }
+
+    @Override
+    public <T> CompletableFuture<Map<String, T>> mgetAsync(final Type componentType, final String... keys) {
+        return CompletableFuture.completedFuture(mget(componentType, keys));
+    }
+
+    @Override
+    public CompletableFuture<Map<String, String>> mgetStringAsync(final String... keys) {
+        return CompletableFuture.completedFuture(mgetString(keys));
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Long>> mgetLongAsync(final String... keys) {
+        return CompletableFuture.completedFuture(mgetLong(keys));
+    }
+
+    @Override
+    public CompletableFuture<Map<String, byte[]>> mgetBytesAsync(final String... keys) {
+        return CompletableFuture.completedFuture(mgetBytes(keys));
+    }
+
+    @Override
     public Map<String, String> getStringMap(final String... keys) {
         Map<String, String> map = new LinkedHashMap<>();
         for (String key : keys) {
