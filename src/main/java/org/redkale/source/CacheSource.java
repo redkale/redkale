@@ -76,6 +76,8 @@ public interface CacheSource extends Resourcable {
     //MSET key value [key value ...]
     public void mset(final Object... keyVals);
 
+    public void mset(final Map map);
+
     public <T> void set(final String key, final Convert convert, final T value);
 
     public <T> void set(final String key, final Type type, final T value);
@@ -183,6 +185,8 @@ public interface CacheSource extends Resourcable {
 
     //------------------------ hmxx ------------------------
     public void hmset(final String key, final Serializable... values);
+
+    public void hmset(final String key, final Map map);
 
     public <T> List<T> hmget(final String key, final Type type, final String... fields);
 
@@ -353,6 +357,8 @@ public interface CacheSource extends Resourcable {
     //MSET key value [key value ...]
     public CompletableFuture<Void> msetAsync(final Object... keyVals);
 
+    public CompletableFuture<Void> msetAsync(final Map map);
+
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final T value);
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value);
@@ -460,6 +466,8 @@ public interface CacheSource extends Resourcable {
 
     //------------------------ hmxxAsync ------------------------
     public CompletableFuture<Void> hmsetAsync(final String key, final Serializable... values);
+
+    public CompletableFuture<Void> hmsetAsync(final String key, final Map map);
 
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields);
 

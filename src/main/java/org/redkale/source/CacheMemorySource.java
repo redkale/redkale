@@ -279,6 +279,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public void hmset(final String key, final Map map) {
+        map.forEach((k, v) -> hset(CacheEntryType.MAP, key, (String) k, v));
+    }
+
+    @Override
     public <T> List<T> hmget(final String key, final Type type, final String... fields) {
         if (key == null) return null;
         CacheEntry entry = container.get(key);
@@ -483,6 +488,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public CompletableFuture<Void> hmsetAsync(final String key, final Map map) {
+        return CompletableFuture.runAsync(() -> hmset(key, map), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields) {
         return CompletableFuture.supplyAsync(() -> hmget(key, type, fields), getExecutor());
     }
@@ -653,6 +663,19 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public void mset(Map map) {
+        map.forEach((key, val) -> {
+            if (val instanceof String) {
+                set(CacheEntryType.STRING, (String) key, val);
+            } else if (val instanceof Number) {
+                set(CacheEntryType.LONG, (String) key, ((Number) val).longValue());
+            } else {
+                set(CacheEntryType.OBJECT, (String) key, val);
+            }
+        });
+    }
+
+    @Override
     public <T> void set(String key, Convert convert, T value) {
         set(CacheEntryType.OBJECT, key, value);
     }
@@ -719,6 +742,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public CompletableFuture<Void> msetAsync(final Object... keyVals) {
         return CompletableFuture.runAsync(() -> mset(keyVals), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Void> msetAsync(final Map map) {
+        return CompletableFuture.runAsync(() -> mset(map), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
