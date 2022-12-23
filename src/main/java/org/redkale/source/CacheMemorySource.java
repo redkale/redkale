@@ -840,9 +840,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public int del(String key) {
-        if (key == null) return 0;
-        return container.remove(key) == null ? 0 : 1;
+    public int del(final String... keys) {
+        if (keys == null) return 0;
+        int count = 0;
+        for (String key : keys) {
+            count += container.remove(key) == null ? 0 : 1;
+        }
+        return count;
     }
 
     @Override
@@ -896,8 +900,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Integer> delAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> del(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Integer> delAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> del(keys), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

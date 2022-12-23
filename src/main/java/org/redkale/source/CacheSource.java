@@ -122,7 +122,7 @@ public interface CacheSource extends Resourcable {
 
     public void expire(final String key, final int seconds);
 
-    public int del(final String key);
+    public int del(final String... keys);
 
     public long incr(final String key);
 
@@ -396,7 +396,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Void> expireAsync(final String key, final int seconds);
 
-    public CompletableFuture<Integer> delAsync(final String key);
+    public CompletableFuture<Integer> delAsync(final String... keys);
 
     public CompletableFuture<Long> incrAsync(final String key);
 
