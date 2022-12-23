@@ -5,11 +5,11 @@
  */
 package org.redkale.cluster;
 
-import java.net.*;
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
-import org.redkale.annotation.Resource;
+import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.boot.*;
 import org.redkale.convert.json.JsonConvert;
@@ -141,7 +141,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     protected void loadMqtpAddressHealth() {
-        List<String> keys = source.queryKeysStartsWith("cluster.mqtp:");
+        List<String> keys = source.keysStartsWith("cluster.mqtp:");
         keys.forEach(serviceName -> {
             try {
                 this.mqtpAddressMap.put(serviceName, queryAddress(serviceName).get(3, TimeUnit.SECONDS));

@@ -270,7 +270,7 @@ public abstract class WebSocketNode {
             return CompletableFuture.completedFuture(new LinkedHashSet<>(this.localEngine.getLocalUserSet().stream().map(x -> String.valueOf(x)).collect(Collectors.toList())));
         }
         tryAcquireSemaphore();
-        CompletableFuture<List<String>> listFuture = this.source.queryKeysStartsWithAsync(WS_SOURCE_KEY_USERID_PREFIX);
+        CompletableFuture<List<String>> listFuture = this.source.keysStartsWithAsync(WS_SOURCE_KEY_USERID_PREFIX);
         CompletableFuture<Set<String>> rs = listFuture.thenApply(v -> new LinkedHashSet<>(v.stream().map(x -> x.substring(WS_SOURCE_KEY_USERID_PREFIX.length())).collect(Collectors.toList())));
         if (semaphore != null) rs.whenComplete((r, e) -> releaseSemaphore());
         return rs;

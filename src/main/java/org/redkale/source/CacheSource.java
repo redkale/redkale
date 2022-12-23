@@ -238,6 +238,29 @@ public interface CacheSource extends Resourcable {
 
     public Set<Long> spopLong(final String key, final int count);
 
+    //------------------------ other ------------------------
+    default List<String> keys() {
+        return keys(null);
+    }
+
+    default List<String> keysStartsWith(String startsWith) {
+        return keys(startsWith + "*");
+    }
+
+    public List<String> keys(String pattern);
+
+    public int getKeySize();
+
+    public <T> Map<String, T> getMap(final Type componentType, final String... keys);
+
+    public Map<String, String> getStringMap(final String... keys);
+
+    public String[] getStringArray(final String... keys);
+
+    public Map<String, Long> getLongMap(final String... keys);
+
+    public Long[] getLongArray(final String... keys);
+
     //------------------------ collection ------------------------
     @Deprecated
     public <T> Collection<T> getCollection(final String key, final Type componentType);
@@ -268,25 +291,6 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated
     public Collection<Long> getexLongCollection(final String key, final int expireSeconds);
-
-    //------------------------ other ------------------------
-    public List<String> queryKeys();
-
-    public List<String> queryKeysStartsWith(String startsWith);
-
-    public List<String> queryKeysEndsWith(String endsWith);
-
-    public int getKeySize();
-
-    public <T> Map<String, T> getMap(final Type componentType, final String... keys);
-
-    public Map<String, String> getStringMap(final String... keys);
-
-    public String[] getStringArray(final String... keys);
-
-    public Map<String, Long> getLongMap(final String... keys);
-
-    public Long[] getLongArray(final String... keys);
 
     //---------------------- CompletableFuture 异步版 ---------------------------------
     default CompletableFuture<Boolean> isOpenAsync() {
@@ -497,6 +501,29 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Set<Long>> spopLongAsync(final String key, final int count);
 
+    //------------------------ other-Async ------------------------
+    default CompletableFuture<List<String>> keysAsync() {
+        return keysAsync(null);
+    }
+
+    default CompletableFuture<List<String>> keysStartsWithAsync(String startsWith) {
+        return keysAsync(startsWith + "*");
+    }
+
+    public CompletableFuture<List<String>> keysAsync(String pattern);
+
+    public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys);
+
+    public CompletableFuture<Integer> getKeySizeAsync();
+
+    public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys);
+
+    public CompletableFuture<String[]> getStringArrayAsync(final String... keys);
+
+    public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys);
+
+    public CompletableFuture<Long[]> getLongArrayAsync(final String... keys);
+
     //------------------------ collectionAsync ------------------------
     @Deprecated
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(final String key, final Type componentType);
@@ -527,25 +554,6 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated
     public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds);
-
-    //------------------------ other-Async ------------------------
-    public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys);
-
-    public CompletableFuture<List<String>> queryKeysAsync();
-
-    public CompletableFuture<List<String>> queryKeysStartsWithAsync(String startsWith);
-
-    public CompletableFuture<List<String>> queryKeysEndsWithAsync(String endsWith);
-
-    public CompletableFuture<Integer> getKeySizeAsync();
-
-    public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys);
-
-    public CompletableFuture<String[]> getStringArrayAsync(final String... keys);
-
-    public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys);
-
-    public CompletableFuture<Long[]> getLongArrayAsync(final String... keys);
 
     //-------------------------- 过期方法 ----------------------------------
     @Deprecated
@@ -891,5 +899,35 @@ public interface CacheSource extends Resourcable {
     @Deprecated
     default int removeLongListItem(final String key, final long value) {
         return lremLong(key, value);
+    }
+
+    @Deprecated
+    default List<String> queryKeys() {
+        return keys();
+    }
+
+    @Deprecated
+    default List<String> queryKeysStartsWith(String startsWith) {
+        return keys(startsWith + "*");
+    }
+
+    @Deprecated
+    default List<String> queryKeysEndsWith(String endsWith) {
+        return keys("*" + endsWith);
+    }
+
+    @Deprecated
+    default CompletableFuture<List<String>> queryKeysAsync() {
+        return keysAsync();
+    }
+
+    @Deprecated
+    default CompletableFuture<List<String>> queryKeysStartsWithAsync(String startsWith) {
+        return keysAsync(startsWith + "*");
+    }
+
+    @Deprecated
+    default CompletableFuture<List<String>> queryKeysEndsWithAsync(String endsWith) {
+        return keysAsync("*" + endsWith);
     }
 }

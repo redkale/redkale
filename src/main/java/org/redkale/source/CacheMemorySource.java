@@ -12,6 +12,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
 import java.util.logging.*;
+import java.util.regex.Pattern;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.annotation.*;
@@ -579,20 +580,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public CompletableFuture<Long> getexLongAsync(final String key, final int expireSeconds, long defValue) {
         return CompletableFuture.supplyAsync(() -> getexLong(key, expireSeconds, defValue), getExecutor());
-    }
-
-    @Override
-    public void refresh(String key, final int expireSeconds) {
-        if (key == null) return;
-        CacheEntry entry = container.get(key);
-        if (entry == null) return;
-        entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
-        entry.expireSeconds = expireSeconds;
-    }
-
-    @Override
-    public CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.runAsync(() -> refresh(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     protected void set(CacheEntryType cacheType, String key, Object value) {
@@ -1536,44 +1523,38 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public List<String> queryKeys() {
-        return new ArrayList<>(container.keySet());
+    public int getKeySize() {
+        return container.size();
     }
 
     @Override
-    public List<String> queryKeysStartsWith(String startsWith) {
-        if (startsWith == null) return queryKeys();
+    public List<String> keys(String pattern) {
+        if (pattern == null || pattern.isEmpty()) {
+            return new ArrayList<>(container.keySet());
+        } else {
+            List<String> rs = new ArrayList<>();
+            Predicate<String> filter = Pattern.compile(pattern).asPredicate();
+            container.keySet().stream().filter(filter).forEach(x -> rs.add(x));
+            return rs;
+        }
+    }
+
+    @Override
+    public List<String> keysStartsWith(String startsWith) {
+        if (startsWith == null) return keys();
         List<String> rs = new ArrayList<>();
         container.keySet().stream().filter(x -> x.startsWith(startsWith)).forEach(x -> rs.add(x));
         return rs;
     }
 
     @Override
-    public List<String> queryKeysEndsWith(String endsWith) {
-        if (endsWith == null) return queryKeys();
-        List<String> rs = new ArrayList<>();
-        container.keySet().stream().filter(x -> x.endsWith(endsWith)).forEach(x -> rs.add(x));
-        return rs;
+    public CompletableFuture<List<String>> keysAsync(String pattern) {
+        return CompletableFuture.completedFuture(keys(pattern));
     }
 
     @Override
-    public int getKeySize() {
-        return container.size();
-    }
-
-    @Override
-    public CompletableFuture<List<String>> queryKeysAsync() {
-        return CompletableFuture.completedFuture(new ArrayList<>(container.keySet()));
-    }
-
-    @Override
-    public CompletableFuture<List<String>> queryKeysStartsWithAsync(String startsWith) {
-        return CompletableFuture.completedFuture(queryKeysStartsWith(startsWith));
-    }
-
-    @Override
-    public CompletableFuture<List<String>> queryKeysEndsWithAsync(String endsWith) {
-        return CompletableFuture.completedFuture(queryKeysEndsWith(endsWith));
+    public CompletableFuture<List<String>> keysStartsWithAsync(String startsWith) {
+        return CompletableFuture.completedFuture(keysStartsWith(startsWith));
     }
 
     @Override
