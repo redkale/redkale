@@ -120,17 +120,17 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> deleteDB(EntityInfo<T> info, Flipper flipper, String sql) {
+    protected <T> CompletableFuture<Integer> deleteDB(EntityInfo<T> info, Flipper flipper, String... sqls) {
         return CompletableFuture.completedFuture(0);
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, final String table, String sql) {
+    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, String[] tables, String... sqls) {
         return CompletableFuture.completedFuture(0);
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, final String table, String sql) {
+    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, String[] tables, String... sqls) {
         return CompletableFuture.completedFuture(0);
     }
 
@@ -140,7 +140,7 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateColumnDB(EntityInfo<T> info, Flipper flipper, String sql, boolean prepared, Object... params) {
+    protected <T> CompletableFuture<Integer> updateColumnDB(EntityInfo<T> info, Flipper flipper, SqlInfo sql) {
         return CompletableFuture.completedFuture(0);
     }
 

@@ -315,19 +315,53 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> deleteDB(EntityInfo<T> info, Flipper flipper, String sql) {
+    protected <T> CompletableFuture<Integer> deleteDB(EntityInfo<T> info, Flipper flipper, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
             conn.setAutoCommit(true);
-            sql += ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
-            if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
-            final Statement stmt = conn.createStatement();
-            int c = stmt.executeUpdate(sql);
-            stmt.close();
-            slowLog(s, sql);
+            int c = 0;
+            if (sqls.length == 1) {
+                String sql = sqls[0];
+                sql += ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
+                if (info.isLoggable(logger, Level.FINEST, sql)) {
+                    logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
+                }
+                final Statement stmt = conn.createStatement();
+                c = stmt.executeUpdate(sql);
+                stmt.close();
+            } else {
+                if (flipper == null || flipper.getLimit() < 1) {
+                    if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+                        logger.finest(info.getType().getSimpleName() + " delete sqls=" + Arrays.toString(sqls));
+                    }
+                    final Statement stmt = conn.createStatement();
+                    for (String sql : sqls) {
+                        stmt.addBatch(sql);
+                    }
+                    int[] cs = stmt.executeBatch();
+                    stmt.close();
+                    for (int cc : cs) {
+                        c += cc;
+                    }
+                } else {
+                    if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+                        logger.finest(info.getType().getSimpleName() + " limit " + flipper.getLimit() + " delete sqls=" + Arrays.toString(sqls));
+                    }
+                    final Statement stmt = conn.createStatement();
+                    for (String sql : sqls) {
+                        stmt.addBatch(sql + " LIMIT " + flipper.getLimit());
+                    }
+                    int[] cs = stmt.executeBatch();
+                    stmt.close();
+                    for (int cc : cs) {
+                        c += cc;
+                    }
+                }
+            }
+            slowLog(s, sqls);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
@@ -345,7 +379,6 @@ public class DataJdbcSource extends DataSqlSource {
                                 st.executeBatch();
                             }
                             st.close();
-                            slowLog(s, sql);
                             return CompletableFuture.completedFuture(0);
                         } catch (SQLException e2) {
                             return CompletableFuture.failedFuture(e2);
@@ -360,17 +393,29 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, final String table, String sql) {
+    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, final String[] tables, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
             conn.setAutoCommit(true);
+            int c = 0;
             final Statement stmt = conn.createStatement();
-            int c = stmt.executeUpdate(sql);
+            if (sqls.length == 1) {
+                String sql = sqls[0];
+                c = stmt.executeUpdate(sql);
+            } else {
+                for (String sql : sqls) {
+                    stmt.addBatch(sql);
+                }
+                int[] cs = stmt.executeBatch();
+                for (int cc : cs) {
+                    c += cc;
+                }
+            }
             stmt.close();
-            slowLog(s, sql);
+            slowLog(s, sqls);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) return CompletableFuture.completedFuture(-1);
@@ -381,21 +426,35 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, final String table, String sql) {
+    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, String[] tables, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
             conn.setAutoCommit(true);
+            int c = 0;
             final Statement stmt = conn.createStatement();
-            int c = stmt.executeUpdate(sql);
+            if (sqls.length == 1) {
+                String sql = sqls[0];
+                c = stmt.executeUpdate(sql);
+            } else {
+                for (String sql : sqls) {
+                    stmt.addBatch(sql);
+                }
+                int[] cs = stmt.executeBatch();
+                for (int cc : cs) {
+                    c += cc;
+                }
+            }
             stmt.close();
             if (info.getTableStrategy() != null) {
-                String tablekey = table.indexOf('.') > 0 ? table : (conn.getCatalog() + '.' + table);
-                info.removeDisTable(tablekey);
+                for (String table : tables) {
+                    String tablekey = table.indexOf('.') > 0 ? table : (conn.getCatalog() + '.' + table);
+                    info.removeDisTable(tablekey);
+                }
             }
-            slowLog(s, sql);
+            slowLog(s, sqls);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) return CompletableFuture.completedFuture(-1);
@@ -480,31 +539,51 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateColumnDB(EntityInfo<T> info, Flipper flipper, String sql, boolean prepared, Object... params) {
+    protected <T> CompletableFuture<Integer> updateColumnDB(EntityInfo<T> info, Flipper flipper, SqlInfo sql) { //String sql, boolean prepared, Object... blobs) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
             conn.setAutoCommit(true);
-            if (prepared) {
-                final PreparedStatement prestmt = conn.prepareStatement(sql);
-                int index = 0;
-                for (Object param : params) {
-                    Blob blob = conn.createBlob();
-                    blob.setBytes(1, (byte[]) param);
-                    prestmt.setBlob(++index, blob);
+            if (sql.blobs != null || sql.tables != null) {
+                final PreparedStatement prestmt = conn.prepareStatement(sql.sql);
+                int c = 0;
+                if (sql.tables == null) {
+                    int index = 0;
+                    for (byte[] param : sql.blobs) {
+                        Blob blob = conn.createBlob();
+                        blob.setBytes(1, param);
+                        prestmt.setBlob(++index, blob);
+                    }
+                    c = prestmt.executeUpdate();
+                } else {
+                    for (String table : sql.tables) {
+                        int index = 0;
+                        if (sql.blobs != null) {
+                            for (byte[] param : sql.blobs) {
+                                Blob blob = conn.createBlob();
+                                blob.setBytes(1, param);
+                                prestmt.setBlob(++index, blob);
+                            }
+                        }
+                        prestmt.setString(++index, table);
+                        prestmt.addBatch();
+                    }
+                    int[] cs = prestmt.executeBatch();
+                    for (int cc : cs) {
+                        c += cc;
+                    }
                 }
-                int c = prestmt.executeUpdate();
                 prestmt.close();
-                slowLog(s, sql);
+                slowLog(s, sql.sql);
                 return CompletableFuture.completedFuture(c);
             } else {
-                if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (info.isLoggable(logger, Level.FINEST, sql.sql)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
                 final Statement stmt = conn.createStatement();
-                int c = stmt.executeUpdate(sql);
+                int c = stmt.executeUpdate(sql.sql);
                 stmt.close();
-                slowLog(s, sql);
+                slowLog(s, sql.sql);
                 return CompletableFuture.completedFuture(c);
             }
         } catch (SQLException e) {
@@ -888,9 +967,23 @@ public class DataJdbcSource extends DataSqlSource {
             final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
             final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
             final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
+            String[] tables = info.getTables(node);
+            String joinAndWhere = (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
             if ("mysql".equals(dbtype()) || "postgresql".equals(dbtype())) {  //sql可以带limit、offset
-                final String listsql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
-                    + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + createSQLOrderby(info, flipper)
+                String listsubsql;
+                StringBuilder union = new StringBuilder();
+                if (tables.length == 1) {
+                    listsubsql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM " + tables[0] + " a" + joinAndWhere;
+                } else {
+                    int b = 0;
+                    for (String table : tables) {
+                        if (!union.isEmpty()) union.append(" UNION ALL ");
+                        String tabalis = "t" + (++b);
+                        union.append("SELECT ").append(info.getFullQueryColumns(tabalis, selects)).append(" FROM ").append(table).append(" ").append(tabalis).append(joinAndWhere);
+                    }
+                    listsubsql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM (" + (union) + ") a";
+                }
+                final String listsql = listsubsql + createSQLOrderby(info, flipper)
                     + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset()));
                 if (readcache && info.isLoggable(logger, Level.FINEST, listsql)) {
                     logger.finest(info.getType().getSimpleName() + " query sql=" + listsql);
@@ -905,7 +998,13 @@ public class DataJdbcSource extends DataSqlSource {
                 ps.close();
                 long total = list.size();
                 if (needtotal) {
-                    final String countsql = "SELECT " + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)") + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+                    String countsubsql;
+                    if (tables.length == 1) {
+                        countsubsql = "SELECT " + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)") + " FROM " + tables[0] + " a" + joinAndWhere;
+                    } else {
+                        countsubsql = "SELECT " + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)") + " FROM (" + (union) + ") a";
+                    }
+                    final String countsql = countsubsql;
                     if (readcache && info.isLoggable(logger, Level.FINEST, countsql)) {
                         logger.finest(info.getType().getSimpleName() + " query countsql=" + countsql);
                     }
@@ -918,8 +1017,20 @@ public class DataJdbcSource extends DataSqlSource {
                 slowLog(s, listsql);
                 return CompletableFuture.completedFuture(new Sheet<>(total, list));
             }
-            final String listsql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM " + info.getTable(node) + " a" + (join == null ? "" : join)
-                + ((where == null || where.length() == 0) ? "" : (" WHERE " + where)) + info.createSQLOrderby(flipper);
+            String listsubsql;
+            StringBuilder union = new StringBuilder();
+            if (tables.length == 1) {
+                listsubsql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM " + tables[0] + " a" + joinAndWhere;
+            } else {
+                int b = 0;
+                for (String table : tables) {
+                    if (!union.isEmpty()) union.append(" UNION ALL ");
+                    String tabalis = "t" + (++b);
+                    union.append("SELECT ").append(distinct ? "DISTINCT " : "").append(info.getFullQueryColumns(tabalis, selects)).append(" FROM ").append(table).append(" ").append(tabalis).append(joinAndWhere);
+                }
+                listsubsql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM (" + (union) + ") a";
+            }
+            final String listsql = listsubsql + info.createSQLOrderby(flipper);
             if (readcache && info.isLoggable(logger, Level.FINEST, listsql)) {
                 logger.finest(info.getType().getSimpleName() + " query sql=" + listsql + (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset())));
             }

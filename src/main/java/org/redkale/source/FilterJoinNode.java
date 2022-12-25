@@ -331,7 +331,9 @@ public class FilterJoinNode extends FilterNode {
 
     @Override
     protected void putJoinTabalis(Map<Class, String> map) {
-        if (this.joinClass != null && !map.containsKey(this.joinClass)) map.put(joinClass, String.valueOf((char) ('b' + map.size())));
+        if (this.joinClass != null && !map.containsKey(this.joinClass)) {
+            map.put(joinClass, "jt" + map.size()); //join_table_1
+        }
         if (this.nodes == null) return;
         for (FilterNode node : this.nodes) {
             node.putJoinTabalis(map);

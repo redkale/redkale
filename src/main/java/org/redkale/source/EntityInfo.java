@@ -959,10 +959,10 @@ public final class EntityInfo<T> {
      *
      * @return String
      */
-    public String getTable(FilterNode node) {
-        if (tableStrategy == null) return table;
-        String t = tableStrategy.getTable(table, node);
-        return t == null || t.isEmpty() ? table : t;
+    public String[] getTables(FilterNode node) {
+        if (tableStrategy == null) return new String[]{table};
+        String[] t = tableStrategy.getTables(table, node);
+        return t == null || t.length == 0 ? new String[]{table} : t;
     }
 
     /**
