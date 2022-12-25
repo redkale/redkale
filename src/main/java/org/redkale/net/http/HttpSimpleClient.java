@@ -8,7 +8,7 @@ package org.redkale.net.http;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
-import java.nio.charset.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.net.*;
@@ -32,6 +32,10 @@ import org.redkale.util.*;
 public class HttpSimpleClient {
 
     public static final String USER_AGENT = "Redkale-http-client/" + Redkale.getDotedVersion();
+
+    private static final byte[] header_bytes_useragent = ("User-Agent: " + USER_AGENT + "\r\n").getBytes(StandardCharsets.UTF_8);
+
+    private static final byte[] header_bytes_connclose = ("Connection: close\r\n").getBytes(StandardCharsets.UTF_8);
 
     protected final AsyncGroup asyncGroup;
 
@@ -101,14 +105,14 @@ public class HttpSimpleClient {
         return asyncGroup.createTCPClient(address, readTimeoutSeconds, writeTimeoutSeconds).thenCompose(conn -> {
             final ByteArray array = new ByteArray();
             int urlpos = url.indexOf("/", url.indexOf("//") + 3);
-            array.put((method + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n"
+            array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n"
                 + "Host: " + uri.getHost() + "\r\n"
                 + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
             if (headers == null || !headers.containsKey("User-Agent")) {
-                array.put(("User-Agent: " + USER_AGENT + "\r\n").getBytes(StandardCharsets.UTF_8));
+                array.put(header_bytes_useragent);
             }
             if (headers == null || !headers.containsKey("Connection")) {
-                array.put(("Connection: close\r\n").getBytes(StandardCharsets.UTF_8));
+                array.put(header_bytes_connclose);
             }
             if (headers != null) {
                 headers.forEach((k, v) -> {
@@ -249,6 +253,7 @@ public class HttpSimpleClient {
         }
 
         //解析Header Connection: keep-alive
+        //返回0表示解析完整，非0表示还需继续读数据
         private int readHeaderLines(final ByteBuffer buffer) {
             int remain = buffer.remaining();
             ByteArray bytes = array;
