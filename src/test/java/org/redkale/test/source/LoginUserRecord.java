@@ -6,10 +6,7 @@
 package org.redkale.test.source;
 
 import java.io.Serializable;
-
-import org.redkale.persistence.Column;
-import org.redkale.source.DistributeTable;
-import org.redkale.persistence.Id;
+import org.redkale.persistence.*;
 import org.redkale.source.*;
 
 /**
@@ -74,10 +71,10 @@ public class LoginUserRecord extends BaseEntity {
         }
 
         @Override
-        public String getTable(String table, FilterNode node) {
+        public String[] getTables(String table, FilterNode node) {
             Serializable id = node.findValue("userid");
-            if (id != null) return getTable(table, id);
-            return getHashTable(table, (Integer) node.findValue("#hash"));
+            if (id != null) return new String[]{getTable(table, id)};
+            return new String[]{getHashTable(table, (Integer) node.findValue("#hash"))};
         }
 
         @Override

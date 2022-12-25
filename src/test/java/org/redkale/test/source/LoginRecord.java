@@ -6,10 +6,7 @@
 package org.redkale.test.source;
 
 import java.io.Serializable;
-
-import org.redkale.persistence.Column;
-import org.redkale.source.DistributeTable;
-import org.redkale.persistence.Id;
+import org.redkale.persistence.*;
 import org.redkale.source.*;
 import org.redkale.util.Utility;
 
@@ -131,11 +128,15 @@ public class LoginRecord extends BaseEntity {
 
         //过滤查询时调用本方法
         @Override
-        public String getTable(String table, FilterNode node) {
+        public String[] getTables(String table, FilterNode node) {
             Serializable day = node.findValue("#day");  //LoginRecord没有day字段，所以前面要加#，表示虚拟字段, 值为yyyyMMdd格式
             if (day != null) getTable(table, (Integer) day, 0L); //存在#day参数则直接使用day值
             Serializable time = node.findValue("createtime");  //存在createtime则使用最小时间，且createtime的范围必须在一天内，因为本表以天为单位建表
-            return getTable(table, 0, (time == null ? 0L : (time instanceof Range ? ((Range.LongRange) time).getMin() : (Long) time)));
+            if (time instanceof Long) {
+                return new String[]{getTable(table, 0, (Long) time)};
+            }
+            Range.LongRange createTime = (Range.LongRange) time;
+            return new String[]{getTable(table, 0, createTime.getMin())};
         }
 
         //创建或单个查询时调用本方法
