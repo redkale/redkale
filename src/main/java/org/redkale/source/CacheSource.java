@@ -6,11 +6,11 @@
 package org.redkale.source;
 
 import java.io.Serializable;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.Convert;
-import org.redkale.util.Resourcable;
+import org.redkale.util.*;
 
 /**
  * Redkale中缓存数据源的核心类。 主要供业务开发者使用， 技术开发者提供CacheSource的实现。<br>
@@ -51,6 +51,42 @@ public interface CacheSource extends Resourcable {
     public Map<String, Long> mgetLong(final String... keys);
 
     public Map<String, byte[]> mgetBytes(final String... keys);
+
+    default <T> T[] mgets(final Type componentType, final String... keys) {
+        T[] rs = (T[]) Array.newInstance(TypeToken.typeToClass(componentType), keys.length);
+        Map<String, T> map = mget(componentType, keys);
+        for (int i = 0; i < keys.length; i++) {
+            rs[i] = map.get(keys[i]);
+        }
+        return rs;
+    }
+
+    default String[] mgetsString(final String... keys) {
+        String[] rs = new String[keys.length];
+        Map<String, String> map = mgetString(keys);
+        for (int i = 0; i < keys.length; i++) {
+            rs[i] = map.get(keys[i]);
+        }
+        return rs;
+    }
+
+    default Long[] mgetsLong(final String... keys) {
+        Long[] rs = new Long[keys.length];
+        Map<String, Long> map = mgetLong(keys);
+        for (int i = 0; i < keys.length; i++) {
+            rs[i] = map.get(keys[i]);
+        }
+        return rs;
+    }
+
+    default byte[][] mgetsBytes(final String... keys) {
+        byte[][] rs = new byte[keys.length][];
+        Map<String, byte[]> map = mgetBytes(keys);
+        for (int i = 0; i < keys.length; i++) {
+            rs[i] = map.get(keys[i]);
+        }
+        return rs;
+    }
 
     //------------------------ getex ------------------------
     public <T> T getex(final String key, final int expireSeconds, final Type type);
@@ -260,7 +296,7 @@ public interface CacheSource extends Resourcable {
 
     public Set<Long> spopLong(final String key, final int count);
 
-    //------------------------ other ------------------------
+    //------------------------ keys ------------------------
     default List<String> keys() {
         return keys(null);
     }
@@ -271,11 +307,7 @@ public interface CacheSource extends Resourcable {
 
     public List<String> keys(String pattern);
 
-    public int getKeySize();
-
-    public String[] getStringArray(final String... keys);
-
-    public Long[] getLongArray(final String... keys);
+    public int dbsize();
 
     //------------------------ collection ------------------------
     @Deprecated
@@ -330,6 +362,46 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Map<String, Long>> mgetLongAsync(final String... keys);
 
     public CompletableFuture<Map<String, byte[]>> mgetBytesAsync(final String... keys);
+
+    default <T> CompletableFuture<T[]> mgetsAsync(final Type componentType, final String... keys) {
+        return mgetAsync(componentType, keys).thenApply(map -> {
+            T[] rs = (T[]) Array.newInstance(TypeToken.typeToClass(componentType), keys.length);
+            for (int i = 0; i < keys.length; i++) {
+                rs[i] = (T) map.get(keys[i]);
+            }
+            return rs;
+        });
+    }
+
+    default CompletableFuture<String[]> mgetsStringAsync(final String... keys) {
+        return mgetStringAsync(keys).thenApply(map -> {
+            String[] rs = new String[keys.length];
+            for (int i = 0; i < keys.length; i++) {
+                rs[i] = map.get(keys[i]);
+            }
+            return rs;
+        });
+    }
+
+    default CompletableFuture<Long[]> mgetsLongAsync(final String... keys) {
+        return mgetLongAsync(keys).thenApply(map -> {
+            Long[] rs = new Long[keys.length];
+            for (int i = 0; i < keys.length; i++) {
+                rs[i] = map.get(keys[i]);
+            }
+            return rs;
+        });
+    }
+
+    default CompletableFuture<byte[][]> mgetsBytesAsync(final String... keys) {
+        return mgetBytesAsync(keys).thenApply(map -> {
+            byte[][] rs = new byte[keys.length][];
+            for (int i = 0; i < keys.length; i++) {
+                rs[i] = map.get(keys[i]);
+            }
+            return rs;
+        });
+    }
 
     //------------------------ getexAsync ------------------------
     public <T> CompletableFuture<T> getexAsync(final String key, final int expireSeconds, final Type type);
@@ -535,7 +607,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Set<Long>> spopLongAsync(final String key, final int count);
 
-    //------------------------ other-Async ------------------------
+    //------------------------ keys-Async ------------------------
     default CompletableFuture<List<String>> keysAsync() {
         return keysAsync(null);
     }
@@ -546,11 +618,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<List<String>> keysAsync(String pattern);
 
-    public CompletableFuture<Integer> getKeySizeAsync();
-
-    public CompletableFuture<String[]> getStringArrayAsync(final String... keys);
-
-    public CompletableFuture<Long[]> getLongArrayAsync(final String... keys);
+    public CompletableFuture<Integer> dbsizeAsync();
 
     //------------------------ collectionAsync ------------------------
     @Deprecated
@@ -997,5 +1065,35 @@ public interface CacheSource extends Resourcable {
     @Deprecated
     default long decr(final String key, long num) {
         return decrby(key, num);
+    }
+
+    @Deprecated
+    default String[] getStringArray(final String... keys) {
+        return mgetsString(keys);
+    }
+
+    @Deprecated
+    default Long[] getLongArray(final String... keys) {
+        return mgetsLong(keys);
+    }
+
+    @Deprecated
+    default CompletableFuture<String[]> getStringArrayAsync(final String... keys) {
+        return mgetsStringAsync(keys);
+    }
+
+    @Deprecated
+    default CompletableFuture<Long[]> getLongArrayAsync(final String... keys) {
+        return mgetsLongAsync(keys);
+    }
+
+    @Deprecated
+    default CompletableFuture<Integer> getKeySizeAsync() {
+        return dbsizeAsync();
+    }
+
+    @Deprecated
+    default int getKeySize() {
+        return dbsize();
     }
 }

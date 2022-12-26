@@ -1664,7 +1664,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public int getKeySize() {
+    public int dbsize() {
         return container.size();
     }
 
@@ -1699,7 +1699,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Integer> getKeySizeAsync() {
+    public CompletableFuture<Integer> dbsizeAsync() {
         return CompletableFuture.completedFuture(container.size());
     }
 
