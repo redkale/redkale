@@ -939,6 +939,26 @@ public final class EntityInfo<T> {
         return table;
     }
 
+    public Map<String, List<Serializable>> getTableMap(Serializable... pks) {
+        if (tableStrategy == null) return Utility.ofMap(table, Utility.ofList(pks));
+        Map<String, List<Serializable>> map = new LinkedHashMap<>();
+        for (Serializable pk : pks) {
+            String t = getTable(pk);
+            map.computeIfAbsent(t, k -> new ArrayList()).add(pk);
+        }
+        return map;
+    }
+
+    public Map<String, List<T>> getTableMap(T... entitys) {
+        if (tableStrategy == null) return Utility.ofMap(table, Utility.ofList(entitys));
+        Map<String, List<T>> map = new LinkedHashMap<>();
+        for (T entity : entitys) {
+            String t = getTable(entity);
+            map.computeIfAbsent(t, k -> new ArrayList()).add(entity);
+        }
+        return map;
+    }
+
     /**
      * 根据主键值获取Entity的表名
      *

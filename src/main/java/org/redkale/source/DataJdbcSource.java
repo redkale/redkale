@@ -148,7 +148,7 @@ public class DataJdbcSource extends DataSqlSource {
                 c = c1;
             } catch (SQLException se) {
                 if (!isTableNotExist(info, se.getSQLState())) throw se;
-                if (info.getTableStrategy() == null) {
+                if (info.getTableStrategy() == null) { //单表
                     String[] tablesqls = createTableSqls(info);
                     if (tablesqls == null) throw se;
                     Statement st = conn.createStatement();
@@ -161,7 +161,7 @@ public class DataJdbcSource extends DataSqlSource {
                         st.executeBatch();
                     }
                     st.close();
-                } else {
+                } else { //分库分表
                     synchronized (info.disTableLock()) {
                         final String catalog = conn.getCatalog();
                         final String newTable = info.getTable(entitys[0]);
@@ -175,9 +175,9 @@ public class DataJdbcSource extends DataSqlSource {
                                 info.addDisTable(tableKey);
                             } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
                                 if (isTableNotExist(info, sqle.getSQLState())) {
-                                    if (newTable.indexOf('.') < 0) {
+                                    if (newTable.indexOf('.') < 0) { //分表的原始表不存在
                                         String[] tablesqls = createTableSqls(info);
-                                        if (tablesqls != null) {
+                                        if (tablesqls != null) { //创建原始表
                                             Statement st = conn.createStatement();
                                             if (tablesqls.length == 1) {
                                                 st.execute(tablesqls[0]);
@@ -188,7 +188,7 @@ public class DataJdbcSource extends DataSqlSource {
                                                 st.executeBatch();
                                             }
                                             st.close();
-                                            //再执行一遍复制表操作
+                                            //再执行一遍创建分表操作
                                             st = conn.createStatement();
                                             st.execute(getTableCopySQL(info, newTable));
                                             st.close();
@@ -204,7 +204,7 @@ public class DataJdbcSource extends DataSqlSource {
                                             logger.log(Level.SEVERE, "create database(" + newTable.substring(0, newTable.indexOf('.')) + ") error", sqle1);
                                         }
                                         try {
-                                            //再执行一遍复制表操作
+                                            //再执行一遍创建分表操作
                                             st = conn.createStatement();
                                             st.execute(getTableCopySQL(info, newTable));
                                             st.close();
@@ -212,7 +212,7 @@ public class DataJdbcSource extends DataSqlSource {
                                         } catch (SQLException sqle2) {
                                             if (isTableNotExist(info, sqle2.getSQLState())) {
                                                 String[] tablesqls = createTableSqls(info);
-                                                if (tablesqls != null) {
+                                                if (tablesqls != null) { //创建原始表
                                                     st = conn.createStatement();
                                                     if (tablesqls.length == 1) {
                                                         st.execute(tablesqls[0]);
@@ -223,7 +223,7 @@ public class DataJdbcSource extends DataSqlSource {
                                                         st.executeBatch();
                                                     }
                                                     st.close();
-                                                    //再执行一遍复制表操作
+                                                    //再执行一遍创建分表操作
                                                     st = conn.createStatement();
                                                     st.execute(getTableCopySQL(info, newTable));
                                                     st.close();
