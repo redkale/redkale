@@ -1614,7 +1614,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public int dbsize() {
+    public long dbsize() {
         return container.size();
     }
 
@@ -1649,8 +1649,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Integer> dbsizeAsync() {
-        return CompletableFuture.completedFuture(container.size());
+    public CompletableFuture<Long> dbsizeAsync() {
+        return CompletableFuture.completedFuture((long) container.size());
     }
 
     @Override

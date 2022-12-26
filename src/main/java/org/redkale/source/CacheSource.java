@@ -297,7 +297,7 @@ public interface CacheSource extends Resourcable {
 
     public List<String> keys(String pattern);
 
-    public int dbsize();
+    public long dbsize();
 
     //------------------------ collection ------------------------
     @Deprecated
@@ -598,7 +598,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<List<String>> keysAsync(String pattern);
 
-    public CompletableFuture<Integer> dbsizeAsync();
+    public CompletableFuture<Long> dbsizeAsync();
 
     //------------------------ collectionAsync ------------------------
     @Deprecated
@@ -1069,11 +1069,11 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated
     default CompletableFuture<Integer> getKeySizeAsync() {
-        return dbsizeAsync();
+        return dbsizeAsync().thenApply(v -> v.intValue());
     }
 
     @Deprecated
     default int getKeySize() {
-        return dbsize();
+        return (int) dbsize();
     }
 }
