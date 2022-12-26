@@ -131,11 +131,13 @@ public interface CacheSource extends Resourcable {
 
     public long incr(final String key);
 
-    public long incr(final String key, long num);
+    public long incrby(final String key, long num);
 
     public long decr(final String key);
 
-    public long decr(final String key, long num);
+    public long decrby(final String key, long num);
+
+    public double incrbyFloat(final String key, double num);
 
     //------------------------ hget ------------------------
     public <T> T hget(final String key, final String field, final Type type);
@@ -175,11 +177,13 @@ public interface CacheSource extends Resourcable {
 
     public long hincr(final String key, String field);
 
-    public long hincr(final String key, String field, long num);
+    public long hincrby(final String key, String field, long num);
+
+    public double hincrbyFloat(final String key, String field, double num);
 
     public long hdecr(final String key, String field);
 
-    public long hdecr(final String key, String field, long num);
+    public long hdecrby(final String key, String field, long num);
 
     public boolean hexists(final String key, String field);
 
@@ -412,11 +416,13 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Long> incrAsync(final String key);
 
-    public CompletableFuture<Long> incrAsync(final String key, long num);
+    public CompletableFuture<Long> incrbyAsync(final String key, long num);
 
     public CompletableFuture<Long> decrAsync(final String key);
 
-    public CompletableFuture<Long> decrAsync(final String key, long num);
+    public CompletableFuture<Long> decrbyAsync(final String key, long num);
+
+    public CompletableFuture<Double> incrbyFloatAsync(final String key, double num);
 
     //------------------------ hgetAsync ------------------------
     public <T> CompletableFuture<T> hgetAsync(final String key, final String field, final Type type);
@@ -456,11 +462,13 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Long> hincrAsync(final String key, String field);
 
-    public CompletableFuture<Long> hincrAsync(final String key, String field, long num);
+    public CompletableFuture<Long> hincrbyAsync(final String key, String field, long num);
+
+    public CompletableFuture<Double> hincrbyFloatAsync(final String key, String field, double num);
 
     public CompletableFuture<Long> hdecrAsync(final String key, String field);
 
-    public CompletableFuture<Long> hdecrAsync(final String key, String field, long num);
+    public CompletableFuture<Long> hdecrbyAsync(final String key, String field, long num);
 
     public CompletableFuture<Boolean> hexistsAsync(final String key, String field);
 
@@ -991,5 +999,15 @@ public interface CacheSource extends Resourcable {
     @Deprecated
     default CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
         return mgetLongAsync(keys);
+    }
+
+    @Deprecated
+    default long incr(final String key, long num) {
+        return incrby(key, num);
+    }
+
+    @Deprecated
+    default long decr(final String key, long num) {
+        return decrby(key, num);
     }
 }
