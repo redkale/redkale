@@ -1654,16 +1654,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void setnxBytes(final String key, final Convert convert, final Type type, final T value) {
-        setnx(CacheEntryType.BYTES, key, convert.convertToBytes(type, value));
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> setnxBytesAsync(final String key, final Convert convert, final Type type, final T value) {
-        return CompletableFuture.runAsync(() -> setnxBytes(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
     public void setexBytes(final String key, final int expireSeconds, final byte[] value) {
         set(CacheEntryType.BYTES, expireSeconds, key, value);
     }
@@ -1671,26 +1661,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, byte[] value) {
         return CompletableFuture.runAsync(() -> setexBytes(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> void setBytes(final String key, final Convert convert, final Type type, final T value) {
-        set(CacheEntryType.BYTES, key, convert.convertToBytes(type, value));
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> setBytesAsync(final String key, final Convert convert, final Type type, final T value) {
-        return CompletableFuture.runAsync(() -> setBytes(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> void setexBytes(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
-        set(CacheEntryType.BYTES, expireSeconds, key, convert.convertToBytes(type, value));
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
-        return CompletableFuture.runAsync(() -> setexBytes(key, expireSeconds, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

@@ -90,8 +90,6 @@ public interface CacheSource extends Resourcable {
 
     public void setBytes(final String key, final byte[] value);
 
-    public <T> void setBytes(final String key, final Convert convert, final Type type, final T value);
-
     //------------------------ setnx ------------------------
     public <T> void setnx(final String key, final Convert convert, final T value);
 
@@ -105,8 +103,6 @@ public interface CacheSource extends Resourcable {
 
     public void setnxBytes(final String key, final byte[] value);
 
-    public <T> void setnxBytes(final String key, final Convert convert, final Type type, final T value);
-
     //------------------------ setex ------------------------
     public <T> void setex(final String key, final int expireSeconds, final Convert convert, final T value);
 
@@ -119,8 +115,6 @@ public interface CacheSource extends Resourcable {
     public void setexLong(final String key, final int expireSeconds, final long value);
 
     public void setexBytes(final String key, final int expireSeconds, final byte[] value);
-
-    public <T> void setexBytes(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
     //------------------------ xxxx ------------------------
     public boolean exists(final String key);
@@ -375,8 +369,6 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Void> setBytesAsync(final String key, final byte[] value);
 
-    public <T> CompletableFuture<Void> setBytesAsync(final String key, final Convert convert, final Type type, final T value);
-
     //------------------------ setnxAsync ------------------------
     public <T> CompletableFuture<Void> setnxAsync(final String key, final Convert convert, final T value);
 
@@ -390,8 +382,6 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Void> setnxBytesAsync(final String key, final byte[] value);
 
-    public <T> CompletableFuture<Void> setnxBytesAsync(final String key, final Convert convert, final Type type, final T value);
-
     //------------------------ setexAsync ------------------------
     public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Convert convert, final T value);
 
@@ -404,8 +394,6 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> setexLongAsync(final String key, final int expireSeconds, final long value);
 
     public CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, final byte[] value);
-
-    public <T> CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
     //------------------------ xxxxAsync ------------------------
     public CompletableFuture<Boolean> existsAsync(final String key);
