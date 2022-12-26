@@ -114,8 +114,6 @@ public interface CacheSource extends Resourcable {
 
     public void mset(final Map map);
 
-    public <T> void set(final String key, final Convert convert, final T value);
-
     public <T> void set(final String key, final Type type, final T value);
 
     public <T> void set(final String key, final Convert convert, final Type type, final T value);
@@ -127,8 +125,6 @@ public interface CacheSource extends Resourcable {
     public void setBytes(final String key, final byte[] value);
 
     //------------------------ setnx ------------------------
-    public <T> void setnx(final String key, final Convert convert, final T value);
-
     public <T> void setnx(final String key, final Type type, final T value);
 
     public <T> void setnx(final String key, final Convert convert, final Type type, final T value);
@@ -140,8 +136,6 @@ public interface CacheSource extends Resourcable {
     public void setnxBytes(final String key, final byte[] value);
 
     //------------------------ setex ------------------------
-    public <T> void setex(final String key, final int expireSeconds, final Convert convert, final T value);
-
     public <T> void setex(final String key, final int expireSeconds, final Type type, final T value);
 
     public <T> void setex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
@@ -177,8 +171,6 @@ public interface CacheSource extends Resourcable {
     public long hgetLong(final String key, final String field, long defValue);
 
     //------------------------ hset ------------------------
-    public <T> void hset(final String key, final String field, final Convert convert, final T value);
-
     public <T> void hset(final String key, final String field, final Type type, final T value);
 
     public <T> void hset(final String key, final String field, final Convert convert, final Type type, final T value);
@@ -188,8 +180,6 @@ public interface CacheSource extends Resourcable {
     public void hsetLong(final String key, final String field, final long value);
 
     //------------------------ hsetnx ------------------------
-    public <T> void hsetnx(final String key, final String field, final Convert convert, final T value);
-
     public <T> void hsetnx(final String key, final String field, final Type type, final T value);
 
     public <T> void hsetnx(final String key, final String field, final Convert convert, final Type type, final T value);
@@ -429,8 +419,6 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Void> msetAsync(final Map map);
 
-    public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final T value);
-
     public <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value);
 
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final Type type, final T value);
@@ -442,8 +430,6 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> setBytesAsync(final String key, final byte[] value);
 
     //------------------------ setnxAsync ------------------------
-    public <T> CompletableFuture<Void> setnxAsync(final String key, final Convert convert, final T value);
-
     public <T> CompletableFuture<Void> setnxAsync(final String key, final Type type, final T value);
 
     public <T> CompletableFuture<Void> setnxAsync(final String key, final Convert convert, final Type type, final T value);
@@ -455,8 +441,6 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> setnxBytesAsync(final String key, final byte[] value);
 
     //------------------------ setexAsync ------------------------
-    public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Convert convert, final T value);
-
     public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Type type, final T value);
 
     public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
@@ -492,8 +476,6 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Long> hgetLongAsync(final String key, final String field, long defValue);
 
     //------------------------ hsetAsync ------------------------
-    public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Convert convert, final T value);
-
     public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Type type, final T value);
 
     public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Convert convert, final Type type, final T value);
@@ -503,8 +485,6 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> hsetLongAsync(final String key, final String field, final long value);
 
     //------------------------ hsetnxAsync ------------------------
-    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Convert convert, final T value);
-
     public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Type type, final T value);
 
     public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value);
@@ -664,7 +644,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated
     default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final T value) {
-        return setexAsync(key, expireSeconds, convert, value);
+        return setexAsync(key, expireSeconds, convert, value.getClass(), value);
     }
 
     @Deprecated
@@ -699,7 +679,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated
     default <T> void set(final int expireSeconds, final String key, final Convert convert, final T value) {
-        setex(key, expireSeconds, convert, value);
+        setex(key, expireSeconds, convert, value.getClass(), value);
     }
 
     @Deprecated

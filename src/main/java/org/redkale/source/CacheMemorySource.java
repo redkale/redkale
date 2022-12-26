@@ -253,11 +253,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void hset(final String key, final String field, final Convert convert, final T value) {
-        hset(CacheEntryType.MAP, key, field, value);
-    }
-
-    @Override
     public <T> void hset(final String key, final String field, final Type type, final T value) {
         hset(CacheEntryType.MAP, key, field, value);
     }
@@ -275,11 +270,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public void hsetLong(final String key, final String field, final long value) {
         hset(CacheEntryType.MAP, key, field, value);
-    }
-
-    @Override
-    public <T> void hsetnx(final String key, final String field, final Convert convert, final T value) {
-        hsetnx(CacheEntryType.MAP, key, field, value);
     }
 
     @Override
@@ -469,11 +459,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Convert convert, final T value) {
-        return CompletableFuture.runAsync(() -> hset(key, field, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
     public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Type type, final T value) {
         return CompletableFuture.runAsync(() -> hset(key, field, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
@@ -491,11 +476,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public CompletableFuture<Void> hsetLongAsync(final String key, final String field, final long value) {
         return CompletableFuture.runAsync(() -> hsetLong(key, field, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Convert convert, final T value) {
-        return CompletableFuture.runAsync(() -> hsetnx(key, field, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -712,11 +692,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void set(String key, Convert convert, T value) {
-        set(CacheEntryType.OBJECT, key, value);
-    }
-
-    @Override
     public <T> void set(String key, Type type, T value) {
         set(CacheEntryType.OBJECT, key, value);
     }
@@ -724,11 +699,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> void set(String key, Convert convert, Type type, T value) {
         set(CacheEntryType.OBJECT, key, value);
-    }
-
-    @Override
-    public <T> void setnx(String key, Convert convert, T value) {
-        setnx(CacheEntryType.OBJECT, key, value);
     }
 
     @Override
@@ -786,11 +756,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Void> setAsync(String key, Convert convert, T value) {
-        return CompletableFuture.runAsync(() -> set(key, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
     public <T> CompletableFuture<Void> setAsync(String key, Type type, T value) {
         return CompletableFuture.runAsync(() -> set(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
@@ -798,11 +763,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> CompletableFuture<Void> setAsync(String key, Convert convert, Type type, T value) {
         return CompletableFuture.runAsync(() -> set(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> setnxAsync(String key, Convert convert, T value) {
-        return CompletableFuture.runAsync(() -> setnx(key, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -864,11 +824,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void setex(String key, int expireSeconds, Convert convert, T value) {
-        set(CacheEntryType.OBJECT, expireSeconds, key, value);
-    }
-
-    @Override
     public <T> void setex(String key, int expireSeconds, Type type, T value) {
         set(CacheEntryType.OBJECT, expireSeconds, key, value);
     }
@@ -886,11 +841,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public void setexLong(String key, int expireSeconds, long value) {
         set(CacheEntryType.LONG, expireSeconds, key, value);
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Convert convert, T value) {
-        return CompletableFuture.runAsync(() -> setex(key, expireSeconds, convert, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
