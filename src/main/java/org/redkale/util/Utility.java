@@ -1710,7 +1710,7 @@ public final class Utility {
      *
      * @return 位置
      */
-    public static <T> int findIndex(final T[] array, final Predicate<T> predicate) {
+    public static <T> int indexOf(final T[] array, final Predicate<T> predicate) {
         if (array == null) return -1;
         int index = -1;
         for (T item : array) {
@@ -1729,12 +1729,235 @@ public final class Utility {
      *
      * @return 位置
      */
-    public static <T> int findIndex(final Collection<T> array, final Predicate<T> predicate) {
+    public static <T> int indexOf(final Collection<T> array, final Predicate<T> predicate) {
         if (array == null) return -1;
         int index = -1;
         for (T item : array) {
             ++index;
             if (item != null && predicate.test(item)) return index;
+        }
+        return -1;
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array   数组
+     * @param element 指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final byte[] array, final byte element) {
+        if (array == null) return -1;
+        for (int i = 0; i < array.length; ++i) {
+            if (array[i] == element) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array     数组
+     * @param fromIndex 起始位置，从0开始
+     * @param element   指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final byte[] array, int fromIndex, final byte element) {
+        if (array == null) return -1;
+        for (int i = fromIndex; i < array.length; ++i) {
+            if (array[i] == element) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array   数组
+     * @param element 指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final short[] array, final short element) {
+        return indexOf(array, 0, element);
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array     数组
+     * @param fromIndex 起始位置，从0开始
+     * @param element   指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final short[] array, int fromIndex, final short element) {
+        if (array == null) return -1;
+        for (int i = fromIndex; i < array.length; ++i) {
+            if (array[i] == element) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array   数组
+     * @param element 指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final char[] array, final char element) {
+        return indexOf(array, 0, element);
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array     数组
+     * @param fromIndex 起始位置，从0开始
+     * @param element   指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final char[] array, int fromIndex, final char element) {
+        if (array == null) return -1;
+        for (int i = fromIndex; i < array.length; ++i) {
+            if (array[i] == element) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array   数组
+     * @param element 指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final int[] array, final int element) {
+        return indexOf(array, 0, element);
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array     数组
+     * @param fromIndex 起始位置，从0开始
+     * @param element   指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final int[] array, int fromIndex, final int element) {
+        if (array == null) return -1;
+        for (int i = fromIndex; i < array.length; ++i) {
+            if (array[i] == element) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array   数组
+     * @param element 指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final long[] array, final long element) {
+        return indexOf(array, 0, element);
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array     数组
+     * @param fromIndex 起始位置，从0开始
+     * @param element   指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final long[] array, int fromIndex, final long element) {
+        if (array == null) return -1;
+        for (int i = fromIndex; i < array.length; ++i) {
+            if (array[i] == element) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array   数组
+     * @param element 指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final float[] array, final float element) {
+        return indexOf(array, 0, element);
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array     数组
+     * @param fromIndex 起始位置，从0开始
+     * @param element   指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final float[] array, int fromIndex, final float element) {
+        if (array == null) return -1;
+        for (int i = fromIndex; i < array.length; ++i) {
+            if (array[i] == element) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array   数组
+     * @param element 指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final double[] array, final double element) {
+        return indexOf(array, 0, element);
+    }
+
+    /**
+     * 查询指定值位置, 没有返回-1
+     *
+     * @param array     数组
+     * @param fromIndex 起始位置，从0开始
+     * @param element   指定值
+     *
+     * @return 位置
+     */
+    public static int indexOf(final double[] array, int fromIndex, final double element) {
+        if (array == null) return -1;
+        for (int i = fromIndex; i < array.length; ++i) {
+            if (array[i] == element) {
+                return i;
+            }
         }
         return -1;
     }
