@@ -7,6 +7,7 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.math.*;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -64,8 +65,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected BiFunction<EntityInfo, Object, CharSequence> sqlFormatter;
 
-    protected BiConsumer futureCompleteConsumer = (r, t) -> {
-        if (t != null) logger.log(Level.INFO, "CompletableFuture complete error", (Throwable) t);
+    protected BiConsumer errorCompleteConsumer = (r, t) -> {
+        //if (t != null) logger.log(Level.INFO, "CompletableFuture complete error", (Throwable) t);
     };
 
     protected final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, i)
@@ -227,6 +228,24 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         } else if (slowmsWarn > 0 && cost > slowmsWarn) {
             logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') very slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
         }
+    }
+
+    protected String parseNotExistTableName(SQLException e) {
+        String errmsg = e.getMessage();
+        char quote = '"';
+        String tableName = null;
+        int pos = errmsg.indexOf(quote);
+        if (pos < 0) {
+            quote = '\'';
+            pos = errmsg.indexOf(quote);
+        }
+        if (pos >= 0) {
+            int pos2 = errmsg.indexOf(quote, pos + 1);
+            if (pos2 > pos) {
+                tableName = errmsg.substring(pos + 1, pos2);
+            }
+        }
+        return tableName;
     }
 
     //解密可能存在的加密字段, 可重载
@@ -725,7 +744,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return insertCache(info, entitys);
         return insertDB(info, entitys).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 insertCache(info, entitys);
             }
@@ -743,14 +762,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return insertDB(info, entitys).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     insertCache(info, entitys);
                 }
             });
         return CompletableFuture.supplyAsync(() -> insertDB(info, entitys).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 insertCache(info, entitys);
             }
@@ -814,7 +833,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return deleteCache(info, -1, pks);
         return deleteCompose(info, pks).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 deleteCache(info, rs, pks);
             }
@@ -830,14 +849,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return deleteCompose(info, pks).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     deleteCache(info, rs, pks);
                 }
             });
         return CompletableFuture.supplyAsync(() -> deleteCompose(info, pks).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 deleteCache(info, rs, pks);
             }
@@ -860,7 +879,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return deleteCache(info, -1, flipper, node);
         return this.deleteCompose(info, flipper, node).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 deleteCache(info, rs, flipper, node);
             }
@@ -875,14 +894,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return this.deleteCompose(info, flipper, node).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     deleteCache(info, rs, flipper, node);
                 }
             });
         return CompletableFuture.supplyAsync(() -> this.deleteCompose(info, flipper, node).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 deleteCache(info, rs, flipper, node);
             }
@@ -968,7 +987,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return clearTableCache(info, node);
         return this.clearTableCompose(info, node).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 clearTableCache(info, node);
             }
@@ -983,14 +1002,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return this.clearTableCompose(info, node).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     clearTableCache(info, node);
                 }
             });
         return CompletableFuture.supplyAsync(() -> this.clearTableCompose(info, node).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 clearTableCache(info, node);
             }
@@ -1024,7 +1043,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return dropTableCache(info, node);
         return this.dropTableCompose(info, node).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 dropTableCache(info, node);
             }
@@ -1039,14 +1058,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return this.dropTableCompose(info, node).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     dropTableCache(info, node);
                 }
             });
         return CompletableFuture.supplyAsync(() -> this.dropTableCompose(info, node).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 dropTableCache(info, node);
             }
@@ -1129,10 +1148,12 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         checkEntity("update", false, entitys);
         final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        if (isOnlyCache(info)) return updateCache(info, -1, entitys);
+        if (isOnlyCache(info)) {
+            return updateCache(info, -1, entitys);
+        }
         return updateEntityDB(info, entitys).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, entitys);
             }
@@ -1151,14 +1172,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return updateEntityDB(info, entitys).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     updateCache(info, rs, entitys);
                 }
             });
         return CompletableFuture.supplyAsync(() -> updateEntityDB(info, entitys).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, entitys);
             }
@@ -1182,7 +1203,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return updateCache(info, -1, pk, column, colval);
         return updateColumnCompose(info, pk, column, colval).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, pk, column, colval);
             }
@@ -1197,14 +1218,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return updateColumnCompose(info, pk, column, colval).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     updateCache(info, rs, pk, column, colval);
                 }
             });
         return CompletableFuture.supplyAsync(() -> updateColumnCompose(info, pk, column, colval).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, pk, column, colval);
             }
@@ -1245,7 +1266,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return updateCache(info, -1, column, colval, node);
         return this.updateColumnCompose(info, column, colval, node).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, column, colval, node);
             }
@@ -1260,14 +1281,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return this.updateColumnCompose(info, column, colval, node).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     updateCache(info, rs, column, colval, node);
                 }
             });
         return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, column, colval, node).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, column, colval, node);
             }
@@ -1343,7 +1364,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return updateCache(info, -1, pk, values);
         return this.updateColumnCompose(info, pk, values).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, pk, values);
             }
@@ -1359,14 +1380,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return this.updateColumnCompose(info, pk, values).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     updateCache(info, rs, pk, values);
                 }
             });
         return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, pk, values).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, pk, values);
             }
@@ -1408,7 +1429,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return updateCache(info, -1, node, flipper, values);
         return this.updateColumnCompose(info, node, flipper, values).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, node, flipper, values);
             }
@@ -1424,14 +1445,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return this.updateColumnCompose(info, node, flipper, values).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     updateCache(info, rs, node, flipper, values);
                 }
             });
         return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, node, flipper, values).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, node, flipper, values);
             }
@@ -1531,7 +1552,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return updateCache(info, -1, false, entity, null, selects);
         return this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, false, entity, null, selects);
             }
@@ -1552,14 +1573,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     updateCache(info, rs, false, entity, null, selects);
                 }
             });
         return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, false, entity, null, selects).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, false, entity, null, selects);
             }
@@ -1578,7 +1599,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) return updateCache(info, -1, true, entity, node, selects);
         return this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, true, entity, node, selects);
             }
@@ -1599,14 +1620,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
         if (isAsync()) return this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {
                 if (t != null) {
-                    futureCompleteConsumer.accept(rs, t);
+                    errorCompleteConsumer.accept(rs, t);
                 } else {
                     updateCache(info, rs, true, entity, node, selects);
                 }
             });
         return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, true, entity, node, selects).join(), getExecutor()).whenComplete((rs, t) -> {
             if (t != null) {
-                futureCompleteConsumer.accept(rs, t);
+                errorCompleteConsumer.accept(rs, t);
             } else {
                 updateCache(info, rs, true, entity, node, selects);
             }
