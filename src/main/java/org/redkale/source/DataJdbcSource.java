@@ -200,7 +200,7 @@ public class DataJdbcSource extends DataSqlSource {
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
-            conn.setAutoCommit(true);
+            conn.setAutoCommit(false);
             int c = 0;
             if (sqls.length == 1) {
                 String sql = sqls[0];
@@ -240,9 +240,16 @@ public class DataJdbcSource extends DataSqlSource {
                     }
                 }
             }
+            conn.commit();
             slowLog(s, sqls);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException se) {
+                }
+            }
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
@@ -280,7 +287,7 @@ public class DataJdbcSource extends DataSqlSource {
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
-            conn.setAutoCommit(true);
+            conn.setAutoCommit(false);
             int c = 0;
             final Statement stmt = conn.createStatement();
             if (sqls.length == 1) {
@@ -296,10 +303,19 @@ public class DataJdbcSource extends DataSqlSource {
                 }
             }
             stmt.close();
+            conn.commit();
             slowLog(s, sqls);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) return CompletableFuture.completedFuture(-1);
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException se) {
+                }
+            }
+            if (isTableNotExist(info, e.getSQLState())) {
+                return CompletableFuture.completedFuture(-1);
+            }
             return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
@@ -313,7 +329,7 @@ public class DataJdbcSource extends DataSqlSource {
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
-            conn.setAutoCommit(true);
+            conn.setAutoCommit(false);
             int c = 0;
             final Statement stmt = conn.createStatement();
             if (sqls.length == 1) {
@@ -329,6 +345,7 @@ public class DataJdbcSource extends DataSqlSource {
                 }
             }
             stmt.close();
+            conn.commit();
             if (info.getTableStrategy() != null) {
                 for (String table : tables) {
                     String tablekey = table.indexOf('.') > 0 ? table : (conn.getCatalog() + '.' + table);
@@ -338,7 +355,15 @@ public class DataJdbcSource extends DataSqlSource {
             slowLog(s, sqls);
             return CompletableFuture.completedFuture(c);
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) return CompletableFuture.completedFuture(-1);
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException se) {
+                }
+            }
+            if (isTableNotExist(info, e.getSQLState())) {
+                return CompletableFuture.completedFuture(-1);
+            }
             return CompletableFuture.failedFuture(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
@@ -804,7 +829,7 @@ public class DataJdbcSource extends DataSqlSource {
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
-            conn.setAutoCommit(true);
+            conn.setAutoCommit(false);
             if (sql.blobs != null || sql.tables != null) {
                 final PreparedStatement prestmt = conn.prepareStatement(sql.sql);
                 int c = 0;
@@ -835,6 +860,7 @@ public class DataJdbcSource extends DataSqlSource {
                     }
                 }
                 prestmt.close();
+                conn.commit();
                 slowLog(s, sql.sql);
                 return CompletableFuture.completedFuture(c);
             } else {
@@ -842,10 +868,17 @@ public class DataJdbcSource extends DataSqlSource {
                 final Statement stmt = conn.createStatement();
                 int c = stmt.executeUpdate(sql.sql);
                 stmt.close();
+                conn.commit();
                 slowLog(s, sql.sql);
                 return CompletableFuture.completedFuture(c);
             }
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException se) {
+                }
+            }
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
@@ -1414,6 +1447,7 @@ public class DataJdbcSource extends DataSqlSource {
         Connection conn = writePool.pollConnection();
         try {
             conn.setReadOnly(false);
+            conn.setAutoCommit(false);
             final Statement stmt = conn.createStatement();
             final int[] rs = new int[sqls.length];
             int i = -1;
@@ -1421,9 +1455,14 @@ public class DataJdbcSource extends DataSqlSource {
                 rs[++i] = stmt.execute(sql) ? 1 : 0;
             }
             stmt.close();
+            conn.commit();
             slowLog(s, sqls);
             return rs;
         } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException se) {
+            }
             throw new SourceException(e);
         } finally {
             if (conn != null) writePool.offerConnection(conn);
