@@ -1076,7 +1076,9 @@ public final class Application {
         //------------------------------------ 注册 java.net.http.HttpClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                    return null;
+                }
                 java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
                 if (resourceName.endsWith(".1.1")) {
                     builder.version(HttpClient.Version.HTTP_1_1);
@@ -1096,7 +1098,9 @@ public final class Application {
         //------------------------------------ 注册 HttpSimpleClient ------------------------------------       
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                    return null;
+                }
                 HttpSimpleClient httpClient = HttpSimpleClient.create(clientAsyncGroup);
                 field.set(srcObj, httpClient);
                 rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
@@ -1139,7 +1143,9 @@ public final class Application {
         //------------------------------------ 注册 HttpMessageClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                    return null;
+                }
                 if (clusterAgent == null) {
                     HttpMessageClient messageClient = new HttpMessageLocalClient(application, resourceName);
                     field.set(srcObj, messageClient);
@@ -1185,65 +1191,69 @@ public final class Application {
     }
 
     CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
-        long st = System.currentTimeMillis();
-        CacheSource old = resourceFactory.find(sourceName, CacheSource.class);
-        if (old != null) return old;
-        final AnyValue sourceConf = findSourceConfig(sourceName, "cachesource");
-        if (sourceConf == null) {
-            if (!autoMemory) return null;
-            CacheSource source = new CacheMemorySource(sourceName);
-            cacheSources.add(source);
-            resourceFactory.register(sourceName, CacheSource.class, source);
-            if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
-            logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
-            return source;
+        synchronized (cacheSources) {
+            long st = System.currentTimeMillis();
+            CacheSource old = resourceFactory.find(sourceName, CacheSource.class);
+            if (old != null) return old;
+            final AnyValue sourceConf = findSourceConfig(sourceName, "cachesource");
+            if (sourceConf == null) {
+                if (!autoMemory) return null;
+                CacheSource source = new CacheMemorySource(sourceName);
+                cacheSources.add(source);
+                resourceFactory.register(sourceName, CacheSource.class, source);
+                if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
+                logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                return source;
+            }
+            try {
+                CacheSource source = AbstractCacheSource.createCacheSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
+                cacheSources.add(source);
+                resourceFactory.register(sourceName, CacheSource.class, source);
+                logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                return source;
+            } catch (RuntimeException ex) {
+                throw ex;
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "load application CaheSource error: " + sourceConf, e);
+            }
+            return null;
         }
-        try {
-            CacheSource source = AbstractCacheSource.createCacheSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
-            cacheSources.add(source);
-            resourceFactory.register(sourceName, source);
-            logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
-            return source;
-        } catch (RuntimeException ex) {
-            throw ex;
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "load application CaheSource error: " + sourceConf, e);
-        }
-        return null;
     }
 
     DataSource loadDataSource(final String sourceName, boolean autoMemory) {
-        DataSource old = resourceFactory.find(sourceName, DataSource.class);
-        if (old != null) return old;
-        final AnyValue sourceConf = findSourceConfig(sourceName, "datasource");
-        if (sourceConf == null) {
-            if (!autoMemory) return null;
-            DataSource source = new DataMemorySource(sourceName);
-            if (!compileMode && source instanceof Service) {
-                resourceFactory.inject(sourceName, source);
-                ((Service) source).init(sourceConf);
+        synchronized (dataSources) {
+            DataSource old = resourceFactory.find(sourceName, DataSource.class);
+            if (old != null) return old;
+            final AnyValue sourceConf = findSourceConfig(sourceName, "datasource");
+            if (sourceConf == null) {
+                if (!autoMemory) return null;
+                DataSource source = new DataMemorySource(sourceName);
+                if (!compileMode && source instanceof Service) {
+                    resourceFactory.inject(sourceName, source);
+                    ((Service) source).init(sourceConf);
+                }
+                dataSources.add(source);
+                resourceFactory.register(sourceName, DataSource.class, source);
+                logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
+                return source;
             }
-            dataSources.add(source);
-            resourceFactory.register(sourceName, DataSource.class, source);
-            logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
-            return source;
-        }
-        try {
-            DataSource source = AbstractDataSource.createDataSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
-            dataSources.add(source);
-            if (source instanceof DataMemorySource && DataMemorySource.isSearchType(sourceConf)) {
-                resourceFactory.register(sourceName, SearchSource.class, source);
-            } else {
-                resourceFactory.register(sourceName, source);
+            try {
+                DataSource source = AbstractDataSource.createDataSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
+                dataSources.add(source);
+                if (source instanceof DataMemorySource && DataMemorySource.isSearchType(sourceConf)) {
+                    resourceFactory.register(sourceName, SearchSource.class, source);
+                } else {
+                    resourceFactory.register(sourceName, DataSource.class, source);
+                }
+                logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
+                return source;
+            } catch (RuntimeException ex) {
+                throw ex;
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "load application DataSource error: " + sourceConf, e);
             }
-            logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
-            return source;
-        } catch (RuntimeException ex) {
-            throw ex;
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "load application DataSource error: " + sourceConf, e);
+            return null;
         }
-        return null;
     }
 
     private void initResources() throws Exception {
