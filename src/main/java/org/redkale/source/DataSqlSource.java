@@ -537,7 +537,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     @Local
     protected <T> Map<String, PrepareInfo<T>> getInsertQuestionPrepareInfo(EntityInfo<T> info, T... entitys) {
-        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();
+        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();//一定要是LinkedHashMap
         for (T entity : entitys) {
             String table = info.getTable(entity);
             map.computeIfAbsent(table, t -> new PrepareInfo(info.getInsertQuestionPrepareSQL(entity))).addEntity(entity);
@@ -547,7 +547,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     @Local
     protected <T> Map<String, PrepareInfo<T>> getInsertDollarPrepareInfo(EntityInfo<T> info, T... entitys) {
-        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();
+        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();//一定要是LinkedHashMap
         for (T entity : entitys) {
             String table = info.getTable(entity);
             map.computeIfAbsent(table, t -> new PrepareInfo(info.getInsertDollarPrepareSQL(entity))).addEntity(entity);
@@ -557,7 +557,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     @Local
     protected <T> Map<String, PrepareInfo<T>> getUpdateQuestionPrepareInfo(EntityInfo<T> info, T... entitys) {
-        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();
+        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>(); //一定要是LinkedHashMap
         for (T entity : entitys) {
             String table = info.getTable(entity);
             map.computeIfAbsent(table, t -> new PrepareInfo(info.getUpdateQuestionPrepareSQL(entity))).addEntity(entity);
@@ -567,7 +567,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     @Local
     protected <T> Map<String, PrepareInfo<T>> getUpdateDollarPrepareInfo(EntityInfo<T> info, T... entitys) {
-        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();
+        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();//一定要是LinkedHashMap
         for (T entity : entitys) {
             String table = info.getTable(entity);
             map.computeIfAbsent(table, t -> new PrepareInfo(info.getUpdateDollarPrepareSQL(entity))).addEntity(entity);
