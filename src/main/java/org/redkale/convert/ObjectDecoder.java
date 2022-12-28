@@ -89,7 +89,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             }
             if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
                 this.creator = factory.loadCreator(clazz);
-                if (this.creator == null) throw new ConvertException("Cannot create a creator for " + clazz);
+                if (this.creator == null) {
+                    throw new ConvertException("Cannot create a creator for " + clazz);
+                }
             }
             final Set<DeMember> list = new LinkedHashSet();
             final String[] cps = ObjectEncoder.findConstructorProperties(this.creator);
@@ -98,10 +100,16 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 ConvertFactory colFactory;
                 RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
                 for (final Field field : clazz.getFields()) {
-                    if (Modifier.isStatic(field.getModifiers())) continue;
-                    if (factory.isConvertDisabled(field)) continue;
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        continue;
+                    }
+                    if (factory.isConvertDisabled(field)) {
+                        continue;
+                    }
                     ref = factory.findRef(clazz, field);
-                    if (ref != null && ref.ignore()) continue;
+                    if (ref != null && ref.ignore()) {
+                        continue;
+                    }
                     ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
                     colFactory = factory.columnFactory(field.getType(), field.getAnnotationsByType(ConvertCoder.class), false);
                     Decodeable<R, ?> fieldCoder;
@@ -115,25 +123,45 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         fieldCoder = colFactory.loadDecoder(t);
                     }
                     DeMember member = new DeMember(ObjectEncoder.createAttribute(colFactory, type, clazz, field, null, null), fieldCoder, field, null);
-                    if (ref != null) member.index = ref.getIndex();
+                    if (ref != null) {
+                        member.index = ref.getIndex();
+                    }
                     list.add(member);
                 }
                 final boolean reversible = factory.isReversible();
                 RedkaleClassLoader.putReflectionPublicMethods(clazz.getName());
                 for (final Method method : clazz.getMethods()) {
-                    if (Modifier.isStatic(method.getModifiers())) continue;
-                    if (Modifier.isAbstract(method.getModifiers())) continue;
-                    if (method.isSynthetic()) continue;
-                    if (method.getParameterCount() != 1) continue;
-                    if (method.getName().length() < 4) continue;
-                    if (!method.getName().startsWith("set")) continue;
-                    if (method.getReturnType() != void.class && method.getReturnType() != clazz) continue;
-                    if (factory.isConvertDisabled(method)) continue;
+                    if (Modifier.isStatic(method.getModifiers())) {
+                        continue;
+                    }
+                    if (Modifier.isAbstract(method.getModifiers())) {
+                        continue;
+                    }
+                    if (method.isSynthetic()) {
+                        continue;
+                    }
+                    if (method.getParameterCount() != 1) {
+                        continue;
+                    }
+                    if (method.getName().length() < 4) {
+                        continue;
+                    }
+                    if (!method.getName().startsWith("set")) {
+                        continue;
+                    }
+                    if (method.getReturnType() != void.class && method.getReturnType() != clazz) {
+                        continue;
+                    }
+                    if (factory.isConvertDisabled(method)) {
+                        continue;
+                    }
                     if (reversible && (cps == null || !ObjectEncoder.contains(cps, ConvertFactory.readGetSetFieldName(method)))) {
                         boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
                         try {
                             Method getter = clazz.getMethod(method.getName().replaceFirst("set", is ? "is" : "get"));
-                            if (getter.getReturnType() != method.getParameterTypes()[0]) continue;
+                            if (getter.getReturnType() != method.getParameterTypes()[0]) {
+                                continue;
+                            }
                         } catch (Exception e) {
                             continue;
                         }
@@ -142,20 +170,26 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         Field f = null;
                         try {
                             f = clazz.getDeclaredField(fieldname);
-                            if (f.getType() != method.getParameterTypes()[0]) continue;
+                            if (f.getType() != method.getParameterTypes()[0]) {
+                                continue;
+                            }
                         } catch (Exception e) {
                         }
                         if (f == null) {
                             boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
                             try {
                                 Method getter = clazz.getMethod(method.getName().replaceFirst("set", is ? "is" : "get"));
-                                if (getter.getReturnType() != method.getParameterTypes()[0]) continue;
+                                if (getter.getReturnType() != method.getParameterTypes()[0]) {
+                                    continue;
+                                }
                             } catch (Exception e) {
                             }
                         }
                     }
                     ref = factory.findRef(clazz, method);
-                    if (ref != null && ref.ignore()) continue;
+                    if (ref != null && ref.ignore()) {
+                        continue;
+                    }
 
                     ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
                     Field maybeField = ConvertFactory.readGetSetField(method);
@@ -174,7 +208,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         fieldCoder = colFactory.loadDecoder(t);
                     }
                     DeMember member = new DeMember(ObjectEncoder.createAttribute(colFactory, type, clazz, null, null, method), fieldCoder, maybeField, method);
-                    if (ref != null) member.index = ref.getIndex();
+                    if (ref != null) {
+                        member.index = ref.getIndex();
+                    }
                     list.add(member);
                 }
                 if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
@@ -186,7 +222,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                                 break;
                             }
                         }
-                        if (flag) continue;
+                        if (flag) {
+                            continue;
+                        }
                         //不存在setter方法
                         try {
                             Field f = clazz.getDeclaredField(constructorField);
@@ -212,7 +250,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 Collections.sort(sorts, (a, b) -> a.compareTo(factory.isFieldSort(), b));
                 Set<Integer> pos = new HashSet<>();
                 for (DeMember member : sorts) {
-                    if (member.index > 0) pos.add(member.index);
+                    if (member.index > 0) {
+                        pos.add(member.index);
+                    }
                 }
                 int pidx = 0;
                 for (DeMember member : sorts) {
@@ -271,8 +311,12 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     public T convertFrom(final R in) {
         R objin = objectReader(in);
         final String clazz = objin.readObjectB(typeClass);
-        if (clazz == null) return null;
-        if (!clazz.isEmpty()) return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(objin);
+        if (clazz == null) {
+            return null;
+        }
+        if (!clazz.isEmpty()) {
+            return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(objin);
+        }
         if (!this.inited) {
             synchronized (lock) {
                 try {
@@ -327,13 +371,17 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                             break;
                         }
                     }
-                    if (flag) otherParams[oc++] = new Object[]{member.attribute, val};
+                    if (flag) {
+                        otherParams[oc++] = new Object[]{member.attribute, val};
+                    }
 
                 }
                 first = false;
             }
             objin.readObjectE(typeClass);
-            if (this.creator == null) return null;
+            if (this.creator == null) {
+                return null;
+            }
             final T result = this.creator.create(constructorParams);
             for (int i = 0; i < oc; i++) {
                 ((Attribute) otherParams[i][0]).set(result, otherParams[i][1]);

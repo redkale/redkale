@@ -5,10 +5,10 @@
  */
 package org.redkale.net.sncp;
 
+import java.nio.ByteBuffer;
+import org.redkale.convert.bson.BsonWriter;
+import org.redkale.net.Response;
 import static org.redkale.net.sncp.SncpRequest.HEADER_SIZE;
-import java.nio.*;
-import org.redkale.convert.bson.*;
-import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
@@ -33,10 +33,18 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     private final int addrPort;
 
     public static String getRetCodeInfo(int retcode) {
-        if (retcode == RETCODE_ILLSERVICEID) return "The serviceid is invalid";
-        if (retcode == RETCODE_ILLSERVICEVER) return "The serviceVersion is invalid";
-        if (retcode == RETCODE_ILLACTIONID) return "The actionid is invalid";
-        if (retcode == RETCODE_THROWEXCEPTION) return "Inner exception";
+        if (retcode == RETCODE_ILLSERVICEID) {
+            return "The serviceid is invalid";
+        }
+        if (retcode == RETCODE_ILLSERVICEVER) {
+            return "The serviceVersion is invalid";
+        }
+        if (retcode == RETCODE_ILLACTIONID) {
+            return "The actionid is invalid";
+        }
+        if (retcode == RETCODE_THROWEXCEPTION) {
+            return "Inner exception";
+        }
         return null;
     }
 

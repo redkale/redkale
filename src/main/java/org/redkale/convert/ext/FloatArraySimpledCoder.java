@@ -5,9 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 
 /**
  * float[] 的SimpledCoder实现
@@ -32,7 +30,9 @@ public final class FloatArraySimpledCoder<R extends Reader, W extends Writer> ex
         if (out.writeArrayB(values.length, this, FloatSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (float v : values) {
-                if (flag) out.writeArrayMark();
+                if (flag) {
+                    out.writeArrayMark();
+                }
                 out.writeFloat(v);
                 flag = true;
             }
@@ -44,7 +44,9 @@ public final class FloatArraySimpledCoder<R extends Reader, W extends Writer> ex
     public float[] convertFrom(R in) {
         int len = in.readArrayB(null, null, FloatSimpledCoder.instance);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(null, FloatSimpledCoder.instance);
             len = Reader.SIGN_NOLENGTH;

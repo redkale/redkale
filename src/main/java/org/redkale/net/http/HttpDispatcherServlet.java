@@ -5,16 +5,16 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.util.AnyValue.DefaultAnyValue;
-import java.io.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.*;
 import java.util.logging.*;
-import java.util.regex.*;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import org.redkale.net.*;
+import org.redkale.net.DispatcherServlet;
 import org.redkale.net.http.Rest.RestDynSourceType;
 import org.redkale.service.Service;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 
 /**
@@ -81,7 +81,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                     newwsmappings.put(en.getKey(), en.getValue());
                 }
             }
-            if (newwsmappings.size() != wsmappings.size()) this.wsmappings = newwsmappings;
+            if (newwsmappings.size() != wsmappings.size()) {
+                this.wsmappings = newwsmappings;
+            }
             if (!keys.isEmpty()) {
                 this.regxArray = Utility.remove(this.regxArray, predicateEntry);
                 this.regxWsArray = Utility.remove(this.regxWsArray, predicateEntry);
@@ -107,14 +109,24 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     public <T extends HttpServlet> HttpServlet removeHttpServlet(Service service) {
         Predicate<MappingEntry> predicateEntry = (t) -> {
-            if (!Rest.isRestDyn(t.servlet)) return false;
+            if (!Rest.isRestDyn(t.servlet)) {
+                return false;
+            }
             Service s = Rest.getService(t.servlet);
-            if (s == service) return true;
-            if (s != null) return false;
+            if (s == service) {
+                return true;
+            }
+            if (s != null) {
+                return false;
+            }
             Map<String, Service> map = Rest.getServiceMap(t.servlet);
-            if (map == null) return false;
+            if (map == null) {
+                return false;
+            }
             boolean rs = map.values().contains(service);
-            if (rs && map.size() == 1) return true;
+            if (rs && map.size() == 1) {
+                return true;
+            }
             if (rs && map.size() > 1) {
                 String key = null;
                 for (Map.Entry<String, Service> en : map.entrySet()) {
@@ -123,7 +135,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                         break;
                     }
                 }
-                if (key != null) map.remove(key);
+                if (key != null) {
+                    map.remove(key);
+                }
                 return false; //还有其他Resouce.name 的Service
             }
             return rs;
@@ -137,13 +151,17 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
     public <T extends WebSocket> HttpServlet removeHttpServlet(Class<T> websocketOrServletType) {
         Predicate<MappingEntry> predicateEntry = (t) -> {
             Class type = t.servlet.getClass();
-            if (type == websocketOrServletType) return true;
+            if (type == websocketOrServletType) {
+                return true;
+            }
             RestDynSourceType rdt = (RestDynSourceType) type.getAnnotation(RestDynSourceType.class);
             return (rdt != null && rdt.value() == websocketOrServletType);
         };
         Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> {
             Class type = t.getValue().getClass();
-            if (type == websocketOrServletType) return true;
+            if (type == websocketOrServletType) {
+                return true;
+            }
             RestDynSourceType rdt = (RestDynSourceType) type.getAnnotation(RestDynSourceType.class);
             return (rdt != null && rdt.value() == websocketOrServletType);
         };
@@ -153,10 +171,16 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     @SuppressWarnings("unchecked")
     public boolean addForbidURIRegx(final String urlRegx) {
-        if (urlRegx == null || urlRegx.isEmpty()) return false;
+        if (urlRegx == null || urlRegx.isEmpty()) {
+            return false;
+        }
         synchronized (excludeLock) {
-            if (forbidURIMaps != null && forbidURIMaps.containsKey(urlRegx)) return false;
-            if (forbidURIMaps == null) forbidURIMaps = new HashMap<>();
+            if (forbidURIMaps != null && forbidURIMaps.containsKey(urlRegx)) {
+                return false;
+            }
+            if (forbidURIMaps == null) {
+                forbidURIMaps = new HashMap<>();
+            }
             String mapping = urlRegx;
             if (Utility.contains(mapping, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
                 if (mapping.endsWith("/*")) {
@@ -179,9 +203,13 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     @SuppressWarnings("unchecked")
     public boolean removeForbidURIReg(final String urlreg) {
-        if (urlreg == null || urlreg.isEmpty()) return false;
+        if (urlreg == null || urlreg.isEmpty()) {
+            return false;
+        }
         synchronized (excludeLock) {
-            if (forbidURIMaps == null || forbidURIPredicates == null || !forbidURIMaps.containsKey(urlreg)) return false;
+            if (forbidURIMaps == null || forbidURIPredicates == null || !forbidURIMaps.containsKey(urlreg)) {
+                return false;
+            }
             BiPredicate<String, String> predicate = forbidURIMaps.get(urlreg);
             forbidURIMaps.remove(urlreg);
             int index = -1;
@@ -215,7 +243,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         Collection<HttpServlet> servlets = getServlets();
         servlets.forEach(s -> {
             s.preInit(application, context, getServletConf(s));
-            if (application == null || !application.isCompileMode()) s.init(context, getServletConf(s));
+            if (application == null || !application.isCompileMode()) {
+                s.init(context, getServletConf(s));
+            }
         });
         { //设置ResourceServlet
             AnyValue resConfig = config.getAnyValue("resource-servlet");
@@ -252,7 +282,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 }
             }
             context.getResourceFactory().inject(this.resourceHttpServlet);
-            if (application == null || !application.isCompileMode()) this.resourceHttpServlet.init(context, resConfig);
+            if (application == null || !application.isCompileMode()) {
+                this.resourceHttpServlet.init(context, resConfig);
+            }
         }
     }
 
@@ -290,7 +322,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                     }
                 }
                 //找不到匹配的HttpServlet则使用静态资源HttpResourceServlet
-                if (servlet == null) servlet = this.resourceHttpServlet;
+                if (servlet == null) {
+                    servlet = this.resourceHttpServlet;
+                }
             }
             boolean forbid = false;
             BiPredicate<String, String>[] forbidUrlPredicates = this.forbidURIPredicates;
@@ -323,25 +357,37 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
      */
     @Override
     public void addServlet(HttpServlet servlet, Object prefix, AnyValue conf, String... mappingPaths) {
-        if (prefix == null) prefix = "";
+        if (prefix == null) {
+            prefix = "";
+        }
         if (mappingPaths.length < 1) {
             WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
             if (ws != null) {
                 mappingPaths = ws.value();
-                if (!ws.repair()) prefix = "";//被设置为不自动追加前缀则清空prefix
+                if (!ws.repair()) {
+                    prefix = "";//被设置为不自动追加前缀则清空prefix
+                }
             }
         }
         if (lazyHeaders && !Rest.isSimpleRestDyn(servlet)) {
             lazyHeaders = false;
-            if (context != null) context.lazyHeaders = false; //启动后运行过程中执行addServlet
+            if (context != null) {
+                context.lazyHeaders = false; //启动后运行过程中执行addServlet
+            }
         }
         synchronized (allMapStrings) {  //需要整段锁住
             for (String mappingPath : mappingPaths) {
-                if (mappingPath == null) continue;
-                if (!prefix.toString().isEmpty()) mappingPath = prefix + mappingPath;
+                if (mappingPath == null) {
+                    continue;
+                }
+                if (!prefix.toString().isEmpty()) {
+                    mappingPath = prefix + mappingPath;
+                }
 
                 if (Utility.contains(mappingPath, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
-                    if (mappingPath.charAt(0) != '^') mappingPath = '^' + mappingPath;
+                    if (mappingPath.charAt(0) != '^') {
+                        mappingPath = '^' + mappingPath;
+                    }
                     if (mappingPath.endsWith("/*")) {
                         mappingPath = mappingPath.substring(0, mappingPath.length() - 1) + ".*";
                     } else {

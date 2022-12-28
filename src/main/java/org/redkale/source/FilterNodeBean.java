@@ -75,18 +75,26 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         Class compType = type.getComponentType();
         if (Collection.class.isAssignableFrom(type) && genericType instanceof ParameterizedType) {
             Type pt = ((ParameterizedType) genericType).getActualTypeArguments()[0];
-            if (pt instanceof Class) compType = (Class) pt;
+            if (pt instanceof Class) {
+                compType = (Class) pt;
+            }
         }
         if ((exp == null || exp == EQUAL) && (type.isArray() || Collection.class.isAssignableFrom(type))) {
             if (compType != null && Range.class.isAssignableFrom(compType)) {
-                if (AND != exp) exp = OR;
+                if (AND != exp) {
+                    exp = OR;
+                }
             } else if (NOTIN != exp) {
                 exp = IN;
             }
         } else if (Range.class.isAssignableFrom(type)) {
-            if (NOTBETWEEN != exp) exp = BETWEEN;
+            if (NOTBETWEEN != exp) {
+                exp = BETWEEN;
+            }
         }
-        if (exp == null) exp = EQUAL;
+        if (exp == null) {
+            exp = EQUAL;
+        }
         this.express = exp;
 
         this.least = filterCol == null ? 1 : filterCol.least();
@@ -132,13 +140,17 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
     }
 
     public static FilterNode createFilterNode(final FilterBean bean) {
-        if (bean == null) return null;
+        if (bean == null) {
+            return null;
+        }
         return load(bean.getClass()).create(bean);
     }
 
     public static FilterNodeBean load(Class<? extends FilterBean> clazz) {
         FilterNodeBean rs = beanodes.get(clazz);
-        if (rs != null) return rs;
+        if (rs != null) {
+            return rs;
+        }
         synchronized (beanodes) {
             rs = beanodes.get(clazz);
             if (rs == null) {
@@ -150,7 +162,9 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
     }
 
     private FilterNode create(final T bean) {
-        if (bean == null || beanAttr == null) return null;
+        if (bean == null || beanAttr == null) {
+            return null;
+        }
         FilterNode node = null;
         final Serializable val = beanAttr.get(bean);
         if (column != null && val != null) {
@@ -168,10 +182,14 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 }
             }
         }
-        if (this.nodeBeans == null) return node;
+        if (this.nodeBeans == null) {
+            return node;
+        }
         for (final FilterNodeBean fnb : this.nodeBeans) {
             FilterNode n = fnb.create(bean);
-            if (n == null) continue;
+            if (n == null) {
+                continue;
+            }
             node = node == null ? n : ((!(n instanceof FilterJoinNode)) ? n.any(node, or) : node.any(n, or));
         }
         return node;
@@ -183,11 +201,21 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         Class cltmp = clazz;
         do {
             for (final Field field : cltmp.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
-                if (fields.contains(field.getName())) continue;
-                if (field.getAnnotation(Transient.class) != null) continue;
-                if (field.getAnnotation(javax.persistence.Transient.class) != null) continue;
-                if (field.getAnnotation(FilterColumn.class) != null && field.getAnnotation(FilterColumn.class).ignore()) continue;
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                if (fields.contains(field.getName())) {
+                    continue;
+                }
+                if (field.getAnnotation(Transient.class) != null) {
+                    continue;
+                }
+                if (field.getAnnotation(javax.persistence.Transient.class) != null) {
+                    continue;
+                }
+                if (field.getAnnotation(FilterColumn.class) != null && field.getAnnotation(FilterColumn.class).ignore()) {
+                    continue;
+                }
 
                 final boolean pubmod = Modifier.isPublic(field.getModifiers());
 
@@ -205,7 +233,9 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                             try {
                                 getter = cltmp.getMethod("get" + new String(chars));
                             } catch (Exception ex3) {
-                                if (!pubmod) continue;
+                                if (!pubmod) {
+                                    continue;
+                                }
                             }
                         } else if (!pubmod) {
                             continue;
@@ -224,7 +254,9 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                     for (int i = 0; i < refs.length; i++) {
                         groups[i] = refs[i].value();
                     }
-                    if (groups.length == 0) groups = new String[]{"[AND]"};
+                    if (groups.length == 0) {
+                        groups = new String[]{"[AND]"};
+                    }
                     for (String key : groups) {
                         if (!key.startsWith("[AND]") && !key.startsWith("[OR]")) {
                             throw new SourceException(field + "'s FilterGroup.value(" + key + ") illegal, must be [AND] or [OR] startsWith");
@@ -254,17 +286,25 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         FilterNodeBean rs = null;
         for (LinkNode link : linkes.values()) {
             FilterNodeBean f = link.createFilterNodeBean();
-            if (f == null) continue;
+            if (f == null) {
+                continue;
+            }
             rs = rs == null ? f : rs.and(f);
         }
-        if (rs != null && rs.nodeBeans != null) Arrays.sort(rs.nodeBeans);
+        if (rs != null && rs.nodeBeans != null) {
+            Arrays.sort(rs.nodeBeans);
+        }
         return rs == null ? new FilterNodeBean(null) : rs;
     }
 
     @Override
     public int compareTo(FilterNodeBean<T> o) {
-        if (this.joinClass == null && o.joinClass == null) return 0;
-        if (this.joinClass != null && o.joinClass != null) return 0;
+        if (this.joinClass == null && o.joinClass == null) {
+            return 0;
+        }
+        if (this.joinClass != null && o.joinClass != null) {
+            return 0;
+        }
         return this.joinClass == null ? -1 : 1;
     }
 
@@ -298,7 +338,9 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             }
             for (LinkNode link : nexts.values()) {
                 FilterNodeBean f = link.createFilterNodeBean();
-                if (f == null) continue;
+                if (f == null) {
+                    continue;
+                }
                 node = node == null ? f : node.any(f, or);
             }
             return node;
@@ -349,17 +391,25 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         StringBuilder sb = new StringBuilder();
         StringBuilder element = toElementString(prefix);
         boolean more = element.length() > 0 && this.nodeBeans != null;
-        if (more) sb.append('(');
+        if (more) {
+            sb.append('(');
+        }
         sb.append(element);
         if (this.nodeBeans != null) {
             for (FilterNodeBean node : this.nodeBeans) {
                 String s = node.toString();
-                if (s.length() < 1) continue;
-                if (sb.length() > 1) sb.append(or ? " OR " : " AND ");
+                if (s.length() < 1) {
+                    continue;
+                }
+                if (sb.length() > 1) {
+                    sb.append(or ? " OR " : " AND ");
+                }
                 sb.append(s);
             }
         }
-        if (more) sb.append(')');
+        if (more) {
+            sb.append(')');
+        }
         return sb;
     }
 

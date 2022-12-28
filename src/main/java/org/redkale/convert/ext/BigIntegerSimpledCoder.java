@@ -5,10 +5,8 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
-import org.redkale.convert.Reader;
 import java.math.BigInteger;
+import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 
 /**
@@ -64,7 +62,9 @@ public final class BigIntegerSimpledCoder<R extends Reader, W extends Writer> ex
         @Override
         public BigInteger convertFrom(R in) {
             final String str = in.readString();
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             return new BigInteger(str);
         }
     }
@@ -92,7 +92,9 @@ public final class BigIntegerSimpledCoder<R extends Reader, W extends Writer> ex
         @Override
         public BigInteger convertFrom(R in) {
             final String str = in.readString();
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             if (str.length() > 2) {
                 if (str.charAt(0) == '0' && (str.charAt(1) == 'x' || str.charAt(1) == 'X')) {
                     return new BigInteger(str.substring(2), 16);

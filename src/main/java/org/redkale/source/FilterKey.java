@@ -10,12 +10,12 @@ import org.redkale.annotation.ConstructorParameters;
 
 /**
  * FilterKey主要用于自身字段间的表达式, 如： a.recordid = a.parentid , a.parentid就需要FilterKey来表示 new FilterKey("parentid")
- *   <br>
+ * <br>
  * 注意：该类型不支持表达式：FV_XXX、BETWEEN、NOTBETWEEN、IN、NOTIN
  *
  * <p>
  * 详情见: https://redkale.org
- * 
+ *
  * @author zhangjx
  */
 public class FilterKey implements java.io.Serializable {

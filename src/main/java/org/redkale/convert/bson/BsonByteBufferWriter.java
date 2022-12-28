@@ -5,8 +5,8 @@
  */
 package org.redkale.convert.bson;
 
-import java.nio.*;
-import java.util.function.*;
+import java.nio.ByteBuffer;
+import java.util.function.Supplier;
 import org.redkale.util.Utility;
 
 /**
@@ -37,17 +37,23 @@ public class BsonByteBufferWriter extends BsonWriter {
 
     @Override
     public ByteBuffer[] toBuffers() {
-        if (buffers == null) return new ByteBuffer[0];
+        if (buffers == null) {
+            return new ByteBuffer[0];
+        }
         for (int i = index; i < this.buffers.length; i++) {
             ByteBuffer buf = this.buffers[i];
-            if (buf.position() != 0) buf.flip();
+            if (buf.position() != 0) {
+                buf.flip();
+            }
         }
         return this.buffers;
     }
 
     @Override
     public byte[] toArray() {
-        if (buffers == null) return new byte[0];
+        if (buffers == null) {
+            return new byte[0];
+        }
         int pos = 0;
         byte[] bytes = new byte[this.count];
         for (ByteBuffer buf : toBuffers()) {

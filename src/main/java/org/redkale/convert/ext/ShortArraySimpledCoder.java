@@ -5,9 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 
 /**
  * short[] 的SimpledCoder实现
@@ -32,7 +30,9 @@ public final class ShortArraySimpledCoder<R extends Reader, W extends Writer> ex
         if (out.writeArrayB(values.length, this, ShortSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (short v : values) {
-                if (flag) out.writeArrayMark();
+                if (flag) {
+                    out.writeArrayMark();
+                }
                 out.writeShort(v);
                 flag = true;
             }
@@ -44,7 +44,9 @@ public final class ShortArraySimpledCoder<R extends Reader, W extends Writer> ex
     public short[] convertFrom(R in) {
         int len = in.readArrayB(null, null, ShortSimpledCoder.instance);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(null, ShortSimpledCoder.instance);
             len = Reader.SIGN_NOLENGTH;

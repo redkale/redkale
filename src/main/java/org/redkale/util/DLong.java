@@ -5,8 +5,8 @@
  */
 package org.redkale.util;
 
-import java.nio.*;
-import java.util.*;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * 16bytes数据结构
@@ -30,7 +30,9 @@ public final class DLong extends Number implements Comparable<DLong> {
     }
 
     protected DLong(byte[] bytes) {
-        if (bytes == null || bytes.length != 16) throw new NumberFormatException("Not 16 length bytes");
+        if (bytes == null || bytes.length != 16) {
+            throw new NumberFormatException("Not 16 length bytes");
+        }
         this.value = bytes;
     }
 
@@ -73,8 +75,12 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
         final DLong other = (DLong) obj;
         return Arrays.equals(this.value, other.value);
     }
@@ -86,7 +92,9 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     @Override
     public String toString() {
-        if (this == ZERO) return "0";
+        if (this == ZERO) {
+            return "0";
+        }
         return new String(Utility.binToHex(value));
     }
 
@@ -119,9 +127,13 @@ public final class DLong extends Number implements Comparable<DLong> {
 
     @Override
     public int compareTo(DLong o) {
-        if (o == null) return 1;
+        if (o == null) {
+            return 1;
+        }
         for (int i = 0; i < value.length; i++) {
-            if (this.value[i] != o.value[i]) return this.value[i] - o.value[i];
+            if (this.value[i] != o.value[i]) {
+                return this.value[i] - o.value[i];
+            }
         }
         return 0;
     }

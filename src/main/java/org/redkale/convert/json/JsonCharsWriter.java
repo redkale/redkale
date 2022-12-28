@@ -6,7 +6,7 @@
 package org.redkale.convert.json;
 
 import java.nio.ByteBuffer;
-import org.redkale.util.*;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -59,7 +59,9 @@ public class JsonCharsWriter extends JsonWriter {
      */
     private char[] expand(int len) {
         int newcount = count + len;
-        if (newcount <= content.length) return content;
+        if (newcount <= content.length) {
+            return content;
+        }
         char[] newdata = new char[Math.max(content.length * 3 / 2, newcount)];
         System.arraycopy(content, 0, newdata, 0, count);
         this.content = newdata;
@@ -104,10 +106,14 @@ public class JsonCharsWriter extends JsonWriter {
     public void writeLatin1To(final boolean quote, final String value) {
         int len = value.length();
         expand(len + (quote ? 2 : 0));
-        if (quote) content[count++] = '"';
+        if (quote) {
+            content[count++] = '"';
+        }
         value.getChars(0, len, content, count);
         count += len;
-        if (quote) content[count++] = '"';
+        if (quote) {
+            content[count++] = '"';
+        }
     }
 
     @Override
@@ -318,7 +324,9 @@ public class JsonCharsWriter extends JsonWriter {
             return;
         }
         expand(value.length() * 2 + 2);
-        if (quote) content[count++] = '"';
+        if (quote) {
+            content[count++] = '"';
+        }
         for (char ch : Utility.charArray(value)) {
             switch (ch) {
                 case '\n':
@@ -346,7 +354,9 @@ public class JsonCharsWriter extends JsonWriter {
                     break;
             }
         }
-        if (quote) content[count++] = '"';
+        if (quote) {
+            content[count++] = '"';
+        }
     }
 
     @Override
@@ -367,7 +377,9 @@ public class JsonCharsWriter extends JsonWriter {
             return;
         }
         final char sign = value >= 0 ? 0 : '-';
-        if (value < 0) value = -value;
+        if (value < 0) {
+            value = -value;
+        }
         int size;
         for (int i = 0;; i++) {
             if (value <= sizeTable[i]) {
@@ -375,7 +387,9 @@ public class JsonCharsWriter extends JsonWriter {
                 break;
             }
         }
-        if (sign != 0) size++; //负数
+        if (sign != 0) {
+            size++; //负数
+        }
         expand(size);
 
         int q, r;
@@ -398,9 +412,13 @@ public class JsonCharsWriter extends JsonWriter {
             r = value - ((q << 3) + (q << 1));  // r = i-(q*10) ...
             content[--charPos] = digits[r];
             value = q;
-            if (value == 0) break;
+            if (value == 0) {
+                break;
+            }
         }
-        if (sign != 0) content[--charPos] = sign;
+        if (sign != 0) {
+            content[--charPos] = sign;
+        }
         count += size;
     }
 
@@ -411,7 +429,9 @@ public class JsonCharsWriter extends JsonWriter {
             return;
         }
         final char sign = value >= 0 ? 0 : '-';
-        if (value < 0) value = -value;
+        if (value < 0) {
+            value = -value;
+        }
         int size = 19;
         long p = 10;
         for (int i = 1; i < 19; i++) {
@@ -421,7 +441,9 @@ public class JsonCharsWriter extends JsonWriter {
             }
             p = 10 * p;
         }
-        if (sign != 0) size++; //负数
+        if (sign != 0) {
+            size++; //负数
+        }
         expand(size);
 
         long q;
@@ -457,9 +479,13 @@ public class JsonCharsWriter extends JsonWriter {
             r = i2 - ((q2 << 3) + (q2 << 1));  // r = i2-(q2*10) ...
             content[--charPos] = digits[r];
             i2 = q2;
-            if (i2 == 0) break;
+            if (i2 == 0) {
+                break;
+            }
         }
-        if (sign != 0) content[--charPos] = sign;
+        if (sign != 0) {
+            content[--charPos] = sign;
+        }
         count += size;
     }
 

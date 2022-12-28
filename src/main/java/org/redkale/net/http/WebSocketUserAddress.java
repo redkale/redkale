@@ -67,7 +67,9 @@ public interface WebSocketUserAddress extends Serializable {
         }
 
         public SimpleWebSocketUserAddress(WebSocketUserAddress userAddress) {
-            if (userAddress == null) return;
+            if (userAddress == null) {
+                return;
+            }
             this.userid = userAddress.userid();
             this.address = userAddress.address();
             this.addresses = userAddress.addresses();

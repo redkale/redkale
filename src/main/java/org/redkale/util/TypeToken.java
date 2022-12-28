@@ -7,8 +7,8 @@ package org.redkale.util;
 import java.lang.reflect.Type;
 import java.lang.reflect.*;
 import java.util.*;
-import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 
 /**
@@ -43,34 +43,66 @@ public abstract class TypeToken<T> {
      * @return 是否可反解析
      */
     public final static boolean isClassType(final Type type) {
-        if (type instanceof Class) return true;
-        if (type instanceof WildcardType) return false;
-        if (type instanceof TypeVariable) return false;
-        if (type instanceof GenericArrayType) return isClassType(((GenericArrayType) type).getGenericComponentType());
-        if (!(type instanceof ParameterizedType)) return false; //只能是null了
+        if (type instanceof Class) {
+            return true;
+        }
+        if (type instanceof WildcardType) {
+            return false;
+        }
+        if (type instanceof TypeVariable) {
+            return false;
+        }
+        if (type instanceof GenericArrayType) {
+            return isClassType(((GenericArrayType) type).getGenericComponentType());
+        }
+        if (!(type instanceof ParameterizedType)) {
+            return false; //只能是null了
+        }
         final ParameterizedType ptype = (ParameterizedType) type;
-        if (ptype.getOwnerType() != null && !isClassType(ptype.getOwnerType())) return false;
-        if (!isClassType(ptype.getRawType())) return false;
+        if (ptype.getOwnerType() != null && !isClassType(ptype.getOwnerType())) {
+            return false;
+        }
+        if (!isClassType(ptype.getRawType())) {
+            return false;
+        }
         for (Type t : ptype.getActualTypeArguments()) {
-            if (!isClassType(t)) return false;
+            if (!isClassType(t)) {
+                return false;
+            }
         }
         return true;
     }
 
     public final static boolean containsUnknownType(final Type type) {
-        if (type == null) return false;
-        if (type instanceof Class) return false;
-        if (type instanceof WildcardType) return true;
-        if (type instanceof TypeVariable) return true;
-        if (type instanceof GenericArrayType) return containsUnknownType(((GenericArrayType) type).getGenericComponentType());
+        if (type == null) {
+            return false;
+        }
+        if (type instanceof Class) {
+            return false;
+        }
+        if (type instanceof WildcardType) {
+            return true;
+        }
+        if (type instanceof TypeVariable) {
+            return true;
+        }
+        if (type instanceof GenericArrayType) {
+            return containsUnknownType(((GenericArrayType) type).getGenericComponentType());
+        }
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
-            if (containsUnknownType(pt.getRawType())) return true;
-            if (containsUnknownType(pt.getOwnerType())) return true;
+            if (containsUnknownType(pt.getRawType())) {
+                return true;
+            }
+            if (containsUnknownType(pt.getOwnerType())) {
+                return true;
+            }
             Type[] ts = pt.getActualTypeArguments();
             if (ts != null) {
                 for (Type t : ts) {
-                    if (containsUnknownType(t)) return true;
+                    if (containsUnknownType(t)) {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -79,11 +111,21 @@ public abstract class TypeToken<T> {
     }
 
     public final static Class typeToClass(final Type type) {
-        if (type instanceof Class) return (Class) type;
-        if (type instanceof WildcardType) return null;
-        if (type instanceof TypeVariable) return null;
-        if (type instanceof GenericArrayType) return Array.newInstance(typeToClass(((GenericArrayType) type).getGenericComponentType()), 0).getClass();
-        if (!(type instanceof ParameterizedType)) return null; //只能是null了
+        if (type instanceof Class) {
+            return (Class) type;
+        }
+        if (type instanceof WildcardType) {
+            return null;
+        }
+        if (type instanceof TypeVariable) {
+            return null;
+        }
+        if (type instanceof GenericArrayType) {
+            return Array.newInstance(typeToClass(((GenericArrayType) type).getGenericComponentType()), 0).getClass();
+        }
+        if (!(type instanceof ParameterizedType)) {
+            return null; //只能是null了
+        }
         Type owner = ((ParameterizedType) type).getOwnerType();
         Type raw = ((ParameterizedType) type).getRawType();
         //A$B<C> owner=A  raw=A$B, 所以内部类情况下使用owner是错误的
@@ -207,7 +249,9 @@ public abstract class TypeToken<T> {
      * @return Type
      */
     public static Type getGenericType(final Type type, final Type declaringClass) {
-        if (type == null || declaringClass == null) return type;
+        if (type == null || declaringClass == null) {
+            return type;
+        }
         if (type instanceof TypeVariable) {
             Type superType = null;
             Class declaringClass0 = null;
@@ -218,13 +262,17 @@ public abstract class TypeToken<T> {
                     Map<Type, Type> map = new HashMap<>();
                     parseType(map, declaringClass0);
                     Type rstype = getType(map, type);
-                    if (rstype instanceof Class) return rstype;
+                    if (rstype instanceof Class) {
+                        return rstype;
+                    }
                 }
                 while (superType instanceof Class && superType != Object.class) superType = ((Class) superType).getGenericSuperclass();
             } else if (declaringClass instanceof ParameterizedType) {
                 superType = declaringClass;
                 Type rawType = ((ParameterizedType) declaringClass).getRawType();
-                if (rawType instanceof Class) declaringClass0 = (Class) rawType;
+                if (rawType instanceof Class) {
+                    declaringClass0 = (Class) rawType;
+                }
             }
             if (declaringClass0 != null && superType instanceof ParameterizedType) {
                 ParameterizedType superPT = (ParameterizedType) superType;
@@ -245,10 +293,14 @@ public abstract class TypeToken<T> {
                                 Class raw = (Class) superPT.getRawType();
                                 do {
                                     Type rawsuper = raw.getGenericSuperclass();
-                                    if (!(rawsuper instanceof ParameterizedType)) break;
+                                    if (!(rawsuper instanceof ParameterizedType)) {
+                                        break;
+                                    }
                                     ParameterizedType rpt = (ParameterizedType) rawsuper;
                                     Type supraw = rpt.getRawType();
-                                    if (!(supraw instanceof Class)) break;
+                                    if (!(supraw instanceof Class)) {
+                                        break;
+                                    }
                                     Type[] tps = ((Class) supraw).getTypeParameters();
                                     if (rpt.getActualTypeArguments().length == tps.length) {
                                         for (int k = 0; k < rpt.getActualTypeArguments().length; k++) {
@@ -259,7 +311,9 @@ public abstract class TypeToken<T> {
                                         }
                                     }
                                     Type rtrt = rpt.getRawType();
-                                    if (!(rtrt instanceof Class)) break;
+                                    if (!(rtrt instanceof Class)) {
+                                        break;
+                                    }
                                     raw = (Class) rtrt;
                                 } while (raw != Object.class);
                             }
@@ -268,8 +322,9 @@ public abstract class TypeToken<T> {
                             if (atas[i] instanceof Class
                                 && ((TypeVariable) type).getBounds().length == 1
                                 && ((TypeVariable) type).getBounds()[0] instanceof Class
-                                && ((Class) ((TypeVariable) type).getBounds()[0]).isAssignableFrom((Class) atas[i]))
+                                && ((Class) ((TypeVariable) type).getBounds()[0]).isAssignableFrom((Class) atas[i])) {
                                 return atas[i];
+                            }
                             if (atas[i] instanceof Class
                                 && ((TypeVariable) type).getBounds().length == 1
                                 && ((TypeVariable) type).getBounds()[0] instanceof ParameterizedType) {
@@ -280,8 +335,9 @@ public abstract class TypeToken<T> {
                             }
                             if (atas[i] instanceof ParameterizedType
                                 && ((TypeVariable) type).getBounds().length == 1
-                                && ((TypeVariable) type).getBounds()[0] == Object.class)
+                                && ((TypeVariable) type).getBounds()[0] == Object.class) {
                                 return atas[i];
+                            }
                         }
                     }
                     ParameterizedType cycType = superPT;
@@ -292,18 +348,23 @@ public abstract class TypeToken<T> {
                                 if (argTypes[i] == type) {
                                     if (atas[i] instanceof TypeVariable
                                         && ((TypeVariable) atas[i]).getBounds().length == 1
-                                        && ((TypeVariable) atas[i]).getBounds()[0] instanceof Class)
+                                        && ((TypeVariable) atas[i]).getBounds()[0] instanceof Class) {
                                         return ((Class) ((TypeVariable) atas[i]).getBounds()[0]);
+                                    }
                                 }
                             }
                         }
                     }
                 }
                 Type moreType = ((ParameterizedType) superType).getRawType();
-                if (moreType != Object.class) return getGenericType(type, moreType);
+                if (moreType != Object.class) {
+                    return getGenericType(type, moreType);
+                }
             }
             TypeVariable tv = (TypeVariable) type;
-            if (tv.getBounds().length == 1) return tv.getBounds()[0];
+            if (tv.getBounds().length == 1) {
+                return tv.getBounds()[0];
+            }
         } else if (type instanceof GenericArrayType) {
             final Type rst = getGenericType(((GenericArrayType) type).getGenericComponentType(), declaringClass);
             return (GenericArrayType) () -> rst;
@@ -319,23 +380,35 @@ public abstract class TypeToken<T> {
 
     private static Type getType(Map<Type, Type> map, Type type) {
         Type one = map.get(type);
-        if (one == null) return type;
+        if (one == null) {
+            return type;
+        }
         return getType(map, one);
     }
 
     private static Map<Type, Type> parseType(Map<Type, Type> map, Class clzz) {
-        if (clzz == Object.class) return map;
+        if (clzz == Object.class) {
+            return map;
+        }
         Type superType = clzz.getGenericSuperclass();
-        if (!(superType instanceof ParameterizedType)) return map;
+        if (!(superType instanceof ParameterizedType)) {
+            return map;
+        }
         ParameterizedType pt = (ParameterizedType) superType;
         Type[] ptt = pt.getActualTypeArguments();
         Type superRaw = pt.getRawType();
-        if (!(superRaw instanceof Class)) return map;
+        if (!(superRaw instanceof Class)) {
+            return map;
+        }
         Class superClazz = (Class) superRaw;
         TypeVariable[] scs = superClazz.getTypeParameters();
-        if (scs.length != ptt.length) return map;
+        if (scs.length != ptt.length) {
+            return map;
+        }
         for (int i = 0; i < scs.length; i++) {
-            if (scs[i] == ptt[i]) continue;
+            if (scs[i] == ptt[i]) {
+                continue;
+            }
             map.put(scs[i], ptt[i]);
         }
         return parseType(map, clzz.getSuperclass());
@@ -350,7 +423,9 @@ public abstract class TypeToken<T> {
      * @return Type
      */
     public static Type createClassType(final Type type, final Type declaringType0) {
-        if (isClassType(type)) return type;
+        if (isClassType(type)) {
+            return type;
+        }
         if (type instanceof ParameterizedType) {  // e.g. Map<String, String>
             final ParameterizedType pt = (ParameterizedType) type;
             final Type[] paramTypes = pt.getActualTypeArguments();
@@ -363,11 +438,15 @@ public abstract class TypeToken<T> {
         if (declaringType instanceof Class) {
             do {
                 declaringType = ((Class) declaringType).getGenericSuperclass();
-                if (declaringType == Object.class) return Object.class;
+                if (declaringType == Object.class) {
+                    return Object.class;
+                }
             } while (declaringType instanceof Class);
         }
         //存在通配符则declaringType 必须是 ParameterizedType
-        if (!(declaringType instanceof ParameterizedType)) return Object.class;
+        if (!(declaringType instanceof ParameterizedType)) {
+            return Object.class;
+        }
         final ParameterizedType declaringPType = (ParameterizedType) declaringType;
         final Type[] virTypes = ((Class) declaringPType.getRawType()).getTypeParameters();
         final Type[] desTypes = declaringPType.getActualTypeArguments();
@@ -375,12 +454,16 @@ public abstract class TypeToken<T> {
             final WildcardType wt = (WildcardType) type;
             for (Type f : wt.getUpperBounds()) {
                 for (int i = 0; i < virTypes.length; i++) {
-                    if (virTypes[i].equals(f)) return desTypes.length <= i ? Object.class : desTypes[i];
+                    if (virTypes[i].equals(f)) {
+                        return desTypes.length <= i ? Object.class : desTypes[i];
+                    }
                 }
             }
         } else if (type instanceof TypeVariable) { // e.g.  <? extends E>
             for (int i = 0; i < virTypes.length; i++) {
-                if (virTypes[i].equals(type)) return desTypes.length <= i ? Object.class : desTypes[i];
+                if (virTypes[i].equals(type)) {
+                    return desTypes.length <= i ? Object.class : desTypes[i];
+                }
             }
         }
         return type;
@@ -399,9 +482,13 @@ public abstract class TypeToken<T> {
         if (ownerType0 == null && rawType0 instanceof Class) {
             int count = 0;
             for (Type t : actualTypeArguments0) {
-                if (isClassType(t)) count++;
+                if (isClassType(t)) {
+                    count++;
+                }
             }
-            if (count == actualTypeArguments0.length) return createParameterizedType0((Class) rawType0, actualTypeArguments0);
+            if (count == actualTypeArguments0.length) {
+                return createParameterizedType0((Class) rawType0, actualTypeArguments0);
+            }
         }
         return new ParameterizedType() {
             private final Class<?> rawType = (Class<?>) rawType0;
@@ -432,9 +519,13 @@ public abstract class TypeToken<T> {
 
             @Override
             public boolean equals(Object o) {
-                if (!(o instanceof ParameterizedType)) return false;
+                if (!(o instanceof ParameterizedType)) {
+                    return false;
+                }
                 final ParameterizedType that = (ParameterizedType) o;
-                if (this == that) return true;
+                if (this == that) {
+                    return true;
+                }
                 return Objects.equals(ownerType, that.getOwnerType())
                     && Objects.equals(rawType, that.getRawType())
                     && Arrays.equals(actualTypeArguments, that.getActualTypeArguments());
@@ -443,14 +534,18 @@ public abstract class TypeToken<T> {
             @Override
             public String toString() {
                 StringBuilder sb = new StringBuilder();
-                if (ownerType != null) sb.append((ownerType instanceof Class) ? (((Class) ownerType).getName()) : ownerType.toString()).append(".");
+                if (ownerType != null) {
+                    sb.append((ownerType instanceof Class) ? (((Class) ownerType).getName()) : ownerType.toString()).append(".");
+                }
                 sb.append(rawType.getName());
 
                 if (actualTypeArguments != null && actualTypeArguments.length > 0) {
                     sb.append("<");
                     boolean first = true;
                     for (Type t : actualTypeArguments) {
-                        if (!first) sb.append(", ");
+                        if (!first) {
+                            sb.append(", ");
+                        }
                         sb.append(t);
                         first = false;
                     }
@@ -527,9 +622,15 @@ public abstract class TypeToken<T> {
     }
 
     private static CharSequence getClassTypeDescriptor(Type type) {
-        if (!isClassType(type)) throw new IllegalArgumentException(type + " not a class type");
-        if (type instanceof Class) return org.redkale.asm.Type.getDescriptor((Class) type);
-        if (type instanceof GenericArrayType) return getClassTypeDescriptor(((GenericArrayType) type).getGenericComponentType()) + "[]";
+        if (!isClassType(type)) {
+            throw new IllegalArgumentException(type + " not a class type");
+        }
+        if (type instanceof Class) {
+            return org.redkale.asm.Type.getDescriptor((Class) type);
+        }
+        if (type instanceof GenericArrayType) {
+            return getClassTypeDescriptor(((GenericArrayType) type).getGenericComponentType()) + "[]";
+        }
         final ParameterizedType pt = (ParameterizedType) type;
         CharSequence rawTypeDesc = getClassTypeDescriptor(pt.getRawType());
         StringBuilder sb = new StringBuilder();

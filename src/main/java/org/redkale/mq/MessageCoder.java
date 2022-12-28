@@ -35,7 +35,9 @@ public interface MessageCoder<T> {
 
     //type: 1:string, 2:int, 3:long
     public static byte[] encodeUserid(Serializable value) {
-        if (value == null) return MessageRecord.EMPTY_BYTES;
+        if (value == null) {
+            return MessageRecord.EMPTY_BYTES;
+        }
         if (value instanceof Integer) {
             int val = (Integer) value;
             return new byte[]{(byte) 2, (byte) (val >> 24 & 0xFF), (byte) (val >> 16 & 0xFF), (byte) (val >> 8 & 0xFF), (byte) (val & 0xFF)};
@@ -45,34 +47,48 @@ public interface MessageCoder<T> {
                 (byte) (val >> 32 & 0xFF), (byte) (val >> 24 & 0xFF), (byte) (val >> 16 & 0xFF), (byte) (val >> 8 & 0xFF), (byte) (val & 0xFF)};
         }
         String str = value.toString();
-        if (str.isEmpty()) return MessageRecord.EMPTY_BYTES;
+        if (str.isEmpty()) {
+            return MessageRecord.EMPTY_BYTES;
+        }
         return Utility.append(new byte[]{(byte) 1}, str.getBytes(StandardCharsets.UTF_8));
     }
 
     //type: 1:string, 2:int, 3:long
     public static Serializable decodeUserid(ByteBuffer buffer) {
         int len = buffer.getChar();
-        if (len == 0) return null;
+        if (len == 0) {
+            return null;
+        }
         byte type = buffer.get();
-        if (type == 2) return buffer.getInt();
-        if (type == 3) return buffer.getLong();
+        if (type == 2) {
+            return buffer.getInt();
+        }
+        if (type == 3) {
+            return buffer.getLong();
+        }
         byte[] bs = new byte[len - 1];
         buffer.get(bs);
         return new String(bs, StandardCharsets.UTF_8);
     }
 
     public static byte[] getBytes(byte[] value) {
-        if (value == null) return MessageRecord.EMPTY_BYTES;
+        if (value == null) {
+            return MessageRecord.EMPTY_BYTES;
+        }
         return value;
     }
 
     public static byte[] getBytes(String value) {
-        if (value == null || value.isEmpty()) return MessageRecord.EMPTY_BYTES;
+        if (value == null || value.isEmpty()) {
+            return MessageRecord.EMPTY_BYTES;
+        }
         return value.getBytes(StandardCharsets.UTF_8);
     }
 
     public static byte[] getBytes(final Map<String, String> map) {
-        if (map == null || map.isEmpty()) return new byte[2];
+        if (map == null || map.isEmpty()) {
+            return new byte[2];
+        }
         final AtomicInteger len = new AtomicInteger(2);
         map.forEach((key, value) -> {
             len.addAndGet(2 + (key == null ? 0 : Utility.encodeUTF8Length(key)));
@@ -100,7 +116,9 @@ public interface MessageCoder<T> {
 
     public static String getLongString(ByteBuffer buffer) {
         int len = buffer.getInt();
-        if (len == 0) return null;
+        if (len == 0) {
+            return null;
+        }
         byte[] bs = new byte[len];
         buffer.get(bs);
         return new String(bs, StandardCharsets.UTF_8);
@@ -118,7 +136,9 @@ public interface MessageCoder<T> {
 
     public static String getShortString(ByteBuffer buffer) {
         int len = buffer.getChar();
-        if (len == 0) return null;
+        if (len == 0) {
+            return null;
+        }
         byte[] bs = new byte[len];
         buffer.get(bs);
         return new String(bs, StandardCharsets.UTF_8);
@@ -126,7 +146,9 @@ public interface MessageCoder<T> {
 
     public static Map<String, String> getMap(ByteBuffer buffer) {
         int len = buffer.getChar();
-        if (len == 0) return null;
+        if (len == 0) {
+            return null;
+        }
         Map<String, String> map = new HashMap<>(len);
         for (int i = 0; i < len; i++) {
             map.put(getShortString(buffer), getLongString(buffer));

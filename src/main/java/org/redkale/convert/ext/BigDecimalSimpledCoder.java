@@ -5,10 +5,8 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
-import org.redkale.convert.Reader;
 import java.math.BigDecimal;
+import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.Utility;
 
@@ -38,7 +36,9 @@ public final class BigDecimalSimpledCoder<R extends Reader, W extends Writer> ex
     @Override
     public BigDecimal convertFrom(R in) {
         String value = in.readSmallString();
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         return new BigDecimal(Utility.charArray(value));
     }
 
@@ -64,7 +64,9 @@ public final class BigDecimalSimpledCoder<R extends Reader, W extends Writer> ex
         @Override
         public BigDecimal convertFrom(R in) {
             final String str = in.readString();
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             return new BigDecimal(str);
         }
     }

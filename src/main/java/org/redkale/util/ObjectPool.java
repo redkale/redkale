@@ -204,19 +204,27 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         }
         T result = queue.poll();
         if (result == null) {
-            if (parent != null) result = parent.queue.poll();
+            if (parent != null) {
+                result = parent.queue.poll();
+            }
             if (result == null) {
-                if (creatCounter != null) creatCounter.increment();
+                if (creatCounter != null) {
+                    creatCounter.increment();
+                }
                 result = this.creator.create();
             }
         }
-        if (prepare != null) prepare.accept(result);
+        if (prepare != null) {
+            prepare.accept(result);
+        }
         return result;
     }
 
     @Override
     public void accept(final T e) {
-        if (e == null) return;
+        if (e == null) {
+            return;
+        }
         if (unsafeDequeable) {
             if (unsafeThread == null) {
                 unsafeThread = Thread.currentThread();
@@ -225,7 +233,9 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
             }
         }
         if (recycler.test(e)) {
-            if (cycleCounter != null) cycleCounter.increment();
+            if (cycleCounter != null) {
+                cycleCounter.increment();
+            }
 //            if (debug) {
 //                for (T t : queue) {
 //                    if (t == e) {
@@ -235,7 +245,9 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 //                }
 //            }
             boolean rs = unsafeDequeable ? queue.size() < max && queue.offer(e) : queue.offer(e);
-            if (!rs && parent != null) parent.accept(e);
+            if (!rs && parent != null) {
+                parent.accept(e);
+            }
         }
     }
 

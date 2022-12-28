@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
@@ -86,19 +86,35 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         final String localModule = module;
         return clusterAgent.queryMqtpAddress("mqtp", module, resname).thenCompose(addrmap -> {
             if (addrmap == null || addrmap.isEmpty()) {
-                if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "mqtpAsync.broadcastMessage: module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, "mqtpAsync.broadcastMessage: module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                }
                 return new HttpResult<byte[]>().status(404).toFuture();
             }
             final Map<String, String> clientHeaders = new LinkedHashMap<>();
             byte[] clientBody = null;
-            if (req.isRpc()) clientHeaders.put(Rest.REST_HEADER_RPC, "true");
-            if (req.isFrombody()) clientHeaders.put(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
-            if (req.getReqConvertType() != null) clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
-            if (req.getRespConvertType() != null) clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
-            if (userid != null) clientHeaders.put(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
-            if (headers != null) headers.forEach((n, v) -> {
-                    if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) clientHeaders.put(n, v);
+            if (req.isRpc()) {
+                clientHeaders.put(Rest.REST_HEADER_RPC, "true");
+            }
+            if (req.isFrombody()) {
+                clientHeaders.put(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
+            }
+            if (req.getReqConvertType() != null) {
+                clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
+            }
+            if (req.getRespConvertType() != null) {
+                clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
+            }
+            if (userid != null) {
+                clientHeaders.put(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
+            }
+            if (headers != null) {
+                headers.forEach((n, v) -> {
+                    if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) {
+                        clientHeaders.put(n, v);
+                    }
                 });
+            }
             clientHeaders.put("Content-Type", "x-www-form-urlencoded");
             if (req.getBody() != null && req.getBody().length > 0) {
                 String paramstr = req.getParametersToString();
@@ -112,20 +128,28 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 clientBody = req.getBody();
             } else {
                 String paramstr = req.getParametersToString();
-                if (paramstr != null) clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
+                if (paramstr != null) {
+                    clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
+                }
             }
             List<CompletableFuture> futures = new ArrayList<>();
-            if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "mqtpAsync: module=" + localModule + ", resname=" + resname + ", addrmap=" + addrmap);
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.log(Level.FINEST, "mqtpAsync: module=" + localModule + ", resname=" + resname + ", addrmap=" + addrmap);
+            }
             for (Map.Entry<String, Collection<InetSocketAddress>> en : addrmap.entrySet()) {
                 String realmodule = en.getKey();
                 Collection<InetSocketAddress> addrs = en.getValue();
-                if (addrs == null || addrs.isEmpty()) continue;
+                if (addrs == null || addrs.isEmpty()) {
+                    continue;
+                }
                 String suburi = req.getRequestURI();
                 suburi = suburi.substring(1); //跳过 /
                 suburi = "/" + realmodule + suburi.substring(suburi.indexOf('/'));
                 futures.add(forEachCollectionFuture(logger.isLoggable(Level.FINEST), userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + suburi, clientHeaders, clientBody, addrs.iterator()));
             }
-            if (futures.isEmpty()) return CompletableFuture.completedFuture(null);
+            if (futures.isEmpty()) {
+                return CompletableFuture.completedFuture(null);
+            }
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).thenApply(v -> null);
         });
     }
@@ -137,25 +161,41 @@ public class HttpMessageClusterClient extends HttpMessageClient {
         Map<String, String> headers = req.getHeaders();
         String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
         final String localModule = module;
-        if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);
+        }
         return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
             if (addrs == null || addrs.isEmpty()) {
-                if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + ": module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + ": module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                }
                 return new HttpResult<byte[]>().status(404).toFuture();
             }
             final Map<String, String> clientHeaders = new LinkedHashMap<>();
             byte[] clientBody = null;
-            if (req.isRpc()) clientHeaders.put(Rest.REST_HEADER_RPC, "true");
-            if (req.isFrombody()) clientHeaders.put(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
-            if (req.getReqConvertType() != null) clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
-            if (req.getRespConvertType() != null) clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
-            if (userid != null) clientHeaders.put(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
+            if (req.isRpc()) {
+                clientHeaders.put(Rest.REST_HEADER_RPC, "true");
+            }
+            if (req.isFrombody()) {
+                clientHeaders.put(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
+            }
+            if (req.getReqConvertType() != null) {
+                clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
+            }
+            if (req.getRespConvertType() != null) {
+                clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
+            }
+            if (userid != null) {
+                clientHeaders.put(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
+            }
             if (headers != null) {
                 boolean ws = headers.containsKey("Sec-WebSocket-Key");
                 headers.forEach((n, v) -> {
                     if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())
                         && (!ws || (!"Connection".equals(n) && !"Sec-WebSocket-Key".equals(n)
-                        && !"Sec-WebSocket-Version".equals(n)))) clientHeaders.put(n, v);
+                        && !"Sec-WebSocket-Version".equals(n)))) {
+                        clientHeaders.put(n, v);
+                    }
                 });
             }
             clientHeaders.put("Content-Type", "x-www-form-urlencoded");
@@ -171,28 +211,42 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 clientBody = req.getBody();
             } else {
                 String paramstr = req.getParametersToString();
-                if (paramstr != null) clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
+                if (paramstr != null) {
+                    clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
+                }
             }
-            if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
+            }
             return forEachCollectionFuture(logger.isLoggable(Level.FINEST), userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(), clientHeaders, clientBody, addrs.iterator());
         });
     }
 
     private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(boolean finest, Serializable userid, HttpSimpleRequest req, String requesturi, final Map<String, String> clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
-        if (!it.hasNext()) return CompletableFuture.completedFuture(null);
+        if (!it.hasNext()) {
+            return CompletableFuture.completedFuture(null);
+        }
         InetSocketAddress addr = it.next();
         String url = "http://" + addr.getHostString() + ":" + addr.getPort() + requesturi;
-        if (finest) logger.log(Level.FINEST, "forEachCollectionFuture: url=" + url + ", headers=" + clientHeaders);
-        if (httpSimpleClient != null) return httpSimpleClient.postAsync(url, clientHeaders, clientBody);
+        if (finest) {
+            logger.log(Level.FINEST, "forEachCollectionFuture: url=" + url + ", headers=" + clientHeaders);
+        }
+        if (httpSimpleClient != null) {
+            return httpSimpleClient.postAsync(url, clientHeaders, clientBody);
+        }
         java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().uri(URI.create(url))
             .timeout(Duration.ofMillis(10_000))
             //存在sendHeader后不发送body数据的问题， java.net.http.HttpRequest的bug?
             .method("POST", clientBody == null ? java.net.http.HttpRequest.BodyPublishers.noBody() : java.net.http.HttpRequest.BodyPublishers.ofByteArray(clientBody));
-        if (clientHeaders != null) clientHeaders.forEach((n, v) -> builder.header(n, v));
+        if (clientHeaders != null) {
+            clientHeaders.forEach((n, v) -> builder.header(n, v));
+        }
         return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
             .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {
                 final int rs = resp.statusCode();
-                if (rs != 200) return new HttpResult<byte[]>().status(rs);
+                if (rs != 200) {
+                    return new HttpResult<byte[]>().status(rs);
+                }
                 return new HttpResult<byte[]>(resp.body());
             });
     }

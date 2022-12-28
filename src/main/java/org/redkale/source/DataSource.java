@@ -342,7 +342,7 @@ public interface DataSource extends Resourcable {
      *
      * @param <T>   Entity泛型
      * @param clazz Entity类
-     * @param node  过滤条件
+     * @param node  分库分表的过滤条件
      *
      * @return 影响的记录条数 -1表示表不存在
      */
@@ -354,7 +354,7 @@ public interface DataSource extends Resourcable {
      *
      * @param <T>   Entity泛型
      * @param clazz Entity类
-     * @param node  过滤条件
+     * @param node  分库分表的过滤条件
      *
      * @return 影响的记录条数CompletableFuture -1表示表不存在
      */
@@ -405,7 +405,7 @@ public interface DataSource extends Resourcable {
      *
      * @param <T>   Entity泛型
      * @param clazz Entity类
-     * @param node  过滤条件
+     * @param node  分库分表的过滤条件
      *
      * @return 影响的记录条数CompletableFuture -1表示表不存在
      */

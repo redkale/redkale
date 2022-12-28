@@ -128,14 +128,18 @@ public abstract class AbstractDataSource extends AbstractService implements Data
                 Iterator<DataSourceProvider> it = ServiceLoader.load(DataSourceProvider.class, serverClassLoader).iterator();
                 while (it.hasNext()) {
                     DataSourceProvider provider = it.next();
-                    if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                    if (provider != null) {
+                        RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                    }
                     if (provider != null && provider.acceptsConf(sourceConf)) {
                         providers.add(provider);
                     }
                 }
                 for (DataSourceProvider provider : InstanceProvider.sort(providers)) {
                     source = provider.createInstance();
-                    if (source != null) break;
+                    if (source != null) {
+                        break;
+                    }
                 }
                 if (source == null) {
                     if (DataMemorySource.acceptsConf(sourceConf)) {
@@ -162,7 +166,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     public static String parseDbtype(String url) {
         String dbtype = null;
-        if (url == null) return dbtype;
+        if (url == null) {
+            return dbtype;
+        }
         if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("search://") || url.startsWith("searchs://")) { //elasticsearch or opensearch
             dbtype = "search";
         } else {
@@ -179,24 +185,32 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             } else { //jdbc:oracle:thin:@localhost:1521
                 String url0 = url.substring(url.indexOf(":") + 1);
                 pos = url0.indexOf(':');
-                if (pos > 0) dbtype = url0.substring(0, pos);
+                if (pos > 0) {
+                    dbtype = url0.substring(0, pos);
+                }
             }
         }
-        if ("mariadb".equals(dbtype)) return "mysql";
+        if ("mariadb".equals(dbtype)) {
+            return "mysql";
+        }
         return dbtype;
     }
 
     protected SourceUrlInfo parseSourceUrl(final String url) {
         final SourceUrlInfo info = new SourceUrlInfo();
         info.url = url;
-        if (url.startsWith("jdbc:h2:")) return info;
+        if (url.startsWith("jdbc:h2:")) {
+            return info;
+        }
         String url0 = url.substring(url.indexOf("://") + 3);
         int pos = url0.indexOf('?'); //127.0.0.1:5432/db?charset=utr8&xxx=yy
         if (pos > 0) {
             String params = url0.substring(pos + 1).replace("&amp;", "&");
             for (String param : params.split("&")) {
                 int p = param.indexOf('=');
-                if (p < 1) continue;
+                if (p < 1) {
+                    continue;
+                }
                 info.attributes.put(param.substring(0, p), param.substring(p + 1));
             }
             url0 = url0.substring(0, pos);
@@ -357,7 +371,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      * @return CompletableFuture
      */
     protected <T> CompletableFuture checkEntity(String action, boolean async, T... entitys) {
-        if (entitys.length < 1) return null;
+        if (entitys.length < 1) {
+            return null;
+        }
         Class clazz = null;
         for (T val : entitys) {
             if (clazz == null) {
@@ -509,25 +525,33 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     @Override
     public final <T> int insert(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return 0;
+        if (entitys == null || entitys.isEmpty()) {
+            return 0;
+        }
         return insert(entitys.toArray());
     }
 
     @Override
     public final <T> int insert(final Stream<T> entitys) {
-        if (entitys == null) return 0;
+        if (entitys == null) {
+            return 0;
+        }
         return insert(entitys.toArray());
     }
 
     @Override
     public final <T> CompletableFuture<Integer> insertAsync(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        if (entitys == null || entitys.isEmpty()) {
+            return CompletableFuture.completedFuture(0);
+        }
         return insertAsync(entitys.toArray());
     }
 
     @Override
     public final <T> CompletableFuture<Integer> insertAsync(final Stream<T> entitys) {
-        if (entitys == null) return CompletableFuture.completedFuture(0);
+        if (entitys == null) {
+            return CompletableFuture.completedFuture(0);
+        }
         return insertAsync(entitys.toArray());
     }
 

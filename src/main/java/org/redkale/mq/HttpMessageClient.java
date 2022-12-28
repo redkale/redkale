@@ -10,10 +10,10 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.*;
+import java.util.logging.Logger;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.http.*;
 import static org.redkale.mq.MessageRecord.CTYPE_HTTP_REQUEST;
+import org.redkale.net.http.*;
 
 /**
  * 不依赖MessageRecord则可兼容RPC方式
@@ -48,7 +48,9 @@ public class HttpMessageClient extends MessageClient {
 
     public String generateHttpReqTopic(HttpSimpleRequest request, String path) {
         String module = request.getRequestURI();
-        if (path != null && !path.isEmpty() && module.startsWith(path)) module = module.substring(path.length());
+        if (path != null && !path.isEmpty() && module.startsWith(path)) {
+            module = module.substring(path.length());
+        }
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         Map<String, String> headers = request.getHeaders();
@@ -122,21 +124,27 @@ public class HttpMessageClient extends MessageClient {
 
     public <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), 0, null, request, null).thenApply((HttpResult<byte[]> httbs) -> {
-            if (httbs == null || httbs.getResult() == null) return null;
+            if (httbs == null || httbs.getResult() == null) {
+                return null;
+            }
             return JsonConvert.root().convertFrom(type, httbs.getResult());
         });
     }
 
     public <T> CompletableFuture<T> sendMessage(Serializable userid, HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), userid, null, request, null).thenApply((HttpResult<byte[]> httbs) -> {
-            if (httbs == null || httbs.getResult() == null) return null;
+            if (httbs == null || httbs.getResult() == null) {
+                return null;
+            }
             return JsonConvert.root().convertFrom(type, httbs.getResult());
         });
     }
 
     public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request, null).thenApply((HttpResult<byte[]> httbs) -> {
-            if (httbs == null || httbs.getResult() == null) return null;
+            if (httbs == null || httbs.getResult() == null) {
+                return null;
+            }
             return JsonConvert.root().convertFrom(type, httbs.getResult());
         });
     }

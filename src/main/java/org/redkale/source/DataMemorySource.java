@@ -68,7 +68,9 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     @Override
     public <T> void compile(Class<T> clazz) {
         EntityInfo entityInfo = EntityInfo.compile(clazz, this);
-        if (entityInfo.getCache() == null) new EntityCache<>(entityInfo, null).clear();
+        if (entityInfo.getCache() == null) {
+            new EntityCache<>(entityInfo, null).clear();
+        }
     }
 
     @Override

@@ -187,7 +187,9 @@ public final class EntityInfo<T> {
     static <T> EntityInfo<T> load(Class<T> clazz, final boolean cacheForbidden, final Properties conf,
         DataSource source, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
         EntityInfo rs = entityInfos.get(clazz);
-        if (rs != null && (rs.cache == null || rs.cache.isFullLoaded())) return rs;
+        if (rs != null && (rs.cache == null || rs.cache.isFullLoaded())) {
+            return rs;
+        }
         synchronized (entityInfos) {
             rs = entityInfos.get(clazz);
             if (rs == null) {
@@ -195,7 +197,9 @@ public final class EntityInfo<T> {
                 entityInfos.put(clazz, rs);
             }
             if (rs.cache != null && !rs.isCacheFullLoaded()) {
-                if (fullloader == null) throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
+                if (fullloader == null) {
+                    throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
+                }
                 rs.cache.fullLoadAsync();
             }
             return rs;
@@ -317,7 +321,9 @@ public final class EntityInfo<T> {
         DistributeTableStrategy dts = null;
         try {
             dts = (dt == null) ? null : dt.strategy().getDeclaredConstructor().newInstance();
-            if (dts != null) RedkaleClassLoader.putReflectionDeclaredConstructors(dt.strategy(), dt.strategy().getName());
+            if (dts != null) {
+                RedkaleClassLoader.putReflectionDeclaredConstructors(dt.strategy(), dt.strategy().getName());
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, type + " init DistributeTableStrategy error", e);
         }
@@ -359,16 +365,28 @@ public final class EntityInfo<T> {
             ddlList.add(ddl);
             RedkaleClassLoader.putReflectionDeclaredFields(cltmp.getName());
             for (Field field : cltmp.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
-                if (Modifier.isFinal(field.getModifiers())) continue;
-                if (field.getAnnotation(Transient.class) != null) continue;
-                if (field.getAnnotation(javax.persistence.Transient.class) != null) continue;
-                if (fields.contains(field.getName())) continue;
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                if (Modifier.isFinal(field.getModifiers())) {
+                    continue;
+                }
+                if (field.getAnnotation(Transient.class) != null) {
+                    continue;
+                }
+                if (field.getAnnotation(javax.persistence.Transient.class) != null) {
+                    continue;
+                }
+                if (fields.contains(field.getName())) {
+                    continue;
+                }
                 final String fieldname = field.getName();
                 final Column col = field.getAnnotation(Column.class);
                 final String sqlfield = col == null || col.name().isEmpty() ? fieldname : col.name();
                 if (!fieldname.equals(sqlfield)) {
-                    if (aliasmap0 == null) aliasmap0 = new HashMap<>();
+                    if (aliasmap0 == null) {
+                        aliasmap0 = new HashMap<>();
+                    }
                     aliasmap0.put(fieldname, sqlfield);
                 }
                 Attribute attr;
@@ -405,22 +423,34 @@ public final class EntityInfo<T> {
                 attributeMap.put(fieldname, attr);
             }
         } while ((cltmp = cltmp.getSuperclass()) != Object.class);
-        if (idAttr0 == null) throw new SourceException(type.getName() + " have no primary column by @org.redkale.persistence.Id");
+        if (idAttr0 == null) {
+            throw new SourceException(type.getName() + " have no primary column by @org.redkale.persistence.Id");
+        }
         cltmp = type;
         JsonConvert convert = DEFAULT_JSON_CONVERT;
         do {
             for (Method method : cltmp.getDeclaredMethods()) {
-                if (method.getAnnotation(SourceConvert.class) == null) continue;
-                if (!Modifier.isStatic(method.getModifiers())) throw new SourceException("@SourceConvert method(" + method + ") must be static");
-                if (method.getReturnType() != JsonConvert.class) throw new SourceException("@SourceConvert method(" + method + ") must be return JsonConvert.class");
-                if (method.getParameterCount() > 0) throw new SourceException("@SourceConvert method(" + method + ") must be 0 parameter");
+                if (method.getAnnotation(SourceConvert.class) == null) {
+                    continue;
+                }
+                if (!Modifier.isStatic(method.getModifiers())) {
+                    throw new SourceException("@SourceConvert method(" + method + ") must be static");
+                }
+                if (method.getReturnType() != JsonConvert.class) {
+                    throw new SourceException("@SourceConvert method(" + method + ") must be return JsonConvert.class");
+                }
+                if (method.getParameterCount() > 0) {
+                    throw new SourceException("@SourceConvert method(" + method + ") must be 0 parameter");
+                }
                 try {
                     method.setAccessible(true);
                     convert = (JsonConvert) method.invoke(null);
                 } catch (Exception e) {
                     throw new SourceException(method + " invoke error", e);
                 }
-                if (convert != null) break;
+                if (convert != null) {
+                    break;
+                }
             }
         } while ((cltmp = cltmp.getSuperclass()) != Object.class);
         this.jsonConvert = convert == null ? DEFAULT_JSON_CONVERT : convert;
@@ -476,7 +506,9 @@ public final class EntityInfo<T> {
             StringBuilder querydb = new StringBuilder();
             int index = 0;
             for (String col : querycols) {
-                if (index > 0) querydb.append(',');
+                if (index > 0) {
+                    querydb.append(',');
+                }
                 querydb.append(col);
                 index++;
             }
@@ -486,7 +518,9 @@ public final class EntityInfo<T> {
             StringBuilder insertsbnames = new StringBuilder();
             index = 0;
             for (String col : insertcols) {
-                if (index > 0) insertsb.append(',');
+                if (index > 0) {
+                    insertsb.append(',');
+                }
                 insertsb.append(col);
                 if (index > 0) {
                     insertsbquestion.append(',');
@@ -712,7 +746,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getFindQuestionPrepareSQL(Serializable pk) {
-        if (this.tableStrategy == null) return findQuestionPrepareSQL;
+        if (this.tableStrategy == null) {
+            return findQuestionPrepareSQL;
+        }
         return findQuestionPrepareSQL.replace("${newtable}", getTable(pk));
     }
 
@@ -734,7 +770,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getFindDollarPrepareSQL(Serializable pk) {
-        if (this.tableStrategy == null) return findDollarPrepareSQL;
+        if (this.tableStrategy == null) {
+            return findDollarPrepareSQL;
+        }
         return findDollarPrepareSQL.replace("${newtable}", getTable(pk));
     }
 
@@ -746,7 +784,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getFindNamesPrepareSQL(Serializable pk) {
-        if (this.tableStrategy == null) return findNamesPrepareSQL;
+        if (this.tableStrategy == null) {
+            return findNamesPrepareSQL;
+        }
         return findNamesPrepareSQL.replace("${newtable}", getTable(pk));
     }
 
@@ -758,7 +798,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getInsertQuestionPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return insertQuestionPrepareSQL;
+        if (this.tableStrategy == null) {
+            return insertQuestionPrepareSQL;
+        }
         return insertQuestionPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -770,7 +812,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getInsertDollarPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return insertDollarPrepareSQL;
+        if (this.tableStrategy == null) {
+            return insertDollarPrepareSQL;
+        }
         return insertDollarPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -782,7 +826,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getInsertNamesPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return insertNamesPrepareSQL;
+        if (this.tableStrategy == null) {
+            return insertNamesPrepareSQL;
+        }
         return insertNamesPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -794,7 +840,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getUpdateQuestionPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return updateQuestionPrepareSQL;
+        if (this.tableStrategy == null) {
+            return updateQuestionPrepareSQL;
+        }
         return updateQuestionPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -806,7 +854,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getUpdateDollarPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return updateDollarPrepareSQL;
+        if (this.tableStrategy == null) {
+            return updateDollarPrepareSQL;
+        }
         return updateDollarPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -818,9 +868,15 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getUpdateQuestionPrepareCaseSQL(T[] beans) {
-        if (beans == null || beans.length < 2) return null;
-        if (this.updateQuestionPrepareCaseSQLs == null) return null;
-        if (this.updateQuestionPrepareCaseSQLs.length <= beans.length) return null;
+        if (beans == null || beans.length < 2) {
+            return null;
+        }
+        if (this.updateQuestionPrepareCaseSQLs == null) {
+            return null;
+        }
+        if (this.updateQuestionPrepareCaseSQLs.length <= beans.length) {
+            return null;
+        }
         return this.updateQuestionPrepareCaseSQLs[beans.length];
     }
 
@@ -832,9 +888,15 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getUpdateDollarPrepareCaseSQL(T[] beans) {
-        if (beans == null || beans.length < 2) return null;
-        if (this.updateDollarPrepareCaseSQLs == null) return null;
-        if (this.updateDollarPrepareCaseSQLs.length <= beans.length) return null;
+        if (beans == null || beans.length < 2) {
+            return null;
+        }
+        if (this.updateDollarPrepareCaseSQLs == null) {
+            return null;
+        }
+        if (this.updateDollarPrepareCaseSQLs.length <= beans.length) {
+            return null;
+        }
         return this.updateDollarPrepareCaseSQLs[beans.length];
     }
 
@@ -846,7 +908,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getUpdateNamesPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return updateNamesPrepareSQL;
+        if (this.tableStrategy == null) {
+            return updateNamesPrepareSQL;
+        }
         return updateNamesPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -858,7 +922,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getDeleteQuestionPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return deleteQuestionPrepareSQL;
+        if (this.tableStrategy == null) {
+            return deleteQuestionPrepareSQL;
+        }
         return deleteQuestionPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -870,7 +936,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getDeleteDollarPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return deleteDollarPrepareSQL;
+        if (this.tableStrategy == null) {
+            return deleteDollarPrepareSQL;
+        }
         return deleteDollarPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -882,7 +950,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getDeleteNamesPrepareSQL(T bean) {
-        if (this.tableStrategy == null) return deleteNamesPrepareSQL;
+        if (this.tableStrategy == null) {
+            return deleteNamesPrepareSQL;
+        }
         return deleteNamesPrepareSQL.replace("${newtable}", getTable(bean));
     }
 
@@ -896,17 +966,27 @@ public final class EntityInfo<T> {
      */
     public CharSequence getQueryColumns(String tabalis, SelectColumn selects) {
         if (selects == null) {
-            if (tabalis == null) return querySqlColumnSequence;
-            if ("a".equals(tabalis)) return querySqlColumnSequenceA;
+            if (tabalis == null) {
+                return querySqlColumnSequence;
+            }
+            if ("a".equals(tabalis)) {
+                return querySqlColumnSequenceA;
+            }
             return tabalis + "." + Utility.joining(querySqlColumns, "," + tabalis + ".");
         }
         StringBuilder sb = new StringBuilder();
         for (Attribute attr : this.attributes) {
-            if (!selects.test(attr.field())) continue;
-            if (sb.length() > 0) sb.append(',');
+            if (!selects.test(attr.field())) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append(',');
+            }
             sb.append(getSQLColumn(tabalis, attr.field()));
         }
-        if (sb.length() == 0) sb.append('*');
+        if (sb.length() == 0) {
+            sb.append('*');
+        }
         return sb;
     }
 
@@ -918,7 +998,9 @@ public final class EntityInfo<T> {
                 StringBuilder sb = new StringBuilder();
                 String s = tabalis + ".";
                 for (String col : querySqlColumns) {
-                    if (sb.length() > 0) sb.append(',');
+                    if (sb.length() > 0) {
+                        sb.append(',');
+                    }
                     sb.append(s).append(col);
                 }
                 return sb;
@@ -926,11 +1008,17 @@ public final class EntityInfo<T> {
         } else {
             StringBuilder sb = new StringBuilder();
             for (Attribute attr : this.attributes) {
-                if (!selects.test(attr.field())) continue;
-                if (sb.length() > 0) sb.append(',');
+                if (!selects.test(attr.field())) {
+                    continue;
+                }
+                if (sb.length() > 0) {
+                    sb.append(',');
+                }
                 sb.append(getSQLColumn(tabalis, attr.field()));
             }
-            if (sb.length() == 0) sb.append('*');
+            if (sb.length() == 0) {
+                sb.append('*');
+            }
             return sb;
         }
     }
@@ -940,7 +1028,9 @@ public final class EntityInfo<T> {
     }
 
     public Map<String, List<Serializable>> getTableMap(Serializable... pks) {
-        if (tableStrategy == null) return Utility.ofMap(table, Utility.ofList(pks));
+        if (tableStrategy == null) {
+            return Utility.ofMap(table, Utility.ofList(pks));
+        }
         Map<String, List<Serializable>> map = new LinkedHashMap<>();
         for (Serializable pk : pks) {
             String t = getTable(pk);
@@ -950,7 +1040,9 @@ public final class EntityInfo<T> {
     }
 
     public Map<String, List<T>> getTableMap(T... entitys) {
-        if (tableStrategy == null) return Utility.ofMap(table, Utility.ofList(entitys));
+        if (tableStrategy == null) {
+            return Utility.ofMap(table, Utility.ofList(entitys));
+        }
         Map<String, List<T>> map = new LinkedHashMap<>();
         for (T entity : entitys) {
             String t = getTable(entity);
@@ -967,7 +1059,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getTable(Serializable primary) {
-        if (tableStrategy == null) return table;
+        if (tableStrategy == null) {
+            return table;
+        }
         String t = tableStrategy.getTable(table, primary);
         if (t == null || t.isEmpty()) {
             throw new SourceException(table + " tableStrategy.getTable is empty, primary=" + primary);
@@ -983,7 +1077,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String[] getTables(FilterNode node) {
-        if (tableStrategy == null) return new String[]{table};
+        if (tableStrategy == null) {
+            return new String[]{table};
+        }
         String[] t = tableStrategy.getTables(table, node);
         if (t == null || t.length < 1) {
             throw new SourceException(table + " tableStrategy.getTable is empty, filter=" + node);
@@ -999,7 +1095,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getTable(T bean) {
-        if (tableStrategy == null) return table;
+        if (tableStrategy == null) {
+            return table;
+        }
         String t = tableStrategy.getTable(table, bean);
         if (t == null || t.isEmpty()) {
             throw new SourceException(table + " tableStrategy.getTable is empty, entity=" + bean);
@@ -1033,7 +1131,9 @@ public final class EntityInfo<T> {
      * @return Attribute
      */
     public Attribute<T, Serializable> getAttribute(String fieldname) {
-        if (fieldname == null) return null;
+        if (fieldname == null) {
+            return null;
+        }
         return this.attributeMap.get(fieldname);
     }
 
@@ -1065,11 +1165,17 @@ public final class EntityInfo<T> {
      * @return String
      */
     protected String createSQLOrderby(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null) return "";
+        if (flipper == null || flipper.getSort() == null) {
+            return "";
+        }
         final String sort = flipper.getSort();
-        if (sort.isEmpty() || sort.indexOf(';') >= 0 || sort.indexOf('\n') >= 0) return "";
+        if (sort.isEmpty() || sort.indexOf(';') >= 0 || sort.indexOf('\n') >= 0) {
+            return "";
+        }
         String sql = this.sortOrderbySqls.get(sort);
-        if (sql != null) return sql;
+        if (sql != null) {
+            return sql;
+        }
         final StringBuilder sb = new StringBuilder();
         sb.append(" ORDER BY ");
         if (isNoAlias()) {
@@ -1077,9 +1183,13 @@ public final class EntityInfo<T> {
         } else {
             boolean flag = false;
             for (String item : sort.split(",")) {
-                if (item.isEmpty()) continue;
+                if (item.isEmpty()) {
+                    continue;
+                }
                 String[] sub = item.split("\\s+");
-                if (flag) sb.append(',');
+                if (flag) {
+                    sb.append(',');
+                }
                 if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
                     sb.append(getSQLColumn("a", sub[0])).append(" ASC");
                 } else {
@@ -1116,7 +1226,9 @@ public final class EntityInfo<T> {
      */
     public Object getSQLValue(String fieldname, Serializable fieldvalue) {
         if (fieldvalue == null && fieldname != null && isNotNullable(fieldname)) {
-            if (isNotNullJson(getAttribute(fieldname))) return "";
+            if (isNotNullJson(getAttribute(fieldname))) {
+                return "";
+            }
         }
         return fieldvalue;
     }
@@ -1227,11 +1339,17 @@ public final class EntityInfo<T> {
      * @return CharSequence
      */
     protected CharSequence formatSQLValue(String sqlColumn, Attribute<T, Serializable> attr, final ColumnValue cv, BiFunction<EntityInfo, Object, CharSequence> formatter) {
-        if (cv == null) return null;
+        if (cv == null) {
+            return null;
+        }
         Object val = cv.getValue();
         //ColumnNodeValue时 cv.getExpress() == ColumnExpress.MOV 只用于updateColumn
-        if (val instanceof ColumnNodeValue) return formatSQLValue(attr, null, (ColumnNodeValue) val, formatter);
-        if (val instanceof ColumnFuncNode) return formatSQLValue(attr, null, (ColumnFuncNode) val, formatter);
+        if (val instanceof ColumnNodeValue) {
+            return formatSQLValue(attr, null, (ColumnNodeValue) val, formatter);
+        }
+        if (val instanceof ColumnFuncNode) {
+            return formatSQLValue(attr, null, (ColumnFuncNode) val, formatter);
+        }
         switch (cv.getExpress()) {
             case INC:
                 return new StringBuilder().append(sqlColumn).append(" + ").append(val);
@@ -1249,7 +1367,9 @@ public final class EntityInfo<T> {
                 return new StringBuilder().append(sqlColumn).append(" | ").append(val);
             case MOV:
                 CharSequence rs = formatter == null ? formatToString(val) : formatter.apply(this, val);
-                if (rs == null && isNotNullJson(attr)) rs = "";
+                if (rs == null && isNotNullJson(attr)) {
+                    rs = "";
+                }
                 return rs;
         }
         return formatter == null ? formatToString(val) : formatter.apply(this, val);
@@ -1267,7 +1387,9 @@ public final class EntityInfo<T> {
         Serializable left = node.getLeft();
         if (left instanceof CharSequence) {
             left = this.getSQLColumn(tabalis, left.toString());
-            if (node.getExpress() == ColumnExpress.MOV) return (String) left;
+            if (node.getExpress() == ColumnExpress.MOV) {
+                return (String) left;
+            }
         } else if (left instanceof ColumnNodeValue) {
             left = "(" + formatSQLValue(attr, tabalis, (ColumnNodeValue) left, formatter) + ")";
         } else if (left instanceof ColumnFuncNode) {
@@ -1330,7 +1452,9 @@ public final class EntityInfo<T> {
     }
 
     public boolean isNotNullJson(Attribute<T, Serializable> attr) {
-        if (attr == null) return false;
+        if (attr == null) {
+            return false;
+        }
         return notNullColumns.contains(attr.field())
             && !Number.class.isAssignableFrom(attr.type())
             && !CharSequence.class.isAssignableFrom(attr.type())
@@ -1352,11 +1476,17 @@ public final class EntityInfo<T> {
      */
     public boolean isLoggable(Logger logger, Level l, String str) {
         boolean rs = logger.isLoggable(l) && l.intValue() >= this.logLevel;
-        if (this.excludeLogLevels == null || !rs || str == null) return rs;
+        if (this.excludeLogLevels == null || !rs || str == null) {
+            return rs;
+        }
         String[] keys = this.excludeLogLevels.get(l.intValue());
-        if (keys == null) return rs;
+        if (keys == null) {
+            return rs;
+        }
         for (String key : keys) {
-            if (str.contains(key)) return false;
+            if (str.contains(key)) {
+                return false;
+            }
         }
         return rs;
     }
@@ -1369,7 +1499,9 @@ public final class EntityInfo<T> {
      * @return String
      */
     private String formatToString(Object value) {
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         if (value instanceof CharSequence) {
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'').toString();
         } else if (!(value instanceof Number) && !(value instanceof java.util.Date)
@@ -1388,7 +1520,9 @@ public final class EntityInfo<T> {
      * @return Entity对象
      */
     protected T getEntityValue(final SelectColumn sels, final DataResultSetRow row) {
-        if (row.wasNull()) return null;
+        if (row.wasNull()) {
+            return null;
+        }
         T obj;
         Attribute<T, Serializable>[] attrs = this.queryAttributes;
         if (this.constructorParameters == null) {
@@ -1426,7 +1560,9 @@ public final class EntityInfo<T> {
      * @return Entity对象
      */
     protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final DataResultSetRow row) {
-        if (row.wasNull()) return null;
+        if (row.wasNull()) {
+            return null;
+        }
         T obj;
         int index = 0;
         if (this.constructorParameters == null) {
@@ -1435,14 +1571,18 @@ public final class EntityInfo<T> {
             Object[] cps = new Object[this.constructorParameters.length];
             for (int i = 0; i < constructorAttrs.length; i++) {
                 Attribute<T, Serializable> attr = constructorAttrs[i];
-                if (attr == null) continue;
+                if (attr == null) {
+                    continue;
+                }
                 cps[i] = getFieldValue(attr, row, ++index);
             }
             obj = creator.create(cps);
         }
         if (unconstructorAttrs != null) {
             for (Attribute<T, Serializable> attr : unconstructorAttrs) {
-                if (attr == null) continue;
+                if (attr == null) {
+                    continue;
+                }
                 attr.set(obj, getFieldValue(attr, row, ++index));
             }
         }

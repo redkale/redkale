@@ -75,7 +75,9 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     public byte[] toArray() {
-        if (count == content.length) return content;
+        if (count == content.length) {
+            return content;
+        }
         byte[] newdata = new byte[count];
         System.arraycopy(content, 0, newdata, 0, count);
         return newdata;
@@ -123,7 +125,9 @@ public class BsonWriter extends Writer implements ByteTuple {
      */
     protected int expand(int len) {
         int newcount = count + len;
-        if (newcount <= content.length) return 0;
+        if (newcount <= content.length) {
+            return 0;
+        }
         byte[] newdata = new byte[Math.max(content.length * 3 / 2, newcount)];
         System.arraycopy(content, 0, newdata, 0, count);
         this.content = newdata;
@@ -185,7 +189,9 @@ public class BsonWriter extends Writer implements ByteTuple {
         writeArrayB(values.length, null, null, values);
         boolean flag = false;
         for (byte v : values) {
-            if (flag) writeArrayMark();
+            if (flag) {
+                writeArrayMark();
+            }
             writeByte(v);
             flag = true;
         }
@@ -266,11 +272,15 @@ public class BsonWriter extends Writer implements ByteTuple {
             return;
         }
         char[] chars = Utility.charArray(value);
-        if (chars.length > 255) throw new ConvertException("'" + value + "' have  very long length");
+        if (chars.length > 255) {
+            throw new ConvertException("'" + value + "' have  very long length");
+        }
         byte[] bytes = new byte[chars.length + 1];
         bytes[0] = (byte) chars.length;
         for (int i = 0; i < chars.length; i++) {
-            if (chars[i] > Byte.MAX_VALUE) throw new ConvertException("'" + value + "'  have double-word");
+            if (chars[i] > Byte.MAX_VALUE) {
+                throw new ConvertException("'" + value + "'  have double-word");
+            }
             bytes[i + 1] = (byte) chars[i];
         }
         writeTo(bytes);

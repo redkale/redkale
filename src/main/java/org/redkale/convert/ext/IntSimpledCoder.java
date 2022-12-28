@@ -5,9 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 
 /**
@@ -49,7 +47,9 @@ public final class IntSimpledCoder<R extends Reader, W extends Writer> extends S
             if (value == null) {
                 out.writeSmallString("0x0");
             } else {
-                if (value < 0) throw new NumberFormatException("Negative values (" + value + ") are not supported");
+                if (value < 0) {
+                    throw new NumberFormatException("Negative values (" + value + ") are not supported");
+                }
                 out.writeSmallString("0x" + Integer.toHexString(value));
             }
         }
@@ -57,7 +57,9 @@ public final class IntSimpledCoder<R extends Reader, W extends Writer> extends S
         @Override
         public Integer convertFrom(R in) {
             final String str = in.readString();
-            if (str == null) return 0;
+            if (str == null) {
+                return 0;
+            }
             try {
                 if (str.length() > 2 && str.charAt(0) == '0' && (str.charAt(1) == 'x' || str.charAt(1) == 'X')) {
                     return Integer.parseInt(str.substring(2), 16);

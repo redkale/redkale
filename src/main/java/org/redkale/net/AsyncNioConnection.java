@@ -308,7 +308,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
             int totalCount = 0;
             boolean hasRemain = true;
             boolean writeOver = true;
-            if (invokeDirect) currWriteInvoker++;
+            if (invokeDirect) {
+                currWriteInvoker++;
+            }
             while (invokeDirect && hasRemain) { //必须要将buffer写完为止
                 if (writeByteTuple1Array != null) {
                     final ByteBuffer buffer = pollWriteBuffer();
@@ -316,7 +318,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                         buffer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
                         if (writeByteTuple2Length > 0) {
                             buffer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
-                            if (writeByteTuple2Callback != null) writeByteTuple2Callback.accept(writeByteTuple2Attachment);
+                            if (writeByteTuple2Callback != null) {
+                                writeByteTuple2Callback.accept(writeByteTuple2Attachment);
+                            }
                         }
                         buffer.flip();
                         writeByteBuffer = buffer;
@@ -333,7 +337,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                         writer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
                         if (writeByteTuple2Length > 0) {
                             writer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
-                            if (writeByteTuple2Callback != null) writeByteTuple2Callback.accept(writeByteTuple2Attachment);
+                            if (writeByteTuple2Callback != null) {
+                                writeByteTuple2Callback.accept(writeByteTuple2Attachment);
+                            }
                         }
                         final ByteBuffer[] buffers = writer.toBuffers();
                         writeByteBuffers = buffers;
@@ -378,12 +384,16 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     }
                     break;
                 } else if (writeCount < 0) {
-                    if (totalCount == 0) totalCount = writeCount;
+                    if (totalCount == 0) {
+                        totalCount = writeCount;
+                    }
                     break;
                 } else {
                     totalCount += writeCount;
                 }
-                if (!hasRemain) break;
+                if (!hasRemain) {
+                    break;
+                }
             }
 
             if (writeOver && (totalCount != 0 || !hasRemain)) {
@@ -497,7 +507,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
             public synchronized int read() throws IOException {
                 if (bb == null || !bb.hasRemaining()) {
                     int r = readBuffer();
-                    if (r < 1) return -1;
+                    if (r < 1) {
+                        return -1;
+                    }
                 }
                 return bb.get() & 0xff;
             }
@@ -513,7 +525,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 }
                 if (bb == null || !bb.hasRemaining()) {
                     int r = readBuffer();
-                    if (r < 1) return -1;
+                    if (r < 1) {
+                        return -1;
+                    }
                 }
                 int size = Math.min(b.length, Math.min(len, bb.remaining()));
                 bb.get(b, off, size);
@@ -531,7 +545,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
             @Override
             public int available() throws IOException {
-                if (bb == null || !bb.hasRemaining()) return 0;
+                if (bb == null || !bb.hasRemaining()) {
+                    return 0;
+                }
                 return bb.remaining();
             }
 

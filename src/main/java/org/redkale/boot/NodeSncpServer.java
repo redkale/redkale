@@ -34,10 +34,14 @@ public class NodeSncpServer extends NodeServer {
         super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
         this.consumer = sncpServer == null || application.isSingletonMode() ? null : (agent, x) -> {//singleton模式下不生成SncpServlet
-            if (x.getClass().getAnnotation(Local.class) != null) return; //本地模式的Service不生成SncpServlet
+            if (x.getClass().getAnnotation(Local.class) != null) {
+                return; //本地模式的Service不生成SncpServlet
+            }
             SncpDynServlet servlet = sncpServer.addSncpServlet(x);
             dynServletMap.put(x, servlet);
-            if (agent != null) agent.putService(this, x, servlet);
+            if (agent != null) {
+                agent.putService(this, x, servlet);
+            }
         };
     }
 
@@ -55,21 +59,29 @@ public class NodeSncpServer extends NodeServer {
     }
 
     public void consumerAccept(MessageAgent messageAgent, Service service) {
-        if (this.consumer != null) this.consumer.accept(messageAgent, service);
+        if (this.consumer != null) {
+            this.consumer.accept(messageAgent, service);
+        }
     }
 
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
         //-------------------------------------------------------------------
-        if (sncpServer == null) return; //调试时server才可能为null
+        if (sncpServer == null) {
+            return; //调试时server才可能为null
+        }
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
         List<SncpServlet> servlets = sncpServer.getSncpServlets();
         Collections.sort(servlets);
         for (SncpServlet en : servlets) {
-            if (sb != null) sb.append("Load ").append(en).append(LINE_SEPARATOR);
+            if (sb != null) {
+                sb.append("Load ").append(en).append(LINE_SEPARATOR);
+            }
         }
-        if (sb != null && sb.length() > 0) logger.log(Level.FINE, sb.toString());
+        if (sb != null && sb.length() > 0) {
+            logger.log(Level.FINE, sb.toString());
+        }
     }
 
     @Override
@@ -83,7 +95,9 @@ public class NodeSncpServer extends NodeServer {
 
     @Override
     protected void loadFilter(ClassFilter<? extends Filter> filterFilter, ClassFilter otherFilter) throws Exception {
-        if (sncpServer != null) loadSncpFilter(this.serverConf.getAnyValue("fliters"), filterFilter);
+        if (sncpServer != null) {
+            loadSncpFilter(this.serverConf.getAnyValue("fliters"), filterFilter);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -92,15 +106,21 @@ public class NodeSncpServer extends NodeServer {
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
         for (FilterEntry<? extends Filter> en : list) {
             Class<SncpFilter> clazz = (Class<SncpFilter>) en.getType();
-            if (Modifier.isAbstract(clazz.getModifiers())) continue;
+            if (Modifier.isAbstract(clazz.getModifiers())) {
+                continue;
+            }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
             final SncpFilter filter = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(filter, this);
             DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
             this.sncpServer.addSncpFilter(filter, filterConf);
-            if (sb != null) sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+            if (sb != null) {
+                sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+            }
         }
-        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+        if (sb != null && sb.length() > 0) {
+            logger.log(Level.INFO, sb.toString());
+        }
     }
 
     @Override

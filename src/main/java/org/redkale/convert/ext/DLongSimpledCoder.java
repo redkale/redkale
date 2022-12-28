@@ -5,9 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.Reader;
-import org.redkale.convert.Writer;
-import org.redkale.convert.SimpledCoder;
+import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.*;
 
@@ -41,7 +39,9 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
     @SuppressWarnings("unchecked")
     public DLong convertFrom(R in) {
         byte[] bs = bsSimpledCoder.convertFrom(in);
-        if (bs == null) return null;
+        if (bs == null) {
+            return null;
+        }
         return DLong.create(bs);
     }
 
@@ -67,7 +67,9 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
         @Override
         public DLong convertFrom(R in) {
             final String str = in.readSmallString();
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             return DLong.create(Utility.hexToBin(str));
         }
     }

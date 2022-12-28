@@ -96,7 +96,9 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         ObjectPool<Response> safeResponsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         final int respPoolMax = server.getResponsePoolSize();
         ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
-            if (!(Thread.currentThread() instanceof WorkThread)) return null;
+            if (!(Thread.currentThread() instanceof WorkThread)) {
+                return null;
+            }
             return ObjectPool.createUnsafePool(safeResponsePool, safeResponsePool.getCreatCounter(),
                 safeResponsePool.getCycleCounter(), respPoolMax, safeResponsePool.getCreator(), safeResponsePool.getPrepare(), safeResponsePool.getRecycler());
         });
@@ -129,13 +131,17 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                 while (!closed) {
                     try {
                         int count = selector.select();
-                        if (count == 0) continue;
+                        if (count == 0) {
+                            continue;
+                        }
                         Set<SelectionKey> keys = selector.selectedKeys();
                         Iterator<SelectionKey> it = keys.iterator();
                         while (it.hasNext()) {
                             SelectionKey key = it.next();
                             it.remove();
-                            if (key.isAcceptable()) accept(key);
+                            if (key.isAcceptable()) {
+                                accept(key);
+                            }
                         }
                     } catch (Throwable t) {
                         server.logger.log(Level.SEVERE, "server accept error", t);
@@ -156,9 +162,13 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
         AsyncIOThread readThread = ioGroup.nextIOThread();
         LongAdder connCreateCounter = ioGroup.connCreateCounter;
-        if (connCreateCounter != null) connCreateCounter.increment();
+        if (connCreateCounter != null) {
+            connCreateCounter.increment();
+        }
         LongAdder connLivingCounter = ioGroup.connLivingCounter;
-        if (connLivingCounter != null) connLivingCounter.increment();
+        if (connLivingCounter != null) {
+            connLivingCounter.increment();
+        }
         AsyncNioTcpConnection conn = new AsyncNioTcpConnection(false, ioGroup, readThread, ioGroup.connectThread(), channel, context.getSSLBuilder(), context.getSSLContext(), null, connLivingCounter, ioGroup.connClosedCounter);
         ProtocolCodec codec = new ProtocolCodec(context, responseSupplier, responseConsumer, conn);
         conn.protocolCodec = codec;
@@ -179,7 +189,9 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
 
     @Override
     public void close() throws IOException {
-        if (this.closed) return;
+        if (this.closed) {
+            return;
+        }
         this.closed = true;
         this.selector.wakeup();
         this.ioGroup.close();

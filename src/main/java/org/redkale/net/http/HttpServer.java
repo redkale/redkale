@@ -226,7 +226,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      */
     public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(final ClassLoader classLoader, final Class<S> webSocketType, MessageAgent messageAgent, final String prefix, final AnyValue conf) {
         T servlet = Rest.createRestWebSocketServlet(classLoader, webSocketType, messageAgent);
-        if (servlet != null) this.dispatcher.addServlet(servlet, prefix, conf);
+        if (servlet != null) {
+            this.dispatcher.addServlet(servlet, prefix, conf);
+        }
         return servlet;
     }
 
@@ -269,8 +271,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final Class<S> serviceType = Sncp.getServiceType(service);
         if (name != null) {
             for (final HttpServlet item : ((HttpDispatcherServlet) this.dispatcher).getServlets()) {
-                if (!(item instanceof HttpServlet)) continue;
-                if (item.getClass().getAnnotation(Rest.RestDyn.class) == null) continue;
+                if (!(item instanceof HttpServlet)) {
+                    continue;
+                }
+                if (item.getClass().getAnnotation(Rest.RestDyn.class) == null) {
+                    continue;
+                }
                 try {
                     Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
                     if (serviceType.equals(field.getType())) {
@@ -293,7 +299,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 }
             }
         }
-        if (servlet == null) return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+        if (servlet == null) {
+            return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+        }
         try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
             Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
             field.setAccessible(true);
@@ -307,16 +315,22 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 firstService = service;
             }
             Map map = (Map) mapfield.get(servlet);
-            if (map == null && !resname.isEmpty()) map = new HashMap();
+            if (map == null && !resname.isEmpty()) {
+                map = new HashMap();
+            }
             if (map != null) {
                 map.put(resname, service);
-                if (firstService != null) map.put("", firstService);
+                if (firstService != null) {
+                    map.put("", firstService);
+                }
             }
             mapfield.set(servlet, map);
         } catch (Exception e) {
             throw new RuntimeException(serviceType + " generate rest servlet error", e);
         }
-        if (first) this.dispatcher.addServlet(servlet, prefix, sncp ? Sncp.getConf(service) : null);
+        if (first) {
+            this.dispatcher.addServlet(servlet, prefix, sncp ? Sncp.getConf(service) : null);
+        }
         return servlet;
     }
 
@@ -367,7 +381,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             AnyValue resps = config.getAnyValue("response");
             if (resps != null) {
                 AnyValue contenttypes = resps.getAnyValue("content-type");
-                if (contenttypes == null) contenttypes = resps.getAnyValue("contenttype"); //兼容旧的
+                if (contenttypes == null) {
+                    contenttypes = resps.getAnyValue("contenttype"); //兼容旧的
+                }
                 if (contenttypes != null) {
                     plainContentType = contenttypes.getValue("plain");
                     jsonContentType = contenttypes.getValue("json");
@@ -376,14 +392,18 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 if (addHeaders.length > 0) {
                     for (AnyValue addHeader : addHeaders) {
                         String val = addHeader.getValue("value");
-                        if (val == null) continue;
+                        if (val == null) {
+                            continue;
+                        }
                         if (val.startsWith("request.parameters.")) {
                             defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val, val.substring("request.parameters.".length()), null});
                         } else if (val.startsWith("request.headers.")) {
                             defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val, val.substring("request.headers.".length())});
                         } else if (val.startsWith("system.property.")) {
                             String v = System.getProperty(val.substring("system.property.".length()));
-                            if (v != null) defaultAddHeaders.add(new String[]{addHeader.getValue("name"), v});
+                            if (v != null) {
+                                defaultAddHeaders.add(new String[]{addHeader.getValue("name"), v});
+                            }
                         } else {
                             defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val});
                         }
@@ -393,14 +413,18 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 if (setHeaders.length > 0) {
                     for (AnyValue setHeader : setHeaders) {
                         String val = setHeader.getValue("value");
-                        if (val == null) continue;
+                        if (val == null) {
+                            continue;
+                        }
                         if (val.startsWith("request.parameters.")) {
                             defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val, val.substring("request.parameters.".length()), null});
                         } else if (val.startsWith("request.headers.")) {
                             defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val, val.substring("request.headers.".length())});
                         } else if (val.startsWith("system.property.")) {
                             String v = System.getProperty(val.substring("system.property.".length()));
-                            if (v != null) defaultSetHeaders.add(new String[]{setHeader.getValue("name"), v});
+                            if (v != null) {
+                                defaultSetHeaders.add(new String[]{setHeader.getValue("name"), v});
+                            }
                         } else {
                             defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val});
                         }
@@ -521,7 +545,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final int rcapacity = this.bufferCapacity;
         ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
+                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) {
+                    return false;
+                }
                 e.clear();
                 return true;
             });

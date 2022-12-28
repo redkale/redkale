@@ -120,14 +120,18 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     protected boolean recycle() {
-        if (!inited) return false;
+        if (!inited) {
+            return false;
+        }
         this.output = null;
         this.filter = null;
         this.servlet = null;
         boolean notpipeline = request.pipelineIndex == 0 || request.pipelineOver;
         request.recycle();
         if (channel != null) {
-            if (notpipeline) channel.dispose();
+            if (notpipeline) {
+                channel.dispose();
+            }
             channel = null;
         }
         this.responseSupplier = null;
@@ -195,9 +199,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     public void finish(boolean kill) {
-        if (!this.inited) return; //避免重复关闭
-        //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
-        if (kill) refuseAlive();
+        if (!this.inited) {
+            return; //避免重复关闭
+        }        //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
+        if (kill) {
+            refuseAlive();
+        }
         if (this.recycleListener != null) {
             try {
                 this.recycleListener.accept(request, this);
@@ -243,8 +250,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     public void finish(boolean kill, final byte[] bs, int offset, int length) {
-        if (!this.inited) return; //避免重复关闭
-        if (kill) refuseAlive();
+        if (!this.inited) {
+            return; //避免重复关闭
+        }
+        if (kill) {
+            refuseAlive();
+        }
         if (this.channel.hasPipelineData()) {
             this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
 
@@ -264,8 +275,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     public <A> void finish(boolean kill, final byte[] bs, int offset, int length, final byte[] bs2, int offset2, int length2, Consumer<A> callback, A attachment) {
-        if (!this.inited) return; //避免重复关闭
-        if (kill) refuseAlive();
+        if (!this.inited) {
+            return; //避免重复关闭
+        }
+        if (kill) {
+            refuseAlive();
+        }
         if (this.channel.hasPipelineData()) {
             this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
 
@@ -293,8 +308,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     protected void finish(boolean kill, ByteBuffer buffer) {
-        if (!this.inited) return; //避免重复关闭
-        if (kill) refuseAlive();
+        if (!this.inited) {
+            return; //避免重复关闭
+        }
+        if (kill) {
+            refuseAlive();
+        }
         if (this.channel.hasPipelineData()) {
             this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
 
@@ -314,8 +333,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     protected void finish(boolean kill, ByteBuffer... buffers) {
-        if (!this.inited) return; //避免重复关闭
-        if (kill) refuseAlive();
+        if (!this.inited) {
+            return; //避免重复关闭
+        }
+        if (kill) {
+            refuseAlive();
+        }
         if (this.channel.hasPipelineData()) {
             this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
 
@@ -339,12 +362,16 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
             @Override
             public void completed(Integer result, Void attachment) {
-                if (handler != null) handler.completed(result, attachment);
+                if (handler != null) {
+                    handler.completed(result, attachment);
+                }
             }
 
             @Override
             public void failed(Throwable exc, Void attachment) {
-                if (handler != null) handler.failed(exc, attachment);
+                if (handler != null) {
+                    handler.failed(exc, attachment);
+                }
             }
 
         });
@@ -356,13 +383,17 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             @Override
             public void completed(Integer result, A attachment) {
                 channel.offerBuffer(buffer);
-                if (handler != null) handler.completed(result, attachment);
+                if (handler != null) {
+                    handler.completed(result, attachment);
+                }
             }
 
             @Override
             public void failed(Throwable exc, A attachment) {
                 channel.offerBuffer(buffer);
-                if (handler != null) handler.failed(exc, attachment);
+                if (handler != null) {
+                    handler.failed(exc, attachment);
+                }
             }
 
         });
@@ -374,7 +405,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             @Override
             public void completed(Integer result, A attachment) {
                 channel.offerBuffer(buffers);
-                if (handler != null) handler.completed(result, attachment);
+                if (handler != null) {
+                    handler.completed(result, attachment);
+                }
             }
 
             @Override
@@ -382,7 +415,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 for (ByteBuffer buffer : buffers) {
                     channel.offerBuffer(buffer);
                 }
-                if (handler != null) handler.failed(exc, attachment);
+                if (handler != null) {
+                    handler.failed(exc, attachment);
+                }
             }
 
         });

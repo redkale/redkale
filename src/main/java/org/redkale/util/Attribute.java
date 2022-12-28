@@ -8,9 +8,11 @@ package org.redkale.util;
 import java.lang.reflect.TypeVariable;
 import java.util.*;
 import java.util.function.*;
-import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
+import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
+import org.redkale.util.Attribute;
 
 /**
  * 该类实现动态映射一个JavaBean类中成员对应的getter、setter方法； 代替低效的反射实现方式。
@@ -412,16 +414,28 @@ public interface Attribute<T, F> {
         List<Attribute<T, ?>> list = new ArrayList<>();
         RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
         for (java.lang.reflect.Field field : clazz.getFields()) {
-            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
-            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) {
+                continue;
+            }
             list.add(create(clazz, field));
         }
         RedkaleClassLoader.putReflectionDeclaredMethods(clazz.getName());
         for (java.lang.reflect.Method setter : clazz.getDeclaredMethods()) {
-            if (java.lang.reflect.Modifier.isStatic(setter.getModifiers())) continue;
-            if (!setter.getName().startsWith("set")) continue;
-            if (setter.getReturnType() != void.class) continue;
-            if (setter.getParameterCount() != 1) continue;
+            if (java.lang.reflect.Modifier.isStatic(setter.getModifiers())) {
+                continue;
+            }
+            if (!setter.getName().startsWith("set")) {
+                continue;
+            }
+            if (setter.getReturnType() != void.class) {
+                continue;
+            }
+            if (setter.getParameterCount() != 1) {
+                continue;
+            }
             Class t = setter.getParameterTypes()[0];
             String prefix = t == boolean.class || t == Boolean.class ? "is" : "get";
             java.lang.reflect.Method getter = null;
@@ -447,16 +461,28 @@ public interface Attribute<T, F> {
         List<Attribute<T, ?>> list = new ArrayList<>();
         RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
         for (java.lang.reflect.Field field : clazz.getFields()) {
-            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
-            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) {
+                continue;
+            }
             list.add(create(clazz, field));
         }
         RedkaleClassLoader.putReflectionDeclaredMethods(clazz.getName());
         for (java.lang.reflect.Method method : clazz.getDeclaredMethods()) {
-            if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
-            if (method.getReturnType() == void.class) continue;
-            if (method.getParameterCount() != 0) continue;
-            if (method.getName().equals("getClass")) continue;
+            if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (method.getReturnType() == void.class) {
+                continue;
+            }
+            if (method.getParameterCount() != 0) {
+                continue;
+            }
+            if (method.getName().equals("getClass")) {
+                continue;
+            }
             if ((method.getName().startsWith("get") && method.getName().length() > 3)
                 || (method.getName().startsWith("is") && method.getName().length() > 2)
                 || Utility.isRecordGetter(clazz, method)) {
@@ -478,15 +504,25 @@ public interface Attribute<T, F> {
         List<Attribute<T, ?>> list = new ArrayList<>();
         RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
         for (java.lang.reflect.Field field : clazz.getFields()) {
-            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
-            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) continue;
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            if (java.lang.reflect.Modifier.isFinal(field.getModifiers())) {
+                continue;
+            }
             list.add(create(clazz, field));
         }
         RedkaleClassLoader.putReflectionDeclaredMethods(clazz.getName());
         for (java.lang.reflect.Method method : clazz.getDeclaredMethods()) {
-            if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) continue;
-            if (!method.getName().startsWith("set")) continue;
-            if (method.getParameterCount() != 1) continue;
+            if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (!method.getName().startsWith("set")) {
+                continue;
+            }
+            if (method.getParameterCount() != 1) {
+                continue;
+            }
             list.add(create(clazz, (java.lang.reflect.Method) null, method));
         }
         return list.toArray(new Attribute[list.size()]);
@@ -648,8 +684,12 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(java.lang.reflect.Type subclass, final Class<T> clazz, String fieldAlias, final Class<F> fieldType, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
-        if (subclass == null) subclass = clazz;
-        if (fieldAlias != null && fieldAlias.isEmpty()) fieldAlias = null;
+        if (subclass == null) {
+            subclass = clazz;
+        }
+        if (fieldAlias != null && fieldAlias.isEmpty()) {
+            fieldAlias = null;
+        }
         int mod = field == null ? java.lang.reflect.Modifier.STATIC : field.getModifiers();
         if (field != null && !java.lang.reflect.Modifier.isStatic(mod) && !java.lang.reflect.Modifier.isPublic(mod)) {
             Class t = field.getType();
@@ -663,7 +703,9 @@ public interface Attribute<T, F> {
                 } catch (Exception ex) {
                     try {
                         java.lang.reflect.Method m = clazz.getMethod(field.getName());
-                        if (Utility.isRecordGetter(clazz, m) && field.getType() == m.getReturnType()) getter = m;
+                        if (Utility.isRecordGetter(clazz, m) && field.getType() == m.getReturnType()) {
+                            getter = m;
+                        }
                     } catch (Exception ex2) {
                     }
                 }
@@ -735,7 +777,9 @@ public interface Attribute<T, F> {
         if (generictype instanceof java.lang.reflect.TypeVariable) {
             checkCast = true;
             generictype = TypeToken.getGenericType(generictype, subclass);
-            if (generictype instanceof Class) column = (Class) generictype;
+            if (generictype instanceof Class) {
+                column = (Class) generictype;
+            }
         }
         StringBuilder newsubname = new StringBuilder();
         for (char ch : subclass.toString().replace("class ", "").toCharArray()) { //RetResult<String>与RetResult<Map<String,String>>是不一样的
@@ -758,7 +802,9 @@ public interface Attribute<T, F> {
             tostr += "_getter_setter";
         }
         final Class pcolumn = column;
-        if (column.isPrimitive()) column = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(column, 1), 0).getClass();
+        if (column.isPrimitive()) {
+            column = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(column, 1), 0).getClass();
+        }
         final String supDynName = Attribute.class.getName().replace('.', '/');
         final String interName = TypeToken.typeToClass(subclass).getName().replace('.', '/');
         final String columnName = column.getName().replace('.', '/');
@@ -776,7 +822,9 @@ public interface Attribute<T, F> {
         if (realclz != null) {
             pkgname = realclz.getName();
             int pos = pkgname.lastIndexOf('.');
-            if (pos > 0) pkgname = pkgname.substring(0, pos + 1);
+            if (pos > 0) {
+                pkgname = pkgname.substring(0, pos + 1);
+            }
             pkgname = pkgname.replace('.', '/');
         }
         final String newDynName = "org/redkaledyn/attribute/" + pkgname + "_Dyn" + Attribute.class.getSimpleName()
@@ -883,7 +931,9 @@ public interface Attribute<T, F> {
                         mv.visitMethodInsn(INVOKESTATIC, columnName, "valueOf", "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc, false);
                         m = 2;
                     } else {
-                        if (checkCast) mv.visitTypeInsn(CHECKCAST, columnName);
+                        if (checkCast) {
+                            mv.visitTypeInsn(CHECKCAST, columnName);
+                        }
                     }
                 }
             } else {
@@ -893,7 +943,9 @@ public interface Attribute<T, F> {
                     mv.visitMethodInsn(INVOKESTATIC, columnName, "valueOf", "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc, false);
                     m = 2;
                 } else {
-                    if (checkCast) mv.visitTypeInsn(CHECKCAST, columnName);
+                    if (checkCast) {
+                        mv.visitTypeInsn(CHECKCAST, columnName);
+                    }
                 }
             }
             mv.visitInsn(ARETURN);
@@ -1073,8 +1125,12 @@ public interface Attribute<T, F> {
         Objects.requireNonNull(fieldName);
         Objects.requireNonNull(fieldType);
         String str = Attribute.class.getSimpleName() + "_" + fieldName + "_" + fieldType.getSimpleName();
-        if (getter != null) str += "_getter";
-        if (setter != null) str += "_setter";
+        if (getter != null) {
+            str += "_getter";
+        }
+        if (setter != null) {
+            str += "_setter";
+        }
         final String tostr = str;
         return new Attribute<T, F>() {
             @Override
@@ -1109,7 +1165,9 @@ public interface Attribute<T, F> {
 
             @Override
             public void set(T obj, F value) {
-                if (setter != null) setter.accept(obj, value);
+                if (setter != null) {
+                    setter.accept(obj, value);
+                }
             }
 
             @Override

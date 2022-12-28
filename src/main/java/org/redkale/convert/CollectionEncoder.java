@@ -79,9 +79,13 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
         if (out.writeArrayB(value.size(), this, componentEncoder, value) < 0) {
             boolean first = true;
             for (Object v : value) {
-                if (!first) out.writeArrayMark();
+                if (!first) {
+                    out.writeArrayMark();
+                }
                 writeMemberValue(out, member, v, first);
-                if (first) first = false;
+                if (first) {
+                    first = false;
+                }
             }
         }
         out.writeArrayE();

@@ -68,16 +68,24 @@ public class DataJdbcSource extends DataSqlSource {
 
     @Override
     public void destroy(AnyValue config) {
-        if (readPool != null) readPool.close();
-        if (writePool != null && writePool != readPool) writePool.close();
+        if (readPool != null) {
+            readPool.close();
+        }
+        if (writePool != null && writePool != readPool) {
+            writePool.close();
+        }
     }
 
     @Local
     @Override
     public void close() throws Exception {
         super.close();
-        if (readPool != null) readPool.close();
-        if (writePool != null && writePool != readPool) writePool.close();
+        if (readPool != null) {
+            readPool.close();
+        }
+        if (writePool != null && writePool != readPool) {
+            writePool.close();
+        }
     }
 
     public static boolean acceptsConf(AnyValue conf) {
@@ -276,7 +284,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) writePool.offerConnection(conn);
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
         }
     }
 
@@ -318,7 +328,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) writePool.offerConnection(conn);
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
         }
     }
 
@@ -366,7 +378,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) writePool.offerConnection(conn);
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
         }
     }
 
@@ -428,10 +442,14 @@ public class DataJdbcSource extends DataSqlSource {
                 conn.commit();
             } catch (SQLException se) {
                 conn.rollback();
-                if (!isTableNotExist(info, se.getSQLState())) throw se;
+                if (!isTableNotExist(info, se.getSQLState())) {
+                    throw se;
+                }
                 if (info.getTableStrategy() == null) { //单表
                     String[] tableSqls = createTableSqls(info);
-                    if (tableSqls == null) throw se;
+                    if (tableSqls == null) {
+                        throw se;
+                    }
                     //创建单表结构
                     Statement st = conn.createStatement();
                     if (tableSqls.length == 1) {
@@ -587,7 +605,9 @@ public class DataJdbcSource extends DataSqlSource {
                             }
                         }
                         String debugsql = sb.toString();
-                        if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " insert sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                        if (info.isLoggable(logger, Level.FINEST, debugsql)) {
+                            logger.finest(info.getType().getSimpleName() + " insert sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                        }
                     }
                 } else {
                     prepareInfos.forEach((t, p) -> {
@@ -609,7 +629,9 @@ public class DataJdbcSource extends DataSqlSource {
                                 }
                             }
                             String debugsql = sb.toString();
-                            if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " insert sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                            if (info.isLoggable(logger, Level.FINEST, debugsql)) {
+                                logger.finest(info.getType().getSimpleName() + " insert sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                            }
                         }
                     });
                 }
@@ -633,7 +655,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) writePool.offerConnection(conn);
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
         }
     }
 
@@ -659,7 +683,9 @@ public class DataJdbcSource extends DataSqlSource {
                     int c1 = 0;
                     int[] pc = prestmt.executeBatch();
                     for (int p : pc) {
-                        if (p >= 0) c1 += p;
+                        if (p >= 0) {
+                            c1 += p;
+                        }
                     }
                     c = c1;
                     prestmt.close();
@@ -764,7 +790,9 @@ public class DataJdbcSource extends DataSqlSource {
                             }
                         }
                         String debugsql = sb.toString();
-                        if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " update sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                        if (info.isLoggable(logger, Level.FINEST, debugsql)) {
+                            logger.finest(info.getType().getSimpleName() + " update sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                        }
                     }
                 } else {
                     prepareInfos.forEach((t, p) -> {
@@ -786,7 +814,9 @@ public class DataJdbcSource extends DataSqlSource {
                                 }
                             }
                             String debugsql = sb.toString();
-                            if (info.isLoggable(logger, Level.FINEST, debugsql)) logger.finest(info.getType().getSimpleName() + " update sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                            if (info.isLoggable(logger, Level.FINEST, debugsql)) {
+                                logger.finest(info.getType().getSimpleName() + " update sql=" + debugsql.replaceAll("(\r|\n)", "\\n"));
+                            }
                         }
                     });
                 }
@@ -810,7 +840,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) writePool.offerConnection(conn);
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
         }
     }
 
@@ -856,7 +888,9 @@ public class DataJdbcSource extends DataSqlSource {
                 slowLog(s, sql.sql);
                 return CompletableFuture.completedFuture(c);
             } else {
-                if (info.isLoggable(logger, Level.FINEST, sql.sql)) logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                if (info.isLoggable(logger, Level.FINEST, sql.sql)) {
+                    logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
+                }
                 final Statement stmt = conn.createStatement();
                 int c = stmt.executeUpdate(sql.sql);
                 stmt.close();
@@ -896,7 +930,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) writePool.offerConnection(conn);
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
         }
     }
 
@@ -916,7 +952,9 @@ public class DataJdbcSource extends DataSqlSource {
                     for (String col : ffc.cols()) {
                         Object o = set.getObject(++index);
                         Number rs = ffc.getDefvalue();
-                        if (o != null) rs = (Number) o;
+                        if (o != null) {
+                            rs = (Number) o;
+                        }
                         map.put(ffc.col(col), rs);
                     }
                 }
@@ -949,7 +987,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -965,7 +1005,9 @@ public class DataJdbcSource extends DataSqlSource {
             ResultSet set = stmt.executeQuery(sql);
             if (set.next()) {
                 Object o = set.getObject(1);
-                if (o != null) rs = (Number) o;
+                if (o != null) {
+                    rs = (Number) o;
+                }
             }
             set.close();
             stmt.close();
@@ -995,7 +1037,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -1042,7 +1086,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -1104,7 +1150,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -1147,7 +1195,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -1194,7 +1244,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -1210,7 +1262,9 @@ public class DataJdbcSource extends DataSqlSource {
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
             set.close();
             ps.close();
-            if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
+            if (info.isLoggable(logger, Level.FINEST, sql)) {
+                logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
+            }
             slowLog(s, sql);
             return CompletableFuture.completedFuture(rs);
         } catch (SQLException e) {
@@ -1237,7 +1291,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -1317,7 +1373,9 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (Exception e) {
             return CompletableFuture.failedFuture(e);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -1337,7 +1395,9 @@ public class DataJdbcSource extends DataSqlSource {
             if (needTotal) {
                 ps = conn.prepareStatement(countSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
                 set = ps.executeQuery();
-                if (set.next()) total = set.getLong(1);
+                if (set.next()) {
+                    total = set.getLong(1);
+                }
                 set.close();
                 ps.close();
             }
@@ -1346,9 +1406,13 @@ public class DataJdbcSource extends DataSqlSource {
         } else {
             //conn.setReadOnly(true);
             PreparedStatement ps = conn.prepareStatement(listSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-            if (flipper != null && flipper.getLimit() > 0) ps.setFetchSize(flipper.getLimit());
+            if (flipper != null && flipper.getLimit() > 0) {
+                ps.setFetchSize(flipper.getLimit());
+            }
             ResultSet set = ps.executeQuery();
-            if (flipper != null && flipper.getOffset() > 0) set.absolute(flipper.getOffset());
+            if (flipper != null && flipper.getOffset() > 0) {
+                set.absolute(flipper.getOffset());
+            }
             final int limit = flipper == null || flipper.getLimit() < 1 ? Integer.MAX_VALUE : flipper.getLimit();
             int i = 0;
             final DataResultSet rr = createDataResultSet(info, set);
@@ -1356,13 +1420,17 @@ public class DataJdbcSource extends DataSqlSource {
                 while (set.next()) {
                     i++;
                     list.add(info.getFullEntityValue(rr));
-                    if (limit <= i) break;
+                    if (limit <= i) {
+                        break;
+                    }
                 }
             } else {
                 while (set.next()) {
                     i++;
                     list.add(info.getEntityValue(sels, rr));
-                    if (limit <= i) break;
+                    if (limit <= i) {
+                        break;
+                    }
                 }
             }
             long total = list.size();
@@ -1389,7 +1457,9 @@ public class DataJdbcSource extends DataSqlSource {
             } else {
                 int b = 0;
                 for (String table : tables) {
-                    if (!union.isEmpty()) union.append(" UNION ALL ");
+                    if (!union.isEmpty()) {
+                        union.append(" UNION ALL ");
+                    }
                     union.append("SELECT ").append(info.getFullQueryColumns("a", selects)).append(" FROM ").append(table).append(" a").append(joinAndWhere);
                 }
                 listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM (" + (union) + ") a";
@@ -1481,7 +1551,9 @@ public class DataJdbcSource extends DataSqlSource {
     @Local
     @Override
     public int[] directExecute(String... sqls) {
-        if (sqls.length == 0) return new int[0];
+        if (sqls.length == 0) {
+            return new int[0];
+        }
         final long s = System.currentTimeMillis();
         Connection conn = writePool.pollConnection();
         try {
@@ -1504,7 +1576,9 @@ public class DataJdbcSource extends DataSqlSource {
             }
             throw new SourceException(e);
         } finally {
-            if (conn != null) writePool.offerConnection(conn);
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
         }
     }
 
@@ -1524,7 +1598,9 @@ public class DataJdbcSource extends DataSqlSource {
         final long s = System.currentTimeMillis();
         final Connection conn = readPool.pollConnection();
         try {
-            if (logger.isLoggable(Level.FINEST)) logger.finest("direct query sql=" + sql);
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.finest("direct query sql=" + sql);
+            }
             //conn.setReadOnly(true);
             final Statement statement = conn.createStatement();
             //final PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -1537,7 +1613,9 @@ public class DataJdbcSource extends DataSqlSource {
         } catch (Exception ex) {
             throw new SourceException(ex);
         } finally {
-            if (conn != null) readPool.offerConnection(conn);
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
         }
     }
 
@@ -1555,26 +1633,34 @@ public class DataJdbcSource extends DataSqlSource {
                     Object val = index > 0 ? getObject(index) : getObject(column);
 
                     if (val
-                        == null) return null;
+                        == null) {
+                        return null;
+                    }
                     return new java.util.Date(
                         ((java.sql.Date) val).getTime());
                 } else if (t == java.time.LocalDate.class) {
                     Object val = index > 0 ? getObject(index) : getObject(column);
 
                     if (val
-                        == null) return null;
+                        == null) {
+                        return null;
+                    }
                     return ((java.sql.Date) val).toLocalDate();
                 } else if (t == java.time.LocalTime.class) {
                     Object val = index > 0 ? getObject(index) : getObject(column);
 
                     if (val
-                        == null) return null;
+                        == null) {
+                        return null;
+                    }
                     return ((java.sql.Time) val).toLocalTime();
                 } else if (t == java.time.LocalDateTime.class) {
                     Object val = index > 0 ? getObject(index) : getObject(column);
 
                     if (val
-                        == null) return null;
+                        == null) {
+                        return null;
+                    }
                     return ((java.sql.Timestamp) val).toLocalDateTime();
                 } else if (t.getName().startsWith("java.sql.")) {
                     return index > 0 ? (Serializable) getObject(index) : (Serializable) getObject(column);
@@ -1687,8 +1773,12 @@ public class DataJdbcSource extends DataSqlSource {
             String username = prop.getProperty(DATA_SOURCE_USER, "");
             String password = prop.getProperty(DATA_SOURCE_PASSWORD, "");
             this.connectAttrs = new Properties();
-            if (username != null) this.connectAttrs.put("user", username);
-            if (password != null) this.connectAttrs.put("password", password);
+            if (username != null) {
+                this.connectAttrs.put("user", username);
+            }
+            if (password != null) {
+                this.connectAttrs.put("password", password);
+            }
             try {
                 this.driver = DriverManager.getDriver(this.url);
             } catch (SQLException e) {
@@ -1749,7 +1839,9 @@ public class DataJdbcSource extends DataSqlSource {
                     } catch (InterruptedException t) {
                         logger.log(Level.WARNING, "take pooled connection error", t);
                     }
-                    if (conn == null) throw new SourceException("create pooled connection timeout");
+                    if (conn == null) {
+                        throw new SourceException("create pooled connection timeout");
+                    }
                 }
             }
             if (conn != null) {
@@ -1776,7 +1868,9 @@ public class DataJdbcSource extends DataSqlSource {
 
         public <C> void offerConnection(final C connection) {
             Connection conn = (Connection) connection;
-            if (conn == null) return;
+            if (conn == null) {
+                return;
+            }
             try {
                 if (checkValid(conn) && queue.offer(conn)) {
                     usingCounter.decrement();
@@ -1794,9 +1888,13 @@ public class DataJdbcSource extends DataSqlSource {
         protected boolean checkValid(Connection conn) {
             try {
                 boolean rs = !conn.isClosed() && conn.isValid(1);
-                if (!rs) return rs;
+                if (!rs) {
+                    return rs;
+                }
                 Properties prop = conn.getClientInfo();
-                if (prop == null) return false;
+                if (prop == null) {
+                    return false;
+                }
                 return prop == clientInfo || Objects.equals(prop.getProperty("version"), clientInfo.getProperty("version"));
             } catch (SQLException ex) {
                 if (!"08S01".equals(ex.getSQLState())) {//MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException

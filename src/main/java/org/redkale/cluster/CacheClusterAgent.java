@@ -51,7 +51,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         super.init(factory, config);
         this.sourceName = getSourceName();
         this.ttls = config.getIntValue("ttls", 10);
-        if (this.ttls < 5) this.ttls = 10;
+        if (this.ttls < 5) {
+            this.ttls = 10;
+        }
     }
 
     @Override
@@ -88,7 +90,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     @Override
     public void destroy(AnyValue config) {
-        if (scheduler != null) scheduler.shutdownNow();
+        if (scheduler != null) {
+            scheduler.shutdownNow();
+        }
     }
 
     public String getSourceName() {
@@ -102,7 +106,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     @Override //ServiceLoader时判断配置是否符合当前实现类
     public boolean acceptsConf(AnyValue config) {
-        if (config == null) return false;
+        if (config == null) {
+            return false;
+        }
         return config.getValue("source") != null;
     }
 
@@ -186,7 +192,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     public CompletableFuture<Collection<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname) {
         final String serviceName = generateHttpServiceName(protocol, module, resname);
         Collection<InetSocketAddress> rs = httpAddressMap.get(serviceName);
-        if (rs != null) return CompletableFuture.completedFuture(rs);
+        if (rs != null) {
+            return CompletableFuture.completedFuture(rs);
+        }
         return queryAddress(serviceName).thenApply(t -> {
             httpAddressMap.put(serviceName, t);
             return t;
@@ -203,7 +211,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         return future.thenApply(map -> {
             final Set<InetSocketAddress> set = new HashSet<>();
             map.forEach((n, v) -> {
-                if (v != null && (System.currentTimeMillis() - v.time) / 1000 < ttls) set.add(v.addr);
+                if (v != null && (System.currentTimeMillis() - v.time) / 1000 < ttls) {
+                    set.add(v.addr);
+                }
             });
             return set;
         });
@@ -228,7 +238,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     @Override
     public void register(Application application) {
-        if (isApplicationHealth()) throw new RuntimeException("application.nodeid=" + nodeid + " exists in cluster");
+        if (isApplicationHealth()) {
+            throw new RuntimeException("application.nodeid=" + nodeid + " exists in cluster");
+        }
         deregister(application);
 
         String serviceid = generateApplicationServiceId();
@@ -283,7 +295,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
             }
         }
         source.hdel(serviceName, serviceid);
-        if (realcanceled && currEntry != null) currEntry.canceled = true;
+        if (realcanceled && currEntry != null) {
+            currEntry.canceled = true;
+        }
         if (!"mqtp".equals(protocol) && currEntry != null && currEntry.submqtp) {
             deregister(ns, "mqtp", service, realcanceled);
         }

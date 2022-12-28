@@ -221,8 +221,12 @@ public final class Utility {
      * @throws IllegalArgumentException is value is more than MAX_POW2 or less than 0
      */
     public static int roundToPowerOfTwo(final int value) {
-        if (value > MAX_POW2) throw new IllegalArgumentException("There is no larger power of 2 int for value:" + value + " since it exceeds 2^31.");
-        if (value < 0) throw new IllegalArgumentException("Given value:" + value + ". Expecting value >= 0.");
+        if (value > MAX_POW2) {
+            throw new IllegalArgumentException("There is no larger power of 2 int for value:" + value + " since it exceeds 2^31.");
+        }
+        if (value < 0) {
+            throw new IllegalArgumentException("Given value:" + value + ". Expecting value >= 0.");
+        }
         return 1 << (32 - Integer.numberOfLeadingZeros(value - 1));
     }
 
@@ -231,12 +235,22 @@ public final class Utility {
     }
 
     public static boolean isRecordGetter(Class clazz, Method method) {
-        if (JAVA_RECORD_CLASS == null) return false;
-        if (method.getReturnType() == void.class) return false;
-        if (method.getParameterCount() != 0) return false;
-        if (method.getName().equals("getClass")) return false;
+        if (JAVA_RECORD_CLASS == null) {
+            return false;
+        }
+        if (method.getReturnType() == void.class) {
+            return false;
+        }
+        if (method.getParameterCount() != 0) {
+            return false;
+        }
+        if (method.getName().equals("getClass")) {
+            return false;
+        }
         Class clz = (clazz == null ? method.getDeclaringClass() : clazz);
-        if (!JAVA_RECORD_CLASS.isAssignableFrom(clz)) return false;
+        if (!JAVA_RECORD_CLASS.isAssignableFrom(clz)) {
+            return false;
+        }
         try {
             return clz.getDeclaredField(method.getName()).getType() == method.getReturnType();
         } catch (Throwable t) {
@@ -520,7 +534,9 @@ public final class Utility {
      * @return List
      */
     public static <T> List<T> limit(List<T> list, int limit) {
-        if (list == null || list.isEmpty() || list.size() <= limit) return list;
+        if (list == null || list.isEmpty() || list.size() <= limit) {
+            return list;
+        }
         return list.subList(0, limit);
     }
 
@@ -543,7 +559,9 @@ public final class Utility {
      * @return 新数组
      */
     public static <T> T[] unshift(final T[] array, final T... objs) {
-        if (array == null || array.length == 0) return objs;
+        if (array == null || array.length == 0) {
+            return objs;
+        }
         final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.length);
         System.arraycopy(objs, 0, news, 0, objs.length);
         System.arraycopy(array, 0, news, objs.length, array.length);
@@ -560,14 +578,20 @@ public final class Utility {
      * @return 新数组
      */
     public static <T> T[] unshift(final T[] array, final Collection<T> objs) {
-        if (objs == null || objs.isEmpty()) return array;
+        if (objs == null || objs.isEmpty()) {
+            return array;
+        }
         if (array == null) {
             T one = null;
             for (T t : objs) {
-                if (t != null) one = t;
+                if (t != null) {
+                    one = t;
+                }
                 break;
             }
-            if (one == null) return array;
+            if (one == null) {
+                return array;
+            }
             T[] news = (T[]) Array.newInstance(one.getClass(), objs.size());
             return objs.toArray(news);
         }
@@ -601,7 +625,9 @@ public final class Utility {
      */
     public static int sum(boolean check, final int... array) {
         if (array == null || array.length == 0) {
-            if (!check) return 0;
+            if (!check) {
+                return 0;
+            }
             throw new NullPointerException("array is null or empty");
         }
         int sum = 0;
@@ -632,7 +658,9 @@ public final class Utility {
      */
     public static long sum(boolean check, final long... array) {
         if (array == null || array.length == 0) {
-            if (!check) return 0;
+            if (!check) {
+                return 0;
+            }
             throw new NullPointerException("array is null or empty");
         }
         long sum = 0L;
@@ -650,10 +678,14 @@ public final class Utility {
      * @return int
      */
     public static int max(final int... array) {
-        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        if (array == null || array.length == 0) {
+            throw new NullPointerException("array is null or empty");
+        }
         int max = array[0];
         for (int i : array) {
-            if (i > max) i = max;
+            if (i > max) {
+                i = max;
+            }
         }
         return max;
     }
@@ -666,10 +698,14 @@ public final class Utility {
      * @return long
      */
     public static long max(final long... array) {
-        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        if (array == null || array.length == 0) {
+            throw new NullPointerException("array is null or empty");
+        }
         long max = array[0];
         for (long i : array) {
-            if (i > max) i = max;
+            if (i > max) {
+                i = max;
+            }
         }
         return max;
     }
@@ -682,10 +718,14 @@ public final class Utility {
      * @return int
      */
     public static long min(final int... array) {
-        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        if (array == null || array.length == 0) {
+            throw new NullPointerException("array is null or empty");
+        }
         int min = array[0];
         for (int i : array) {
-            if (i < min) i = min;
+            if (i < min) {
+                i = min;
+            }
         }
         return min;
     }
@@ -698,10 +738,14 @@ public final class Utility {
      * @return long
      */
     public static long min(final long... array) {
-        if (array == null || array.length == 0) throw new NullPointerException("array is null or empty");
+        if (array == null || array.length == 0) {
+            throw new NullPointerException("array is null or empty");
+        }
         long min = array[0];
         for (long i : array) {
-            if (i < min) i = min;
+            if (i < min) {
+                i = min;
+            }
         }
         return min;
     }
@@ -715,10 +759,14 @@ public final class Utility {
      * @return String
      */
     public static String joining(final char[] array, final String delimiter) {
-        if (array == null || array.length == 0) return "";
+        if (array == null || array.length == 0) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         for (char i : array) {
-            if (sb.length() > 0) sb.append(delimiter);
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
             sb.append(i);
         }
         return sb.toString();
@@ -733,10 +781,14 @@ public final class Utility {
      * @return String
      */
     public static String joining(final int[] array, final String delimiter) {
-        if (array == null || array.length == 0) return "";
+        if (array == null || array.length == 0) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         for (int i : array) {
-            if (sb.length() > 0) sb.append(delimiter);
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
             sb.append(i);
         }
         return sb.toString();
@@ -751,10 +803,14 @@ public final class Utility {
      * @return String
      */
     public static String joining(final long[] array, final String delimiter) {
-        if (array == null || array.length == 0) return "";
+        if (array == null || array.length == 0) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         for (long i : array) {
-            if (sb.length() > 0) sb.append(delimiter);
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
             sb.append(i);
         }
         return sb.toString();
@@ -770,10 +826,14 @@ public final class Utility {
      * @return String
      */
     public static <T> String joining(final T[] array, final String delimiter) {
-        if (array == null || array.length == 0) return "";
+        if (array == null || array.length == 0) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         for (T i : array) {
-            if (sb.length() > 0) sb.append(delimiter);
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
             sb.append(i);
         }
         return sb.toString();
@@ -789,10 +849,14 @@ public final class Utility {
      * @return String
      */
     public static <T> String joining(final Stream<T> stream, final String delimiter) {
-        if (stream == null) return "";
+        if (stream == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         stream.forEach(i -> {
-            if (sb.length() > 0) sb.append(delimiter);
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
             sb.append(i);
         });
         return sb.toString();
@@ -808,10 +872,14 @@ public final class Utility {
      * @return String
      */
     public static <T> String joining(final String[] array, final char delimiter) {
-        if (array == null || array.length == 0) return "";
+        if (array == null || array.length == 0) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         for (String i : array) {
-            if (sb.length() > 0) sb.append(delimiter);
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
             sb.append(i);
         }
         return sb.toString();
@@ -827,10 +895,14 @@ public final class Utility {
      * @return String
      */
     public static <T> String joiningHex(final byte[] array, final char delimiter) {
-        if (array == null || array.length == 0) return "";
+        if (array == null || array.length == 0) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         for (byte i : array) {
-            if (sb.length() > 0) sb.append(delimiter);
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
             String s = Integer.toHexString(i & 0xff);
             sb.append(s.length() > 1 ? "0x" : "0x0").append(s);
         }
@@ -849,11 +921,15 @@ public final class Utility {
      * @return String
      */
     public static <T> String joiningHex(final byte[] array, int offset, int length, final char delimiter) {
-        if (array == null || array.length == 0) return "";
+        if (array == null || array.length == 0) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         int len = offset + length;
         for (int i = offset; i < len; i++) {
-            if (sb.length() > 0) sb.append(delimiter);
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
             String s = Integer.toHexString(array[i] & 0xff);
             sb.append(s.length() > 1 ? "0x" : "0x0").append(s);
         }
@@ -869,8 +945,12 @@ public final class Utility {
      * @return 新数组
      */
     public static byte[] append(final byte[] array, final byte... objs) {
-        if (array == null || array.length == 0) return objs;
-        if (objs == null || objs.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return objs;
+        }
+        if (objs == null || objs.length == 0) {
+            return array;
+        }
         final byte[] news = new byte[array.length + objs.length];
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
@@ -889,12 +969,16 @@ public final class Utility {
      */
     public static byte[] append(final byte[] array, final byte[] objs, int offset, int length) {
         if (array == null || array.length == 0) {
-            if (objs != null && offset == 0 && objs.length == length) return objs;
+            if (objs != null && offset == 0 && objs.length == length) {
+                return objs;
+            }
             final byte[] news = new byte[length];
             System.arraycopy(objs, 0, news, 0, length);
             return news;
         }
-        if (objs == null || length == 0) return array;
+        if (objs == null || length == 0) {
+            return array;
+        }
         final byte[] news = new byte[array.length + length];
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, offset, news, array.length, length);
@@ -910,8 +994,12 @@ public final class Utility {
      * @return 新数组
      */
     public static short[] append(final short[] array, final short... objs) {
-        if (array == null || array.length == 0) return objs;
-        if (objs == null || objs.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return objs;
+        }
+        if (objs == null || objs.length == 0) {
+            return array;
+        }
         final short[] news = new short[array.length + objs.length];
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
@@ -927,8 +1015,12 @@ public final class Utility {
      * @return 新数组
      */
     public static char[] append(final char[] array, final char... objs) {
-        if (array == null || array.length == 0) return objs;
-        if (objs == null || objs.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return objs;
+        }
+        if (objs == null || objs.length == 0) {
+            return array;
+        }
         final char[] news = new char[array.length + objs.length];
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
@@ -944,8 +1036,12 @@ public final class Utility {
      * @return 新数组
      */
     public static int[] append(final int[] array, final int... objs) {
-        if (array == null || array.length == 0) return objs;
-        if (objs == null || objs.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return objs;
+        }
+        if (objs == null || objs.length == 0) {
+            return array;
+        }
         final int[] news = new int[array.length + objs.length];
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
@@ -961,8 +1057,12 @@ public final class Utility {
      * @return 新数组
      */
     public static long[] append(final long[] array, final long... objs) {
-        if (array == null || array.length == 0) return objs;
-        if (objs == null || objs.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return objs;
+        }
+        if (objs == null || objs.length == 0) {
+            return array;
+        }
         final long[] news = new long[array.length + objs.length];
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
@@ -979,8 +1079,12 @@ public final class Utility {
      * @return 新数组
      */
     public static <T> T[] append(final T[] array, final T... objs) {
-        if (array == null || array.length == 0) return objs;
-        if (objs == null || objs.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return objs;
+        }
+        if (objs == null || objs.length == 0) {
+            return array;
+        }
         final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.length);
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
@@ -997,8 +1101,12 @@ public final class Utility {
      * @return 新数组
      */
     public static <T> Object[][] append(final Object[][] array, final Object[]... objs) {
-        if (array == null || array.length == 0) return objs;
-        if (objs == null || objs.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return objs;
+        }
+        if (objs == null || objs.length == 0) {
+            return array;
+        }
         final Object[][] news = new Object[array.length + objs.length][];
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
@@ -1015,14 +1123,20 @@ public final class Utility {
      * @return 新数组
      */
     public static <T> T[] append(final T[] array, final Collection<T> objs) {
-        if (objs == null || objs.isEmpty()) return array;
+        if (objs == null || objs.isEmpty()) {
+            return array;
+        }
         if (array == null) {
             T one = null;
             for (T t : objs) {
-                if (t != null) one = t;
+                if (t != null) {
+                    one = t;
+                }
                 break;
             }
-            if (one == null) return array;
+            if (one == null) {
+                return array;
+            }
             T[] news = (T[]) Array.newInstance(one.getClass(), objs.size());
             return objs.toArray(news);
         }
@@ -1043,7 +1157,9 @@ public final class Utility {
      * @return 新数组
      */
     public static int[] reverseSort(final int[] array) {
-        if (array == null || array.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return array;
+        }
         return Arrays.stream(array).boxed().sorted(Collections.reverseOrder()).mapToInt(x -> x).toArray();
     }
 
@@ -1055,7 +1171,9 @@ public final class Utility {
      * @return 新数组
      */
     public static long[] reverseSort(final long[] array) {
-        if (array == null || array.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return array;
+        }
         return Arrays.stream(array).boxed().sorted(Collections.reverseOrder()).mapToLong(x -> x).toArray();
     }
 
@@ -1082,7 +1200,9 @@ public final class Utility {
      * @return 新数组
      */
     public static <T> T[] remove(final T[] array, final Predicate filter) {
-        if (array == null || array.length == 0 || filter == null) return array;
+        if (array == null || array.length == 0 || filter == null) {
+            return array;
+        }
         final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length);
         int index = 0;
         for (int i = 0; i < news.length; i++) {
@@ -1090,7 +1210,9 @@ public final class Utility {
                 news[index++] = array[i];
             }
         }
-        if (index == array.length) return array;
+        if (index == array.length) {
+            return array;
+        }
         final T[] rs = (T[]) Array.newInstance(array.getClass().getComponentType(), index);
         System.arraycopy(news, 0, rs, 0, index);
         return rs;
@@ -1105,7 +1227,9 @@ public final class Utility {
      * @return 新数组
      */
     public static String[] remove(final String[] array, final String item) {
-        if (array == null || array.length == 0) return array;
+        if (array == null || array.length == 0) {
+            return array;
+        }
         final String[] news = new String[array.length];
         int index = 0;
         for (int i = 0; i < news.length; i++) {
@@ -1115,7 +1239,9 @@ public final class Utility {
                 news[index++] = array[i];
             }
         }
-        if (index == array.length) return array;
+        if (index == array.length) {
+            return array;
+        }
         final String[] rs = new String[index];
         System.arraycopy(news, 0, rs, 0, index);
         return rs;
@@ -1148,7 +1274,9 @@ public final class Utility {
      * @return 新数组
      */
     public static short[] remove(final short[] array, boolean repeat, final short... items) {
-        if (array == null || array.length == 0 || items == null || items.length == 0) return array;
+        if (array == null || array.length == 0 || items == null || items.length == 0) {
+            return array;
+        }
         final short[] news = new short[array.length];
         short[] subs = items;
         int index = 0;
@@ -1173,7 +1301,9 @@ public final class Utility {
                 news[index++] = array[i];
             }
         }
-        if (index == array.length) return array;
+        if (index == array.length) {
+            return array;
+        }
         final short[] rs = new short[index];
         System.arraycopy(news, 0, rs, 0, index);
         return rs;
@@ -1206,7 +1336,9 @@ public final class Utility {
      * @return 新数组
      */
     public static int[] remove(final int[] array, boolean repeat, final int... items) {
-        if (array == null || array.length == 0 || items == null || items.length == 0) return array;
+        if (array == null || array.length == 0 || items == null || items.length == 0) {
+            return array;
+        }
         final int[] news = new int[array.length];
         int[] subs = items;
         int index = 0;
@@ -1231,7 +1363,9 @@ public final class Utility {
                 news[index++] = array[i];
             }
         }
-        if (index == array.length) return array;
+        if (index == array.length) {
+            return array;
+        }
         final int[] rs = new int[index];
         System.arraycopy(news, 0, rs, 0, index);
         return rs;
@@ -1291,7 +1425,9 @@ public final class Utility {
                 news[index++] = array[i];
             }
         }
-        if (index == array.length) return array;
+        if (index == array.length) {
+            return array;
+        }
         final long[] rs = new long[index];
         System.arraycopy(news, 0, rs, 0, index);
         return rs;
@@ -1331,10 +1467,14 @@ public final class Utility {
      * @return boolean
      */
     public static boolean contains(String string, char... values) {
-        if (string == null) return false;
+        if (string == null) {
+            return false;
+        }
         for (char ch : Utility.charArray(string)) {
             for (char ch2 : values) {
-                if (ch == ch2) return true;
+                if (ch == ch2) {
+                    return true;
+                }
             }
         }
         return false;
@@ -1350,9 +1490,15 @@ public final class Utility {
      * @return 元素是否完全相同
      */
     public static <T> boolean equalsElement(T[] array1, T[] array2) {
-        if (array1 == null && array2 == null) return true;
-        if (array1 == null || array2 == null) return false;
-        if (array1.length != array2.length) return false;
+        if (array1 == null && array2 == null) {
+            return true;
+        }
+        if (array1 == null || array2 == null) {
+            return false;
+        }
+        if (array1.length != array2.length) {
+            return false;
+        }
         return equalsElement(ofList(array1), ofList(array2));
     }
 
@@ -1366,13 +1512,21 @@ public final class Utility {
      * @return 元素是否完全相同
      */
     public static <T> boolean equalsElement(Collection<T> col1, Collection<T> col2) {
-        if (col1 == null && col2 == null) return true;
-        if (col1 == null || col2 == null) return false;
-        if (col1.size() != col2.size()) return false;
+        if (col1 == null && col2 == null) {
+            return true;
+        }
+        if (col1 == null || col2 == null) {
+            return false;
+        }
+        if (col1.size() != col2.size()) {
+            return false;
+        }
         //{1,2,2}, {1,1,2}
         List<T> list = new ArrayList<>(col2);
         for (T item : col1) {
-            if (!list.remove(item)) return false;
+            if (!list.remove(item)) {
+                return false;
+            }
         }
         return list.isEmpty();
     }
@@ -1388,11 +1542,19 @@ public final class Utility {
      * @return 元素是否完全相同
      */
     public static <K, V> boolean equalsElement(Map<K, V> map1, Map<K, V> map2) {
-        if (map1 == null && map2 == null) return true;
-        if (map1 == null || map2 == null) return false;
-        if (map1.size() != map2.size()) return false;
+        if (map1 == null && map2 == null) {
+            return true;
+        }
+        if (map1 == null || map2 == null) {
+            return false;
+        }
+        if (map1.size() != map2.size()) {
+            return false;
+        }
         for (Map.Entry<K, V> en : map1.entrySet()) {
-            if (!Objects.equals(en.getValue(), map2.get(en.getKey()))) return false;
+            if (!Objects.equals(en.getValue(), map2.get(en.getKey()))) {
+                return false;
+            }
         }
         return true;
     }
@@ -1406,9 +1568,13 @@ public final class Utility {
      * @return boolean
      */
     public static boolean contains(char[] values, char value) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (char v : values) {
-            if (v == value) return true;
+            if (v == value) {
+                return true;
+            }
         }
         return false;
     }
@@ -1422,9 +1588,13 @@ public final class Utility {
      * @return boolean
      */
     public static boolean contains(short[] values, short value) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (short v : values) {
-            if (v == value) return true;
+            if (v == value) {
+                return true;
+            }
         }
         return false;
     }
@@ -1438,9 +1608,13 @@ public final class Utility {
      * @return boolean
      */
     public static boolean contains(short[] values, short... items) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (short item : items) {
-            if (!contains(values, item)) return false;
+            if (!contains(values, item)) {
+                return false;
+            }
         }
         return true;
     }
@@ -1454,9 +1628,13 @@ public final class Utility {
      * @return boolean
      */
     public static boolean contains(int[] values, int value) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (int v : values) {
-            if (v == value) return true;
+            if (v == value) {
+                return true;
+            }
         }
         return false;
     }
@@ -1470,9 +1648,13 @@ public final class Utility {
      * @return boolean
      */
     public static boolean contains(int[] values, int... items) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (int item : items) {
-            if (!contains(values, item)) return false;
+            if (!contains(values, item)) {
+                return false;
+            }
         }
         return true;
     }
@@ -1486,9 +1668,13 @@ public final class Utility {
      * @return boolean
      */
     public static boolean contains(long[] values, long value) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (long v : values) {
-            if (v == value) return true;
+            if (v == value) {
+                return true;
+            }
         }
         return false;
     }
@@ -1502,9 +1688,13 @@ public final class Utility {
      * @return boolean
      */
     public static boolean contains(long[] values, long... items) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (long item : items) {
-            if (!contains(values, item)) return false;
+            if (!contains(values, item)) {
+                return false;
+            }
         }
         return true;
     }
@@ -1519,9 +1709,13 @@ public final class Utility {
      * @return boolean
      */
     public static <T> boolean contains(T[] values, T value) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (T v : values) {
-            if (Objects.equals(v, value)) return true;
+            if (Objects.equals(v, value)) {
+                return true;
+            }
         }
         return false;
     }
@@ -1536,9 +1730,13 @@ public final class Utility {
      * @return boolean
      */
     public static <T> boolean contains(T[] values, Predicate<T> predicate) {
-        if (values == null) return false;
+        if (values == null) {
+            return false;
+        }
         for (T v : values) {
-            if (predicate.test(v)) return true;
+            if (predicate.test(v)) {
+                return true;
+            }
         }
         return false;
     }
@@ -1555,14 +1753,24 @@ public final class Utility {
      * @return 是否完全包含
      */
     public static boolean containsMatch(final short[] array, final short... items) {
-        if (array == null) return false;
-        if (items == null || items.length == 0) return true;
-        if (array.length == 0 && items.length == 0) return true;
-        if (array.length < items.length) return false;
+        if (array == null) {
+            return false;
+        }
+        if (items == null || items.length == 0) {
+            return true;
+        }
+        if (array.length == 0 && items.length == 0) {
+            return true;
+        }
+        if (array.length < items.length) {
+            return false;
+        }
 
         short[] subs = array;
         for (short item : items) {
-            if (!contains(subs, item)) return false;
+            if (!contains(subs, item)) {
+                return false;
+            }
             short[] newsubs = new short[subs.length - 1];
             int k = 0;
             boolean done = false;
@@ -1592,14 +1800,24 @@ public final class Utility {
      * @return 是否完全包含
      */
     public static boolean containsMatch(final int[] array, final int... items) {
-        if (array == null) return false;
-        if (items == null || items.length == 0) return true;
-        if (array.length == 0 && items.length == 0) return true;
-        if (array.length < items.length) return false;
+        if (array == null) {
+            return false;
+        }
+        if (items == null || items.length == 0) {
+            return true;
+        }
+        if (array.length == 0 && items.length == 0) {
+            return true;
+        }
+        if (array.length < items.length) {
+            return false;
+        }
 
         int[] subs = array;
         for (int item : items) {
-            if (!contains(subs, item)) return false;
+            if (!contains(subs, item)) {
+                return false;
+            }
             int[] newsubs = new int[subs.length - 1];
             int k = 0;
             boolean done = false;
@@ -1629,14 +1847,24 @@ public final class Utility {
      * @return 是否完全包含
      */
     public static boolean containsMatch(final long[] array, final long... items) {
-        if (array == null) return false;
-        if (items == null || items.length == 0) return true;
-        if (array.length == 0 && items.length == 0) return true;
-        if (array.length < items.length) return false;
+        if (array == null) {
+            return false;
+        }
+        if (items == null || items.length == 0) {
+            return true;
+        }
+        if (array.length == 0 && items.length == 0) {
+            return true;
+        }
+        if (array.length < items.length) {
+            return false;
+        }
 
         long[] subs = array;
         for (long item : items) {
-            if (!contains(subs, item)) return false;
+            if (!contains(subs, item)) {
+                return false;
+            }
             long[] newsubs = new long[subs.length - 1];
             int k = 0;
             boolean done = false;
@@ -1663,7 +1891,9 @@ public final class Utility {
      * @return 新字符串数组
      */
     public static String[] exclude(final String[] columns, final String... cols) {
-        if (columns == null || columns.length == 0 || cols == null || cols.length == 0) return columns;
+        if (columns == null || columns.length == 0 || cols == null || cols.length == 0) {
+            return columns;
+        }
         int count = 0;
         for (String column : columns) {
             boolean flag = false;
@@ -1673,10 +1903,16 @@ public final class Utility {
                     break;
                 }
             }
-            if (flag) count++;
+            if (flag) {
+                count++;
+            }
         }
-        if (count == 0) return columns;
-        if (count == columns.length) return new String[0];
+        if (count == 0) {
+            return columns;
+        }
+        if (count == columns.length) {
+            return new String[0];
+        }
         final String[] newcols = new String[columns.length - count];
         count = 0;
         for (String column : columns) {
@@ -1687,7 +1923,9 @@ public final class Utility {
                     break;
                 }
             }
-            if (!flag) newcols[count++] = column;
+            if (!flag) {
+                newcols[count++] = column;
+            }
         }
         return newcols;
     }
@@ -1702,9 +1940,13 @@ public final class Utility {
      * @return 对象
      */
     public static <T> T find(final T[] array, final Predicate<T> predicate) {
-        if (array == null) return null;
+        if (array == null) {
+            return null;
+        }
         for (T item : array) {
-            if (item != null && predicate.test(item)) return item;
+            if (item != null && predicate.test(item)) {
+                return item;
+            }
         }
         return null;
     }
@@ -1719,9 +1961,13 @@ public final class Utility {
      * @return 对象
      */
     public static <T> T find(final Collection<T> array, final Predicate<T> predicate) {
-        if (array == null) return null;
+        if (array == null) {
+            return null;
+        }
         for (T item : array) {
-            if (item != null && predicate.test(item)) return item;
+            if (item != null && predicate.test(item)) {
+                return item;
+            }
         }
         return null;
     }
@@ -1736,11 +1982,15 @@ public final class Utility {
      * @return 位置
      */
     public static <T> int indexOf(final T[] array, final Predicate<T> predicate) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         int index = -1;
         for (T item : array) {
             ++index;
-            if (item != null && predicate.test(item)) return index;
+            if (item != null && predicate.test(item)) {
+                return index;
+            }
         }
         return -1;
     }
@@ -1755,11 +2005,15 @@ public final class Utility {
      * @return 位置
      */
     public static <T> int indexOf(final Collection<T> array, final Predicate<T> predicate) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         int index = -1;
         for (T item : array) {
             ++index;
-            if (item != null && predicate.test(item)) return index;
+            if (item != null && predicate.test(item)) {
+                return index;
+            }
         }
         return -1;
     }
@@ -1773,7 +2027,9 @@ public final class Utility {
      * @return 位置
      */
     public static int indexOf(final byte[] array, final byte element) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         for (int i = 0; i < array.length; ++i) {
             if (array[i] == element) {
                 return i;
@@ -1792,7 +2048,9 @@ public final class Utility {
      * @return 位置
      */
     public static int indexOf(final byte[] array, int fromIndex, final byte element) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         for (int i = fromIndex; i < array.length; ++i) {
             if (array[i] == element) {
                 return i;
@@ -1823,7 +2081,9 @@ public final class Utility {
      * @return 位置
      */
     public static int indexOf(final short[] array, int fromIndex, final short element) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         for (int i = fromIndex; i < array.length; ++i) {
             if (array[i] == element) {
                 return i;
@@ -1854,7 +2114,9 @@ public final class Utility {
      * @return 位置
      */
     public static int indexOf(final char[] array, int fromIndex, final char element) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         for (int i = fromIndex; i < array.length; ++i) {
             if (array[i] == element) {
                 return i;
@@ -1885,7 +2147,9 @@ public final class Utility {
      * @return 位置
      */
     public static int indexOf(final int[] array, int fromIndex, final int element) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         for (int i = fromIndex; i < array.length; ++i) {
             if (array[i] == element) {
                 return i;
@@ -1916,7 +2180,9 @@ public final class Utility {
      * @return 位置
      */
     public static int indexOf(final long[] array, int fromIndex, final long element) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         for (int i = fromIndex; i < array.length; ++i) {
             if (array[i] == element) {
                 return i;
@@ -1947,7 +2213,9 @@ public final class Utility {
      * @return 位置
      */
     public static int indexOf(final float[] array, int fromIndex, final float element) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         for (int i = fromIndex; i < array.length; ++i) {
             if (array[i] == element) {
                 return i;
@@ -1978,7 +2246,9 @@ public final class Utility {
      * @return 位置
      */
     public static int indexOf(final double[] array, int fromIndex, final double element) {
-        if (array == null) return -1;
+        if (array == null) {
+            return -1;
+        }
         for (int i = fromIndex; i < array.length; ++i) {
             if (array[i] == element) {
                 return i;
@@ -1996,14 +2266,18 @@ public final class Utility {
      * @return 字符串
      */
     public static String toString(String string, ByteBuffer buffer) {
-        if (buffer == null || !buffer.hasRemaining()) return string;
+        if (buffer == null || !buffer.hasRemaining()) {
+            return string;
+        }
         int pos = buffer.position();
         int limit = buffer.limit();
         byte[] bytes = new byte[buffer.remaining()];
         buffer.get(bytes);
         buffer.position(pos);
         buffer.limit(limit);
-        if (string == null) return new String(bytes, UTF_8);
+        if (string == null) {
+            return new String(bytes, UTF_8);
+        }
         return string + new String(bytes, UTF_8);
     }
 
@@ -2015,7 +2289,9 @@ public final class Utility {
      *
      */
     public static void println(String string, ByteBuffer buffer) {
-        if (buffer == null || !buffer.hasRemaining()) return;
+        if (buffer == null || !buffer.hasRemaining()) {
+            return;
+        }
         int pos = buffer.position();
         int limit = buffer.limit();
         byte[] bytes = new byte[buffer.remaining()];
@@ -2033,16 +2309,24 @@ public final class Utility {
      *
      */
     public static void println(String string, byte... bytes) {
-        if (bytes == null) return;
+        if (bytes == null) {
+            return;
+        }
         StringBuilder sb = new StringBuilder();
-        if (string != null) sb.append(string);
+        if (string != null) {
+            sb.append(string);
+        }
         sb.append(bytes.length).append(".[");
         boolean last = false;
         for (byte b : bytes) {
-            if (last) sb.append(',');
+            if (last) {
+                sb.append(',');
+            }
             int v = b & 0xff;
             sb.append("0x");
-            if (v < 16) sb.append('0');
+            if (v < 16) {
+                sb.append('0');
+            }
             sb.append(Integer.toHexString(v));
             last = true;
         }
@@ -2061,12 +2345,18 @@ public final class Utility {
             Enumeration<NetworkInterface> nifs = NetworkInterface.getNetworkInterfaces();
             while (nifs.hasMoreElements()) {
                 NetworkInterface nif = nifs.nextElement();
-                if (!nif.isUp()) continue;
+                if (!nif.isUp()) {
+                    continue;
+                }
                 Enumeration<InetAddress> eis = nif.getInetAddresses();
                 while (eis.hasMoreElements()) {
                     InetAddress ia = eis.nextElement();
-                    if (ia.isLoopbackAddress() && ia instanceof Inet4Address) back = ia;
-                    if (ia.isSiteLocalAddress() && ia instanceof Inet4Address) return ia;
+                    if (ia.isLoopbackAddress() && ia instanceof Inet4Address) {
+                        back = ia;
+                    }
+                    if (ia.isSiteLocalAddress() && ia instanceof Inet4Address) {
+                        return ia;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -2089,12 +2379,16 @@ public final class Utility {
         return new CompletionHandler<V, A>() {
             @Override
             public void completed(V result, A attachment) {
-                if (success != null) success.accept(result, attachment);
+                if (success != null) {
+                    success.accept(result, attachment);
+                }
             }
 
             @Override
             public void failed(Throwable exc, A attachment) {
-                if (fail != null) fail.accept(exc, attachment);
+                if (fail != null) {
+                    fail.accept(exc, attachment);
+                }
             }
         };
     }
@@ -2112,12 +2406,16 @@ public final class Utility {
         return new CompletionHandler<Void, A>() {
             @Override
             public void completed(Void result, A attachment) {
-                if (success != null) success.accept(attachment);
+                if (success != null) {
+                    success.accept(attachment);
+                }
             }
 
             @Override
             public void failed(Throwable exc, A attachment) {
-                if (fail != null) fail.accept(exc, attachment);
+                if (fail != null) {
+                    fail.accept(exc, attachment);
+                }
             }
         };
     }
@@ -2135,12 +2433,16 @@ public final class Utility {
         return new CompletionHandler<V, Void>() {
             @Override
             public void completed(V result, Void attachment) {
-                if (success != null) success.accept(result);
+                if (success != null) {
+                    success.accept(result);
+                }
             }
 
             @Override
             public void failed(Throwable exc, Void attachment) {
-                if (fail != null) fail.accept(exc);
+                if (fail != null) {
+                    fail.accept(exc);
+                }
             }
         };
     }
@@ -2416,19 +2718,37 @@ public final class Utility {
             int c = 0;
             if (!format.contains("%1$")) {
                 for (char ch : format.toCharArray()) {
-                    if (ch == '%') c++;
+                    if (ch == '%') {
+                        c++;
+                    }
                 }
             }
             size = c;
         }
-        if (size <= 1) return String.format(format, time);
-        if (size == 2) return String.format(format, time, time);
-        if (size == 3) return String.format(format, time, time, time);
-        if (size == 4) return String.format(format, time, time, time, time);
-        if (size == 5) return String.format(format, time, time, time, time, time);
-        if (size == 6) return String.format(format, time, time, time, time, time, time);
-        if (size == 7) return String.format(format, time, time, time, time, time, time, time);
-        if (size == 8) return String.format(format, time, time, time, time, time, time, time);
+        if (size <= 1) {
+            return String.format(format, time);
+        }
+        if (size == 2) {
+            return String.format(format, time, time);
+        }
+        if (size == 3) {
+            return String.format(format, time, time, time);
+        }
+        if (size == 4) {
+            return String.format(format, time, time, time, time);
+        }
+        if (size == 5) {
+            return String.format(format, time, time, time, time, time);
+        }
+        if (size == 6) {
+            return String.format(format, time, time, time, time, time, time);
+        }
+        if (size == 7) {
+            return String.format(format, time, time, time, time, time, time, time);
+        }
+        if (size == 8) {
+            return String.format(format, time, time, time, time, time, time, time);
+        }
         Object[] args = new Object[size];
         for (int i = 0; i < size; i++) {
             args[i] = time;
@@ -2444,7 +2764,9 @@ public final class Utility {
      * @return byte[]
      */
     public static byte[] intsToBytes(int[] value) {
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         byte[] bs = new byte[value.length];
         for (int i = 0; i < bs.length; i++) {
             bs[i] = (byte) value[i];
@@ -2482,7 +2804,9 @@ public final class Utility {
      * @return md5值
      */
     public static byte[] md5(String str) {
-        if (str == null) return null;
+        if (str == null) {
+            return null;
+        }
         MessageDigest md5;
         try {
             md5 = MessageDigest.getInstance("MD5");
@@ -2500,7 +2824,9 @@ public final class Utility {
      * @return md5值
      */
     public static byte[] md5(byte[] input) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         MessageDigest md5;
         try {
             md5 = MessageDigest.getInstance("MD5");
@@ -2520,7 +2846,9 @@ public final class Utility {
      * @return md5值
      */
     public static byte[] md5(byte[] input, int offset, int len) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         MessageDigest md5;
         try {
             md5 = MessageDigest.getInstance("MD5");
@@ -2598,7 +2926,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] sha256(String str) {
-        if (str == null) return null;
+        if (str == null) {
+            return null;
+        }
         MessageDigest digester;
         try {
             digester = MessageDigest.getInstance("SHA-256");
@@ -2616,7 +2946,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] sha256(byte[] input) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         MessageDigest digester;
         try {
             digester = MessageDigest.getInstance("SHA-256");
@@ -2636,7 +2968,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] sha256(byte[] input, int offset, int len) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         MessageDigest digester;
         try {
             digester = MessageDigest.getInstance("SHA-256");
@@ -2746,7 +3080,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] hmacSha1(byte[] key, byte[] input) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         try {
             Mac mac = Mac.getInstance("HmacSHA1");
             mac.init(new SecretKeySpec(key, "HmacSHA1"));
@@ -2767,7 +3103,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] hmacSha1(byte[] key, byte[] input, int offset, int len) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         try {
             Mac mac = Mac.getInstance("HmacSHA1");
             mac.init(new SecretKeySpec(key, "HmacSHA1"));
@@ -2877,7 +3215,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] hmacSha256(byte[] key, byte[] input) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(key, "HmacSHA256"));
@@ -2898,7 +3238,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] hmacSha256(byte[] key, byte[] input, int offset, int len) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(key, "HmacSHA256"));
@@ -3008,7 +3350,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] hmacSha512(byte[] key, byte[] input) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         try {
             SecretKey sk = new SecretKeySpec(key, "HmacSHA512");
             Mac mac = Mac.getInstance("HmacSHA512");
@@ -3030,7 +3374,9 @@ public final class Utility {
      * @return hash值
      */
     public static byte[] hmacSha512(byte[] key, byte[] input, int offset, int len) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         try {
             SecretKey sk = new SecretKeySpec(key, "HmacSHA512");
             Mac mac = Mac.getInstance("HmacSHA512");
@@ -3213,13 +3559,21 @@ public final class Utility {
         String digits = "0123456789abcdef";
         for (int i = 0; i < size; i++) {
             int ch1 = src.charAt(offset + i * 2);
-            if ('A' <= ch1 && 'F' >= ch1) ch1 = ch1 - 'A' + 'a';
+            if ('A' <= ch1 && 'F' >= ch1) {
+                ch1 = ch1 - 'A' + 'a';
+            }
             int ch2 = src.charAt(offset + i * 2 + 1);
-            if ('A' <= ch2 && 'F' >= ch2) ch2 = ch2 - 'A' + 'a';
+            if ('A' <= ch2 && 'F' >= ch2) {
+                ch2 = ch2 - 'A' + 'a';
+            }
             int pos1 = digits.indexOf(ch1);
-            if (pos1 < 0) throw new NumberFormatException();
+            if (pos1 < 0) {
+                throw new NumberFormatException();
+            }
             int pos2 = digits.indexOf(ch2);
-            if (pos2 < 0) throw new NumberFormatException();
+            if (pos2 < 0) {
+                throw new NumberFormatException();
+            }
             bytes[i] = (byte) (pos1 * 0x10 + pos2);
         }
         return bytes;
@@ -3268,13 +3622,21 @@ public final class Utility {
         String digits = "0123456789abcdef";
         for (int i = 0; i < size; i++) {
             int ch1 = src[offset + i * 2];
-            if ('A' <= ch1 && 'F' >= ch1) ch1 = ch1 - 'A' + 'a';
+            if ('A' <= ch1 && 'F' >= ch1) {
+                ch1 = ch1 - 'A' + 'a';
+            }
             int ch2 = src[offset + i * 2 + 1];
-            if ('A' <= ch2 && 'F' >= ch2) ch2 = ch2 - 'A' + 'a';
+            if ('A' <= ch2 && 'F' >= ch2) {
+                ch2 = ch2 - 'A' + 'a';
+            }
             int pos1 = digits.indexOf(ch1);
-            if (pos1 < 0) throw new NumberFormatException();
+            if (pos1 < 0) {
+                throw new NumberFormatException();
+            }
             int pos2 = digits.indexOf(ch2);
-            if (pos2 < 0) throw new NumberFormatException();
+            if (pos2 < 0) {
+                throw new NumberFormatException();
+            }
             bytes[i] = (byte) (pos1 * 0x10 + pos2);
         }
         return bytes;
@@ -3328,8 +3690,12 @@ public final class Utility {
     }
 
     public static byte[] encodeUTF8(final String value) {
-        if (value == null) return new byte[0];
-        if (strCharFunction == null) return encodeUTF8(value.toCharArray());
+        if (value == null) {
+            return new byte[0];
+        }
+        if (strCharFunction == null) {
+            return encodeUTF8(value.toCharArray());
+        }
         return encodeUTF8((char[]) strCharFunction.apply(value));
     }
 
@@ -3384,40 +3750,60 @@ public final class Utility {
     }
 
     public static boolean isLatin1(String value) {
-        if (value == null) return true;
+        if (value == null) {
+            return true;
+        }
         if (strLatin1Function != null) {
             return strLatin1Function.test(value); //LATIN1:0  UTF16:1
         }
         char[] chs = charArray(value);
         for (char ch : chs) {
-            if (ch >= 0x80) return false;
+            if (ch >= 0x80) {
+                return false;
+            }
         }
         return true;
     }
 
     public static char[] charArray(String value) {
-        if (value == null) return null;
-        if (strCharFunction == null) return value.toCharArray();
+        if (value == null) {
+            return null;
+        }
+        if (strCharFunction == null) {
+            return value.toCharArray();
+        }
         return (char[]) strCharFunction.apply(value);
     }
 
     public static char[] charArray(StringBuilder value) {
-        if (value == null) return null;
-        if (sbCharFunction == null) return value.toString().toCharArray();
+        if (value == null) {
+            return null;
+        }
+        if (sbCharFunction == null) {
+            return value.toString().toCharArray();
+        }
         return (char[]) sbCharFunction.apply(value);
     }
 
     //只能是单字节字符串
     public static byte[] latin1ByteArray(String latin1Value) {
-        if (latin1Value == null) return null;
-        if (strByteFunction == null) return latin1Value.getBytes();
+        if (latin1Value == null) {
+            return null;
+        }
+        if (strByteFunction == null) {
+            return latin1Value.getBytes();
+        }
         return (byte[]) strByteFunction.apply(latin1Value);
     }
 
     //只能是单字节字符串
     public static byte[] latin1ByteArray(StringBuilder latin1Value) {
-        if (latin1Value == null) return null;
-        if (sbByteFunction == null) return latin1Value.toString().getBytes();
+        if (latin1Value == null) {
+            return null;
+        }
+        if (sbByteFunction == null) {
+            return latin1Value.toString().getBytes();
+        }
         return (byte[]) sbByteFunction.apply(latin1Value);
     }
 
@@ -3430,8 +3816,12 @@ public final class Utility {
     }
 
     public static int encodeUTF8Length(String value) {
-        if (value == null) return -1;
-        if (strCharFunction == null) return encodeUTF8Length(value.toCharArray());
+        if (value == null) {
+            return -1;
+        }
+        if (strCharFunction == null) {
+            return encodeUTF8Length(value.toCharArray());
+        }
         return encodeUTF8Length((char[]) strCharFunction.apply(value));
     }
 
@@ -3486,14 +3876,20 @@ public final class Utility {
         for (int i = start; i < limit; i++) {
             c = chs[i];
             if (c < 0x80) {
-                if (buf.remaining() < 1) buf = buffer2;
+                if (buf.remaining() < 1) {
+                    buf = buffer2;
+                }
                 buf.put((byte) c);
             } else if (c < 0x800) {
-                if (buf.remaining() < 2) buf = buffer2;
+                if (buf.remaining() < 2) {
+                    buf = buffer2;
+                }
                 buf.put((byte) (0xc0 | (c >> 6)));
                 buf.put((byte) (0x80 | (c & 0x3f)));
             } else if (Character.isSurrogate(c)) { //连取两个
-                if (buf.remaining() < 4) buf = buffer2;
+                if (buf.remaining() < 4) {
+                    buf = buffer2;
+                }
                 int uc = Character.toCodePoint(c, chs[i + 1]);
                 buf.put((byte) (0xf0 | ((uc >> 18))));
                 buf.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
@@ -3501,18 +3897,24 @@ public final class Utility {
                 buf.put((byte) (0x80 | (uc & 0x3f)));
                 i++;
             } else {
-                if (buf.remaining() < 3) buf = buffer2;
+                if (buf.remaining() < 3) {
+                    buf = buffer2;
+                }
                 buf.put((byte) (0xe0 | ((c >> 12))));
                 buf.put((byte) (0x80 | ((c >> 6) & 0x3f)));
                 buf.put((byte) (0x80 | (c & 0x3f)));
             }
         }
-        if (buffer2 != null) buffer2.flip();
+        if (buffer2 != null) {
+            buffer2.flip();
+        }
         return buffer2; //返回扩展buffer
     }
 
     public static String getTypeDescriptor(java.lang.reflect.Type type) {
-        if (type == null) return null;
+        if (type == null) {
+            return null;
+        }
         if (type instanceof Class) {
             Class d = (Class) type;
             final StringBuilder sb = new StringBuilder();
@@ -4055,7 +4457,9 @@ public final class Utility {
         java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().uri(URI.create(url))
             .timeout(Duration.ofMillis(timeoutMs > 0 ? timeoutMs : 6000))
             .method(method, body == null ? java.net.http.HttpRequest.BodyPublishers.noBody() : java.net.http.HttpRequest.BodyPublishers.ofString(body));
-        if (headers != null) headers.forEach((n, v) -> builder.header(n, v));
+        if (headers != null) {
+            headers.forEach((n, v) -> builder.header(n, v));
+        }
         java.net.http.HttpClient c = client == null ? httpClient : client;
         if (c == null) {
             synchronized (clientLock) {
@@ -4080,7 +4484,9 @@ public final class Utility {
                 if (rs == 200 || result != null) {
                     if (respHeaders != null) {
                         resp.headers().map().forEach((k, l) -> {
-                            if (!l.isEmpty()) respHeaders.put(k, l.get(0));
+                            if (!l.isEmpty()) {
+                                respHeaders.put(k, l.get(0));
+                            }
                         });
                     }
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -4170,7 +4576,9 @@ public final class Utility {
         while ((pos = in.read(bytes)) != -1) {
             out.write(bytes, 0, pos);
         }
-        if (close) in.close();
+        if (close) {
+            in.close();
+        }
         return charset == null ? out.toString() : out.toString(charset);
     }
 
@@ -4189,7 +4597,9 @@ public final class Utility {
         while ((pos = in.read(bytes)) != -1) {
             out.write(bytes, 0, pos);
         }
-        if (close) in.close();
+        if (close) {
+            in.close();
+        }
         return out;
     }
 

@@ -97,7 +97,9 @@ public final class ResourceFactory {
         List<ResourceFactory> result = new ArrayList<>();
         for (WeakReference<ResourceFactory> ref : chidren) {
             ResourceFactory rf = ref.get();
-            if (rf != null) result.add(rf);
+            if (rf != null) {
+                result.add(rf);
+            }
         }
         return result;
     }
@@ -129,7 +131,9 @@ public final class ResourceFactory {
     public static Class getResourceType(Type type) {
         Class<?> clazz = TypeToken.typeToClass(type);
         ResourceType rt = clazz.getAnnotation(ResourceType.class);
-        if (rt != null) return rt.value();
+        if (rt != null) {
+            return rt.value();
+        }
         org.redkale.util.ResourceType rt2 = clazz.getAnnotation(org.redkale.util.ResourceType.class);
         return rt2 == null ? clazz : rt2.value();
     }
@@ -183,7 +187,9 @@ public final class ResourceFactory {
      * @return 旧资源对象
      */
     public <A> A register(final boolean autoSync, final A rs) {
-        if (rs == null) return null;
+        if (rs == null) {
+            return null;
+        }
         return (A) register(autoSync, "", rs);
     }
 
@@ -390,7 +396,9 @@ public final class ResourceFactory {
         } else {
             A old = null;
             A t = (A) register(autoSync, name, rt, val);
-            if (t != null) old = t;
+            if (t != null) {
+                old = t;
+            }
             return old;
         }
     }
@@ -457,7 +465,9 @@ public final class ResourceFactory {
      *
      */
     public <A> void register(Properties properties, String environmentName, Class<A> environmentType) {
-        if (properties == null || properties.isEmpty()) return;
+        if (properties == null || properties.isEmpty()) {
+            return;
+        }
         List<ResourceChangeWrapper> wrappers = new ArrayList<>();
         List<ResourceEvent> environmentEventList = new ArrayList<>();
         properties.forEach((k, v) -> {
@@ -478,14 +488,18 @@ public final class ResourceFactory {
                 }
             }
         }
-        if (wrappers.isEmpty() && envListenMap.isEmpty()) return;
+        if (wrappers.isEmpty() && envListenMap.isEmpty()) {
+            return;
+        }
         Map<Object, List<ResourceChangeWrapper>> map = new LinkedHashMap<>();
         for (ResourceChangeWrapper wrapper : wrappers) {
             map.computeIfAbsent(wrapper.dest, k -> new ArrayList<>()).add(wrapper);
         }
         if (!map.isEmpty()) {
             map.forEach((dest, list) -> {
-                if (envListenMap.containsKey(dest)) return; //跳过含有@Resource Environment字段的对象
+                if (envListenMap.containsKey(dest)) {
+                    return; //跳过含有@Resource Environment字段的对象
+                }
                 Method listener = list.get(0).listener;
                 try {
                     ResourceEvent[] events = new ResourceEvent[list.size()];
@@ -553,8 +567,12 @@ public final class ResourceFactory {
      */
     public ResourceFactory findResourceFactory(String name, Type clazz) {
         Map<String, ResourceEntry> map = this.store.get(clazz);
-        if (map != null && map.containsKey(name)) return this;
-        if (parent != null) return parent.findResourceFactory(name, clazz);
+        if (map != null && map.containsKey(name)) {
+            return this;
+        }
+        if (parent != null) {
+            return parent.findResourceFactory(name, clazz);
+        }
         return null;
     }
 
@@ -574,12 +592,20 @@ public final class ResourceFactory {
 
     public <A> A findChild(final String name, final Class<? extends A> clazz) {
         A rs = find(name, clazz);
-        if (rs != null) return rs;
+        if (rs != null) {
+            return rs;
+        }
         for (Map.Entry<Type, ConcurrentHashMap<String, ResourceEntry>> en : this.store.entrySet()) {
-            if (!(en.getKey() instanceof Class)) continue;
-            if (!clazz.isAssignableFrom((Class) en.getKey())) continue;
+            if (!(en.getKey() instanceof Class)) {
+                continue;
+            }
+            if (!clazz.isAssignableFrom((Class) en.getKey())) {
+                continue;
+            }
             ResourceEntry v = en.getValue().get(name);
-            if (v != null) return (A) v.value;
+            if (v != null) {
+                return (A) v.value;
+            }
         }
         return null;
     }
@@ -588,9 +614,13 @@ public final class ResourceFactory {
         Map<String, ResourceEntry> map = this.store.get(clazz);
         if (map != null) {
             ResourceEntry re = map.get(name);
-            if (re != null) return re;
+            if (re != null) {
+                return re;
+            }
         }
-        if (parent != null) return parent.findEntry(name, clazz);
+        if (parent != null) {
+            return parent.findEntry(name, clazz);
+        }
         return null;
     }
 
@@ -606,10 +636,14 @@ public final class ResourceFactory {
         Map<String, ResourceEntry> map = this.store.get(clazz);
         if (map != null) {
             for (ResourceEntry re : map.values()) {
-                if (re.value != null) list.add((A) re.value);
+                if (re.value != null) {
+                    list.add((A) re.value);
+                }
             }
         }
-        if (parent != null) parent.query(list, clazz);
+        if (parent != null) {
+            parent.query(list, clazz);
+        }
         return list;
     }
 
@@ -618,7 +652,9 @@ public final class ResourceFactory {
     }
 
     private <A> List<A> query(final List<A> list, final BiPredicate<String, Object> predicate) {
-        if (predicate == null) return list;
+        if (predicate == null) {
+            return list;
+        }
         for (ConcurrentHashMap<String, ResourceEntry> map : this.store.values()) {
             for (Map.Entry<String, ResourceEntry> en : map.entrySet()) {
                 if (predicate.test(en.getKey(), en.getValue().value)) {
@@ -626,7 +662,9 @@ public final class ResourceFactory {
                 }
             }
         }
-        if (parent != null) parent.query(list, predicate);
+        if (parent != null) {
+            parent.query(list, predicate);
+        }
         return list;
     }
 
@@ -634,9 +672,13 @@ public final class ResourceFactory {
         Map<String, ResourceEntry> map = this.store.get(clazz);
         if (map != null) {
             ResourceEntry rs = map.get(name);
-            if (rs != null) return rs;
+            if (rs != null) {
+                return rs;
+            }
         }
-        if (parent != null) return parent.findEntry(name, clazz);
+        if (parent != null) {
+            return parent.findEntry(name, clazz);
+        }
         return null;
     }
 
@@ -677,42 +719,62 @@ public final class ResourceFactory {
     }
 
     public static String formatResourceName(String parent, String name) {
-        if (name == null) return null;
+        if (name == null) {
+            return null;
+        }
         int pos = name.indexOf("{system.property.");
-        if (pos < 0) return (name.contains(RESOURCE_PARENT_NAME) && parent != null) ? name.replace(RESOURCE_PARENT_NAME, parent) : name;
+        if (pos < 0) {
+            return (name.contains(RESOURCE_PARENT_NAME) && parent != null) ? name.replace(RESOURCE_PARENT_NAME, parent) : name;
+        }
         String prefix = name.substring(0, pos);
         String subName = name.substring(pos + "{system.property.".length());
         pos = subName.lastIndexOf('}');
-        if (pos < 0) return (name.contains(RESOURCE_PARENT_NAME) && parent != null) ? name.replace(RESOURCE_PARENT_NAME, parent) : name;
+        if (pos < 0) {
+            return (name.contains(RESOURCE_PARENT_NAME) && parent != null) ? name.replace(RESOURCE_PARENT_NAME, parent) : name;
+        }
         String postfix = subName.substring(pos + 1);
         String property = subName.substring(0, pos);
         return formatResourceName(parent, prefix + System.getProperty(property, "") + postfix);
     }
 
     private <T> boolean inject(String srcResourceName, final Object srcObj, final T attachment, final BiConsumer<Object, Field> consumer, final List<Object> list) {
-        if (srcObj == null) return false;
+        if (srcObj == null) {
+            return false;
+        }
         try {
             list.add(srcObj);
             Class clazz = srcObj.getClass();
             final boolean diyloaderflag = !parentRoot().resAnnotationProviderMap.isEmpty();
             do {
-                if (java.lang.Enum.class.isAssignableFrom(clazz)) break;
+                if (java.lang.Enum.class.isAssignableFrom(clazz)) {
+                    break;
+                }
                 final String cname = clazz.getName();
                 if (cname.startsWith("java.") || cname.startsWith("javax.")
-                    || cname.startsWith("jdk.") || cname.startsWith("sun.")) break;
+                    || cname.startsWith("jdk.") || cname.startsWith("sun.")) {
+                    break;
+                }
                 if (cname.indexOf('/') < 0) {//排除内部类， 如:JsonConvert$$Lambda$87/0x0000000100197440-
                     RedkaleClassLoader.putReflectionDeclaredFields(cname);
                 }
                 for (Field field : clazz.getDeclaredFields()) {
-                    if (Modifier.isStatic(field.getModifiers())) continue;
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        continue;
+                    }
                     field.setAccessible(true);
                     final Class classType = field.getType();
                     Resource rc1 = field.getAnnotation(Resource.class);
                     javax.annotation.Resource rc2 = field.getAnnotation(javax.annotation.Resource.class);
                     if (rc1 == null && rc2 == null) {  //深度注入
-                        if (Convert.class.isAssignableFrom(classType)) continue;
-                        if (ConvertFactory.class.isAssignableFrom(classType)) continue;
-                        if (ResourceFactory.class.isAssignableFrom(classType)) continue;
+                        if (Convert.class.isAssignableFrom(classType)) {
+                            continue;
+                        }
+                        if (ConvertFactory.class.isAssignableFrom(classType)) {
+                            continue;
+                        }
+                        if (ResourceFactory.class.isAssignableFrom(classType)) {
+                            continue;
+                        }
                         boolean flag = true; //是否没有重复
                         Object ns = field.get(srcObj);
                         for (Object o : list) {
@@ -724,23 +786,35 @@ public final class ResourceFactory {
                         if (flag && diyloaderflag) {
                             parentRoot().resAnnotationProviderMap.values().stream().forEach(iloader -> {
                                 Annotation ann = field.getAnnotation(iloader.annotationType());
-                                if (ann == null) return;
+                                if (ann == null) {
+                                    return;
+                                }
                                 iloader.load(this, srcResourceName, srcObj, ann, field, attachment);
                             });
                         }
-                        if (ns == null) continue;
+                        if (ns == null) {
+                            continue;
+                        }
                         final String nsname = ns.getClass().getName();
                         if (ns.getClass().isPrimitive() || ns.getClass().isArray()
                             || nsname.startsWith("java.") || nsname.startsWith("javax.")
-                            || nsname.startsWith("jdk.") || nsname.startsWith("sun.")) continue;
-                        if (flag) this.inject(null, ns, attachment, consumer, list);
+                            || nsname.startsWith("jdk.") || nsname.startsWith("sun.")) {
+                            continue;
+                        }
+                        if (flag) {
+                            this.inject(null, ns, attachment, consumer, list);
+                        }
                         continue;
                     }
-                    if (Modifier.isFinal(field.getModifiers())) continue;
+                    if (Modifier.isFinal(field.getModifiers())) {
+                        continue;
+                    }
                     RedkaleClassLoader.putReflectionField(cname, field);
                     final Type gencType = TypeToken.containsUnknownType(field.getGenericType())
                         ? TypeToken.getGenericType(field.getGenericType(), srcObj.getClass()) : field.getGenericType();
-                    if (consumer != null) consumer.accept(srcObj, field);
+                    if (consumer != null) {
+                        consumer.accept(srcObj, field);
+                    }
                     String tname = rc1 == null ? rc2.name() : rc1.name();
                     if (tname.contains(RESOURCE_PARENT_NAME)) {
                         Resource res1 = srcObj.getClass().getAnnotation(Resource.class);
@@ -848,7 +922,9 @@ public final class ResourceFactory {
                             rs = new BigInteger(rs.toString());
                         }
                     }
-                    if (rs != null) field.set(srcObj, rs);
+                    if (rs != null) {
+                        field.set(srcObj, rs);
+                    }
                     if (rs == null && !skipCheckRequired && rc1 != null && rc1.required()) {
                         throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + srcObj.getClass().getName());
                     }
@@ -864,12 +940,16 @@ public final class ResourceFactory {
     }
 
     public <T extends Annotation> void register(final ResourceAnnotationProvider<T> loader) {
-        if (loader == null) return;
+        if (loader == null) {
+            return;
+        }
         parentRoot().resAnnotationProviderMap.put(loader.annotationType(), loader);
     }
 
     public void register(final ResourceTypeLoader rs, final Type... clazzs) {
-        if (clazzs == null || rs == null) return;
+        if (clazzs == null || rs == null) {
+            return;
+        }
         for (Type clazz : clazzs) {
             resTypeLoaderMap.put(clazz, rs);
         }
@@ -877,29 +957,43 @@ public final class ResourceFactory {
 
     public ResourceTypeLoader findResourceTypeLoader(Type clazz) {
         ResourceTypeLoader it = this.resTypeLoaderMap.get(clazz);
-        if (it != null) return it;
+        if (it != null) {
+            return it;
+        }
         return parent == null ? null : parent.findResourceTypeLoader(clazz);
     }
 
     private ResourceFactory parentRoot() {
-        if (parent == null) return this;
+        if (parent == null) {
+            return this;
+        }
         return parent.parentRoot();
     }
 
     private ResourceTypeLoader findMatchTypeLoader(Type ft, Field field) {
         ResourceTypeLoader it = this.resTypeLoaderMap.get(ft);
-        if (it == null && field != null) it = this.resTypeLoaderMap.get(field.getType());
-        if (it != null) return it;
+        if (it == null && field != null) {
+            it = this.resTypeLoaderMap.get(field.getType());
+        }
+        if (it != null) {
+            return it;
+        }
         return parent == null ? null : parent.findMatchTypeLoader(ft, field);
     }
 
     private ResourceTypeLoader findRegxTypeLoader(Type ft, Field field) {
-        if (field == null) return null;
+        if (field == null) {
+            return null;
+        }
         Class c = field.getType();
         for (Map.Entry<Type, ResourceTypeLoader> en : this.resTypeLoaderMap.entrySet()) {
             Type t = en.getKey();
-            if (t == ft) return en.getValue();
-            if (t instanceof Class && (((Class) t)).isAssignableFrom(c)) return en.getValue();
+            if (t == ft) {
+                return en.getValue();
+            }
+            if (t instanceof Class && (((Class) t)).isAssignableFrom(c)) {
+                return en.getValue();
+            }
         }
         return parent == null ? null : parent.findRegxTypeLoader(ft, field);
     }
@@ -950,7 +1044,9 @@ public final class ResourceFactory {
             if (sync && elements != null && !elements.isEmpty()) {
                 for (ResourceElement element : elements) {
                     Object dest = element.dest.get();
-                    if (dest == null) continue;  //依赖对象可能被销毁了
+                    if (dest == null) {
+                        continue;  //依赖对象可能被销毁了
+                    }
                     Object newVal = value;
                     final Class classType = element.fieldType;
                     if (newVal != null && !newVal.getClass().isPrimitive() && (classType.isPrimitive() || Number.class.isAssignableFrom(classType))) {
@@ -974,7 +1070,9 @@ public final class ResourceFactory {
                             newVal = new BigDecimal(newVal.toString());
                         }
                     }
-                    if (newVal == null && classType.isPrimitive()) newVal = Array.get(Array.newInstance(classType, 1), 0);
+                    if (newVal == null && classType.isPrimitive()) {
+                        newVal = Array.get(Array.newInstance(classType, 1), 0);
+                    }
                     Object oldVal = null;
                     if (element.listener != null) {
                         try {
@@ -1036,13 +1134,17 @@ public final class ResourceFactory {
             synchronized (listenerMethods) {
                 Class loop = clazz;
                 Method m = listenerMethods.get(clazz.getName() + "-" + fieldType.getName());
-                if (m != null) return m;
+                if (m != null) {
+                    return m;
+                }
                 do {
                     RedkaleClassLoader.putReflectionDeclaredMethods(loop.getName());
                     for (Method method : loop.getDeclaredMethods()) {
                         ResourceListener rl = method.getAnnotation(ResourceListener.class);
                         org.redkale.util.ResourceListener rl2 = method.getAnnotation(org.redkale.util.ResourceListener.class);
-                        if (rl == null && rl2 == null) continue;
+                        if (rl == null && rl2 == null) {
+                            continue;
+                        }
                         if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == ResourceEvent[].class) {
                             m = method;
                             m.setAccessible(true);
@@ -1088,11 +1190,19 @@ public final class ResourceFactory {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj) return true;
-            if (obj == null) return false;
-            if (getClass() != obj.getClass()) return false;
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
             final ResourceChangeWrapper other = (ResourceChangeWrapper) obj;
-            if (!Objects.equals(this.dest, other.dest)) return false;
+            if (!Objects.equals(this.dest, other.dest)) {
+                return false;
+            }
             return Objects.equals(this.listener, other.listener);
         }
 

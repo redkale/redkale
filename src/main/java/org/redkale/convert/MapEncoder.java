@@ -5,8 +5,7 @@
  */
 package org.redkale.convert;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -85,11 +84,17 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
         if (out.writeMapB(values.size(), (Encodeable) keyEncoder, (Encodeable) valueEncoder, value) < 0) {
             boolean first = true;
             for (Map.Entry<K, V> en : values.entrySet()) {
-                if (ignoreColumns != null && ignoreColumns.contains(en.getKey())) continue;
+                if (ignoreColumns != null && ignoreColumns.contains(en.getKey())) {
+                    continue;
+                }
                 V v = mapFieldFunc == null ? en.getValue() : mapFieldFunc.apply(en.getKey(), en.getValue());
-                if (!first) out.writeArrayMark();
+                if (!first) {
+                    out.writeArrayMark();
+                }
                 writeMemberValue(out, member, en.getKey(), v, first);
-                if (first) first = false;
+                if (first) {
+                    first = false;
+                }
             }
         }
         out.writeMapE();

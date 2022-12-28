@@ -7,11 +7,10 @@ package org.redkale.boot.watch;
 
 import java.io.IOException;
 import java.util.List;
-import org.redkale.annotation.Resource;
+import org.redkale.annotation.*;
 import org.redkale.boot.*;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
-import org.redkale.annotation.Comment;
 
 /**
  *
@@ -39,11 +38,17 @@ public class FilterWatchService extends AbstractWatchService {
     public RetResult addFilter(@RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameRegx = "\\.jar$") byte[] jar,
         @RestParam(name = "server", comment = "Server节点名") final String serverName,
         @RestParam(name = "type", comment = "Filter类名") final String filterType) throws IOException {
-        if (filterType == null) return new RetResult(RET_FILTER_TYPE_NOT_EXISTS, "Not found Filter Type (" + filterType + ")");
-        if (jar == null) return new RetResult(RET_FILTER_JAR_ILLEGAL, "Not found jar file");
+        if (filterType == null) {
+            return new RetResult(RET_FILTER_TYPE_NOT_EXISTS, "Not found Filter Type (" + filterType + ")");
+        }
+        if (jar == null) {
+            return new RetResult(RET_FILTER_JAR_ILLEGAL, "Not found jar file");
+        }
         List<NodeServer> nodes = application.getNodeServers();
         for (NodeServer node : nodes) {
-            if (node.getServer().containsFilter(filterType)) return new RetResult(RET_FILTER_EXISTS, "Filter(" + filterType + ") exists");
+            if (node.getServer().containsFilter(filterType)) {
+                return new RetResult(RET_FILTER_EXISTS, "Filter(" + filterType + ") exists");
+            }
         }
         return RetResult.success();
     }

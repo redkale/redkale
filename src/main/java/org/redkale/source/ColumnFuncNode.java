@@ -27,7 +27,9 @@ public class ColumnFuncNode implements ColumnNode {
     }
 
     public ColumnFuncNode(FilterFunc func, Serializable node) {
-        if (!(node instanceof String) && !(node instanceof ColumnNodeValue)) throw new IllegalArgumentException("value must be String or ColumnNodeValue");
+        if (!(node instanceof String) && !(node instanceof ColumnNodeValue)) {
+            throw new IllegalArgumentException("value must be String or ColumnNodeValue");
+        }
         this.func = func;
         this.value = node;
     }

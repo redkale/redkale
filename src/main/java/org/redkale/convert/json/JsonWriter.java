@@ -7,7 +7,7 @@ package org.redkale.convert.json;
 
 import java.lang.reflect.Type;
 import org.redkale.convert.*;
-import org.redkale.util.*;
+import org.redkale.util.StringWrapper;
 
 /**
  *
@@ -92,7 +92,9 @@ public abstract class JsonWriter extends Writer {
 
     @Override //只容许JsonBytesWriter重写此方法
     public void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
-        if (this.comma) writeTo(',');
+        if (this.comma) {
+            writeTo(',');
+        }
         if (member != null) {
             writeTo(member.getJsonFieldNameChars());
         } else {
@@ -129,7 +131,9 @@ public abstract class JsonWriter extends Writer {
         writeArrayB(values.length, null, null, values);
         boolean flag = false;
         for (byte v : values) {
-            if (flag) writeArrayMark();
+            if (flag) {
+                writeArrayMark();
+            }
             writeByte(v);
             flag = true;
         }

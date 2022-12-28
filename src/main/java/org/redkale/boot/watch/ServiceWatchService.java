@@ -6,15 +6,14 @@
 package org.redkale.boot.watch;
 
 import java.lang.reflect.*;
-import java.util.*;
-
+import java.util.List;
 import org.redkale.annotation.Comment;
-import org.redkale.annotation.Resource;
+import org.redkale.annotation.*;
 import org.redkale.boot.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
-import org.redkale.util.*;
+import org.redkale.util.ResourceFactory;
 
 /**
  * <p>
@@ -37,13 +36,23 @@ public class ServiceWatchService extends AbstractWatchService {
         @RestParam(name = "type", comment = "Service的类名") String type,
         @RestParam(name = "field", comment = "字段名") String field,
         @RestParam(name = "value", comment = "字段值") String value) {
-        if (name == null) name = "";
-        if (type == null) type = "";
-        if (field == null) field = "";
+        if (name == null) {
+            name = "";
+        }
+        if (type == null) {
+            type = "";
+        }
+        if (field == null) {
+            field = "";
+        }
         type = type.trim();
         field = field.trim();
-        if (type.isEmpty()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `type`");
-        if (field.isEmpty()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `field`");
+        if (type.isEmpty()) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `type`");
+        }
+        if (field.isEmpty()) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `field`");
+        }
         Object dest = findService(name, type);
         Class clazz = dest.getClass();
         Throwable t = null;
@@ -54,10 +63,14 @@ public class ServiceWatchService extends AbstractWatchService {
                     fieldObj = clazz.getDeclaredField(field);
                     break;
                 } catch (Exception e) {
-                    if (t == null) t = e;
+                    if (t == null) {
+                        t = e;
+                    }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
-            if (fieldObj == null) return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + String.valueOf(t) + ")");
+            if (fieldObj == null) {
+                return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + String.valueOf(t) + ")");
+            }
             fieldObj.setAccessible(true);
             fieldObj.set(dest, JsonConvert.root().convertFrom(fieldObj.getGenericType(), value));
             return RetResult.success();
@@ -71,13 +84,23 @@ public class ServiceWatchService extends AbstractWatchService {
     public RetResult getField(@RestParam(name = "name", comment = "Service的资源名") String name,
         @RestParam(name = "type", comment = "Service的类名") String type,
         @RestParam(name = "field", comment = "字段名") String field) {
-        if (name == null) name = "";
-        if (type == null) type = "";
-        if (field == null) field = "";
+        if (name == null) {
+            name = "";
+        }
+        if (type == null) {
+            type = "";
+        }
+        if (field == null) {
+            field = "";
+        }
         type = type.trim();
         field = field.trim();
-        if (type.isEmpty()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `type`");
-        if (field.isEmpty()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `field`");
+        if (type.isEmpty()) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `type`");
+        }
+        if (field.isEmpty()) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `field`");
+        }
         Object dest = findService(name, type);
         Class clazz = dest.getClass();
         Throwable t = null;
@@ -88,10 +111,14 @@ public class ServiceWatchService extends AbstractWatchService {
                     fieldObj = clazz.getDeclaredField(field);
                     break;
                 } catch (Exception e) {
-                    if (t == null) t = e;
+                    if (t == null) {
+                        t = e;
+                    }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
-            if (fieldObj == null) return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + String.valueOf(t) + ")");
+            if (fieldObj == null) {
+                return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + String.valueOf(t) + ")");
+            }
             fieldObj.setAccessible(true);
             return new RetResult(fieldObj.get(dest));
         } catch (Throwable t2) {
@@ -106,18 +133,30 @@ public class ServiceWatchService extends AbstractWatchService {
         @RestParam(name = "method", comment = "Service的方法名") String method,
         @RestParam(name = "params", comment = "方法的参数值") List<String> params,
         @RestParam(name = "paramtypes", comment = "方法的参数数据类型") List<String> paramtypes) {
-        if (name == null) name = "";
-        if (type == null) type = "";
-        if (method == null) method = "";
+        if (name == null) {
+            name = "";
+        }
+        if (type == null) {
+            type = "";
+        }
+        if (method == null) {
+            method = "";
+        }
         type = type.trim();
         method = method.trim();
-        if (type.isEmpty()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `type`");
-        if (method.isEmpty()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `method`");
+        if (type.isEmpty()) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `type`");
+        }
+        if (method.isEmpty()) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `method`");
+        }
         Object dest = findService(name, type);
         Class clazz = dest.getClass();
         Throwable t = null;
         final int paramcount = params == null ? 0 : params.size();
-        if (paramtypes != null && paramcount != paramtypes.size()) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "params.size not equals to paramtypes.size");
+        if (paramtypes != null && paramcount != paramtypes.size()) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "params.size not equals to paramtypes.size");
+        }
         try {
             Method methodObj = null;
             do {
@@ -140,14 +179,22 @@ public class ServiceWatchService extends AbstractWatchService {
                             }
                         }
                     }
-                    if (methodObj != null) break;
+                    if (methodObj != null) {
+                        break;
+                    }
                 } catch (Exception e) {
-                    if (t == null) t = e;
+                    if (t == null) {
+                        t = e;
+                    }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
-            if (methodObj == null) return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + (t == null ? ("not found method(" + method + ")") : String.valueOf(t)) + ")");
+            if (methodObj == null) {
+                return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + (t == null ? ("not found method(" + method + ")") : String.valueOf(t)) + ")");
+            }
             methodObj.setAccessible(true);
-            if (paramcount < 1) return new RetResult(methodObj.invoke(dest));
+            if (paramcount < 1) {
+                return new RetResult(methodObj.invoke(dest));
+            }
             Object[] paramObjs = new Object[paramcount];
             Type[] pts = methodObj.getGenericParameterTypes();
             for (int i = 0; i < paramObjs.length; i++) {
@@ -164,10 +211,14 @@ public class ServiceWatchService extends AbstractWatchService {
         for (NodeServer ns : application.getNodeServers()) {
             ResourceFactory resFactory = ns.getResourceFactory();
             List list = resFactory.query((n, s) -> name.equals(n) && s != null && s.getClass().getName().endsWith(type));
-            if (list == null || list.isEmpty()) continue;
+            if (list == null || list.isEmpty()) {
+                continue;
+            }
             dest = list.get(0);
         }
-        if (dest == null) return new RetResult(RET_SERVICE_DEST_NOT_EXISTS, "not found servie (name=" + name + ", type=" + type + ")");
+        if (dest == null) {
+            return new RetResult(RET_SERVICE_DEST_NOT_EXISTS, "not found servie (name=" + name + ", type=" + type + ")");
+        }
         return dest;
     }
 

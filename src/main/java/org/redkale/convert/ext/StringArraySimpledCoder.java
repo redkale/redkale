@@ -30,7 +30,9 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
         if (out.writeArrayB(values.length, this, StringSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (String v : values) {
-                if (flag) out.writeArrayMark();
+                if (flag) {
+                    out.writeArrayMark();
+                }
                 out.writeString(v);
                 flag = true;
             }
@@ -46,7 +48,9 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
     public String[] convertFrom(R in, DeMember member) {
         int len = in.readArrayB(member, null, StringSimpledCoder.instance);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(null, StringSimpledCoder.instance);
             len = Reader.SIGN_NOLENGTH;

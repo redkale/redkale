@@ -142,7 +142,9 @@ public interface SearchQuery extends java.io.Serializable {
         public SearchSimpleQuery(String keyword, String... fields) {
             this.keyword = keyword;
             this.fields = fields;
-            if (fields == null || fields.length < 1) throw new IllegalArgumentException("fields is empty");
+            if (fields == null || fields.length < 1) {
+                throw new IllegalArgumentException("fields is empty");
+            }
         }
 
         public SearchSimpleQuery keyword(String keyword) {
@@ -156,7 +158,9 @@ public interface SearchQuery extends java.io.Serializable {
         }
 
         public SearchSimpleQuery fields(String... fields) {
-            if (fields == null || fields.length < 1) throw new IllegalArgumentException("fields is empty");
+            if (fields == null || fields.length < 1) {
+                throw new IllegalArgumentException("fields is empty");
+            }
             this.fields = fields;
             return this;
         }
@@ -177,7 +181,9 @@ public interface SearchQuery extends java.io.Serializable {
         }
 
         public SearchSimpleQuery extras(String key, Object value) {
-            if (this.extras == null) this.extras = new LinkedHashMap<>();
+            if (this.extras == null) {
+                this.extras = new LinkedHashMap<>();
+            }
             this.extras.put(key, value);
             return this;
         }
@@ -315,7 +321,9 @@ public interface SearchQuery extends java.io.Serializable {
         }
 
         public SearchSimpleHighlight extras(String key, Object value) {
-            if (this.extras == null) this.extras = new LinkedHashMap<>();
+            if (this.extras == null) {
+                this.extras = new LinkedHashMap<>();
+            }
             this.extras.put(key, value);
             return this;
         }

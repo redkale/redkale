@@ -58,14 +58,18 @@ public abstract class Sncp {
     }
 
     public static DLong hash(final java.lang.reflect.Method method) {
-        if (method == null) return DLong.ZERO;
+        if (method == null) {
+            return DLong.ZERO;
+        }
         StringBuilder sb = new StringBuilder(); //不能使用method.toString() 因为包含declaringClass信息导致接口与实现类的方法hash不一致
         sb.append(method.getReturnType().getName()).append(' ');
         sb.append(method.getName());
         sb.append('(');
         boolean first = true;
         for (Class pt : method.getParameterTypes()) {
-            if (!first) sb.append(',');
+            if (!first) {
+                sb.append(',');
+            }
             sb.append(pt.getName());
             first = false;
         }
@@ -81,7 +85,9 @@ public abstract class Sncp {
      * @return hash值
      */
     public static DLong hash(final String name) {
-        if (name == null || name.isEmpty()) return DLong.ZERO;
+        if (name == null || name.isEmpty()) {
+            return DLong.ZERO;
+        }
         byte[] bytes = name.trim().getBytes();
         synchronized (md5) {
             bytes = md5.digest(bytes);
@@ -99,35 +105,49 @@ public abstract class Sncp {
     }
 
     public static int getVersion(Service service) {
-        if (service == null) return -1;
+        if (service == null) {
+            return -1;
+        }
         return -1; //暂不实现Version
     }
 
     public static String getResourceName(Service service) {
-        if (service == null) return null;
+        if (service == null) {
+            return null;
+        }
         Resource res = service.getClass().getAnnotation(Resource.class);
-        if (res != null) return res.name();
+        if (res != null) {
+            return res.name();
+        }
         javax.annotation.Resource res2 = service.getClass().getAnnotation(javax.annotation.Resource.class);
         return res2 == null ? null : res2.name();
     }
 
     public static Class getServiceType(Service service) {
         ResourceType rt = service.getClass().getAnnotation(ResourceType.class);
-        if (rt != null) return rt.value();
+        if (rt != null) {
+            return rt.value();
+        }
         org.redkale.util.ResourceType rt2 = service.getClass().getAnnotation(org.redkale.util.ResourceType.class);
         return rt2 == null ? service.getClass() : rt2.value();
     }
 
     public static Class getResourceType(Service service) {
-        if (service == null) return null;
+        if (service == null) {
+            return null;
+        }
         ResourceType type = service.getClass().getAnnotation(ResourceType.class);
-        if (type != null) return type.value();
+        if (type != null) {
+            return type.value();
+        }
         org.redkale.util.ResourceType rt2 = service.getClass().getAnnotation(org.redkale.util.ResourceType.class);
         return rt2 == null ? getServiceType(service) : rt2.value();
     }
 
     public static AnyValue getConf(Service service) {
-        if (service == null || !isSncpDyn(service)) return null;
+        if (service == null || !isSncpDyn(service)) {
+            return null;
+        }
         try {
             Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_conf");
             ts.setAccessible(true);
@@ -138,7 +158,9 @@ public abstract class Sncp {
     }
 
     public static SncpClient getSncpClient(Service service) {
-        if (service == null || !isSncpDyn(service)) return null;
+        if (service == null || !isSncpDyn(service)) {
+            return null;
+        }
         try {
             Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_client");
             ts.setAccessible(true);
@@ -149,7 +171,9 @@ public abstract class Sncp {
     }
 
     public static MessageAgent getMessageAgent(Service service) {
-        if (service == null || !isSncpDyn(service)) return null;
+        if (service == null || !isSncpDyn(service)) {
+            return null;
+        }
         try {
             Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageagent");
             ts.setAccessible(true);
@@ -160,7 +184,9 @@ public abstract class Sncp {
     }
 
     public static void setMessageAgent(Service service, MessageAgent messageAgent) {
-        if (service == null || !isSncpDyn(service)) return;
+        if (service == null || !isSncpDyn(service)) {
+            return;
+        }
         try {
             Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageagent");
             ts.setAccessible(true);
@@ -178,7 +204,9 @@ public abstract class Sncp {
     public static boolean updateTransport(Service service,
         final TransportFactory transportFactory, String name, String protocol, InetSocketAddress clientAddress,
         final Set<String> groups, final Collection<InetSocketAddress> addresses) {
-        if (!isSncpDyn(service)) return false;
+        if (!isSncpDyn(service)) {
+            return false;
+        }
         SncpClient client = getSncpClient(service);
         client.setRemoteGroups(groups);
         if (client.getRemoteGroupTransport() != null) {
@@ -190,14 +218,18 @@ public abstract class Sncp {
     }
 
     static void checkAsyncModifier(Class param, Method method) {
-        if (param == CompletionHandler.class) return;
+        if (param == CompletionHandler.class) {
+            return;
+        }
         if (Modifier.isFinal(param.getModifiers())) {
             throw new RuntimeException("CompletionHandler Type Parameter on {" + method + "} cannot final modifier");
         }
         if (!Modifier.isPublic(param.getModifiers())) {
             throw new RuntimeException("CompletionHandler Type Parameter on {" + method + "} must be public modifier");
         }
-        if (param.isInterface()) return;
+        if (param.isInterface()) {
+            return;
+        }
         boolean constructorflag = false;
         RedkaleClassLoader.putReflectionDeclaredConstructors(param, param.getName());
         for (Constructor c : param.getDeclaredConstructors()) {
@@ -209,8 +241,12 @@ public abstract class Sncp {
                 }
             }
         }
-        if (param.getDeclaredConstructors().length == 0) constructorflag = true;
-        if (!constructorflag) throw new RuntimeException(param + " must have a empty parameter Constructor");
+        if (param.getDeclaredConstructors().length == 0) {
+            constructorflag = true;
+        }
+        if (!constructorflag) {
+            throw new RuntimeException(param + " must have a empty parameter Constructor");
+        }
         for (Method m : param.getMethods()) {
             if (m.getName().equals("completed") && Modifier.isFinal(m.getModifiers())) {
                 throw new RuntimeException(param + "'s completed method cannot final modifier");
@@ -295,12 +331,20 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     protected static <T extends Service> Class<? extends T> createLocalServiceClass(ClassLoader classLoader, final String name, final Class<T> serviceImplClass) {
-        if (serviceImplClass == null) return null;
-        if (!Service.class.isAssignableFrom(serviceImplClass)) return serviceImplClass;
+        if (serviceImplClass == null) {
+            return null;
+        }
+        if (!Service.class.isAssignableFrom(serviceImplClass)) {
+            return serviceImplClass;
+        }
         ResourceFactory.checkResourceName(name);
         int mod = serviceImplClass.getModifiers();
-        if (!java.lang.reflect.Modifier.isPublic(mod)) return serviceImplClass;
-        if (java.lang.reflect.Modifier.isAbstract(mod)) return serviceImplClass;
+        if (!java.lang.reflect.Modifier.isPublic(mod)) {
+            return serviceImplClass;
+        }
+        if (java.lang.reflect.Modifier.isAbstract(mod)) {
+            return serviceImplClass;
+        }
         final String supDynName = serviceImplClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
@@ -313,9 +357,13 @@ public abstract class Sncp {
         if (!name.isEmpty()) {
             boolean normal = true;
             for (char ch : name.toCharArray()) {
-                if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) normal = false;
+                if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
+                    normal = false;
+                }
             }
-            if (!normal) throw new RuntimeException(serviceImplClass + "'s resource name is illegal, must be 0-9 _ a-z A-Z");
+            if (!normal) {
+                throw new RuntimeException(serviceImplClass + "'s resource name is illegal, must be 0-9 _ a-z A-Z");
+            }
             newDynName += "_" + (normal ? name : hash(name));
         }
         try {
@@ -344,7 +392,9 @@ public abstract class Sncp {
         }
         { //给新类加上 原有的Annotation
             for (Annotation ann : serviceImplClass.getAnnotations()) {
-                if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) continue;
+                if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
+                    continue;
+                }
                 MethodDebugVisitor.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
             }
         }
@@ -462,15 +512,23 @@ public abstract class Sncp {
                     RedkaleClassLoader.putReflectionDeclaredFields(loop.getName());
                     for (Field field : loop.getDeclaredFields()) {
                         int mod = field.getModifiers();
-                        if (Modifier.isFinal(mod) || Modifier.isStatic(mod)) continue;
-                        if (field.getAnnotation(RpcRemote.class) == null) continue;
-                        if (!field.getType().isAssignableFrom(newClazz)) continue;
+                        if (Modifier.isFinal(mod) || Modifier.isStatic(mod)) {
+                            continue;
+                        }
+                        if (field.getAnnotation(RpcRemote.class) == null) {
+                            continue;
+                        }
+                        if (!field.getType().isAssignableFrom(newClazz)) {
+                            continue;
+                        }
                         field.setAccessible(true);
                         RedkaleClassLoader.putReflectionField(loop.getName(), field);
                         if (remoteService == null && clientSncpAddress != null) {
                             remoteService = createRemoteService(classLoader, name, serviceImplClass, messageAgent, transportFactory, clientSncpAddress, groups, conf);
                         }
-                        if (remoteService != null) field.set(service, remoteService);
+                        if (remoteService != null) {
+                            field.set(service, remoteService);
+                        }
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
             }
@@ -481,7 +539,9 @@ public abstract class Sncp {
                     c.setAccessible(true);
                     client = new SncpClient(name, serviceImplClass, service, messageAgent, transportFactory, false, newClazz, clientSncpAddress);
                     c.set(service, client);
-                    if (transportFactory != null) transportFactory.addSncpService(service);
+                    if (transportFactory != null) {
+                        transportFactory.addSncpService(service);
+                    }
                 } catch (NoSuchFieldException ne) {
                     ne.printStackTrace();
                 }
@@ -491,7 +551,9 @@ public abstract class Sncp {
                 c.setAccessible(true);
                 c.set(service, messageAgent);
             }
-            if (client == null) return service;
+            if (client == null) {
+                return service;
+            }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
@@ -568,13 +630,19 @@ public abstract class Sncp {
         final InetSocketAddress clientAddress,
         final Set<String> groups0,
         final AnyValue conf) {
-        if (serviceTypeOrImplClass == null) return null;
-        if (!Service.class.isAssignableFrom(serviceTypeOrImplClass)) return null;
+        if (serviceTypeOrImplClass == null) {
+            return null;
+        }
+        if (!Service.class.isAssignableFrom(serviceTypeOrImplClass)) {
+            return null;
+        }
         final Set<String> groups = groups0 == null ? new HashSet<>() : groups0;
         ResourceFactory.checkResourceName(name);
         final int mod = serviceTypeOrImplClass.getModifiers();
         boolean realed = !(java.lang.reflect.Modifier.isAbstract(mod) || serviceTypeOrImplClass.isInterface());
-        if (!java.lang.reflect.Modifier.isPublic(mod)) return null;
+        if (!java.lang.reflect.Modifier.isPublic(mod)) {
+            return null;
+        }
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
@@ -590,7 +658,9 @@ public abstract class Sncp {
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
-            if (transportFactory != null) client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
+            if (transportFactory != null) {
+                client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
+            }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                 c.setAccessible(true);
@@ -611,7 +681,9 @@ public abstract class Sncp {
                 c.setAccessible(true);
                 c.set(service, conf);
             }
-            if (transportFactory != null) transportFactory.addSncpService(service);
+            if (transportFactory != null) {
+                transportFactory.addSncpService(service);
+            }
             return service;
         } catch (Throwable ex) {
         }
@@ -641,7 +713,9 @@ public abstract class Sncp {
         }
         { //给新类加上 原有的Annotation
             for (Annotation ann : serviceTypeOrImplClass.getAnnotations()) {
-                if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) continue;
+                if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
+                    continue;
+                }
                 MethodDebugVisitor.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
             }
         }
@@ -802,7 +876,9 @@ public abstract class Sncp {
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
-            if (transportFactory != null) client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
+            if (transportFactory != null) {
+                client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
+            }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                 c.setAccessible(true);
@@ -827,7 +903,9 @@ public abstract class Sncp {
                 c.set(service, conf);
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
             }
-            if (transportFactory != null) transportFactory.addSncpService(service);
+            if (transportFactory != null) {
+                transportFactory.addSncpService(service);
+            }
             return service;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

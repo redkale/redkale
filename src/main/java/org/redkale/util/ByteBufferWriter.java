@@ -70,7 +70,9 @@ public class ByteBufferWriter {
     }
 
     public ByteBuffer[] toBuffers() {
-        if (buffers == null) return new ByteBuffer[0];
+        if (buffers == null) {
+            return new ByteBuffer[0];
+        }
         for (ByteBuffer buf : this.buffers) {
             buf.flip();
         }
@@ -189,12 +191,16 @@ public class ByteBufferWriter {
         int remain = buf.remaining();
         if (remain >= length + length2) {
             buf.put(src, offset, length);
-            if (src2 != null) buf.put(src2, offset2, length2);
+            if (src2 != null) {
+                buf.put(src2, offset2, length2);
+            }
             position += length + length2;
             this.writeBytesCounter++;
         } else {
             put(true, src, offset, length);
-            if (src2 != null) put(false, src2, offset2, length2);
+            if (src2 != null) {
+                put(false, src2, offset2, length2);
+            }
         }
         return writeBytesCounter;
     }
@@ -210,7 +216,9 @@ public class ByteBufferWriter {
             position += remain;
             put(false, src, offset + remain, length - remain);
         }
-        if (outside) this.writeBytesCounter++;
+        if (outside) {
+            this.writeBytesCounter++;
+        }
         return writeBytesCounter;
     }
 

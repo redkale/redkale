@@ -74,7 +74,9 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
         byte[] typevals = new byte[1];
         int len = in.readArrayB(member, typevals, componentDecoder);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(member, componentDecoder);
             len = Reader.SIGN_NOLENGTH;
@@ -97,7 +99,9 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader itemReader = getItemReader(in, member, first);
-                if (itemReader == null) break;
+                if (itemReader == null) {
+                    break;
+                }
                 result.add(readMemberValue(itemReader, member, localdecoder, first));
                 first = false;
             }
@@ -124,7 +128,9 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
     }
 
     protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
-        if (in == null) return null;
+        if (in == null) {
+            return null;
+        }
         return decoder.convertFrom(in);
     }
 

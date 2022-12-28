@@ -28,7 +28,9 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
 
     @Override
     public byte[] encode(MessageRecord data) {
-        if (data == null) return null;
+        if (data == null) {
+            return null;
+        }
         byte[] userid = MessageCoder.encodeUserid(data.getUserid());
         byte[] groupid = MessageCoder.getBytes(data.getGroupid());
         byte[] topic = MessageCoder.getBytes(data.getTopic());
@@ -52,22 +54,32 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
         buffer.putInt(data.getVersion());
         buffer.putInt(data.getFlag());
         buffer.putLong(data.getCreateTime());
-        
+
         buffer.putChar((char) userid.length);
-        if (userid.length > 0) buffer.put(userid);
-        
+        if (userid.length > 0) {
+            buffer.put(userid);
+        }
+
         buffer.putChar((char) groupid.length);
-        if (groupid.length > 0) buffer.put(groupid);
-        
+        if (groupid.length > 0) {
+            buffer.put(groupid);
+        }
+
         buffer.putChar((char) topic.length);
-        if (topic.length > 0) buffer.put(topic);
-        
+        if (topic.length > 0) {
+            buffer.put(topic);
+        }
+
         buffer.putChar((char) respTopic.length);
-        if (respTopic.length > 0) buffer.put(respTopic);
-        
+        if (respTopic.length > 0) {
+            buffer.put(respTopic);
+        }
+
         buffer.putChar((char) traceid.length);
-        if (traceid.length > 0) buffer.put(traceid);
-        
+        if (traceid.length > 0) {
+            buffer.put(traceid);
+        }
+
         if (data.getContent() == null) {
             buffer.putInt(0);
         } else {
@@ -79,7 +91,9 @@ public class MessageRecordCoder implements MessageCoder<MessageRecord> {
 
     @Override
     public MessageRecord decode(byte[] data) {
-        if (data == null) return null;
+        if (data == null) {
+            return null;
+        }
         ByteBuffer buffer = ByteBuffer.wrap(data);
         long seqid = buffer.getLong();
         byte ctype = buffer.get();

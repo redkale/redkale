@@ -6,9 +6,7 @@
 package org.redkale.convert.ext;
 
 import java.util.stream.IntStream;
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 
 /**
  * int[] 的SimpledCoder实现
@@ -33,7 +31,9 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
         if (out.writeArrayB(values.length, this, IntSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (int v : values) {
-                if (flag) out.writeArrayMark();
+                if (flag) {
+                    out.writeArrayMark();
+                }
                 out.writeInt(v);
                 flag = true;
             }
@@ -45,7 +45,9 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
     public int[] convertFrom(R in) {
         int len = in.readArrayB(null, null, IntSimpledCoder.instance);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(null, IntSimpledCoder.instance);
             len = Reader.SIGN_NOLENGTH;

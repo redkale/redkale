@@ -136,7 +136,9 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         if (rs < 0) {  //表示数据格式不正确
             final DispatcherServlet preparer = context.prepare;
             LongAdder ec = preparer.executeCounter;
-            if (ec != null) ec.increment();
+            if (ec != null) {
+                ec.increment();
+            }
             channel.offerBuffer(buffer);
             if (rs != Integer.MIN_VALUE && preparer.illRequestCounter != null) {
                 preparer.illRequestCounter.increment();
@@ -148,15 +150,21 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         } else if (rs == 0) {
             final DispatcherServlet preparer = context.prepare;
             LongAdder ec = preparer.executeCounter;
-            if (ec != null) ec.increment();
+            if (ec != null) {
+                ec.increment();
+            }
             int pindex = pipelineIndex;
             boolean pipeline = false;
             Request hreq = lastreq;
             if (buffer.hasRemaining()) {
                 pipeline = true;
-                if (pindex == 0) pindex++;
+                if (pindex == 0) {
+                    pindex++;
+                }
                 request.pipeline(pindex, pindex + 1);
-                if (hreq == null) hreq = request.copyHeader();
+                if (hreq == null) {
+                    hreq = request.copyHeader();
+                }
             } else {
                 request.pipeline(pindex, pindex);
                 channel.setReadBuffer((ByteBuffer) buffer.clear());
@@ -193,7 +201,9 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                     }
                     channel.offerBuffer(attachment);
                     response.finish(true);
-                    if (exc != null) request.context.logger.log(Level.FINER, "Servlet read channel erroneous, force to close channel ", exc);
+                    if (exc != null) {
+                        request.context.logger.log(Level.FINER, "Servlet read channel erroneous, force to close channel ", exc);
+                    }
                 }
             });
         }

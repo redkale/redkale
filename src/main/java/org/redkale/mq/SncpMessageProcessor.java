@@ -41,7 +41,9 @@ public class SncpMessageProcessor implements MessageProcessor {
     protected long starttime;
 
     protected final Runnable innerCallback = () -> {
-        if (cdl != null) cdl.countDown();
+        if (cdl != null) {
+            cdl.countDown();
+        }
     };
 
     public SncpMessageProcessor(Logger logger, SncpMessageClient messageClient, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
@@ -85,7 +87,9 @@ public class SncpMessageProcessor implements MessageProcessor {
                 logger.log(Level.FINEST, "SncpMessageProcessor.process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
             }
         } catch (Throwable ex) {
-            if (response != null) response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
+            if (response != null) {
+                response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
+            }
             logger.log(Level.SEVERE, SncpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }
     }

@@ -6,15 +6,14 @@
 package org.redkale.net;
 
 import java.lang.ref.WeakReference;
-import java.net.*;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import java.util.stream.Collectors;
 import javax.net.ssl.SSLContext;
-
 import org.redkale.annotation.Comment;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -109,9 +108,15 @@ public class TransportFactory {
             this.poolmaxconns = conf.getIntValue(NAME_POOLMAXCONNS, this.poolmaxconns);
             this.pinginterval = conf.getIntValue(NAME_PINGINTERVAL, this.pinginterval);
             this.checkinterval = conf.getIntValue(NAME_CHECKINTERVAL, this.checkinterval);
-            if (this.poolmaxconns < 2) this.poolmaxconns = 2;
-            if (this.pinginterval < 2) this.pinginterval = 2;
-            if (this.checkinterval < 2) this.checkinterval = 2;
+            if (this.poolmaxconns < 2) {
+                this.poolmaxconns = 2;
+            }
+            if (this.pinginterval < 2) {
+                this.pinginterval = 2;
+            }
+            if (this.checkinterval < 2) {
+                this.checkinterval = 2;
+            }
         }
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
             final Thread t = new Thread(r, "Redkale-" + this.getClass().getSimpleName() + "-Schedule-Thread");
@@ -163,12 +168,16 @@ public class TransportFactory {
     }
 
     public String findGroupName(InetSocketAddress addr) {
-        if (addr == null) return null;
+        if (addr == null) {
+            return null;
+        }
         return groupAddrs.get(addr);
     }
 
     public TransportGroupInfo findGroupInfo(String group) {
-        if (group == null) return null;
+        if (group == null) {
+            return null;
+        }
         return groupInfos.get(group);
     }
 
@@ -178,10 +187,16 @@ public class TransportFactory {
     }
 
     public boolean removeGroupInfo(String groupName, InetSocketAddress addr) {
-        if (groupName == null || groupName.isEmpty() || addr == null) return false;
-        if (!groupName.equals(groupAddrs.get(addr))) return false;
+        if (groupName == null || groupName.isEmpty() || addr == null) {
+            return false;
+        }
+        if (!groupName.equals(groupAddrs.get(addr))) {
+            return false;
+        }
         TransportGroupInfo group = groupInfos.get(groupName);
-        if (group == null) return false;
+        if (group == null) {
+            return false;
+        }
         group.removeAddress(addr);
         groupAddrs.remove(addr);
         return true;
@@ -193,13 +208,23 @@ public class TransportFactory {
     }
 
     public boolean addGroupInfo(TransportGroupInfo info) {
-        if (info == null) throw new RuntimeException("TransportGroupInfo can not null");
-        if (info.addresses == null) throw new RuntimeException("TransportGroupInfo.addresses can not null");
-        if (!checkName(info.name)) throw new RuntimeException("Transport.group.name only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (info == null) {
+            throw new RuntimeException("TransportGroupInfo can not null");
+        }
+        if (info.addresses == null) {
+            throw new RuntimeException("TransportGroupInfo.addresses can not null");
+        }
+        if (!checkName(info.name)) {
+            throw new RuntimeException("Transport.group.name only 0-9 a-z A-Z _ cannot begin 0-9");
+        }
         TransportGroupInfo old = groupInfos.get(info.name);
-        if (old != null && !old.protocol.equals(info.protocol)) throw new RuntimeException("Transport.group.name repeat but protocol is different");
+        if (old != null && !old.protocol.equals(info.protocol)) {
+            throw new RuntimeException("Transport.group.name repeat but protocol is different");
+        }
         for (InetSocketAddress addr : info.addresses) {
-            if (!groupAddrs.getOrDefault(addr, info.name).equals(info.name)) throw new RuntimeException(addr + " repeat but different group.name");
+            if (!groupAddrs.getOrDefault(addr, info.name).equals(info.name)) {
+                throw new RuntimeException(addr + " repeat but different group.name");
+            }
         }
         if (old == null) {
             groupInfos.put(info.name, info);
@@ -213,12 +238,16 @@ public class TransportFactory {
     }
 
     public Transport loadTransport(InetSocketAddress sncpAddress, final Set<String> groups) {
-        if (groups == null) return null;
+        if (groups == null) {
+            return null;
+        }
         Set<InetSocketAddress> addresses = new HashSet<>();
         TransportGroupInfo info = null;
         for (String group : groups) {
             info = groupInfos.get(group);
-            if (info == null) continue;
+            if (info == null) {
+                continue;
+            }
             addresses.addAll(info.addresses);
         }
         if (info == null) {
@@ -226,7 +255,9 @@ public class TransportFactory {
         } else {
             info.protocol = netprotocol;
         }
-        if (sncpAddress != null) addresses.remove(sncpAddress);
+        if (sncpAddress != null) {
+            addresses.remove(sncpAddress);
+        }
         return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, this, this.asyncGroup, this.sslContext, sncpAddress, addresses, this.strategy);
     }
 
@@ -239,7 +270,9 @@ public class TransportFactory {
     }
 
     public void addSncpService(Service service) {
-        if (service == null) return;
+        if (service == null) {
+            return;
+        }
         services.add(new WeakReference<>(service));
     }
 
@@ -247,13 +280,17 @@ public class TransportFactory {
         List<Service> rs = new ArrayList<>();
         for (WeakReference<Service> ref : services) {
             Service service = ref.get();
-            if (service != null) rs.add(service);
+            if (service != null) {
+                rs.add(service);
+            }
         }
         return rs;
     }
 
     public void shutdownNow() {
-        if (this.scheduler != null) this.scheduler.shutdownNow();
+        if (this.scheduler != null) {
+            this.scheduler.shutdownNow();
+        }
     }
 
     private void checks() {
@@ -266,11 +303,15 @@ public class TransportFactory {
             }
             Transport.TransportNode[] nodes = transport.getTransportNodes();
             for (final Transport.TransportNode node : nodes) {
-                if (node.disabletime < 1) continue; //可用
+                if (node.disabletime < 1) {
+                    continue; //可用
+                }
                 CompletableFuture<AsyncConnection> future = Utility.orTimeout(asyncGroup.createTCPClient(node.address), 2, TimeUnit.SECONDS);
                 future.whenComplete((r, t) -> {
                     node.disabletime = t == null ? 0 : System.currentTimeMillis();
-                    if (r != null) r.dispose();
+                    if (r != null) {
+                        r.dispose();
+                    }
                 });
             }
         }
@@ -283,7 +324,9 @@ public class TransportFactory {
         long timex = System.currentTimeMillis() - (this.pinginterval < 15 ? this.pinginterval : (this.pinginterval - 3)) * 1000;
         for (WeakReference<Transport> ref : transportReferences) {
             Transport transport = ref.get();
-            if (transport == null) continue;
+            if (transport == null) {
+                continue;
+            }
             Transport.TransportNode[] nodes = transport.getTransportNodes();
             for (final Transport.TransportNode node : nodes) {
                 final BlockingQueue<AsyncConnection> queue = node.connQueue;
@@ -338,8 +381,12 @@ public class TransportFactory {
     }
 
     private static boolean checkName(String name) {  //不能含特殊字符
-        if (name.isEmpty()) return false;
-        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') return false;
+        if (name.isEmpty()) {
+            return false;
+        }
+        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') {
+            return false;
+        }
         for (char ch : name.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
                 return false;

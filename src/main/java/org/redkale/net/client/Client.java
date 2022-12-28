@@ -8,8 +8,8 @@ package org.redkale.net.client;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.*;
-import java.util.logging.*;
+import java.util.function.Function;
+import java.util.logging.Logger;
 import org.redkale.net.*;
 import org.redkale.util.*;
 
@@ -105,7 +105,9 @@ public abstract class Client<R extends ClientRequest, P> {
     @SuppressWarnings("OverridableMethodCallInConstructor")
     protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
         int maxPipelines, R pingRequest, R closeRequest, Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        if (maxPipelines < 1) throw new IllegalArgumentException("maxPipelines must bigger 0");
+        if (maxPipelines < 1) {
+            throw new IllegalArgumentException("maxPipelines must bigger 0");
+        }
         this.group = group;
         this.tcp = tcp;
         this.address = address;
@@ -140,8 +142,12 @@ public abstract class Client<R extends ClientRequest, P> {
                     }
                     long now = System.currentTimeMillis();
                     for (ClientConnection<R, P> conn : this.connArray) {
-                        if (conn == null) continue;
-                        if (now - conn.getLastWriteTime() < 10_000) continue;
+                        if (conn == null) {
+                            continue;
+                        }
+                        if (now - conn.getLastWriteTime() < 10_000) {
+                            continue;
+                        }
                         conn.writeChannel(req).thenAccept(p -> handlePingResult(conn, p));
                     }
                 } catch (Throwable t) {
@@ -160,11 +166,15 @@ public abstract class Client<R extends ClientRequest, P> {
     }
 
     public synchronized void close() {
-        if (this.closed) return;
+        if (this.closed) {
+            return;
+        }
         this.timeoutScheduler.shutdownNow();
         final R closereq = closeRequest;
         for (ClientConnection conn : this.connArray) {
-            if (conn == null) continue;
+            if (conn == null) {
+                continue;
+            }
             if (closereq == null) {
                 conn.dispose(null);
             } else {
@@ -180,12 +190,16 @@ public abstract class Client<R extends ClientRequest, P> {
     }
 
     public final CompletableFuture<P> sendAsync(R request) {
-        if (request.workThread == null) request.workThread = WorkThread.currWorkThread();
+        if (request.workThread == null) {
+            request.workThread = WorkThread.currWorkThread();
+        }
         return connect(null).thenCompose(conn -> writeChannel(conn, request));
     }
 
     public final CompletableFuture<P> sendAsync(ChannelContext context, R request) {
-        if (request.workThread == null) request.workThread = WorkThread.currWorkThread();
+        if (request.workThread == null) {
+            request.workThread = WorkThread.currWorkThread();
+        }
         return connect(context).thenCompose(conn -> writeChannel(conn, request));
     }
 
@@ -201,7 +215,9 @@ public abstract class Client<R extends ClientRequest, P> {
         final boolean cflag = context != null && connectionContextName != null;
         if (cflag) {
             ClientConnection cc = context.getAttribute(connectionContextName);
-            if (cc != null && cc.isOpen()) return CompletableFuture.completedFuture(cc);
+            if (cc != null && cc.isOpen()) {
+                return CompletableFuture.completedFuture(cc);
+            }
         }
         int connIndex;
         final int size = this.connArray.length;
@@ -214,7 +230,9 @@ public abstract class Client<R extends ClientRequest, P> {
 //        if (connIndex >= 0) {
         ClientConnection cc = this.connArray[connIndex];
         if (cc != null && cc.isOpen()) {
-            if (cflag) context.setAttribute(connectionContextName, cc);
+            if (cflag) {
+                context.setAttribute(connectionContextName, cc);
+            }
             return CompletableFuture.completedFuture(cc);
         }
         final int index = connIndex;
@@ -226,13 +244,17 @@ public abstract class Client<R extends ClientRequest, P> {
                 c.authenticated = true;
                 this.connArray[index] = c;
                 CompletableFuture<ClientConnection> f;
-                if (cflag) context.setAttribute(connectionContextName, c);
+                if (cflag) {
+                    context.setAttribute(connectionContextName, c);
+                }
                 while ((f = waitQueue.poll()) != null) {
                     f.complete(c);
                 }
                 return c;
             }).whenComplete((r, t) -> {
-                if (t != null) this.connOpenStates[index].set(false);
+                if (t != null) {
+                    this.connOpenStates[index].set(false);
+                }
             });
         } else {
             CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), 6, TimeUnit.SECONDS);

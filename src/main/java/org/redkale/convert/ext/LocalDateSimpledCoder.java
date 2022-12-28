@@ -5,7 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import java.time.*;
+import java.time.LocalDate;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 
@@ -43,7 +43,6 @@ public final class LocalDateSimpledCoder<R extends Reader, W extends Writer> ext
 //        BsonReader reader = new BsonReader(writer.toArray());
 //        System.out.println(LocalDateSimpledCoder.instance.convertFrom(reader));
 //    }
-
     /**
      * java.time.LocalDate 的JsonSimpledCoder实现
      *
@@ -66,7 +65,9 @@ public final class LocalDateSimpledCoder<R extends Reader, W extends Writer> ext
         @Override
         public LocalDate convertFrom(R in) {
             final String str = in.readSmallString();
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             return LocalDate.parse(str);
         }
     }

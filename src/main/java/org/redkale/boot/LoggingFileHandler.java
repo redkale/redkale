@@ -62,7 +62,9 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
         @Override
         public void publish(LogRecord log) {
-            if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) return;
+            if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) {
+                return;
+            }
             fillLogRecord(log);
             super.publish(log);
         }
@@ -136,7 +138,9 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         cal.set(Calendar.MILLISECOND, 0);
         cal.add(Calendar.DAY_OF_YEAR, 1);
         long t = cal.getTimeInMillis();
-        if (this.tomorrow != t) logindex.set(0);
+        if (this.tomorrow != t) {
+            logindex.set(0);
+        }
         this.tomorrow = t;
     }
 
@@ -162,11 +166,15 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                                 if (bigger) {
                                     for (int i = Math.min(count - 2, logindex.get() - 1); i > 0; i--) {
                                         File greater = new File(logfile.getPath() + "." + i);
-                                        if (greater.exists()) Files.move(greater.toPath(), new File(logfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                        if (greater.exists()) {
+                                            Files.move(greater.toPath(), new File(logfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                        }
                                     }
                                     Files.move(logfile.toPath(), new File(logfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                                 } else {
-                                    if (logfile.exists() && logfile.length() < 1) logfile.delete();
+                                    if (logfile.exists() && logfile.length() < 1) {
+                                        logfile.delete();
+                                    }
                                 }
                                 logstream = null;
                             }
@@ -176,11 +184,15 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                             if (limit > 0 && limit <= logunusuallength.get()) {
                                 for (int i = Math.min(count - 2, logunusualindex.get() - 1); i > 0; i--) {
                                     File greater = new File(logunusualfile.getPath() + "." + i);
-                                    if (greater.exists()) Files.move(greater.toPath(), new File(logunusualfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                    if (greater.exists()) {
+                                        Files.move(greater.toPath(), new File(logunusualfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                    }
                                 }
                                 Files.move(logunusualfile.toPath(), new File(logunusualfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                             } else {
-                                if (logunusualfile.exists() && logunusualfile.length() < 1) logunusualfile.delete();
+                                if (logunusualfile.exists() && logunusualfile.length() < 1) {
+                                    logunusualfile.delete();
+                                }
                             }
                             logunusualstream = null;
                         }
@@ -210,7 +222,9 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                         }
                     } catch (Exception e) {
                         ErrorManager err = getErrorManager();
-                        if (err != null) err.error(null, e, ErrorManager.WRITE_FAILURE);
+                        if (err != null) {
+                            err.error(null, e, ErrorManager.WRITE_FAILURE);
+                        }
                     }
                 }
 
@@ -274,12 +288,16 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         }
         String countstr = manager.getProperty(cname + ".count");
         try {
-            if (countstr != null) this.count = Math.max(1, Math.abs(Integer.decode(countstr)));
+            if (countstr != null) {
+                this.count = Math.max(1, Math.abs(Integer.decode(countstr)));
+            }
         } catch (Exception e) {
         }
         String appendstr = manager.getProperty(cname + ".append");
         try {
-            if (appendstr != null) this.append = "true".equalsIgnoreCase(appendstr) || "1".equals(appendstr);
+            if (appendstr != null) {
+                this.append = "true".equalsIgnoreCase(appendstr) || "1".equals(appendstr);
+            }
         } catch (Exception e) {
         }
         String levelstr = manager.getProperty(cname + ".level");
@@ -308,11 +326,15 @@ public class LoggingFileHandler extends LoggingBaseHandler {
             }
         } catch (Exception e) {
         }
-        if (getFormatter() == null) setFormatter(new SimpleFormatter());
+        if (getFormatter() == null) {
+            setFormatter(new SimpleFormatter());
+        }
 
         String encodingstr = manager.getProperty(cname + ".encoding");
         try {
-            if (encodingstr != null) setEncoding(encodingstr);
+            if (encodingstr != null) {
+                setEncoding(encodingstr);
+            }
         } catch (Exception e) {
         }
 
@@ -327,8 +349,12 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     @Override
     public void publish(LogRecord log) {
-        if (!isLoggable(log)) return;
-        if (denyregx != null && denyregx.matcher(log.getMessage()).find()) return;
+        if (!isLoggable(log)) {
+            return;
+        }
+        if (denyregx != null && denyregx.matcher(log.getMessage()).find()) {
+            return;
+        }
         fillLogRecord(log);
         logqueue.offer(log);
     }
@@ -336,20 +362,28 @@ public class LoggingFileHandler extends LoggingBaseHandler {
     @Override
     public void flush() {
         try {
-            if (logstream != null) logstream.flush();
+            if (logstream != null) {
+                logstream.flush();
+            }
         } catch (Exception e) {
             ErrorManager err = getErrorManager();
-            if (err != null) err.error(null, e, ErrorManager.FLUSH_FAILURE);
+            if (err != null) {
+                err.error(null, e, ErrorManager.FLUSH_FAILURE);
+            }
         }
     }
 
     @Override
     public void close() throws SecurityException {
         try {
-            if (logstream != null) logstream.close();
+            if (logstream != null) {
+                logstream.close();
+            }
         } catch (Exception e) {
             ErrorManager err = getErrorManager();
-            if (err != null) err.error(null, e, ErrorManager.CLOSE_FAILURE);
+            if (err != null) {
+                err.error(null, e, ErrorManager.CLOSE_FAILURE);
+            }
         }
     }
 

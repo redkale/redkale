@@ -9,18 +9,17 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import javax.net.ssl.SSLContext;
-
 import org.redkale.annotation.ConstructorParameters;
-import org.redkale.convert.*;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.*;
+import org.redkale.util.Utility;
 
 /**
  * 传输客户端
@@ -104,7 +103,9 @@ public final class Transport {
                 List<TransportNode> list = new ArrayList<>();
                 if (addresses != null) {
                     for (InetSocketAddress addr : addresses) {
-                        if (clientAddress != null && clientAddress.equals(addr)) continue;
+                        if (clientAddress != null && clientAddress.equals(addr)) {
+                            continue;
+                        }
                         boolean hasold = false;
                         for (TransportNode oldAddr : oldNodes) {
                             if (oldAddr.getAddress().equals(addr)) {
@@ -113,7 +114,9 @@ public final class Transport {
                                 break;
                             }
                         }
-                        if (hasold) continue;
+                        if (hasold) {
+                            continue;
+                        }
                         list.add(new TransportNode(factory.poolmaxconns, addr));
                     }
                 }
@@ -128,14 +131,20 @@ public final class Transport {
     }
 
     public final boolean addRemoteAddresses(final InetSocketAddress addr) {
-        if (addr == null) return false;
-        if (clientAddress != null && clientAddress.equals(addr)) return false;
+        if (addr == null) {
+            return false;
+        }
+        if (clientAddress != null && clientAddress.equals(addr)) {
+            return false;
+        }
         synchronized (this) {
             if (this.transportNodes.length == 0) {
                 this.transportNodes = new TransportNode[]{new TransportNode(factory.poolmaxconns, addr)};
             } else {
                 for (TransportNode i : this.transportNodes) {
-                    if (addr.equals(i.address)) return false;
+                    if (addr.equals(i.address)) {
+                        return false;
+                    }
                 }
                 this.transportNodes = Utility.append(transportNodes, new TransportNode(factory.poolmaxconns, addr));
             }
@@ -144,7 +153,9 @@ public final class Transport {
     }
 
     public final boolean removeRemoteAddresses(InetSocketAddress addr) {
-        if (addr == null) return false;
+        if (addr == null) {
+            return false;
+        }
         synchronized (this) {
             this.transportNodes = Utility.remove(transportNodes, new TransportNode(factory.poolmaxconns, addr));
         }
@@ -157,9 +168,13 @@ public final class Transport {
 
     public void close() {
         TransportNode[] nodes = this.transportNodes;
-        if (nodes == null) return;
+        if (nodes == null) {
+            return;
+        }
         for (TransportNode node : nodes) {
-            if (node != null) node.dispose();
+            if (node != null) {
+                node.dispose();
+            }
         }
     }
 
@@ -173,7 +188,9 @@ public final class Transport {
 
     public TransportNode findTransportNode(SocketAddress addr) {
         for (TransportNode node : this.transportNodes) {
-            if (node.address.equals(addr)) return node;
+            if (node.address.equals(addr)) {
+                return node;
+            }
         }
         return null;
     }
@@ -214,23 +231,33 @@ public final class Transport {
         if (semaphore != null && !semaphore.tryAcquire()) {
             final CompletableFuture<AsyncConnection> future = Utility.orTimeout(new CompletableFuture<>(), 10, TimeUnit.SECONDS);
             future.whenComplete((r, t) -> node.pollQueue.remove(future));
-            if (node.pollQueue.offer(future)) return future;
+            if (node.pollQueue.offer(future)) {
+                return future;
+            }
             future.completeExceptionally(new IOException("create transport connection error"));
             return future;
         }
         return func.get().thenApply(conn -> {
-            if (conn != null && semaphore != null) conn.beforeCloseListener((c) -> semaphore.release());
+            if (conn != null && semaphore != null) {
+                conn.beforeCloseListener((c) -> semaphore.release());
+            }
             return conn;
         });
     }
 
     public CompletableFuture<AsyncConnection> pollConnection(SocketAddress addr0) {
-        if (this.strategy != null) return strategy.pollConnection(addr0, this);
+        if (this.strategy != null) {
+            return strategy.pollConnection(addr0, this);
+        }
         final TransportNode[] nodes = this.transportNodes;
-        if (addr0 == null && nodes.length == 1) addr0 = nodes[0].address;
+        if (addr0 == null && nodes.length == 1) {
+            addr0 = nodes[0].address;
+        }
         final SocketAddress addr = addr0;
         final boolean rand = addr == null; //是否随机取地址
-        if (rand && nodes.length < 1) throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");
+        if (rand && nodes.length < 1) {
+            throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");
+        }
         try {
             if (!tcp) { // UDP
                 SocketAddress udpaddr = rand ? nodes[0].address : addr;
@@ -238,7 +265,9 @@ public final class Transport {
             }
             if (!rand) { //指定地址
                 TransportNode node = findTransportNode(addr);
-                if (node == null) return asyncGroup.createTCPClient(addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
+                if (node == null) {
+                    return asyncGroup.createTCPClient(addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
+                }
                 return pollAsync(node, addr, () -> asyncGroup.createTCPClient(addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds));
             }
 
@@ -246,7 +275,9 @@ public final class Transport {
             int enablecount = 0;
             final TransportNode[] newnodes = new TransportNode[nodes.length];
             for (final TransportNode node : nodes) {
-                if (node.disabletime > 0) continue;
+                if (node.disabletime > 0) {
+                    continue;
+                }
                 newnodes[enablecount++] = node;
             }
             final long now = System.currentTimeMillis();
@@ -280,11 +311,17 @@ public final class Transport {
         //从可用/不可用的地址列表中创建连接
         CompletableFuture future = new CompletableFuture();
         for (final TransportNode node : nodes) {
-            if (node == exclude) continue;
-            if (future.isDone()) return future;
+            if (node == exclude) {
+                continue;
+            }
+            if (future.isDone()) {
+                return future;
+            }
             asyncGroup.createTCPClient(node.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
                 .whenComplete((c, t) -> {
-                    if (c != null && !future.complete(c)) node.connQueue.offer(c);
+                    if (c != null && !future.complete(c)) {
+                        node.connQueue.offer(c);
+                    }
                     node.disabletime = t == null ? 0 : System.currentTimeMillis();
                 });
         }
@@ -292,11 +329,15 @@ public final class Transport {
     }
 
     public void offerConnection(final boolean forceClose, AsyncConnection conn) {
-        if (this.strategy != null && strategy.offerConnection(forceClose, conn)) return;
+        if (this.strategy != null && strategy.offerConnection(forceClose, conn)) {
+            return;
+        }
         if (!forceClose && conn.isTCP()) {
             if (conn.isOpen()) {
                 TransportNode node = findTransportNode(conn.getRemoteAddress());
-                if (node == null || !node.connQueue.offer(conn)) conn.dispose();
+                if (node == null || !node.connQueue.offer(conn)) {
+                    conn.dispose();
+                }
             } else {
                 conn.dispose();
             }
@@ -321,7 +362,9 @@ public final class Transport {
 
                         @Override
                         public void completed(Integer result, ByteBuffer attachment) {
-                            if (handler != null) handler.completed(result, att);
+                            if (handler != null) {
+                                handler.completed(result, att);
+                            }
                             conn.offerBuffer(attachment);
                             offerConnection(false, conn);
                         }
@@ -401,7 +444,9 @@ public final class Transport {
 
         public void setAttributes(ConcurrentHashMap<String, Object> map) {
             attributes.clear();
-            if (map != null) attributes.putAll(map);
+            if (map != null) {
+                attributes.putAll(map);
+            }
         }
 
         public InetSocketAddress getAddress() {
@@ -431,9 +476,15 @@ public final class Transport {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj) return true;
-            if (obj == null) return false;
-            if (getClass() != obj.getClass()) return false;
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
             final TransportNode other = (TransportNode) obj;
             return this.address.equals(other.address);
         }

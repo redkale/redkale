@@ -89,7 +89,9 @@ public final class DataSources {
             for (AnyValue itemConf : confs) {
                 String name = itemConf.getValue("name");
                 String value = itemConf.getValue("value");
-                if (name != null && value != null) prop.put(name, value);
+                if (name != null && value != null) {
+                    prop.put(name, value);
+                }
             }
         }
         return createDataSource(unitName, prop, prop);
@@ -189,9 +191,13 @@ public final class DataSources {
 
     @Deprecated //@deprecated @since 2.7.0
     public static DataSource createDataSource(final String unitName, URL persistxml) throws IOException {
-        if (persistxml == null) persistxml = DataSources.class.getResource("/persistence.xml");
+        if (persistxml == null) {
+            persistxml = DataSources.class.getResource("/persistence.xml");
+        }
         InputStream in = persistxml == null ? null : persistxml.openStream();
-        if (in == null) return null;
+        if (in == null) {
+            return null;
+        }
         Map<String, Properties> map = loadPersistenceXml(in);
         Properties readprop = null;
         Properties writeprop = null;
@@ -219,9 +225,15 @@ public final class DataSources {
                 }
             }
         }
-        if (readprop == null) throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
-        if (writeprop == null) writeprop = readprop;
-        if (readprop.getProperty(JDBC_URL, "").startsWith("memory:source")) return new DataMemorySource(unitName);
+        if (readprop == null) {
+            throw new IOException("Cannot find (resource.name = '" + unitName + "') DataSource");
+        }
+        if (writeprop == null) {
+            writeprop = readprop;
+        }
+        if (readprop.getProperty(JDBC_URL, "").startsWith("memory:source")) {
+            return new DataMemorySource(unitName);
+        }
 
         return createDataSource(unitName, readprop, writeprop);
     }
@@ -232,7 +244,9 @@ public final class DataSources {
             Map<String, Properties> map = loadPersistenceXml(in);
             final Properties sourceProperties = new Properties();
             map.forEach((unitName, prop) -> {
-                if (unitName.endsWith(".write")) return;
+                if (unitName.endsWith(".write")) {
+                    return;
+                }
                 if (unitName.endsWith(".read")) {
                     String name = unitName.replace(".read", "");
                     prop.forEach((k, v) -> {

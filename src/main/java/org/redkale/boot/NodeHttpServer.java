@@ -90,13 +90,17 @@ public class NodeHttpServer extends NodeServer {
 
     @Override
     protected void loadFilter(ClassFilter<? extends Filter> filterFilter, ClassFilter otherFilter) throws Exception {
-        if (httpServer != null) loadHttpFilter(filterFilter);
+        if (httpServer != null) {
+            loadHttpFilter(filterFilter);
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     protected void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception {
-        if (httpServer != null) loadHttpServlet(servletFilter, otherFilter);
+        if (httpServer != null) {
+            loadHttpServlet(servletFilter, otherFilter);
+        }
     }
 
     private void initWebSocketService() {
@@ -104,15 +108,23 @@ public class NodeHttpServer extends NodeServer {
         final ResourceFactory regFactory = application.getResourceFactory();
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
             try {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) return null;
-                if (!(srcObj instanceof WebSocketServlet)) return null;
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                    return null;
+                }
+                if (!(srcObj instanceof WebSocketServlet)) {
+                    return null;
+                }
                 ResourceTypeLoader loader = null;
                 ResourceFactory sncpResFactory = null;
                 for (NodeServer ns : application.servers) {
-                    if (!ns.isSNCP()) continue;
+                    if (!ns.isSNCP()) {
+                        continue;
+                    }
                     sncpResFactory = ns.resourceFactory;
                     loader = sncpResFactory.findTypeLoader(WebSocketNode.class, field);
-                    if (loader != null) break;
+                    if (loader != null) {
+                        break;
+                    }
                 }
                 Service nodeService = null;
                 if (loader != null) {
@@ -158,15 +170,21 @@ public class NodeHttpServer extends NodeServer {
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
         for (FilterEntry<? extends Filter> en : list) {
             Class<HttpFilter> clazz = (Class<HttpFilter>) en.getType();
-            if (Modifier.isAbstract(clazz.getModifiers())) continue;
+            if (Modifier.isAbstract(clazz.getModifiers())) {
+                continue;
+            }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
             final HttpFilter filter = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(filter, this);
             DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
             this.httpServer.addHttpFilter(filter, filterConf);
-            if (sb != null) sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+            if (sb != null) {
+                sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+            }
         }
-        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
+        if (sb != null && sb.length() > 0) {
+            logger.log(Level.INFO, sb.toString());
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -177,8 +195,12 @@ public class NodeHttpServer extends NodeServer {
         final AnyValue servletsConf = this.serverConf.getAnyValue("servlets");
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         String prefix0 = servletsConf == null ? "" : servletsConf.getValue("path", "");
-        if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
-        if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
+        if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') {
+            prefix0 = prefix0.substring(0, prefix0.length() - 1);
+        }
+        if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') {
+            prefix0 = '/' + prefix0;
+        }
         final String prefix = prefix0;
         List<FilterEntry<? extends Servlet>> list = new ArrayList(servletFilter.getFilterEntrys());
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
@@ -196,10 +218,16 @@ public class NodeHttpServer extends NodeServer {
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
         for (FilterEntry<? extends Servlet> en : list) {
             Class<HttpServlet> clazz = (Class<HttpServlet>) en.getType();
-            if (Modifier.isAbstract(clazz.getModifiers())) continue;
-            if (clazz.getAnnotation(Rest.RestDyn.class) != null) continue; //动态生成的跳过
+            if (Modifier.isAbstract(clazz.getModifiers())) {
+                continue;
+            }
+            if (clazz.getAnnotation(Rest.RestDyn.class) != null) {
+                continue; //动态生成的跳过
+            }
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
-            if (ws == null) continue;
+            if (ws == null) {
+                continue;
+            }
             if (ws.value().length == 0) {
                 logger.log(Level.INFO, "Not found @WebServlet.value in " + clazz.getName());
                 continue;
@@ -233,17 +261,25 @@ public class NodeHttpServer extends NodeServer {
             if (rests != null) {
                 for (AbstractMap.SimpleEntry<String, String[]> en : rests) {
                     int pos = en.getKey().indexOf('#');
-                    if (pos > maxTypeLength) maxTypeLength = pos;
+                    if (pos > maxTypeLength) {
+                        maxTypeLength = pos;
+                    }
                     int len = en.getKey().length() - pos - 1;
-                    if (len > maxNameLength) maxNameLength = len;
+                    if (len > maxNameLength) {
+                        maxNameLength = len;
+                    }
                 }
             }
             if (webss != null) {
                 for (AbstractMap.SimpleEntry<String, String[]> en : webss) {
                     int pos = en.getKey().indexOf('#');
-                    if (pos > maxTypeLength) maxTypeLength = pos;
+                    if (pos > maxTypeLength) {
+                        maxTypeLength = pos;
+                    }
                     int len = en.getKey().length() - pos - 1;
-                    if (len > maxNameLength) maxNameLength = len;
+                    if (len > maxNameLength) {
+                        maxNameLength = len;
+                    }
                 }
             }
             if (rests != null) {
@@ -280,7 +316,9 @@ public class NodeHttpServer extends NodeServer {
             }
             ss.sort((AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
-                if (as.getKey().length() > max) max = as.getKey().length();
+                if (as.getKey().length() > max) {
+                    max = as.getKey().length();
+                }
             }
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 sb.append("Load ").append(as.getKey());
@@ -291,27 +329,40 @@ public class NodeHttpServer extends NodeServer {
             }
             sb.append("All HttpServlets load in ").append(System.currentTimeMillis() - starts).append(" ms").append(LINE_SEPARATOR);
         }
-        if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString().trim());
+        if (sb != null && sb.length() > 0) {
+            logger.log(Level.INFO, sb.toString().trim());
+        }
     }
 
     @SuppressWarnings("unchecked")
     protected void loadRestServlet(final ClassFilter<? extends WebSocket> webSocketFilter, final AnyValue restConf, final List<Object> restedObjects, final StringBuilder sb,
         final List<AbstractMap.SimpleEntry<String, String[]>> rests, final List<AbstractMap.SimpleEntry<String, String[]>> webss) throws Exception {
-        if (!rest) return;
-        if (restConf == null) return; //不存在REST服务
-
+        if (!rest) {
+            return;
+        }
+        if (restConf == null) {
+            return; //不存在REST服务
+        }
         String prefix0 = restConf.getValue("path", "");
-        if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
-        if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
+        if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') {
+            prefix0 = prefix0.substring(0, prefix0.length() - 1);
+        }
+        if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') {
+            prefix0 = '/' + prefix0;
+        }
 
         String mqname = restConf.getValue("mq");
         MessageAgent agent0 = null;
         if (mqname != null) {
             agent0 = application.getMessageAgent(mqname);
-            if (agent0 == null) throw new RuntimeException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
+            if (agent0 == null) {
+                throw new RuntimeException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
+            }
         }
         final MessageAgent messageAgent = agent0;
-        if (messageAgent != null) prefix0 = ""; //开启MQ时,prefix字段失效
+        if (messageAgent != null) {
+            prefix0 = ""; //开启MQ时,prefix字段失效
+        }
         final String prefix = prefix0;
         final boolean autoload = restConf.getBoolValue("autoload", true);
         {  //加载RestService
@@ -332,17 +383,25 @@ public class NodeHttpServer extends NodeServer {
             final ClassFilter restFilter = ClassFilter.create(serverClassLoader, null, application.isCompileMode() ? "" : restConf.getValue("includes", ""), application.isCompileMode() ? "" : restConf.getValue("excludes", ""), includeValues, excludeValues);
             final CountDownLatch scdl = new CountDownLatch(super.interceptorServices.size());
             Stream<Service> stream = super.interceptorServices.stream();
-            if (!application.isCompileMode()) stream = stream.parallel(); //不能并行，否则在maven plugin运行环境下ClassLoader不对
+            if (!application.isCompileMode()) {
+                stream = stream.parallel(); //不能并行，否则在maven plugin运行环境下ClassLoader不对
+            }
             stream.forEach((service) -> {
                 try {
                     final Class stype = Sncp.getServiceType(service);
                     final String name = Sncp.getResourceName(service);
                     RestService rs = (RestService) stype.getAnnotation(RestService.class);
-                    if (rs == null || rs.ignore()) return;
+                    if (rs == null || rs.ignore()) {
+                        return;
+                    }
 
                     final String stypename = stype.getName();
-                    if (!autoload && !includeValues.contains(stypename)) return;
-                    if (!restFilter.accept(stypename)) return;
+                    if (!autoload && !includeValues.contains(stypename)) {
+                        return;
+                    }
+                    if (!restFilter.accept(stypename)) {
+                        return;
+                    }
                     synchronized (restedObjects) {
                         if (restedObjects.contains(service)) {
                             logger.log(Level.WARNING, stype.getName() + " repeat create rest servlet, so ignore");
@@ -351,13 +410,19 @@ public class NodeHttpServer extends NodeServer {
                         restedObjects.add(service); //避免重复创建Rest对象
                     }
                     HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
-                    if (servlet == null) return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+                    if (servlet == null) {
+                        return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+                    }
                     String prefix2 = prefix;
                     WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
-                    if (ws != null && !ws.repair()) prefix2 = "";
+                    if (ws != null && !ws.repair()) {
+                        prefix2 = "";
+                    }
                     resourceFactory.inject(servlet, NodeHttpServer.this);
                     dynServletMap.put(service, servlet);
-                    if (messageAgent != null) messageAgent.putService(this, service, servlet);
+                    if (messageAgent != null) {
+                        messageAgent.putService(this, service, servlet);
+                    }
                     //if (finest) logger.finest("Create RestServlet(resource.name='" + name + "') = " + servlet);
                     if (rests != null) {
                         String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
@@ -398,23 +463,35 @@ public class NodeHttpServer extends NodeServer {
                     continue;
                 }
                 final Class<? extends WebSocket> stype = en.getType();
-                if (stype.getAnnotation(Rest.RestDyn.class) != null) continue;
+                if (stype.getAnnotation(Rest.RestDyn.class) != null) {
+                    continue;
+                }
                 RestWebSocket rs = stype.getAnnotation(RestWebSocket.class);
-                if (rs == null || rs.ignore()) continue;
+                if (rs == null || rs.ignore()) {
+                    continue;
+                }
 
                 final String stypename = stype.getName();
-                if (!autoload && !includeValues.contains(stypename)) continue;
-                if (!restFilter.accept(stypename)) continue;
+                if (!autoload && !includeValues.contains(stypename)) {
+                    continue;
+                }
+                if (!restFilter.accept(stypename)) {
+                    continue;
+                }
                 if (restedObjects.contains(stype)) {
                     logger.log(Level.WARNING, stype.getName() + " repeat create rest websocket, so ignore");
                     continue;
                 }
                 restedObjects.add(stype); //避免重复创建Rest对象
                 WebSocketServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, messageAgent, prefix, en.getProperty());
-                if (servlet == null) continue; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
+                if (servlet == null) {
+                    continue; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
+                }
                 String prefix2 = prefix;
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
-                if (ws != null && !ws.repair()) prefix2 = "";
+                if (ws != null && !ws.repair()) {
+                    prefix2 = "";
+                }
                 resourceFactory.inject(servlet, NodeHttpServer.this);
                 if (logger.isLoggable(Level.FINEST)) {
                     logger.finest(stype.getName() + " create a RestWebSocketServlet");
@@ -430,7 +507,9 @@ public class NodeHttpServer extends NodeServer {
                 }
             }
         }
-        if (messageAgent != null) this.messageAgents.put(messageAgent.getName(), messageAgent);
+        if (messageAgent != null) {
+            this.messageAgents.put(messageAgent.getName(), messageAgent);
+        }
     }
 
     @Override //loadServlet执行之后调用
@@ -439,8 +518,12 @@ public class NodeHttpServer extends NodeServer {
         if (!application.isCompileMode() && cluster != null) {
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();
-            if (!cluster.containsProtocol(protocol)) return;
-            if (!cluster.containsPort(server.getSocketAddress().getPort())) return;
+            if (!cluster.containsProtocol(protocol)) {
+                return;
+            }
+            if (!cluster.containsPort(server.getSocketAddress().getPort())) {
+                return;
+            }
             cluster.register(this, protocol, dynServletMap.keySet(), new HashSet<>());
         }
     }

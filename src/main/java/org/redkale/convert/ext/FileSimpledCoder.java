@@ -34,7 +34,9 @@ public class FileSimpledCoder<R extends Reader, W extends Writer> extends Simple
     @Override
     public File convertFrom(R in) {
         String value = in.readString();
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         return new File(value);
     }
 

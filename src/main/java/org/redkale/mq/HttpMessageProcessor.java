@@ -54,7 +54,9 @@ public class HttpMessageProcessor implements MessageProcessor {
     protected long startTime;
 
     protected final Runnable innerCallback = () -> {
-        if (cdl != null) cdl.countDown();
+        if (cdl != null) {
+            cdl.countDown();
+        }
     };
 
     public HttpMessageProcessor(Logger logger, HttpMessageClient messageClient, MessageProducers producers, NodeHttpServer server, Service service, HttpServlet servlet) {
@@ -92,12 +94,15 @@ public class HttpMessageProcessor implements MessageProcessor {
             long now = System.currentTimeMillis();
             long cha = now - message.createTime;
             long e = now - startTime;
-            if (multiConsumer) message.setRespTopic(null); //不容许有响应
-
+            if (multiConsumer) {
+                message.setRespTopic(null); //不容许有响应
+            }
             HttpMessageResponse response = respSupplier.get();
             request = response.request();
             response.prepare(message, callback, producers.getProducer(message));
-            if (multiConsumer) request.setRequestURI(request.getRequestURI().replaceFirst(this.multiModule, this.restModule));
+            if (multiConsumer) {
+                request.setRequestURI(request.getRequestURI().replaceFirst(this.multiModule, this.restModule));
+            }
 
             server.getHttpServer().getContext().execute(servlet, request, response);
             long o = System.currentTimeMillis() - now;

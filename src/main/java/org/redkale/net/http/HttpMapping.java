@@ -5,9 +5,9 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  * 配合 HttpServlet 使用。
@@ -113,7 +113,7 @@ public @interface HttpMapping {
      * @return String
      */
     String example() default "";
-    
+
     /**
      * 备注描述
      *

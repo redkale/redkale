@@ -5,9 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 
 /**
  * char[] 的SimpledCoder实现
@@ -32,7 +30,9 @@ public final class CharArraySimpledCoder<R extends Reader, W extends Writer> ext
         if (out.writeArrayB(values.length, this, CharSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (char v : values) {
-                if (flag) out.writeArrayMark();
+                if (flag) {
+                    out.writeArrayMark();
+                }
                 out.writeChar(v);
                 flag = true;
             }
@@ -44,7 +44,9 @@ public final class CharArraySimpledCoder<R extends Reader, W extends Writer> ext
     public char[] convertFrom(R in) {
         int len = in.readArrayB(null, null, CharSimpledCoder.instance);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(null, CharSimpledCoder.instance);
             len = Reader.SIGN_NOLENGTH;

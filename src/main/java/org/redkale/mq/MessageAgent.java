@@ -76,8 +76,12 @@ public abstract class MessageAgent implements Resourcable {
                 Class<MessageCoder<MessageRecord>> coderClass = (Class) Thread.currentThread().getContextClassLoader().loadClass(coderType);
                 RedkaleClassLoader.putReflectionPublicConstructors(coderClass, coderClass.getName());
                 MessageCoder<MessageRecord> coder = coderClass.getConstructor().newInstance();
-                if (factory != null) factory.inject(coder);
-                if (coder instanceof Service) ((Service) coder).init(config);
+                if (factory != null) {
+                    factory.inject(coder);
+                }
+                if (coder instanceof Service) {
+                    ((Service) coder).init(config);
+                }
                 this.messageCoder = coder;
             } catch (RuntimeException ex) {
                 throw ex;
@@ -121,30 +125,50 @@ public abstract class MessageAgent implements Resourcable {
     public void destroy(AnyValue config) {
         this.httpMessageClient.close().join();
         this.sncpMessageClient.close().join();
-        if (this.timeoutExecutor != null) this.timeoutExecutor.shutdown();
-        if (this.sncpProducer != null) this.sncpProducer.shutdown().join();
-        if (this.httpProducer != null) this.httpProducer.shutdown().join();
-        if (this.messageCoder instanceof Service) ((Service) this.messageCoder).destroy(config);
+        if (this.timeoutExecutor != null) {
+            this.timeoutExecutor.shutdown();
+        }
+        if (this.sncpProducer != null) {
+            this.sncpProducer.shutdown().join();
+        }
+        if (this.httpProducer != null) {
+            this.httpProducer.shutdown().join();
+        }
+        if (this.messageCoder instanceof Service) {
+            ((Service) this.messageCoder).destroy(config);
+        }
     }
 
     protected List<MessageConsumer> getAllMessageConsumer() {
         List<MessageConsumer> consumers = new ArrayList<>();
         MessageConsumer one = this.httpMessageClient == null ? null : this.httpMessageClient.respConsumer;
-        if (one != null) consumers.add(one);
+        if (one != null) {
+            consumers.add(one);
+        }
         one = this.sncpMessageClient == null ? null : this.sncpMessageClient.respConsumer;
-        if (one != null) consumers.add(one);
+        if (one != null) {
+            consumers.add(one);
+        }
         consumers.addAll(messageNodes.values().stream().map(mcn -> mcn.consumer).collect(Collectors.toList()));
         return consumers;
     }
 
     protected List<MessageProducer> getAllMessageProducer() {
         List<MessageProducer> producers = new ArrayList<>();
-        if (this.httpProducer != null) producers.addAll(Utility.ofList(this.httpProducer.producers));
-        if (this.sncpProducer != null) producers.addAll(Utility.ofList(this.sncpProducer.producers));
+        if (this.httpProducer != null) {
+            producers.addAll(Utility.ofList(this.httpProducer.producers));
+        }
+        if (this.sncpProducer != null) {
+            producers.addAll(Utility.ofList(this.sncpProducer.producers));
+        }
         MessageProducers one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
-        if (one != null) producers.addAll(Utility.ofList(one.producers));
+        if (one != null) {
+            producers.addAll(Utility.ofList(one.producers));
+        }
         one = this.sncpMessageClient == null ? null : this.sncpMessageClient.getProducer();
-        if (one != null) producers.addAll(Utility.ofList(one.producers));
+        if (one != null) {
+            producers.addAll(Utility.ofList(one.producers));
+        }
         return producers;
     }
 
@@ -182,8 +206,12 @@ public abstract class MessageAgent implements Resourcable {
     }
 
     protected String checkName(String name) {  //不能含特殊字符
-        if (name.isEmpty()) return name;
-        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+        if (name.isEmpty()) {
+            return name;
+        }
+        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') {
+            throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+        }
         for (char ch : name.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
                 throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
@@ -205,7 +233,9 @@ public abstract class MessageAgent implements Resourcable {
                         producers[i] = producer;
                     }
                     long e = System.currentTimeMillis() - s;
-                    if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "MessageAgent.SncpProducer startup all in " + e + "ms");
+                    if (logger.isLoggable(Level.FINEST)) {
+                        logger.log(Level.FINEST, "MessageAgent.SncpProducer startup all in " + e + "ms");
+                    }
                     this.sncpProducer = new MessageProducers(producers);
                 }
             }
@@ -225,7 +255,9 @@ public abstract class MessageAgent implements Resourcable {
                         producers[i] = producer;
                     }
                     long e = System.currentTimeMillis() - s;
-                    if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "MessageAgent.HttpProducer startup all in " + e + "ms");
+                    if (logger.isLoggable(Level.FINEST)) {
+                        logger.log(Level.FINEST, "MessageAgent.HttpProducer startup all in " + e + "ms");
+                    }
                     this.httpProducer = new MessageProducers(producers);
                 }
             }
@@ -253,28 +285,42 @@ public abstract class MessageAgent implements Resourcable {
 
     public final synchronized void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
-        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return;
+        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) {
+            return;
+        }
         org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
-        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) return;
+        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) {
+            return;
+        }
         { //标记@RestService(name = " ") 需要跳过， 一般作为模板引擎
             RestService rest = service.getClass().getAnnotation(RestService.class);
-            if (rest != null && !rest.name().isEmpty() && rest.name().trim().isEmpty()) return;
+            if (rest != null && !rest.name().isEmpty() && rest.name().trim().isEmpty()) {
+                return;
+            }
         }
         String[] topics = generateHttpReqTopics(service);
         String consumerid = generateHttpConsumerid(topics, service);
-        if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+        if (messageNodes.containsKey(consumerid)) {
+            throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+        }
         HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, httpMessageClient, getHttpProducer(), ns, service, servlet);
         this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topics, consumerid, processor)));
     }
 
     public final synchronized void putService(NodeSncpServer ns, Service service, SncpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
-        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return;
+        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) {
+            return;
+        }
         org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
-        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) return;
+        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) {
+            return;
+        }
         String topic = generateSncpReqTopic(service);
         String consumerid = generateSncpConsumerid(topic, service);
-        if (messageNodes.containsKey(consumerid)) throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+        if (messageNodes.containsKey(consumerid)) {
+            throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+        }
         SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, sncpMessageClient, getSncpProducer(), ns, service, servlet);
         this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(new String[]{topic}, consumerid, processor)));
     }
@@ -319,7 +365,9 @@ public abstract class MessageAgent implements Resourcable {
         String resname = Sncp.getResourceName(service);
         String module = Rest.getRestModule(service).toLowerCase();
         MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
-        if (mmc != null) return new String[]{generateHttpReqTopic(mmc.module()) + (resname.isEmpty() ? "" : ("-" + resname))};
+        if (mmc != null) {
+            return new String[]{generateHttpReqTopic(mmc.module()) + (resname.isEmpty() ? "" : ("-" + resname))};
+        }
         return new String[]{"http.req." + module + (resname.isEmpty() ? "" : ("-" + resname))};
     }
 

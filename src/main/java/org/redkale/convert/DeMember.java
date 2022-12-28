@@ -156,17 +156,29 @@ public final class DeMember<R extends Reader, T, F> {
     }
 
     public int compareTo(boolean fieldSort, DeMember<R, T, F> o) {
-        if (o == null) return -1;
-        if (this.position != o.position) return (this.position == 0 ? Integer.MAX_VALUE : this.position) - (o.position == 0 ? Integer.MAX_VALUE : o.position);
-        if (this.index != o.index) return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
-        if (this.index != 0) throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field() + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
+        if (o == null) {
+            return -1;
+        }
+        if (this.position != o.position) {
+            return (this.position == 0 ? Integer.MAX_VALUE : this.position) - (o.position == 0 ? Integer.MAX_VALUE : o.position);
+        }
+        if (this.index != o.index) {
+            return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
+        }
+        if (this.index != 0) {
+            throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field() + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
+        }
         return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof DeMember)) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof DeMember)) {
+            return false;
+        }
         DeMember other = (DeMember) obj;
         return compareTo(true, other) == 0;
     }

@@ -5,7 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import java.time.*;
+import java.time.LocalTime;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 
@@ -64,7 +64,9 @@ public final class LocalTimeSimpledCoder<R extends Reader, W extends Writer> ext
         @Override
         public LocalTime convertFrom(R in) {
             final String str = in.readSmallString();
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             return LocalTime.parse(str);
         }
     }

@@ -80,9 +80,13 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
         if (out.writeArrayB(array.length, this, componentEncoder, array) < 0) {
             boolean first = true;
             for (Object v : array) {
-                if (!first) out.writeArrayMark();
+                if (!first) {
+                    out.writeArrayMark();
+                }
                 writeMemberValue(out, member, v, first);
-                if (first) first = false;
+                if (first) {
+                    first = false;
+                }
             }
         }
         out.writeArrayE();

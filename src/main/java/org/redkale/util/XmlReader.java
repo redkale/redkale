@@ -93,10 +93,16 @@ public class XmlReader {
                     readXmlDecl(root, array);
                 } else if (ch2 == '/') { //节点结束
                     String tag = readEndTag();
-                    if (tags.isEmpty()) throw newException("unexpected end tag " + tag);
-                    if (!tags.getFirst().tag.equals(tag)) throw newException("expected end tag " + tags.getFirst().tag + " but " + tag);
+                    if (tags.isEmpty()) {
+                        throw newException("unexpected end tag " + tag);
+                    }
+                    if (!tags.getFirst().tag.equals(tag)) {
+                        throw newException("expected end tag " + tags.getFirst().tag + " but " + tag);
+                    }
                     tags.removeFirst();
-                    if (tags.isEmpty()) break;
+                    if (tags.isEmpty()) {
+                        break;
+                    }
                 } else { //节点开始
                     readStartTag(root);
                 }
@@ -126,7 +132,9 @@ public class XmlReader {
      * @return 空白字符或有效字符
      */
     protected char nextChar() {
-        if (this.position == this.limit) throw newException("read EOF");
+        if (this.position == this.limit) {
+            throw newException("read EOF");
+        }
         char ch = this.text[++this.position];
         if (ch == '\n') {
             this.lineNumber++;
@@ -143,10 +151,14 @@ public class XmlReader {
      */
     protected char nextGoodChar() {
         char c = nextChar();
-        if (c > ' ') return c;
+        if (c > ' ') {
+            return c;
+        }
         for (;;) {
             c = nextChar();
-            if (c > ' ') return c;
+            if (c > ' ') {
+                return c;
+            }
         }
     }
 
@@ -165,17 +177,23 @@ public class XmlReader {
         boolean endtag = false;
         boolean endattr = false;
         char ch = nextGoodChar();
-        if (ch == '/') return true;
+        if (ch == '/') {
+            return true;
+        }
         int start = this.position;
         for (;;) {
             if (ch == '=') {
                 break;
             } else if (ch >= '0' && ch <= '9') {
-                if (first) throw newException("illegal character " + ch);
+                if (first) {
+                    throw newException("illegal character " + ch);
+                }
             } else if (ch >= 'a' && ch <= 'z') {
             } else if (ch >= 'A' && ch <= 'Z') {
             } else if (ch == '.' || ch == '-' || ch == '_' || ch == ':') {
-                if (first) throw newException("illegal character " + ch);
+                if (first) {
+                    throw newException("illegal character " + ch);
+                }
             } else {
                 throw newException("illegal character " + ch);
             }
@@ -190,7 +208,9 @@ public class XmlReader {
             start = this.position + 1;
             for (;;) {
                 ch = nextChar();
-                if (ch == quote) break;
+                if (ch == quote) {
+                    break;
+                }
             }
             attrValue = escape(new String(this.text, start, this.position - start));
         } else {
@@ -211,13 +231,23 @@ public class XmlReader {
             }
             attrValue = escape(new String(this.text, start, this.position - start));
         }
-        if (attrFunc != null) attrValue = attrFunc.apply(attrName, attrValue);
+        if (attrFunc != null) {
+            attrValue = attrFunc.apply(attrName, attrValue);
+        }
         config.addValue(attrName, attrValue);
-        if (endtag) return endtag;
-        if (endattr) return false;
+        if (endtag) {
+            return endtag;
+        }
+        if (endattr) {
+            return false;
+        }
         ch = nextGoodChar();
-        if (ch == '>') return false;
-        if (ch == '/') return true;
+        if (ch == '>') {
+            return false;
+        }
+        if (ch == '/') {
+            return true;
+        }
         backChar(ch);
         return readTagAttribute(tag, config);
     }
@@ -248,9 +278,13 @@ public class XmlReader {
         } else {
             tags.getFirst().config.addValue(tag, tagNode.config);
         }
-        if (hasattr) endtag = readTagAttribute(tag, config);
+        if (hasattr) {
+            endtag = readTagAttribute(tag, config);
+        }
         if (endtag) {
-            if (nextChar() != '>') throw newException("expected /> for tag end");
+            if (nextChar() != '>') {
+                throw newException("expected /> for tag end");
+            }
             return;
         }
         tags.addFirst(tagNode);
@@ -261,14 +295,18 @@ public class XmlReader {
         char ch;
         for (;;) {
             ch = nextChar();
-            if (ch == '>') break;
+            if (ch == '>') {
+                break;
+            }
         }
         return new String(this.text, start, this.position - start).trim();
     }
 
     protected void readComment() { //读取到 <!- 才进入此方法
         char ch = nextChar();
-        if (ch != '-') throw newException("expected <!-- for comment start");
+        if (ch != '-') {
+            throw newException("expected <!-- for comment start");
+        }
         int dash = 0;
         for (;;) {
             ch = nextChar();
@@ -283,12 +321,24 @@ public class XmlReader {
     }
 
     protected void readDocdecl(DefaultAnyValue root, ByteArray array) {//读取到 <!D 才进入此方法  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' (markupdecl | DeclSep)* ']' S?)? '>'
-        if (nextChar() != 'O') throw newException("expected <!DOCTYPE");
-        if (nextChar() != 'C') throw newException("expected <!DOCTYPE");
-        if (nextChar() != 'T') throw newException("expected <!DOCTYPE");
-        if (nextChar() != 'Y') throw newException("expected <!DOCTYPE");
-        if (nextChar() != 'P') throw newException("expected <!DOCTYPE");
-        if (nextChar() != 'E') throw newException("expected <!DOCTYPE");
+        if (nextChar() != 'O') {
+            throw newException("expected <!DOCTYPE");
+        }
+        if (nextChar() != 'C') {
+            throw newException("expected <!DOCTYPE");
+        }
+        if (nextChar() != 'T') {
+            throw newException("expected <!DOCTYPE");
+        }
+        if (nextChar() != 'Y') {
+            throw newException("expected <!DOCTYPE");
+        }
+        if (nextChar() != 'P') {
+            throw newException("expected <!DOCTYPE");
+        }
+        if (nextChar() != 'E') {
+            throw newException("expected <!DOCTYPE");
+        }
         char ch;
         array.clear();
         array.put("<!DOCTYPE".getBytes());
@@ -304,12 +354,24 @@ public class XmlReader {
     }
 
     protected void readCDSect(DefaultAnyValue root, ByteArray array) {//读取到 <![ 才进入此方法  '<![CDATA[ (Char* - (Char* ']]>' Char*)) ]]>'
-        if (nextChar() != 'C') throw newException("expected <![CDATA[ for cdsect start");
-        if (nextChar() != 'D') throw newException("expected <![CDATA[ for cdsect start");
-        if (nextChar() != 'A') throw newException("expected <![CDATA[ for cdsect start");
-        if (nextChar() != 'T') throw newException("expected <![CDATA[ for cdsect start");
-        if (nextChar() != 'A') throw newException("expected <![CDATA[ for cdsect start");
-        if (nextChar() != '[') throw newException("expected <![CDATA[ for cdsect start");
+        if (nextChar() != 'C') {
+            throw newException("expected <![CDATA[ for cdsect start");
+        }
+        if (nextChar() != 'D') {
+            throw newException("expected <![CDATA[ for cdsect start");
+        }
+        if (nextChar() != 'A') {
+            throw newException("expected <![CDATA[ for cdsect start");
+        }
+        if (nextChar() != 'T') {
+            throw newException("expected <![CDATA[ for cdsect start");
+        }
+        if (nextChar() != 'A') {
+            throw newException("expected <![CDATA[ for cdsect start");
+        }
+        if (nextChar() != '[') {
+            throw newException("expected <![CDATA[ for cdsect start");
+        }
         char ch;
         array.clear();
         array.put("<![CDATA[".getBytes());

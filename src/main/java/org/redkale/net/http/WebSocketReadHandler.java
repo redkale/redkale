@@ -5,14 +5,13 @@
  */
 package org.redkale.net.http;
 
-import java.util.logging.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import java.util.logging.Level;
+import java.util.logging.*;
 import org.redkale.convert.Convert;
 import static org.redkale.net.http.WebSocket.*;
 import org.redkale.net.http.WebSocketPacket.FrameType;
@@ -97,8 +96,12 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
      *
      */
     protected void readDecode(final ByteBuffer realbuf) {
-        if (debug && realbuf.remaining() > 6) logger.log(Level.FINEST, "read websocket message's length = " + realbuf.remaining());
-        if (!realbuf.hasRemaining()) return;
+        if (debug && realbuf.remaining() > 6) {
+            logger.log(Level.FINEST, "read websocket message's length = " + realbuf.remaining());
+        }
+        if (!realbuf.hasRemaining()) {
+            return;
+        }
         ByteBuffer buffer = realbuf;
         byte frameOpcode;
         byte frameCrcode;
@@ -117,7 +120,9 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                 final byte crcode0 = halfFrameBytes.get(1);   //第二个字节
                 byte lengthCode = crcode0;
                 final boolean masked = (lengthCode & 0x80) == 0x80;
-                if (masked) lengthCode ^= 0x80; //mask
+                if (masked) {
+                    lengthCode ^= 0x80; //mask
+                }
                 int minLength = ((lengthCode <= 0x7D) ? 0 : (lengthCode == 0x7E ? 2 : 8)) + (masked ? 4 : 0);
                 cha = minLength + 2 - halfFrameBytes.length();
                 if (remain < cha) { //还不够读取长度值和mask
@@ -172,7 +177,9 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
             final byte crcode0 = realbuf.get();   //第二个字节
             byte lengthCode = crcode0;
             final boolean masked = (lengthCode & 0x80) == 0x80;
-            if (masked) lengthCode ^= 0x80; //mask
+            if (masked) {
+                lengthCode ^= 0x80; //mask
+            }
             int minLength = ((lengthCode <= 0x7D) ? 0 : (lengthCode == 0x7E ? 2 : 8)) + (masked ? 4 : 0);
             if (remain < minLength + 2) { //还不够读取长度值
                 this.halfFrameBytes.put(opcode0, crcode0);
@@ -204,7 +211,9 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                 } else if (lengthCode == 0x7F) {//0x7E=127   长度>65535
                     this.halfFrameBytes.putLong((long) length);
                 }
-                if (masks0 != null) this.halfFrameBytes.put(masks0);
+                if (masks0 != null) {
+                    this.halfFrameBytes.put(masks0);
+                }
                 this.halfFrameBytes.put(realbuf);
                 this.halfFrameOpcode = opcode0;
                 this.halfFrameCrcode = crcode0;
@@ -233,14 +242,18 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
         // this.receiveCompress = !control && webSocket.inflater != null && (opcode & 0B0100_0000) != 0; //rsv1 为 1
 
         if (type == FrameType.CLOSE) {
-            if (debug) logger.log(Level.FINEST, " receive close command from websocket client");
+            if (debug) {
+                logger.log(Level.FINEST, " receive close command from websocket client");
+            }
         }
         if (type == null) {
             logger.log(Level.SEVERE, " receive unknown frametype(opcode=" + (frameOpcode & 0B0000_1111) + ") from websocket client");
         }
         final boolean checkrsv = false;//暂时不校验
         if (checkrsv && (frameOpcode & 0B0111_0000) != 0) {
-            if (debug) logger.log(Level.FINE, "rsv1 rsv2 rsv3 must be 0, but not (" + frameOpcode + ")");
+            if (debug) {
+                logger.log(Level.FINE, "rsv1 rsv2 rsv3 must be 0, but not (" + frameOpcode + ")");
+            }
             return; //rsv1 rsv2 rsv3 must be 0     
         }
         byte[] content = new byte[frameLength];
@@ -278,7 +291,9 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
     @Override
     public void completed(Integer count, ByteBuffer readBuffer) {
         if (count < 1) {
-            if (debug) logger.log(Level.FINEST, "WebSocket(" + webSocket + ") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds");
+            if (debug) {
+                logger.log(Level.FINEST, "WebSocket(" + webSocket + ") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds");
+            }
             webSocket.kill(CLOSECODE_ILLPACKET, "read buffer count is " + count);
             return;
         }
@@ -330,7 +345,9 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                         }
                     } else if (packet.type == FrameType.CLOSE) {
                         webSocket.initiateClosed = true;
-                        if (debug) logger.log(Level.FINEST, "WebSocket(" + webSocket + ") onMessage by CLOSE FrameType : " + packet);
+                        if (debug) {
+                            logger.log(Level.FINEST, "WebSocket(" + webSocket + ") onMessage by CLOSE FrameType : " + packet);
+                        }
                         webSocket.kill(CLOSECODE_CLIENTCLOSE, "received CLOSE frame-type message");
                         return;
                     } else {
@@ -351,9 +368,13 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
 
     @Override
     public void failed(Throwable exc, ByteBuffer attachment2) {
-        if (webSocket.initiateClosed) return;
+        if (webSocket.initiateClosed) {
+            return;
+        }
         if (exc != null) {
-            if (debug) context.getLogger().log(Level.FINEST, "WebSocket(" + webSocket + ") read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds", exc);
+            if (debug) {
+                context.getLogger().log(Level.FINEST, "WebSocket(" + webSocket + ") read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds", exc);
+            }
             webSocket.kill(CLOSECODE_WSEXCEPTION, "read websocket-packet failed");
         } else {
             webSocket.kill(CLOSECODE_WSEXCEPTION, "decode websocket-packet error");

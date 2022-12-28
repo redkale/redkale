@@ -42,7 +42,9 @@ public final class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer>
     @Override
     public LocalDateTime convertFrom(R in) {
         byte[] bs = bsSimpledCoder.convertFrom(in);
-        if (bs == null) return null;
+        if (bs == null) {
+            return null;
+        }
         long v1 = (((long) bs[0] & 0xff) << 56) | (((long) bs[1] & 0xff) << 48) | (((long) bs[2] & 0xff) << 40) | (((long) bs[3] & 0xff) << 32)
             | (((long) bs[4] & 0xff) << 24) | (((long) bs[5] & 0xff) << 16) | (((long) bs[6] & 0xff) << 8) | ((long) bs[7] & 0xff);
         int v2 = ((bs[8] & 0xff) << 24) | ((bs[9] & 0xff) << 16) | ((bs[10] & 0xff) << 8) | (bs[11] & 0xff);
@@ -79,7 +81,9 @@ public final class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer>
         @Override
         public LocalDateTime convertFrom(R in) {
             final String str = in.readSmallString();
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             return LocalDateTime.parse(str);
         }
     }

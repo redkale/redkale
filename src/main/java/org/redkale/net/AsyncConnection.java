@@ -5,17 +5,19 @@
  */
 package org.redkale.net;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.*;
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
-import javax.net.ssl.*;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
-import static javax.net.ssl.SSLEngineResult.Status.*;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
+import static javax.net.ssl.SSLEngineResult.Status.*;
+import javax.net.ssl.*;
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
+import static javax.net.ssl.SSLEngineResult.Status.*;
 import org.redkale.util.*;
 
 /**
@@ -266,7 +268,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             buffer.put(headerContent, headerOffset, headerLength);
             if (bodyLength > 0) {
                 buffer.put(bodyContent, bodyOffset, bodyLength);
-                if (bodyCallback != null) bodyCallback.accept(bodyAttachment);
+                if (bodyCallback != null) {
+                    bodyCallback.accept(bodyAttachment);
+                }
             }
             buffer.flip();
             CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
@@ -288,7 +292,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             writer.put(headerContent, headerOffset, headerLength);
             if (bodyLength > 0) {
                 writer.put(bodyContent, bodyOffset, bodyLength);
-                if (bodyCallback != null) bodyCallback.accept(bodyAttachment);
+                if (bodyCallback != null) {
+                    bodyCallback.accept(bodyAttachment);
+                }
             }
             final ByteBuffer[] buffers = writer.toBuffers();
             CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
@@ -309,7 +315,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     }
 
     public void setReadBuffer(ByteBuffer buffer) {
-        if (this.readBuffer != null) throw new RuntimeException("repeat AsyncConnection.setReadBuffer");
+        if (this.readBuffer != null) {
+            throw new RuntimeException("repeat AsyncConnection.setReadBuffer");
+        }
         this.readBuffer = buffer;
     }
 
@@ -514,7 +522,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     }
 
     protected void setReadSSLBuffer(ByteBuffer buffer) {
-        if (this.readSSLHalfBuffer != null) throw new RuntimeException("repeat AsyncConnection.setReadSSLBuffer");
+        if (this.readSSLHalfBuffer != null) {
+            throw new RuntimeException("repeat AsyncConnection.setReadSSLBuffer");
+        }
         this.readSSLHalfBuffer = buffer;
     }
 
@@ -537,12 +547,16 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     }
 
     public void offerBuffer(ByteBuffer buffer) {
-        if (buffer == null) return;
+        if (buffer == null) {
+            return;
+        }
         bufferConsumer.accept(buffer);
     }
 
     public void offerBuffer(ByteBuffer... buffers) {
-        if (buffers == null) return;
+        if (buffers == null) {
+            return;
+        }
         Consumer<ByteBuffer> consumer = this.bufferConsumer;
         for (ByteBuffer buffer : buffers) {
             consumer.accept(buffer);
@@ -595,12 +609,18 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         }
         if (this.readBuffer != null) {
             Consumer<ByteBuffer> consumer = this.bufferConsumer;
-            if (consumer != null) consumer.accept(this.readBuffer);
+            if (consumer != null) {
+                consumer.accept(this.readBuffer);
+            }
         }
-        if (attributes == null) return;
+        if (attributes == null) {
+            return;
+        }
         try {
             for (Object obj : attributes.values()) {
-                if (obj instanceof AutoCloseable) ((AutoCloseable) obj).close();
+                if (obj instanceof AutoCloseable) {
+                    ((AutoCloseable) obj).close();
+                }
             }
             attributes.clear();
         } catch (Exception io) {
@@ -618,7 +638,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     @Override
     public void setAttribute(String name, Object value) {
-        if (this.attributes == null) this.attributes = new HashMap<>();
+        if (this.attributes == null) {
+            this.attributes = new HashMap<>();
+        }
         this.attributes.put(name, value);
     }
 
@@ -630,7 +652,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     @Override
     public final void removeAttribute(String name) {
-        if (this.attributes != null) this.attributes.remove(name);
+        if (this.attributes != null) {
+            this.attributes.remove(name);
+        }
     }
 
     @Override
@@ -640,7 +664,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     @Override
     public final void clearAttribute() {
-        if (this.attributes != null) this.attributes.clear();
+        if (this.attributes != null) {
+            this.attributes.clear();
+        }
     }
 
     protected void startHandshake(final Consumer<Throwable> callback) {
@@ -702,7 +728,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 netBuffer.flip();
                 try {
                     ByteBuffer appBuffer = sslUnwrap(handshake, netBuffer);
-                    if (appBuffer == null) return; //CLOSED，netBuffer已被回收
+                    if (appBuffer == null) {
+                        return; //CLOSED，netBuffer已被回收
+                    }
                     if (AsyncConnection.this.readSSLHalfBuffer != netBuffer) {
                         offerBuffer(netBuffer);
                     }
@@ -912,7 +940,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                                 callback.accept(t);
                             }
                         });
-                        if (rs) return;
+                        if (rs) {
+                            return;
+                        }
                     } catch (SSLException e) {
                         callback.accept(e);
                         return;
@@ -946,9 +976,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     public String toString() {
         String s = super.toString();
         int pos = s.lastIndexOf('@');
-        if (pos < 1) return s;
+        if (pos < 1) {
+            return s;
+        }
         int cha = pos + 10 - s.length();
-        if (cha < 1) return s;
+        if (cha < 1) {
+            return s;
+        }
         for (int i = 0; i < cha; i++) s += ' ';
         return s;
     }

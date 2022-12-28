@@ -7,8 +7,8 @@ package org.redkale.util;
 
 import java.lang.reflect.*;
 import org.redkale.asm.*;
-import org.redkale.asm.Type;
 import static org.redkale.asm.Opcodes.*;
+import org.redkale.asm.Type;
 
 /**
  * 动态生成指定方法的调用对象, 替代Method.invoke的反射方式
@@ -154,7 +154,9 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
                     mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
                 } else {
                     paramDescs.append(Type.getDescriptor(paramType));
-                    if (paramType != Object.class) mv.visitTypeInsn(CHECKCAST, paramType.getName().replace('.', '/'));
+                    if (paramType != Object.class) {
+                        mv.visitTypeInsn(CHECKCAST, paramType.getName().replace('.', '/'));
+                    }
                 }
                 paramIndex++;
             }
@@ -208,11 +210,13 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
         final byte[] bytes = cw.toByteArray();
         Class<?> resultClazz = null;
         try {
-            if (resultClazz == null) resultClazz = new ClassLoader(loader) {
+            if (resultClazz == null) {
+                resultClazz = new ClassLoader(loader) {
                     public final Class<?> loadClass(String name, byte[] b) {
                         return defineClass(name, b, 0, b.length);
                     }
                 }.loadClass(newDynName.replace('/', '.'), bytes);
+            }
             RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
             return (Invoker<C, T>) resultClazz.getDeclaredConstructor().newInstance();

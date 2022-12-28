@@ -5,11 +5,11 @@
  */
 package org.redkale.net;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.*;
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.*;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import javax.net.ssl.SSLContext;
@@ -114,7 +114,9 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
     }
 
     public ReadableByteChannel readableByteChannel() {
-        if (this.sslEngine == null) return this.channel;
+        if (this.sslEngine == null) {
+            return this.channel;
+        }
 
         AsyncConnection self = this;
         return new ReadableByteChannel() {
@@ -139,8 +141,9 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
                 netBuffer.flip();
                 if (netBuffer.hasRemaining()) {
                     ByteBuffer appBuffer = sslUnwrap(false, netBuffer);
-                    if (appBuffer == null) return -1; //CLOSED，netBuffer已被回收
-
+                    if (appBuffer == null) {
+                        return -1; //CLOSED，netBuffer已被回收
+                    }
                     appBuffer.flip();
                     int pos = bb.position();
                     while (bb.hasRemaining() && appBuffer.hasRemaining()) bb.put(appBuffer.get());
@@ -175,7 +178,9 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
 
     @Override
     public WritableByteChannel writableByteChannel() {
-        if (this.sslEngine == null) return this.channel;
+        if (this.sslEngine == null) {
+            return this.channel;
+        }
 
         AsyncConnection self = this;
         return new WritableByteChannel() {
@@ -284,9 +289,15 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
         channel.shutdownInput();
         channel.shutdownOutput();
         channel.close();
-        if (this.connectKey != null) this.connectKey.cancel();
-        if (this.readKey != null) this.readKey.cancel();
-        if (this.writeKey != null) this.writeKey.cancel();
+        if (this.connectKey != null) {
+            this.connectKey.cancel();
+        }
+        if (this.readKey != null) {
+            this.readKey.cancel();
+        }
+        if (this.writeKey != null) {
+            this.writeKey.cancel();
+        }
     }
 
 }

@@ -5,9 +5,8 @@
  */
 package org.redkale.net.sncp;
 
-import org.redkale.net.DispatcherServlet;
-import org.redkale.util.AnyValue;
 import java.io.IOException;
+import org.redkale.net.DispatcherServlet;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -26,7 +25,9 @@ public class SncpDispatcherServlet extends DispatcherServlet<DLong, SncpContext,
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, DLong... mappings) {
         synchronized (sncplock) {
             for (SncpServlet s : getServlets()) {
-                if (s.service == servlet.service) throw new RuntimeException(s.service + " repeat addSncpServlet");
+                if (s.service == servlet.service) {
+                    throw new RuntimeException(s.service + " repeat addSncpServlet");
+                }
             }
             setServletConf(servlet, conf);
             putMapping(servlet.getServiceid(), servlet);
@@ -53,7 +54,9 @@ public class SncpDispatcherServlet extends DispatcherServlet<DLong, SncpContext,
 
     @Override
     public void init(SncpContext context, AnyValue config) {
-        if (application != null && application.isCompileMode()) return;
+        if (application != null && application.isCompileMode()) {
+            return;
+        }
         super.init(context, config); //必须要执行
         getServlets().forEach(s -> s.init(context, getServletConf(s)));
     }

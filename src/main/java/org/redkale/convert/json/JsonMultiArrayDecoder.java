@@ -41,7 +41,9 @@ public class JsonMultiArrayDecoder implements Decodeable<JsonReader, Object[]> {
 
     public Object[] convertFrom(JsonReader in, DeMember member) {
         int len = in.readArrayB(member, null, null);
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         //len must be Reader.SIGN_NOLENGTH
         final List<Object> result = new ArrayList();
         int startPosition = in.position();

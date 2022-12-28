@@ -6,9 +6,7 @@
 package org.redkale.convert.ext;
 
 import java.util.stream.DoubleStream;
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 
 /**
  * double[] 的SimpledCoder实现
@@ -33,7 +31,9 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
         if (out.writeArrayB(values.length, this, DoubleSimpledCoder.instance, values) < 0) {
             boolean flag = false;
             for (double v : values) {
-                if (flag) out.writeArrayMark();
+                if (flag) {
+                    out.writeArrayMark();
+                }
                 out.writeDouble(v);
                 flag = true;
             }
@@ -45,7 +45,9 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
     public double[] convertFrom(R in) {
         int len = in.readArrayB(null, null, DoubleSimpledCoder.instance);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(null, DoubleSimpledCoder.instance);
             len = Reader.SIGN_NOLENGTH;

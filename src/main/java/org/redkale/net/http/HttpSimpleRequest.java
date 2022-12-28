@@ -5,16 +5,15 @@
  */
 package org.redkale.net.http;
 
-import java.io.*;
+import java.io.Serializable;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.*;
+import org.redkale.util.Traces;
 
 /**
  * HttpRequest的缩减版, 只提供部分字段
@@ -105,11 +104,15 @@ public class HttpSimpleRequest implements java.io.Serializable {
 
     @ConvertDisabled
     public String getParametersToString() {
-        if (this.params == null || this.params.isEmpty()) return null;
+        if (this.params == null || this.params.isEmpty()) {
+            return null;
+        }
         final StringBuilder sb = new StringBuilder();
         AtomicBoolean no2 = new AtomicBoolean(false);
         this.params.forEach((n, v) -> {
-            if (no2.get()) sb.append('&');
+            if (no2.get()) {
+                sb.append('&');
+            }
             sb.append(n).append('=').append(URLEncoder.encode(v, StandardCharsets.UTF_8));
             no2.set(true);
         });
@@ -193,12 +196,16 @@ public class HttpSimpleRequest implements java.io.Serializable {
     }
 
     public HttpSimpleRequest removeHeader(String name) {
-        if (this.headers != null) this.headers.remove(name);
+        if (this.headers != null) {
+            this.headers.remove(name);
+        }
         return this;
     }
 
     public HttpSimpleRequest removeParam(String name) {
-        if (this.params != null) this.params.remove(name);
+        if (this.params != null) {
+            this.params.remove(name);
+        }
         return this;
     }
 
@@ -213,55 +220,83 @@ public class HttpSimpleRequest implements java.io.Serializable {
     }
 
     public HttpSimpleRequest header(String key, String value) {
-        if (this.headers == null) this.headers = new HashMap<>();
+        if (this.headers == null) {
+            this.headers = new HashMap<>();
+        }
         this.headers.put(key, value);
         return this;
     }
 
     public HttpSimpleRequest header(String key, JsonConvert convert, Object value) {
-        if (value == null) return this;
-        if (this.headers == null) this.headers = new HashMap<>();
-        if (convert == null) convert = JsonConvert.root();
+        if (value == null) {
+            return this;
+        }
+        if (this.headers == null) {
+            this.headers = new HashMap<>();
+        }
+        if (convert == null) {
+            convert = JsonConvert.root();
+        }
         this.headers.put(key, convert.convertTo(value));
         return this;
     }
 
     public HttpSimpleRequest header(String key, Object value) {
-        if (value == null) return this;
-        if (this.headers == null) this.headers = new HashMap<>();
+        if (value == null) {
+            return this;
+        }
+        if (this.headers == null) {
+            this.headers = new HashMap<>();
+        }
         this.headers.put(key, JsonConvert.root().convertTo(value));
         return this;
     }
 
     public HttpSimpleRequest header(String key, int value) {
-        if (this.headers == null) this.headers = new HashMap<>();
+        if (this.headers == null) {
+            this.headers = new HashMap<>();
+        }
         this.headers.put(key, String.valueOf(value));
         return this;
     }
 
     public HttpSimpleRequest header(String key, long value) {
-        if (this.headers == null) this.headers = new HashMap<>();
+        if (this.headers == null) {
+            this.headers = new HashMap<>();
+        }
         this.headers.put(key, String.valueOf(value));
         return this;
     }
 
     public HttpSimpleRequest param(String key, String value) {
-        if (this.params == null) this.params = new HashMap<>();
+        if (this.params == null) {
+            this.params = new HashMap<>();
+        }
         this.params.put(key, value);
         return this;
     }
 
     public HttpSimpleRequest param(String key, JsonConvert convert, Object value) {
-        if (value == null) return this;
-        if (this.params == null) this.params = new HashMap<>();
-        if (convert == null) convert = JsonConvert.root();
+        if (value == null) {
+            return this;
+        }
+        if (this.params == null) {
+            this.params = new HashMap<>();
+        }
+        if (convert == null) {
+            convert = JsonConvert.root();
+        }
         this.params.put(key, convert.convertTo(value));
         return this;
     }
 
     public HttpSimpleRequest param(String key, Object value) {
-        if (value == null) return this;
-        if (this.params == null) this.params = new HashMap<>();
+        if (value == null) {
+            return this;
+        }
+        if (this.params == null) {
+            this.params = new HashMap<>();
+        }
         this.params.put(key, value instanceof CharSequence ? value.toString() : JsonConvert.root().convertTo(value));
         return this;
     }

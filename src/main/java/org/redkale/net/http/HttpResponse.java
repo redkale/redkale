@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.nio.file.*;
+import java.nio.file.StandardOpenOption;
 import java.time.ZoneId;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
@@ -337,7 +337,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     @SuppressWarnings("unchecked")
     public <H extends CompletionHandler> H createAsyncHandler(Class<H> handlerClass) {
-        if (handlerClass == null || handlerClass == CompletionHandler.class) return (H) createAsyncHandler();
+        if (handlerClass == null || handlerClass == CompletionHandler.class) {
+            return (H) createAsyncHandler();
+        }
         return context.loadAsyncHandlerCreator(handlerClass).create(createAsyncHandler());
     }
 
@@ -348,7 +350,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final Object obj) {
         this.contentType = this.jsonContentType;
-        if (this.recycleListener != null) this.output = obj;
+        if (this.recycleListener != null) {
+            this.output = obj;
+        }
         Convert c = request.getRespConvert();
         if (c == jsonRootConvert) {
             JsonBytesWriter writer = jsonWriter;
@@ -367,7 +371,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final JsonConvert convert, final Object obj) {
         this.contentType = this.jsonContentType;
-        if (this.recycleListener != null) this.output = obj;
+        if (this.recycleListener != null) {
+            this.output = obj;
+        }
         if (convert == jsonRootConvert) {
             JsonBytesWriter writer = jsonWriter;
             convert.convertTo(writer.clear(), obj);
@@ -385,7 +391,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final Type type, final Object obj) {
         this.contentType = this.jsonContentType;
-        if (this.recycleListener != null) this.output = obj;
+        if (this.recycleListener != null) {
+            this.output = obj;
+        }
         Convert c = request.getRespConvert();
         if (c == jsonRootConvert) {
             JsonBytesWriter writer = jsonWriter;
@@ -405,7 +413,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
         this.contentType = this.jsonContentType;
-        if (this.recycleListener != null) this.output = obj;
+        if (this.recycleListener != null) {
+            this.output = obj;
+        }
         if (convert == jsonRootConvert) {
             JsonBytesWriter writer = jsonWriter;
             convert.convertTo(writer.clear(), type, obj);
@@ -502,13 +512,17 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (this.retResultHandler != null) {
             ret = this.retResultHandler.apply(this.request, ret);
         }
-        if (this.recycleListener != null) this.output = ret;
+        if (this.recycleListener != null) {
+            this.output = ret;
+        }
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
             this.header.addValue("retinfo", ret.getRetinfo());
         }
         Convert cc = ret == null ? null : ret.convert();
-        if (cc == null) cc = request.getRespConvert();
+        if (cc == null) {
+            cc = request.getRespConvert();
+        }
         if (cc instanceof JsonConvert) {
             this.contentType = this.jsonContentType;
         } else if (cc instanceof TextConvert) {
@@ -535,14 +549,20 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (this.retResultHandler != null) {
             ret = this.retResultHandler.apply(this.request, ret);
         }
-        if (this.recycleListener != null) this.output = ret;
+        if (this.recycleListener != null) {
+            this.output = ret;
+        }
         if (ret != null && !ret.isSuccess()) {
             this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
             this.header.addValue("retinfo", ret.getRetinfo());
         }
         Convert cc = convert;
-        if (cc == null && ret != null) cc = ret.convert();
-        if (cc == null) cc = request.getRespConvert();
+        if (cc == null && ret != null) {
+            cc = ret.convert();
+        }
+        if (cc == null) {
+            cc = request.getRespConvert();
+        }
         if (cc instanceof JsonConvert) {
             this.contentType = this.jsonContentType;
         } else if (cc instanceof TextConvert) {
@@ -575,7 +595,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param result     HttpResult输出对象
      */
     public void finish(final Convert convert, Type resultType, HttpResult result) {
-        if (result.getContentType() != null) setContentType(result.getContentType());
+        if (result.getContentType() != null) {
+            setContentType(result.getContentType());
+        }
         addHeader(result.getHeaders()).addCookie(result.getCookies()).setStatus(result.getStatus() < 1 ? 200 : result.getStatus());
         Object val = result.getResult();
         if (val == null) {
@@ -584,7 +606,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             finish(getStatus(), val.toString());
         } else {
             Convert cc = result.convert();
-            if (cc == null) cc = convert;
+            if (cc == null) {
+                cc = convert;
+            }
             finish(cc, resultType, val);
         }
     }
@@ -717,8 +741,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         if (httpRender != null) {
             setContentType(contentTypeHtmlUTF8);
-            if (result.getHeaders() != null) addHeader(result.getHeaders());
-            if (result.getCookies() != null) addCookie(result.getCookies());
+            if (result.getHeaders() != null) {
+                addHeader(result.getHeaders());
+            }
+            if (result.getCookies() != null) {
+                addCookie(result.getCookies());
+            }
             httpRender.renderTo(this.request, this, convert, result);
             return;
         }
@@ -770,7 +798,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         //以下if条件会被Rest类第2440行左右的地方用到
         if (val == null) {
             Convert cc = convert;
-            if (cc == null) cc = request.getRespConvert();
+            if (cc == null) {
+                cc = request.getRespConvert();
+            }
             if (cc instanceof JsonConvert) {
                 this.contentType = this.jsonContentType;
             } else if (cc instanceof TextConvert) {
@@ -798,13 +828,17 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             finish(convert, (HttpScope) val);
         } else {
             Convert cc = convert;
-            if (cc == null) cc = request.getRespConvert();
+            if (cc == null) {
+                cc = request.getRespConvert();
+            }
             if (cc instanceof JsonConvert) {
                 this.contentType = this.jsonContentType;
             } else if (cc instanceof TextConvert) {
                 this.contentType = this.plainContentType;
             }
-            if (this.recycleListener != null) this.output = val;
+            if (this.recycleListener != null) {
+                this.output = val;
+            }
             //this.channel == null为虚拟的HttpResponse
             if (type == null) {
                 if (cc == jsonRootConvert) {
@@ -842,7 +876,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param message 输出内容
      */
     public void finish(int status, String message) {
-        if (isClosed()) return;
+        if (isClosed()) {
+            return;
+        }
         this.status = status;
         //if (status != 200) super.refuseAlive();
         final byte[] val = message == null ? HttpRequest.EMPTY_BYTES : (context.getCharset() == null ? Utility.encodeUTF8(message) : message.getBytes(context.getCharset()));
@@ -904,16 +940,24 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param <A>         A
      */
     protected <A> void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length, Consumer<A> callback, A attachment) {
-        if (isClosed()) return; //避免重复关闭
+        if (isClosed()) {
+            return; //避免重复关闭
+        }
         if (this.headWritedSize < 0) {
-            if (contentType != null) this.contentType = contentType;
+            if (contentType != null) {
+                this.contentType = contentType;
+            }
             this.contentLength = length;
             createHeader();
         }
         ByteArray data = headerArray;
         data.put(bs, offset, length);
-        if (callback != null) callback.accept(attachment);
-        if (cacheHandler != null) cacheHandler.accept(this, data.getBytes());
+        if (callback != null) {
+            callback.accept(attachment);
+        }
+        if (cacheHandler != null) {
+            cacheHandler.accept(this, data.getBytes());
+        }
 
         int pipelineIndex = request.getPipelineIndex();
         if (pipelineIndex > 0) {
@@ -1015,7 +1059,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 headerArray.put(serverNameBytes);
                 if (!this.respHeadContainsConnection) {
                     byte[] bs = this.request.isKeepAlive() ? connectAliveBytes : connectCloseBytes;
-                    if (bs.length > 0) headerArray.put(bs);
+                    if (bs.length > 0) {
+                        headerArray.put(bs);
+                    }
                 }
             }
             if (!this.request.isWebSocket()) {
@@ -1035,16 +1081,22 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 }
             }
         }
-        if (dateSupplier != null) headerArray.put(dateSupplier.get());
+        if (dateSupplier != null) {
+            headerArray.put(dateSupplier.get());
+        }
 
         if (this.defaultAddHeaders != null) {
             for (String[] headers : this.defaultAddHeaders) {
                 if (headers.length > 3) {
                     String v = request.getParameter(headers[2]);
-                    if (v != null) this.header.addValue(headers[0], v);
+                    if (v != null) {
+                        this.header.addValue(headers[0], v);
+                    }
                 } else if (headers.length > 2) {
                     String v = request.getHeader(headers[2]);
-                    if (v != null) this.header.addValue(headers[0], v);
+                    if (v != null) {
+                        this.header.addValue(headers[0], v);
+                    }
                 } else {
                     this.header.addValue(headers[0], headers[1]);
                 }
@@ -1054,10 +1106,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             for (String[] headers : this.defaultSetHeaders) {
                 if (headers.length > 3) {
                     String v = request.getParameter(headers[2]);
-                    if (v != null) this.header.setValue(headers[0], v);
+                    if (v != null) {
+                        this.header.setValue(headers[0], v);
+                    }
                 } else if (headers.length > 2) {
                     String v = request.getHeader(headers[2]);
-                    if (v != null) this.header.setValue(headers[0], v);
+                    if (v != null) {
+                        this.header.setValue(headers[0], v);
+                    }
                 } else {
                     this.header.setValue(headers[0], headers[1]);
                 }
@@ -1074,7 +1130,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 domain = "Domain=" + domain + "; ";
             }
             String path = defaultCookie == null ? null : defaultCookie.getPath();
-            if (path == null || path.isEmpty()) path = "/";
+            if (path == null || path.isEmpty()) {
+                path = "/";
+            }
             if (request.newSessionid.isEmpty()) {
                 headerArray.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; " + domain + "Path=/; Max-Age=0; HttpOnly\r\n").getBytes());
             } else {
@@ -1083,10 +1141,16 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         if (this.cookies != null) {
             for (HttpCookie cookie : this.cookies) {
-                if (cookie == null) continue;
+                if (cookie == null) {
+                    continue;
+                }
                 if (defaultCookie != null) {
-                    if (defaultCookie.getDomain() != null && cookie.getDomain() == null) cookie.setDomain(defaultCookie.getDomain());
-                    if (defaultCookie.getPath() != null && cookie.getPath() == null) cookie.setPath(defaultCookie.getPath());
+                    if (defaultCookie.getDomain() != null && cookie.getDomain() == null) {
+                        cookie.setDomain(defaultCookie.getDomain());
+                    }
+                    if (defaultCookie.getPath() != null && cookie.getPath() == null) {
+                        cookie.setPath(defaultCookie.getPath());
+                    }
                 }
                 headerArray.put(("Set-Cookie: " + cookieString(cookie) + "\r\n").getBytes());
             }
@@ -1098,15 +1162,25 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     private CharSequence cookieString(HttpCookie cookie) {
         StringBuilder sb = new StringBuilder();
         sb.append(cookie.getName()).append("=").append(cookie.getValue()).append("; Version=1");
-        if (cookie.getDomain() != null) sb.append("; Domain=").append(cookie.getDomain());
-        if (cookie.getPath() != null) sb.append("; Path=").append(cookie.getPath());
-        if (cookie.getPortlist() != null) sb.append("; Port=").append(cookie.getPortlist());
+        if (cookie.getDomain() != null) {
+            sb.append("; Domain=").append(cookie.getDomain());
+        }
+        if (cookie.getPath() != null) {
+            sb.append("; Path=").append(cookie.getPath());
+        }
+        if (cookie.getPortlist() != null) {
+            sb.append("; Port=").append(cookie.getPortlist());
+        }
         if (cookie.getMaxAge() > 0) {
             sb.append("; Max-Age=").append(cookie.getMaxAge());
             sb.append("; Expires=").append(RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(ZONE_GMT).plusSeconds(cookie.getMaxAge())));
         }
-        if (cookie.getSecure()) sb.append("; Secure");
-        if (cookie.isHttpOnly()) sb.append("; HttpOnly");
+        if (cookie.getSecure()) {
+            sb.append("; Secure");
+        }
+        if (cookie.isHttpOnly()) {
+            sb.append("; HttpOnly");
+        }
         return sb;
     }
 
@@ -1119,7 +1193,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     protected <A> void sendBody(ByteBuffer buffer, CompletionHandler<Integer, Void> handler) {
         if (this.headWritedSize < 0) {
-            if (this.contentLength < 0) this.contentLength = buffer == null ? 0 : buffer.remaining();
+            if (this.contentLength < 0) {
+                this.contentLength = buffer == null ? 0 : buffer.remaining();
+            }
             createHeader();
             if (buffer == null) {
                 super.send(headerArray, handler);
@@ -1199,9 +1275,13 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             }
         }
         this.contentType = MimeType.getByFilename(filename == null || filename.isEmpty() ? file.getName() : filename);
-        if (this.contentType == null) this.contentType = "application/octet-stream";
+        if (this.contentType == null) {
+            this.contentType = "application/octet-stream";
+        }
         String range = request.getHeader("Range");
-        if (range != null && (!range.startsWith("bytes=") || range.indexOf(',') >= 0)) range = null;
+        if (range != null && (!range.startsWith("bytes=") || range.indexOf(',') >= 0)) {
+            range = null;
+        }
         long start = -1;
         long len = -1;
         if (range != null) {
@@ -1220,10 +1300,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         createHeader();
         ByteArray data = headerArray;
         if (fileBody == null) {
-            if (this.recycleListener != null) this.output = file;
+            if (this.recycleListener != null) {
+                this.output = file;
+            }
             finishFile(data, file, start, len);
         } else { //一般HttpResourceServlet缓存file内容时fileBody不为空
-            if (start >= 0) data.put(fileBody, (int) start, (int) ((len > 0) ? len : fileBody.length() - start));
+            if (start >= 0) {
+                data.put(fileBody, (int) start, (int) ((len > 0) ? len : fileBody.length() - start));
+            }
             super.finish(false, data.content(), 0, data.length());
         }
     }
@@ -1246,7 +1330,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             public void completed(Integer result, Void attachment) {
                 try {
                     if (fileChannel != null && sends >= limit) {
-                        if (buffer != null) channel.offerBuffer(buffer);
+                        if (buffer != null) {
+                            channel.offerBuffer(buffer);
+                        }
                         try {
                             fileChannel.close();
                         } catch (IOException ie) {
@@ -1256,7 +1342,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                     }
                     if (fileChannel == null) {
                         fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
-                        if (offset > 0) fileChannel = fileChannel.position(offset);
+                        if (offset > 0) {
+                            fileChannel = fileChannel.position(offset);
+                        }
                         limit = length > 0 ? length : (file.length() - (offset > 0 ? offset : 0));
                         sends = 0;
                         buffer = channel.ssl() ? channel.pollWriteSSLBuffer() : channel.pollWriteBuffer();
@@ -1264,7 +1352,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
                     buffer.clear();
                     int len = fileChannel.read(buffer);
-                    if (len < 1) throw new IOException("read " + file + " error: " + len);
+                    if (len < 1) {
+                        throw new IOException("read " + file + " error: " + len);
+                    }
                     buffer.flip();
                     if (sends + len > limit) {
                         buffer.limit((int) (len - limit + sends));
@@ -1286,8 +1376,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
             @Override
             public void failed(Throwable exc, Void attachment) {
-                if (buffer != null) channel.offerBuffer(buffer);
-                if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "finishFile error", exc);
+                if (buffer != null) {
+                    channel.offerBuffer(buffer);
+                }
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.log(Level.FINER, "finishFile error", exc);
+                }
                 finish(true);
             }
         });
@@ -1329,7 +1423,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public HttpResponse setHeader(String name, Object value) {
         this.header.setValue(name, String.valueOf(value));
-        if ("Connection".equalsIgnoreCase(name)) this.respHeadContainsConnection = true;
+        if ("Connection".equalsIgnoreCase(name)) {
+            this.respHeadContainsConnection = true;
+        }
         return this;
     }
 
@@ -1343,7 +1439,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public HttpResponse addHeader(String name, Object value) {
         this.header.addValue(name, String.valueOf(value));
-        if ("Connection".equalsIgnoreCase(name)) this.respHeadContainsConnection = true;
+        if ("Connection".equalsIgnoreCase(name)) {
+            this.respHeadContainsConnection = true;
+        }
         return this;
     }
 
@@ -1355,7 +1453,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @return HttpResponse
      */
     public HttpResponse addHeader(Map<String, ?> map) {
-        if (map == null || map.isEmpty()) return this;
+        if (map == null || map.isEmpty()) {
+            return this;
+        }
         for (Map.Entry<String, ?> en : map.entrySet()) {
             this.header.addValue(en.getKey(), String.valueOf(en.getValue()));
             if (!respHeadContainsConnection && "Connection".equalsIgnoreCase(en.getKey())) {

@@ -9,12 +9,11 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Stream;
-import org.redkale.annotation.Resource;
+import org.redkale.annotation.*;
 import org.redkale.boot.*;
 import org.redkale.net.Server;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
-import org.redkale.annotation.Comment;
 
 /**
  *
@@ -36,7 +35,9 @@ public class ServerWatchService extends AbstractWatchService {
     public RetResult info(@RestParam(name = "#port:") final int port) {
         Stream<NodeServer> stream = application.getNodeServers().stream();
         NodeServer node = stream.filter(ns -> ns.getServer().getSocketAddress().getPort() == port).findFirst().orElse(null);
-        if (node == null) return new RetResult(RET_SERVER_NOT_EXISTS, "Server(port=" + port + ") not found");
+        if (node == null) {
+            return new RetResult(RET_SERVER_NOT_EXISTS, "Server(port=" + port + ") not found");
+        }
         return new RetResult(formatToMap(node));
     }
 
@@ -53,11 +54,17 @@ public class ServerWatchService extends AbstractWatchService {
     @RestMapping(name = "changeAddress", comment = "更改Server的监听地址和端口")
     public RetResult changeAddress(@RestParam(name = "#port:") final int oldport,
         @RestParam(name = "#newhost:") final String newhost, @RestParam(name = "#newport:") final int newport) {
-        if (oldport < 1) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `oldport`");
-        if (newport < 1) return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `newport`");
+        if (oldport < 1) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `oldport`");
+        }
+        if (newport < 1) {
+            return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `newport`");
+        }
         Stream<NodeServer> stream = application.getNodeServers().stream();
         NodeServer node = stream.filter(ns -> ns.getServer().getSocketAddress().getPort() == oldport).findFirst().orElse(null);
-        if (node == null) return new RetResult(RET_SERVER_NOT_EXISTS, "Server(port=" + oldport + ") not found");
+        if (node == null) {
+            return new RetResult(RET_SERVER_NOT_EXISTS, "Server(port=" + oldport + ") not found");
+        }
         final Server server = node.getServer();
         InetSocketAddress newAddr = new InetSocketAddress(newhost == null || newhost.isEmpty() ? server.getSocketAddress().getHostString() : newhost, newport);
         try {

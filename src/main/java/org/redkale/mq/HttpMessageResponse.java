@@ -11,12 +11,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.function.*;
 import java.util.logging.Level;
-import org.redkale.convert.*;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.http.*;
-import org.redkale.service.RetResult;
 import static org.redkale.mq.MessageRecord.CTYPE_HTTP_RESULT;
 import org.redkale.net.Response;
+import org.redkale.net.http.*;
+import org.redkale.service.RetResult;
 
 /**
  *
@@ -74,17 +74,27 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     public static void finishHttpResult(boolean finest, Convert respConvert, Type type, MessageRecord msg, Runnable callback, MessageClient messageClient, MessageProducer producer, String resptopic, HttpResult result) {
-        if (callback != null) callback.run();
-        if (resptopic == null || resptopic.isEmpty()) return;
+        if (callback != null) {
+            callback.run();
+        }
+        if (resptopic == null || resptopic.isEmpty()) {
+            return;
+        }
         if (result.getResult() instanceof RetResult) {
             RetResult ret = (RetResult) result.getResult();
             //必须要塞入retcode， 开发者可以无需反序列化ret便可确定操作是否返回成功
-            if (!ret.isSuccess()) result.header("retcode", String.valueOf(ret.getRetcode()));
+            if (!ret.isSuccess()) {
+                result.header("retcode", String.valueOf(ret.getRetcode()));
+            }
         }
-        if (result.convert() == null && respConvert != null) result.convert(respConvert);
+        if (result.convert() == null && respConvert != null) {
+            result.convert(respConvert);
+        }
         if (finest) {
             Object innerrs = result.getResult();
-            if (innerrs instanceof byte[]) innerrs = new String((byte[]) innerrs, StandardCharsets.UTF_8);
+            if (innerrs instanceof byte[]) {
+                innerrs = new String((byte[]) innerrs, StandardCharsets.UTF_8);
+            }
             producer.logger.log(Level.FINEST, "HttpMessageResponse.finishHttpResult seqid=" + msg.getSeqid() + ", content: " + innerrs + ", status: " + result.getStatus() + ", headers: " + result.getHeaders());
         }
         byte[] content = HttpResultCoder.getInstance().encode(result);
@@ -117,7 +127,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finishJson(final JsonConvert convert, final Object obj) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         finishHttpResult(obj.getClass(), convert, new HttpResult(obj));
@@ -127,7 +139,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finishJson(final Type type, final Object obj) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         finishHttpResult(type, new HttpResult(obj));
@@ -136,7 +150,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         finishHttpResult(type, convert, new HttpResult(obj));
@@ -145,7 +161,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(Type type, org.redkale.service.RetResult ret) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         finishHttpResult(type, new HttpResult(ret));
@@ -155,7 +173,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(final Convert convert, Type type, org.redkale.service.RetResult ret) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         finishHttpResult(type, convert, new HttpResult(ret));
@@ -164,7 +184,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(final Convert convert, final Type type, Object obj) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         finishHttpResult(type, convert, new HttpResult(obj));
@@ -173,7 +195,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(String obj) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         finishHttpResult(String.class, new HttpResult(obj == null ? "" : obj));
@@ -207,7 +231,9 @@ public class HttpMessageResponse extends HttpResponse {
             producer.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
         }
         if (this.message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         finishHttpResult(String.class, new HttpResult(msg == null ? "" : msg).status(status));
@@ -216,17 +242,23 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(final Convert convert, Type type, HttpResult result) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
-        if (convert != null) result.convert(convert);
+        if (convert != null) {
+            result.convert(convert);
+        }
         finishHttpResult(type, result);
     }
 
     @Override
     public void finish(boolean kill, final byte[] bs, int offset, int length) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         if (offset == 0 && bs.length == length) {
@@ -239,7 +271,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
@@ -249,7 +283,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     protected <A> void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length, Consumer<A> consumer, A attachment) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
@@ -259,7 +295,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(boolean kill, ByteBuffer buffer) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         byte[] bs = new byte[buffer.remaining()];
@@ -270,7 +308,9 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(boolean kill, ByteBuffer... buffers) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) callback.run();
+            if (callback != null) {
+                callback.run();
+            }
             return;
         }
         int size = 0;

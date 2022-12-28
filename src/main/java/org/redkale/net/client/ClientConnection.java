@@ -58,11 +58,15 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         @Override
         public void completed(Integer result, Void attachment) {
             if (writeLastRequest != null && writeLastRequest == client.closeRequest) {
-                if (closeFuture != null) closeFuture.complete(null);
+                if (closeFuture != null) {
+                    closeFuture.complete(null);
+                }
                 closeFuture = null;
                 return;
             }
-            if (continueWrite(false)) return;
+            if (continueWrite(false)) {
+                return;
+            }
             writePending.compareAndSet(true, false);
             readChannel();
         }
@@ -96,11 +100,15 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         ByteArray rw = conn.writeArray;
         rw.clear();
         int pipelines = maxPipelines > 1 ? (maxPipelines - responseQueue.size()) : 1;
-        if (must && pipelines < 1) pipelines = 1;
+        if (must && pipelines < 1) {
+            pipelines = 1;
+        }
         int c = 0;
         AtomicBoolean pw = conn.pauseWriting;
         for (int i = 0; i < pipelines; i++) {
-            if (pw.get()) break;
+            if (pw.get()) {
+                break;
+            }
             R req;
             if (lastHalfRequest == null) {
                 req = requestQueue.poll();
@@ -108,13 +116,17 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 req = lastHalfRequest;
                 lastHalfRequest = null;
             }
-            if (req == null) break;
+            if (req == null) {
+                break;
+            }
             writeLastRequest = req;
             if (req.canMerge(conn)) {
                 R r;
                 while ((r = requestQueue.poll()) != null) {
                     i++;
-                    if (!req.merge(conn, r)) break;
+                    if (!req.merge(conn, r)) {
+                        break;
+                    }
                     req.respFuture.mergeCount++;
                 }
                 req.accept(conn, rw);
@@ -136,7 +148,9 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             channel.write(rw, writeHandler);
             return true;
         }
-        if (pw.get()) writePending.compareAndSet(true, false);
+        if (pw.get()) {
+            writePending.compareAndSet(true, false);
+        }
         return false;
     }
 
@@ -174,9 +188,13 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                     }
                 }
                 respWaitingCounter.decrement();
-                if (isAuthenticated() && client.respDoneCounter != null) client.respDoneCounter.increment();
+                if (isAuthenticated() && client.respDoneCounter != null) {
+                    client.respDoneCounter.increment();
+                }
                 try {
-                    if (respFuture.timeout != null) respFuture.timeout.cancel(true);
+                    if (respFuture.timeout != null) {
+                        respFuture.timeout.cancel(true);
+                    }
                     ClientRequest request = respFuture.request;
                     //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", result=" + rs.result);
                     preComplete(rs.result, (R) request, rs.exc);
@@ -227,7 +245,9 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                             if (mergeCount > 0) {
                                 for (int i = 0; i < mergeCount; i++) {
                                     respFuture = responseQueue.poll();
-                                    if (respFuture != null) completeResponse(rs, respFuture);
+                                    if (respFuture != null) {
+                                        completeResponse(rs, respFuture);
+                                    }
                                 }
                             }
                         }
@@ -315,7 +335,9 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 responseQueue.offer(respFuture);
             }
             requestQueue.offer(request);
-            if (isAuthenticated() && client.reqWritedCounter != null) client.reqWritedCounter.increment();
+            if (isAuthenticated() && client.reqWritedCounter != null) {
+                client.reqWritedCounter.increment();
+            }
         }
         if (responseQueue.size() < 2 && writePending.compareAndSet(false, true)) {//responseQueue.size() < 2 && 加了这句会存在偶尔不写数据的问题?
             continueWrite(true);
@@ -358,7 +380,9 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         CompletableFuture f;
         respWaitingCounter.reset();
         while ((f = responseQueue.poll()) != null) {
-            if (e == null) e = new ClosedChannelException();
+            if (e == null) {
+                e = new ClosedChannelException();
+            }
             f.completeExceptionally(e);
         }
     }
@@ -383,9 +407,13 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     public String toString() {
         String s = super.toString();
         int pos = s.lastIndexOf('@');
-        if (pos < 1) return s;
+        if (pos < 1) {
+            return s;
+        }
         int cha = pos + 10 - s.length();
-        if (cha < 1) return s;
+        if (cha < 1) {
+            return s;
+        }
         for (int i = 0; i < cha; i++) s += ' ';
         return s;
     }

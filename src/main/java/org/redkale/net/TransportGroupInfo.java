@@ -79,31 +79,45 @@ public class TransportGroupInfo {
 
     public boolean containsAddress(InetSocketAddress addr) {
         synchronized (this) {
-            if (this.addresses == null) return false;
+            if (this.addresses == null) {
+                return false;
+            }
             return this.addresses.contains(addr);
         }
     }
 
     public void removeAddress(InetSocketAddress addr) {
-        if (addr == null) return;
+        if (addr == null) {
+            return;
+        }
         synchronized (this) {
-            if (this.addresses == null) return;
+            if (this.addresses == null) {
+                return;
+            }
             this.addresses.remove(addr);
         }
     }
 
     public void putAddress(InetSocketAddress addr) {
-        if (addr == null) return;
+        if (addr == null) {
+            return;
+        }
         synchronized (this) {
-            if (this.addresses == null) this.addresses = new HashSet<>();
+            if (this.addresses == null) {
+                this.addresses = new HashSet<>();
+            }
             this.addresses.add(addr);
         }
     }
 
     public void putAddress(Set<InetSocketAddress> addrs) {
-        if (addrs == null) return;
+        if (addrs == null) {
+            return;
+        }
         synchronized (this) {
-            if (this.addresses == null) this.addresses = new HashSet<>();
+            if (this.addresses == null) {
+                this.addresses = new HashSet<>();
+            }
             this.addresses.addAll(addrs);
         }
     }

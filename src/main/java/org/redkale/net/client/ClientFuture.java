@@ -60,7 +60,9 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
 
     @Override
     public void run() {
-        if (conn == null) return;
+        if (conn == null) {
+            return;
+        }
         AsyncConnection channel = conn.getChannel();
         if (channel.inCurrThread()) {
             this.runTimeout();
@@ -71,7 +73,9 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
 
     private void runTimeout() {
         Queue<ClientFuture> responseQueue = conn.responseQueue;
-        if (responseQueue != null) responseQueue.remove(this);
+        if (responseQueue != null) {
+            responseQueue.remove(this);
+        }
         TimeoutException ex = new TimeoutException();
         WorkThread workThread = null;
         if (request != null) {

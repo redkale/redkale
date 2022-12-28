@@ -5,9 +5,10 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
 
 /**
  * 只能注解于RestService类的方法的String/byte[]/JavaBean参数或参数内的String/byte[]/JavaBean字段
@@ -31,14 +32,14 @@ public @interface RestBody {
      * @return boolean
      */
     boolean required() default true;
-    
+
     /**
      * for OpenAPI Specification 3.1.0
-     * 
+     *
      * @return String
      */
-    String example() default  "";
-    
+    String example() default "";
+
     /**
      * 备注描述, 对应&#64;HttpParam.comment
      *

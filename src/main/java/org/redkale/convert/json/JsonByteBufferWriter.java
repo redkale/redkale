@@ -6,11 +6,11 @@
 package org.redkale.convert.json;
 
 import java.nio.*;
-import java.nio.charset.*;
-import java.util.*;
-import java.util.function.*;
-import org.redkale.convert.*;
-import org.redkale.util.*;
+import java.nio.charset.Charset;
+import java.util.Objects;
+import java.util.function.Supplier;
+import org.redkale.convert.ConvertException;
+import org.redkale.util.Utility;
 
 /**
  * 以ByteBuffer为数据载体的JsonWriter
@@ -61,16 +61,22 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     public ByteBuffer[] toBuffers() {
-        if (buffers == null) return new ByteBuffer[0];
+        if (buffers == null) {
+            return new ByteBuffer[0];
+        }
         for (int i = index; i < this.buffers.length; i++) {
             ByteBuffer buf = this.buffers[i];
-            if (buf.position() != 0) buf.flip();
+            if (buf.position() != 0) {
+                buf.flip();
+            }
         }
         return this.buffers;
     }
 
     public int count() {
-        if (this.buffers == null) return 0;
+        if (this.buffers == null) {
+            return 0;
+        }
         int len = 0;
         for (ByteBuffer buffer : buffers) {
             len += buffer.remaining();
@@ -103,7 +109,9 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public void writeTo(final char ch) {
-        if (ch > Byte.MAX_VALUE) throw new ConvertException("writeTo char(int.value = " + (int) ch + ") must be less 127");
+        if (ch > Byte.MAX_VALUE) {
+            throw new ConvertException("writeTo char(int.value = " + (int) ch + ") must be less 127");
+        }
         expand(1);
         this.buffers[index].put((byte) ch);
     }
@@ -133,7 +141,9 @@ public class JsonByteBufferWriter extends JsonWriter {
                 buffer.put(chs, offset, bsize);
                 offset += bsize;
                 remain -= bsize;
-                if (remain < 1) break;
+                if (remain < 1) {
+                    break;
+                }
                 buffer = nextByteBuffer();
             }
         }
@@ -148,10 +158,14 @@ public class JsonByteBufferWriter extends JsonWriter {
             bb = charset.encode(CharBuffer.wrap(chs, start, len));
             byteLength += bb.remaining();
         }
-        if (expandsize < 0) expandsize = expand(byteLength);
+        if (expandsize < 0) {
+            expandsize = expand(byteLength);
+        }
         if (expandsize == 0) { // 只需要一个buffer 
             final ByteBuffer buffer = this.buffers[index];
-            if (quote) buffer.put((byte) '"');
+            if (quote) {
+                buffer.put((byte) '"');
+            }
 
             if (charset == null) { //UTF-8
                 final int limit = start + len;
@@ -179,12 +193,16 @@ public class JsonByteBufferWriter extends JsonWriter {
                 buffer.put(bb);
             }
 
-            if (quote) buffer.put((byte) '"');
+            if (quote) {
+                buffer.put((byte) '"');
+            }
             return;
         }
         ByteBuffer buffer = this.buffers[index];
         if (quote) {
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+            if (!buffer.hasRemaining()) {
+                buffer = nextByteBuffer();
+            }
             buffer.put((byte) '"');
         }
         if (charset == null) { //UTF-8
@@ -192,41 +210,65 @@ public class JsonByteBufferWriter extends JsonWriter {
             for (int i = start; i < limit; i++) {
                 char c = chs[i];
                 if (c < 0x80) {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) c);
                 } else if (c < 0x800) {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0xc0 | (c >> 6)));
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0x80 | (c & 0x3f)));
                 } else if (Character.isSurrogate(c)) { //连取两个
                     int uc = Character.toCodePoint(c, chs[i + 1]);
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0xf0 | ((uc >> 18))));
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0x80 | ((uc >> 6) & 0x3f)));
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0x80 | (uc & 0x3f)));
                     i++;
                 } else {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0xe0 | ((c >> 12))));
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0x80 | ((c >> 6) & 0x3f)));
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) (0x80 | (c & 0x3f)));
                 }
             }
         } else {
             while (bb.hasRemaining()) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(bb.get());
             }
         }
         if (quote) {
-            if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+            if (!buffer.hasRemaining()) {
+                buffer = nextByteBuffer();
+            }
             buffer.put((byte) '"');
         }
     }
@@ -274,21 +316,31 @@ public class JsonByteBufferWriter extends JsonWriter {
         int expandsize = expand(bs.length + (quote ? 2 : 0));
         if (expandsize == 0) {// 只需要一个buffer 
             final ByteBuffer buffer = this.buffers[index];
-            if (quote) buffer.put((byte) '"');
+            if (quote) {
+                buffer.put((byte) '"');
+            }
             buffer.put(bs);
-            if (quote) buffer.put((byte) '"');
+            if (quote) {
+                buffer.put((byte) '"');
+            }
         } else {
             ByteBuffer buffer = this.buffers[index];
             if (quote) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put((byte) '"');
             }
             for (byte b : bs) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             if (quote) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put((byte) '"');
             }
         }
@@ -306,11 +358,15 @@ public class JsonByteBufferWriter extends JsonWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             for (byte b : bs1) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs2) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
         }
@@ -328,11 +384,15 @@ public class JsonByteBufferWriter extends JsonWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             for (byte b : bs1) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs2) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
         }
@@ -350,11 +410,15 @@ public class JsonByteBufferWriter extends JsonWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             for (byte b : bs1) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs2) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
         }
@@ -374,19 +438,27 @@ public class JsonByteBufferWriter extends JsonWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             for (byte b : bs1) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put((byte) '"');
             }
             for (byte b : bs2) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put((byte) '"');
             }
         }
@@ -405,15 +477,21 @@ public class JsonByteBufferWriter extends JsonWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             for (byte b : bs1) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs2) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put((byte) '}');
             }
         }
@@ -432,15 +510,21 @@ public class JsonByteBufferWriter extends JsonWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             for (byte b : bs1) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs2) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put((byte) '}');
             }
         }
@@ -459,15 +543,21 @@ public class JsonByteBufferWriter extends JsonWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             for (byte b : bs1) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs2) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put((byte) '}');
             }
         }
@@ -492,23 +582,33 @@ public class JsonByteBufferWriter extends JsonWriter {
             } else {
                 ByteBuffer buffer = this.buffers[index];
                 for (byte b : bs1) {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put(b);
                 }
                 {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) '"');
                 }
                 for (byte b : bs2) {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put(b);
                 }
                 {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) '"');
                 }
                 {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) '}');
                 }
             }
@@ -543,23 +643,33 @@ public class JsonByteBufferWriter extends JsonWriter {
             } else {
                 ByteBuffer buffer = this.buffers[index];
                 for (byte b : bs1) {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put(b);
                 }
                 {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) '"');
                 }
                 for (byte b : bs2) {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put(b);
                 }
                 {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) '"');
                 }
                 {
-                    if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                    if (!buffer.hasRemaining()) {
+                        buffer = nextByteBuffer();
+                    }
                     buffer.put((byte) '}');
                 }
             }
@@ -583,23 +693,33 @@ public class JsonByteBufferWriter extends JsonWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             for (byte b : bs1) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs2) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs3) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             for (byte b : bs4) {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put(b);
             }
             {
-                if (!buffer.hasRemaining()) buffer = nextByteBuffer();
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
                 buffer.put((byte) '}');
             }
         }
@@ -659,7 +779,9 @@ public class JsonByteBufferWriter extends JsonWriter {
             expandsize = expand(byteLength);
             if (expandsize == 0) { // 只需要一个buffer 
                 final ByteBuffer buffer = this.buffers[index];
-                if (quote) buffer.put((byte) '"');
+                if (quote) {
+                    buffer.put((byte) '"');
+                }
                 for (int i = 0; i < chs.length; i++) {
                     char c = chs[i];
                     switch (c) {
@@ -694,7 +816,9 @@ public class JsonByteBufferWriter extends JsonWriter {
                             break;
                     }
                 }
-                if (quote) buffer.put((byte) '"');
+                if (quote) {
+                    buffer.put((byte) '"');
+                }
                 return;
             }
         }

@@ -10,9 +10,9 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import org.redkale.persistence.Column;
 import org.redkale.convert.*;
-import org.redkale.convert.json.*;
+import org.redkale.convert.json.JsonConvert;
+import org.redkale.persistence.Column;
 import org.redkale.util.*;
 
 /**
@@ -135,7 +135,9 @@ public class RetResult<T> implements Serializable {
 
     //@since 2.7.0
     public T join() {
-        if (isSuccess()) return result;
+        if (isSuccess()) {
+            return result;
+        }
         throw new RetcodeException(this.retcode, this.retinfo);
     }
 
@@ -244,7 +246,9 @@ public class RetResult<T> implements Serializable {
     @Deprecated
     public RetResult<T> attach(String key, Object value) {
         System.err.println("RetResult.attach is deprecated");
-        if (this.attach == null) this.attach = new HashMap<>();
+        if (this.attach == null) {
+            this.attach = new HashMap<>();
+        }
         boolean canstr = value != null && (value instanceof CharSequence || value instanceof Number || value.getClass().isPrimitive());
         this.attach.put(key, value == null ? null : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
         return this;

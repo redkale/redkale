@@ -16,7 +16,6 @@ import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.*;
-import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.MessageMultiConsumer;
@@ -73,7 +72,9 @@ public abstract class ClusterAgent {
         this.waits = config.getBoolValue("waits", false);
         {
             String ps = config.getValue("protocols", "").toUpperCase();
-            if (ps == null || ps.isEmpty()) ps = "SNCP;HTTP";
+            if (ps == null || ps.isEmpty()) {
+                ps = "SNCP;HTTP";
+            }
             this.protocols = ps.split(";");
         }
         String ts = config.getValue("ports", "");
@@ -81,7 +82,9 @@ public abstract class ClusterAgent {
             String[] its = ts.split(";");
             List<Integer> list = new ArrayList<>();
             for (String str : its) {
-                if (str.trim().isEmpty()) continue;
+                if (str.trim().isEmpty()) {
+                    continue;
+                }
                 list.add(Integer.parseInt(str.trim()));
             }
             if (!list.isEmpty()) {
@@ -115,12 +118,16 @@ public abstract class ClusterAgent {
     public abstract boolean acceptsConf(AnyValue config);
 
     public boolean containsProtocol(String protocol) {
-        if (protocol == null || protocol.isEmpty()) return false;
+        if (protocol == null || protocol.isEmpty()) {
+            return false;
+        }
         return protocols == null || Utility.contains(protocols, protocol.toUpperCase());
     }
 
     public boolean containsPort(int port) {
-        if (ports == null || ports.length == 0) return true;
+        if (ports == null || ports.length == 0) {
+            return true;
+        }
         return Utility.contains(ports, port);
     }
 
@@ -130,10 +137,14 @@ public abstract class ClusterAgent {
 
     //注册服务, 在NodeService调用Service.init方法之前调用
     public void register(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
-        if (localServices.isEmpty()) return;
+        if (localServices.isEmpty()) {
+            return;
+        }
         //注册本地模式
         for (Service service : localServices) {
-            if (!canRegister(ns, protocol, service)) continue;
+            if (!canRegister(ns, protocol, service)) {
+                continue;
+            }
             ClusterEntry htentry = register(ns, protocol, service);
             localEntrys.put(htentry.serviceid, htentry);
             if (protocol.toLowerCase().startsWith("http")) {
@@ -159,23 +170,35 @@ public abstract class ClusterAgent {
     public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
         //注销本地模式  远程模式不注册
         for (Service service : localServices) {
-            if (!canRegister(ns, protocol, service)) continue;
+            if (!canRegister(ns, protocol, service)) {
+                continue;
+            }
             deregister(ns, protocol, service);
         }
         afterDeregister(ns, protocol);
     }
 
     protected boolean canRegister(NodeServer ns, String protocol, Service service) {
-        if ("SNCP".equalsIgnoreCase(protocol) && service.getClass().getAnnotation(Local.class) != null) return false;
+        if ("SNCP".equalsIgnoreCase(protocol) && service.getClass().getAnnotation(Local.class) != null) {
+            return false;
+        }
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
-        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) return false;
+        if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) {
+            return false;
+        }
         org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
-        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) return false;
+        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) {
+            return false;
+        }
         if (service instanceof WebSocketNode) {
-            if (((WebSocketNode) service).getLocalWebSocketEngine() == null) return false;
+            if (((WebSocketNode) service).getLocalWebSocketEngine() == null) {
+                return false;
+            }
         }
         ClusterEntry entry = new ClusterEntry(ns, protocol, service);
-        if (entry.serviceName.trim().endsWith(serviceSeparator())) return false;
+        if (entry.serviceName.trim().endsWith(serviceSeparator())) {
+            return false;
+        }
         return true;
     }
 
@@ -183,7 +206,9 @@ public abstract class ClusterAgent {
     }
 
     protected void afterDeregister(NodeServer ns, String protocol) {
-        if (!this.waits) return;
+        if (!this.waits) {
+            return;
+        }
         int s = intervalCheckSeconds();
         if (s > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
             try {
@@ -216,7 +241,9 @@ public abstract class ClusterAgent {
     //格式: protocol:classtype-resourcename
     protected void updateSncpTransport(ClusterEntry entry) {
         Service service = entry.serviceRef.get();
-        if (service == null) return;
+        if (service == null) {
+            return;
+        }
         Collection<InetSocketAddress> addrs = ClusterAgent.this.queryAddress(entry).join();
         Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netProtocol, entry.address, null, addrs);
     }
@@ -274,7 +301,9 @@ public abstract class ClusterAgent {
             String selfmodule = Rest.getRestModule(service).toLowerCase();
             return protocol.toLowerCase() + serviceSeparator() + mmc.module() + serviceSeparator() + selfmodule;
         }
-        if (!Sncp.isSncpDyn(service)) return protocol.toLowerCase() + serviceSeparator() + service.getClass().getName();
+        if (!Sncp.isSncpDyn(service)) {
+            return protocol.toLowerCase() + serviceSeparator() + service.getClass().getName();
+        }
         String resname = Sncp.getResourceName(service);
         return protocol.toLowerCase() + serviceSeparator() + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
     }

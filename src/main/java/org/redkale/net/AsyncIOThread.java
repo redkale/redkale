@@ -69,7 +69,9 @@ public class AsyncIOThread extends AsyncThread {
 
     @Override
     public void execute(Collection<Runnable> commands) {
-        if (commands == null) return;
+        if (commands == null) {
+            return;
+        }
         for (Runnable command : commands) {
             commandQueue.offer(command);
         }
@@ -104,7 +106,9 @@ public class AsyncIOThread extends AsyncThread {
                     try {
                         register.accept(selector);
                     } catch (Throwable t) {
-                        if (!this.closed) logger.log(Level.INFO, getName() + " register run failed", t);
+                        if (!this.closed) {
+                            logger.log(Level.INFO, getName() + " register run failed", t);
+                        }
                     }
                 }
                 Runnable command;
@@ -112,11 +116,15 @@ public class AsyncIOThread extends AsyncThread {
                     try {
                         command.run();
                     } catch (Throwable t) {
-                        if (!this.closed) logger.log(Level.INFO, getName() + " command run failed", t);
+                        if (!this.closed) {
+                            logger.log(Level.INFO, getName() + " command run failed", t);
+                        }
                     }
                 }
                 int count = selector.select();
-                if (count == 0) continue;
+                if (count == 0) {
+                    continue;
+                }
 
                 Set<SelectionKey> keys = selector.selectedKeys();
                 Iterator<SelectionKey> it = keys.iterator();
@@ -124,7 +132,9 @@ public class AsyncIOThread extends AsyncThread {
                     SelectionKey key = it.next();
                     it.remove();
                     invoker = 0;
-                    if (!key.isValid()) continue;
+                    if (!key.isValid()) {
+                        continue;
+                    }
                     AsyncNioConnection conn = (AsyncNioConnection) key.attachment();
                     if (conn.client) {
                         if (key.isConnectable()) {
@@ -155,7 +165,9 @@ public class AsyncIOThread extends AsyncThread {
                     }
                 }
             } catch (Throwable ex) {
-                if (!this.closed) logger.log(Level.FINE, getName() + " selector run failed", ex);
+                if (!this.closed) {
+                    logger.log(Level.FINE, getName() + " selector run failed", ex);
+                }
             }
         }
     }

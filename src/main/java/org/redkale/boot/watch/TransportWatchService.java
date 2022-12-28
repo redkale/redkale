@@ -6,19 +6,18 @@
 package org.redkale.boot.watch;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetSocketAddress;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import org.redkale.annotation.Comment;
-import org.redkale.annotation.Resource;
+import org.redkale.annotation.*;
 import org.redkale.boot.Application;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
@@ -61,14 +60,18 @@ public class TransportWatchService extends AbstractWatchService {
         } catch (Exception e) {
             return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is illegal or cannot connect");
         }
-        if (transportFactory.findGroupName(address) != null) return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is exists");
+        if (transportFactory.findGroupName(address) != null) {
+            return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is exists");
+        }
         synchronized (this) {
             if (transportFactory.findGroupInfo(group) == null) {
                 return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
             }
             transportFactory.addGroupInfo(group, address);
             for (Service service : transportFactory.getServices()) {
-                if (!Sncp.isSncpDyn(service)) continue;
+                if (!Sncp.isSncpDyn(service)) {
+                    continue;
+                }
                 SncpClient client = Sncp.getSncpClient(service);
                 if (Sncp.isRemote(service)) {
                     if (client.getRemoteGroups() != null && client.getRemoteGroups().contains(group)) {
@@ -92,16 +95,22 @@ public class TransportWatchService extends AbstractWatchService {
     public RetResult removeNode(@RestParam(name = "group", comment = "Group节点名") final String group,
         @RestParam(name = "addr", comment = "节点IP") final String addr,
         @RestParam(name = "port", comment = "节点端口") final int port) throws IOException {
-        if (group == null) return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
+        if (group == null) {
+            return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
+        }
         final InetSocketAddress address = new InetSocketAddress(addr, port);
-        if (!group.equals(transportFactory.findGroupName(address))) return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") not belong to group(" + group + ")");
+        if (!group.equals(transportFactory.findGroupName(address))) {
+            return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") not belong to group(" + group + ")");
+        }
         synchronized (this) {
             if (transportFactory.findGroupInfo(group) == null) {
                 return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
             }
             transportFactory.removeGroupInfo(group, address);
             for (Service service : transportFactory.getServices()) {
-                if (!Sncp.isSncpDyn(service)) continue;
+                if (!Sncp.isSncpDyn(service)) {
+                    continue;
+                }
                 SncpClient client = Sncp.getSncpClient(service);
                 if (Sncp.isRemote(service)) {
                     if (client.getRemoteGroups() != null && client.getRemoteGroups().contains(group)) {

@@ -34,7 +34,9 @@ public class DurationSimpledCoder<R extends Reader, W extends Writer> extends Si
     @Override
     public Duration convertFrom(R in) {
         String value = in.readSmallString();
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         return Duration.ofNanos(Long.parseLong(value));
     }
 

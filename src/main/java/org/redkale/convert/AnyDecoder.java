@@ -7,9 +7,9 @@ package org.redkale.convert;
 
 import java.lang.reflect.Type;
 import java.util.*;
-import org.redkale.util.*;
 import org.redkale.convert.Reader.ValueType;
 import static org.redkale.convert.Reader.ValueType.MAP;
+import org.redkale.util.*;
 
 /**
  * 对不明类型的对象进行反序列化。 <br>
@@ -51,7 +51,9 @@ public class AnyDecoder implements Decodeable<Reader, Object> {
     @Override
     public Object convertFrom(Reader in) {
         ValueType vt = in.readType();
-        if (vt == null) return null;
+        if (vt == null) {
+            return null;
+        }
         switch (vt) {
             case ARRAY:
                 return this.collectionDecoder.convertFrom(in);

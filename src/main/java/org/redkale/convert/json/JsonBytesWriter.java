@@ -63,7 +63,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     protected byte[] expand(int len) {
         int newcount = count + len;
-        if (newcount <= content.length) return content;
+        if (newcount <= content.length) {
+            return content;
+        }
         byte[] newdata = new byte[Math.max(content.length * 3 / 2, newcount)];
         System.arraycopy(content, 0, newdata, 0, count);
         this.content = newdata;
@@ -96,7 +98,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override
     public final void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
-        if (this.comma) writeTo(',');
+        if (this.comma) {
+            writeTo(',');
+        }
         if (member != null) {
             byte[] bs = member.getJsonFieldNameBytes();
             expand(bs.length);
@@ -366,7 +370,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     private void writeEscapeLatinString(final boolean quote, byte[] value) {
         byte[] bytes = expand(value.length * 2 + 2);
         int curr = count;
-        if (quote) bytes[curr++] = '"';
+        if (quote) {
+            bytes[curr++] = '"';
+        }
         for (byte b : value) {
             if (b == '"') {
                 bytes[curr++] = '\\';
@@ -391,7 +397,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                 bytes[curr++] = b;
             }
         }
-        if (quote) bytes[curr++] = '"';
+        if (quote) {
+            bytes[curr++] = '"';
+        }
         count = curr;
     }
 
@@ -412,7 +420,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         }
         byte[] bytes = expand(value.length() * 4 + 2);
         int curr = count;
-        if (quote) bytes[curr++] = '"';
+        if (quote) {
+            bytes[curr++] = '"';
+        }
         int len = value.length();
         for (int i = 0; i < len; i++) {
             char ch = value.charAt(i);
@@ -457,7 +467,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                     break;
             }
         }
-        if (quote) bytes[curr++] = '"';
+        if (quote) {
+            bytes[curr++] = '"';
+        }
         count = curr;
     }
 
@@ -485,7 +497,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             return;
         }
         final char sign = value >= 0 ? 0 : '-';
-        if (value < 0) value = -value;
+        if (value < 0) {
+            value = -value;
+        }
         int size;
         for (int i = 0;; i++) {
             if (value <= sizeTable[i]) {
@@ -493,7 +507,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                 break;
             }
         }
-        if (sign != 0) size++; //负数
+        if (sign != 0) {
+            size++; //负数
+        }
         byte[] bytes = expand(size);
 
         int q, r;
@@ -516,9 +532,13 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             r = value - ((q << 3) + (q << 1));  // r = i-(q*10) ...
             bytes[--charPos] = (byte) digits[r];
             value = q;
-            if (value == 0) break;
+            if (value == 0) {
+                break;
+            }
         }
-        if (sign != 0) bytes[--charPos] = (byte) sign;
+        if (sign != 0) {
+            bytes[--charPos] = (byte) sign;
+        }
         count += size;
     }
 
@@ -532,7 +552,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             return;
         }
         final char sign = value >= 0 ? 0 : '-';
-        if (value < 0) value = -value;
+        if (value < 0) {
+            value = -value;
+        }
         int size = 19;
         long p = 10;
         for (int i = 1; i < 19; i++) {
@@ -542,7 +564,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             }
             p = 10 * p;
         }
-        if (sign != 0) size++; //负数
+        if (sign != 0) {
+            size++; //负数
+        }
         byte[] bytes = expand(size);
 
         long q;
@@ -578,9 +602,13 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             r = i2 - ((q2 << 3) + (q2 << 1));  // r = i2-(q2*10) ...
             bytes[--charPos] = (byte) digits[r];
             i2 = q2;
-            if (i2 == 0) break;
+            if (i2 == 0) {
+                break;
+            }
         }
-        if (sign != 0) bytes[--charPos] = (byte) sign;
+        if (sign != 0) {
+            bytes[--charPos] = (byte) sign;
+        }
         count += size;
     }
 

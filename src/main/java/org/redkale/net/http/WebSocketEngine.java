@@ -5,21 +5,19 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.net.http.WebSocketServlet.DEFAILT_LIVEINTERVAL;
-import java.io.*;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.logging.*;
-import java.util.stream.*;
-
+import java.util.stream.Stream;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.Convert;
 import org.redkale.net.Cryptor;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import static org.redkale.net.http.WebSocketServlet.*;
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
 
 /**
  *
@@ -103,13 +101,25 @@ public class WebSocketEngine {
 
     void init(AnyValue conf) {
         AnyValue props = conf;
-        if (conf != null && conf.getAnyValue("properties") != null) props = conf.getAnyValue("properties");
+        if (conf != null && conf.getAnyValue("properties") != null) {
+            props = conf.getAnyValue("properties");
+        }
         this.liveinterval = props == null ? (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval) : props.getIntValue(WEBPARAM__LIVEINTERVAL, (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval));
-        if (liveinterval <= 0) return;
-        if (props != null) this.wsmaxconns = props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsmaxconns);
-        if (props != null) this.wsthreads = props.getIntValue(WEBPARAM__WSTHREADS, this.wsthreads);
-        if (props != null) this.wsmaxbody = props.getIntValue(WEBPARAM__WSMAXBODY, this.wsmaxbody);
-        if (scheduler != null) return;
+        if (liveinterval <= 0) {
+            return;
+        }
+        if (props != null) {
+            this.wsmaxconns = props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsmaxconns);
+        }
+        if (props != null) {
+            this.wsthreads = props.getIntValue(WEBPARAM__WSTHREADS, this.wsthreads);
+        }
+        if (props != null) {
+            this.wsmaxbody = props.getIntValue(WEBPARAM__WSMAXBODY, this.wsmaxbody);
+        }
+        if (scheduler != null) {
+            return;
+        }
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
             final Thread t = new Thread(r, "Redkale-" + engineid + "-WebSocket-LiveInterval-Thread");
             t.setDaemon(true);
@@ -125,11 +135,15 @@ public class WebSocketEngine {
                 logger.log(Level.SEVERE, "WebSocketEngine schedule(interval=" + liveinterval + "s) ping error", t);
             }
         }, delay, liveinterval, TimeUnit.SECONDS);
-        if (logger.isLoggable(Level.FINEST)) logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsmaxconns + ", delay:" + delay + "s, interval:" + liveinterval + "s) scheduler executor");
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsmaxconns + ", delay:" + delay + "s, interval:" + liveinterval + "s) scheduler executor");
+        }
     }
 
     void destroy(AnyValue conf) {
-        if (scheduler != null) scheduler.shutdownNow();
+        if (scheduler != null) {
+            scheduler.shutdownNow();
+        }
     }
 
     @Comment("添加WebSocket")
@@ -146,18 +160,24 @@ public class WebSocketEngine {
             currconns.incrementAndGet();
             list.add(socket);
         }
-        if (node != null) return node.connect(socket._userid);
+        if (node != null) {
+            return node.connect(socket._userid);
+        }
         return null;
     }
 
     @Comment("从WebSocketEngine删除指定WebSocket")
     CompletableFuture<Void> removeLocalThenDisconnect(WebSocket socket) {
         Serializable userid = socket._userid;
-        if (userid == null) return null; //尚未登录成功
+        if (userid == null) {
+            return null; //尚未登录成功
+        }
         if (single) {
             currconns.decrementAndGet();
             websockets.remove(userid);
-            if (node != null) return node.disconnect(userid);
+            if (node != null) {
+                return node.disconnect(userid);
+            }
         } else { //非线程安全， 在常规场景中无需锁
             List<WebSocket> list = websockets2.get(userid);
             if (list != null) {
@@ -174,7 +194,9 @@ public class WebSocketEngine {
 
     @Comment("更改WebSocket的userid")
     CompletableFuture<Void> changeLocalUserid(WebSocket socket, final Serializable newuserid) {
-        if (newuserid == null) throw new NullPointerException("newuserid is null");
+        if (newuserid == null) {
+            throw new NullPointerException("newuserid is null");
+        }
         final Serializable olduserid = socket._userid;
         socket._userid = newuserid;
         if (single) {
@@ -184,7 +206,9 @@ public class WebSocketEngine {
             List<WebSocket> oldlist = websockets2.get(olduserid);
             if (oldlist != null) {
                 oldlist.remove(socket);
-                if (oldlist.isEmpty()) websockets2.remove(olduserid);
+                if (oldlist.isEmpty()) {
+                    websockets2.remove(olduserid);
+                }
             }
             List<WebSocket> newlist = websockets2.get(newuserid);
             if (newlist == null) {
@@ -193,7 +217,9 @@ public class WebSocketEngine {
             }
             newlist.add(socket);
         }
-        if (node != null) return node.changeUserid(olduserid, newuserid);
+        if (node != null) {
+            return node.changeUserid(olduserid, newuserid);
+        }
         return CompletableFuture.completedFuture(null);
     }
 
@@ -201,12 +227,16 @@ public class WebSocketEngine {
     public int forceCloseLocalWebSocket(Serializable userid) {
         if (single) {
             WebSocket ws = websockets.get(userid);
-            if (ws == null) return 0;
+            if (ws == null) {
+                return 0;
+            }
             ws.close();
             return 1;
         }
         List<WebSocket> list = websockets2.get(userid);
-        if (list == null || list.isEmpty()) return 0;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
         List<WebSocket> list2 = new ArrayList<>(list);
         for (WebSocket ws : list2) {
             ws.close();
@@ -276,13 +306,17 @@ public class WebSocketEngine {
         CompletableFuture<Integer> future = null;
         if (single) {
             for (WebSocket websocket : websockets.values()) {
-                if (predicate != null && !predicate.test(websocket)) continue;
+                if (predicate != null && !predicate.test(websocket)) {
+                    continue;
+                }
                 future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
             }
         } else {
             for (List<WebSocket> list : websockets2.values()) {
                 for (WebSocket websocket : list) {
-                    if (predicate != null && !predicate.test(websocket)) continue;
+                    if (predicate != null && !predicate.test(websocket)) {
+                        continue;
+                    }
                     future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
                 }
             }
@@ -355,13 +389,17 @@ public class WebSocketEngine {
         if (single) {
             for (Serializable userid : userids) {
                 WebSocket websocket = websockets.get(userid);
-                if (websocket == null) continue;
+                if (websocket == null) {
+                    continue;
+                }
                 future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
             }
         } else {
             for (Serializable userid : userids) {
                 List<WebSocket> list = websockets2.get(userid);
-                if (list == null) continue;
+                if (list == null) {
+                    continue;
+                }
                 for (WebSocket websocket : list) {
                     future = future == null ? websocket.send(message, last) : future.thenCombine(websocket.send(message, last), (a, b) -> a | (Integer) b);
                 }
@@ -404,13 +442,17 @@ public class WebSocketEngine {
         if (single) {
             for (Serializable userid : userids) {
                 WebSocket websocket = websockets.get(userid);
-                if (websocket == null) continue;
+                if (websocket == null) {
+                    continue;
+                }
                 future = future == null ? websocket.action(action) : future.thenCombine(websocket.action(action), (a, b) -> a | (Integer) b);
             }
         } else {
             for (Serializable userid : userids) {
                 List<WebSocket> list = websockets2.get(userid);
-                if (list == null) continue;
+                if (list == null) {
+                    continue;
+                }
                 for (WebSocket websocket : list) {
                     future = future == null ? websocket.action(action) : future.thenCombine(websocket.action(action), (a, b) -> a | (Integer) b);
                 }
@@ -431,13 +473,17 @@ public class WebSocketEngine {
 
     @Comment("连接数是否达到上限")
     public boolean isLocalConnLimited() {
-        if (this.wsmaxconns < 1) return false;
+        if (this.wsmaxconns < 1) {
+            return false;
+        }
         return currconns.get() >= this.wsmaxconns;
     }
 
     @Comment("获取所有连接")
     public Collection<WebSocket> getLocalWebSockets() {
-        if (single) return websockets.values();
+        if (single) {
+            return websockets.values();
+        }
         List<WebSocket> list = new ArrayList<>();
         websockets2.values().forEach(x -> list.addAll(x));
         return list;
@@ -445,7 +491,9 @@ public class WebSocketEngine {
 
     @Comment("获取所有连接")
     public void forEachLocalWebSocket(Consumer<WebSocket> consumer) {
-        if (consumer == null) return;
+        if (consumer == null) {
+            return;
+        }
         if (single) {
             websockets.values().stream().forEach(consumer);
         } else {
@@ -455,7 +503,9 @@ public class WebSocketEngine {
 
     @Comment("获取当前连接总数")
     public int getLocalWebSocketSize() {
-        if (single) return websockets.size();
+        if (single) {
+            return websockets.size();
+        }
         return (int) websockets2.values().stream().mapToInt(sublist -> sublist.size()).count();
     }
 
@@ -471,7 +521,9 @@ public class WebSocketEngine {
 
     @Comment("适用于单用户单连接模式")
     public WebSocket findLocalWebSocket(Serializable userid) {
-        if (single) return websockets.get(userid);
+        if (single) {
+            return websockets.get(userid);
+        }
         List<WebSocket> list = websockets2.get(userid);
         return (list == null || list.isEmpty()) ? null : list.get(list.size() - 1);
     }

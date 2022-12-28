@@ -42,7 +42,9 @@ public class RpcCallArrayAttribute<T, F> implements Attribute<T[], F> {
 
     @Override
     public F get(final T[] objs) {
-        if (objs == null || objs.length == 0) return null;
+        if (objs == null || objs.length == 0) {
+            return null;
+        }
         final Attribute<T, Serializable> attr = RpcCallAttribute.load(objs[0].getClass());
         final Object keys = Array.newInstance(attr.type(), objs.length);
         for (int i = 0; i < objs.length; i++) {
@@ -53,7 +55,9 @@ public class RpcCallArrayAttribute<T, F> implements Attribute<T[], F> {
 
     @Override
     public void set(final T[] objs, final F keys) {
-        if (objs == null || objs.length == 0) return;
+        if (objs == null || objs.length == 0) {
+            return;
+        }
         final Attribute<T, Serializable> attr = RpcCallAttribute.load(objs[0].getClass());
         for (int i = 0; i < objs.length; i++) {
             attr.set(objs[i], (Serializable) Array.get(keys, i));

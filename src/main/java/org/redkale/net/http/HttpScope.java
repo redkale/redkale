@@ -11,9 +11,9 @@ import java.net.HttpCookie;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
-import org.redkale.persistence.Transient;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.persistence.Transient;
 import org.redkale.util.TypeToken;
 
 /**
@@ -128,12 +128,16 @@ public class HttpScope {
     }
 
     public HttpScope appendAttrFunc(final String key, Supplier supplier) {
-        if (supplier == null) return this;
+        if (supplier == null) {
+            return this;
+        }
         return appendAttrFunc(k -> k.equals(key) ? supplier.get() : null);
     }
 
     public HttpScope appendAttrFunc(final Function<String, Object> attrFunc) {
-        if (attrFunc == null) return this;
+        if (attrFunc == null) {
+            return this;
+        }
         final Function<String, Object> old = this.attrFunction;
         if (old == null) {
             this.attrFunction = attrFunc;
@@ -147,15 +151,23 @@ public class HttpScope {
     }
 
     public HttpScope attr(Map<String, ?> map) {
-        if (map == null) return this;
-        if (this.attributes == null) this.attributes = new LinkedHashMap<>();
+        if (map == null) {
+            return this;
+        }
+        if (this.attributes == null) {
+            this.attributes = new LinkedHashMap<>();
+        }
         this.attributes.putAll(map);
         return this;
     }
 
     public HttpScope attr(String name, Object value) {
-        if (name == null || value == null) return this;
-        if (this.attributes == null) this.attributes = new LinkedHashMap<>();
+        if (name == null || value == null) {
+            return this;
+        }
+        if (this.attributes == null) {
+            this.attributes = new LinkedHashMap<>();
+        }
         this.attributes.put(name, value);
         return this;
     }
@@ -168,17 +180,23 @@ public class HttpScope {
     @SuppressWarnings("unchecked")
     public <T> T find(HttpScope parent, String name) {
         T rs = this.attributes == null ? null : (T) this.attributes.get(name);
-        if (rs != null) return rs;
+        if (rs != null) {
+            return rs;
+        }
         return parent == null ? null : parent.find(name);
     }
 
     public void forEach(BiConsumer<String, Object> action) {
-        if (this.attributes == null) return;
+        if (this.attributes == null) {
+            return;
+        }
         this.attributes.forEach(action);
     }
 
     public HttpScope header(String name, Serializable value) {
-        if (this.headers == null) this.headers = new HashMap<>();
+        if (this.headers == null) {
+            this.headers = new HashMap<>();
+        }
         this.headers.put(name, String.valueOf(value));
         return this;
     }
@@ -194,7 +212,9 @@ public class HttpScope {
     }
 
     public HttpScope cookie(HttpCookie cookie) {
-        if (this.cookies == null) this.cookies = new ArrayList<>();
+        if (this.cookies == null) {
+            this.cookies = new ArrayList<>();
+        }
         this.cookies.add(cookie);
         return this;
     }
@@ -242,7 +262,9 @@ public class HttpScope {
     public Map<String, Object> getAttributes() {
         final Function<String, Object> attrFunc = this.attrFunction;
         if (attrFunc != null) {
-            if (this.attributes == null) this.attributes = new LinkedHashMap<>();
+            if (this.attributes == null) {
+                this.attributes = new LinkedHashMap<>();
+            }
             return new LinkedHashMap(this.attributes) {
                 @Override
                 public Object get(Object key) {
@@ -250,7 +272,9 @@ public class HttpScope {
                         return super.get(key);
                     } else {
                         Object val = attrFunc.apply(key.toString());
-                        if (val == NIL) return null;
+                        if (val == NIL) {
+                            return null;
+                        }
                         put(key.toString(), val);
                         return val;
                     }

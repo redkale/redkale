@@ -5,7 +5,7 @@
  */
 package org.redkale.convert.bson;
 
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
@@ -31,7 +31,9 @@ public class BsonByteBufferReader extends BsonReader {
     protected BsonByteBufferReader(ConvertMask mask, ByteBuffer... buffers) {
         this.mask = mask;
         this.buffers = buffers;
-        if (buffers != null && buffers.length > 0) this.currentBuffer = buffers[currentIndex];
+        if (buffers != null && buffers.length > 0) {
+            this.currentBuffer = buffers[currentIndex];
+        }
     }
 
     @Override
@@ -52,7 +54,9 @@ public class BsonByteBufferReader extends BsonReader {
     @Override
     public int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
         short bt = readShort();
-        if (bt == Reader.SIGN_NULL) return bt;
+        if (bt == Reader.SIGN_NULL) {
+            return bt;
+        }
         short lt = readShort();
         byte kt = readByte();
         byte vt = readByte();
@@ -75,11 +79,15 @@ public class BsonByteBufferReader extends BsonReader {
     @Override
     public final int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) {
         short bt = readShort();
-        if (bt == Reader.SIGN_NULL) return bt;
+        if (bt == Reader.SIGN_NULL) {
+            return bt;
+        }
         short lt = readShort();
         if (componentDecoder != null && componentDecoder != ByteSimpledCoder.instance) {
             byte comval = readByte();
-            if (typevals != null) typevals[0] = comval;
+            if (typevals != null) {
+                typevals[0] = comval;
+            }
         }
         return (bt & 0xffff) << 16 | (lt & 0xffff);
     }
@@ -224,15 +232,21 @@ public class BsonByteBufferReader extends BsonReader {
     @Override
     public final String readSmallString() {
         int len = 0xff & readByte();
-        if (len == 0) return "";
+        if (len == 0) {
+            return "";
+        }
         return new String(read(len));
     }
 
     @Override
     public final String readString() {
         int len = readInt();
-        if (len == SIGN_NULL) return null;
-        if (len == 0) return "";
+        if (len == SIGN_NULL) {
+            return null;
+        }
+        if (len == 0) {
+            return "";
+        }
         return new String(read(len), StandardCharsets.UTF_8);
     }
 }

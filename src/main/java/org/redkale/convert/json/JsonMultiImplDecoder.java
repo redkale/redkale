@@ -68,13 +68,17 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
             for (String s : fields[i]) {
                 boolean repeat = false;
                 for (int j = 0; j < fields.length; j++) {
-                    if (j == i) continue;
+                    if (j == i) {
+                        continue;
+                    }
                     if (fields[j].contains(s)) {
                         repeat = true;
                         break;
                     }
                 }
-                if (repeat) removes.add(s);
+                if (repeat) {
+                    removes.add(s);
+                }
             }
         }
 
@@ -100,7 +104,9 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
     @Override
     public T convertFrom(JsonReader in) {
         final String clazz = in.readObjectB(null);
-        if (clazz == null) return null;
+        if (clazz == null) {
+            return null;
+        }
         ObjectDecoder decoder = this.firstDecoder;
         Map<String, ObjectDecoder> uniques = this.uniqueFieldToDecoders;
         Map<String, ObjectDecoder> repeats = this.repeatFieldToDecoders;

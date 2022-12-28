@@ -60,29 +60,47 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         buffer.putInt(data.getReqConvertType() == null ? 0 : data.getReqConvertType().getValue());
         buffer.putInt(data.getRespConvertType() == null ? 0 : data.getRespConvertType().getValue());
         buffer.putChar((char) traceid.length);
-        if (traceid.length > 0) buffer.put(traceid);
+        if (traceid.length > 0) {
+            buffer.put(traceid);
+        }
         buffer.putInt(requestURI.length);
-        if (requestURI.length > 0) buffer.put(requestURI);
+        if (requestURI.length > 0) {
+            buffer.put(requestURI);
+        }
         buffer.putChar((char) path.length);
-        if (path.length > 0) buffer.put(path);
+        if (path.length > 0) {
+            buffer.put(path);
+        }
         buffer.putChar((char) remoteAddr.length);
-        if (remoteAddr.length > 0) buffer.put(remoteAddr);
+        if (remoteAddr.length > 0) {
+            buffer.put(remoteAddr);
+        }
         buffer.putChar((char) sessionid.length);
-        if (sessionid.length > 0) buffer.put(sessionid);
+        if (sessionid.length > 0) {
+            buffer.put(sessionid);
+        }
         buffer.putChar((char) contentType.length);
-        if (contentType.length > 0) buffer.put(contentType);
+        if (contentType.length > 0) {
+            buffer.put(contentType);
+        }
         buffer.putChar((char) userid.length);
-        if (userid.length > 0) buffer.put(userid);
+        if (userid.length > 0) {
+            buffer.put(userid);
+        }
         buffer.put(headers);
         buffer.put(params);
         buffer.putInt(body.length);
-        if (body.length > 0) buffer.put(body);
+        if (body.length > 0) {
+            buffer.put(body);
+        }
         return bs;
     }
 
     @Override
     public HttpSimpleRequest decode(byte[] data) {
-        if (data == null) return null;
+        if (data == null) {
+            return null;
+        }
         ByteBuffer buffer = ByteBuffer.wrap(data);
         HttpSimpleRequest req = new HttpSimpleRequest();
         byte opt = buffer.get();
@@ -91,8 +109,12 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         req.setHashid(buffer.getInt());
         int reqformat = buffer.getInt();
         int respformat = buffer.getInt();
-        if (reqformat != 0) req.setReqConvertType(ConvertType.find(reqformat));
-        if (respformat != 0) req.setRespConvertType(ConvertType.find(respformat));
+        if (reqformat != 0) {
+            req.setReqConvertType(ConvertType.find(reqformat));
+        }
+        if (respformat != 0) {
+            req.setRespConvertType(ConvertType.find(respformat));
+        }
         req.setTraceid(MessageCoder.getShortString(buffer));
         req.setRequestURI(MessageCoder.getLongString(buffer));
         req.setPath(MessageCoder.getShortString(buffer));
@@ -113,7 +135,9 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
 
     protected static String getString(ByteBuffer buffer) {
         int len = buffer.getInt();
-        if (len == 0) return null;
+        if (len == 0) {
+            return null;
+        }
         byte[] bs = new byte[len];
         buffer.get(bs);
         return new String(bs, StandardCharsets.UTF_8);

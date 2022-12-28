@@ -76,7 +76,9 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
     @SuppressWarnings("unchecked")
     public E convertFrom(final R in) {
         String value = in.readSmallString();
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         if (valueToEnums != null) {
             return valueToEnums.get(value);
         } else {

@@ -5,7 +5,7 @@
  */
 package org.redkale.net.http;
 
-import java.io.*;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 
@@ -111,7 +111,9 @@ public final class WebSocketPacket {
     }
 
     public String toSimpleString() {
-        if (payload == null) return null;
+        if (payload == null) {
+            return null;
+        }
         return type == FrameType.TEXT ? new String(payload, StandardCharsets.UTF_8) : ("bytes(" + payload.length + ")");
     }
 

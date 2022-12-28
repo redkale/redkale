@@ -7,9 +7,9 @@ package org.redkale.convert.json;
 
 import java.io.*;
 import java.nio.*;
-import java.nio.charset.*;
-import org.redkale.convert.*;
-import org.redkale.util.*;
+import java.nio.charset.Charset;
+import org.redkale.convert.ConvertException;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -39,7 +39,9 @@ class JsonStreamWriter extends JsonByteBufferWriter {
 
     @Override
     public void writeTo(final char ch) {
-        if (ch > Byte.MAX_VALUE) throw new ConvertException("writeTo char(int.value = " + (int) ch + ") must be less 127");
+        if (ch > Byte.MAX_VALUE) {
+            throw new ConvertException("writeTo char(int.value = " + (int) ch + ") must be less 127");
+        }
         try {
             out.write((byte) ch);
         } catch (IOException e) {
@@ -54,7 +56,9 @@ class JsonStreamWriter extends JsonByteBufferWriter {
 
     private void writeTo(final boolean quote, final char[] chs, final int start, final int len) {
         try {
-            if (quote) out.write('"');
+            if (quote) {
+                out.write('"');
+            }
             if (charset == null) { //UTF-8
                 final int limit = start + len;
                 for (int i = start; i < limit; i++) {
@@ -81,7 +85,9 @@ class JsonStreamWriter extends JsonByteBufferWriter {
                 ByteBuffer bb = charset.encode(CharBuffer.wrap(chs, start, len));
                 out.write(bb.array());
             }
-            if (quote) out.write('"');
+            if (quote) {
+                out.write('"');
+            }
         } catch (IOException e) {
             throw new ConvertException(e);
         }

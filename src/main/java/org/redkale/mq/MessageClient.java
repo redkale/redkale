@@ -13,7 +13,7 @@ import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import static org.redkale.mq.MessageRecord.*;
 import org.redkale.net.http.*;
-import org.redkale.util.*;
+import org.redkale.util.Traces;
 
 /**
  *
@@ -47,7 +47,9 @@ public abstract class MessageClient {
     }
 
     protected CompletableFuture<Void> close() {
-        if (this.respConsumer == null) return CompletableFuture.completedFuture(null);
+        if (this.respConsumer == null) {
+            return CompletableFuture.completedFuture(null);
+        }
         return this.respConsumer.shutdown();
     }
 
@@ -68,11 +70,17 @@ public abstract class MessageClient {
                                 messageAgent.logger.log(Level.WARNING, MessageClient.this.getClass().getSimpleName() + " process " + msg + " error， not found mqresp.futurenode");
                                 return;
                             }
-                            if (node.scheduledFuture != null) node.scheduledFuture.cancel(true);
+                            if (node.scheduledFuture != null) {
+                                node.scheduledFuture.cancel(true);
+                            }
                             AtomicLong ncer = node.getCounter();
-                            if (ncer != null) ncer.decrementAndGet();
+                            if (ncer != null) {
+                                ncer.decrementAndGet();
+                            }
                             final long cha = now - msg.createTime;
-                            if (finest) messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.receive (mq.delay = " + cha + "ms, mq.seqid = " + msg.getSeqid() + ")");
+                            if (finest) {
+                                messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.receive (mq.delay = " + cha + "ms, mq.seqid = " + msg.getSeqid() + ")");
+                            }
                             node.future.complete(msg);
                             long cha2 = System.currentTimeMillis() - now;
                             if ((cha > 1000 || cha2 > 1000) && messageAgent != null && messageAgent.logger.isLoggable(Level.FINE)) {
@@ -87,7 +95,9 @@ public abstract class MessageClient {
                         MessageConsumer one = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
                         one.startup().join();
                         long onee = System.currentTimeMillis() - ones;
-                        if (finest) messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.startup " + onee + "ms ");
+                        if (finest) {
+                            messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.startup " + onee + "ms ");
+                        }
                         this.respConsumer = one;
                     }
                 }
@@ -95,7 +105,9 @@ public abstract class MessageClient {
             if (needresp && (message.getRespTopic() == null || message.getRespTopic().isEmpty())) {
                 message.setRespTopic(respTopic);
             }
-            if (counter != null) counter.incrementAndGet();
+            if (counter != null) {
+                counter.incrementAndGet();
+            }
             getProducer().apply(message);
             if (needresp) {
                 MessageRespFutureNode node = new MessageRespFutureNode(messageAgent.logger, message, respNodes, counter, future);

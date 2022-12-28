@@ -49,7 +49,6 @@ public class Traces {
 //        }
 //        return traceid;
 //    }
-    
     public static void currTraceid(String traceid) {
         if (enable) {
             localTrace.set(traceid);

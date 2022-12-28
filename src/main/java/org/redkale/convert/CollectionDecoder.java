@@ -5,10 +5,9 @@
  */
 package org.redkale.convert;
 
-import org.redkale.util.Creator;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
+import org.redkale.util.Creator;
 
 /**
  * Collection的反序列化操作类  <br>
@@ -80,7 +79,9 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         byte[] typevals = new byte[1];
         int len = in.readArrayB(member, typevals, componentDecoder);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(member, componentDecoder);
             len = Reader.SIGN_NOLENGTH;
@@ -103,7 +104,9 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader itemReader = getItemReader(in, member, first);
-                if (itemReader == null) break;
+                if (itemReader == null) {
+                    break;
+                }
                 result.add(readMemberValue(itemReader, member, localdecoder, first));
                 first = false;
             }
@@ -129,7 +132,9 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
     }
 
     protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
-        if (in == null) return null;
+        if (in == null) {
+            return null;
+        }
         return decoder.convertFrom(in);
     }
 

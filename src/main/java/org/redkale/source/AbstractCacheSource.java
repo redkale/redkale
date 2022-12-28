@@ -71,14 +71,18 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
             Iterator<CacheSourceProvider> it = ServiceLoader.load(CacheSourceProvider.class, serverClassLoader).iterator();
             while (it.hasNext()) {
                 CacheSourceProvider provider = it.next();
-                if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                if (provider != null) {
+                    RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                }
                 if (provider != null && provider.acceptsConf(sourceConf)) {
                     providers.add(provider);
                 }
             }
             for (CacheSourceProvider provider : InstanceProvider.sort(providers)) {
                 source = provider.createInstance();
-                if (source != null) break;
+                if (source != null) {
+                    break;
+                }
             }
             if (source == null) {
                 if (CacheMemorySource.acceptsConf(sourceConf)) {

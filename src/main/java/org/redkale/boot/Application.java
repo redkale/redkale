@@ -359,7 +359,9 @@ public final class Application {
                             List<String> list = new ArrayList<>();
                             reader.lines().forEach(v -> list.add(v));
                             Collections.sort(list);
-                            if (!list.isEmpty()) cacheClasses = new LinkedHashSet<>(list);
+                            if (!list.isEmpty()) {
+                                cacheClasses = new LinkedHashSet<>(list);
+                            }
                             in.close();
                         }
                     } catch (Exception e) {
@@ -381,7 +383,9 @@ public final class Application {
             } else if ("file".equals(confPath.getScheme())) {
                 logConfFile = new File(confPath.getPath(), "logging.properties");
                 logConfURI = logConfFile.toURI();
-                if (!logConfFile.isFile() || !logConfFile.canRead()) logConfFile = null;
+                if (!logConfFile.isFile() || !logConfFile.canRead()) {
+                    logConfFile = null;
+                }
             } else {
                 logConfURI = URI.create(confPath + (confPath.toString().endsWith("/") ? "" : "/") + "logging.properties");
             }
@@ -456,10 +460,14 @@ public final class Application {
         AnyValue executorConf = null;
         executorConf = config.getAnyValue("executor");
         AnyValue excludelibConf = config.getAnyValue("excludelibs");
-        if (excludelibConf != null) excludelib0 = excludelibConf.getValue("value");
+        if (excludelibConf != null) {
+            excludelib0 = excludelibConf.getValue("value");
+        }
         AnyValue transportConf = config.getAnyValue("transport");
         int groupsize = config.getAnyValues("group").length;
-        if (groupsize > 0 && transportConf == null) transportConf = new DefaultAnyValue();
+        if (groupsize > 0 && transportConf == null) {
+            transportConf = new DefaultAnyValue();
+        }
         if (transportConf != null) {
             //--------------transportBufferPool-----------
             bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 32 * 1024);
@@ -478,7 +486,9 @@ public final class Application {
                     RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
                     while (it.hasNext()) {
                         ClusterAgentProvider provider = it.next();
-                        if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
+                        if (provider != null) {
+                            RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
+                        }
                         if (provider != null && provider.acceptsConf(clusterConf)) {
                             cluster = provider.createInstance();
                             cluster.setConfig(clusterConf);
@@ -492,7 +502,9 @@ public final class Application {
                             cluster.setConfig(clusterConf);
                         }
                     }
-                    if (cluster == null) logger.log(Level.SEVERE, "load application cluster resource, but not found name='type' value error: " + clusterConf);
+                    if (cluster == null) {
+                        logger.log(Level.SEVERE, "load application cluster resource, but not found name='type' value error: " + clusterConf);
+                    }
                 } else {
                     Class type = classLoader.loadClass(classVal);
                     if (!ClusterAgent.class.isAssignableFrom(type)) {
@@ -516,13 +528,19 @@ public final class Application {
             for (int i = 0; i < mqConfs.length; i++) {
                 AnyValue mqConf = mqConfs[i];
                 String mqname = mqConf.getValue("name", "");
-                if (mqnames.contains(mqname)) throw new RuntimeException("mq.name(" + mqname + ") is repeat");
+                if (mqnames.contains(mqname)) {
+                    throw new RuntimeException("mq.name(" + mqname + ") is repeat");
+                }
                 mqnames.add(mqname);
                 String namex = mqConf.getValue("names");
                 if (namex != null && !namex.isEmpty()) {
                     for (String n : namex.split(";")) {
-                        if (n.trim().isEmpty()) continue;
-                        if (mqnames.contains(n.trim())) throw new RuntimeException("mq.name(" + n.trim() + ") is repeat");
+                        if (n.trim().isEmpty()) {
+                            continue;
+                        }
+                        if (mqnames.contains(n.trim())) {
+                            throw new RuntimeException("mq.name(" + n.trim() + ") is repeat");
+                        }
                         mqnames.add(n.trim());
                     }
                 }
@@ -533,14 +551,18 @@ public final class Application {
                         RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
                         while (it.hasNext()) {
                             MessageAgentProvider provider = it.next();
-                            if (provider != null) RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
+                            if (provider != null) {
+                                RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
+                            }
                             if (provider != null && provider.acceptsConf(mqConf)) {
                                 mqs[i] = provider.createInstance();
                                 mqs[i].setConfig(mqConf);
                                 break;
                             }
                         }
-                        if (mqs[i] == null) logger.log(Level.SEVERE, "load application mq resource, but not found name='value' value error: " + mqConf);
+                        if (mqs[i] == null) {
+                            logger.log(Level.SEVERE, "load application mq resource, but not found name='value' value error: " + mqConf);
+                        }
                     } else {
                         Class type = classLoader.loadClass(classVal);
                         if (!MessageAgent.class.isAssignableFrom(type)) {
@@ -561,7 +583,9 @@ public final class Application {
         ExecutorService workExecutor0 = null;
         ExecutorService clientExecutor;
         {
-            if (executorConf == null) executorConf = DefaultAnyValue.create();
+            if (executorConf == null) {
+                executorConf = DefaultAnyValue.create();
+            }
             final AtomicReference<ExecutorService> workref = new AtomicReference<>();
             final int executorThreads = executorConf.getIntValue("threads", Math.max(2, Utility.cpus()));
             boolean executorHash = executorConf.getBoolValue("hash");
@@ -688,7 +712,9 @@ public final class Application {
             final Properties agentEnvs = new Properties();
             if (propertiesConf.getValue("load") != null) { //本地配置项文件加载
                 for (String dfload : propertiesConf.getValue("load").split(";")) {
-                    if (dfload.trim().isEmpty()) continue;
+                    if (dfload.trim().isEmpty()) {
+                        continue;
+                    }
                     final URI df = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : this.confPath.toString(), dfload.trim());
                     if (df != null && (!"file".equals(df.getScheme()) || df.toString().contains("!") || new File(df).isFile())) {
                         Properties ps = new Properties();
@@ -756,7 +782,9 @@ public final class Application {
             for (AnyValue prop : propertiesConf.getAnyValues("property")) {
                 String key = prop.getValue("name");
                 String value = prop.getValue("value");
-                if (key == null || value == null) continue;
+                if (key == null || value == null) {
+                    continue;
+                }
                 oldEnvs.put(key, value);
             }
             agentEnvs.forEach((k, v) -> {
@@ -835,7 +863,9 @@ public final class Application {
             for (AnyValue prop : propertiesConf.getAnyValues("property")) {
                 String key = prop.getValue("name");
                 String value = prop.getValue("value");
-                if (key == null) continue;
+                if (key == null) {
+                    continue;
+                }
                 value = value == null ? value : replaceValue(value);
                 if (key.startsWith("system.property.")) {
                     String propName = key.substring("system.property.".length());
@@ -965,25 +995,33 @@ public final class Application {
             boolean supported = true;
             Logger l = logger;
             do {
-                if (l.getHandlers() == null) break;
+                if (l.getHandlers() == null) {
+                    break;
+                }
                 for (Handler handler : l.getHandlers()) {
                     if (!(handler instanceof ConsoleHandler)) {
                         supported = false;
                         break;
                     }
                 }
-                if (!supported) break;
+                if (!supported) {
+                    break;
+                }
             } while ((l = l.getParent()) != null);
             //colour  颜色代号：背景颜色代号(41-46)；前景色代号(31-36)
             //type    样式代号：0无；1加粗；3斜体；4下划线
             //String.format("\033[%d;%dm%s\033[0m", colour, type, content)
-            if (supported) msg = "\033[" + color + (type > 0 ? (";" + type) : "") + "m" + msg + "\033[0m";
+            if (supported) {
+                msg = "\033[" + color + (type > 0 ? (";" + type) : "") + "m" + msg + "\033[0m";
+            }
         }
         return msg;
     }
 
     private String checkName(String name) {  //不能含特殊字符
-        if (name == null || name.isEmpty()) return name;
+        if (name == null || name.isEmpty()) {
+            return name;
+        }
         for (char ch : name.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '_' || ch == '.' || ch == '-' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
                 throw new RuntimeException("name only 0-9 a-z A-Z _ - . cannot begin 0-9");
@@ -1006,10 +1044,16 @@ public final class Application {
                         resName = res.name();
                     } else {
                         javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
-                        if (res2 != null) resName = res2.name();
+                        if (res2 != null) {
+                            resName = res2.name();
+                        }
                     }
-                    if (resName == null) return null;
-                    if (srcObj instanceof Service && Sncp.isRemote((Service) srcObj)) return null; //远程模式不得注入 
+                    if (resName == null) {
+                        return null;
+                    }
+                    if (srcObj instanceof Service && Sncp.isRemote((Service) srcObj)) {
+                        return null; //远程模式不得注入 
+                    }
                     Class type = field.getType();
                     if (type == Application.class) {
                         field.set(srcObj, application);
@@ -1025,7 +1069,9 @@ public final class Application {
                     } else if (type == NodeSncpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeSncpServer.class) continue;
+                            if (ns.getClass() != NodeSncpServer.class) {
+                                continue;
+                            }
                             if (resName.equals(ns.server.getName())) {
                                 server = ns;
                                 break;
@@ -1036,7 +1082,9 @@ public final class Application {
                     } else if (type == NodeHttpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeHttpServer.class) continue;
+                            if (ns.getClass() != NodeHttpServer.class) {
+                                continue;
+                            }
                             if (resName.equals(ns.server.getName())) {
                                 server = ns;
                                 break;
@@ -1047,7 +1095,9 @@ public final class Application {
                     } else if (type == NodeWatchServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeWatchServer.class) continue;
+                            if (ns.getClass() != NodeWatchServer.class) {
+                                continue;
+                            }
                             if (resName.equals(ns.server.getName())) {
                                 server = ns;
                                 break;
@@ -1116,7 +1166,9 @@ public final class Application {
             ((AsyncIOGroup) this.clientAsyncGroup).start();
         }
         if (this.clusterAgent != null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") initing");
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") initing");
+            }
             long s = System.currentTimeMillis();
             if (this.clusterAgent instanceof CacheClusterAgent) {
                 String sourceName = ((CacheClusterAgent) clusterAgent).getSourceName(); //必须在inject前调用，需要赋值Resourcable.name
@@ -1129,7 +1181,9 @@ public final class Application {
             logger.info("ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
         }
         if (this.messageAgents != null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent initing");
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "MessageAgent initing");
+            }
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 this.resourceFactory.inject(agent);
@@ -1194,14 +1248,20 @@ public final class Application {
         synchronized (cacheSources) {
             long st = System.currentTimeMillis();
             CacheSource old = resourceFactory.find(sourceName, CacheSource.class);
-            if (old != null) return old;
+            if (old != null) {
+                return old;
+            }
             final AnyValue sourceConf = findSourceConfig(sourceName, "cachesource");
             if (sourceConf == null) {
-                if (!autoMemory) return null;
+                if (!autoMemory) {
+                    return null;
+                }
                 CacheSource source = new CacheMemorySource(sourceName);
                 cacheSources.add(source);
                 resourceFactory.register(sourceName, CacheSource.class, source);
-                if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
+                if (!compileMode && source instanceof Service) {
+                    ((Service) source).init(sourceConf);
+                }
                 logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
@@ -1223,10 +1283,14 @@ public final class Application {
     DataSource loadDataSource(final String sourceName, boolean autoMemory) {
         synchronized (dataSources) {
             DataSource old = resourceFactory.find(sourceName, DataSource.class);
-            if (old != null) return old;
+            if (old != null) {
+                return old;
+            }
             final AnyValue sourceConf = findSourceConfig(sourceName, "datasource");
             if (sourceConf == null) {
-                if (!autoMemory) return null;
+                if (!autoMemory) {
+                    return null;
+                }
                 DataSource source = new DataMemorySource(sourceName);
                 if (!compileMode && source instanceof Service) {
                     resourceFactory.inject(sourceName, source);
@@ -1273,9 +1337,13 @@ public final class Application {
         }
         for (AnyValue conf : config.getAnyValues("listener")) {
             final String listenClass = conf.getValue("value", "");
-            if (listenClass.isEmpty()) continue;
+            if (listenClass.isEmpty()) {
+                continue;
+            }
             Class clazz = classLoader.loadClass(listenClass);
-            if (!ApplicationListener.class.isAssignableFrom(clazz)) continue;
+            if (!ApplicationListener.class.isAssignableFrom(clazz)) {
+                continue;
+            }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
             @SuppressWarnings("unchecked")
             ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
@@ -1303,7 +1371,9 @@ public final class Application {
                     channel.configureBlocking(true);
                     channel.socket().setSoTimeout(3000);
                     channel.bind(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
-                    if (!singletonMode) signalShutdownHandle();
+                    if (!singletonMode) {
+                        signalShutdownHandle();
+                    }
                     boolean loop = true;
                     final ByteBuffer buffer = ByteBuffer.allocateDirect(UDP_CAPACITY);
                     while (loop) {
@@ -1332,7 +1402,9 @@ public final class Application {
                         } else if ("APIDOC".equalsIgnoreCase(cmd)) {
                             try {
                                 String rs = new ApiDocCommand(application).command(cmd, params);
-                                if (rs == null || rs.isEmpty()) rs = "\r\n";
+                                if (rs == null || rs.isEmpty()) {
+                                    rs = "\r\n";
+                                }
                                 sendUdpData(channel, address, buffer, rs.getBytes(StandardCharsets.UTF_8));
                             } catch (Exception ex) {
                                 sendUdpData(channel, address, buffer, "apidoc fail".getBytes(StandardCharsets.UTF_8));
@@ -1351,7 +1423,9 @@ public final class Application {
                                     }
                                 }
                             }
-                            if (sb.length() == 0) sb.append("\r\n");
+                            if (sb.length() == 0) {
+                                sb.append("\r\n");
+                            }
                             sendUdpData(channel, address, buffer, sb.toString().getBytes(StandardCharsets.UTF_8));
                             long e = System.currentTimeMillis() - s;
                             logger.info(application.getClass().getSimpleName() + " command in " + e + " ms");
@@ -1371,13 +1445,17 @@ public final class Application {
         int count = (bytes.length + 4) / UDP_CAPACITY + ((bytes.length + 4) % UDP_CAPACITY > 0 ? 1 : 0);
         int start = 0;
         for (int i = 0; i < count; i++) {
-            if (start == 0) buffer.putInt(bytes.length);
+            if (start == 0) {
+                buffer.putInt(bytes.length);
+            }
             int len = Math.min(buffer.remaining(), bytes.length - start);
             buffer.put(bytes, start, len);
             buffer.flip();
             boolean first = true;
             while (buffer.hasRemaining()) {
-                if (!first) Utility.sleep(10);
+                if (!first) {
+                    Utility.sleep(10);
+                }
                 if (dest == null) {
                     channel.write(buffer);
                 } else {
@@ -1426,7 +1504,9 @@ public final class Application {
         //命令和参数合成一个数组
         String[] args = new String[1 + (params == null ? 0 : params.length)];
         args[0] = cmd;
-        if (params != null) System.arraycopy(params, 0, args, 1, params.length);
+        if (params != null) {
+            System.arraycopy(params, 0, args, 1, params.length);
+        }
         final ByteBuffer buffer = ByteBuffer.allocateDirect(UDP_CAPACITY);
         try {
             sendUdpData(channel, dest, buffer, JsonConvert.root().convertToBytes(args));
@@ -1434,7 +1514,9 @@ public final class Application {
             readUdpData(channel, buffer, out);
             channel.close();
             String rs = out.toString(StandardCharsets.UTF_8).trim();
-            if (logger != null) logger.info("Send: " + cmd + ", Reply: " + rs);
+            if (logger != null) {
+                logger.info("Send: " + cmd + ", Reply: " + rs);
+            }
             System.out.println(rs);
         } catch (Exception e) {
             if (e instanceof PortUnreachableException) {
@@ -1444,7 +1526,9 @@ public final class Application {
                     application.start();
                     String rs = new ApiDocCommand(application).command(cmd, params);
                     application.shutdown();
-                    if (logger != null) logger.info(rs);
+                    if (logger != null) {
+                        logger.info(rs);
+                    }
                     System.out.println(rs);
                     return;
                 }
@@ -1482,16 +1566,22 @@ public final class Application {
                 others.add(entry);
             }
         }
-        if (watchs.size() > 1) throw new RuntimeException("Found one more WATCH Server");
+        if (watchs.size() > 1) {
+            throw new RuntimeException("Found one more WATCH Server");
+        }
         this.watching = !watchs.isEmpty();
 
         runServers(timecd, sncps);  //必须确保SNCP服务都启动后再启动其他服务
         runServers(timecd, others);
         runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
         timecd.await();
-        if (this.clusterAgent != null) this.clusterAgent.start();
+        if (this.clusterAgent != null) {
+            this.clusterAgent.start();
+        }
         if (this.messageAgents != null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent starting");
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "MessageAgent starting");
+            }
             long s = System.currentTimeMillis();
             final StringBuffer sb = new StringBuffer();
             Set<String> names = new HashSet<>();
@@ -1500,12 +1590,16 @@ public final class Application {
                 Map<String, Long> map = agent.start().join();
                 AtomicInteger maxlen = new AtomicInteger();
                 map.keySet().forEach(str -> {
-                    if (str.length() > maxlen.get()) maxlen.set(str.length());
+                    if (str.length() > maxlen.get()) {
+                        maxlen.set(str.length());
+                    }
                 });
                 new TreeMap<>(map).forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
                 );
             }
-            if (sb.length() > 0) logger.info(sb.toString().trim());
+            if (sb.length() > 0) {
+                logger.info(sb.toString().trim());
+            }
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") start in " + (System.currentTimeMillis() - s) + " ms");
         }
         long intms = System.currentTimeMillis() - startTime;
@@ -1517,7 +1611,9 @@ public final class Application {
         for (ApplicationListener listener : this.listeners) {
             listener.postStart(this);
         }
-        if (!singletonMode && !compileMode) this.shutdownLatch.await();
+        if (!singletonMode && !compileMode) {
+            this.shutdownLatch.await();
+        }
     }
 
     private static String alignString(String value, int maxlen) {
@@ -1532,7 +1628,9 @@ public final class Application {
     //使用了nohup或使用了后台&，Runtime.getRuntime().addShutdownHook失效
     private void signalShutdownHandle() {
         Consumer<Consumer<String>> signalShutdownConsumer = Utility.signalShutdownConsumer();
-        if (signalShutdownConsumer == null) return;
+        if (signalShutdownConsumer == null) {
+            return;
+        }
         signalShutdownConsumer.accept(sig -> {
             try {
                 long s = System.currentTimeMillis();
@@ -1592,7 +1690,9 @@ public final class Application {
                                             final Class<? extends NodeServer> type = entry.getType();
                                             NodeProtocol pros = type.getAnnotation(NodeProtocol.class);
                                             String p = pros.value().toUpperCase();
-                                            if ("SNCP".equals(p) || "HTTP".equals(p)) continue;
+                                            if ("SNCP".equals(p) || "HTTP".equals(p)) {
+                                                continue;
+                                            }
                                             final Class<? extends NodeServer> old = nodeClasses.get(p);
                                             if (old != null && old != type) {
                                                 throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
@@ -1658,13 +1758,17 @@ public final class Application {
      * @throws Exception 异常
      */
     public static <T extends Service> T singleton(String name, Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
-        if (serviceClass == null) throw new IllegalArgumentException("serviceClass is null");
+        if (serviceClass == null) {
+            throw new IllegalArgumentException("serviceClass is null");
+        }
         final Application application = Application.create(true);
         System.setProperty("red" + "kale.singleton.serviceclass", serviceClass.getName());
         if (extServiceClasses != null && extServiceClasses.length > 0) {
             StringBuilder sb = new StringBuilder();
             for (Class clazz : extServiceClasses) {
-                if (sb.length() > 0) sb.append(',');
+                if (sb.length() > 0) {
+                    sb.append(',');
+                }
                 sb.append(clazz.getName());
             }
             System.setProperty("red" + "kale.singleton.extserviceclasses", sb.toString());
@@ -1673,7 +1777,9 @@ public final class Application {
         application.start();
         for (NodeServer server : application.servers) {
             T service = server.resourceFactory.find(name, serviceClass);
-            if (service != null) return service;
+            if (service != null) {
+                return service;
+            }
         }
         if (Modifier.isAbstract(serviceClass.getModifiers())) {
             throw new IllegalArgumentException("abstract class not allowed");
@@ -1767,7 +1873,9 @@ public final class Application {
         } else {
             conf = AnyValue.loadFromProperties(text).getAnyValue("redkale");
         }
-        if (fromCache) ((DefaultAnyValue) conf).addValue("[config-from-cache]", "true");
+        if (fromCache) {
+            ((DefaultAnyValue) conf).addValue("[config-from-cache]", "true");
+        }
 
         return conf;
     }
@@ -1821,7 +1929,9 @@ public final class Application {
                 boolean restart = "restart".equalsIgnoreCase(cmd);
                 AnyValue config = loadAppConfig();
                 Application.sendCommand(null, config.getIntValue("port"), restart ? "SHUTDOWN" : cmd, params);
-                if (!restart) return;
+                if (!restart) {
+                    return;
+                }
             }
         }
         //PrepareCompiler.main(args); //测试代码
@@ -1846,7 +1956,9 @@ public final class Application {
     }
 
     void updateEnvironmentProperties(String namespace, List<ResourceEvent> events) {
-        if (events == null || events.isEmpty()) return;
+        if (events == null || events.isEmpty()) {
+            return;
+        }
         synchronized (envProperties) {
             Properties envRegisterProps = new Properties();
             Set<String> envRemovedKeys = new HashSet<>();
@@ -1998,7 +2110,9 @@ public final class Application {
                 //更新缓存
                 for (String sourceName : cacheSourceNames) {
                     CacheSource source = Utility.find(cacheSources, s -> Objects.equals(s.resourceName(), sourceName));
-                    if (source == null) continue;  //多余的数据源
+                    if (source == null) {
+                        continue;  //多余的数据源
+                    }
                     final DefaultAnyValue old = (DefaultAnyValue) findSourceConfig(sourceName, "cachesource");
                     Properties newProps = new Properties();
                     this.sourceProperties.forEach((k, v) -> {
@@ -2009,7 +2123,9 @@ public final class Application {
                             prefix = "redkale.cachesource." + sourceName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return; //不是同一name数据源配置项
+                        if (pos < 0) {
+                            return; //不是同一name数据源配置项
+                        }
                         newProps.put(k, v);
                     });
                     List<ResourceEvent> changeEvents = new ArrayList<>();
@@ -2021,7 +2137,9 @@ public final class Application {
                             prefix = "redkale.cachesource." + sourceName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return; //不是同一name数据源配置项
+                        if (pos < 0) {
+                            return; //不是同一name数据源配置项
+                        }
                         newProps.put(k, v);
                         changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
                     });
@@ -2033,7 +2151,9 @@ public final class Application {
                             prefix = "redkale.cachesource." + sourceName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return;
+                        if (pos < 0) {
+                            return;
+                        }
                         newProps.remove(k); //不是同一name数据源配置项
                         changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
                     });
@@ -2051,7 +2171,9 @@ public final class Application {
                 //更新数据库                
                 for (String sourceName : dataSourceNames) {
                     DataSource source = Utility.find(dataSources, s -> Objects.equals(s.resourceName(), sourceName));
-                    if (source == null) continue;  //多余的数据源
+                    if (source == null) {
+                        continue;  //多余的数据源
+                    }
                     DefaultAnyValue old = (DefaultAnyValue) findSourceConfig(sourceName, "datasource");
                     Properties newProps = new Properties();
                     this.sourceProperties.forEach((k, v) -> {
@@ -2062,7 +2184,9 @@ public final class Application {
                             prefix = "redkale.datasource." + sourceName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return; //不是同一name数据源配置项
+                        if (pos < 0) {
+                            return; //不是同一name数据源配置项
+                        }
                         newProps.put(k, v);
                     });
                     List<ResourceEvent> changeEvents = new ArrayList<>();
@@ -2074,7 +2198,9 @@ public final class Application {
                             prefix = "redkale.datasource." + sourceName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return; //不是同一name数据源配置项
+                        if (pos < 0) {
+                            return; //不是同一name数据源配置项
+                        }
                         newProps.put(k, v);
                         changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
                     });
@@ -2086,7 +2212,9 @@ public final class Application {
                             prefix = "redkale.datasource." + sourceName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return;
+                        if (pos < 0) {
+                            return;
+                        }
                         newProps.remove(k); //不是同一name数据源配置项
                         changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
                     });
@@ -2121,7 +2249,9 @@ public final class Application {
                 //更新MQ
                 for (String mqName : messageNames) {
                     MessageAgent agent = Utility.find(messageAgents, s -> Objects.equals(s.resourceName(), mqName));
-                    if (agent == null) continue;  //多余的数据源
+                    if (agent == null) {
+                        continue;  //多余的数据源
+                    }
                     final DefaultAnyValue old = (DefaultAnyValue) findMQConfig(mqName);
                     Properties newProps = new Properties();
                     this.messageProperties.forEach((k, v) -> {
@@ -2132,7 +2262,9 @@ public final class Application {
                             prefix = "redkale.mq." + mqName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return; //不是同一name数据源配置项
+                        if (pos < 0) {
+                            return; //不是同一name数据源配置项
+                        }
                         newProps.put(k, v);
                     });
                     List<ResourceEvent> changeEvents = new ArrayList<>();
@@ -2144,7 +2276,9 @@ public final class Application {
                             prefix = "redkale.mq." + mqName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return; //不是同一name数据源配置项
+                        if (pos < 0) {
+                            return; //不是同一name数据源配置项
+                        }
                         newProps.put(k, v);
                         changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.messageProperties.getProperty(key)));
                     });
@@ -2156,7 +2290,9 @@ public final class Application {
                             prefix = "redkale.mq." + mqName + ".";
                             pos = key.indexOf(prefix);
                         }
-                        if (pos < 0) return;
+                        if (pos < 0) {
+                            return;
+                        }
                         newProps.remove(k); //不是同一name数据源配置项
                         changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.messageProperties.getProperty(key)));
                     });
@@ -2251,7 +2387,9 @@ public final class Application {
         localServers.stream().forEach((server) -> {
             try {
                 List<Object> rs = server.command(cmd, params);
-                if (rs != null) results.addAll(rs);
+                if (rs != null) {
+                    results.addAll(rs);
+                }
             } catch (Exception t) {
                 logger.log(Level.WARNING, " command server(" + server.getSocketAddress() + ") error", t);
             }
@@ -2271,7 +2409,9 @@ public final class Application {
         Collections.reverse(localServers); //倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
         if (isCompileMode() && this.messageAgents != null) {
             Set<String> names = new HashSet<>();
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent stopping");
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "MessageAgent stopping");
+            }
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 names.add(agent.getName());
@@ -2280,7 +2420,9 @@ public final class Application {
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in " + (System.currentTimeMillis() - s) + " ms");
         }
         if (!isCompileMode() && clusterAgent != null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "ClusterAgent destroying");
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "ClusterAgent destroying");
+            }
             long s = System.currentTimeMillis();
             clusterAgent.deregister(this);
             clusterAgent.destroy(clusterAgent.getConfig());
@@ -2297,7 +2439,9 @@ public final class Application {
         });
         if (this.messageAgents != null) {
             Set<String> names = new HashSet<>();
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "MessageAgent destroying");
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "MessageAgent destroying");
+            }
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 names.add(agent.getName());
@@ -2306,7 +2450,9 @@ public final class Application {
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
         for (DataSource source : dataSources) {
-            if (source == null) continue;
+            if (source == null) {
+                continue;
+            }
             try {
                 if (source instanceof Service) {
                     long s = System.currentTimeMillis();
@@ -2321,7 +2467,9 @@ public final class Application {
             }
         }
         for (CacheSource source : cacheSources) {
-            if (source == null) continue;
+            if (source == null) {
+                continue;
+            }
             try {
                 if (source instanceof Service) {
                     long s = System.currentTimeMillis();
@@ -2369,9 +2517,13 @@ public final class Application {
     }
 
     public MessageAgent getMessageAgent(String name) {
-        if (messageAgents == null) return null;
+        if (messageAgents == null) {
+            return null;
+        }
         for (MessageAgent agent : messageAgents) {
-            if (agent.getName().equals(name)) return agent;
+            if (agent.getName().equals(name)) {
+                return agent;
+            }
         }
         return null;
     }
@@ -2433,11 +2585,19 @@ public final class Application {
     }
 
     private static int parseLenth(String value, int defValue) {
-        if (value == null) return defValue;
+        if (value == null) {
+            return defValue;
+        }
         value = value.toUpperCase().replace("B", "");
-        if (value.endsWith("G")) return Integer.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
-        if (value.endsWith("M")) return Integer.decode(value.replace("M", "")) * 1024 * 1024;
-        if (value.endsWith("K")) return Integer.decode(value.replace("K", "")) * 1024;
+        if (value.endsWith("G")) {
+            return Integer.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
+        }
+        if (value.endsWith("M")) {
+            return Integer.decode(value.replace("M", "")) * 1024 * 1024;
+        }
+        if (value.endsWith("K")) {
+            return Integer.decode(value.replace("K", "")) * 1024;
+        }
         return Integer.decode(value);
     }
 

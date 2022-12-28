@@ -42,7 +42,9 @@ public class ClientResult<P> {
 
     @Override
     public String toString() {
-        if (exc != null) return "{\"exc\":" + exc + "}";
+        if (exc != null) {
+            return "{\"exc\":" + exc + "}";
+        }
         return "{\"result\":" + result + "}";
     }
 }

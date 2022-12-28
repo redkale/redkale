@@ -5,10 +5,8 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
-import org.redkale.convert.Reader;
 import java.net.*;
+import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.StringWrapper;
 
@@ -39,7 +37,9 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
     @Override
     public InetAddress convertFrom(R in) {
         byte[] bytes = ByteArraySimpledCoder.instance.convertFrom(in);
-        if (bytes == null) return null;
+        if (bytes == null) {
+            return null;
+        }
         try {
             return InetAddress.getByAddress(bytes);
         } catch (Exception ex) {
@@ -71,7 +71,9 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
         @Override
         public InetSocketAddress convertFrom(R in) {
             byte[] bytes = ByteArraySimpledCoder.instance.convertFrom(in);
-            if (bytes == null) return null;
+            if (bytes == null) {
+                return null;
+            }
             int port = in.readInt();
             try {
                 return new InetSocketAddress(InetAddress.getByAddress(bytes), port);
@@ -104,7 +106,9 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
         @Override
         public InetAddress convertFrom(R in) {
             String str = in.readString();
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             try {
                 return InetAddress.getByName(str);
             } catch (Exception ex) {
@@ -136,7 +140,9 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
         @Override
         public InetSocketAddress convertFrom(R in) {
             String str = StringSimpledCoder.instance.convertFrom(in);
-            if (str == null) return null;
+            if (str == null) {
+                return null;
+            }
             try {
                 int pos = str.indexOf(':');
                 return new InetSocketAddress(str.substring(0, pos), Integer.parseInt(str.substring(pos + 1)));

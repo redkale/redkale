@@ -5,9 +5,7 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.Reader;
-import org.redkale.convert.Writer;
-import org.redkale.convert.SimpledCoder;
+import org.redkale.convert.*;
 
 /**
  * Type 的SimpledCoder实现 只支持Type的子类Class
@@ -35,7 +33,9 @@ public class TypeSimpledCoder<R extends Reader, W extends Writer> extends Simple
     @Override
     public Class convertFrom(R in) {
         String str = in.readSmallString();
-        if (str == null) return null;
+        if (str == null) {
+            return null;
+        }
         try {
             return Thread.currentThread().getContextClassLoader().loadClass(str);
         } catch (Throwable e) {

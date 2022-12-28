@@ -39,7 +39,9 @@ public class ColumnNodeValue implements ColumnNode {
             throw new IllegalArgumentException("express cannot be null");
         }
         if (express == MOV) {
-            if (!(left instanceof String) || right != null) throw new IllegalArgumentException("left value must be String, right value must be null on ColumnExpress.MOV");
+            if (!(left instanceof String) || right != null) {
+                throw new IllegalArgumentException("left value must be String, right value must be null on ColumnExpress.MOV");
+            }
         } else {
             if (!(left instanceof String) && !(left instanceof Number) && !(left instanceof ColumnNodeValue) && !(left instanceof ColumnFuncNode)) {
                 throw new IllegalArgumentException("left value must be String, Number, ColumnFuncNode or ColumnNodeValue");

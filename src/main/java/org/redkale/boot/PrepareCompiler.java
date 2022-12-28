@@ -51,57 +51,83 @@ public class PrepareCompiler {
 
         for (FilterEntry en : entityFilter.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) continue;
+            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+                continue;
+            }
             try {
                 application.dataSources.forEach(source -> source.compile(clz));
                 JsonFactory.root().loadEncoder(clz);
-                if (hasSncp) BsonFactory.root().loadEncoder(clz);
+                if (hasSncp) {
+                    BsonFactory.root().loadEncoder(clz);
+                }
                 Decodeable decoder = JsonFactory.root().loadDecoder(clz);
-                if (hasSncp) BsonFactory.root().loadDecoder(clz);
+                if (hasSncp) {
+                    BsonFactory.root().loadDecoder(clz);
+                }
                 decoder.convertFrom(new JsonReader("{}"));
             } catch (Exception e) { //JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
             }
         }
         for (FilterEntry en : entityFilter2.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) continue;
+            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+                continue;
+            }
             try {
                 application.dataSources.forEach(source -> source.compile(clz));
                 JsonFactory.root().loadEncoder(clz);
-                if (hasSncp) BsonFactory.root().loadEncoder(clz);
+                if (hasSncp) {
+                    BsonFactory.root().loadEncoder(clz);
+                }
                 Decodeable decoder = JsonFactory.root().loadDecoder(clz);
-                if (hasSncp) BsonFactory.root().loadDecoder(clz);
+                if (hasSncp) {
+                    BsonFactory.root().loadDecoder(clz);
+                }
                 decoder.convertFrom(new JsonReader("{}"));
             } catch (Exception e) { //JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
             }
         }
         for (FilterEntry en : beanFilter.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) continue;
+            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+                continue;
+            }
             try {
                 JsonFactory.root().loadEncoder(clz);
-                if (hasSncp) BsonFactory.root().loadEncoder(clz);
+                if (hasSncp) {
+                    BsonFactory.root().loadEncoder(clz);
+                }
                 Decodeable decoder = JsonFactory.root().loadDecoder(clz);
-                if (hasSncp) BsonFactory.root().loadDecoder(clz);
+                if (hasSncp) {
+                    BsonFactory.root().loadDecoder(clz);
+                }
                 decoder.convertFrom(new JsonReader("{}"));
             } catch (Exception e) { //JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
             }
         }
         for (FilterEntry en : beanFilter2.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) continue;
+            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+                continue;
+            }
             try {
                 JsonFactory.root().loadEncoder(clz);
-                if (hasSncp) BsonFactory.root().loadEncoder(clz);
+                if (hasSncp) {
+                    BsonFactory.root().loadEncoder(clz);
+                }
                 Decodeable decoder = JsonFactory.root().loadDecoder(clz);
-                if (hasSncp) BsonFactory.root().loadDecoder(clz);
+                if (hasSncp) {
+                    BsonFactory.root().loadDecoder(clz);
+                }
                 decoder.convertFrom(new JsonReader("{}"));
             } catch (Exception e) { //JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
             }
         }
         for (FilterEntry en : filterFilter.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) continue;
+            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+                continue;
+            }
             try {
                 FilterNodeBean.load(clz);
             } catch (Exception e) {

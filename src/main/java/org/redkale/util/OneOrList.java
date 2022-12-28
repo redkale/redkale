@@ -53,7 +53,9 @@ public class OneOrList<T> implements java.io.Serializable {
     //序列化
     protected static Encodeable<JsonWriter, OneOrList> createEncoder(final org.redkale.convert.json.JsonFactory factory, final Type type) {
         Type itemType = parseItemType(type);
-        if (itemType == null) return null;
+        if (itemType == null) {
+            return null;
+        }
         Encodeable oneEncoder = factory.loadEncoder(itemType);
         Encodeable listEncoder = factory.loadEncoder(TypeToken.createParameterizedType(null, List.class, itemType));
         return new Encodeable<JsonWriter, OneOrList>() {
@@ -79,7 +81,9 @@ public class OneOrList<T> implements java.io.Serializable {
     //反序列化
     protected static Decodeable<JsonReader, OneOrList> createDecoder(final org.redkale.convert.json.JsonFactory factory, final Type type) {
         Type itemType = parseItemType(type);
-        if (itemType == null) return null;
+        if (itemType == null) {
+            return null;
+        }
         Creator<OneOrList> creator = Creator.create(type instanceof Class ? (Class) type : (Class) ((ParameterizedType) type).getRawType());
         Decodeable oneDecoder = factory.loadDecoder(itemType);
         Decodeable listDecoder = factory.loadDecoder(TypeToken.createParameterizedType(null, List.class, itemType));
@@ -109,13 +113,17 @@ public class OneOrList<T> implements java.io.Serializable {
     protected static Type parseItemType(Type type) {
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
-            if (pt.getRawType() != OneOrList.class) return null;
+            if (pt.getRawType() != OneOrList.class) {
+                return null;
+            }
             return pt.getActualTypeArguments()[0];
         } else if (type instanceof Class) {
             Class clz = (Class) type;
             while (clz.getSuperclass() != OneOrList.class) {
                 clz = clz.getSuperclass();
-                if (clz == Object.class) return null;
+                if (clz == Object.class) {
+                    return null;
+                }
             }
             return ((ParameterizedType) clz.getGenericSuperclass()).getActualTypeArguments()[0];
         } else {

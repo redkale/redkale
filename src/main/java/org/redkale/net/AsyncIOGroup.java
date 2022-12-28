@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-
 import org.redkale.annotation.ResourceType;
 import org.redkale.util.*;
 
@@ -60,7 +59,9 @@ public class AsyncIOGroup extends AsyncGroup {
     public AsyncIOGroup(boolean client, String threadPrefixName, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
         this(client, threadPrefixName, workExecutor, bufferCapacity, ObjectPool.createSafePool(null, null, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) return false;
+                if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) {
+                    return false;
+                }
                 e.clear();
                 return true;
             }));
@@ -101,24 +102,36 @@ public class AsyncIOGroup extends AsyncGroup {
 
     @Override
     public AsyncGroup start() {
-        if (started) return this;
-        if (closed) throw new RuntimeException("group is closed");
+        if (started) {
+            return this;
+        }
+        if (closed) {
+            throw new RuntimeException("group is closed");
+        }
         for (AsyncIOThread thread : ioThreads) {
             thread.start();
         }
-        if (connectThread != null) connectThread.start();
+        if (connectThread != null) {
+            connectThread.start();
+        }
         started = true;
         return this;
     }
 
     @Override
     public AsyncGroup close() {
-        if (shareCount.decrementAndGet() > 0) return this;
-        if (closed) return this;
+        if (shareCount.decrementAndGet() > 0) {
+            return this;
+        }
+        if (closed) {
+            return this;
+        }
         for (AsyncIOThread thread : ioThreads) {
             thread.close();
         }
-        if (connectThread != null) connectThread.close();
+        if (connectThread != null) {
+            connectThread.close();
+        }
         this.timeoutExecutor.shutdownNow();
         closed = true;
         return this;
@@ -150,9 +163,15 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     public void interestOpsOr(AsyncIOThread thread, SelectionKey key, int opt) {
-        if (key == null) return;
-        if (key.selector() != thread.selector) throw new RuntimeException("NioThread.selector not the same to SelectionKey.selector");
-        if ((key.interestOps() & opt) != 0) return;
+        if (key == null) {
+            return;
+        }
+        if (key.selector() != thread.selector) {
+            throw new RuntimeException("NioThread.selector not the same to SelectionKey.selector");
+        }
+        if ((key.interestOps() & opt) != 0) {
+            return;
+        }
         key.interestOps(key.interestOps() | opt);
         if (thread.inCurrThread()) {
 //            timeoutExecutor.execute(() -> {
@@ -191,7 +210,9 @@ public class AsyncIOGroup extends AsyncGroup {
                 }
             }
         }
-        if (ioThread == null) ioThread = nextIOThread();
+        if (ioThread == null) {
+            ioThread = nextIOThread();
+        }
         final AsyncNioTcpConnection conn = new AsyncNioTcpConnection(true, this, ioThread, connectThread, channel, null, null, address, connLivingCounter, connClosedCounter);
         final CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
@@ -199,8 +220,12 @@ public class AsyncIOGroup extends AsyncGroup {
             public void completed(Void result, Void attachment) {
                 conn.setReadTimeoutSeconds(readTimeoutSeconds);
                 conn.setWriteTimeoutSeconds(writeTimeoutSeconds);
-                if (connCreateCounter != null) connCreateCounter.increment();
-                if (connLivingCounter != null) connLivingCounter.increment();
+                if (connCreateCounter != null) {
+                    connCreateCounter.increment();
+                }
+                if (connLivingCounter != null) {
+                    connLivingCounter.increment();
+                }
                 if (conn.sslEngine == null) {
                     future.complete(conn);
                 } else {
@@ -242,7 +267,9 @@ public class AsyncIOGroup extends AsyncGroup {
                 }
             }
         }
-        if (ioThread == null) ioThread = nextIOThread();
+        if (ioThread == null) {
+            ioThread = nextIOThread();
+        }
         AsyncNioUdpConnection conn = new AsyncNioUdpConnection(true, this, ioThread, connectThread, channel, null, null, address, connLivingCounter, connClosedCounter);
         CompletableFuture future = new CompletableFuture();
         conn.connect(address, null, new CompletionHandler<Void, Void>() {

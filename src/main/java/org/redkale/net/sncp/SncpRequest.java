@@ -5,13 +5,12 @@
  */
 package org.redkale.net.sncp;
 
-import java.net.*;
-import java.nio.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.redkale.convert.bson.*;
-import org.redkale.net.*;
-import org.redkale.util.*;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.logging.*;
+import org.redkale.convert.bson.BsonConvert;
+import org.redkale.net.Request;
+import org.redkale.util.DLong;
 
 /**
  *
@@ -64,17 +63,23 @@ public class SncpRequest extends Request<SncpContext> {
     @Override  //request.header与response.header数据格式保持一致
     protected int readHeader(ByteBuffer buffer, Request last) {
         if (buffer.remaining() == Sncp.PING_BUFFER.remaining()) {
-            if (buffer.hasRemaining()) buffer.get(new byte[buffer.remaining()]);
+            if (buffer.hasRemaining()) {
+                buffer.get(new byte[buffer.remaining()]);
+            }
             this.ping = true;  //Sncp.PING_BUFFER
             this.readState = READ_STATE_END;
             return 0;
         }
         //---------------------head----------------------------------
         if (this.readState == READ_STATE_ROUTE) {
-            if (buffer.remaining() < HEADER_SIZE) return 1; //小于60
+            if (buffer.remaining() < HEADER_SIZE) {
+                return 1; //小于60
+            }
             this.seqid = buffer.getLong(); //8
             if (buffer.getChar() != HEADER_SIZE) { //2
-                if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
+                if (context.getLogger().isLoggable(Level.FINEST)) {
+                    context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
+                }
                 return -1;
             }
             this.serviceid = DLong.read(buffer); //16
@@ -84,7 +89,9 @@ public class SncpRequest extends Request<SncpContext> {
             this.bodyLength = buffer.getInt(); //4
 
             if (buffer.getInt() != 0) { //4
-                if (context.getLogger().isLoggable(Level.FINEST)) context.getLogger().finest("sncp buffer header.retcode not 0");
+                if (context.getLogger().isLoggable(Level.FINEST)) {
+                    context.getLogger().finest("sncp buffer header.retcode not 0");
+                }
                 return -1;
             }
             this.body = new byte[this.bodyLength];
@@ -96,7 +103,9 @@ public class SncpRequest extends Request<SncpContext> {
             buffer.get(body, 0, len);
             this.bodyOffset = len;
             int rs = bodyLength - len;
-            if (rs == 0) this.readState = READ_STATE_END;
+            if (rs == 0) {
+                this.readState = READ_STATE_END;
+            }
             return rs;
         }
         return 0;
@@ -159,7 +168,9 @@ public class SncpRequest extends Request<SncpContext> {
     }
 
     public InetSocketAddress getRemoteAddress() {
-        if (addrBytes[0] == 0) return null;
+        if (addrBytes[0] == 0) {
+            return null;
+        }
         return new InetSocketAddress((0xff & addrBytes[0]) + "." + (0xff & addrBytes[1]) + "." + (0xff & addrBytes[2]) + "." + (0xff & addrBytes[3]),
             ((0xff00 & (addrBytes[4] << 8)) | (0xff & addrBytes[5])));
     }

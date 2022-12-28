@@ -60,7 +60,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
     public void init(final ConvertFactory factory) {
         this.factory = factory;
         try {
-            if (type == Object.class) return;
+            if (type == Object.class) {
+                return;
+            }
             //if (!(type instanceof Class)) throw new ConvertException("[" + type + "] is no a class");
             final Class clazz = this.typeClass;
             final Set<EnMember> list = new LinkedHashSet();
@@ -69,7 +71,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             try {
                 creator = factory.loadCreator(this.typeClass);
             } catch (RuntimeException e) {
-                if (reversible && !Modifier.isAbstract(this.typeClass.getModifiers())) throw e;
+                if (reversible && !Modifier.isAbstract(this.typeClass.getModifiers())) {
+                    throw e;
+                }
             }
             final String[] cps = creator == null ? null : ObjectEncoder.findConstructorProperties(creator);
             try {
@@ -77,10 +81,16 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 ConvertFactory colFactory;
                 RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
                 for (final Field field : clazz.getFields()) {
-                    if (Modifier.isStatic(field.getModifiers())) continue;
-                    if (factory.isConvertDisabled(field)) continue;
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        continue;
+                    }
+                    if (factory.isConvertDisabled(field)) {
+                        continue;
+                    }
                     ref = factory.findRef(clazz, field);
-                    if (ref != null && ref.ignore()) continue;
+                    if (ref != null && ref.ignore()) {
+                        continue;
+                    }
                     ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
                     colFactory = factory.columnFactory(field.getType(), field.getAnnotationsByType(ConvertCoder.class), true);
                     Encodeable<W, ?> fieldCoder;
@@ -94,22 +104,40 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         fieldCoder = colFactory.loadEncoder(t);
                     }
                     EnMember member = new EnMember(createAttribute(colFactory, type, clazz, field, null, null), fieldCoder, field, null);
-                    if (ref != null) member.index = ref.getIndex();
+                    if (ref != null) {
+                        member.index = ref.getIndex();
+                    }
                     list.add(member);
                 }
 
                 RedkaleClassLoader.putReflectionPublicMethods(clazz.getName());
                 for (final Method method : clazz.getMethods()) {
-                    if (Modifier.isStatic(method.getModifiers())) continue;
-                    if (Modifier.isAbstract(method.getModifiers())) continue;
-                    if (method.isSynthetic()) continue;
-                    if (method.getName().equals("getClass")) continue;
-                    if (method.getReturnType() == void.class) continue;
-                    if (method.getParameterCount() != 0) continue;
+                    if (Modifier.isStatic(method.getModifiers())) {
+                        continue;
+                    }
+                    if (Modifier.isAbstract(method.getModifiers())) {
+                        continue;
+                    }
+                    if (method.isSynthetic()) {
+                        continue;
+                    }
+                    if (method.getName().equals("getClass")) {
+                        continue;
+                    }
+                    if (method.getReturnType() == void.class) {
+                        continue;
+                    }
+                    if (method.getParameterCount() != 0) {
+                        continue;
+                    }
                     if (!(method.getName().startsWith("is") && method.getName().length() > 2)
                         && !(method.getName().startsWith("get") && method.getName().length() > 3)
-                        && !Utility.isRecordGetter(clazz, method)) continue;
-                    if (factory.isConvertDisabled(method)) continue;
+                        && !Utility.isRecordGetter(clazz, method)) {
+                        continue;
+                    }
+                    if (factory.isConvertDisabled(method)) {
+                        continue;
+                    }
                     String convertname = ConvertFactory.readGetSetFieldName(method);
                     if (reversible && (cps == null || !contains(cps, convertname))) {
                         boolean is = method.getName().startsWith("is");
@@ -120,12 +148,16 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         }
                     }
                     ref = factory.findRef(clazz, method);
-                    if (ref != null && ref.ignore()) continue;
+                    if (ref != null && ref.ignore()) {
+                        continue;
+                    }
                     ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
                     if (small == null) {
                         try {
                             Field f = clazz.getDeclaredField(convertname);
-                            if (f != null) small = f.getAnnotation(ConvertSmallString.class);
+                            if (f != null) {
+                                small = f.getAnnotation(ConvertSmallString.class);
+                            }
                         } catch (Exception e) {
                         }
                     }
@@ -145,7 +177,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         fieldCoder = colFactory.loadEncoder(t);
                     }
                     EnMember member = new EnMember(createAttribute(colFactory, type, clazz, null, method, null), fieldCoder, maybeField, method);
-                    if (ref != null) member.index = ref.getIndex();
+                    if (ref != null) {
+                        member.index = ref.getIndex();
+                    }
                     list.add(member);
                 }
                 List<EnMember> sorts = new ArrayList<>(list);
@@ -159,7 +193,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                                 break;
                             }
                         }
-                        if (flag) continue;
+                        if (flag) {
+                            continue;
+                        }
                         //不存在setter方法
                         try {
                             Field f = clazz.getDeclaredField(constructorField);
@@ -185,12 +221,16 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             }
                         }
                     }
-                    if (dissorts.size() != list.size()) sorts = new ArrayList<>(dissorts);
+                    if (dissorts.size() != list.size()) {
+                        sorts = new ArrayList<>(dissorts);
+                    }
                 }
                 Collections.sort(sorts, (a, b) -> a.compareTo(factory.isFieldSort(), b));
                 Set<Integer> pos = new HashSet<>();
                 for (EnMember member : sorts) {
-                    if (member.index > 0) pos.add(member.index);
+                    if (member.index > 0) {
+                        pos.add(member.index);
+                    }
                 }
                 int pidx = 0;
                 for (EnMember member : sorts) {
@@ -235,7 +275,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
         }
         if (value.getClass() != this.typeClass && !this.type.equals(out.specify())) {
             final Class clz = value.getClass();
-            if (out.needWriteClassName()) out.writeClassName(factory.getEntityAlias(clz));
+            if (out.needWriteClassName()) {
+                out.writeClassName(factory.getEntityAlias(clz));
+            }
             factory.loadEncoder(clz).convertTo(out, value);
             return;
         }
@@ -251,7 +293,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 if (extFields != null) {
                     Encodeable<W, ?> anyEncoder = factory.getAnyEncoder();
                     for (ConvertField en : extFields) {
-                        if (en == null) continue;
+                        if (en == null) {
+                            continue;
+                        }
                         maxPosition++;
                         objout.writeObjectField(en.getName(), en.getType(), Math.max(en.getPosition(), maxPosition), anyEncoder, en.getValue());
                     }
@@ -305,13 +349,17 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
 
     static boolean contains(String[] values, String value) {
         for (String str : values) {
-            if (str.equals(value)) return true;
+            if (str.equals(value)) {
+                return true;
+            }
         }
         return false;
     }
 
     static String[] findConstructorProperties(Creator creator) {
-        if (creator == null) return null;
+        if (creator == null) {
+            return null;
+        }
         try {
             Method method = creator.getClass().getMethod("create", Object[].class);
             ConstructorParameters cps = method.getAnnotation(ConstructorParameters.class);

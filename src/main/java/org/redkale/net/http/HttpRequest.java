@@ -14,7 +14,6 @@ import java.nio.charset.*;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Level;
-
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
@@ -181,23 +180,33 @@ public class HttpRequest extends Request<HttpContext> {
         this.localHeader = null;
         this.localParameter = null;
         this.rpcAuthenticator = null;
-        if (req != null) initSimpleRequest(req, true);
+        if (req != null) {
+            initSimpleRequest(req, true);
+        }
     }
 
     protected HttpRequest initSimpleRequest(HttpSimpleRequest req, boolean needPath) {
         if (req != null) {
             this.rpc = req.rpc;
             this.traceid = req.traceid;
-            if (req.getBody() != null) this.array.put(req.getBody());
-            if (req.getHeaders() != null) this.headers.putAll(req.getHeaders());
+            if (req.getBody() != null) {
+                this.array.put(req.getBody());
+            }
+            if (req.getHeaders() != null) {
+                this.headers.putAll(req.getHeaders());
+            }
             this.frombody = req.isFrombody();
             this.reqConvertType = req.getReqConvertType();
             this.reqConvert = req.getReqConvertType() == null ? null : ConvertFactory.findConvert(req.getReqConvertType());
             this.respConvertType = req.getRespConvertType();
             this.respConvert = req.getRespConvertType() == null ? null : ConvertFactory.findConvert(req.getRespConvertType());
-            if (req.getParams() != null) this.params.putAll(req.getParams());
+            if (req.getParams() != null) {
+                this.params.putAll(req.getParams());
+            }
             this.hashid = req.getHashid();
-            if (req.getCurrentUserid() != null) this.currentUserid = req.getCurrentUserid();
+            if (req.getCurrentUserid() != null) {
+                this.currentUserid = req.getCurrentUserid();
+            }
             this.contentType = req.getContentType();
             this.remoteAddr = req.getRemoteAddr();
             this.locale = req.getLocale();
@@ -286,7 +295,9 @@ public class HttpRequest extends Request<HttpContext> {
         ByteArray bytes = array;
         if (this.readState == READ_STATE_ROUTE) {
             int rs = readMethodLine(buffer);
-            if (rs != 0) return rs;
+            if (rs != 0) {
+                return rs;
+            }
             this.readState = READ_STATE_HEADER;
         }
         if (this.readState == READ_STATE_HEADER) {
@@ -324,7 +335,9 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headers.putAll(httplast.headers);
             } else if (context.lazyHeaders && getmethod) { //非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
-                if (rs != 0) return rs;
+                if (rs != 0) {
+                    return rs;
+                }
                 this.headerParsed = false;
             } else {
                 int startpos = buffer.position();
@@ -340,22 +353,34 @@ public class HttpRequest extends Request<HttpContext> {
             bytes.clear();
             this.readState = READ_STATE_BODY;
         }
-        if (this.contentType != null && this.contentType.contains("boundary=")) this.boundary = true;
-        if (this.boundary) this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
+        if (this.contentType != null && this.contentType.contains("boundary=")) {
+            this.boundary = true;
+        }
+        if (this.boundary) {
+            this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
+        }
         if (this.readState == READ_STATE_BODY) {
             if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
-                if (this.contentLength > context.getMaxbody()) return -1;
+                if (this.contentLength > context.getMaxbody()) {
+                    return -1;
+                }
                 bytes.put(buffer, Math.min((int) this.contentLength, buffer.remaining()));
                 int lr = (int) this.contentLength - bytes.length();
                 if (lr == 0) {
                     this.readState = READ_STATE_END;
-                    if (bytes.isEmpty()) this.bodyParsed = true; //no body data
+                    if (bytes.isEmpty()) {
+                        this.bodyParsed = true; //no body data
+                    }
                 }
                 return lr > 0 ? lr : 0;
             }
-            if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) bytes.put(buffer, buffer.remaining()); //文件上传、HTTP1.0或Connection:close
+            if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) {
+                bytes.put(buffer, buffer.remaining()); //文件上传、HTTP1.0或Connection:close
+            }
             this.readState = READ_STATE_END;
-            if (bytes.isEmpty()) this.bodyParsed = true;  //no body data
+            if (bytes.isEmpty()) {
+                this.bodyParsed = true;  //no body data
+            }
         }
         //暂不考虑是keep-alive且存在body却没有指定Content-Length的情况
         return 0;
@@ -390,9 +415,15 @@ public class HttpRequest extends Request<HttpContext> {
                             }
                         }
                     }
-                    if (rn1 != 0) buffer.put(rn1);
-                    if (rn2 != 0) buffer.put(rn2);
-                    if (rn3 != 0) buffer.put(rn3);
+                    if (rn1 != 0) {
+                        buffer.put(rn1);
+                    }
+                    if (rn2 != 0) {
+                        buffer.put(rn2);
+                    }
+                    if (rn3 != 0) {
+                        buffer.put(rn3);
+                    }
                 }
                 return 1;
             }
@@ -443,7 +474,9 @@ public class HttpRequest extends Request<HttpContext> {
                     return 1;
                 }
                 byte b = buffer.get();
-                if (b == ' ') break;
+                if (b == ' ') {
+                    break;
+                }
                 bytes.put(b);
             }
             size = bytes.length();
@@ -469,7 +502,9 @@ public class HttpRequest extends Request<HttpContext> {
                     return 1;
                 }
                 byte b = buffer.get();
-                if (b == ' ') break;
+                if (b == ' ') {
+                    break;
+                }
                 if (b == '?' && qst < 0) {
                     qst = bytes.length();
                 } else if (!decodeable && (b == '+' || b == '%')) {
@@ -524,7 +559,9 @@ public class HttpRequest extends Request<HttpContext> {
                     buffer.put((byte) '\r');
                     return 1;
                 }
-                if (buffer.get() != '\n') return -1;
+                if (buffer.get() != '\n') {
+                    return -1;
+                }
                 break;
             }
             bytes.put(b);
@@ -560,7 +597,9 @@ public class HttpRequest extends Request<HttpContext> {
             remain--;
             byte b1 = buffer.get();
             byte b2 = buffer.get();
-            if (b1 == '\r' && b2 == '\n') return 0;
+            if (b1 == '\r' && b2 == '\n') {
+                return 0;
+            }
             bytes.put(b1, b2);
             for (;;) {  // name
                 if (remain-- < 1) {
@@ -569,7 +608,9 @@ public class HttpRequest extends Request<HttpContext> {
                     return 1;
                 }
                 byte b = buffer.get();
-                if (b == ':') break;
+                if (b == ':') {
+                    break;
+                }
                 bytes.put(b);
             }
             String name = parseHeaderName(bytes, charset);
@@ -604,7 +645,9 @@ public class HttpRequest extends Request<HttpContext> {
                         buffer.put((byte) '\r');
                         return 1;
                     }
-                    if (buffer.get() != '\n') return -1;
+                    if (buffer.get() != '\n') {
+                        return -1;
+                    }
                     break;
                 }
                 if (first) {
@@ -716,9 +759,13 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     private void parseHeader() {
-        if (headerParsed) return;
+        if (headerParsed) {
+            return;
+        }
         headerParsed = true;
-        if (headerBytes == null) return;
+        if (headerBytes == null) {
+            return;
+        }
         if (array.isEmpty()) {
             readHeaderLines(ByteBuffer.wrap(headerBytes), array);
             array.clear();
@@ -732,23 +779,33 @@ public class HttpRequest extends Request<HttpContext> {
         final byte[] bs = bytes.content();
         final byte first = bs[0];
         if (first == 'H' && size == 4) {  //Host
-            if (bs[1] == 'o' && bs[2] == 's' && bs[3] == 't') return KEY_HOST;
+            if (bs[1] == 'o' && bs[2] == 's' && bs[3] == 't') {
+                return KEY_HOST;
+            }
         } else if (first == 'A' && size == 6) {  //Accept
             if (bs[1] == 'c' && bs[2] == 'c' && bs[3] == 'e'
-                && bs[4] == 'p' && bs[5] == 't') return KEY_ACCEPT;
+                && bs[4] == 'p' && bs[5] == 't') {
+                return KEY_ACCEPT;
+            }
         } else if (first == 'C') {
             if (size == 10) { //Connection
                 if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 'n'
                     && bs[4] == 'e' && bs[5] == 'c' && bs[6] == 't'
-                    && bs[7] == 'i' && bs[8] == 'o' && bs[9] == 'n') return KEY_CONNECTION;
+                    && bs[7] == 'i' && bs[8] == 'o' && bs[9] == 'n') {
+                    return KEY_CONNECTION;
+                }
             } else if (size == 12) { //Content-Type
                 if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 't'
                     && bs[4] == 'e' && bs[5] == 'n' && bs[6] == 't'
                     && bs[7] == '-' && bs[8] == 'T' && bs[9] == 'y'
-                    && bs[10] == 'p' && bs[11] == 'e') return KEY_CONTENT_TYPE;
+                    && bs[10] == 'p' && bs[11] == 'e') {
+                    return KEY_CONTENT_TYPE;
+                }
             } else if (size == 6) { //Cookie
                 if (bs[1] == 'o' && bs[2] == 'o' && bs[3] == 'k'
-                    && bs[4] == 'i' && bs[5] == 'e') return KEY_COOKIE;
+                    && bs[4] == 'i' && bs[5] == 'e') {
+                    return KEY_COOKIE;
+                }
             }
         }
         return bytes.toString(charset);
@@ -756,7 +813,9 @@ public class HttpRequest extends Request<HttpContext> {
 
     @Override
     protected HttpRequest copyHeader() {
-        if (!pipelineSameHeaders || !context.lazyHeaders) return null;
+        if (!pipelineSameHeaders || !context.lazyHeaders) {
+            return null;
+        }
         HttpRequest req = new HttpRequest(context, this.array);
         req.headerLength = this.headerLength;
         req.headerBytes = this.headerBytes;
@@ -835,7 +894,9 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     private void parseBody() {
-        if (this.boundary || bodyParsed) return;
+        if (this.boundary || bodyParsed) {
+            return;
+        }
         bodyParsed = true;
         if (this.contentType != null && this.contentType.toLowerCase().contains("x-www-form-urlencoded")) {
             addParameter(array, 0, array.length());
@@ -843,17 +904,23 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     private void addParameter(final ByteArray array, final int offset, final int len) {
-        if (len < 1) return;
+        if (len < 1) {
+            return;
+        }
         Charset charset = this.context.getCharset();
         int limit = offset + len;
         int keypos = array.find(offset, limit, '=');
         int valpos = array.find(offset, limit, '&');
         if (keypos <= 0 || (valpos >= 0 && valpos < keypos)) {
-            if (valpos > 0) addParameter(array, valpos + 1, limit - valpos - 1);
+            if (valpos > 0) {
+                addParameter(array, valpos + 1, limit - valpos - 1);
+            }
             return;
         }
         String name = toDecodeString(array, offset, keypos - offset, charset);
-        if (!name.isEmpty() && name.charAt(0) == '<') return; //内容可能是xml格式; 如: <?xml version="1.0"
+        if (!name.isEmpty() && name.charAt(0) == '<') {
+            return; //内容可能是xml格式; 如: <?xml version="1.0"
+        }
         ++keypos;
         String value = toDecodeString(array, keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
         this.params.put(name, value);
@@ -929,9 +996,15 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     private static int hexBit(byte b) {
-        if ('0' <= b && '9' >= b) return b - '0';
-        if ('a' <= b && 'z' >= b) return b - 'a' + 10;
-        if ('A' <= b && 'Z' >= b) return b - 'A' + 10;
+        if ('0' <= b && '9' >= b) {
+            return b - '0';
+        }
+        if ('a' <= b && 'z' >= b) {
+            return b - 'a' + 10;
+        }
+        if ('A' <= b && 'Z' >= b) {
+            return b - 'A' + 10;
+        }
         return b;
     }
 
@@ -976,8 +1049,12 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @SuppressWarnings("unchecked")
     public int currentIntUserid() {
-        if (currentUserid == CURRUSERID_NIL || currentUserid == null) return 0;
-        if (this.currentUserid instanceof Number) return ((Number) this.currentUserid).intValue();
+        if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
+            return 0;
+        }
+        if (this.currentUserid instanceof Number) {
+            return ((Number) this.currentUserid).intValue();
+        }
         String uid = this.currentUserid.toString();
         return uid.isEmpty() ? 0 : Integer.parseInt(uid);
     }
@@ -991,8 +1068,12 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @SuppressWarnings("unchecked")
     public long currentLongUserid() {
-        if (currentUserid == CURRUSERID_NIL || currentUserid == null) return 0L;
-        if (this.currentUserid instanceof Number) return ((Number) this.currentUserid).longValue();
+        if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
+            return 0L;
+        }
+        if (this.currentUserid instanceof Number) {
+            return ((Number) this.currentUserid).longValue();
+        }
         String uid = this.currentUserid.toString();
         return uid.isEmpty() ? 0L : Long.parseLong(uid);
     }
@@ -1010,22 +1091,34 @@ public class HttpRequest extends Request<HttpContext> {
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T currentUserid(Class<T> type) {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
-            if (type == int.class || type == Integer.class) return (T) (Integer) (int) 0;
-            if (type == long.class || type == Long.class) return (T) (Long) (long) 0;
+            if (type == int.class || type == Integer.class) {
+                return (T) (Integer) (int) 0;
+            }
+            if (type == long.class || type == Long.class) {
+                return (T) (Long) (long) 0;
+            }
             return null;
         }
         if (type == int.class || type == Integer.class) {
-            if (this.currentUserid instanceof Number) return (T) (Integer) ((Number) this.currentUserid).intValue();
+            if (this.currentUserid instanceof Number) {
+                return (T) (Integer) ((Number) this.currentUserid).intValue();
+            }
             String uid = this.currentUserid.toString();
             return (T) (Integer) (uid.isEmpty() ? 0 : Integer.parseInt(uid));
         }
         if (type == long.class || type == Long.class) {
-            if (this.currentUserid instanceof Number) return (T) (Long) ((Number) this.currentUserid).longValue();
+            if (this.currentUserid instanceof Number) {
+                return (T) (Long) ((Number) this.currentUserid).longValue();
+            }
             String uid = this.currentUserid.toString();
             return (T) (Long) (uid.isEmpty() ? 0L : Long.parseLong(uid));
         }
-        if (type == String.class) return (T) this.currentUserid.toString();
-        if (this.currentUserid instanceof CharSequence) return JsonConvert.root().convertFrom(type, this.currentUserid.toString());
+        if (type == String.class) {
+            return (T) this.currentUserid.toString();
+        }
+        if (this.currentUserid instanceof CharSequence) {
+            return JsonConvert.root().convertFrom(type, this.currentUserid.toString());
+        }
         return (T) this.currentUserid;
     }
 
@@ -1087,7 +1180,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @ConvertDisabled
     public Annotation[] getAnnotations() {
-        if (this.annotations == null) return new Annotation[0];
+        if (this.annotations == null) {
+            return new Annotation[0];
+        }
         Annotation[] newanns = new Annotation[this.annotations.length];
         System.arraycopy(this.annotations, 0, newanns, 0, newanns.length);
         return newanns;
@@ -1102,9 +1197,13 @@ public class HttpRequest extends Request<HttpContext> {
      * @return Annotation
      */
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        if (this.annotations == null) return null;
+        if (this.annotations == null) {
+            return null;
+        }
         for (Annotation ann : this.annotations) {
-            if (ann.getClass() == annotationClass) return (T) ann;
+            if (ann.getClass() == annotationClass) {
+                return (T) ann;
+            }
         }
         return null;
     }
@@ -1118,7 +1217,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return Annotation[]
      */
     public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
-        if (this.annotations == null) return (T[]) Array.newInstance(annotationClass, 0);
+        if (this.annotations == null) {
+            return (T[]) Array.newInstance(annotationClass, 0);
+        }
         T[] news = (T[]) Array.newInstance(annotationClass, this.annotations.length);
         int index = 0;
         for (Annotation ann : this.annotations) {
@@ -1126,7 +1227,9 @@ public class HttpRequest extends Request<HttpContext> {
                 news[index++] = (T) ann;
             }
         }
-        if (index < 1) return (T[]) Array.newInstance(annotationClass, 0);
+        if (index < 1) {
+            return (T[]) Array.newInstance(annotationClass, 0);
+        }
         return Arrays.copyOf(news, index);
     }
 
@@ -1147,7 +1250,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 地址
      */
     public String getRemoteAddr() {
-        if (this.remoteAddr != null) return this.remoteAddr;
+        if (this.remoteAddr != null) {
+            return this.remoteAddr;
+        }
         parseHeader();
         if (remoteAddrHeader != null) {
             String val = getHeader(remoteAddrHeader);
@@ -1157,7 +1262,9 @@ public class HttpRequest extends Request<HttpContext> {
             }
         }
         SocketAddress addr = getRemoteAddress();
-        if (addr == null) return "";
+        if (addr == null) {
+            return "";
+        }
         if (addr instanceof InetSocketAddress) {
             this.remoteAddr = ((InetSocketAddress) addr).getAddress().getHostAddress();
             return this.remoteAddr;
@@ -1172,7 +1279,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 国际化Locale
      */
     public String getLocale() {
-        if (this.locale != null) return this.locale;
+        if (this.locale != null) {
+            return this.locale;
+        }
         if (localHeader != null) {
             String val = getHeader(localHeader);
             if (val != null) {
@@ -1220,10 +1329,16 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(java.lang.reflect.Type type) {
-        if (array == null || array.isEmpty()) return null;
+        if (array == null || array.isEmpty()) {
+            return null;
+        }
         Convert convert = this.reqConvert;
-        if (convert == null) convert = context.getJsonConvert();
-        if (type == byte[].class) return (T) array.getBytes();
+        if (convert == null) {
+            convert = context.getJsonConvert();
+        }
+        if (type == byte[].class) {
+            return (T) array.getBytes();
+        }
         return (T) convert.convertFrom(type, array.content());
     }
 
@@ -1237,8 +1352,12 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(Convert convert, java.lang.reflect.Type type) {
-        if (array.isEmpty()) return null;
-        if (type == byte[].class) return (T) array.getBytes();
+        if (array.isEmpty()) {
+            return null;
+        }
+        if (type == byte[].class) {
+            return (T) array.getBytes();
+        }
         return (T) convert.convertFrom(type, array.content());
     }
 
@@ -1378,7 +1497,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public HttpCookie[] getCookies() {
         parseHeader();
-        if (this.cookies == null) this.cookies = parseCookies(this.cookie);
+        if (this.cookies == null) {
+            this.cookies = parseCookies(this.cookie);
+        }
         return this.cookies.length == 0 ? null : this.cookies;
     }
 
@@ -1403,24 +1524,34 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getCookie(String name, String dfvalue) {
         HttpCookie[] cs = getCookies();
-        if (cs == null) return dfvalue;
+        if (cs == null) {
+            return dfvalue;
+        }
         for (HttpCookie c : cs) {
-            if (name.equals(c.getName())) return c.getValue();
+            if (name.equals(c.getName())) {
+                return c.getValue();
+            }
         }
         return dfvalue;
     }
 
     private static HttpCookie[] parseCookies(String cookiestr) {
-        if (cookiestr == null || cookiestr.isEmpty()) return new HttpCookie[0];
+        if (cookiestr == null || cookiestr.isEmpty()) {
+            return new HttpCookie[0];
+        }
         String str = cookiestr.replaceAll("(^;)|(;$)", "").replaceAll(";+", ";");
-        if (str.isEmpty()) return new HttpCookie[0];
+        if (str.isEmpty()) {
+            return new HttpCookie[0];
+        }
         String[] strs = str.split(";");
         HttpCookie[] cookies = new HttpCookie[strs.length];
         for (int i = 0; i < strs.length; i++) {
             String s = strs[i];
             int pos = s.indexOf('=');
             String v = (pos < 0 ? "" : s.substring(pos + 1));
-            if (v.indexOf('"') == 0 && v.lastIndexOf('"') == v.length() - 1) v = v.substring(1, v.length() - 1);
+            if (v.indexOf('"') == 0 && v.lastIndexOf('"') == v.length() - 1) {
+                v = v.substring(1, v.length() - 1);
+            }
             cookies[i] = new HttpCookie((pos < 0 ? s : s.substring(0, pos)), v);
         }
         return cookies;
@@ -1496,7 +1627,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @ConvertDisabled
     public String getRequstURILastPath() {
-        if (requestURI == null) return "";
+        if (requestURI == null) {
+            return "";
+        }
         return requestURI.substring(requestURI.lastIndexOf('/') + 1);
     }
 
@@ -1511,7 +1644,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getRequstURILastPath(short defvalue) {
         String val = getRequstURILastPath();
-        if (val.isEmpty()) return defvalue;
+        if (val.isEmpty()) {
+            return defvalue;
+        }
         try {
             return Short.parseShort(val);
         } catch (NumberFormatException e) {
@@ -1531,7 +1666,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getRequstURILastPath(int radix, short defvalue) {
         String val = getRequstURILastPath();
-        if (val.isEmpty()) return defvalue;
+        if (val.isEmpty()) {
+            return defvalue;
+        }
         try {
             return Short.parseShort(val, radix);
         } catch (NumberFormatException e) {
@@ -1658,7 +1795,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return String[]
      */
     public String[] getRequstURIPaths(String prefix) {
-        if (requestURI == null || prefix == null) return new String[0];
+        if (requestURI == null || prefix == null) {
+            return new String[0];
+        }
         return requestURI.substring(requestURI.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("/");
     }
 
@@ -1673,9 +1812,13 @@ public class HttpRequest extends Request<HttpContext> {
      * @return prefix截断后的值
      */
     public String getRequstURIPath(String prefix, String defvalue) {
-        if (requestURI == null || prefix == null || prefix.isEmpty()) return defvalue;
+        if (requestURI == null || prefix == null || prefix.isEmpty()) {
+            return defvalue;
+        }
         int pos = requestURI.indexOf(prefix);
-        if (pos < 0) return defvalue;
+        if (pos < 0) {
+            return defvalue;
+        }
         String sub = requestURI.substring(pos + prefix.length());
         pos = sub.indexOf('/');
         return pos < 0 ? sub : sub.substring(0, pos);
@@ -1859,7 +2002,9 @@ public class HttpRequest extends Request<HttpContext> {
     @ConvertDisabled
     public Map<String, String> getHeadersToMap(Map<String, String> map) {
         parseHeader();
-        if (map == null) map = new LinkedHashMap<>();
+        if (map == null) {
+            map = new LinkedHashMap<>();
+        }
         final Map<String, String> map0 = map;
         headers.forEach((k, v) -> map0.put(k, v));
         return map0;
@@ -1958,7 +2103,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getShortValue(name, defaultValue);    
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Short.decode(value);
         } catch (NumberFormatException e) {
@@ -1979,7 +2126,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getShortValue(name, defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
         } catch (NumberFormatException e) {
@@ -1999,7 +2148,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getShortValue(name, (short) defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return (short) defaultValue;
+        if (value == null || value.length() == 0) {
+            return (short) defaultValue;
+        }
         try {
             return Short.decode(value);
         } catch (NumberFormatException e) {
@@ -2020,7 +2171,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getShortValue(radix, name, (short) defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return (short) defaultValue;
+        if (value == null || value.length() == 0) {
+            return (short) defaultValue;
+        }
         try {
             return (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
         } catch (NumberFormatException e) {
@@ -2040,7 +2193,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getIntValue(name, defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
@@ -2061,7 +2216,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getIntValue(radix, name, defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Integer.decode(value) : Integer.parseInt(value, radix));
         } catch (NumberFormatException e) {
@@ -2081,7 +2238,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getLongValue(name, defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Long.decode(value);
         } catch (NumberFormatException e) {
@@ -2102,7 +2261,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getLongValue(radix, name, defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Long.decode(value) : Long.parseLong(value, radix));
         } catch (NumberFormatException e) {
@@ -2122,7 +2283,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getFloatValue(name, defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Float.parseFloat(value);
         } catch (NumberFormatException e) {
@@ -2142,7 +2305,9 @@ public class HttpRequest extends Request<HttpContext> {
         //return headers.getDoubleValue(name, defaultValue);
         parseHeader();
         String value = headers.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException e) {
@@ -2170,7 +2335,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @ConvertDisabled
     public Map<String, String> getParametersToMap(Map<String, String> map) {
-        if (map == null) map = new LinkedHashMap<>();
+        if (map == null) {
+            map = new LinkedHashMap<>();
+        }
         final Map<String, String> map0 = map;
         getParameters().forEach((k, v) -> map0.put(k, v));
         return map0;
@@ -2198,7 +2365,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getParametersToString(String prefix) {
         byte[] rbs = queryBytes;
-        if (rbs == null || rbs.length < 1) return "";
+        if (rbs == null || rbs.length < 1) {
+            return "";
+        }
         Charset charset = this.context.getCharset();
         String str = charset == null ? new String(rbs, StandardCharsets.UTF_8) : new String(rbs, charset);
         return (prefix == null) ? str : (prefix + str);
@@ -2225,9 +2394,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getParameter(String name) {
         if (this.frombody) {
-            if (array.isEmpty()) return null;
+            if (array.isEmpty()) {
+                return null;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (String) convert.convertFrom(String.class, array.content());
         }
         parseBody();
@@ -2244,9 +2417,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getParameter(String name, String defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (String) convert.convertFrom(String.class, array.content());
         }
         parseBody();
@@ -2264,10 +2441,16 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public <T> T getJsonParameter(java.lang.reflect.Type type, String name) {
         if (this.frombody) {
-            if (array.isEmpty()) return null;
+            if (array.isEmpty()) {
+                return null;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
-            if (type == byte[].class) return (T) array.getBytes();
+            if (convert == null) {
+                convert = jsonConvert;
+            }
+            if (type == byte[].class) {
+                return (T) array.getBytes();
+            }
             return (T) convert.convertFrom(type, array.content());
         }
         String v = getParameter(name);
@@ -2299,9 +2482,13 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public boolean getBooleanParameter(String name, boolean defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (boolean) convert.convertFrom(boolean.class, array.content());
         }
         parseBody();
@@ -2319,14 +2506,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getShortParameter(String name, short defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (short) convert.convertFrom(short.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Short.decode(value);
         } catch (NumberFormatException e) {
@@ -2345,14 +2538,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getShortParameter(int radix, String name, short defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return (short) defaultValue;
+            if (array.isEmpty()) {
+                return (short) defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (short) convert.convertFrom(short.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
         } catch (NumberFormatException e) {
@@ -2370,14 +2569,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public short getShortParameter(String name, int defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return (short) defaultValue;
+            if (array.isEmpty()) {
+                return (short) defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (short) convert.convertFrom(short.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return (short) defaultValue;
+        if (value == null || value.length() == 0) {
+            return (short) defaultValue;
+        }
         try {
             return Short.decode(value);
         } catch (NumberFormatException e) {
@@ -2395,14 +2600,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public int getIntParameter(String name, int defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (int) convert.convertFrom(int.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Integer.decode(value);
         } catch (NumberFormatException e) {
@@ -2421,14 +2632,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public int getIntParameter(int radix, String name, int defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (int) convert.convertFrom(int.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Integer.decode(value) : Integer.parseInt(value, radix));
         } catch (NumberFormatException e) {
@@ -2446,14 +2663,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getLongParameter(String name, long defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (long) convert.convertFrom(long.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Long.decode(value);
         } catch (NumberFormatException e) {
@@ -2472,14 +2695,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public long getLongParameter(int radix, String name, long defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (long) convert.convertFrom(long.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Long.decode(value) : Long.parseLong(value, radix));
         } catch (NumberFormatException e) {
@@ -2497,14 +2726,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public float getFloatParameter(String name, float defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (float) convert.convertFrom(float.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Float.parseFloat(value);
         } catch (NumberFormatException e) {
@@ -2522,14 +2757,20 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public double getDoubleParameter(String name, double defaultValue) {
         if (this.frombody) {
-            if (array.isEmpty()) return defaultValue;
+            if (array.isEmpty()) {
+                return defaultValue;
+            }
             Convert convert = this.reqConvert;
-            if (convert == null) convert = jsonConvert;
+            if (convert == null) {
+                convert = jsonConvert;
+            }
             return (double) convert.convertFrom(double.class, array.content());
         }
         parseBody();
         String value = params.get(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException e) {
@@ -2608,8 +2849,12 @@ public class HttpRequest extends Request<HttpContext> {
         } else if (flipper.getLimit() < 1 || (maxLimit > 0 && flipper.getLimit() > maxLimit)) {
             flipper.setLimit(maxLimit);
         }
-        if (flipper != null || !autoCreate) return flipper;
-        if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
+        if (flipper != null || !autoCreate) {
+            return flipper;
+        }
+        if (maxLimit < 1) {
+            maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
+        }
         return new org.redkale.source.Flipper(maxLimit);
     }
 }

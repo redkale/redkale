@@ -9,7 +9,7 @@ import java.net.HttpCookie;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.redkale.convert.*;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import static org.redkale.mq.MessageCoder.*;
 import org.redkale.net.http.HttpResult;
@@ -35,7 +35,9 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
 
     @Override
     public byte[] encode(HttpResult data) {
-        if (data == null) return null;
+        if (data == null) {
+            return null;
+        }
         byte[] contentType = MessageCoder.getBytes(data.getContentType());
         byte[] headers = MessageCoder.getBytes(data.getHeaders());
         byte[] cookies = getBytes(data.getCookies());
@@ -48,7 +50,9 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
             content = MessageCoder.getBytes(data.getResult().toString());
         } else {
             Convert cc = data.convert();
-            if (cc == null) cc = JsonConvert.root();
+            if (cc == null) {
+                cc = JsonConvert.root();
+            }
             content = cc.convertToBytes(data.getResult());
         }
         int count = 4 + 2 + contentType.length + headers.length + cookies.length + 4 + (content == null ? 0 : content.length);
@@ -56,7 +60,9 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.putInt(data.getStatus());
         buffer.putChar((char) contentType.length);
-        if (contentType.length > 0) buffer.put(contentType);
+        if (contentType.length > 0) {
+            buffer.put(contentType);
+        }
         buffer.put(headers);
         buffer.put(cookies);
         if (content == null || content.length == 0) {
@@ -70,7 +76,9 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
 
     @Override
     public HttpResult<byte[]> decode(byte[] data) {
-        if (data == null) return null;
+        if (data == null) {
+            return null;
+        }
         ByteBuffer buffer = ByteBuffer.wrap(data);
         HttpResult result = new HttpResult();
         result.setStatus(buffer.getInt());
@@ -87,7 +95,9 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
     }
 
     public static byte[] getBytes(final List<HttpCookie> list) {
-        if (list == null || list.isEmpty()) return new byte[2];
+        if (list == null || list.isEmpty()) {
+            return new byte[2];
+        }
         final AtomicInteger len = new AtomicInteger(2);
         list.forEach(cookie -> {
             len.addAndGet(2 + (cookie.getName() == null ? 0 : Utility.encodeUTF8Length(cookie.getName())));
@@ -115,7 +125,9 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
 
     public static List<HttpCookie> getCookieList(ByteBuffer buffer) {
         int len = buffer.getChar();
-        if (len == 0) return null;
+        if (len == 0) {
+            return null;
+        }
         final List<HttpCookie> list = new ArrayList<>(len);
         for (int i = 0; i < len; i++) {
             HttpCookie cookie = new HttpCookie(getShortString(buffer), getShortString(buffer));

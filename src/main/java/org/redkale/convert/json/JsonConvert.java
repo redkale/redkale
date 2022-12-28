@@ -6,9 +6,9 @@
 package org.redkale.convert.json;
 
 import java.io.*;
-import java.lang.reflect.*;
-import java.nio.*;
-import java.nio.charset.*;
+import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.function.*;
 import org.redkale.convert.*;
 import org.redkale.service.RetResult;
@@ -102,29 +102,39 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     //------------------------------ convertFrom -----------------------------------------------------------
     @Override
     public <T> T convertFrom(final Type type, final byte[] bytes) {
-        if (bytes == null) return null;
+        if (bytes == null) {
+            return null;
+        }
         return convertFrom(type, new String(bytes, StandardCharsets.UTF_8));
     }
 
     @Override
     public <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int length) {
-        if (bytes == null) return null;
+        if (bytes == null) {
+            return null;
+        }
         return convertFrom(type, new String(bytes, offset, length, StandardCharsets.UTF_8));
     }
 
     @Override
     public <T> T convertFrom(final Type type, final String text) {
-        if (text == null) return null;
+        if (text == null) {
+            return null;
+        }
         return convertFrom(type, Utility.charArray(text));
     }
 
     public <T> T convertFrom(final Type type, final char[] text) {
-        if (text == null) return null;
+        if (text == null) {
+            return null;
+        }
         return convertFrom(type, text, 0, text.length);
     }
 
     public <T> T convertFrom(final Type type, final char[] text, final int offset, final int length) {
-        if (text == null || type == null) return null;
+        if (text == null || type == null) {
+            return null;
+        }
         Decodeable decoder = this.lastConvertDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
@@ -135,7 +145,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     public <T> T convertFrom(final Type type, final InputStream in) {
-        if (type == null || in == null) return null;
+        if (type == null || in == null) {
+            return null;
+        }
         Decodeable decoder = this.lastConvertDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
@@ -146,7 +158,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
-        if (type == null || buffers == null || buffers.length == 0) return null;
+        if (type == null || buffers == null || buffers.length == 0) {
+            return null;
+        }
         Decodeable decoder = this.lastConvertDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
@@ -157,7 +171,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers) {
-        if (type == null || buffers == null || buffers.length == 0) return null;
+        if (type == null || buffers == null || buffers.length == 0) {
+            return null;
+        }
         Decodeable decoder = this.lastConvertDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
@@ -167,7 +183,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     public <T> T convertFrom(final Type type, final JsonReader reader) {
-        if (type == null) return null;
+        if (type == null) {
+            return null;
+        }
         Decodeable decoder = this.lastConvertDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
@@ -180,19 +198,25 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final String text) {
-        if (text == null) return null;
+        if (text == null) {
+            return null;
+        }
         return (V) convertFrom(Utility.charArray(text));
     }
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final char[] text) {
-        if (text == null) return null;
+        if (text == null) {
+            return null;
+        }
         return (V) convertFrom(text, 0, text.length);
     }
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final char[] text, final int offset, final int length) {
-        if (text == null) return null;
+        if (text == null) {
+            return null;
+        }
         //final JsonReader in = readerPool.get();
         //in.setText(text, offset, length);
         Object rs = new AnyDecoder(factory).convertFrom(new JsonReader(text, offset, length));
@@ -202,64 +226,86 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final InputStream in) {
-        if (in == null) return null;
+        if (in == null) {
+            return null;
+        }
         return (V) new AnyDecoder(factory).convertFrom(new JsonStreamReader(in));
     }
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final ByteBuffer... buffers) {
-        if (buffers == null || buffers.length == 0) return null;
+        if (buffers == null || buffers.length == 0) {
+            return null;
+        }
         return (V) new AnyDecoder(factory).convertFrom(new JsonByteBufferReader((ConvertMask) null, buffers));
     }
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final ConvertMask mask, final ByteBuffer... buffers) {
-        if (buffers == null || buffers.length == 0) return null;
+        if (buffers == null || buffers.length == 0) {
+            return null;
+        }
         return (V) new AnyDecoder(factory).convertFrom(new JsonByteBufferReader(mask, buffers));
     }
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final JsonReader reader) {
-        if (reader == null) return null;
+        if (reader == null) {
+            return null;
+        }
         return (V) new AnyDecoder(factory).convertFrom(reader);
     }
 
     //json数据的数组长度必须和types个数相同
     public Object[] convertFrom(final Type[] types, final String text) {
-        if (text == null) return null;
+        if (text == null) {
+            return null;
+        }
         return new JsonMultiArrayDecoder(getFactory(), types).convertFrom(new JsonReader(text));
     }
 
     //json数据的数组长度必须和types个数相同
     public Object[] convertFrom(final Type[] types, final byte[] bytes) {
-        if (bytes == null) return null;
+        if (bytes == null) {
+            return null;
+        }
         return convertFrom(types, new String(bytes, StandardCharsets.UTF_8));
     }
 
     //json数据的数组长度必须和types个数相同
     public Object[] convertFrom(final Type[] types, final byte[] bytes, final int offset, final int length) {
-        if (bytes == null) return null;
+        if (bytes == null) {
+            return null;
+        }
         return convertFrom(types, new String(bytes, offset, length, StandardCharsets.UTF_8));
     }
 
     //------------------------------ convertTo -----------------------------------------------------------
     @Override
     public String convertTo(final Object value) {
-        if (value == null) return "null";
+        if (value == null) {
+            return "null";
+        }
         return convertTo(value.getClass(), value);
     }
 
     @Override
     public String convertTo(final Type type, final Object value) {
-        if (type == null) return null;
-        if (value == null) return "null";
+        if (type == null) {
+            return null;
+        }
+        if (value == null) {
+            return "null";
+        }
         JsonBytesWriter writer = pollJsonBytesWriter();
         Encodeable encoder = this.lastConvertEncodeable;
         if (encoder == null || encoder.getType() != type) {
             encoder = factory.loadEncoder(type);
             this.lastConvertEncodeable = encoder;
         }
-        if (encoder.specifyable()) writer.specify(type);
+        if (encoder.specifyable()) {
+            writer.specify(type);
+        }
         encoder.convertTo(writer, value);
 
         String result = writer.toString();
@@ -269,21 +315,29 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public byte[] convertToBytes(final Object value) {
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         return convertToBytes(value.getClass(), value);
     }
 
     @Override
     public byte[] convertToBytes(final Type type, final Object value) {
-        if (type == null) return null;
-        if (value == null) return null;
+        if (type == null) {
+            return null;
+        }
+        if (value == null) {
+            return null;
+        }
         JsonBytesWriter writer = pollJsonBytesWriter();
         Encodeable encoder = this.lastConvertEncodeable;
         if (encoder == null || encoder.getType() != type) {
             encoder = factory.loadEncoder(type);
             this.lastConvertEncodeable = encoder;
         }
-        if (encoder.specifyable()) writer.specify(type);
+        if (encoder.specifyable()) {
+            writer.specify(type);
+        }
         encoder.convertTo(writer, value);
 
         byte[] result = writer.toBytes();
@@ -307,7 +361,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 encoder = factory.loadEncoder(type);
                 this.lastConvertEncodeable = encoder;
             }
-            if (encoder.specifyable()) writer.specify(type);
+            if (encoder.specifyable()) {
+                writer.specify(type);
+            }
             encoder.convertTo(writer, value);
         }
         writer.completed(handler, offerBytesConsumer);
@@ -329,7 +385,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 encoder = factory.loadEncoder(type);
                 this.lastConvertEncodeable = encoder;
             }
-            if (encoder.specifyable()) writer.specify(type);
+            if (encoder.specifyable()) {
+                writer.specify(type);
+            }
             encoder.convertTo(writer, value);
         }
         writer.directTo(array);
@@ -344,7 +402,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     public void convertTo(final OutputStream out, final Type type, final Object value) {
-        if (type == null) return;
+        if (type == null) {
+            return;
+        }
         if (value == null) {
             configWrite(new JsonStreamWriter(tiny, out)).writeNull();
         } else {
@@ -354,14 +414,18 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 encoder = factory.loadEncoder(type);
                 this.lastConvertEncodeable = encoder;
             }
-            if (encoder.specifyable()) writer.specify(type);
+            if (encoder.specifyable()) {
+                writer.specify(type);
+            }
             encoder.convertTo(writer, value);
         }
     }
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
-        if (supplier == null) return null;
+        if (supplier == null) {
+            return null;
+        }
         JsonByteBufferWriter out = configWrite(new JsonByteBufferWriter(tiny, supplier));
         if (value == null) {
             out.writeNull();
@@ -373,7 +437,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
-        if (supplier == null || type == null) return null;
+        if (supplier == null || type == null) {
+            return null;
+        }
         JsonByteBufferWriter out = configWrite(new JsonByteBufferWriter(tiny, supplier));
         if (value == null) {
             out.writeNull();
@@ -395,14 +461,18 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 encoder = factory.loadEncoder(type);
                 this.lastConvertEncodeable = encoder;
             }
-            if (encoder.specifyable()) writer.specify(type);
+            if (encoder.specifyable()) {
+                writer.specify(type);
+            }
             encoder.convertTo(writer, value);
         }
     }
 
     @Override
     public void convertTo(final JsonWriter writer, final Type type, final Object value) {
-        if (type == null) return;
+        if (type == null) {
+            return;
+        }
         if (value == null) {
             writer.writeNull();
         } else {
@@ -411,7 +481,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 encoder = factory.loadEncoder(type);
                 this.lastConvertEncodeable = encoder;
             }
-            if (encoder.specifyable()) writer.specify(type);
+            if (encoder.specifyable()) {
+                writer.specify(type);
+            }
             encoder.convertTo(writer, value);
         }
     }

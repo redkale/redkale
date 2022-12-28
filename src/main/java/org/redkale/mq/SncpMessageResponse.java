@@ -6,8 +6,8 @@
 package org.redkale.mq;
 
 import org.redkale.convert.bson.BsonWriter;
-import org.redkale.net.sncp.*;
 import static org.redkale.net.sncp.SncpRequest.HEADER_SIZE;
+import org.redkale.net.sncp.*;
 import org.redkale.util.ByteArray;
 
 /**
@@ -47,7 +47,9 @@ public class SncpMessageResponse extends SncpResponse {
 
     @Override
     public void finish(final int retcode, final BsonWriter out) {
-        if (callback != null) callback.run();
+        if (callback != null) {
+            callback.run();
+        }
         if (out == null) {
             final ByteArray result = new ByteArray(SncpRequest.HEADER_SIZE);
             fillHeader(result, 0, retcode);

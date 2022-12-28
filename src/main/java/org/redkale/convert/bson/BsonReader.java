@@ -9,8 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
-import org.redkale.convert.ext.*;
-import org.redkale.util.*;
+import org.redkale.convert.ext.ByteSimpledCoder;
+import org.redkale.util.ObjectPool;
 
 /**
  * BSON数据源
@@ -91,7 +91,9 @@ public class BsonReader extends Reader {
     @Override
     @SuppressWarnings("unchecked")
     public final void skipValue() {
-        if (typeval == 0) return;
+        if (typeval == 0) {
+            return;
+        }
         final byte val = this.typeval;
         this.typeval = 0;
         switch (val) {
@@ -115,7 +117,9 @@ public class BsonReader extends Reader {
                 break;
             default:
                 Decodeable decoder = BsonFactory.typeEnum(val);
-                if (decoder != null) decoder.convertFrom(this);
+                if (decoder != null) {
+                    decoder.convertFrom(this);
+                }
                 break;
         }
     }
@@ -124,9 +128,13 @@ public class BsonReader extends Reader {
     public final String readObjectB(final Class clazz) {
         this.fieldIndex = 0; //必须要重置为0
         final String newcls = readClassName();
-        if (newcls != null && !newcls.isEmpty()) return newcls;
+        if (newcls != null && !newcls.isEmpty()) {
+            return newcls;
+        }
         short bt = readShort();
-        if (bt == Reader.SIGN_NULL) return null;
+        if (bt == Reader.SIGN_NULL) {
+            return null;
+        }
         if (bt != SIGN_OBJECTB) {
             throw new ConvertException("a bson object must begin with " + (SIGN_OBJECTB)
                 + " (position = " + position + ") but '" + currentByte() + "'");
@@ -149,7 +157,9 @@ public class BsonReader extends Reader {
     @Override
     public int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
         short bt = readShort();
-        if (bt == Reader.SIGN_NULL) return bt;
+        if (bt == Reader.SIGN_NULL) {
+            return bt;
+        }
         int rs = (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
         byte kt = readByte();
         byte vt = readByte();
@@ -172,11 +182,15 @@ public class BsonReader extends Reader {
     @Override
     public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) { //componentDecoder可能为null
         short bt = readShort();
-        if (bt == Reader.SIGN_NULL) return bt;
+        if (bt == Reader.SIGN_NULL) {
+            return bt;
+        }
         int rs = (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
         if (componentDecoder != null && componentDecoder != ByteSimpledCoder.instance) {
             byte comval = readByte();
-            if (typevals != null) typevals[0] = comval;
+            if (typevals != null) {
+                typevals[0] = comval;
+            }
         }
         return rs;
     }
@@ -213,9 +227,13 @@ public class BsonReader extends Reader {
     @Override
     public boolean hasNext(int startPosition, int contentLength) {
         byte b = readByte();
-        if (b == SIGN_HASNEXT) return true;
-        if (b != SIGN_NONEXT) throw new ConvertException("hasNext option must be (" + (SIGN_HASNEXT)
+        if (b == SIGN_HASNEXT) {
+            return true;
+        }
+        if (b != SIGN_NONEXT) {
+            throw new ConvertException("hasNext option must be (" + (SIGN_HASNEXT)
                 + " or " + (SIGN_NONEXT) + ") but '" + b + "' at position(" + this.position + ")");
+        }
         return false;
     }
 
@@ -224,7 +242,9 @@ public class BsonReader extends Reader {
         final String exceptedField = readSmallString();
         this.typeval = readByte();
         final int len = members.length;
-        if (this.fieldIndex >= len) this.fieldIndex = 0;
+        if (this.fieldIndex >= len) {
+            this.fieldIndex = 0;
+        }
         for (int k = this.fieldIndex; k < len; k++) {
             if (exceptedField.equals(members[k].getAttribute().field())) {
                 this.fieldIndex = k;
@@ -255,7 +275,9 @@ public class BsonReader extends Reader {
     public final byte[] readByteArray() {
         int len = readArrayB(null, null, null);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = readMemberContentLength(null, null);
             len = Reader.SIGN_NOLENGTH;
@@ -332,7 +354,9 @@ public class BsonReader extends Reader {
     @Override
     public String readSmallString() {
         int len = 0xff & readByte();
-        if (len == 0) return "";
+        if (len == 0) {
+            return "";
+        }
         String value = new String(content, ++this.position, len);
         this.position += len - 1; //上一行已经++this.position，所以此处要-1
         return value;
@@ -341,8 +365,12 @@ public class BsonReader extends Reader {
     @Override
     public String readString() {
         int len = readInt();
-        if (len == SIGN_NULL) return null;
-        if (len == 0) return "";
+        if (len == SIGN_NULL) {
+            return null;
+        }
+        if (len == 0) {
+            return "";
+        }
         String value = new String(content, ++this.position, len, StandardCharsets.UTF_8);
         this.position += len - 1;//上一行已经++this.position，所以此处要-1
         return value;

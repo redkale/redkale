@@ -39,7 +39,9 @@ public abstract class ClientCodec<R extends ClientRequest, P> {
     }
 
     public List<ClientResult<P>> removeResults() {
-        if (results.isEmpty()) return null;
+        if (results.isEmpty()) {
+            return null;
+        }
         List<ClientResult<P>> rs = new ArrayList<>(results);
         this.results.clear();
         return rs;

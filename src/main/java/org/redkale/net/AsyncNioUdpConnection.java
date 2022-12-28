@@ -5,11 +5,11 @@
  */
 package org.redkale.net;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.*;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import javax.net.ssl.SSLContext;
@@ -103,19 +103,25 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     @Override
     public ReadableByteChannel readableByteChannel() {
-        if (this.sslEngine == null) return this.channel;
+        if (this.sslEngine == null) {
+            return this.channel;
+        }
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public WritableByteChannel writableByteChannel() {
-        if (this.sslEngine == null) return this.channel;
+        if (this.sslEngine == null) {
+            return this.channel;
+        }
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public boolean isConnected() {
-        if (!client) return true;
+        if (!client) {
+            return true;
+        }
         return this.channel.isConnected();
     }
 
@@ -139,7 +145,9 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
         int end = offset + length;
         for (int i = offset; i < end; i++) {
             ByteBuffer buf = srcs[i];
-            if (buf.hasRemaining()) return this.channel.send(buf, remoteAddress);
+            if (buf.hasRemaining()) {
+                return this.channel.send(buf, remoteAddress);
+            }
         }
         return 0;
     }
@@ -164,10 +172,18 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
     @Override
     public final void close() throws IOException {
         super.close();
-        if (client) channel.close(); //不能关闭channel
-        if (this.connectKey != null) this.connectKey.cancel();
-        if (this.readKey != null) this.readKey.cancel();
-        if (this.writeKey != null) this.writeKey.cancel();
+        if (client) {
+            channel.close(); //不能关闭channel
+        }
+        if (this.connectKey != null) {
+            this.connectKey.cancel();
+        }
+        if (this.readKey != null) {
+            this.readKey.cancel();
+        }
+        if (this.writeKey != null) {
+            this.writeKey.cancel();
+        }
     }
 
 }

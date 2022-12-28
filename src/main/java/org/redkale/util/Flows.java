@@ -154,36 +154,64 @@ public abstract class Flows {
     }
 
     public static boolean maybePublisherClass(Class value) {
-        if (value == null) return false;
+        if (value == null) {
+            return false;
+        }
         if (reactorFluxFunction != null) {
-            if (reactorMonoClass.isAssignableFrom(value)) return true;
-            if (reactorFluxClass.isAssignableFrom(value)) return true;
+            if (reactorMonoClass.isAssignableFrom(value)) {
+                return true;
+            }
+            if (reactorFluxClass.isAssignableFrom(value)) {
+                return true;
+            }
         }
         return Flow.Publisher.class.isAssignableFrom(value);
     }
 
     public static Type maybePublisherSubType(Type value) {
-        if (value == null) return null;
-        if (!(value instanceof ParameterizedType)) return null;
+        if (value == null) {
+            return null;
+        }
+        if (!(value instanceof ParameterizedType)) {
+            return null;
+        }
         ParameterizedType pt = (ParameterizedType) value;
         Type parent = pt.getRawType() == null ? pt.getOwnerType() : pt.getRawType();
-        if (!(parent instanceof Class)) return null;
-        if (pt.getActualTypeArguments().length != 1) return null;
-        if (reactorFluxFunction != null) {
-            if (reactorMonoClass.isAssignableFrom((Class) parent)) return pt.getActualTypeArguments()[0];
-            if (reactorFluxClass.isAssignableFrom((Class) parent)) return pt.getActualTypeArguments()[0];
+        if (!(parent instanceof Class)) {
+            return null;
         }
-        if (Flow.Publisher.class.isAssignableFrom((Class) parent)) return pt.getActualTypeArguments()[0];
+        if (pt.getActualTypeArguments().length != 1) {
+            return null;
+        }
+        if (reactorFluxFunction != null) {
+            if (reactorMonoClass.isAssignableFrom((Class) parent)) {
+                return pt.getActualTypeArguments()[0];
+            }
+            if (reactorFluxClass.isAssignableFrom((Class) parent)) {
+                return pt.getActualTypeArguments()[0];
+            }
+        }
+        if (Flow.Publisher.class.isAssignableFrom((Class) parent)) {
+            return pt.getActualTypeArguments()[0];
+        }
         return null;
     }
 
     public static Object maybePublisherToFuture(Object value) {
-        if (value == null) return value;
+        if (value == null) {
+            return value;
+        }
         if (reactorFluxFunction != null) {
             Class clazz = value.getClass();
-            if (reactorMonoClass.isAssignableFrom(clazz)) return reactorMonoFunction.apply(value);
-            if (reactorFluxClass.isAssignableFrom(clazz)) return reactorFluxFunction.apply(value);
-            if (Flow.Publisher.class.isAssignableFrom(clazz)) return createMonoFuture((Flow.Publisher) value);
+            if (reactorMonoClass.isAssignableFrom(clazz)) {
+                return reactorMonoFunction.apply(value);
+            }
+            if (reactorFluxClass.isAssignableFrom(clazz)) {
+                return reactorFluxFunction.apply(value);
+            }
+            if (Flow.Publisher.class.isAssignableFrom(clazz)) {
+                return createMonoFuture((Flow.Publisher) value);
+            }
         }
         return value;
     }
@@ -254,7 +282,9 @@ public abstract class Flows {
 
         @Override
         public void onNext(T item) {
-            if (rs == null) rs = new ArrayList<>();
+            if (rs == null) {
+                rs = new ArrayList<>();
+            }
             rs.add(item);
         }
 

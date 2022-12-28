@@ -5,14 +5,14 @@
  */
 package org.redkale.convert.ext;
 
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 
 /**
  * float 的SimpledCoder实现
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型

@@ -52,15 +52,31 @@ public final class SncpDynServlet extends SncpServlet {
         Set<DLong> actionids = new HashSet<>();
         RedkaleClassLoader.putReflectionPublicMethods(service.getClass().getName());
         for (java.lang.reflect.Method method : service.getClass().getMethods()) {
-            if (method.isSynthetic()) continue;
-            if (Modifier.isStatic(method.getModifiers())) continue;
-            if (Modifier.isFinal(method.getModifiers())) continue;
-            if (method.getAnnotation(Local.class) != null) continue;
-            if (method.getName().equals("getClass") || method.getName().equals("toString")) continue;
-            if (method.getName().equals("equals") || method.getName().equals("hashCode")) continue;
-            if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) continue;
+            if (method.isSynthetic()) {
+                continue;
+            }
+            if (Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (Modifier.isFinal(method.getModifiers())) {
+                continue;
+            }
+            if (method.getAnnotation(Local.class) != null) {
+                continue;
+            }
+            if (method.getName().equals("getClass") || method.getName().equals("toString")) {
+                continue;
+            }
+            if (method.getName().equals("equals") || method.getName().equals("hashCode")) {
+                continue;
+            }
+            if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) {
+                continue;
+            }
             if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == AnyValue.class) {
-                if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) continue;
+                if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) {
+                    continue;
+                }
             }
 
             final DLong actionid = Sncp.hash(method);
@@ -104,10 +120,14 @@ public final class SncpDynServlet extends SncpServlet {
 
     @Override
     public int compareTo(SncpServlet o0) {
-        if (!(o0 instanceof SncpDynServlet)) return 1;
+        if (!(o0 instanceof SncpDynServlet)) {
+            return 1;
+        }
         SncpDynServlet o = (SncpDynServlet) o0;
         int rs = this.type.getName().compareTo(o.type.getName());
-        if (rs == 0) rs = this.serviceName.compareTo(o.serviceName);
+        if (rs == 0) {
+            rs = this.serviceName.compareTo(o.serviceName);
+        }
         return rs;
     }
 
@@ -198,7 +218,9 @@ public final class SncpDynServlet extends SncpServlet {
             if (paramAttrs != null) {
                 for (int i = 1; i < paramAttrs.length; i++) {
                     org.redkale.util.Attribute attr = paramAttrs[i];
-                    if (attr == null) continue;
+                    if (attr == null) {
+                        continue;
+                    }
                     out.writeByte((byte) i);
                     convert.convertTo(out, attr.genericType(), attr.get(params[i - 1]));
                 }
@@ -610,7 +632,9 @@ public final class SncpDynServlet extends SncpServlet {
                 } catch (Exception e) {
                 }
                 for (java.lang.reflect.Type t : originalParamTypes) {
-                    if (t.toString().startsWith("java.lang.")) continue;
+                    if (t.toString().startsWith("java.lang.")) {
+                        continue;
+                    }
                     BsonFactory.root().loadDecoder(t);
                 }
                 if (originalReturnType != void.class && originalReturnType != Void.class) {
@@ -658,7 +682,9 @@ public final class SncpDynServlet extends SncpServlet {
                         }
                     }
                 }
-                if (hasattr) instance.paramAttrs = atts;
+                if (hasattr) {
+                    instance.paramAttrs = atts;
+                }
                 newClazz.getField("service").set(instance, service);
                 return instance;
             } catch (Exception ex) {

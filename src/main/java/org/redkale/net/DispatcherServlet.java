@@ -5,9 +5,9 @@
  */
 package org.redkale.net;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -69,7 +69,9 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     public boolean containsServlet(Class<? extends S> servletClass) {
         synchronized (servletLock) {
             for (S servlet : new HashSet<>(servlets)) {
-                if (servlet.getClass().equals(servletClass)) return true;
+                if (servlet.getClass().equals(servletClass)) {
+                    return true;
+                }
             }
             return false;
         }
@@ -78,7 +80,9 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     public boolean containsServlet(String servletClassName) {
         synchronized (servletLock) {
             for (S servlet : new HashSet<>(servlets)) {
-                if (servlet.getClass().getName().equals(servletClassName)) return true;
+                if (servlet.getClass().getName().equals(servletClassName)) {
+                    return true;
+                }
             }
             return false;
         }
@@ -128,7 +132,9 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     @Override
     @SuppressWarnings("unchecked")
     public void init(C context, AnyValue config) {
-        if (application != null && application.isCompileMode()) return;
+        if (application != null && application.isCompileMode()) {
+            return;
+        }
         synchronized (filters) {
             if (!filters.isEmpty()) {
                 Collections.sort(filters);
@@ -171,31 +177,43 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     public boolean containsFilter(Class<? extends Filter> filterClass) {
-        if (this.headFilter == null || filterClass == null) return false;
+        if (this.headFilter == null || filterClass == null) {
+            return false;
+        }
         Filter filter = this.headFilter;
         do {
-            if (filter.getClass().equals(filterClass)) return true;
+            if (filter.getClass().equals(filterClass)) {
+                return true;
+            }
         } while ((filter = filter._next) != null);
         return false;
     }
 
     public boolean containsFilter(String filterClassName) {
-        if (this.headFilter == null || filterClassName == null) return false;
+        if (this.headFilter == null || filterClassName == null) {
+            return false;
+        }
         Filter filter = this.headFilter;
         do {
-            if (filter.getClass().getName().equals(filterClassName)) return true;
+            if (filter.getClass().getName().equals(filterClassName)) {
+                return true;
+            }
         } while ((filter = filter._next) != null);
         return false;
     }
 
     @SuppressWarnings("unchecked")
     public <T extends Filter<C, R, P>> T removeFilter(Predicate<T> predicate) {
-        if (this.headFilter == null || predicate == null) return null;
+        if (this.headFilter == null || predicate == null) {
+            return null;
+        }
         synchronized (filters) {
             Filter filter = this.headFilter;
             Filter prev = null;
             do {
-                if (predicate.test((T) filter)) break;
+                if (predicate.test((T) filter)) {
+                    break;
+                }
                 prev = filter;
             } while ((filter = filter._next) != null);
             if (filter != null) {

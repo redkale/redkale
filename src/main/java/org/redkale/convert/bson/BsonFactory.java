@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.stream.Stream;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
-import org.redkale.util.*;
+import org.redkale.util.TypeToken;
 
 /**
  * BSON的ConvertFactory
@@ -78,7 +78,9 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     @Override
     public final BsonConvert getConvert() {
-        if (convert == null) convert = new BsonConvert(this, tiny);
+        if (convert == null) {
+            convert = new BsonConvert(this, tiny);
+        }
         return (BsonConvert) convert;
     }
 

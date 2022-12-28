@@ -60,7 +60,9 @@ public class HttpResult<T> {
     }
 
     public HttpResult<T> header(String name, Serializable value) {
-        if (this.headers == null) this.headers = new HashMap<>();
+        if (this.headers == null) {
+            this.headers = new HashMap<>();
+        }
         this.headers.put(name, String.valueOf(value));
         return this;
     }
@@ -76,7 +78,9 @@ public class HttpResult<T> {
     }
 
     public HttpResult<T> cookie(HttpCookie cookie) {
-        if (this.cookies == null) this.cookies = new ArrayList<>();
+        if (this.cookies == null) {
+            this.cookies = new ArrayList<>();
+        }
         this.cookies.add(cookie);
         return this;
     }

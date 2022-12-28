@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import org.redkale.boot.*;
-import org.redkale.convert.*;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 
@@ -96,7 +96,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         HttpServlet servlet = findHttpServlet(topic);
         CompletableFuture future = new CompletableFuture();
         if (servlet == null) {
-            if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
+            }
             future.completeExceptionally(new RuntimeException("404 Not Found " + topic));
             return future;
         }
@@ -114,7 +116,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
         HttpServlet servlet = findHttpServlet(topic);
         if (servlet == null) {
-            if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
+            }
             return CompletableFuture.completedFuture(new HttpResult().status(404));
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
@@ -126,10 +130,14 @@ public class HttpMessageLocalClient extends HttpMessageClient {
             future.completeExceptionally(e);
         }
         return future.thenApply(rs -> {
-            if (rs == null) return new HttpResult();
+            if (rs == null) {
+                return new HttpResult();
+            }
             if (rs instanceof HttpResult) {
                 Object result = ((HttpResult) rs).getResult();
-                if (result == null || result instanceof byte[]) return (HttpResult) rs;
+                if (result == null || result instanceof byte[]) {
+                    return (HttpResult) rs;
+                }
                 return new HttpResult(JsonConvert.root().convertToBytes(result));
             }
             return new HttpResult(JsonConvert.root().convertToBytes(rs));
@@ -141,7 +149,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);
         if (servlet == null) {
-            if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, "produceMessage: request=" + request + ", not found servlet");
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "produceMessage: request=" + request + ", not found servlet");
+            }
             return;
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
@@ -171,7 +181,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
         public HttpMessageLocalRequest(HttpContext context, HttpSimpleRequest req, Serializable userid) {
             super(context, req);
-            if (userid != null) this.currentUserid = userid;
+            if (userid != null) {
+                this.currentUserid = userid;
+            }
         }
     }
 
@@ -201,7 +213,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
         @Override
         public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             future.complete(obj);
         }
 
@@ -212,13 +226,17 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
         @Override
         public void finish(final Convert convert, Type type, org.redkale.service.RetResult ret) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             future.complete(ret);
         }
 
         @Override
         public void finish(final Convert convert, final Type type, Object obj) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             if (obj instanceof CompletableFuture) {
                 ((CompletableFuture) obj).whenComplete((r, t) -> {
                     if (t == null) {
@@ -234,7 +252,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
         @Override
         public void finish(String obj) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             future.complete(obj == null ? "" : obj);
         }
 
@@ -260,7 +280,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
         @Override
         public void finish(int status, String msg) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             if (status == 0 || status == 200) {
                 future.complete(msg == null ? "" : msg);
             } else {
@@ -270,14 +292,20 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
         @Override
         public void finish(final Convert convert, Type valueType, HttpResult result) {
-            if (future == null) return;
-            if (convert != null) result.convert(convert);
+            if (future == null) {
+                return;
+            }
+            if (convert != null) {
+                result.convert(convert);
+            }
             future.complete(result);
         }
 
         @Override
         public void finish(boolean kill, final byte[] bs, int offset, int length) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             if (offset == 0 && bs.length == length) {
                 future.complete(bs);
             } else {
@@ -287,14 +315,18 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
         @Override
         public void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
             future.complete(rs);
         }
 
         @Override
         public void finish(boolean kill, ByteBuffer buffer) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             byte[] bs = new byte[buffer.remaining()];
             buffer.get(bs);
             future.complete(bs);
@@ -302,7 +334,9 @@ public class HttpMessageLocalClient extends HttpMessageClient {
 
         @Override
         public void finish(boolean kill, ByteBuffer... buffers) {
-            if (future == null) return;
+            if (future == null) {
+                return;
+            }
             int size = 0;
             for (ByteBuffer buf : buffers) {
                 size += buf.remaining();

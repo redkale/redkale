@@ -45,35 +45,79 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
     }
 
     private static boolean checkMemberType(final JsonFactory factory, final Class declaringClass, Type type, Class clazz) {
-        if (type == String.class) return true;
-        if (clazz.isPrimitive()) return true;
-        if (clazz.isEnum()) return true;
-        if (type == boolean[].class) return true;
-        if (type == byte[].class) return true;
-        if (type == short[].class) return true;
-        if (type == char[].class) return true;
-        if (type == int[].class) return true;
-        if (type == float[].class) return true;
-        if (type == long[].class) return true;
-        if (type == double[].class) return true;
-        if (type == Boolean[].class) return true;
-        if (type == Byte[].class) return true;
-        if (type == Short[].class) return true;
-        if (type == Character[].class) return true;
-        if (type == Integer[].class) return true;
-        if (type == Float[].class) return true;
-        if (type == Long[].class) return true;
-        if (type == Double[].class) return true;
-        if (type == String[].class) return true;
+        if (type == String.class) {
+            return true;
+        }
+        if (clazz.isPrimitive()) {
+            return true;
+        }
+        if (clazz.isEnum()) {
+            return true;
+        }
+        if (type == boolean[].class) {
+            return true;
+        }
+        if (type == byte[].class) {
+            return true;
+        }
+        if (type == short[].class) {
+            return true;
+        }
+        if (type == char[].class) {
+            return true;
+        }
+        if (type == int[].class) {
+            return true;
+        }
+        if (type == float[].class) {
+            return true;
+        }
+        if (type == long[].class) {
+            return true;
+        }
+        if (type == double[].class) {
+            return true;
+        }
+        if (type == Boolean[].class) {
+            return true;
+        }
+        if (type == Byte[].class) {
+            return true;
+        }
+        if (type == Short[].class) {
+            return true;
+        }
+        if (type == Character[].class) {
+            return true;
+        }
+        if (type == Integer[].class) {
+            return true;
+        }
+        if (type == Float[].class) {
+            return true;
+        }
+        if (type == Long[].class) {
+            return true;
+        }
+        if (type == Double[].class) {
+            return true;
+        }
+        if (type == String[].class) {
+            return true;
+        }
 
-        if (declaringClass == clazz) return false;
+        if (declaringClass == clazz) {
+            return false;
+        }
         if (Collection.class.isAssignableFrom(clazz) && type instanceof ParameterizedType) {
             Type[] ts = ((ParameterizedType) type).getActualTypeArguments();
             if (ts.length == 1) {
                 Type t = ts[0];
                 if (t == Boolean.class || t == Byte.class || t == Short.class || t == Character.class
                     || t == Integer.class || t == Float.class || t == Long.class || t == Double.class
-                    || t == String.class || ((t instanceof Class) && ((Class) t).isEnum())) return true;
+                    || t == String.class || ((t instanceof Class) && ((Class) t).isEnum())) {
+                    return true;
+                }
                 return false;
             }
         }
@@ -82,27 +126,65 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
 
     //字段全部是primitive或String类型，且没有泛型的类才能动态生成JsonDynEncoder， 不支持的返回null
     public static JsonDynEncoder createDyncEncoder(final JsonFactory factory, final Type type) {
-        if (!(type instanceof Class)) return null;
+        if (!(type instanceof Class)) {
+            return null;
+        }
         //发现有自定义的基础数据类型Encoder就不动态生成JsonDynEncoder了
-        if (factory.loadEncoder(boolean.class) != BoolSimpledCoder.instance) return null;
-        if (factory.loadEncoder(byte.class) != ByteSimpledCoder.instance) return null;
-        if (factory.loadEncoder(short.class) != ShortSimpledCoder.instance) return null;
-        if (factory.loadEncoder(char.class) != CharSimpledCoder.instance) return null;
-        if (factory.loadEncoder(int.class) != IntSimpledCoder.instance) return null;
-        if (factory.loadEncoder(float.class) != FloatSimpledCoder.instance) return null;
-        if (factory.loadEncoder(long.class) != LongSimpledCoder.instance) return null;
-        if (factory.loadEncoder(double.class) != DoubleSimpledCoder.instance) return null;
-        if (factory.loadEncoder(String.class) != StringSimpledCoder.instance) return null;
+        if (factory.loadEncoder(boolean.class) != BoolSimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(byte.class) != ByteSimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(short.class) != ShortSimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(char.class) != CharSimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(int.class) != IntSimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(float.class) != FloatSimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(long.class) != LongSimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(double.class) != DoubleSimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(String.class) != StringSimpledCoder.instance) {
+            return null;
+        }
         //array
-        if (factory.loadEncoder(boolean[].class) != BoolArraySimpledCoder.instance) return null;
-        if (factory.loadEncoder(byte[].class) != ByteArraySimpledCoder.instance) return null;
-        if (factory.loadEncoder(short[].class) != ShortArraySimpledCoder.instance) return null;
-        if (factory.loadEncoder(char[].class) != CharArraySimpledCoder.instance) return null;
-        if (factory.loadEncoder(int[].class) != IntArraySimpledCoder.instance) return null;
-        if (factory.loadEncoder(float[].class) != FloatArraySimpledCoder.instance) return null;
-        if (factory.loadEncoder(long[].class) != LongArraySimpledCoder.instance) return null;
-        if (factory.loadEncoder(double[].class) != DoubleArraySimpledCoder.instance) return null;
-        if (factory.loadEncoder(String[].class) != StringArraySimpledCoder.instance) return null;
+        if (factory.loadEncoder(boolean[].class) != BoolArraySimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(byte[].class) != ByteArraySimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(short[].class) != ShortArraySimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(char[].class) != CharArraySimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(int[].class) != IntArraySimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(float[].class) != FloatArraySimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(long[].class) != LongArraySimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(double[].class) != DoubleArraySimpledCoder.instance) {
+            return null;
+        }
+        if (factory.loadEncoder(String[].class) != StringArraySimpledCoder.instance) {
+            return null;
+        }
 
         final Class clazz = (Class) type;
         List<AccessibleObject> members = null;
@@ -111,52 +193,100 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             ConvertColumnEntry ref;
             RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
             for (final Field field : clazz.getFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
-                if (factory.isConvertDisabled(field)) continue;
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                if (factory.isConvertDisabled(field)) {
+                    continue;
+                }
                 ref = factory.findRef(clazz, field);
-                if (ref != null && ref.ignore()) continue;
-                if (!(checkMemberType(factory, clazz, field.getGenericType(), field.getType()))) return null;
+                if (ref != null && ref.ignore()) {
+                    continue;
+                }
+                if (!(checkMemberType(factory, clazz, field.getGenericType(), field.getType()))) {
+                    return null;
+                }
                 String name = convertFieldName(factory, clazz, field);
-                if (names.contains(name)) continue;
+                if (names.contains(name)) {
+                    continue;
+                }
                 names.add(name);
-                if (members == null) members = new ArrayList<>();
+                if (members == null) {
+                    members = new ArrayList<>();
+                }
                 members.add(field);
             }
             RedkaleClassLoader.putReflectionPublicMethods(clazz.getName());
             for (final Method method : clazz.getMethods()) {
-                if (Modifier.isStatic(method.getModifiers())) continue;
-                if (Modifier.isAbstract(method.getModifiers())) continue;
-                if (method.isSynthetic()) continue;
-                if (method.getName().length() < 3) continue;
-                if (method.getName().equals("getClass")) continue;
+                if (Modifier.isStatic(method.getModifiers())) {
+                    continue;
+                }
+                if (Modifier.isAbstract(method.getModifiers())) {
+                    continue;
+                }
+                if (method.isSynthetic()) {
+                    continue;
+                }
+                if (method.getName().length() < 3) {
+                    continue;
+                }
+                if (method.getName().equals("getClass")) {
+                    continue;
+                }
                 if (!(method.getName().startsWith("is") && method.getName().length() > 2)
-                    && !(method.getName().startsWith("get") && method.getName().length() > 3)) continue;
-                if (factory.isConvertDisabled(method)) continue;
-                if (method.getParameterTypes().length != 0) continue;
-                if (method.getReturnType() == void.class) continue;
+                    && !(method.getName().startsWith("get") && method.getName().length() > 3)) {
+                    continue;
+                }
+                if (factory.isConvertDisabled(method)) {
+                    continue;
+                }
+                if (method.getParameterTypes().length != 0) {
+                    continue;
+                }
+                if (method.getReturnType() == void.class) {
+                    continue;
+                }
                 ref = factory.findRef(clazz, method);
-                if (ref != null && ref.ignore()) continue;
-                if (!(checkMemberType(factory, clazz, method.getGenericReturnType(), method.getReturnType()))) return null;
+                if (ref != null && ref.ignore()) {
+                    continue;
+                }
+                if (!(checkMemberType(factory, clazz, method.getGenericReturnType(), method.getReturnType()))) {
+                    return null;
+                }
                 String name = convertFieldName(factory, clazz, method);
-                if (names.contains(name)) continue;
+                if (names.contains(name)) {
+                    continue;
+                }
                 names.add(name);
-                if (members == null) members = new ArrayList<>();
+                if (members == null) {
+                    members = new ArrayList<>();
+                }
                 members.add(method);
             }
-            if (members == null) return null;
+            if (members == null) {
+                return null;
+            }
             Collections.sort(members, (o1, o2) -> {
                 ConvertColumnEntry ref1 = factory.findRef(clazz, o1);
                 ConvertColumnEntry ref2 = factory.findRef(clazz, o2);
                 if ((ref1 != null && ref1.getIndex() > 0) || (ref2 != null && ref2.getIndex() > 0)) {
                     int idx1 = ref1 == null ? Integer.MAX_VALUE / 2 : ref1.getIndex();
                     int idx2 = ref2 == null ? Integer.MAX_VALUE / 2 : ref2.getIndex();
-                    if (idx1 != idx2) return idx1 - idx2;
+                    if (idx1 != idx2) {
+                        return idx1 - idx2;
+                    }
                 }
                 String n1 = ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(o1) : ref1.name();
                 String n2 = ref2 == null || ref2.name().isEmpty() ? readGetSetFieldName(o2) : ref2.name();
-                if (n1 == null && n2 == null) return 0;
-                if (n1 == null) return -1;
-                if (n2 == null) return 1;
+                if (n1 == null && n2 == null) {
+                    return 0;
+                }
+                if (n1 == null) {
+                    return -1;
+                }
+                if (n2 == null) {
+                    return 1;
+                }
                 return n1.compareTo(n2);
             });
             return generateDyncEncoder(factory, clazz, members);
@@ -173,13 +303,17 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
     }
 
     protected static ConvertSmallString readConvertSmallString(AccessibleObject element) {
-        if (element instanceof Field) return ((Field) element).getAnnotation(ConvertSmallString.class);
+        if (element instanceof Field) {
+            return ((Field) element).getAnnotation(ConvertSmallString.class);
+        }
         Method method = (Method) element;
         ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
         if (small == null) {
             try {
                 Field f = method.getDeclaringClass().getDeclaredField(readGetSetFieldName(method));
-                if (f != null) small = f.getAnnotation(ConvertSmallString.class);
+                if (f != null) {
+                    small = f.getAnnotation(ConvertSmallString.class);
+                }
             } catch (Exception e) {
             }
         }
@@ -187,18 +321,26 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
     }
 
     protected static Class readGetSetFieldType(AccessibleObject element) {
-        if (element instanceof Field) return ((Field) element).getType();
+        if (element instanceof Field) {
+            return ((Field) element).getType();
+        }
         return element == null ? null : ((Method) element).getReturnType();
     }
 
     protected static String readGetSetFieldName(AccessibleObject element) {
-        if (element instanceof Field) return ((Field) element).getName();
+        if (element instanceof Field) {
+            return ((Field) element).getName();
+        }
         Method method = (Method) element;
-        if (method == null) return null;
+        if (method == null) {
+            return null;
+        }
         String fname = method.getName();
         if (!(fname.startsWith("is") && fname.length() > 2)
             && !(fname.startsWith("get") && fname.length() > 3)
-            && !(fname.startsWith("set") && fname.length() > 3)) return fname;
+            && !(fname.startsWith("set") && fname.length() > 3)) {
+            return fname;
+        }
         fname = fname.substring(fname.startsWith("is") ? 2 : 3);
         if (fname.length() > 1 && !(fname.charAt(1) >= 'A' && fname.charAt(1) <= 'Z')) {
             fname = Character.toLowerCase(fname.charAt(0)) + fname.substring(1);
@@ -211,8 +353,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
     protected static JsonDynEncoder generateDyncEncoder(final JsonFactory factory, final Class clazz, final List<AccessibleObject> members) {
         final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
         selfObjEncoder.init(factory);
-        if (selfObjEncoder.getMembers().length != members.size()) return null; //存在ignore等定制配置
-
+        if (selfObjEncoder.getMembers().length != members.size()) {
+            return null; //存在ignore等定制配置
+        }
         final String supDynName = JsonDynEncoder.class.getName().replace('.', '/');
         final String valtypeName = clazz.getName().replace('.', '/');
         final String writerName = JsonWriter.class.getName().replace('.', '/');
@@ -234,7 +377,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             memberb.append(fieldname).append(',');
             final Class fieldtype = readGetSetFieldType(element);
             if (fieldtype != String.class && !fieldtype.isPrimitive()) {
-                if (mixedNames0 == null) mixedNames0 = new HashMap<>();
+                if (mixedNames0 == null) {
+                    mixedNames0 = new HashMap<>();
+                }
                 mixedNames0.put(fieldname, element);
             }
         }
@@ -288,16 +433,21 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 fv = cw.visitField(ACC_PROTECTED, fieldname + "Encoder", encodeableDesc, null, null);
                 fv.visitEnd();
             }
-            if (fieldtype == int.class) intFieldCount++;
+            if (fieldtype == int.class) {
+                intFieldCount++;
+            }
             if (fieldtype == String.class && membersSize == 1 && readConvertSmallString(element) != null) {
                 onlyOneLatin1FieldObjectFlag = true;
             } else if (fieldtype != short.class && fieldtype != int.class && fieldtype != long.class && !(fieldtype == String.class && readConvertSmallString(element) != null)) {
                 onlyShotIntLongLatin1MoreFieldObjectFlag = false;
             }
         }
-        if (intFieldCount == 2 && intFieldCount == membersSize) onlyTwoIntFieldObjectFlag = true;
-        if (onlyShotIntLongLatin1MoreFieldObjectFlag && membersSize < 2) onlyShotIntLongLatin1MoreFieldObjectFlag = false; //字段个数必须大于1
-
+        if (intFieldCount == 2 && intFieldCount == membersSize) {
+            onlyTwoIntFieldObjectFlag = true;
+        }
+        if (onlyShotIntLongLatin1MoreFieldObjectFlag && membersSize < 2) {
+            onlyShotIntLongLatin1MoreFieldObjectFlag = false; //字段个数必须大于1
+        }
         { // 构造函数
             mv = (cw.visitMethod(ACC_PUBLIC, "<init>", "(" + jsonfactoryDesc + typeDesc + ")V", null, null));
             //mv.setDebug(true);

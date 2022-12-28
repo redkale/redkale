@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.*;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import org.redkale.boot.Application;
@@ -92,7 +92,9 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         ObjectPool<ByteBuffer> safeBufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
         ObjectPool<Response> safeResponsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
-            if (!(Thread.currentThread() instanceof WorkThread)) return null;
+            if (!(Thread.currentThread() instanceof WorkThread)) {
+                return null;
+            }
             return ObjectPool.createUnsafePool(safeResponsePool, safeResponsePool.getCreatCounter(),
                 safeResponsePool.getCycleCounter(), 16, safeResponsePool.getCreator(), safeResponsePool.getPrepare(), safeResponsePool.getRecycler());
         });
@@ -137,9 +139,13 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
     private void accept(SocketAddress address, ByteBuffer buffer) throws IOException {
         AsyncIOThread readThread = ioGroup.nextIOThread();
         LongAdder connCreateCounter = ioGroup.connCreateCounter;
-        if (connCreateCounter != null) connCreateCounter.increment();
+        if (connCreateCounter != null) {
+            connCreateCounter.increment();
+        }
         LongAdder connLivingCounter = ioGroup.connLivingCounter;
-        if (connLivingCounter != null) connLivingCounter.increment();
+        if (connLivingCounter != null) {
+            connLivingCounter.increment();
+        }
         AsyncNioUdpConnection conn = new AsyncNioUdpConnection(false, ioGroup, readThread, ioGroup.connectThread(), this.serverChannel, context.getSSLBuilder(), context.getSSLContext(), address, connLivingCounter, ioGroup.connClosedCounter);
         ProtocolCodec codec = new ProtocolCodec(context, responseSupplier, responseConsumer, conn);
         conn.protocolCodec = codec;
@@ -160,7 +166,9 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
 
     @Override
     public void close() throws IOException {
-        if (this.closed) return;
+        if (this.closed) {
+            return;
+        }
         this.closed = true;
         this.ioGroup.close();
         this.serverChannel.close();

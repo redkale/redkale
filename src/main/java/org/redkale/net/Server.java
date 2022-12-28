@@ -133,7 +133,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Utility.cpus() * 8);
         this.responsePoolSize = config.getIntValue("responsePoolSize", 1024);
         this.name = config.getValue("name", "Server-" + config.getValue("protocol", netprotocol).replaceFirst("\\..+", "").toUpperCase() + "-" + this.address.getPort());
-        if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) throw new RuntimeException("server.name (" + this.name + ") is illegal");
+        if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) {
+            throw new RuntimeException("server.name (" + this.name + ") is illegal");
+        }
         AnyValue sslConf = config.getAnyValue("ssl");
         if (sslConf != null) {
             String builderClass = sslConf.getValue("builder", SSLBuilder.class.getName());
@@ -169,25 +171,47 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     protected static long parseLenth(String value, long defValue) {
-        if (value == null) return defValue;
+        if (value == null) {
+            return defValue;
+        }
         value = value.toUpperCase().replace("B", "");
         if (value.indexOf('.') >= 0) {
-            if (value.endsWith("G")) return (long) (Float.parseFloat(value.replace("G", "")) * 1024 * 1024 * 1024);
-            if (value.endsWith("M")) return (long) (Float.parseFloat(value.replace("M", "")) * 1024 * 1024);
-            if (value.endsWith("K")) return (long) (Float.parseFloat(value.replace("K", "")) * 1024);
+            if (value.endsWith("G")) {
+                return (long) (Float.parseFloat(value.replace("G", "")) * 1024 * 1024 * 1024);
+            }
+            if (value.endsWith("M")) {
+                return (long) (Float.parseFloat(value.replace("M", "")) * 1024 * 1024);
+            }
+            if (value.endsWith("K")) {
+                return (long) (Float.parseFloat(value.replace("K", "")) * 1024);
+            }
             return (long) Float.parseFloat(value);
         }
-        if (value.endsWith("G")) return Long.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
-        if (value.endsWith("M")) return Long.decode(value.replace("M", "")) * 1024 * 1024;
-        if (value.endsWith("K")) return Long.decode(value.replace("K", "")) * 1024;
+        if (value.endsWith("G")) {
+            return Long.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
+        }
+        if (value.endsWith("M")) {
+            return Long.decode(value.replace("M", "")) * 1024 * 1024;
+        }
+        if (value.endsWith("K")) {
+            return Long.decode(value.replace("K", "")) * 1024;
+        }
         return Long.decode(value);
     }
 
     protected static String formatLenth(long value) {
-        if (value < 1) return "" + value;
-        if (value % (1024 * 1024 * 1024) == 0) return value / (1024 * 1024 * 1024) + "G";
-        if (value % (1024 * 1024) == 0) return value / (1024 * 1024) + "M";
-        if (value % 1024 == 0) return value / (1024) + "K";
+        if (value < 1) {
+            return "" + value;
+        }
+        if (value % (1024 * 1024 * 1024) == 0) {
+            return value / (1024 * 1024 * 1024) + "G";
+        }
+        if (value % (1024 * 1024) == 0) {
+            return value / (1024 * 1024) + "M";
+        }
+        if (value % 1024 == 0) {
+            return value / (1024) + "K";
+        }
         return value + "B";
     }
 
@@ -333,39 +357,55 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     public void changeMaxconns(final int newmaxconns) {
         this.maxconns = newmaxconns;
-        if (this.context != null) this.context.maxconns = newmaxconns;
-        if (this.serverChannel != null) this.serverChannel.maxconns = newmaxconns;
+        if (this.context != null) {
+            this.context.maxconns = newmaxconns;
+        }
+        if (this.serverChannel != null) {
+            this.serverChannel.maxconns = newmaxconns;
+        }
     }
 
     public void changeCharset(final Charset newcharset) {
         this.charset = newcharset;
-        if (this.context != null) this.context.charset = newcharset;
+        if (this.context != null) {
+            this.context.charset = newcharset;
+        }
     }
 
     public void changeMaxbody(final int newmaxbody) {
         this.maxbody = newmaxbody;
-        if (this.context != null) this.context.maxbody = newmaxbody;
+        if (this.context != null) {
+            this.context.maxbody = newmaxbody;
+        }
     }
 
     public void changeReadTimeoutSeconds(final int newReadTimeoutSeconds) {
         this.readTimeoutSeconds = newReadTimeoutSeconds;
-        if (this.context != null) this.context.readTimeoutSeconds = newReadTimeoutSeconds;
+        if (this.context != null) {
+            this.context.readTimeoutSeconds = newReadTimeoutSeconds;
+        }
     }
 
     public void changeWriteTimeoutSeconds(final int newWriteTimeoutSeconds) {
         this.writeTimeoutSeconds = newWriteTimeoutSeconds;
-        if (this.context != null) this.context.writeTimeoutSeconds = newWriteTimeoutSeconds;
+        if (this.context != null) {
+            this.context.writeTimeoutSeconds = newWriteTimeoutSeconds;
+        }
     }
 
     public void changeAliveTimeoutSeconds(final int newAliveTimeoutSeconds) {
         this.aliveTimeoutSeconds = newAliveTimeoutSeconds;
-        if (this.context != null) this.context.aliveTimeoutSeconds = newAliveTimeoutSeconds;
+        if (this.context != null) {
+            this.context.aliveTimeoutSeconds = newAliveTimeoutSeconds;
+        }
     }
 
     protected abstract C createContext();
 
     protected void initContextConfig(Context.ContextConfig contextConfig) {
-        if (application != null) contextConfig.workExecutor = application.getWorkExecutor();
+        if (application != null) {
+            contextConfig.workExecutor = application.getWorkExecutor();
+        }
         contextConfig.serverStartTime = this.serverStartTime;
         contextConfig.logger = this.logger;
         contextConfig.sslBuilder = this.sslBuilder;
@@ -480,29 +520,39 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     public static URL[] loadLib(final RedkaleClassLoader classLoader, final Logger logger, final String lib) {
-        if (lib == null || lib.isEmpty()) return new URL[0];
+        if (lib == null || lib.isEmpty()) {
+            return new URL[0];
+        }
         final Set<URL> set = new HashSet<>();
         try {
             for (String s : lib.split(";")) {
-                if (s.isEmpty()) continue;
+                if (s.isEmpty()) {
+                    continue;
+                }
                 if (s.endsWith("*")) {
                     File root = new File(s.substring(0, s.length() - 1));
                     if (root.isDirectory()) {
                         File[] lfs = root.listFiles();
-                        if (lfs == null) throw new RuntimeException("File(" + root + ") cannot listFiles()");
+                        if (lfs == null) {
+                            throw new RuntimeException("File(" + root + ") cannot listFiles()");
+                        }
                         for (File f : lfs) {
                             set.add(f.toURI().toURL());
                         }
                     }
                 } else {
                     File f = new File(s);
-                    if (f.canRead()) set.add(f.toURI().toURL());
+                    if (f.canRead()) {
+                        set.add(f.toURI().toURL());
+                    }
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (set.isEmpty()) return new URL[0];
+        if (set.isEmpty()) {
+            return new URL[0];
+        }
         for (URL url : set) {
             classLoader.addURL(url);
         }

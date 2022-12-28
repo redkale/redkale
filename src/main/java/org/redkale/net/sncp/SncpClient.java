@@ -94,7 +94,9 @@ public final class SncpClient {
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
         this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
-        if (this.addrBytes.length != 4) throw new RuntimeException("SNCP clientAddress only support IPv4");
+        if (this.addrBytes.length != 4) {
+            throw new RuntimeException("SNCP clientAddress only support IPv4");
+        }
     }
 
     static List<SncpAction> getSncpActions(final Class serviceClass) {
@@ -145,7 +147,9 @@ public final class SncpClient {
     @Override
     public String toString() {
         String service = serviceClass.getName();
-        if (remote) service = service.replace("DynLocalService", "DynRemoteService");
+        if (remote) {
+            service = service.replace("DynLocalService", "DynRemoteService");
+        }
         return this.getClass().getSimpleName() + "(service = " + service + ", serviceid = " + serviceid + ", serviceVersion = " + serviceVersion + ", name = '" + name
             + "', address = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
             + ", actions.size = " + actions.length + ")";
@@ -157,7 +161,9 @@ public final class SncpClient {
             return service + "(serviceid=" + serviceid + ", name='" + name + "', actions.size=" + actions.length + ")";
         }
         String service = serviceClass.getAnnotation(SncpDyn.class) == null ? serviceClass.getName() : serviceClass.getSuperclass().getSimpleName();
-        if (remote) service = service.replace("DynLocalService", "DynRemoteService");
+        if (remote) {
+            service = service.replace("DynLocalService", "DynRemoteService");
+        }
         return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = " + serviceVersion
             + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
             + ((remoteGroups == null || remoteGroups.isEmpty()) ? "" : ", remoteGroups = " + remoteGroups)
@@ -170,23 +176,40 @@ public final class SncpClient {
         final List<Method> multis = new ArrayList<>();
         final Map<DLong, Method> actionids = new HashMap<>();
         for (final java.lang.reflect.Method method : serviceClass.getMethods()) {
-            if (method.isSynthetic()) continue;
-            if (Modifier.isStatic(method.getModifiers())) continue;
-            if (Modifier.isFinal(method.getModifiers())) continue;
-            if (method.getAnnotation(Local.class) != null) continue;
-            if (method.getName().equals("getClass") || method.getName().equals("toString")) continue;
-            if (method.getName().equals("equals") || method.getName().equals("hashCode")) continue;
-            if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) continue;
+            if (method.isSynthetic()) {
+                continue;
+            }
+            if (Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (Modifier.isFinal(method.getModifiers())) {
+                continue;
+            }
+            if (method.getAnnotation(Local.class) != null) {
+                continue;
+            }
+            if (method.getName().equals("getClass") || method.getName().equals("toString")) {
+                continue;
+            }
+            if (method.getName().equals("equals") || method.getName().equals("hashCode")) {
+                continue;
+            }
+            if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) {
+                continue;
+            }
             if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == AnyValue.class) {
-                if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) continue;
+                if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) {
+                    continue;
+                }
             }
             //if (onlySncpDyn && method.getAnnotation(SncpDyn.class) == null) continue;
 
             DLong actionid = Sncp.hash(method);
             Method old = actionids.get(actionid);
             if (old != null) {
-                if (old.getDeclaringClass().equals(method.getDeclaringClass()))
+                if (old.getDeclaringClass().equals(method.getDeclaringClass())) {
                     throw new RuntimeException(serviceClass.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
+                }
                 continue;
             }
             actionids.put(actionid, method);
@@ -198,8 +221,12 @@ public final class SncpClient {
         }
         multis.sort((m1, m2) -> m1.getAnnotation(SncpDyn.class).index() - m2.getAnnotation(SncpDyn.class).index());
         list.sort((Method o1, Method o2) -> {
-            if (!o1.getName().equals(o2.getName())) return o1.getName().compareTo(o2.getName());
-            if (o1.getParameterCount() != o2.getParameterCount()) return o1.getParameterCount() - o2.getParameterCount();
+            if (!o1.getName().equals(o2.getName())) {
+                return o1.getName().compareTo(o2.getName());
+            }
+            if (o1.getParameterCount() != o2.getParameterCount()) {
+                return o1.getParameterCount() - o2.getParameterCount();
+            }
             return 0;
         });
         //带SncpDyn必须排在前面
@@ -211,7 +238,9 @@ public final class SncpClient {
     public <T> T remote(final int index, final Object... params) {
         final SncpAction action = actions[index];
         final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
-        if (action.handlerFuncParamIndex >= 0) params[action.handlerFuncParamIndex] = null;
+        if (action.handlerFuncParamIndex >= 0) {
+            params[action.handlerFuncParamIndex] = null;
+        }
         final BsonReader reader = bsonConvert.pollBsonReader();
         CompletableFuture<byte[]> future = remote0(handlerFunc, remoteGroupTransport, null, action, params);
         if (action.boolReturnTypeFuture) { //与handlerFuncIndex互斥
@@ -239,7 +268,9 @@ public final class SncpClient {
             }); //需要获取  Executor
             return (T) result;
         }
-        if (handlerFunc != null) return null;
+        if (handlerFunc != null) {
+            return null;
+        }
         try {
             reader.setBytes(future.get(5, TimeUnit.SECONDS));
             byte i;
@@ -263,15 +294,21 @@ public final class SncpClient {
         final String traceid = Traces.currTraceid();
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
-        if (action.addressSourceParamIndex >= 0) params[action.addressSourceParamIndex] = this.clientSncpAddress;
-        if (bsonConvert == null) bsonConvert = BsonConvert.root();
+        if (action.addressSourceParamIndex >= 0) {
+            params[action.addressSourceParamIndex] = this.clientSncpAddress;
+        }
+        if (bsonConvert == null) {
+            bsonConvert = BsonConvert.root();
+        }
         final BsonWriter writer = bsonConvert.pollBsonWriter(); // 将head写入
         writer.writeTo(DEFAULT_HEADER);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
             BsonConvert bcc = bsonConvert;
             if (params[i] instanceof org.redkale.service.RetResult) {
                 org.redkale.convert.Convert cc = ((org.redkale.service.RetResult) params[i]).convert();
-                if (cc instanceof BsonConvert) bcc = (BsonConvert) cc;
+                if (cc instanceof BsonConvert) {
+                    bcc = (BsonConvert) cc;
+                }
             }
             bcc.convertTo(writer, CompletionHandler.class.isAssignableFrom(myparamclass[i]) ? CompletionHandler.class : myparamtypes[i], params[i]);
         }
@@ -282,7 +319,9 @@ public final class SncpClient {
             final ByteArray reqbytes = writer.toByteArray();
             fillHeader(reqbytes, seqid, actionid, traceid, reqBodyLength);
             String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
-            if (targetTopic == null) targetTopic = this.topic;
+            if (targetTopic == null) {
+                targetTopic = this.topic;
+            }
             MessageRecord message = messageClient.createMessageRecord(targetTopic, null, reqbytes.getBytes());
             final String tt = targetTopic;
             if (logger.isLoggable(Level.FINER)) {
@@ -454,15 +493,25 @@ public final class SncpClient {
 
     private void checkResult(long seqid, final SncpAction action, ByteBuffer buffer) {
         long rseqid = buffer.getLong();
-        if (rseqid != seqid) throw new RuntimeException("sncp(" + action.method + ") response.seqid = " + seqid + ", but request.seqid =" + rseqid);
-        if (buffer.getChar() != HEADER_SIZE) throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
+        if (rseqid != seqid) {
+            throw new RuntimeException("sncp(" + action.method + ") response.seqid = " + seqid + ", but request.seqid =" + rseqid);
+        }
+        if (buffer.getChar() != HEADER_SIZE) {
+            throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
+        }
         DLong rserviceid = DLong.read(buffer);
-        if (!rserviceid.equals(this.serviceid)) throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
+        if (!rserviceid.equals(this.serviceid)) {
+            throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
+        }
         int version = buffer.getInt();
-        if (version != this.serviceVersion) throw new RuntimeException("sncp(" + action.method + ") response.serviceVersion = " + serviceVersion + ", but request.serviceVersion =" + version);
+        if (version != this.serviceVersion) {
+            throw new RuntimeException("sncp(" + action.method + ") response.serviceVersion = " + serviceVersion + ", but request.serviceVersion =" + version);
+        }
         DLong raction = DLong.read(buffer);
         DLong actid = action.actionid;
-        if (!actid.equals(raction)) throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
+        if (!actid.equals(raction)) {
+            throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
+        }
         buffer.getInt();  //地址
         buffer.getChar(); //端口
     }

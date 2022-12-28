@@ -6,12 +6,12 @@
 package org.redkale.convert.json;
 
 import java.io.Serializable;
-import java.lang.reflect.*;
+import java.lang.reflect.Type;
 import java.math.*;
 import java.net.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
-import org.redkale.util.*;
+import org.redkale.util.DLong;
 
 /**
  * JSON的ConvertFactory
@@ -89,7 +89,9 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     @Override
     public final JsonConvert getConvert() {
-        if (convert == null) convert = new JsonConvert(this, tiny);
+        if (convert == null) {
+            convert = new JsonConvert(this, tiny);
+        }
         return (JsonConvert) convert;
     }
 

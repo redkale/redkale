@@ -74,12 +74,18 @@ public final class ByteArray implements ByteTuple {
      * @return 是否相同
      */
     public boolean equal(final byte[] bytes) {
-        if (bytes == null) return false;
+        if (bytes == null) {
+            return false;
+        }
         int len = count;
-        if (len != bytes.length) return false;
+        if (len != bytes.length) {
+            return false;
+        }
         byte[] ba = content;
         for (int i = 0; i < len; i++) {
-            if (ba[i] != bytes[i]) return false;
+            if (ba[i] != bytes[i]) {
+                return false;
+            }
         }
         return true;
     }
@@ -218,13 +224,19 @@ public final class ByteArray implements ByteTuple {
      * @param buffer ByteBuffer
      */
     public void put(ByteBuffer buffer) {
-        if (buffer == null) return;
+        if (buffer == null) {
+            return;
+        }
         int remain = buffer.remaining();
-        if (remain == 0) return;
+        if (remain == 0) {
+            return;
+        }
         int l = this.content.length - count;
         if (remain > l) {
             byte[] ns = new byte[this.content.length + remain];
-            if (count > 0) System.arraycopy(content, 0, ns, 0, count);
+            if (count > 0) {
+                System.arraycopy(content, 0, ns, 0, count);
+            }
             this.content = ns;
         }
         buffer.get(content, count, remain);
@@ -294,7 +306,9 @@ public final class ByteArray implements ByteTuple {
      * @return byte[]
      */
     public byte[] getBytes(int offset, int length) {
-        if (length < 1) return new byte[0];
+        if (length < 1) {
+            return new byte[0];
+        }
         byte[] bs = new byte[length];
         System.arraycopy(this.content, offset, bs, 0, length);
         return bs;
@@ -361,7 +375,9 @@ public final class ByteArray implements ByteTuple {
         byte[] bytes = this.content;
         int end = limit > 0 ? limit : count;
         for (int i = offset; i < end; i++) {
-            if (bytes[i] == value) return i;
+            if (bytes[i] == value) {
+                return i;
+            }
         }
         return -1;
     }
@@ -372,7 +388,9 @@ public final class ByteArray implements ByteTuple {
      * @return ByteArray
      */
     public ByteArray removeLastByte() {
-        if (count > 0) count--;
+        if (count > 0) {
+            count--;
+        }
         return this;
     }
 
@@ -738,7 +756,9 @@ public final class ByteArray implements ByteTuple {
      * @return ByteArray
      */
     public ByteArray put(byte... values) {
-        if (values.length < 1) return this;
+        if (values.length < 1) {
+            return this;
+        }
         if (count >= content.length - values.length) {
             byte[] ns = new byte[content.length + values.length];
             System.arraycopy(content, 0, ns, 0, count);
@@ -758,7 +778,9 @@ public final class ByteArray implements ByteTuple {
      * @return ByteArray
      */
     public ByteArray put(int offset, byte... values) {
-        if (values.length < 1) throw new IllegalArgumentException();
+        if (values.length < 1) {
+            throw new IllegalArgumentException();
+        }
         System.arraycopy(values, 0, content, offset, values.length);
         return this;
     }
@@ -827,7 +849,9 @@ public final class ByteArray implements ByteTuple {
      * @return ByteArray
      */
     public ByteArray put(ByteBuffer buffer, int len) {
-        if (len < 1) return this;
+        if (len < 1) {
+            return this;
+        }
         if (count >= content.length - len) {
             byte[] ns = new byte[content.length + len];
             System.arraycopy(content, 0, ns, 0, count);
@@ -864,7 +888,9 @@ public final class ByteArray implements ByteTuple {
      * @return 字符串
      */
     public String toString(final int offset, int len, final Charset charset) {
-        if (charset == null) return new String(content, offset, len, StandardCharsets.UTF_8);
+        if (charset == null) {
+            return new String(content, offset, len, StandardCharsets.UTF_8);
+        }
         return new String(content, offset, len, charset);
     }
 
@@ -877,7 +903,9 @@ public final class ByteArray implements ByteTuple {
      * @return 字符串
      */
     public String toString(final int offset, final Charset charset) {
-        if (charset == null) return new String(content, offset, count - offset, StandardCharsets.UTF_8);
+        if (charset == null) {
+            return new String(content, offset, count - offset, StandardCharsets.UTF_8);
+        }
         return new String(content, offset, count - offset, charset);
     }
 

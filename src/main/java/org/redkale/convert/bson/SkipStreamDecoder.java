@@ -26,7 +26,9 @@ public class SkipStreamDecoder<T> extends StreamDecoder<T> {
 
     @Override
     protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
-        if (typevals != null) return BsonFactory.typeEnum(typevals[0]);
+        if (typevals != null) {
+            return BsonFactory.typeEnum(typevals[0]);
+        }
         return decoder;
     }
 }

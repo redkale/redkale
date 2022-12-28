@@ -72,7 +72,9 @@ public class ByteBufferReader {
     }
 
     public static byte[] toBytes(ByteBuffer[] buffers) {
-        if (buffers == null) return null;
+        if (buffers == null) {
+            return null;
+        }
         int size = 0;
         for (ByteBuffer buffer : buffers) {
             size += buffer.remaining();
@@ -89,7 +91,9 @@ public class ByteBufferReader {
 
     public static boolean hasRemaining(ByteBuffer... buffers) {
         for (ByteBuffer buf : buffers) {
-            if (buf.hasRemaining()) return true;
+            if (buf.hasRemaining()) {
+                return true;
+            }
         }
         return false;
     }
@@ -113,10 +117,16 @@ public class ByteBufferReader {
 
     public boolean hasRemaining() {
         boolean v = this.currBuffer.hasRemaining();
-        if (v) return v;
-        if (this.currIndex == this.buffers.length - 1) return false;
+        if (v) {
+            return v;
+        }
+        if (this.currIndex == this.buffers.length - 1) {
+            return false;
+        }
         for (int i = this.currIndex + 1; i < this.buffers.length; i++) {
-            if (this.buffers[i].hasRemaining()) return true;
+            if (this.buffers[i].hasRemaining()) {
+                return true;
+            }
         }
         return false;
     }
@@ -150,20 +160,26 @@ public class ByteBufferReader {
     public short getShort() {
         ByteBuffer buf = this.currBuffer;
         int remain = buf.remaining();
-        if (remain >= 2) return buf.getShort();
+        if (remain >= 2) {
+            return buf.getShort();
+        }
         if (remain == 0) {
             buf = this.buffers[++this.currIndex];
             this.currBuffer = buf;
             return buf.getShort();
         }
-        if (bigEndian) return (short) ((buf.get() << 8) | (get() & 0xff));
+        if (bigEndian) {
+            return (short) ((buf.get() << 8) | (get() & 0xff));
+        }
         return (short) ((buf.get() & 0xff) | (get() << 8));
     }
 
     public int getInt() {
         ByteBuffer buf = this.currBuffer;
         int remain = buf.remaining();
-        if (remain >= 4) return buf.getInt();
+        if (remain >= 4) {
+            return buf.getInt();
+        }
         if (remain == 0) {
             buf = this.buffers[++this.currIndex];
             this.currBuffer = buf;
@@ -214,7 +230,9 @@ public class ByteBufferReader {
     public long getLong() {
         ByteBuffer buf = this.currBuffer;
         int remain = buf.remaining();
-        if (remain >= 8) return buf.getLong();
+        if (remain >= 8) {
+            return buf.getLong();
+        }
         if (remain == 0) {
             buf = this.buffers[++this.currIndex];
             this.currBuffer = buf;

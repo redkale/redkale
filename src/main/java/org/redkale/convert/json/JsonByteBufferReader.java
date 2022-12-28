@@ -5,8 +5,8 @@
  */
 package org.redkale.convert.json;
 
-import java.nio.*;
-import java.nio.charset.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.UnmappableCharacterException;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 
@@ -34,7 +34,9 @@ public class JsonByteBufferReader extends JsonReader {
     protected JsonByteBufferReader(ConvertMask mask, ByteBuffer... buffers) {
         this.mask = mask;
         this.buffers = buffers;
-        if (buffers != null && buffers.length > 0) this.currentBuffer = buffers[currentIndex];
+        if (buffers != null && buffers.length > 0) {
+            this.currentBuffer = buffers[currentIndex];
+        }
     }
 
     @Override
@@ -80,7 +82,9 @@ public class JsonByteBufferReader extends JsonReader {
         }
         if (this.currentBuffer != null) {
             int remain = this.currentBuffer.remaining();
-            if (remain == 0 && this.currentIndex + 1 >= this.buffers.length) return 0;
+            if (remain == 0 && this.currentIndex + 1 >= this.buffers.length) {
+                return 0;
+            }
         }
         byte b = nextByte();
         if (b >= 0) {// 1 byte, 7 bits: 0xxxxxxx
@@ -91,7 +95,9 @@ public class JsonByteBufferReader extends JsonReader {
             return (char) ((b << 12) ^ (nextByte() << 6) ^ (nextByte() ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
         } else if ((b >> 3) == -2) {// 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
             int uc = ((b << 18) ^ (nextByte() << 12) ^ (nextByte() << 6) ^ (nextByte() ^ (((byte) 0xF0 << 18) ^ ((byte) 0x80 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
-            if (sb != null) sb.append(Character.highSurrogate(uc));
+            if (sb != null) {
+                sb.append(Character.highSurrogate(uc));
+            }
             return Character.lowSurrogate(uc);
         } else {
             throw new RuntimeException(new UnmappableCharacterException(4));
@@ -117,9 +123,15 @@ public class JsonByteBufferReader extends JsonReader {
     public final String readObjectB(final Class clazz) {
         this.fieldIndex = 0; //必须要重置为0
         char ch = nextGoodChar(true);
-        if (ch == '{') return "";
-        if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return null;
-        if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') return null;
+        if (ch == '{') {
+            return "";
+        }
+        if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') {
+            return null;
+        }
+        if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') {
+            return null;
+        }
         StringBuilder sb = new StringBuilder();
         sb.append(ch);
         char one;
@@ -142,9 +154,15 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     public final int readArrayB(DeMember member, byte[] typevals, Decodeable decoder) {
         char ch = nextGoodChar(true);
-        if (ch == '[' || ch == '{') return SIGN_NOLENGTH;
-        if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') return SIGN_NULL;
-        if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') return SIGN_NULL;
+        if (ch == '[' || ch == '{') {
+            return SIGN_NOLENGTH;
+        }
+        if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') {
+            return SIGN_NULL;
+        }
+        if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') {
+            return SIGN_NULL;
+        }
         StringBuilder sb = new StringBuilder();
         sb.append(ch);
         char one;
@@ -161,7 +179,9 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     public final void readBlank() {
         char ch = nextGoodChar(true);
-        if (ch == ':') return;
+        if (ch == ':') {
+            return;
+        }
         StringBuilder sb = new StringBuilder();
         sb.append(ch);
         char one;
@@ -180,7 +200,9 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     public final String readSmallString() {
         char ch = nextGoodChar(true);
-        if (ch == 0) return null;
+        if (ch == 0) {
+            return null;
+        }
         final StringBuilder sb = new StringBuilder();
         if (ch == '"' || ch == '\'') {
             final char quote = ch;

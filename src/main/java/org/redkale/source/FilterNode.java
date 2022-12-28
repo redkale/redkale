@@ -127,12 +127,20 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public Serializable findValue(final String col) {
-        if (this.column != null && this.column.equals(col)) return this.value;
-        if (this.nodes == null) return null;
+        if (this.column != null && this.column.equals(col)) {
+            return this.value;
+        }
+        if (this.nodes == null) {
+            return null;
+        }
         for (FilterNode n : this.nodes) {
-            if (n == null) continue;
+            if (n == null) {
+                continue;
+            }
             Serializable val = n.findValue(col);
-            if (val != null) return val;
+            if (val != null) {
+                return val;
+            }
         }
         return null;
     }
@@ -170,7 +178,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     protected FilterNode any(FilterNode node, boolean signor) {
-        if (this.readOnly) throw new SourceException("FilterNode(" + this + ") is ReadOnly");
+        if (this.readOnly) {
+            throw new SourceException("FilterNode(" + this + ") is ReadOnly");
+        }
         Objects.requireNonNull(node);
         if (this.column == null) {
             this.column = node.column;
@@ -213,12 +223,18 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
      * @return SQL的join语句 不存在返回null
      */
     protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
-        if (joinTabalis == null || this.nodes == null) return null;
+        if (joinTabalis == null || this.nodes == null) {
+            return null;
+        }
         StringBuilder sb = null;
         for (FilterNode node : this.nodes) {
             CharSequence cs = node.createSQLJoin(func, update, joinTabalis, haset, info);
-            if (cs == null) continue;
-            if (sb == null) sb = new StringBuilder();
+            if (cs == null) {
+                continue;
+            }
+            if (sb == null) {
+                sb = new StringBuilder();
+            }
             sb.append(cs);
         }
         return sb;
@@ -230,22 +246,30 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
      * @return 是否存在关联表
      */
     protected boolean isjoin() {
-        if (this.nodes == null) return false;
+        if (this.nodes == null) {
+            return false;
+        }
         for (FilterNode node : this.nodes) {
-            if (node.isjoin()) return true;
+            if (node.isjoin()) {
+                return true;
+            }
         }
         return false;
     }
 
     protected final Map<Class, String> getJoinTabalis() {
-        if (!isjoin()) return null;
+        if (!isjoin()) {
+            return null;
+        }
         Map<Class, String> map = new HashMap<>();
         putJoinTabalis(map);
         return map;
     }
 
     protected void putJoinTabalis(Map<Class, String> map) {
-        if (this.nodes == null) return;
+        if (this.nodes == null) {
+            return;
+        }
         for (FilterNode node : this.nodes) {
             node.putJoinTabalis(map);
         }
@@ -259,9 +283,13 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
      * @return 是否可以使用缓存
      */
     protected boolean isCacheUseable(final Function<Class, EntityInfo> entityApplyer) {
-        if (this.nodes == null) return true;
+        if (this.nodes == null) {
+            return true;
+        }
         for (FilterNode node : this.nodes) {
-            if (!node.isCacheUseable(entityApplyer)) return false;
+            if (!node.isCacheUseable(entityApplyer)) {
+                return false;
+            }
         }
         return true;
     }
@@ -279,7 +307,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     protected <T> CharSequence createSQLExpress(DataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
         CharSequence sb0 = this.column == null || this.column.isEmpty() || this.column.charAt(0) == '#' || info == null
             ? null : createElementSQLExpress(source, info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
-        if (this.nodes == null) return sb0;
+        if (this.nodes == null) {
+            return sb0;
+        }
         final StringBuilder rs = new StringBuilder();
         rs.append('(');
         boolean more = false;
@@ -289,13 +319,19 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         }
         for (FilterNode node : this.nodes) {
             CharSequence f = node.createSQLExpress(source, info, joinTabalis);
-            if (f == null || f.length() < 3) continue;
-            if (more) rs.append(or ? " OR " : " AND ");
+            if (f == null || f.length() < 3) {
+                continue;
+            }
+            if (more) {
+                rs.append(or ? " OR " : " AND ");
+            }
             rs.append(f);
             more = true;
         }
         rs.append(')');
-        if (rs.length() < 5) return null;
+        if (rs.length() < 5) {
+            return null;
+        }
         return rs;
     }
 
@@ -331,18 +367,24 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     private static boolean needSplit(final FilterExpress express, final Object val0) {
-        if (val0 == null) return false;
+        if (val0 == null) {
+            return false;
+        }
         boolean items = express != IN && express != NOTIN;  //是否数组集合的表达式
         if (!items) {
             if (val0.getClass().isArray()) {
                 Class comp = val0.getClass().getComponentType();
-                if (comp == java.io.Serializable.class) comp = ((Object[]) val0)[0].getClass();
+                if (comp == java.io.Serializable.class) {
+                    comp = ((Object[]) val0)[0].getClass();
+                }
                 if (!(comp.isPrimitive() || CharSequence.class.isAssignableFrom(comp) || Number.class.isAssignableFrom(comp))) {
                     items = true;
                 }
             } else if (val0 instanceof Collection) {
                 for (Object fv : (Collection) val0) {
-                    if (fv == null) continue;
+                    if (fv == null) {
+                        continue;
+                    }
                     Class comp = fv.getClass();
                     if (!(comp.isPrimitive() || CharSequence.class.isAssignableFrom(comp) || Number.class.isAssignableFrom(comp))) {
                         items = true;
@@ -360,29 +402,49 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             if (val0 instanceof Collection) {
                 StringBuilder sb = new StringBuilder();
                 boolean more = ((Collection) val0).size() > 1;
-                if (more) sb.append('(');
+                if (more) {
+                    sb.append('(');
+                }
                 for (Object fv : (Collection) val0) {
-                    if (fv == null) continue;
+                    if (fv == null) {
+                        continue;
+                    }
                     CharSequence cs = createElementSQLExpress(source, info, talis, fv);
-                    if (cs == null) continue;
-                    if (sb.length() > 2) sb.append(itemand ? " AND " : " OR ");
+                    if (cs == null) {
+                        continue;
+                    }
+                    if (sb.length() > 2) {
+                        sb.append(itemand ? " AND " : " OR ");
+                    }
                     sb.append(cs);
                 }
-                if (more) sb.append(')');
+                if (more) {
+                    sb.append(')');
+                }
                 return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
             } else if (val0.getClass().isArray()) {
                 StringBuilder sb = new StringBuilder();
                 Object[] fvs = (Object[]) val0;
                 boolean more = fvs.length > 1;
-                if (more) sb.append('(');
+                if (more) {
+                    sb.append('(');
+                }
                 for (Object fv : fvs) {
-                    if (fv == null) continue;
+                    if (fv == null) {
+                        continue;
+                    }
                     CharSequence cs = createElementSQLExpress(source, info, talis, fv);
-                    if (cs == null) continue;
-                    if (sb.length() > 2) sb.append(itemand ? " AND " : " OR ");
+                    if (cs == null) {
+                        continue;
+                    }
+                    if (sb.length() > 2) {
+                        sb.append(itemand ? " AND " : " OR ");
+                    }
                     sb.append(cs);
                 }
-                if (more) sb.append(')');
+                if (more) {
+                    sb.append(')');
+                }
                 return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
             }
         }
@@ -391,15 +453,21 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     private <T> CharSequence createElementSQLExpress(DataSqlSource source, final EntityInfo<T> info, String talis, Object val0) {
-        if (column == null || this.column.isEmpty() || this.column.charAt(0) == '#') return null;
-        if (talis == null) talis = "a";
+        if (column == null || this.column.isEmpty() || this.column.charAt(0) == '#') {
+            return null;
+        }
+        if (talis == null) {
+            talis = "a";
+        }
         if (express == ISNULL || express == ISNOTNULL) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
         if (express == ISEMPTY || express == ISNOTEMPTY) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(" ''");
         }
-        if (val0 == null) return null;
+        if (val0 == null) {
+            return null;
+        }
         if (express == FV_MOD || express == FV_DIV) {
             FilterValue fv = (FilterValue) val0;
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(' ').append(fv.getOptvalue())
@@ -407,19 +475,31 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         }
         final boolean fk = (val0 instanceof FilterKey);
         CharSequence val = fk ? info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) : formatToString(express, info.getSQLValue(column, (Serializable) val0));
-        if (val == null) return null;
+        if (val == null) {
+            return null;
+        }
         StringBuilder sb = new StringBuilder(32);
-        if (express == CONTAIN) return source.containSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
-        if (express == IGNORECASECONTAIN) return source.containSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
-        if (express == NOTCONTAIN) return source.notContainSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
-        if (express == IGNORECASENOTCONTAIN) return source.notContainSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
+        if (express == CONTAIN) {
+            return source.containSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
+        }
+        if (express == IGNORECASECONTAIN) {
+            return source.containSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
+        }
+        if (express == NOTCONTAIN) {
+            return source.notContainSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
+        }
+        if (express == IGNORECASENOTCONTAIN) {
+            return source.notContainSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
+        }
 
         if (express == LENGTH_EQUAL || express == LENGTH_LESSTHAN || express == LENGTH_LESSTHANOREQUALTO
             || express == LENGTH_GREATERTHAN || express == LENGTH_GREATERTHANOREQUALTO) {
             sb.append("LENGTH(").append(info.getSQLColumn(talis, column)).append(')');
         } else if (express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL || express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
-            if (fk) val = "LOWER(" + info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) + ')';
+            if (fk) {
+                val = "LOWER(" + info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) + ')';
+            }
         } else {
             sb.append(info.getSQLColumn(talis, column));
         }
@@ -440,12 +520,18 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     protected <T, E> Predicate<T> createPredicate(final EntityCache<T> cache) {
-        if (cache == null || (column == null && this.nodes == null)) return null;
+        if (cache == null || (column == null && this.nodes == null)) {
+            return null;
+        }
         Predicate<T> filter = createElementPredicate(cache, false);
-        if (this.nodes == null) return filter;
+        if (this.nodes == null) {
+            return filter;
+        }
         for (FilterNode node : this.nodes) {
             Predicate<T> f = node.createPredicate(cache);
-            if (f == null) continue;
+            if (f == null) {
+                continue;
+            }
             final Predicate<T> one = filter;
             final Predicate<T> two = f;
             filter = (filter == null) ? f : (or ? new Predicate<T>() {
@@ -476,7 +562,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join) {
-        if (this.column == null || this.column.isEmpty() || this.column.charAt(0) == '#') return null;
+        if (this.column == null || this.column.isEmpty() || this.column.charAt(0) == '#') {
+            return null;
+        }
         return createElementPredicate(cache, join, cache.getAttribute(column));
     }
 
@@ -487,9 +575,13 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             if (val0 instanceof Collection) {
                 Predicate<T> filter = null;
                 for (Object fv : (Collection) val0) {
-                    if (fv == null) continue;
+                    if (fv == null) {
+                        continue;
+                    }
                     Predicate<T> f = createElementPredicate(cache, join, attr, fv);
-                    if (f == null) continue;
+                    if (f == null) {
+                        continue;
+                    }
                     final Predicate<T> one = filter;
                     final Predicate<T> two = f;
                     filter = (filter == null) ? f : (!itemand ? new Predicate<T>() {
@@ -580,9 +672,13 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 }
                 Predicate<T> filter = null;
                 for (Object fv : (Object[]) val2) {
-                    if (fv == null) continue;
+                    if (fv == null) {
+                        continue;
+                    }
                     Predicate<T> f = createElementPredicate(cache, join, attr, fv);
-                    if (f == null) continue;
+                    if (f == null) {
+                        continue;
+                    }
                     final Predicate<T> one = filter;
                     final Predicate<T> two = f;
                     filter = (filter == null) ? f : (!itemand ? new Predicate<T>() {
@@ -617,9 +713,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     @SuppressWarnings("unchecked")
     protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr, Object val0) {
-        if (attr == null) return null;
+        if (attr == null) {
+            return null;
+        }
         final String field = join ? (cache.getType().getSimpleName() + "." + attr.field()) : attr.field();
-        if (express == ISNULL) return new Predicate<T>() {
+        if (express == ISNULL) {
+            return new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -631,7 +730,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     return field + " = null";
                 }
             };
-        if (express == ISNOTNULL) return new Predicate<T>() {
+        }
+        if (express == ISNOTNULL) {
+            return new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -643,7 +744,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     return field + " != null";
                 }
             };
-        if (express == ISEMPTY) return new Predicate<T>() {
+        }
+        if (express == ISEMPTY) {
+            return new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -656,7 +759,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     return field + " = ''";
                 }
             };
-        if (express == ISNOTEMPTY) return new Predicate<T>() {
+        }
+        if (express == ISNOTEMPTY) {
+            return new Predicate<T>() {
 
                 @Override
                 public boolean test(T t) {
@@ -669,7 +774,10 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     return field + " != ''";
                 }
             };
-        if (val0 == null) return null;
+        }
+        if (val0 == null) {
+            return null;
+        }
 
         final Class atype = attr.type();
         final Class valtype = val0.getClass();
@@ -689,10 +797,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             }
         } else if (valtype.isArray()) {
             final int len = Array.getLength(val0);
-            if (len == 0 && express == NOTIN) return null;
+            if (len == 0 && express == NOTIN) {
+                return null;
+            }
             final Class compType = valtype.getComponentType();
             if (atype != compType && len > 0) {
-                if (!compType.isPrimitive() && Number.class.isAssignableFrom(compType)) throw new SourceException("param(" + val0 + ") type not match " + atype + " for column " + column);
+                if (!compType.isPrimitive() && Number.class.isAssignableFrom(compType)) {
+                    throw new SourceException("param(" + val0 + ") type not match " + atype + " for column " + column);
+                }
                 if (atype == int.class || atype == Integer.class) {
                     int[] vs = new int[len];
                     for (int i = 0; i < len; i++) {
@@ -733,7 +845,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             }
         } else if (val0 instanceof Collection) {
             final Collection collection = (Collection) val0;
-            if (collection.isEmpty() && express == NOTIN) return null;
+            if (collection.isEmpty() && express == NOTIN) {
+                return null;
+            }
             if (!collection.isEmpty()) {
                 Iterator it = collection.iterator();
                 it.hasNext();
@@ -786,7 +900,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         final Serializable val = (Serializable) val0;
         final boolean fk = (val instanceof FilterKey);
         final Attribute<T, Serializable> fkattr = fk ? cache.getAttribute(((FilterKey) val).getColumn()) : null;
-        if (fk && fkattr == null) throw new SourceException(cache.getType() + " not found column(" + ((FilterKey) val).getColumn() + ")");
+        if (fk && fkattr == null) {
+            throw new SourceException(cache.getType() + " not found column(" + ((FilterKey) val).getColumn() + ")");
+        }
         switch (express) {
             case EQUAL:
                 return fk ? new Predicate<T>() {
@@ -819,8 +935,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     public boolean test(T t) {
                         Object rs = attr.get(t);
                         Object rs2 = fkattr.get(t);
-                        if (rs == null && rs2 == null) return true;
-                        if (rs == null || rs2 == null) return false;
+                        if (rs == null && rs2 == null) {
+                            return true;
+                        }
+                        if (rs == null || rs2 == null) {
+                            return false;
+                        }
                         return Objects.equals(rs.toString().toLowerCase(), rs2.toString().toLowerCase());
                     }
 
@@ -833,7 +953,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     @Override
                     public boolean test(T t) {
                         Object rs = attr.get(t);
-                        if (rs == null) return false;
+                        if (rs == null) {
+                            return false;
+                        }
                         return val.toString().equalsIgnoreCase(rs.toString());
                     }
 
@@ -873,8 +995,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     public boolean test(T t) {
                         Object rs = attr.get(t);
                         Object rs2 = fkattr.get(t);
-                        if (rs == null && rs2 == null) return false;
-                        if (rs == null || rs2 == null) return true;
+                        if (rs == null && rs2 == null) {
+                            return false;
+                        }
+                        if (rs == null || rs2 == null) {
+                            return true;
+                        }
                         return !Objects.equals(rs.toString().toLowerCase(), rs2.toString().toLowerCase());
                     }
 
@@ -887,7 +1013,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     @Override
                     public boolean test(T t) {
                         Object rs = attr.get(t);
-                        if (rs == null) return true;
+                        if (rs == null) {
+                            return true;
+                        }
                         return !val.toString().equalsIgnoreCase(rs.toString());
                     }
 
@@ -1315,7 +1443,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 };
             case IGNORECASELIKE:
-                if (fk) return new Predicate<T>() {
+                if (fk) {
+                    return new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
@@ -1329,6 +1458,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
                         }
                     };
+                }
                 final String valstr = val.toString().toLowerCase();
                 return new Predicate<T>() {
 
@@ -1398,7 +1528,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 };
             case IGNORECASENOTLIKE:
-                if (fk) return new Predicate<T>() {
+                if (fk) {
+                    return new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
@@ -1412,6 +1543,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
                         }
                     };
+                }
                 final String valstr2 = val.toString().toLowerCase();
                 return new Predicate<T>() {
 
@@ -1529,7 +1661,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 };
             case IGNORECASECONTAIN:
-                if (fk) return new Predicate<T>() {
+                if (fk) {
+                    return new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
@@ -1543,6 +1676,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             return " LOWER(" + fkattr.field() + ") " + express.value() + ' ' + "LOWER(" + field + ") ";
                         }
                     };
+                }
                 final String valstr3 = val.toString().toLowerCase();
                 return new Predicate<T>() {
 
@@ -1585,7 +1719,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 };
             case IGNORECASENOTCONTAIN:
-                if (fk) return new Predicate<T>() {
+                if (fk) {
+                    return new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
@@ -1599,6 +1734,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             return " LOWER(" + fkattr.field() + ") " + express.value() + ' ' + "LOWER(" + field + ") ";
                         }
                     };
+                }
                 final String valstr4 = val.toString().toLowerCase();
                 return new Predicate<T>() {
 
@@ -1618,13 +1754,18 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 Range range = (Range) val;
                 final Comparable min = range.getMin();
                 final Comparable max = range.getMax();
-                if (express == BETWEEN) return new Predicate<T>() {
+                if (express == BETWEEN) {
+                    return new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
                             Comparable rs = (Comparable) attr.get(t);
-                            if (rs == null) return false;
-                            if (min != null && min.compareTo(rs) >= 0) return false;
+                            if (rs == null) {
+                                return false;
+                            }
+                            if (min != null && min.compareTo(rs) >= 0) {
+                                return false;
+                            }
                             return !(max != null && max.compareTo(rs) <= 0);
                         }
 
@@ -1633,13 +1774,19 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             return field + " BETWEEN " + min + " AND " + max;
                         }
                     };
-                if (express == NOTBETWEEN) return new Predicate<T>() {
+                }
+                if (express == NOTBETWEEN) {
+                    return new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
                             Comparable rs = (Comparable) attr.get(t);
-                            if (rs == null) return true;
-                            if (min != null && min.compareTo(rs) >= 0) return true;
+                            if (rs == null) {
+                                return true;
+                            }
+                            if (min != null && min.compareTo(rs) >= 0) {
+                                return true;
+                            }
                             return (max != null && max.compareTo(rs) <= 0);
                         }
 
@@ -1648,6 +1795,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             return field + " NOT BETWEEN " + min + " AND " + max;
                         }
                     };
+                }
                 return null;
             case IN:
             case NOTIN:
@@ -1703,10 +1851,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             @Override
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
-                                if (rs == null) return false;
+                                if (rs == null) {
+                                    return false;
+                                }
                                 int k = (int) rs;
                                 for (int v : (int[]) val) {
-                                    if (v == k) return true;
+                                    if (v == k) {
+                                        return true;
+                                    }
                                 }
                                 return false;
                             }
@@ -1722,10 +1874,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             @Override
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
-                                if (rs == null) return false;
+                                if (rs == null) {
+                                    return false;
+                                }
                                 short k = (short) rs;
                                 for (short v : (short[]) val) {
-                                    if (v == k) return true;
+                                    if (v == k) {
+                                        return true;
+                                    }
                                 }
                                 return false;
                             }
@@ -1741,10 +1897,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             @Override
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
-                                if (rs == null) return false;
+                                if (rs == null) {
+                                    return false;
+                                }
                                 long k = (long) rs;
                                 for (long v : (long[]) val) {
-                                    if (v == k) return true;
+                                    if (v == k) {
+                                        return true;
+                                    }
                                 }
                                 return false;
                             }
@@ -1760,10 +1920,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             @Override
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
-                                if (rs == null) return false;
+                                if (rs == null) {
+                                    return false;
+                                }
                                 float k = (float) rs;
                                 for (float v : (float[]) val) {
-                                    if (v == k) return true;
+                                    if (v == k) {
+                                        return true;
+                                    }
                                 }
                                 return false;
                             }
@@ -1779,10 +1943,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             @Override
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
-                                if (rs == null) return false;
+                                if (rs == null) {
+                                    return false;
+                                }
                                 double k = (double) rs;
                                 for (double v : (double[]) val) {
-                                    if (v == k) return true;
+                                    if (v == k) {
+                                        return true;
+                                    }
                                 }
                                 return false;
                             }
@@ -1798,9 +1966,13 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                             @Override
                             public boolean test(T t) {
                                 Object rs = attr.get(t);
-                                if (rs == null) return false;
+                                if (rs == null) {
+                                    return false;
+                                }
                                 for (Object v : (Object[]) val) {
-                                    if (rs.equals(v)) return true;
+                                    if (rs.equals(v)) {
+                                        return true;
+                                    }
                                 }
                                 return false;
                             }
@@ -1841,17 +2013,25 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         StringBuilder sb = new StringBuilder();
         StringBuilder element = toElementString(prefix);
         boolean more = element != null && element.length() > 0 && this.nodes != null;
-        if (more) sb.append('(');
+        if (more) {
+            sb.append('(');
+        }
         sb.append(element);
         if (this.nodes != null) {
             for (FilterNode node : this.nodes) {
                 String s = node.toString();
-                if (s.length() < 1) continue;
-                if (sb.length() > 1) sb.append(or ? " OR " : " AND ");
+                if (s.length() < 1) {
+                    continue;
+                }
+                if (sb.length() > 1) {
+                    sb.append(or ? " OR " : " AND ");
+                }
                 sb.append(s);
             }
         }
-        if (more) sb.append(')');
+        if (more) {
+            sb.append(')');
+        }
         return sb;
     }
 
@@ -1861,29 +2041,49 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             if (val0 instanceof Collection) {
                 StringBuilder sb = new StringBuilder();
                 boolean more = ((Collection) val0).size() > 1;
-                if (more) sb.append('(');
+                if (more) {
+                    sb.append('(');
+                }
                 for (Object fv : (Collection) val0) {
-                    if (fv == null) continue;
+                    if (fv == null) {
+                        continue;
+                    }
                     CharSequence cs = toElementString(prefix, fv);
-                    if (cs == null) continue;
-                    if (sb.length() > 2) sb.append(itemand ? " AND " : " OR ");
+                    if (cs == null) {
+                        continue;
+                    }
+                    if (sb.length() > 2) {
+                        sb.append(itemand ? " AND " : " OR ");
+                    }
                     sb.append(cs);
                 }
-                if (more) sb.append(')');
+                if (more) {
+                    sb.append(')');
+                }
                 return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
             } else if (val0.getClass().isArray()) {
                 StringBuilder sb = new StringBuilder();
                 Object[] fvs = (Object[]) val0;
                 boolean more = fvs.length > 1;
-                if (more) sb.append('(');
+                if (more) {
+                    sb.append('(');
+                }
                 for (Object fv : fvs) {
-                    if (fv == null) continue;
+                    if (fv == null) {
+                        continue;
+                    }
                     CharSequence cs = toElementString(prefix, fv);
-                    if (cs == null) continue;
-                    if (sb.length() > 2) sb.append(itemand ? " AND " : " OR ");
+                    if (cs == null) {
+                        continue;
+                    }
+                    if (sb.length() > 2) {
+                        sb.append(itemand ? " AND " : " OR ");
+                    }
                     sb.append(cs);
                 }
-                if (more) sb.append(')');
+                if (more) {
+                    sb.append(')');
+                }
                 return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
             }
         }
@@ -1912,8 +2112,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     private static CharSequence formatToString(FilterExpress express, Object value) {
-        if (value == null) return null;
-        if (value instanceof Number) return String.valueOf(value);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number) {
+            return String.valueOf(value);
+        }
         if (value instanceof CharSequence) {
             if (express == LIKE || express == NOTLIKE) {
                 value = "%" + value + '%';
@@ -1946,16 +2150,22 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             return sb;
         } else if (value.getClass().isArray()) {
             int len = Array.getLength(value);
-            if (len == 0) return express == NOTIN ? null : new StringBuilder("(NULL)");
+            if (len == 0) {
+                return express == NOTIN ? null : new StringBuilder("(NULL)");
+            }
             if (len == 1) {
                 Object firstval = Array.get(value, 0);
-                if (firstval != null && firstval.getClass().isArray()) return formatToString(express, firstval);
+                if (firstval != null && firstval.getClass().isArray()) {
+                    return formatToString(express, firstval);
+                }
             }
             StringBuilder sb = new StringBuilder();
             sb.append('(');
             for (int i = 0; i < len; i++) {
                 Object o = Array.get(value, i);
-                if (sb.length() > 1) sb.append(',');
+                if (sb.length() > 1) {
+                    sb.append(',');
+                }
                 if (o instanceof CharSequence) {
                     sb.append('\'').append(o.toString().replace("'", "\\'")).append('\'');
                 } else {
@@ -1965,11 +2175,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             return sb.append(')');
         } else if (value instanceof Collection) {
             Collection c = (Collection) value;
-            if (c.isEmpty()) return express == NOTIN ? null : new StringBuilder("(NULL)");
+            if (c.isEmpty()) {
+                return express == NOTIN ? null : new StringBuilder("(NULL)");
+            }
             StringBuilder sb = new StringBuilder();
             sb.append('(');
             for (Object o : c) {
-                if (sb.length() > 1) sb.append(',');
+                if (sb.length() > 1) {
+                    sb.append(',');
+                }
                 if (o instanceof CharSequence) {
                     sb.append('\'').append(o.toString().replace("'", "\\'")).append('\'');
                 } else {

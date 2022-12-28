@@ -5,10 +5,9 @@
  */
 package org.redkale.convert;
 
-import org.redkale.util.Creator;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
+import org.redkale.util.Creator;
 
 /**
  * Map的反序列化操作类 <br>
@@ -108,7 +107,9 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         byte[] typevals = new byte[2];
         int len = in.readMapB(member, typevals, this.keyDecoder, this.valueDecoder);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(member, null);
             len = Reader.SIGN_NOLENGTH;
@@ -121,7 +122,9 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader entryReader = getEntryReader(in, member, first);
-                if (entryReader == null) break;
+                if (entryReader == null) {
+                    break;
+                }
                 K key = readKeyMember(entryReader, member, kdecoder, first);
                 entryReader.readBlank();
                 V value = readValueMember(entryReader, member, vdecoder, first);

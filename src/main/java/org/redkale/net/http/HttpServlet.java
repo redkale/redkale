@@ -10,9 +10,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.*;
-import org.redkale.asm.*;
+import java.util.function.BiConsumer;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.boot.Application;
 import org.redkale.net.*;
@@ -126,10 +126,14 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     @SuppressWarnings("unchecked")
     void preInit(Application application, HttpContext context, AnyValue config) {
-        if (this.mappings != null) return; //无需重复preInit
+        if (this.mappings != null) {
+            return; //无需重复preInit
+        }
         String path = _prefix == null ? "" : _prefix;
         WebServlet ws = this.getClass().getAnnotation(WebServlet.class);
-        if (ws != null && !ws.repair()) path = "";
+        if (ws != null && !ws.repair()) {
+            path = "";
+        }
         HashMap<String, ActionEntry> map = this._actionmap != null ? this._actionmap : loadActionEntry();
         this.mappings = new Map.Entry[map.size()];
         int i = -1;
@@ -241,29 +245,43 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         final Class selfClz = this.getClass();
         Class clz = this.getClass();
         do {
-            if (java.lang.reflect.Modifier.isAbstract(clz.getModifiers())) break;
+            if (java.lang.reflect.Modifier.isAbstract(clz.getModifiers())) {
+                break;
+            }
             RedkaleClassLoader.putReflectionPublicMethods(clz.getName());
             for (final Method method : clz.getMethods()) {
                 //-----------------------------------------------
                 String methodname = method.getName();
-                if ("service".equals(methodname) || "preExecute".equals(methodname) || "execute".equals(methodname) || "authenticate".equals(methodname)) continue;
+                if ("service".equals(methodname) || "preExecute".equals(methodname) || "execute".equals(methodname) || "authenticate".equals(methodname)) {
+                    continue;
+                }
                 //-----------------------------------------------
                 Class[] paramTypes = method.getParameterTypes();
-                if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class || paramTypes[1] != HttpResponse.class) continue;
+                if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class || paramTypes[1] != HttpResponse.class) {
+                    continue;
+                }
                 //-----------------------------------------------
                 Class[] exps = method.getExceptionTypes();
-                if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) continue;
+                if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) {
+                    continue;
+                }
                 //-----------------------------------------------
 
                 final HttpMapping mapping = method.getAnnotation(HttpMapping.class);
-                if (mapping == null) continue;
+                if (mapping == null) {
+                    continue;
+                }
                 final boolean inherited = mapping.inherited();
-                if (!inherited && selfClz != clz) continue; //忽略不被继承的方法
+                if (!inherited && selfClz != clz) {
+                    continue; //忽略不被继承的方法
+                }
                 final int actionid = mapping.actionid();
                 final String name = mapping.url().trim();
                 final String[] methods = mapping.methods();
                 if (nameset.containsKey(name)) {
-                    if (nameset.get(name) != clz) continue;
+                    if (nameset.get(name) != clz) {
+                        continue;
+                    }
                     throw new RuntimeException(this.getClass().getSimpleName() + " have two same " + HttpMapping.class.getSimpleName() + "(" + name + ")");
                 }
                 nameset.put(name, clz);
@@ -296,7 +314,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 this.cache = cacheSeconds > 0 ? new ConcurrentHashMap<>() : null;
                 this.cacheHandler = cacheSeconds > 0 ? (HttpResponse response, byte[] content) -> {
                     int status = response.getStatus();
-                    if (status != 200) return;
+                    if (status != 200) {
+                        return;
+                    }
                     CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), content);
                     cache.put(response.getRequest().getRequestURI(), ce);
                 } : null;
@@ -305,7 +325,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 this.cache = null;
                 this.cacheHandler = cacheSeconds > 0 ? (HttpResponse response, byte[] content) -> {
                     int status = response.getStatus();
-                    if (status != 200) return;
+                    if (status != 200) {
+                        return;
+                    }
                     oneCache = new CacheEntry(response.getStatus(), response.getContentType(), content);
                 } : null;
             }
@@ -336,9 +358,13 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         }
 
         boolean checkMethod(final String reqMethod) {
-            if (methods.length == 0) return true;
+            if (methods.length == 0) {
+                return true;
+            }
             for (String m : methods) {
-                if (reqMethod.equalsIgnoreCase(m)) return true;
+                if (reqMethod.equalsIgnoreCase(m)) {
+                    return true;
+                }
             }
             return false;
         }

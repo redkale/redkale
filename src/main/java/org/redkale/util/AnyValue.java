@@ -9,7 +9,6 @@ import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
-
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertDisabled;
 
@@ -170,7 +169,9 @@ public abstract class AnyValue {
                 rs.stringEntrys = new Entry[this.stringEntrys.length];
                 for (int i = 0; i < rs.stringEntrys.length; i++) {
                     Entry<String> en = this.stringEntrys[i];
-                    if (en == null) continue;
+                    if (en == null) {
+                        continue;
+                    }
                     rs.stringEntrys[i] = new Entry(en.name, en.value);
                 }
             }
@@ -178,7 +179,9 @@ public abstract class AnyValue {
                 rs.anyEntrys = new Entry[this.anyEntrys.length];
                 for (int i = 0; i < rs.anyEntrys.length; i++) {
                     Entry<DefaultAnyValue> en = this.anyEntrys[i];
-                    if (en == null) continue;
+                    if (en == null) {
+                        continue;
+                    }
                     rs.anyEntrys[i] = new Entry(en.name, en.value == null ? null : en.value.copy());
                 }
             }
@@ -219,25 +222,35 @@ public abstract class AnyValue {
         }
 
         protected DefaultAnyValue merge(AnyValue node0, String path, MergeFunction func) {
-            if (node0 == null) return this;
-            if (node0 == this) throw new IllegalArgumentException();
+            if (node0 == null) {
+                return this;
+            }
+            if (node0 == this) {
+                throw new IllegalArgumentException();
+            }
             DefaultAnyValue node = (DefaultAnyValue) node0;
             if (node.stringEntrys != null) {
                 for (Entry<String> en : node.stringEntrys) {
-                    if (en == null) continue;
+                    if (en == null) {
+                        continue;
+                    }
                     setValue(en.name, en.value);
                 }
             }
             if (node.anyEntrys != null) {
                 for (Entry<DefaultAnyValue> en : node.anyEntrys) {
-                    if (en == null || en.value == null) continue;
+                    if (en == null || en.value == null) {
+                        continue;
+                    }
                     Entry<AnyValue>[] ns = getAnyValueEntrys(en.name);
                     if (ns == null || ns.length < 1) {
                         addValue(en.name, en.value);
                     } else {
                         boolean ok = false;
                         for (Entry<AnyValue> item : ns) {
-                            if (item == null) continue;
+                            if (item == null) {
+                                continue;
+                            }
                             if (item.value != null && en.value.parentArrayIndex == ((DefaultAnyValue) item.value).parentArrayIndex) {
                                 if (func == null) {
                                     item.value.merge(en.value, func);
@@ -278,11 +291,17 @@ public abstract class AnyValue {
          * @return DefaultAnyValue
          */
         public DefaultAnyValue addAllStringSet(final AnyValue av) {
-            if (av == null) return this;
+            if (av == null) {
+                return this;
+            }
             final Entry<String>[] strings = av.getStringEntrys();
-            if (strings == null) return this;
+            if (strings == null) {
+                return this;
+            }
             for (Entry<String> en : strings) {
-                if (!existsValue(en.name)) this.addValue(en.name, en.value);
+                if (!existsValue(en.name)) {
+                    this.addValue(en.name, en.value);
+                }
             }
             return this;
         }
@@ -295,7 +314,9 @@ public abstract class AnyValue {
          * @return DefaultAnyValue
          */
         public DefaultAnyValue addAll(final AnyValue av) {
-            if (av == null) return this;
+            if (av == null) {
+                return this;
+            }
             if (av instanceof DefaultAnyValue) {
                 final DefaultAnyValue adv = (DefaultAnyValue) av;
                 if (adv.stringEntrys != null) {
@@ -333,7 +354,9 @@ public abstract class AnyValue {
          * @return DefaultAnyValue
          */
         public DefaultAnyValue setAll(final AnyValue av) {
-            if (av == null) return this;
+            if (av == null) {
+                return this;
+            }
             if (av instanceof DefaultAnyValue) {
                 final DefaultAnyValue adv = (DefaultAnyValue) av;
                 if (adv.stringEntrys != null) {
@@ -452,14 +475,20 @@ public abstract class AnyValue {
         public String toString() {
             return toString(0, (any, space) -> {
                 int index = ((DefaultAnyValue) any).parentArrayIndex;
-                if (index < 0) return null;
+                if (index < 0) {
+                    return null;
+                }
                 return new StringBuilder().append(space).append("    '$index': ").append(index).append(",\r\n");
             });
         }
 
         public DefaultAnyValue clear() {
-            if (this.stringEntrys != null && this.stringEntrys.length > 0) this.stringEntrys = new Entry[0];
-            if (this.anyEntrys != null && this.anyEntrys.length > 0) this.anyEntrys = new Entry[0];
+            if (this.stringEntrys != null && this.stringEntrys.length > 0) {
+                this.stringEntrys = new Entry[0];
+            }
+            if (this.anyEntrys != null && this.anyEntrys.length > 0) {
+                this.anyEntrys = new Entry[0];
+            }
             return this;
         }
 
@@ -536,28 +565,36 @@ public abstract class AnyValue {
 
         public DefaultAnyValue removeAnyValues(String name) {
             Objects.requireNonNull(name);
-            if (this.anyEntrys == null) return this;
+            if (this.anyEntrys == null) {
+                return this;
+            }
             this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name));
             return this;
         }
 
         public DefaultAnyValue removeValue(String name, AnyValue value) {
             Objects.requireNonNull(name);
-            if (value == null || this.anyEntrys == null) return this;
+            if (value == null || this.anyEntrys == null) {
+                return this;
+            }
             this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
             return this;
         }
 
         public DefaultAnyValue removeStringValues(String name) {
             Objects.requireNonNull(name);
-            if (this.stringEntrys == null) return this;
+            if (this.stringEntrys == null) {
+                return this;
+            }
             this.stringEntrys = Utility.remove(this.stringEntrys, (t) -> name.equals(((Entry) t).name));
             return this;
         }
 
         public DefaultAnyValue removeValue(String name, String value) {
             Objects.requireNonNull(name);
-            if (value == null || this.stringEntrys == null) return this;
+            if (value == null || this.stringEntrys == null) {
+                return this;
+            }
             this.stringEntrys = Utility.remove(this.stringEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
             return this;
         }
@@ -642,7 +679,9 @@ public abstract class AnyValue {
                     ++len;
                 }
             }
-            if (len == 0) return new Entry[len];
+            if (len == 0) {
+                return new Entry[len];
+            }
             Entry[] rs = new Entry[len];
             int i = 0;
             for (Entry<DefaultAnyValue> en : entitys) {
@@ -660,7 +699,9 @@ public abstract class AnyValue {
                     ++len;
                 }
             }
-            if (len == 0) return new String[len];
+            if (len == 0) {
+                return new String[len];
+            }
             String[] rs = new String[len];
             int i = 0;
             for (Entry<String> en : entitys) {
@@ -678,7 +719,9 @@ public abstract class AnyValue {
                     ++len;
                 }
             }
-            if (len == 0) return new AnyValue[len];
+            if (len == 0) {
+                return new AnyValue[len];
+            }
             AnyValue[] rs = new AnyValue[len];
             int i = 0;
             for (Entry<DefaultAnyValue> en : entitys) {
@@ -699,7 +742,9 @@ public abstract class AnyValue {
                     }
                 }
             }
-            if (len == 0) return new String[len];
+            if (len == 0) {
+                return new String[len];
+            }
             String[] rs = new String[len];
             int i = 0;
             for (Entry<String> en : entitys) {
@@ -723,7 +768,9 @@ public abstract class AnyValue {
                     }
                 }
             }
-            if (len == 0) return new AnyValue[len];
+            if (len == 0) {
+                return new AnyValue[len];
+            }
             AnyValue[] rs = new AnyValue[len];
             int i = 0;
             for (Entry<DefaultAnyValue> en : entitys) {
@@ -837,7 +884,9 @@ public abstract class AnyValue {
      * @return AnyValue
      */
     public static AnyValue loadFromProperties(Properties properties, String nameName) {
-        if (properties == null) return null;
+        if (properties == null) {
+            return null;
+        }
         DefaultAnyValue conf = new DefaultAnyValue();
         final char splitChar = (char) 2;
         Map<String, DefaultAnyValue> prefixArray = new TreeMap<>(); //已处理的数组key，如 redkale.source[0].xx  存redkale.source[0]
@@ -922,7 +971,9 @@ public abstract class AnyValue {
                             DefaultAnyValue index = (DefaultAnyValue) field.getAnyValue(keyOrIndex);
                             if (index == null) {
                                 index = new DefaultAnyValue();
-                                if (nameName != null) index.setValue(nameName, keyOrIndex);
+                                if (nameName != null) {
+                                    index.setValue(nameName, keyOrIndex);
+                                }
                                 field.addValue(keyOrIndex, index);
                             }
                             parent = index;
@@ -1064,13 +1115,17 @@ public abstract class AnyValue {
      * @return String
      */
     public String toString(int indent, BiFunction<AnyValue, String, CharSequence> prefixFunc) { //indent: 缩进长度
-        if (indent < 0) indent = 0;
+        if (indent < 0) {
+            indent = 0;
+        }
         final String space = " ".repeat(indent);
         StringBuilder sb = new StringBuilder();
         sb.append("{\r\n");
         if (prefixFunc != null) {
             CharSequence v = prefixFunc.apply(this, space);
-            if (v != null) sb.append(v);
+            if (v != null) {
+                sb.append(v);
+            }
         }
         Entry<String>[] stringArray = getStringEntrys();
         Entry<AnyValue>[] anyArray = getAnyEntrys();
@@ -1274,7 +1329,9 @@ public abstract class AnyValue {
      */
     public byte getByteValue(String name, byte defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Byte.decode(value);
         } catch (NumberFormatException e) {
@@ -1293,7 +1350,9 @@ public abstract class AnyValue {
      */
     public byte getByteValue(int radix, String name, byte defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Byte.decode(value) : Byte.parseByte(value, radix));
         } catch (NumberFormatException e) {
@@ -1346,7 +1405,9 @@ public abstract class AnyValue {
      */
     public short getShortValue(String name, short defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Short.decode(value);
         } catch (NumberFormatException e) {
@@ -1365,7 +1426,9 @@ public abstract class AnyValue {
      */
     public short getShortValue(int radix, String name, short defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Short.decode(value) : Short.parseShort(value, radix));
         } catch (NumberFormatException e) {
@@ -1394,7 +1457,9 @@ public abstract class AnyValue {
      */
     public int getIntValue(String name, int defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Integer.decode(value);
         } catch (NumberFormatException e) {
@@ -1413,7 +1478,9 @@ public abstract class AnyValue {
      */
     public int getIntValue(int radix, String name, int defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Integer.decode(value) : Integer.parseInt(value, radix));
         } catch (NumberFormatException e) {
@@ -1442,7 +1509,9 @@ public abstract class AnyValue {
      */
     public long getLongValue(String name, long defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Long.decode(value);
         } catch (NumberFormatException e) {
@@ -1461,7 +1530,9 @@ public abstract class AnyValue {
      */
     public long getLongValue(int radix, String name, long defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return (radix == 10 ? Long.decode(value) : Long.parseLong(value, radix));
         } catch (NumberFormatException e) {
@@ -1490,7 +1561,9 @@ public abstract class AnyValue {
      */
     public float getFloatValue(String name, float defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Float.parseFloat(value);
         } catch (NumberFormatException e) {
@@ -1519,7 +1592,9 @@ public abstract class AnyValue {
      */
     public double getDoubleValue(String name, double defaultValue) {
         String value = getValue(name);
-        if (value == null || value.length() == 0) return defaultValue;
+        if (value == null || value.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException e) {
@@ -1555,18 +1630,30 @@ public abstract class AnyValue {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof AnyValue)) return false;
+        if (!(other instanceof AnyValue)) {
+            return false;
+        }
         AnyValue conf = (AnyValue) other;
-        if (!equals(this.getStringEntrys(), conf.getStringEntrys())) return false;
+        if (!equals(this.getStringEntrys(), conf.getStringEntrys())) {
+            return false;
+        }
         return equals(this.getAnyEntrys(), conf.getAnyEntrys());
     }
 
     private static <T> boolean equals(Entry<? extends T>[] entry1, Entry<T>[] entry2) {
-        if ((entry1 == null || entry1.length == 0) && (entry2 == null || entry2.length == 0)) return true;
-        if (entry1.length != entry2.length) return false;
+        if ((entry1 == null || entry1.length == 0) && (entry2 == null || entry2.length == 0)) {
+            return true;
+        }
+        if (entry1.length != entry2.length) {
+            return false;
+        }
         for (int i = 0; i < entry1.length; i++) {
-            if (!entry1[i].name.equals(entry2[i].name)) return false;
-            if (!entry1[i].getValue().equals(entry2[i].getValue())) return false;
+            if (!entry1[i].name.equals(entry2[i].name)) {
+                return false;
+            }
+            if (!entry1[i].getValue().equals(entry2[i].getValue())) {
+                return false;
+            }
         }
         return true;
     }
@@ -1601,14 +1688,18 @@ public abstract class AnyValue {
      * @return StringBuilder
      */
     protected static StringBuilder toXMLString(StringBuilder sb, String nodeName, AnyValue conf, int indent) { //indent: 缩进长度
-        if (indent < 0) indent = 0;
+        if (indent < 0) {
+            indent = 0;
+        }
         final String space = " ".repeat(indent);
         Entry<AnyValue>[] anys = conf.getAnyEntrys();
         sb.append(space).append('<').append(nodeName);
         for (Entry<String> en : conf.getStringEntrys()) {
             sb.append(' ').append(en.name).append("=\"").append(en.value).append("\"");
         }
-        if (anys == null || anys.length == 0) return sb.append("/>\r\n\r\n");
+        if (anys == null || anys.length == 0) {
+            return sb.append("/>\r\n\r\n");
+        }
         sb.append(">\r\n\r\n");
         for (Entry<AnyValue> en : conf.getAnyEntrys()) {
             toXMLString(sb, en.name, en.getValue(), indent + 4);

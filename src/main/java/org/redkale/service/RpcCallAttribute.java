@@ -6,7 +6,7 @@
 package org.redkale.service;
 
 import java.io.Serializable;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.util.Attribute;
 
@@ -27,7 +27,9 @@ public class RpcCallAttribute implements Attribute<Object, Serializable> {
 
     static <T> Attribute<T, Serializable> load(final Class clazz) {
         Attribute rs = attributes.get(clazz);
-        if (rs != null) return rs;
+        if (rs != null) {
+            return rs;
+        }
         synchronized (attributes) {
             rs = attributes.get(clazz);
             if (rs == null) {
@@ -64,13 +66,17 @@ public class RpcCallAttribute implements Attribute<Object, Serializable> {
 
     @Override
     public Serializable get(final Object obj) {
-        if (obj == null) return null;
+        if (obj == null) {
+            return null;
+        }
         return load(obj.getClass()).get(obj);
     }
 
     @Override
     public void set(final Object obj, final Serializable key) {
-        if (obj == null) return;
+        if (obj == null) {
+            return;
+        }
         load(obj.getClass()).set(obj, key);
     }
 

@@ -23,7 +23,6 @@ public class ClientAddress implements java.io.Serializable {
     public ClientAddress() {
     }
 
-
     public ClientAddress(SocketAddress address) {
         this.address = address;
     }
@@ -31,7 +30,7 @@ public class ClientAddress implements java.io.Serializable {
     public CompletableFuture<AsyncConnection> createClient(final boolean tcp, final AsyncGroup group, int readTimeoutSeconds, int writeTimeoutSeconds) {
         return group.createClient(tcp, address, readTimeoutSeconds, writeTimeoutSeconds);
     }
-    
+
     public SocketAddress getAddress() {
         return address;
     }

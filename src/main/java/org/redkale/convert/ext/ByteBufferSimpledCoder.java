@@ -6,9 +6,7 @@
 package org.redkale.convert.ext;
 
 import java.nio.ByteBuffer;
-import org.redkale.convert.Reader;
-import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.Writer;
+import org.redkale.convert.*;
 
 /**
  * ByteBuffer 的SimpledCoder实现
@@ -33,7 +31,9 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
         if (out.writeArrayB(value.remaining(), this, ByteSimpledCoder.instance, value) < 0) {
             boolean flag = false;
             for (byte v : value.array()) {
-                if (flag) out.writeArrayMark();
+                if (flag) {
+                    out.writeArrayMark();
+                }
                 out.writeByte(v);
                 flag = true;
             }
@@ -45,7 +45,9 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
     public ByteBuffer convertFrom(R in) {
         int len = in.readArrayB(null, null, ByteSimpledCoder.instance);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(null, ByteSimpledCoder.instance);
             len = Reader.SIGN_NOLENGTH;

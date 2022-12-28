@@ -55,7 +55,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
     protected final ConcurrentHashMap<String, CacheEntry<Object>> container = new ConcurrentHashMap<>();
 
     protected final BiConsumer futureCompleteConsumer = (r, t) -> {
-        if (t != null) logger.log(Level.SEVERE, "CompletableFuture complete error", (Throwable) t);
+        if (t != null) {
+            logger.log(Level.SEVERE, "CompletableFuture complete error", (Throwable) t);
+        }
     };
 
     public CacheMemorySource(String resourceName) {
@@ -84,8 +86,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     @SuppressWarnings("unchecked")
     public void init(AnyValue conf) {
-        if (this.convert == null) this.convert = this.defaultConvert;
-        if (this.convert == null) this.convert = JsonConvert.root();
+        if (this.convert == null) {
+            this.convert = this.defaultConvert;
+        }
+        if (this.convert == null) {
+            this.convert = JsonConvert.root();
+        }
         final CacheMemorySource self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("properties");
         String expireHandlerClass = prop == null ? null : prop.getValue("expirehandler");
@@ -116,7 +122,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     });
                     for (String key : keys) {
                         CacheEntry entry = container.remove(key);
-                        if (expireHandler != null && entry != null) expireHandler.accept(entry);
+                        if (expireHandler != null && entry != null) {
+                            expireHandler.accept(entry);
+                        }
                     }
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, "CacheMemorySource schedule(interval=" + 10 + "s) error", t);
@@ -138,7 +146,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public void destroy(AnyValue conf) {
-        if (scheduler != null) scheduler.shutdownNow();
+        if (scheduler != null) {
+            scheduler.shutdownNow();
+        }
     }
 
     //----------- hxxx --------------
@@ -146,9 +156,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public int hdel(final String key, String... fields) {
         int count = 0;
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.mapValue == null) return 0;
+        if (entry == null || entry.mapValue == null) {
+            return 0;
+        }
         for (String field : fields) {
-            if (entry.mapValue.remove(field) != null) count++;
+            if (entry.mapValue.remove(field) != null) {
+                count++;
+            }
         }
         return count;
     }
@@ -157,7 +171,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public List<String> hkeys(final String key) {
         List<String> list = new ArrayList<>();
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.mapValue == null) return list;
+        if (entry == null || entry.mapValue == null) {
+            return list;
+        }
         list.addAll(entry.mapValue.keySet());
         return list;
     }
@@ -165,7 +181,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public int hlen(final String key) {
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.mapValue == null) return 0;
+        if (entry == null || entry.mapValue == null) {
+            return 0;
+        }
         return entry.mapValue.keySet().size();
     }
 
@@ -246,9 +264,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public boolean hexists(final String key, String field) {
-        if (key == null) return false;
+        if (key == null) {
+            return false;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) return false;
+        if (entry == null || entry.isExpired() || entry.mapValue == null) {
+            return false;
+        }
         return entry.mapValue.contains(field);
     }
 
@@ -306,9 +328,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> List<T> hmget(final String key, final Type type, final String... fields) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) return null;
+        if (entry == null || entry.isExpired() || entry.mapValue == null) {
+            return null;
+        }
         List<T> rs = new ArrayList<>(fields.length);
         for (int i = 0; i < fields.length; i++) {
             Serializable val = (Serializable) entry.mapValue.get(fields[i]);
@@ -328,42 +354,62 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit, String pattern) {
-        if (key == null) return new HashMap();
+        if (key == null) {
+            return new HashMap();
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) return new HashMap();
+        if (entry == null || entry.isExpired() || entry.mapValue == null) {
+            return new HashMap();
+        }
         return new HashMap(entry.mapValue);
     }
 
     @Override
     public <T> T hget(final String key, final String field, final Type type) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) return null;
+        if (entry == null || entry.isExpired() || entry.mapValue == null) {
+            return null;
+        }
         return (T) entry.mapValue.get(field);
     }
 
     @Override
     public String hgetString(final String key, final String field) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) return null;
+        if (entry == null || entry.isExpired() || entry.mapValue == null) {
+            return null;
+        }
         return (String) entry.mapValue.get(field);
     }
 
     @Override
     public long hgetLong(final String key, final String field, long defValue) {
-        if (key == null) return defValue;
+        if (key == null) {
+            return defValue;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) return defValue;
+        if (entry == null || entry.isExpired() || entry.mapValue == null) {
+            return defValue;
+        }
         return ((Number) entry.mapValue.getOrDefault(field, defValue)).longValue();
     }
     //----------- hxxx --------------
 
     @Override
     public boolean exists(String key) {
-        if (key == null) return false;
+        if (key == null) {
+            return false;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null) return false;
+        if (entry == null) {
+            return false;
+        }
         return !entry.isExpired();
     }
 
@@ -374,19 +420,31 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> T get(final String key, final Type type) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return null;
-        if (entry.isListCacheType()) return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
-        if (entry.isSetCacheType()) return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
+        if (entry == null || entry.isExpired()) {
+            return null;
+        }
+        if (entry.isListCacheType()) {
+            return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
+        }
+        if (entry.isSetCacheType()) {
+            return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
+        }
         return entry.cacheType == CacheEntryType.DOUBLE ? (T) (Double) Double.longBitsToDouble(((AtomicLong) entry.objectValue).intValue()) : (T) entry.objectValue;
     }
 
     @Override
     public String getString(String key) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return null;
+        if (entry == null || entry.isExpired()) {
+            return null;
+        }
         return (String) entry.objectValue;
     }
 
@@ -399,9 +457,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public long getLong(String key, long defValue) {
-        if (key == null) return defValue;
+        if (key == null) {
+            return defValue;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return defValue;
+        if (entry == null || entry.isExpired()) {
+            return defValue;
+        }
         return entry.objectValue == null ? defValue : (entry.objectValue instanceof AtomicLong ? ((AtomicLong) entry.objectValue).get() : (Long) entry.objectValue);
     }
 
@@ -561,22 +623,34 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> T getex(final String key, final int expireSeconds, final Type type) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return null;
+        if (entry == null || entry.isExpired()) {
+            return null;
+        }
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         entry.expireSeconds = expireSeconds;
-        if (entry.isListCacheType()) return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
-        if (entry.isSetCacheType()) return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
+        if (entry.isListCacheType()) {
+            return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
+        }
+        if (entry.isSetCacheType()) {
+            return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
+        }
         return (T) entry.objectValue;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public String getexString(String key, final int expireSeconds) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return null;
+        if (entry == null || entry.isExpired()) {
+            return null;
+        }
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         entry.expireSeconds = expireSeconds;
         return (String) entry.objectValue;
@@ -584,9 +658,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public long getexLong(String key, final int expireSeconds, long defValue) {
-        if (key == null) return defValue;
+        if (key == null) {
+            return defValue;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return defValue;
+        if (entry == null || entry.isExpired()) {
+            return defValue;
+        }
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         entry.expireSeconds = expireSeconds;
         return entry.objectValue == null ? defValue : (entry.objectValue instanceof AtomicLong ? ((AtomicLong) entry.objectValue).get() : (Long) entry.objectValue);
@@ -609,7 +687,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     protected void set(CacheEntryType cacheType, String key, Object value) {
-        if (key == null) return;
+        if (key == null) {
+            return;
+        }
         CacheEntry entry = container.get(key);
         if (entry == null) {
             entry = new CacheEntry(cacheType, key, value, null, null, null);
@@ -622,7 +702,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     protected void setnx(CacheEntryType cacheType, String key, Object value) {
-        if (key == null) return;
+        if (key == null) {
+            return;
+        }
         CacheEntry entry = container.get(key);
         if (entry == null) {
             entry = new CacheEntry(cacheType, key, value, null, null, null);
@@ -634,7 +716,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     protected void hset(CacheEntryType cacheType, String key, String field, Object value) {
-        if (key == null) return;
+        if (key == null) {
+            return;
+        }
         CacheEntry entry = container.get(key);
         if (entry == null) {
             entry = new CacheEntry(CacheEntryType.MAP, key, value, null, null, new ConcurrentHashMap<>());
@@ -648,7 +732,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     protected void hsetnx(CacheEntryType cacheType, String key, String field, Object value) {
-        if (key == null) return;
+        if (key == null) {
+            return;
+        }
         CacheEntry entry = container.get(key);
         if (entry == null) {
             entry = new CacheEntry(CacheEntryType.MAP, key, value, null, null, new ConcurrentHashMap<>());
@@ -811,13 +897,17 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     protected void set(CacheEntryType cacheType, int expireSeconds, String key, Object value) {
-        if (key == null) return;
+        if (key == null) {
+            return;
+        }
         CacheEntry entry = container.get(key);
         if (entry == null) {
             entry = new CacheEntry(cacheType, expireSeconds, key, value, null, null, null);
             container.putIfAbsent(key, entry);
         } else {
-            if (expireSeconds > 0) entry.expireSeconds = expireSeconds;
+            if (expireSeconds > 0) {
+                entry.expireSeconds = expireSeconds;
+            }
             entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
             entry.objectValue = value;
         }
@@ -865,9 +955,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public void expire(String key, int expireSeconds) {
-        if (key == null) return;
+        if (key == null) {
+            return;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null) return;
+        if (entry == null) {
+            return;
+        }
         entry.expireSeconds = expireSeconds;
     }
 
@@ -878,7 +972,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public int del(final String... keys) {
-        if (keys == null) return 0;
+        if (keys == null) {
+            return 0;
+        }
         int count = 0;
         for (String key : keys) {
             count += container.remove(key) == null ? 0 : 1;
@@ -982,7 +1078,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
         Map<String, Set<T>> map = new HashMap<>();
         for (String key : keys) {
             Set<T> s = (Set<T>) get(key, componentType);
-            if (s != null) map.put(key, s);
+            if (s != null) {
+                map.put(key, s);
+            }
         }
         return map;
     }
@@ -992,7 +1090,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
         Map<String, List<T>> map = new HashMap<>();
         for (String key : keys) {
             List<T> s = (List<T>) get(key, componentType);
-            if (s != null) map.put(key, s);
+            if (s != null) {
+                map.put(key, s);
+            }
         }
         return map;
     }
@@ -1002,7 +1102,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
         Map<String, Collection<T>> map = new HashMap<>();
         for (String key : keys) {
             Collection<T> s = (Collection<T>) get(key, componentType);
-            if (s != null) map.put(key, s);
+            if (s != null) {
+                map.put(key, s);
+            }
         }
         return map;
     }
@@ -1017,7 +1119,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
         Map<String, Collection<String>> map = new HashMap<>();
         for (String key : keys) {
             Collection<String> s = (Collection<String>) get(key, String.class);
-            if (s != null) map.put(key, s);
+            if (s != null) {
+                map.put(key, s);
+            }
         }
         return map;
     }
@@ -1167,7 +1271,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
         Map<String, Collection<Long>> map = new HashMap<>();
         for (String key : keys) {
             Collection<Long> s = (Collection<Long>) get(key, long.class);
-            if (s != null) map.put(key, s);
+            if (s != null) {
+                map.put(key, s);
+            }
         }
         return map;
     }
@@ -1319,14 +1425,20 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     protected void appendListItem(CacheEntryType cacheType, String key, Object value) {
-        if (key == null) return;
+        if (key == null) {
+            return;
+        }
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
             ConcurrentLinkedQueue list = new ConcurrentLinkedQueue();
             entry = new CacheEntry(cacheType, key, null, null, list, null);
             CacheEntry old = container.putIfAbsent(key, entry);
-            if (old != null) list = old.listValue;
-            if (list != null) list.add(value);
+            if (old != null) {
+                list = old.listValue;
+            }
+            if (list != null) {
+                list.add(value);
+            }
         } else {
             entry.listValue.add(value);
         }
@@ -1364,25 +1476,37 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> int lrem(String key, final Type componentType, T value) {
-        if (key == null) return 0;
+        if (key == null) {
+            return 0;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) return 0;
+        if (entry == null || entry.listValue == null) {
+            return 0;
+        }
         return entry.listValue.remove(value) ? 1 : 0;
     }
 
     @Override
     public int lremString(String key, String value) {
-        if (key == null) return 0;
+        if (key == null) {
+            return 0;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) return 0;
+        if (entry == null || entry.listValue == null) {
+            return 0;
+        }
         return entry.listValue.remove(value) ? 1 : 0;
     }
 
     @Override
     public int lremLong(String key, long value) {
-        if (key == null) return 0;
+        if (key == null) {
+            return 0;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) return 0;
+        if (entry == null || entry.listValue == null) {
+            return 0;
+        }
         return entry.listValue.remove(value) ? 1 : 0;
     }
 
@@ -1423,16 +1547,22 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> T spop(final String key, final Type componentType) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
             return null;
         }
-        if (entry.csetValue.isEmpty()) return null;
+        if (entry.csetValue.isEmpty()) {
+            return null;
+        }
         Iterator it = entry.csetValue.iterator();
         if (it.hasNext()) {
             Object obj = it.next();
-            if (obj != null && componentType == long.class) obj = ((Number) obj).longValue();
+            if (obj != null && componentType == long.class) {
+                obj = ((Number) obj).longValue();
+            }
             it.remove();
             return (T) obj;
         }
@@ -1441,34 +1571,48 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> Set<T> spop(final String key, final int count, final Type componentType) {
-        if (key == null) return new LinkedHashSet<>();
+        if (key == null) {
+            return new LinkedHashSet<>();
+        }
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
             return new LinkedHashSet<>();
         }
-        if (entry.csetValue.isEmpty()) return new LinkedHashSet<>();
+        if (entry.csetValue.isEmpty()) {
+            return new LinkedHashSet<>();
+        }
         Iterator it = entry.csetValue.iterator();
         Set<T> list = new LinkedHashSet<>();
         int index = 0;
         while (it.hasNext()) {
             Object obj = it.next();
-            if (obj != null && componentType == long.class) obj = ((Number) obj).longValue();
+            if (obj != null && componentType == long.class) {
+                obj = ((Number) obj).longValue();
+            }
             list.add((T) obj);
             it.remove();
-            if (++index >= count) break;
+            if (++index >= count) {
+                break;
+            }
         }
         return list;
     }
 
     protected void appendSetItem(CacheEntryType cacheType, String key, Object value) {
-        if (key == null) return;
+        if (key == null) {
+            return;
+        }
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
             CopyOnWriteArraySet set = new CopyOnWriteArraySet();
             entry = new CacheEntry(cacheType, key, null, set, null, null);
             CacheEntry old = container.putIfAbsent(key, entry);
-            if (old != null) set = old.csetValue;
-            if (set != null) set.add(value);
+            if (old != null) {
+                set = old.csetValue;
+            }
+            if (set != null) {
+                set.add(value);
+            }
         } else {
             entry.csetValue.add(value);
         }
@@ -1506,25 +1650,37 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> int srem(String key, Type type, T value) {
-        if (key == null) return 0;
+        if (key == null) {
+            return 0;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) return 0;
+        if (entry == null || entry.csetValue == null) {
+            return 0;
+        }
         return entry.csetValue.remove(value) ? 1 : 0;
     }
 
     @Override
     public int sremString(String key, String value) {
-        if (key == null) return 0;
+        if (key == null) {
+            return 0;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) return 0;
+        if (entry == null || entry.csetValue == null) {
+            return 0;
+        }
         return entry.csetValue.remove(value) ? 1 : 0;
     }
 
     @Override
     public int sremLong(String key, long value) {
-        if (key == null) return 0;
+        if (key == null) {
+            return 0;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) return 0;
+        if (entry == null || entry.csetValue == null) {
+            return 0;
+        }
         return entry.csetValue.remove(value) ? 1 : 0;
     }
 
@@ -1545,9 +1701,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public byte[] getBytes(final String key) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return null;
+        if (entry == null || entry.isExpired()) {
+            return null;
+        }
         return (byte[]) entry.objectValue;
     }
 
@@ -1570,9 +1730,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public byte[] getexBytes(String key, final int expireSeconds) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) return null;
+        if (entry == null || entry.isExpired()) {
+            return null;
+        }
         entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
         entry.expireSeconds = expireSeconds;
         return (byte[]) entry.objectValue;
@@ -1632,7 +1796,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public List<String> keysStartsWith(String startsWith) {
-        if (startsWith == null) return keys();
+        if (startsWith == null) {
+            return keys();
+        }
         List<String> rs = new ArrayList<>();
         container.keySet().stream().filter(x -> x.startsWith(startsWith)).forEach(x -> rs.add(x));
         return rs;

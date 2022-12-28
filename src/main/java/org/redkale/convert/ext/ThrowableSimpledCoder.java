@@ -33,7 +33,9 @@ public class ThrowableSimpledCoder<R extends Reader, W extends Writer> extends S
     @Override
     public Throwable convertFrom(R in) {
         String value = in.readString();
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         return new Exception(value);
     }
 

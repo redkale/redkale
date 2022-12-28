@@ -5,9 +5,9 @@
  */
 package org.redkale.util;
 
-import java.util.*;
-import java.util.function.*;
-import java.util.regex.*;
+import java.util.Arrays;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * 判断字符串数组是否包含或排除指定字符串的操作类
@@ -31,7 +31,9 @@ public class SelectColumn implements Predicate<String> {
     protected SelectColumn(final String[] columns0, final boolean excludable) {
         this.excludable = excludable;
         final int len = columns0.length;
-        if (len < 1) return;
+        if (len < 1) {
+            return;
+        }
         Pattern[] regs = null;
         String[] cols = null;
         int regcount = 0;
@@ -46,10 +48,14 @@ public class SelectColumn implements Predicate<String> {
                 }
             }
             if (reg) {
-                if (regs == null) regs = new Pattern[len];
+                if (regs == null) {
+                    regs = new Pattern[len];
+                }
                 regs[regcount++] = Pattern.compile(col);
             } else {
-                if (cols == null) cols = new String[len];
+                if (cols == null) {
+                    cols = new String[len];
+                }
                 cols[colcount++] = col;
             }
         }
@@ -80,7 +86,6 @@ public class SelectColumn implements Predicate<String> {
 //    public static SelectColumn createIncludes(String... columns) {
 //        return new SelectColumn(columns, false);
 //    }
-
     /**
      * class中的字段名
      *
@@ -104,7 +109,6 @@ public class SelectColumn implements Predicate<String> {
 //    public static SelectColumn createIncludes(String[] cols, String... columns) {
 //        return new SelectColumn(Utility.append(cols, columns), false);
 //    }
-
     /**
      * class中的字段名
      *
@@ -129,7 +133,6 @@ public class SelectColumn implements Predicate<String> {
 //    public static SelectColumn createExcludes(String... columns) {
 //        return new SelectColumn(columns, true);
 //    }
-
     /**
      * class中的字段名
      *
@@ -153,7 +156,6 @@ public class SelectColumn implements Predicate<String> {
 //    public static SelectColumn createExcludes(String[] cols, String... columns) {
 //        return new SelectColumn(Utility.append(cols, columns), true);
 //    }
-
     /**
      *
      * class中的字段名
@@ -175,12 +177,16 @@ public class SelectColumn implements Predicate<String> {
     public boolean test(final String column) {
         if (this.columns != null) {
             for (String col : this.columns) {
-                if (col.equalsIgnoreCase(column)) return !excludable;
+                if (col.equalsIgnoreCase(column)) {
+                    return !excludable;
+                }
             }
         }
         if (this.patterns != null) {
             for (Pattern reg : this.patterns) {
-                if (reg.matcher(column).find()) return !excludable;
+                if (reg.matcher(column).find()) {
+                    return !excludable;
+                }
             }
         }
         return excludable;
@@ -214,8 +220,12 @@ public class SelectColumn implements Predicate<String> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getSimpleName()).append("{excludable=").append(excludable);
-        if (columns != null) sb.append(", columns=").append(Arrays.toString(columns));
-        if (patterns != null) sb.append(", patterns=").append(Arrays.toString(patterns));
+        if (columns != null) {
+            sb.append(", columns=").append(Arrays.toString(columns));
+        }
+        if (patterns != null) {
+            sb.append(", patterns=").append(Arrays.toString(patterns));
+        }
         return sb.append('}').toString();
     }
 

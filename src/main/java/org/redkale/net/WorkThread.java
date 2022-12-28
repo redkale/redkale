@@ -29,7 +29,9 @@ public class WorkThread extends Thread implements Executor {
 
     public WorkThread(String name, int index, int threads, ExecutorService workExecutor, Runnable target) {
         super(target);
-        if (name != null) setName(name);
+        if (name != null) {
+            setName(name);
+        }
         this.index = index;
         this.threads = threads;
         this.workExecutor = workExecutor;
@@ -64,7 +66,9 @@ public class WorkThread extends Thread implements Executor {
     }
 
     public void execute(Collection<Runnable> commands) {
-        if (commands == null) return;
+        if (commands == null) {
+            return;
+        }
         if (workExecutor == null) {
             for (Runnable command : commands) {
                 command.run();

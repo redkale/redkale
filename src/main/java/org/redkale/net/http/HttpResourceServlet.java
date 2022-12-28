@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.io.*;
 import static java.nio.file.StandardWatchEventKinds.*;
 import java.nio.file.*;
+import static java.nio.file.StandardWatchEventKinds.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +60,9 @@ public class HttpResourceServlet extends HttpServlet {
                             //logger.log(Level.FINEST, "file(" + uri + ") happen " + event.kind() + " event");
                             if (event.kind() == ENTRY_DELETE) {
                                 FileEntry en = files.remove(uri);
-                                if (en != null) en.remove();
+                                if (en != null) {
+                                    en.remove();
+                                }
                             } else if (event.kind() == ENTRY_MODIFY) {
                                 FileEntry en = files.get(uri);
                                 if (en != null && en.file != null) {
@@ -67,7 +70,9 @@ public class HttpResourceServlet extends HttpServlet {
                                     for (;;) {
                                         d = en.file.lastModified();
                                         Thread.sleep(2000L);
-                                        if (d == en.file.lastModified()) break;
+                                        if (d == en.file.lastModified()) {
+                                            break;
+                                        }
                                     }
                                     en.update();
                                 }
@@ -139,7 +144,9 @@ public class HttpResourceServlet extends HttpServlet {
             }
             this.locationRewrites = locations.isEmpty() ? null : locations.toArray(new SimpleEntry[locations.size()]);
         }
-        if (this.cachelimit < 1) return;  //不缓存不需要开启WatchThread监听
+        if (this.cachelimit < 1) {
+            return;  //不缓存不需要开启WatchThread监听
+        }
         if (this.root != null && this.watch) {
             try {
                 this.watchThread = new WatchThread(this.root);
@@ -158,12 +165,16 @@ public class HttpResourceServlet extends HttpServlet {
             } catch (IOException ex) {
                 logger.log(Level.WARNING, HttpResourceServlet.class.getSimpleName() + " close watch-thread error", ex);
             }
-            if (this.watchThread.isAlive()) this.watchThread.interrupt();
+            if (this.watchThread.isAlive()) {
+                this.watchThread.interrupt();
+            }
         }
     }
 
     public void setRoot(String rootstr) {
-        if (rootstr == null) return;
+        if (rootstr == null) {
+            return;
+        }
         try {
             this.root = new File(rootstr).getCanonicalFile();
         } catch (IOException ioe) {
@@ -172,7 +183,9 @@ public class HttpResourceServlet extends HttpServlet {
     }
 
     public void setRoot(File file) {
-        if (file == null) return;
+        if (file == null) {
+            return;
+        }
         try {
             this.root = file.getCanonicalFile();
         } catch (IOException ioe) {
@@ -181,11 +194,19 @@ public class HttpResourceServlet extends HttpServlet {
     }
 
     protected static long parseLenth(String value, long defValue) {
-        if (value == null) return defValue;
+        if (value == null) {
+            return defValue;
+        }
         value = value.toUpperCase().replace("B", "");
-        if (value.endsWith("G")) return Long.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
-        if (value.endsWith("M")) return Long.decode(value.replace("M", "")) * 1024 * 1024;
-        if (value.endsWith("K")) return Long.decode(value.replace("K", "")) * 1024;
+        if (value.endsWith("G")) {
+            return Long.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
+        }
+        if (value.endsWith("M")) {
+            return Long.decode(value.replace("M", "")) * 1024 * 1024;
+        }
+        if (value.endsWith("K")) {
+            return Long.decode(value.replace("K", "")) * 1024;
+        }
         return Long.decode(value);
     }
 
@@ -193,7 +214,9 @@ public class HttpResourceServlet extends HttpServlet {
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         String uri = request.getRequestURI();
         if (uri.contains("../")) {
-            if (logger.isLoggable(Level.FINEST)) logger.log(Level.FINEST, "Not found resource (404) be " + uri + ", request = " + request);
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.log(Level.FINEST, "Not found resource (404) be " + uri + ", request = " + request);
+            }
             finish404(request, response);
             return;
         }
@@ -230,7 +253,9 @@ public class HttpResourceServlet extends HttpServlet {
             entry = files.computeIfAbsent(uri, x -> createFileEntry(x));
         }
         if (entry == null) {
-            if (logger.isLoggable(Level.FINER)) logger.log(Level.FINER, "Not found resource (404), url = " + request.getRequestURI());
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "Not found resource (404), url = " + request.getRequestURI());
+            }
             finish404(request, response);
         } else {
             //file = null 表示资源内容在内存而不是在File中
@@ -242,11 +267,19 @@ public class HttpResourceServlet extends HttpServlet {
     protected FileEntry createFileEntry(String uri) {
         File rfile = new File(root, uri);
         File file = rfile;
-        if (file.isDirectory()) file = new File(rfile, this.indexHtml);
-        if (file.isDirectory()) file = new File(rfile, "index.html");
-        if (!file.isFile() || !file.canRead()) return null;
+        if (file.isDirectory()) {
+            file = new File(rfile, this.indexHtml);
+        }
+        if (file.isDirectory()) {
+            file = new File(rfile, "index.html");
+        }
+        if (!file.isFile() || !file.canRead()) {
+            return null;
+        }
         FileEntry en = new FileEntry(this, file);
-        if (watchThread == null) return en;
+        if (watchThread == null) {
+            return en;
+        }
         try {
             Path p = file.getParentFile().toPath();
             keymaps.put(p.register(watchThread.watcher, ENTRY_MODIFY, ENTRY_DELETE), p);
@@ -297,14 +330,20 @@ public class HttpResourceServlet extends HttpServlet {
         }
 
         public void update() {
-            if (this.file == null) return;
+            if (this.file == null) {
+                return;
+            }
             if (this.content != null) {
                 this.servlet.cachedLength.add(0L - this.content.length());
                 this.content = null;
             }
             long length = this.file.length();
-            if (length > this.servlet.cachelengthmax) return;
-            if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) return; //超过缓存总容量
+            if (length > this.servlet.cachelengthmax) {
+                return;
+            }
+            if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) {
+                return; //超过缓存总容量
+            }
             try {
                 FileInputStream in = new FileInputStream(file);
                 ByteArray out = new ByteArray((int) file.length());
@@ -322,7 +361,9 @@ public class HttpResourceServlet extends HttpServlet {
         }
 
         public void remove() {
-            if (this.content != null) this.servlet.cachedLength.add(0L - this.content.length());
+            if (this.content != null) {
+                this.servlet.cachedLength.add(0L - this.content.length());
+            }
         }
 
         public long getCachedLength() {

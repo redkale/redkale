@@ -7,12 +7,12 @@ package org.redkale.mq;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.net.sncp.SncpRequest;
-import org.redkale.annotation.Comment;
 
 /**
  * 存在MQ里面的数据结构<p>
@@ -135,12 +135,16 @@ public class MessageRecord implements Serializable {
     }
 
     public <T> T convertFromContent(Convert convert, java.lang.reflect.Type type) {
-        if (this.content == null || this.content.length == 0) return null;
+        if (this.content == null || this.content.length == 0) {
+            return null;
+        }
         return (T) convert.convertFrom(type, this.content);
     }
 
     public <T> T decodeContent(MessageCoder<T> coder) {
-        if (this.content == null || this.content.length == 0) return null;
+        if (this.content == null || this.content.length == 0) {
+            return null;
+        }
         return (T) coder.decode(this.content);
     }
 
@@ -295,12 +299,24 @@ public class MessageRecord implements Serializable {
         StringBuilder sb = new StringBuilder(128);
         sb.append("{\"seqid\":").append(this.seqid);
         sb.append(",\"version\":").append(this.version);
-        if (this.flag != 0) sb.append(",\"flag\":").append(this.flag);
-        if (this.createTime != 0) sb.append(",\"createTime\":").append(this.createTime);
-        if (this.userid != null) sb.append(",\"userid\":").append(this.userid);
-        if (this.groupid != null) sb.append(",\"groupid\":\"").append(this.groupid).append("\"");
-        if (this.topic != null) sb.append(",\"topic\":\"").append(this.topic).append("\"");
-        if (this.respTopic != null) sb.append(",\"respTopic\":\"").append(this.respTopic).append("\"");
+        if (this.flag != 0) {
+            sb.append(",\"flag\":").append(this.flag);
+        }
+        if (this.createTime != 0) {
+            sb.append(",\"createTime\":").append(this.createTime);
+        }
+        if (this.userid != null) {
+            sb.append(",\"userid\":").append(this.userid);
+        }
+        if (this.groupid != null) {
+            sb.append(",\"groupid\":\"").append(this.groupid).append("\"");
+        }
+        if (this.topic != null) {
+            sb.append(",\"topic\":\"").append(this.topic).append("\"");
+        }
+        if (this.respTopic != null) {
+            sb.append(",\"respTopic\":\"").append(this.respTopic).append("\"");
+        }
         if (this.content != null) {
             if (this.ctype == CTYPE_BSON_RESULT && this.content.length > SncpRequest.HEADER_SIZE) {
                 int offset = SncpRequest.HEADER_SIZE + 1; //循环占位符
@@ -309,8 +325,12 @@ public class MessageRecord implements Serializable {
             } else if (this.ctype == CTYPE_HTTP_REQUEST) {
                 HttpSimpleRequest req = HttpSimpleRequestCoder.getInstance().decode(this.content);
                 if (req != null) {
-                    if (req.getCurrentUserid() == null) req.setCurrentUserid(this.userid);
-                    if (req.getHashid() == 0) req.setHashid(this.hash());
+                    if (req.getCurrentUserid() == null) {
+                        req.setCurrentUserid(this.userid);
+                    }
+                    if (req.getHashid() == 0) {
+                        req.setHashid(this.hash());
+                    }
                 }
                 sb.append(",\"content\":").append(req);
             } else if (this.ctype == CTYPE_HTTP_RESULT) {

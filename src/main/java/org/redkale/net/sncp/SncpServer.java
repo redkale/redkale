@@ -43,9 +43,13 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     private static String netprotocol(AnyValue serconf) {
-        if (serconf == null) return "TCP";
+        if (serconf == null) {
+            return "TCP";
+        }
         String protocol = serconf.getValue("protocol", "").toUpperCase();
-        if (protocol.endsWith(".UDP")) return "UDP";
+        if (protocol.endsWith(".UDP")) {
+            return "UDP";
+        }
         return "TCP";
     }
 
@@ -99,7 +103,9 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
     }
 
     public SncpDynServlet addSncpServlet(Service sncpService) {
-        if (!Sncp.isSncpDyn(sncpService)) return null;
+        if (!Sncp.isSncpDyn(sncpService)) {
+            return null;
+        }
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService),
             Sncp.getResourceType(sncpService), sncpService, maxTypeLength, maxNameLength);
         this.dispatcher.addServlet(sds, null, Sncp.getConf(sncpService));
@@ -122,7 +128,9 @@ public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResp
         final int rcapacity = this.bufferCapacity;
         ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) return false;
+                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) {
+                    return false;
+                }
                 e.clear();
                 return true;
             });

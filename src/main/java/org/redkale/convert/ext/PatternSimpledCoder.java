@@ -5,13 +5,15 @@
  */
 package org.redkale.convert.ext;
 
-import java.util.regex.*;
+import java.util.regex.Pattern;
 import org.redkale.convert.*;
 
 /**
- *  Pattern 的SimpledCoder实现
+ * Pattern 的SimpledCoder实现
  *
- * <p> 详情见: https://redkale.org
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
@@ -32,7 +34,9 @@ public class PatternSimpledCoder<R extends Reader, W extends Writer> extends Sim
     @Override
     public Pattern convertFrom(R in) {
         String value = in.readString();
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         int pos = value.indexOf(',');
         return Pattern.compile(value.substring(pos + 1), Integer.parseInt(value.substring(0, pos)));
     }
