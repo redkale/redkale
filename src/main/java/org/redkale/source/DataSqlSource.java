@@ -86,7 +86,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     //用于判断表不存在的使用, 多个SQLState用;隔开
     protected String tableNotExistSqlstates;
 
-    //用于复制表结构使用
+    //用于复制表结构使用, sql语句必须包含IF NOT EXISTS判断，确保重复执行不会报错
     protected String tablecopySQL;
 
     protected AnyValue config;
@@ -511,6 +511,46 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             val = "";
         }
         return val;
+    }
+
+    @Local
+    protected <T> Map<String, PrepareInfo<T>> getInsertQuestionPrepareInfo(EntityInfo<T> info, T... entitys) {
+        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();
+        for (T entity : entitys) {
+            String table = info.getTable(entity);
+            map.computeIfAbsent(table, t -> new PrepareInfo(info.getInsertQuestionPrepareSQL(entity))).addEntity(entity);
+        }
+        return map;
+    }
+
+    @Local
+    protected <T> Map<String, PrepareInfo<T>> getInsertDollarPrepareInfo(EntityInfo<T> info, T... entitys) {
+        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();
+        for (T entity : entitys) {
+            String table = info.getTable(entity);
+            map.computeIfAbsent(table, t -> new PrepareInfo(info.getInsertDollarPrepareSQL(entity))).addEntity(entity);
+        }
+        return map;
+    }
+
+    @Local
+    protected <T> Map<String, PrepareInfo<T>> getUpdateQuestionPrepareInfo(EntityInfo<T> info, T... entitys) {
+        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();
+        for (T entity : entitys) {
+            String table = info.getTable(entity);
+            map.computeIfAbsent(table, t -> new PrepareInfo(info.getUpdateQuestionPrepareSQL(entity))).addEntity(entity);
+        }
+        return map;
+    }
+
+    @Local
+    protected <T> Map<String, PrepareInfo<T>> getUpdateDollarPrepareInfo(EntityInfo<T> info, T... entitys) {
+        Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();
+        for (T entity : entitys) {
+            String table = info.getTable(entity);
+            map.computeIfAbsent(table, t -> new PrepareInfo(info.getUpdateDollarPrepareSQL(entity))).addEntity(entity);
+        }
+        return map;
     }
 
     @Local
@@ -2573,5 +2613,23 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             this.blobs = blobs.isEmpty() ? null : blobs;
         }
 
+    }
+
+    protected static class PrepareInfo<T> {
+
+        public String prepareSql;
+
+        public List<T> entitys;
+
+        public PrepareInfo(String prepareSql) {
+            this.prepareSql = prepareSql;
+        }
+
+        public void addEntity(T entity) {
+            if (entitys == null) {
+                entitys = new ArrayList<>();
+            }
+            entitys.add(entity);
+        }
     }
 }
