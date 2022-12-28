@@ -5,12 +5,11 @@
  */
 package org.redkale.net.sncp;
 
-import org.redkale.annotation.ConstructorParameters;
-import org.redkale.asm.MethodDebugVisitor;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import java.util.logging.*;
+import org.redkale.annotation.ConstructorParameters;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.bson.*;
@@ -295,7 +294,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
 
         @Override
         public void failed(Throwable exc, Object attachment) {
-            response.getContext().getLogger().log(Level.INFO, "sncp execute error(" + request + ")", exc);
+            response.getContext().getLogger().log(Level.INFO, "Sncp execute error(" + request + ")", exc);
             response.finish(SncpResponse.RETCODE_THROWEXCEPTION, null);
         }
 

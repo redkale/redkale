@@ -434,8 +434,7 @@ public final class ClassFilter<T> {
 
         @Override
         public String toString() {
-            return this.getClass().getSimpleName() + "[thread=" + Thread.currentThread().getName()
-                + ", type=" + this.type.getSimpleName() + ", name=" + name + ", groups=" + this.groups + "]";
+            return this.getClass().getSimpleName() + "[type=" + this.type.getSimpleName() + ", name=" + name + ", groups=" + this.groups + "]";
         }
 
         @Override
@@ -604,7 +603,7 @@ public final class ClassFilter<T> {
                     }
                 }
             }
-            //if (debug) logger.log(Level.INFO, "scan classes: \r\n{0}", debugstr);
+            //if (debug) logger.log(Level.INFO, "Scan classes: \r\n{0}", debugstr);
         }
 
         private static void loadClassFiles(File exclude, File root, List<File> files) {

@@ -2,6 +2,7 @@
  */
 package org.redkale.boot;
 
+import java.io.*;
 import java.util.logging.*;
 import org.redkale.util.Traces;
 
@@ -15,21 +16,101 @@ import org.redkale.util.Traces;
  */
 public abstract class LoggingBaseHandler extends Handler {
 
-    static boolean traceflag = false; //防止设置system.property前调用Traces类导致enable提前初始化
+    //public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s%n%5$s%6$s%n";
+    //无threadName、TID
+    public static final String FORMATTER_FORMAT = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] %4$s %2$s\r\n%5$s%6$s\r\n";
+
+    //有threadName
+    public static final String FORMATTER_FORMAT2 = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] [%7$s] %4$s %2$s\r\n%5$s%6$s\r\n";
+
+    //有threadName、TID
+    public static final String FORMATTER_FORMAT3 = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] [%7$s] %8$s %4$s %2$s\r\n%5$s%6$s\r\n";
+
+    /**
+     * 默认的日志时间格式化类
+     * 与SimpleFormatter的区别在于level不使用本地化
+     *
+     */
+    public static class LoggingFormater extends Formatter {
+
+        @Override
+        public String format(LogRecord log) {
+            if (log.getThrown() == null && log.getMessage() != null && log.getMessage().startsWith("------")) {
+                return formatMessage(log) + "\r\n";
+            }
+            String source;
+            if (log.getSourceClassName() != null) {
+                source = log.getSourceClassName();
+                if (log.getSourceMethodName() != null) {
+                    source += " " + log.getSourceMethodName();
+                }
+            } else {
+                source = log.getLoggerName();
+            }
+            String message = formatMessage(log);
+            String throwable = "";
+            if (log.getThrown() != null) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw) {
+                    @Override
+                    public void println() {
+                        super.print("\r\n");
+                    }
+                };
+                pw.println();
+                log.getThrown().printStackTrace(pw);
+                pw.close();
+                throwable = sw.toString();
+            }
+            Object[] params = log.getParameters();
+            if (params != null) {
+                if (params.length == 1) {
+                    return String.format(FORMATTER_FORMAT2,
+                        log.getInstant().toEpochMilli(),
+                        source,
+                        log.getLoggerName(),
+                        log.getLevel().getName(),
+                        message,
+                        throwable,
+                        params[0]);
+                } else if (params.length == 2) {
+                    return String.format(FORMATTER_FORMAT3,
+                        log.getInstant().toEpochMilli(),
+                        source,
+                        log.getLoggerName(),
+                        log.getLevel().getName(),
+                        message,
+                        throwable,
+                        params[0],
+                        params[1]);
+                }
+            }
+            return String.format(FORMATTER_FORMAT,
+                log.getInstant().toEpochMilli(),
+                source,
+                log.getLoggerName(),
+                log.getLevel().getName(),
+                message,
+                throwable);
+        }
+    }
+
+    static boolean traceFlag = false; //防止设置system.property前调用Traces类导致enable提前初始化
 
     protected static void fillLogRecord(LogRecord log) {
-        if (traceflag && Traces.enable()) {
-            String traceid = Traces.currTraceid();
+        String traceid = null;
+        if (traceFlag && Traces.enable()) {
+            traceid = Traces.currTraceid();
             if (traceid == null || traceid.isEmpty()) {
                 traceid = "[TID:N/A] ";
             } else {
                 traceid = "[TID:" + traceid + "] ";
             }
-            if (log.getMessage() == null) {
-                log.setMessage(traceid);
-            } else {
-                log.setMessage(traceid + log.getMessage());
-            }
+        }
+        if (traceid == null) {
+            log.setParameters(new String[]{Thread.currentThread().getName()});
+        } else {
+            log.setParameters(new String[]{Thread.currentThread().getName(), traceid});
         }
     }
 }

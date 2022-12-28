@@ -5,16 +5,13 @@
  */
 package org.redkale.boot;
 
-import org.redkale.util.RedkaleClassLoader;
-
 import java.io.*;
-import java.nio.file.*;
+import java.nio.file.Files;
 import static java.nio.file.StandardCopyOption.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Calendar;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
-import java.util.logging.Formatter;
 import java.util.regex.Pattern;
 import org.redkale.util.*;
 
@@ -27,9 +24,6 @@ import org.redkale.util.*;
  */
 @SuppressWarnings("unchecked")
 public class LoggingFileHandler extends LoggingBaseHandler {
-
-    //public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s%n%5$s%6$s%n";
-    public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s\r\n%5$s%6$s\r\n";
 
     /**
      * SNCP的日志输出Handler
@@ -54,13 +48,13 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
         private void configure() {
             LogManager manager = LogManager.getLogManager();
-            String denyregstr = manager.getProperty(LoggingConsoleHandler.class.getName() + ".denyreg");
-            if (denyregstr == null) {
-                denyregstr = manager.getProperty("java.util.logging.ConsoleHandler.denyreg");
+            String denyregxstr = manager.getProperty(LoggingConsoleHandler.class.getName() + ".denyregx");
+            if (denyregxstr == null) {
+                denyregxstr = manager.getProperty("java.util.logging.ConsoleHandler.denyregx");
             }
             try {
-                if (denyregstr != null && !denyregstr.trim().isEmpty()) {
-                    this.denyRegx = Pattern.compile(denyregstr);
+                if (denyregxstr != null && !denyregxstr.trim().isEmpty()) {
+                    this.denyRegx = Pattern.compile(denyregxstr);
                 }
             } catch (Exception e) {
             }
@@ -71,52 +65,6 @@ public class LoggingFileHandler extends LoggingBaseHandler {
             if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) return;
             fillLogRecord(log);
             super.publish(log);
-        }
-    }
-
-    /**
-     * 默认的日志时间格式化类
-     * 与SimpleFormatter的区别在于level不使用本地化
-     *
-     */
-    public static class LoggingFormater extends Formatter {
-
-        @Override
-        public String format(LogRecord log) {
-            if (log.getThrown() == null && log.getMessage() != null && log.getMessage().startsWith("------")) {
-                return formatMessage(log) + "\r\n";
-            }
-            String source;
-            if (log.getSourceClassName() != null) {
-                source = log.getSourceClassName();
-                if (log.getSourceMethodName() != null) {
-                    source += " " + log.getSourceMethodName();
-                }
-            } else {
-                source = log.getLoggerName();
-            }
-            String message = formatMessage(log);
-            String throwable = "";
-            if (log.getThrown() != null) {
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw) {
-                    @Override
-                    public void println() {
-                        super.print("\r\n");
-                    }
-                };
-                pw.println();
-                log.getThrown().printStackTrace(pw);
-                pw.close();
-                throwable = sw.toString();
-            }
-            return String.format(FORMATTER_FORMAT,
-                System.currentTimeMillis(),
-                source,
-                log.getLoggerName(),
-                log.getLevel().getName(),
-                message,
-                throwable);
         }
     }
 
@@ -131,7 +79,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
             ps.println("com.sun.level = INFO");
             ps.println("javax.level = INFO");
             ps.println("java.util.logging.ConsoleHandler.level = FINEST");
-            ps.println("java.util.logging.ConsoleHandler.formatter = " + LoggingFileHandler.LoggingFormater.class.getName());
+            ps.println("java.util.logging.ConsoleHandler.formatter = " + LoggingFormater.class.getName());
             LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(out.toByteArray()));
         } catch (Exception e) {
         }
@@ -159,7 +107,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     protected boolean append;
 
-    protected Pattern denyreg;
+    protected Pattern denyregx;
 
     private final AtomicLong loglength = new AtomicLong();
 
@@ -367,10 +315,10 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         } catch (Exception e) {
         }
 
-        String denyregstr = manager.getProperty(cname + ".denyreg");
+        String denyregxstr = manager.getProperty(cname + ".denyregx");
         try {
-            if (denyregstr != null && !denyregstr.trim().isEmpty()) {
-                denyreg = Pattern.compile(denyregstr);
+            if (denyregxstr != null && !denyregxstr.trim().isEmpty()) {
+                denyregx = Pattern.compile(denyregxstr);
             }
         } catch (Exception e) {
         }
@@ -379,32 +327,8 @@ public class LoggingFileHandler extends LoggingBaseHandler {
     @Override
     public void publish(LogRecord log) {
         if (!isLoggable(log)) return;
-        final String sourceClassName = log.getSourceClassName();
-        if (sourceClassName == null || true) {
-            StackTraceElement[] ses = new Throwable().getStackTrace();
-            for (int i = 2; i < ses.length; i++) {
-                if (ses[i].getClassName().startsWith("java.util.logging")) continue;
-                log.setSourceClassName('[' + Thread.currentThread().getName() + "] " + ses[i].getClassName());
-                log.setSourceMethodName(ses[i].getMethodName());
-                break;
-            }
-        } else {
-            log.setSourceClassName('[' + Thread.currentThread().getName() + "] " + sourceClassName);
-        }
-        if (denyreg != null && denyreg.matcher(log.getMessage()).find()) return;
-        if (traceflag && Traces.enable()) {
-            String traceid = Traces.currTraceid();
-            if (traceid == null || traceid.isEmpty()) {
-                traceid = "[TID:N/A] ";
-            } else {
-                traceid = "[TID:" + traceid + "] ";
-            }
-            if (log.getMessage() == null) {
-                log.setMessage(traceid);
-            } else {
-                log.setMessage(traceid + log.getMessage());
-            }
-        }
+        if (denyregx != null && denyregx.matcher(log.getMessage()).find()) return;
+        fillLogRecord(log);
         logqueue.offer(log);
     }
 

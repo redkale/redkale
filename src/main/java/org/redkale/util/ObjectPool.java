@@ -6,7 +6,7 @@ package org.redkale.util;
 
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import java.util.logging.*;
 
@@ -229,7 +229,7 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 //            if (debug) {
 //                for (T t : queue) {
 //                    if (t == e) {
-//                        logger.log(Level.WARNING, "[" + Thread.currentThread().getName() + "] repeat offer the same object(" + e + ")", new Exception());
+//                        logger.log(Level.WARNING, "repeat offer the same object(" + e + ")", new Exception());
 //                        return;
 //                    }
 //                }

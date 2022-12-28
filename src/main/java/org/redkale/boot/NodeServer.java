@@ -271,10 +271,10 @@ public abstract class NodeServer {
                 field.set(srcObj, service);
                 rf.inject(resourceName, service, self); // 给其可能包含@Resource的字段赋值;
                 if (!application.isCompileMode()) service.init(null);
-                logger.info("[" + Thread.currentThread().getName() + "] Load Service(@Local @AutoLoad service = " + resServiceType.getSimpleName() + ", resourceName = '" + resourceName + "')");
+                logger.info("Load Service(@Local @AutoLoad service = " + resServiceType.getSimpleName() + ", resourceName = '" + resourceName + "')");
                 return service;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] Load @Local @AutoLoad(false) Service inject " + resServiceType + " to " + srcObj + " error", e);
+                logger.log(Level.SEVERE, "Load @Local @AutoLoad(false) Service inject " + resServiceType + " to " + srcObj + " error", e);
                 return null;
             }
         }, Service.class);
@@ -288,7 +288,7 @@ public abstract class NodeServer {
                 field.set(srcObj, source);
                 return source;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] DataSource inject to " + srcObj + " error", e);
+                logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
                 return null;
             }
         }, DataSource.class);
@@ -317,7 +317,7 @@ public abstract class NodeServer {
                             sncpServer.getSncpServer().addSncpServlet((Service) source);
                         }
                     }
-                    logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
+                    logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
                     return source;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "DataSource inject error", e);
@@ -390,7 +390,6 @@ public abstract class NodeServer {
     protected void loadService(ClassFilter<? extends Service> serviceFilter, ClassFilter otherFilter) throws Exception {
         if (serviceFilter == null) return;
         final long starts = System.currentTimeMillis();
-        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
         final ResourceFactory appResourceFactory = application.getResourceFactory();
@@ -497,7 +496,7 @@ public abstract class NodeServer {
 
         if (sb != null) {
             remoteServices.forEach(y -> {
-                sb.append(localThreadName).append(Sncp.toSimpleString(y, maxNameLength, maxTypeLength)).append(" load and inject").append(LINE_SEPARATOR);
+                sb.append(Sncp.toSimpleString(y, maxNameLength, maxTypeLength)).append(" load and inject").append(LINE_SEPARATOR);
             });
         }
         if (isSNCP() && !sncpRemoteAgents.isEmpty()) {
@@ -528,7 +527,7 @@ public abstract class NodeServer {
         if (application.isCompileMode()) {
             localServices.stream().forEach(y -> {
                 String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                if (slist != null) slist.add(new StringBuilder().append(localThreadName).append(serstr).append(" load").append(LINE_SEPARATOR).toString());
+                if (slist != null) slist.add(new StringBuilder().append(serstr).append(" load").append(LINE_SEPARATOR).toString());
             });
         } else {
             localServices.stream().forEach(y -> {
@@ -536,7 +535,7 @@ public abstract class NodeServer {
                 y.init(Sncp.getConf(y));
                 long e = System.currentTimeMillis() - s;
                 String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                if (slist != null) slist.add(new StringBuilder().append(localThreadName).append(serstr).append(" load and init in ").append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
+                if (slist != null) slist.add(new StringBuilder().append(serstr).append(" load and init in ").append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
             });
         }
         if (slist != null && sb != null) {
@@ -544,9 +543,9 @@ public abstract class NodeServer {
             for (String s : wlist) {
                 sb.append(s);
             }
-            sb.append(localThreadName).append("All " + localServices.size() + " Services load in ").append(System.currentTimeMillis() - starts).append(" ms");
+            sb.append("All " + localServices.size() + " Services load in ").append(System.currentTimeMillis() - starts).append(" ms");
         }
-        if (sb != null && preinite > 10) sb.append(localThreadName).append(ClusterAgent.class.getSimpleName()).append(" register in ").append(preinite).append(" ms" + LINE_SEPARATOR);
+        if (sb != null && preinite > 10) sb.append(ClusterAgent.class.getSimpleName()).append(" register in ").append(preinite).append(" ms" + LINE_SEPARATOR);
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
 

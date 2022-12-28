@@ -177,10 +177,10 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         } catch (Exception e) {
         }
 
-        String denyregstr = manager.getProperty(cname + ".denyreg");
+        String denyregxstr = manager.getProperty(cname + ".denyregx");
         try {
-            if (denyregstr != null && !denyregstr.trim().isEmpty()) {
-                denyRegx = Pattern.compile(denyregstr);
+            if (denyregxstr != null && !denyregxstr.trim().isEmpty()) {
+                denyRegx = Pattern.compile(denyregxstr);
             }
         } catch (Exception e) {
         }
@@ -189,8 +189,8 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
     @Override
     public void publish(LogRecord log) {
         if (!isLoggable(log)) return;
-        final String sourceClassName = log.getSourceClassName();
-        if (sourceClassName == null || true) {
+        if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) return;
+        if (log.getSourceClassName() != null) {
             StackTraceElement[] ses = new Throwable().getStackTrace();
             for (int i = 2; i < ses.length; i++) {
                 if (ses[i].getClassName().startsWith("java.util.logging")) continue;
@@ -199,7 +199,6 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 break;
             }
         }
-        if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) return;
         String rawTag = tagDateFormat == null ? tag : Utility.formatTime(tagDateFormat, -1, log.getInstant().toEpochMilli());
         fillLogRecord(log);
         logqueue.offer(new SearchLogRecord(rawTag, log));
@@ -265,7 +264,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             this.rawLog = log;
             this.rawTag = tag;
             this.threadName = Thread.currentThread().getName();
-            this.traceid = LoggingFileHandler.traceflag ? Traces.currTraceid() : null;
+            this.traceid = LoggingBaseHandler.traceFlag ? Traces.currTraceid() : null;
             String msg = log.getMessage();
             if (log.getThrown() != null) {
                 StringWriter sw = new StringWriter();

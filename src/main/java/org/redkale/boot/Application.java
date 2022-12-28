@@ -697,7 +697,7 @@ public final class Application {
                             ps.load(in);
                             in.close();
                             if (logger.isLoggable(Level.FINE)) {
-                                logger.log(Level.FINE, "load properties(" + dfload + ") size = " + ps.size());
+                                logger.log(Level.FINE, "Load properties(" + dfload + ") size = " + ps.size());
                             }
                             ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
                                 if (!x.toString().startsWith("redkale.")) {
@@ -707,7 +707,7 @@ public final class Application {
                                 }
                             });
                         } catch (Exception e) {
-                            logger.log(Level.WARNING, "load properties(" + dfload + ") error", e);
+                            logger.log(Level.WARNING, "Load properties(" + dfload + ") error", e);
                         }
                     }
                 }
@@ -1089,7 +1089,7 @@ public final class Application {
                 rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
                 return httpClient;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] java.net.http.HttpClient inject error", e);
+                logger.log(Level.SEVERE, "java.net.http.HttpClient inject error", e);
                 return null;
             }
         }, java.net.http.HttpClient.class);
@@ -1103,7 +1103,7 @@ public final class Application {
                 rf.register(resourceName, HttpSimpleClient.class, httpClient);
                 return httpClient;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpClient inject error", e);
+                logger.log(Level.SEVERE, "HttpClient inject error", e);
                 return null;
             }
         }, HttpSimpleClient.class);
@@ -1153,7 +1153,7 @@ public final class Application {
                 rf.register(resourceName, HttpMessageClient.class, messageClient);
                 return messageClient;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[" + Thread.currentThread().getName() + "] HttpMessageClient inject error", e);
+                logger.log(Level.SEVERE, "HttpMessageClient inject error", e);
                 return null;
             }
         }, HttpMessageClient.class);
@@ -1195,14 +1195,14 @@ public final class Application {
             cacheSources.add(source);
             resourceFactory.register(sourceName, CacheSource.class, source);
             if (!compileMode && source instanceof Service) ((Service) source).init(sourceConf);
-            logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+            logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
             return source;
         }
         try {
             CacheSource source = AbstractCacheSource.createCacheSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
             cacheSources.add(source);
             resourceFactory.register(sourceName, source);
-            logger.info("[" + Thread.currentThread().getName() + "] Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+            logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
             return source;
         } catch (RuntimeException ex) {
             throw ex;
@@ -1225,7 +1225,7 @@ public final class Application {
             }
             dataSources.add(source);
             resourceFactory.register(sourceName, DataSource.class, source);
-            logger.info("[" + Thread.currentThread().getName() + "] Load DataSource resourceName = " + sourceName + ", source = " + source);
+            logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
             return source;
         }
         try {
@@ -1236,7 +1236,7 @@ public final class Application {
             } else {
                 resourceFactory.register(sourceName, source);
             }
-            logger.info("[" + Thread.currentThread().getName() + "] Load DataSource resourceName = " + sourceName + ", source = " + source);
+            logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
             return source;
         } catch (RuntimeException ex) {
             throw ex;
@@ -1313,7 +1313,7 @@ public final class Application {
                                 logger.info(application.getClass().getSimpleName() + " shutdown in " + e + " ms");
                                 channel.close();
                             } catch (Exception ex) {
-                                logger.log(Level.INFO, "shutdown fail", ex);
+                                logger.log(Level.INFO, "Shutdown fail", ex);
                                 sendUdpData(channel, address, buffer, "shutdown fail".getBytes(StandardCharsets.UTF_8));
                             } finally {
                                 loop = false;
@@ -1502,7 +1502,7 @@ public final class Application {
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
         logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale started in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n");
-        LoggingBaseHandler.traceflag = true;
+        LoggingBaseHandler.traceFlag = true;
 
         for (ApplicationListener listener : this.listeners) {
             listener.postStart(this);
@@ -1531,7 +1531,7 @@ public final class Application {
                 long e = System.currentTimeMillis() - s;
                 logger.info(Application.this.getClass().getSimpleName() + " shutdown in " + e + " ms");
             } catch (Exception ex) {
-                logger.log(Level.INFO, "shutdown fail", ex);
+                logger.log(Level.INFO, "Shutdown fail", ex);
             } finally {
                 shutdownLatch.countDown();
             }
@@ -1953,9 +1953,9 @@ public final class Application {
                         Level logLevel = Level.parse(loggingChangedProps.getProperty(".level"));
                         Logger.getGlobal().setLevel(logLevel);
                         this.loggingProperties.putAll(loggingChangedProps);
-                        logger.log(Level.INFO, "reconfig logging level to " + logLevel);
+                        logger.log(Level.INFO, "Reconfig logging level to " + logLevel);
                     } catch (Exception e) {
-                        logger.log(Level.WARNING, "reconfig logging level error, new level is " + loggingChangedProps.getProperty(".level"));
+                        logger.log(Level.WARNING, "Reconfig logging level error, new level is " + loggingChangedProps.getProperty(".level"));
                     }
                 } else {
                     Properties newLogProps = new Properties();
@@ -1963,7 +1963,7 @@ public final class Application {
                     newLogProps.putAll(loggingChangedProps);
                     loggingRemovedKeys.forEach(k -> newLogProps.remove(k));
                     reconfigLogging(newLogProps);
-                    logger.log(Level.INFO, "reconfig logging finished ");
+                    logger.log(Level.INFO, "Reconfig logging finished ");
                 }
             }
 

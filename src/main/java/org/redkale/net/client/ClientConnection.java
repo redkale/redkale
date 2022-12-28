@@ -10,7 +10,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.*;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -209,7 +209,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                         }
                     }
                 } catch (Throwable t) {
-                    client.logger.log(Level.INFO, "complete result error, request: " + respFuture.request, t);
+                    client.logger.log(Level.INFO, "Complete result error, request: " + respFuture.request, t);
                 }
             }
         }

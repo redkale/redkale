@@ -142,7 +142,7 @@ public class NodeHttpServer extends NodeServer {
                     }
                     resourceFactory.inject(resourceName, nodeService, self);
                     field.set(srcObj, nodeService);
-                    logger.fine("[" + Thread.currentThread().getName() + "] Load Service " + nodeService);
+                    logger.fine("Load Service " + nodeService);
                     return nodeService;
                 }
             } catch (Exception e) {
@@ -155,7 +155,6 @@ public class NodeHttpServer extends NodeServer {
     @SuppressWarnings("unchecked")
     protected void loadHttpFilter(final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
-        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
         for (FilterEntry<? extends Filter> en : list) {
             Class<HttpFilter> clazz = (Class<HttpFilter>) en.getType();
@@ -165,7 +164,7 @@ public class NodeHttpServer extends NodeServer {
             resourceFactory.inject(filter, this);
             DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
             this.httpServer.addHttpFilter(filter, filterConf);
-            if (sb != null) sb.append(localThreadName).append(" Load ").append(clazz.getName()).append(LINE_SEPARATOR);
+            if (sb != null) sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString());
     }
@@ -181,7 +180,6 @@ public class NodeHttpServer extends NodeServer {
         if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
         if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
         final String prefix = prefix0;
-        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         List<FilterEntry<? extends Servlet>> list = new ArrayList(servletFilter.getFilterEntrys());
         list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
             boolean ws1 = WebSocketServlet.class.isAssignableFrom(o1.getType());
@@ -203,7 +201,7 @@ public class NodeHttpServer extends NodeServer {
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null) continue;
             if (ws.value().length == 0) {
-                logger.log(Level.INFO, "not found @WebServlet.value in " + clazz.getName());
+                logger.log(Level.INFO, "Not found @WebServlet.value in " + clazz.getName());
                 continue;
             }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
@@ -285,13 +283,13 @@ public class NodeHttpServer extends NodeServer {
                 if (as.getKey().length() > max) max = as.getKey().length();
             }
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
-                sb.append(localThreadName).append("Load ").append(as.getKey());
+                sb.append("Load ").append(as.getKey());
                 for (int i = 0; i < max - as.getKey().length(); i++) {
                     sb.append(' ');
                 }
                 sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
             }
-            sb.append(localThreadName).append("All HttpServlets load in ").append(System.currentTimeMillis() - starts).append(" ms").append(LINE_SEPARATOR);
+            sb.append("All HttpServlets load in ").append(System.currentTimeMillis() - starts).append(" ms").append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) logger.log(Level.INFO, sb.toString().trim());
     }
@@ -306,7 +304,6 @@ public class NodeHttpServer extends NodeServer {
         if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') prefix0 = prefix0.substring(0, prefix0.length() - 1);
         if (!prefix0.isEmpty() && prefix0.charAt(0) != '/') prefix0 = '/' + prefix0;
 
-        final String localThreadName = "[" + Thread.currentThread().getName() + "] ";
         String mqname = restConf.getValue("mq");
         MessageAgent agent0 = null;
         if (mqname != null) {
@@ -361,7 +358,7 @@ public class NodeHttpServer extends NodeServer {
                     resourceFactory.inject(servlet, NodeHttpServer.this);
                     dynServletMap.put(service, servlet);
                     if (messageAgent != null) messageAgent.putService(this, service, servlet);
-                    //if (finest) logger.finest(localThreadName + " Create RestServlet(resource.name='" + name + "') = " + servlet);
+                    //if (finest) logger.finest("Create RestServlet(resource.name='" + name + "') = " + servlet);
                     if (rests != null) {
                         String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
                         for (int i = 0; i < mappings.length; i++) {
@@ -420,7 +417,7 @@ public class NodeHttpServer extends NodeServer {
                 if (ws != null && !ws.repair()) prefix2 = "";
                 resourceFactory.inject(servlet, NodeHttpServer.this);
                 if (logger.isLoggable(Level.FINEST)) {
-                    logger.finest(localThreadName + " " + stype.getName() + " create a RestWebSocketServlet");
+                    logger.finest(stype.getName() + " create a RestWebSocketServlet");
                 }
                 if (webss != null) {
                     String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();

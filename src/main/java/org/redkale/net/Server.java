@@ -10,10 +10,11 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
-import javax.net.ssl.*;
+import javax.net.ssl.SSLContext;
 import org.redkale.boot.Application;
+import org.redkale.net.Filter;
 import org.redkale.util.*;
 
 /**
@@ -35,7 +36,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     //@Deprecated  //@deprecated 2.3.0 使用RESNAME_APP_EXECUTOR
     //public static final String RESNAME_SERVER_EXECUTOR2 = "SERVER_EXECUTOR";
     //public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
-
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     //-------------------------------------------------------------
@@ -155,9 +155,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
                 //SSL模式下， size必须大于 5+16+16384+256+48+(isDTLS?0:16384) = 16k*1/2+325 = 16709/33093  见: sun.security.ssl.SSLRecord.maxLargeRecordSize
                 int maxLen = dtls ? 16709 : 33093;
                 if (maxLen > this.bufferCapacity) {
-                    final String threadName = "[" + Thread.currentThread().getName() + "] ";
                     int newLen = dtls ? (17 * 1024) : (33 * 1024); //取个1024的整倍数
-                    logger.info(threadName + this.getClass().getSimpleName() + " change bufferCapacity " + this.bufferCapacity + " to " + newLen + " for SSL size " + maxLen);
+                    logger.info(this.getClass().getSimpleName() + " change bufferCapacity " + this.bufferCapacity + " to " + newLen + " for SSL size " + maxLen);
                     this.bufferCapacity = newLen;
                 }
             }
@@ -283,9 +282,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.serverChannel.open(config);
         serverChannel.bind(address, backlog);
         serverChannel.accept(application, this);
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
         postStart();
-        logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())
+        logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())
             + ", cpu: " + Utility.cpus() + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
             + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxbody)
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms\r\n");
@@ -315,8 +313,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         }
         this.address = context.address;
         this.serverChannel = newServerChannel;
-        final String threadName = "[" + Thread.currentThread().getName() + "] ";
-        logger.info(threadName + this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol))
+        logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol))
             + " change address listen: " + address + ", started in " + (System.currentTimeMillis() - s) + " ms");
         if (oldServerChannel != null) {
             new Thread() {
