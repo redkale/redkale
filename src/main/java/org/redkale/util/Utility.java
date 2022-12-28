@@ -1097,6 +1097,31 @@ public final class Utility {
     }
 
     /**
+     * 将符合条件的元素从数组中删除
+     *
+     * @param array 原数组
+     * @param item  元素
+     *
+     * @return 新数组
+     */
+    public static String[] remove(final String[] array, final String item) {
+        if (array == null || array.length == 0) return array;
+        final String[] news = new String[array.length];
+        int index = 0;
+        for (int i = 0; i < news.length; i++) {
+            if (item != null && !item.equals(array[i])) {
+                news[index++] = array[i];
+            } else if (item == null && array[i] != null) {
+                news[index++] = array[i];
+            }
+        }
+        if (index == array.length) return array;
+        final String[] rs = new String[index];
+        System.arraycopy(news, 0, rs, 0, index);
+        return rs;
+    }
+
+    /**
      * 将指定的long元素从数组中删除, 相同的元素会根据items里重复次数来执行删除 <br>
      * 例如: <br>
      * remove(new short[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]<br>

@@ -40,6 +40,9 @@ import org.redkale.util.*;
 @ResourceType(DataSource.class)
 public abstract class DataSqlSource extends AbstractDataSource implements Function<Class, EntityInfo> {
 
+    //不存在分表时最大重试次数
+    protected static final int MAX_RETRYS = 3;
+
     protected static final Flipper FLIPPER_ONE = new Flipper(1);
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
@@ -1948,9 +1951,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
                 if (!union.isEmpty()) union.append(" UNION ALL ");
-                String tabalis = "t" + (++b);
-                union.append("SELECT ").append(tabalis).append(".").append(keySqlColumn).append(", ").append(funcSqlColumn.replace("a.", tabalis + "."))
-                    .append(" FROM ").append(table).append(" ").append(tabalis).append(joinAndWhere);
+                union.append("SELECT a.").append(keySqlColumn).append(", ").append(funcSqlColumn)
+                    .append(" FROM ").append(table).append(" a").append(joinAndWhere);
             }
             sql = "SELECT a." + keySqlColumn + ", " + funcSqlColumn + " FROM (" + (union) + ") a";
         }
@@ -2043,14 +2045,12 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             if (groupBySqlColumns.length() > 0) sql += groupBySqlColumns + ", ";
             sql += funcSqlColumns + " FROM " + tables[0] + " a" + joinAndWhere;
         } else {
-            int b = 0;
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
                 if (!union.isEmpty()) union.append(" UNION ALL ");
-                String tabalis = "t" + (++b);
                 String subsql = "SELECT ";
-                if (groupBySqlColumns.length() > 0) subsql += groupBySqlColumns.toString().replace("a.", tabalis + ".") + ", ";
-                subsql += funcSqlColumns.toString().replace("a.", tabalis + ".") + " FROM " + table + " " + tabalis + joinAndWhere;
+                if (groupBySqlColumns.length() > 0) subsql += groupBySqlColumns.toString() + ", ";
+                subsql += funcSqlColumns.toString() + " FROM " + table + " a" + joinAndWhere;
                 union.append(subsql);
             }
             sql = "SELECT ";
@@ -2191,12 +2191,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (tables.length == 1) {
             sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM " + tables[0] + " a" + joinAndWhere;
         } else {
-            int b = 0;
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
                 if (!union.isEmpty()) union.append(" UNION ALL ");
-                String tabalis = "t" + (++b);
-                union.append("SELECT ").append(info.getQueryColumns(tabalis, selects)).append(" FROM ").append(table).append(" ").append(tabalis).append(joinAndWhere);
+                union.append("SELECT ").append(info.getQueryColumns("a", selects)).append(" FROM ").append(table).append(" a").append(joinAndWhere);
             }
             sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM (" + (union) + ") a";
         }
@@ -2275,12 +2273,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (tables.length == 1) {
             sql = "SELECT " + info.getSQLColumn("a", column) + " FROM " + tables[0] + " a" + joinAndWhere;
         } else {
-            int b = 0;
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
                 if (!union.isEmpty()) union.append(" UNION ALL ");
-                String tabalis = "t" + (++b);
-                union.append("SELECT ").append(info.getSQLColumn(tabalis, column)).append(" FROM ").append(table).append(" ").append(tabalis).append(joinAndWhere);
+                union.append("SELECT ").append(info.getSQLColumn("a", column)).append(" FROM ").append(table).append(" a").append(joinAndWhere);
             }
             sql = "SELECT " + info.getSQLColumn("a", column) + " FROM (" + (union) + ") a";
         }
@@ -2364,12 +2360,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (tables.length == 1) {
             sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM " + tables[0] + " a" + joinAndWhere;
         } else {
-            int b = 0;
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
                 if (!union.isEmpty()) union.append(" UNION ALL ");
-                String tabalis = "t" + (++b);
-                union.append("SELECT ").append(info.getPrimarySQLColumn(tabalis)).append(" FROM ").append(table).append(" ").append(tabalis).append(joinAndWhere);
+                union.append("SELECT ").append(info.getPrimarySQLColumn("a")).append(" FROM ").append(table).append(" a").append(joinAndWhere);
             }
             sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM (" + (union) + ") a";
         }
