@@ -969,7 +969,10 @@ public final class EntityInfo<T> {
     public String getTable(Serializable primary) {
         if (tableStrategy == null) return table;
         String t = tableStrategy.getTable(table, primary);
-        return t == null || t.isEmpty() ? table : t;
+        if (t == null || t.isEmpty()) {
+            throw new SourceException(table + " tableStrategy.getTable is empty, primary=" + primary);
+        }
+        return t;
     }
 
     /**
@@ -982,7 +985,10 @@ public final class EntityInfo<T> {
     public String[] getTables(FilterNode node) {
         if (tableStrategy == null) return new String[]{table};
         String[] t = tableStrategy.getTables(table, node);
-        return t == null || t.length == 0 ? new String[]{table} : t;
+        if (t == null || t.length < 1) {
+            throw new SourceException(table + " tableStrategy.getTable is empty, filter=" + node);
+        }
+        return t;
     }
 
     /**
@@ -995,7 +1001,10 @@ public final class EntityInfo<T> {
     public String getTable(T bean) {
         if (tableStrategy == null) return table;
         String t = tableStrategy.getTable(table, bean);
-        return t == null || t.isEmpty() ? table : t;
+        if (t == null || t.isEmpty()) {
+            throw new SourceException(table + " tableStrategy.getTable is empty, entity=" + bean);
+        }
+        return t;
     }
 
     /**
