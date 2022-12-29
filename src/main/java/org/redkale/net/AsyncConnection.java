@@ -44,7 +44,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     protected final AsyncGroup ioGroup;
 
-    protected final AsyncThread ioThread;
+    protected final AsyncIOThread ioThread;
 
     protected final boolean client;
 
@@ -76,12 +76,12 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     //用于服务端的Socket, 等同于一直存在的readCompletionHandler
     ProtocolCodec protocolCodec;
 
-    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncThread ioThread, final int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
+    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioThread, final int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
         SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
         this(client, ioGroup, ioThread, bufferCapacity, bufferPool, bufferPool, sslBuilder, sslContext, livingCounter, closedCounter);
     }
 
-    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncThread ioThread, final int bufferCapacity, Supplier<ByteBuffer> bufferSupplier,
+    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioThread, final int bufferCapacity, Supplier<ByteBuffer> bufferSupplier,
         Consumer<ByteBuffer> bufferConsumer, SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
         Objects.requireNonNull(bufferSupplier);
         Objects.requireNonNull(bufferConsumer);
@@ -152,7 +152,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         return ioThread.inCurrThread();
     }
 
-    public final AsyncThread getAsyncThread() {
+    public final AsyncIOThread getAsyncIOThread() {
         return ioThread;
     }
 

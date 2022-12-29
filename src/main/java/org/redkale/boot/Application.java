@@ -587,35 +587,38 @@ public final class Application {
                 executorConf = DefaultAnyValue.create();
             }
             final AtomicReference<ExecutorService> workref = new AtomicReference<>();
-            final int executorThreads = executorConf.getIntValue("threads", Math.max(2, Utility.cpus()));
-            boolean executorHash = executorConf.getBoolValue("hash");
-            if (executorThreads > 0) {
+            final int workThreads = executorConf.getIntValue("threads", Math.max(2, Utility.cpus()));
+            boolean workHash = executorConf.getBoolValue("hash", false);
+            if (workThreads > 0) {
                 final AtomicInteger workCounter = new AtomicInteger();
-                if (executorHash) {
-                    workExecutor0 = new ThreadHashExecutor(executorThreads, (Runnable r) -> {
+                if (workHash) {
+                    workExecutor0 = new ThreadHashExecutor(workThreads, (Runnable r) -> {
                         int i = workCounter.get();
                         int c = workCounter.incrementAndGet();
                         String threadname = "Redkale-HashWorkThread-" + (c > 9 ? c : ("0" + c));
-                        Thread t = new WorkThread(threadname, i, executorThreads, workref.get(), r);
+                        Thread t = new WorkThread(threadname, i, workThreads, workref.get(), r);
                         return t;
                     });
                 } else {
-                    workExecutor0 = Executors.newFixedThreadPool(executorThreads, (Runnable r) -> {
+                    workExecutor0 = Executors.newFixedThreadPool(workThreads, (Runnable r) -> {
                         int i = workCounter.get();
                         int c = workCounter.incrementAndGet();
                         String threadname = "Redkale-WorkThread-" + (c > 9 ? c : ("0" + c));
-                        Thread t = new WorkThread(threadname, i, executorThreads, workref.get(), r);
+                        Thread t = new WorkThread(threadname, i, workThreads, workref.get(), r);
                         return t;
                     });
                 }
                 workref.set(workExecutor0);
             }
+
+            //给所有client给一个默认的AsyncGroup
             final AtomicInteger wclientCounter = new AtomicInteger();
-            clientExecutor = Executors.newFixedThreadPool(Math.max(2, executorThreads / 2), (Runnable r) -> {
+            final int clientThreads = Math.max(Math.max(2, Utility.cpus()), workThreads / 2);
+            clientExecutor = Executors.newFixedThreadPool(clientThreads, (Runnable r) -> {
                 int i = wclientCounter.get();
                 int c = wclientCounter.incrementAndGet();
-                String threadname = "Redkale-ClientThread-" + (c > 9 ? c : ("0" + c));
-                Thread t = new WorkThread(threadname, i, executorThreads, workref.get(), r);
+                String threadname = "Redkale-Client-WorkThread-" + (c > 9 ? c : ("0" + c));
+                Thread t = new WorkThread(threadname, i, clientThreads, workref.get(), r);
                 return t;
             });
         }

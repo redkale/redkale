@@ -24,7 +24,7 @@ import org.redkale.util.*;
  *
  * @since 2.1.0
  */
-public class AsyncIOThread extends AsyncThread {
+public class AsyncIOThread extends WorkThread {
 
     protected static final Logger logger = Logger.getLogger(AsyncIOThread.class.getSimpleName());
 
@@ -42,15 +42,28 @@ public class AsyncIOThread extends AsyncThread {
 
     private boolean closed;
 
-    int invoker = 0;
-
-    public AsyncIOThread(final boolean readable, String name, int index, int threads, ExecutorService workExecutor, Selector selector,
+    public AsyncIOThread(String name, int index, int threads, ExecutorService workExecutor, Selector selector,
         ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
         super(name, index, threads, workExecutor, null);
         this.selector = selector;
         this.setDaemon(true);
         this.bufferSupplier = () -> (inCurrThread() ? unsafeBufferPool : safeBufferPool).get();
         this.bufferConsumer = (v) -> (inCurrThread() ? unsafeBufferPool : safeBufferPool).accept(v);
+    }
+
+    public static AsyncIOThread currAsyncIOThread() {
+        Thread t = Thread.currentThread();
+        return t instanceof AsyncIOThread ? (AsyncIOThread) t : null;
+    }
+
+    /**
+     * 是否IO线程
+     *
+     * @return boolean
+     */
+    @Override
+    public final boolean inIO() {
+        return true;
     }
 
     @Override
@@ -131,7 +144,6 @@ public class AsyncIOThread extends AsyncThread {
                 while (it.hasNext()) {
                     SelectionKey key = it.next();
                     it.remove();
-                    invoker = 0;
                     if (!key.isValid()) {
                         continue;
                     }

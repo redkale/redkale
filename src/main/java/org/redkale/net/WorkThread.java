@@ -23,9 +23,9 @@ public class WorkThread extends Thread implements Executor {
 
     protected final ThreadHashExecutor hashExecutor;
 
-    private int index;   //WorkThread下标
+    private final int index;   //WorkThread下标，从0开始
 
-    private int threads; //WorkThread个数
+    private final int threads; //WorkThread个数
 
     public WorkThread(String name, int index, int threads, ExecutorService workExecutor, Runnable target) {
         super(target);
@@ -111,6 +111,16 @@ public class WorkThread extends Thread implements Executor {
      * @return boolean
      */
     public boolean inIO() {
+        return false;
+    }
+
+    /**
+     * 是否客户端的IO线程
+     *
+     * @since 2.8.0
+     * @return boolean
+     */
+    public boolean inClient() {
         return false;
     }
 

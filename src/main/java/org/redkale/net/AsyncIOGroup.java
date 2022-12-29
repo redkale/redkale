@@ -76,14 +76,15 @@ public class AsyncIOGroup extends AsyncGroup {
                 ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
                 String name = threadPrefixName + "-" + (i >= 9 ? (i + 1) : ("0" + (i + 1)));
-
-                this.ioThreads[i] = new AsyncIOThread(true, name, i, ioThreads.length, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
+                this.ioThreads[i] = client ? new ClientIOThread(name, i, ioThreads.length, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool)
+                    : new AsyncIOThread(name, i, ioThreads.length, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
             }
             if (client) {
                 ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
-                String name = threadPrefixName.replace("ServletThread", "ConnectThread").replace("IOThread", "ConnectThread");
-                this.connectThread = new AsyncIOThread(false, name, 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
+                String name = threadPrefixName.replace("ServletThread", "ConnectThread").replace("IOThread", "IOConnectThread");
+                this.connectThread = client ? new ClientIOThread(name, 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool)
+                    : new AsyncIOThread(name, 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -196,9 +197,7 @@ public class AsyncIOGroup extends AsyncGroup {
             channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
             channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
         } catch (IOException e) {
-            CompletableFuture future = new CompletableFuture();
-            future.completeExceptionally(e);
-            return future;
+            return CompletableFuture.failedFuture(e);
         }
         AsyncIOThread ioThread = null;
         Thread currThread = Thread.currentThread();
