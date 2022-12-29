@@ -202,7 +202,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> deleteDB(EntityInfo<T> info, Flipper flipper, String... sqls) {
+    protected <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, Flipper flipper, final String... sqls) {
+        return supplyAsync(() -> deleteDB(info, flipper, sqls));
+    }
+
+    @Override
+    protected <T> int deleteDB(EntityInfo<T> info, Flipper flipper, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -250,7 +255,7 @@ public class DataJdbcSource extends DataSqlSource {
             }
             conn.commit();
             slowLog(s, sqls);
-            return CompletableFuture.completedFuture(c);
+            return c;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -273,16 +278,16 @@ public class DataJdbcSource extends DataSqlSource {
                                 st.executeBatch();
                             }
                             st.close();
-                            return CompletableFuture.completedFuture(0);
+                            return 0;
                         } catch (SQLException e2) {
-                            return CompletableFuture.failedFuture(e2);
+                            throw new SourceException(e2);
                         }
                     }
                 } else {
-                    return CompletableFuture.failedFuture(e);
+                    throw new SourceException(e);
                 }
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 writePool.offerConnection(conn);
@@ -291,7 +296,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> clearTableDB(EntityInfo<T> info, final String[] tables, String... sqls) {
+    protected <T> CompletableFuture<Integer> clearTableDBAsync(EntityInfo<T> info, final String[] tables, String... sqls) {
+        return supplyAsync(() -> clearTableDB(info, tables, sqls));
+    }
+
+    @Override
+    protected <T> int clearTableDB(EntityInfo<T> info, final String[] tables, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -315,7 +325,7 @@ public class DataJdbcSource extends DataSqlSource {
             stmt.close();
             conn.commit();
             slowLog(s, sqls);
-            return CompletableFuture.completedFuture(c);
+            return c;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -324,9 +334,9 @@ public class DataJdbcSource extends DataSqlSource {
                 }
             }
             if (isTableNotExist(info, e.getSQLState())) {
-                return CompletableFuture.completedFuture(-1);
+                return -1;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 writePool.offerConnection(conn);
@@ -335,7 +345,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> dropTableDB(EntityInfo<T> info, String[] tables, String... sqls) {
+    protected <T> CompletableFuture<Integer> dropTableDBAsync(EntityInfo<T> info, final String[] tables, String... sqls) {
+        return supplyAsync(() -> dropTableDB(info, tables, sqls));
+    }
+
+    @Override
+    protected <T> int dropTableDB(EntityInfo<T> info, String[] tables, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -365,7 +380,7 @@ public class DataJdbcSource extends DataSqlSource {
                 }
             }
             slowLog(s, sqls);
-            return CompletableFuture.completedFuture(c);
+            return c;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -374,9 +389,9 @@ public class DataJdbcSource extends DataSqlSource {
                 }
             }
             if (isTableNotExist(info, e.getSQLState())) {
-                return CompletableFuture.completedFuture(-1);
+                return -1;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 writePool.offerConnection(conn);
@@ -394,7 +409,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> insertDB(EntityInfo<T> info, T... entitys) {
+    protected <T> CompletableFuture<Integer> insertDBAsync(EntityInfo<T> info, T... entitys) {
+        return supplyAsync(() -> insertDB(info, entitys));
+    }
+
+    @Override
+    protected <T> int insertDB(EntityInfo<T> info, T... entitys) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -645,7 +665,7 @@ public class DataJdbcSource extends DataSqlSource {
                 });
                 slowLog(s, presqls.toArray(new String[presqls.size()]));
             }
-            return CompletableFuture.completedFuture(c);
+            return c;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -653,7 +673,7 @@ public class DataJdbcSource extends DataSqlSource {
                 } catch (SQLException se) {
                 }
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 writePool.offerConnection(conn);
@@ -662,7 +682,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateEntityDB(EntityInfo<T> info, T... entitys) {
+    protected <T> CompletableFuture<Integer> updateEntityDBAsync(EntityInfo<T> info, T... entitys) {
+        return supplyAsync(() -> updateEntityDB(info, entitys));
+    }
+
+    @Override
+    protected <T> int updateEntityDB(EntityInfo<T> info, T... entitys) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         String presql = null;
@@ -726,11 +751,11 @@ public class DataJdbcSource extends DataSqlSource {
                             }
                         }
                         //表不存在，更新条数为0
-                        return CompletableFuture.completedFuture(0);
+                        return 0;
                     } else {
                         String tableName = parseNotExistTableName(se);
                         if (tableName == null || prepareInfos == null) {
-                            return CompletableFuture.failedFuture(se);
+                            throw new SourceException(se);
                         }
                         for (PreparedStatement stmt : prestmts) {
                             stmt.close();
@@ -739,7 +764,7 @@ public class DataJdbcSource extends DataSqlSource {
                         String[] oldTables = prepareInfos.keySet().toArray(new String[prepareInfos.size()]);
                         List<String> notExistTables = checkNotExistTables(conn, oldTables, tableName);
                         if (notExistTables.isEmpty()) {
-                            return CompletableFuture.failedFuture(se);
+                            throw new SourceException(se);
                         }
                         for (String t : notExistTables) {
                             prepareInfos.remove(t);
@@ -748,7 +773,7 @@ public class DataJdbcSource extends DataSqlSource {
                             logger.log(Level.FINE, "update entitys, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + prepareInfos.keySet());
                         }
                         if (prepareInfos.isEmpty()) { //分表全部不存在
-                            return CompletableFuture.completedFuture(0);
+                            return 0;
                         }
                         prestmts = createUpdatePreparedStatements(conn, info, prepareInfos, entitys);
                         int c1 = 0;
@@ -830,7 +855,9 @@ public class DataJdbcSource extends DataSqlSource {
                 });
                 slowLog(s, presqls.toArray(new String[presqls.size()]));
             }
-            return CompletableFuture.completedFuture(c);
+            return c;
+        } catch (SourceException se) {
+            throw se;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -838,7 +865,7 @@ public class DataJdbcSource extends DataSqlSource {
                 } catch (SQLException se) {
                 }
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 writePool.offerConnection(conn);
@@ -847,7 +874,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateColumnDB(EntityInfo<T> info, Flipper flipper, SqlInfo sql) { //String sql, boolean prepared, Object... blobs) {
+    protected <T> CompletableFuture<Integer> updateColumnDBAsync(EntityInfo<T> info, Flipper flipper, SqlInfo sql) {
+        return supplyAsync(() -> updateColumnDB(info, flipper, sql));
+    }
+
+    @Override
+    protected <T> int updateColumnDB(EntityInfo<T> info, Flipper flipper, SqlInfo sql) { //String sql, boolean prepared, Object... blobs) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -886,7 +918,7 @@ public class DataJdbcSource extends DataSqlSource {
                 prestmt.close();
                 conn.commit();
                 slowLog(s, sql.sql);
-                return CompletableFuture.completedFuture(c);
+                return c;
             } else {
                 if (info.isLoggable(logger, Level.FINEST, sql.sql)) {
                     logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
@@ -896,7 +928,7 @@ public class DataJdbcSource extends DataSqlSource {
                 stmt.close();
                 conn.commit();
                 slowLog(s, sql.sql);
-                return CompletableFuture.completedFuture(c);
+                return c;
             }
         } catch (SQLException e) {
             if (conn != null) {
@@ -923,12 +955,12 @@ public class DataJdbcSource extends DataSqlSource {
                         } catch (SQLException e2) {
                         }
                     }
-                    return CompletableFuture.completedFuture(0);
+                    return 0;
                 } else {
-                    return CompletableFuture.failedFuture(e);
+                    throw new SourceException(e);
                 }
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 writePool.offerConnection(conn);
@@ -937,7 +969,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDB(EntityInfo<T> info, String sql, FilterFuncColumn... columns) {
+    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(EntityInfo<T> info, String sql, FilterFuncColumn... columns) {
+        return supplyAsync(() -> getNumberMapDB(info, sql, columns));
+    }
+
+    @Override
+    protected <T, N extends Number> Map<String, N> getNumberMapDB(EntityInfo<T> info, String sql, FilterFuncColumn... columns) {
         Connection conn = null;
         final Map map = new HashMap<>();
         final long s = System.currentTimeMillis();
@@ -962,7 +999,7 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             stmt.close();
             slowLog(s, sql);
-            return CompletableFuture.completedFuture(map);
+            return map;
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
@@ -983,9 +1020,9 @@ public class DataJdbcSource extends DataSqlSource {
                         }
                     }
                 }
-                return CompletableFuture.completedFuture(map);
+                return map;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 readPool.offerConnection(conn);
@@ -994,7 +1031,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Number> getNumberResultDB(EntityInfo<T> info, String sql, Number defVal, String column) {
+    protected <T> CompletableFuture<Number> getNumberResultDBAsync(EntityInfo<T> info, String sql, Number defVal, String column) {
+        return supplyAsync(() -> getNumberResultDB(info, sql, defVal, column));
+    }
+
+    @Override
+    protected <T> Number getNumberResultDB(EntityInfo<T> info, String sql, Number defVal, String column) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -1012,7 +1054,7 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             stmt.close();
             slowLog(s, sql);
-            return CompletableFuture.completedFuture(rs);
+            return rs;
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
@@ -1033,9 +1075,9 @@ public class DataJdbcSource extends DataSqlSource {
                         }
                     }
                 }
-                return CompletableFuture.completedFuture(defVal);
+                return defVal;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 readPool.offerConnection(conn);
@@ -1044,7 +1086,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDB(EntityInfo<T> info, String sql, String keyColumn) {
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(EntityInfo<T> info, String sql, String keyColumn) {
+        return supplyAsync(() -> queryColumnMapDB(info, sql, keyColumn));
+    }
+
+    @Override
+    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(EntityInfo<T> info, String sql, String keyColumn) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         Map<K, N> rs = new LinkedHashMap<>();
@@ -1061,7 +1108,7 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             stmt.close();
             slowLog(s, sql);
-            return CompletableFuture.completedFuture(rs);
+            return rs;
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
@@ -1082,9 +1129,9 @@ public class DataJdbcSource extends DataSqlSource {
                         }
                     }
                 }
-                return CompletableFuture.completedFuture(rs);
+                return rs;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 readPool.offerConnection(conn);
@@ -1093,7 +1140,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDB(EntityInfo<T> info, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(EntityInfo<T> info, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return supplyAsync(() -> queryColumnMapDB(info, sql, funcNodes, groupByColumns));
+    }
+
+    @Override
+    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(EntityInfo<T> info, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
         Connection conn = null;
         Map rs = new LinkedHashMap<>();
         final long s = System.currentTimeMillis();
@@ -1125,7 +1177,7 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             stmt.close();
             slowLog(s, sql);
-            return CompletableFuture.completedFuture(rs);
+            return rs;
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
@@ -1146,9 +1198,9 @@ public class DataJdbcSource extends DataSqlSource {
                         }
                     }
                 }
-                return CompletableFuture.completedFuture(rs);
+                return rs;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 readPool.offerConnection(conn);
@@ -1157,7 +1209,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<T> findDB(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
+    protected <T> CompletableFuture<T> findDBAsync(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
+        return supplyAsync(() -> findDB(info, sql, onlypk, selects));
+    }
+
+    @Override
+    protected <T> T findDB(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -1170,7 +1227,7 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             ps.close();
             slowLog(s, sql);
-            return CompletableFuture.completedFuture(rs);
+            return rs;
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
@@ -1191,9 +1248,9 @@ public class DataJdbcSource extends DataSqlSource {
                         }
                     }
                 }
-                return CompletableFuture.completedFuture(null);
+                return null;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 readPool.offerConnection(conn);
@@ -1202,7 +1259,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Serializable> findColumnDB(EntityInfo<T> info, String sql, boolean onlypk, String column, Serializable defValue) {
+    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, String sql, boolean onlypk, String column, Serializable defValue) {
+        return supplyAsync(() -> findColumnDB(info, sql, onlypk, column, defValue));
+    }
+
+    @Override
+    protected <T> Serializable findColumnDB(EntityInfo<T> info, String sql, boolean onlypk, String column, Serializable defValue) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -1219,7 +1281,7 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             ps.close();
             slowLog(s, sql);
-            return CompletableFuture.completedFuture(val == null ? defValue : val);
+            return val == null ? defValue : val;
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
@@ -1240,9 +1302,9 @@ public class DataJdbcSource extends DataSqlSource {
                         }
                     }
                 }
-                return CompletableFuture.completedFuture(null);
+                return defValue;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 readPool.offerConnection(conn);
@@ -1251,7 +1313,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Boolean> existsDB(EntityInfo<T> info, String sql, boolean onlypk) {
+    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, String sql, boolean onlypk) {
+        return supplyAsync(() -> existsDB(info, sql, onlypk));
+    }
+
+    @Override
+    protected <T> boolean existsDB(EntityInfo<T> info, String sql, boolean onlypk) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -1266,7 +1333,7 @@ public class DataJdbcSource extends DataSqlSource {
                 logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
             }
             slowLog(s, sql);
-            return CompletableFuture.completedFuture(rs);
+            return rs;
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
@@ -1287,9 +1354,9 @@ public class DataJdbcSource extends DataSqlSource {
                         }
                     }
                 }
-                return CompletableFuture.completedFuture(false);
+                return false;
             }
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 readPool.offerConnection(conn);
@@ -1298,7 +1365,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Sheet<T>> querySheetDB(EntityInfo<T> info, final boolean readCache, boolean needTotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
+    protected <T> CompletableFuture<Sheet<T>> querySheetDBAsync(EntityInfo<T> info, final boolean readCache, boolean needTotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
+        return supplyAsync(() -> querySheetDB(info, readCache, needTotal, distinct, selects, flipper, node));
+    }
+
+    @Override
+    protected <T> Sheet<T> querySheetDB(EntityInfo<T> info, final boolean readCache, boolean needTotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         final SelectColumn sels = selects;
@@ -1334,20 +1406,20 @@ public class DataJdbcSource extends DataSqlSource {
                             } catch (SQLException e2) {
                             }
                         }
-                        return CompletableFuture.completedFuture(new Sheet<>(0, new ArrayList()));
+                        return new Sheet<>(0, new ArrayList());
                     } else if (tables != null && tables.length == 1) {
                         //只查一个不存在的分表
-                        return CompletableFuture.completedFuture(new Sheet<>(0, new ArrayList()));
+                        return new Sheet<>(0, new ArrayList());
                     } else if (tables != null && tables.length > 1) {
                         //多分表查询中一个或多个分表不存在
                         String tableName = parseNotExistTableName(se);
                         if (tableName == null) {
-                            return CompletableFuture.failedFuture(se);
+                            throw new SourceException(se);
                         }
                         String[] oldTables = tables;
                         List<String> notExistTables = checkNotExistTables(conn, tables, tableName);
                         if (notExistTables.isEmpty()) {
-                            return CompletableFuture.failedFuture(se);
+                            throw new SourceException(se);
                         }
                         for (String t : notExistTables) {
                             tables = Utility.remove(tables, t);
@@ -1356,7 +1428,7 @@ public class DataJdbcSource extends DataSqlSource {
                             logger.log(Level.FINE, "query sheet, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
                         }
                         if (tables.length == 0) { //分表全部不存在
-                            return CompletableFuture.completedFuture(new Sheet<>(0, new ArrayList()));
+                            return new Sheet<>(0, new ArrayList());
                         }
 
                         //重新查询一次
@@ -1365,13 +1437,15 @@ public class DataJdbcSource extends DataSqlSource {
                         countSql = sqls[1];
                         return executeQuerySheet(info, needTotal, flipper, sels, s, conn, mysqlOrPgsql, listSql, countSql);
                     } else {
-                        return CompletableFuture.failedFuture(se);
+                        throw new SourceException(se);
                     }
                 }
-                return CompletableFuture.failedFuture(se);
+                throw new SourceException(se);
             }
+        } catch (SourceException se) {
+            throw se;
         } catch (Exception e) {
-            return CompletableFuture.failedFuture(e);
+            throw new SourceException(e);
         } finally {
             if (conn != null) {
                 readPool.offerConnection(conn);
@@ -1379,7 +1453,7 @@ public class DataJdbcSource extends DataSqlSource {
         }
     }
 
-    private <T> CompletableFuture<Sheet<T>> executeQuerySheet(EntityInfo<T> info, boolean needTotal, Flipper flipper, SelectColumn sels,
+    private <T> Sheet<T> executeQuerySheet(EntityInfo<T> info, boolean needTotal, Flipper flipper, SelectColumn sels,
         long s, Connection conn, boolean mysqlOrPgsql, String listSql, String countSql) throws SQLException {
         final List<T> list = new ArrayList();
         if (mysqlOrPgsql) {  //sql可以带limit、offset
@@ -1402,7 +1476,7 @@ public class DataJdbcSource extends DataSqlSource {
                 ps.close();
             }
             slowLog(s, listSql);
-            return CompletableFuture.completedFuture(new Sheet<>(total, list));
+            return new Sheet<>(total, list);
         } else {
             //conn.setReadOnly(true);
             PreparedStatement ps = conn.prepareStatement(listSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -1441,7 +1515,7 @@ public class DataJdbcSource extends DataSqlSource {
             set.close();
             ps.close();
             slowLog(s, listSql);
-            return CompletableFuture.completedFuture(new Sheet<>(total, list));
+            return new Sheet<>(total, list);
         }
     }
 

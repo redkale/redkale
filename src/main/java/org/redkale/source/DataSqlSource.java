@@ -73,7 +73,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     };
 
     protected final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, i)
-        -> ((CompletableFuture<Sheet>) querySheetDB(i, false, false, false, null, null, (FilterNode) null)).thenApply(e -> e == null ? new ArrayList() : e.list(true));
+        -> ((CompletableFuture<Sheet>) querySheetDBAsync(i, false, false, false, null, null, (FilterNode) null)).thenApply(e -> e == null ? new ArrayList() : e.list(true));
 
     //超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 2000
     protected long slowmsWarn;
@@ -145,12 +145,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return;
         }
         //不支持读写分离模式的动态切换
-        if (readConfProps == writeConfProps
-            && (events[0].name().startsWith("read.") || events[0].name().startsWith("write."))) {
+        if (readConfProps == writeConfProps && (events[0].name().startsWith("read.") || events[0].name().startsWith("write."))) {
             throw new SourceException("DataSource(name=" + resourceName() + ") not support to change to read/write separation mode");
         }
-        if (readConfProps != writeConfProps
-            && (!events[0].name().startsWith("read.") && !events[0].name().startsWith("write."))) {
+        if (readConfProps != writeConfProps && (!events[0].name().startsWith("read.") && !events[0].name().startsWith("write."))) {
             throw new SourceException("DataSource(name=" + resourceName() + ") not support to change to non read/write separation mode");
         }
 
@@ -163,7 +161,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 String newValue = decryptProperty(event.name(), event.newValue().toString());
                 allEvents.add(ResourceEvent.create(event.name(), newValue, event.oldValue()));
                 newProps.put(event.name(), newValue);
-                sb.append("DataSource(name=").append(resourceName()).append(") change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
+                sb.append("DataSource(name=").append(resourceName()).append(") change '")
+                    .append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
             }
             updateOneResourceChange(newProps, allEvents.toArray(new ResourceEvent[allEvents.size()]));
             for (ResourceEvent event : allEvents) {
@@ -188,7 +187,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                     writeEvents.add(ResourceEvent.create(newName, newValue, event.oldValue()));
                     newWriteProps.put(event.name(), newValue);
                 }
-                sb.append("DataSource(name=").append(resourceName()).append(") change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
+                sb.append("DataSource(name=").append(resourceName()).append(") change '")
+                    .append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
             }
             if (!readEvents.isEmpty()) {
                 updateReadResourceChange(newReadProps, readEvents.toArray(new ResourceEvent[readEvents.size()]));
@@ -559,10 +559,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     @Local
     protected boolean isTableNotExist(EntityInfo info, String sqlCode) {
-        if (sqlCode == null || sqlCode.isEmpty()) {
-            return false;
-        }
-        return tableNotExistSqlstates.contains(';' + sqlCode + ';');
+        return sqlCode != null && !sqlCode.isEmpty() && tableNotExistSqlstates.contains(';' + sqlCode + ';');
     }
 
     @Local
@@ -667,46 +664,116 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected abstract String prepareParamSign(int index);
 
     //插入纪录
-    protected abstract <T> CompletableFuture<Integer> insertDB(final EntityInfo<T> info, T... entitys);
+    protected abstract <T> CompletableFuture<Integer> insertDBAsync(final EntityInfo<T> info, T... entitys);
 
     //删除记录
-    protected abstract <T> CompletableFuture<Integer> deleteDB(final EntityInfo<T> info, Flipper flipper, final String... sqls);
+    protected abstract <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, Flipper flipper, final String... sqls);
 
     //清空表
-    protected abstract <T> CompletableFuture<Integer> clearTableDB(final EntityInfo<T> info, String[] tables, final String... sqls);
+    protected abstract <T> CompletableFuture<Integer> clearTableDBAsync(final EntityInfo<T> info, String[] tables, final String... sqls);
 
     //删除表
-    protected abstract <T> CompletableFuture<Integer> dropTableDB(final EntityInfo<T> info, String[] tables, final String... sqls);
+    protected abstract <T> CompletableFuture<Integer> dropTableDBAsync(final EntityInfo<T> info, String[] tables, final String... sqls);
 
     //更新纪录
-    protected abstract <T> CompletableFuture<Integer> updateEntityDB(final EntityInfo<T> info, T... entitys);
+    protected abstract <T> CompletableFuture<Integer> updateEntityDBAsync(final EntityInfo<T> info, T... entitys);
 
     //更新纪录
-    protected abstract <T> CompletableFuture<Integer> updateColumnDB(final EntityInfo<T> info, Flipper flipper, final SqlInfo sql);
+    protected abstract <T> CompletableFuture<Integer> updateColumnDBAsync(final EntityInfo<T> info, Flipper flipper, final SqlInfo sql);
 
     //查询Number Map数据
-    protected abstract <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDB(final EntityInfo<T> info, final String sql, final FilterFuncColumn... columns);
+    protected abstract <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(final EntityInfo<T> info, final String sql, final FilterFuncColumn... columns);
 
     //查询Number数据
-    protected abstract <T> CompletableFuture<Number> getNumberResultDB(final EntityInfo<T> info, final String sql, final Number defVal, final String column);
+    protected abstract <T> CompletableFuture<Number> getNumberResultDBAsync(final EntityInfo<T> info, final String sql, final Number defVal, final String column);
 
     //查询Map数据
-    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDB(final EntityInfo<T> info, final String sql, final String keyColumn);
+    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(final EntityInfo<T> info, final String sql, final String keyColumn);
 
     //查询Map数据
-    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDB(final EntityInfo<T> info, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns);
+    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(final EntityInfo<T> info, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns);
 
     //查询单条记录
-    protected abstract <T> CompletableFuture<T> findDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final SelectColumn selects);
+    protected abstract <T> CompletableFuture<T> findDBAsync(final EntityInfo<T> info, final String sql, final boolean onlypk, final SelectColumn selects);
 
     //查询单条记录的单个字段
-    protected abstract <T> CompletableFuture<Serializable> findColumnDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final String column, final Serializable defValue);
+    protected abstract <T> CompletableFuture<Serializable> findColumnDBAsync(final EntityInfo<T> info, final String sql, final boolean onlypk, final String column, final Serializable defValue);
 
     //判断记录是否存在
-    protected abstract <T> CompletableFuture<Boolean> existsDB(final EntityInfo<T> info, final String sql, final boolean onlypk);
+    protected abstract <T> CompletableFuture<Boolean> existsDBAsync(final EntityInfo<T> info, final String sql, final boolean onlypk);
 
     //查询一页数据
-    protected abstract <T> CompletableFuture<Sheet<T>> querySheetDB(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+    protected abstract <T> CompletableFuture<Sheet<T>> querySheetDBAsync(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+
+    //插入纪录
+    protected <T> int insertDB(final EntityInfo<T> info, T... entitys) {
+        return insertDBAsync(info, entitys).join();
+    }
+
+    //删除记录
+    protected <T> int deleteDB(final EntityInfo<T> info, Flipper flipper, final String... sqls) {
+        return deleteDBAsync(info, flipper, sqls).join();
+    }
+
+    //清空表
+    protected <T> int clearTableDB(final EntityInfo<T> info, String[] tables, final String... sqls) {
+        return clearTableDBAsync(info, tables, sqls).join();
+    }
+
+    //删除表
+    protected <T> int dropTableDB(final EntityInfo<T> info, String[] tables, final String... sqls) {
+        return dropTableDBAsync(info, tables, sqls).join();
+    }
+
+    //更新纪录
+    protected <T> int updateEntityDB(final EntityInfo<T> info, T... entitys) {
+        return updateEntityDBAsync(info, entitys).join();
+    }
+
+    //更新纪录
+    protected <T> int updateColumnDB(final EntityInfo<T> info, Flipper flipper, final SqlInfo sql) {
+        return updateColumnDBAsync(info, flipper, sql).join();
+    }
+
+    //查询Number Map数据
+    protected <T, N extends Number> Map<String, N> getNumberMapDB(final EntityInfo<T> info, final String sql, final FilterFuncColumn... columns) {
+        return (Map) getNumberMapDBAsync(info, sql, columns).join();
+    }
+
+    //查询Number数据
+    protected <T> Number getNumberResultDB(final EntityInfo<T> info, final String sql, final Number defVal, final String column) {
+        return getNumberResultDBAsync(info, sql, defVal, column).join();
+    }
+
+    //查询Map数据
+    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(final EntityInfo<T> info, final String sql, final String keyColumn) {
+        return (Map) queryColumnMapDBAsync(info, sql, keyColumn).join();
+    }
+
+    //查询Map数据
+    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(final EntityInfo<T> info, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return (Map) queryColumnMapDBAsync(info, sql, funcNodes, groupByColumns).join();
+    }
+
+    //查询单条记录
+    protected <T> T findDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final SelectColumn selects) {
+        return findDBAsync(info, sql, onlypk, selects).join();
+    }
+
+    //查询单条记录的单个字段
+    protected <T> Serializable findColumnDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final String column, final Serializable defValue) {
+        return findColumnDBAsync(info, sql, onlypk, column, defValue).join();
+    }
+
+    //判断记录是否存在
+    protected <T> boolean existsDB(final EntityInfo<T> info, final String sql, final boolean onlypk) {
+        return existsDBAsync(info, sql, onlypk).join();
+    }
+
+    //查询一页数据
+    protected <T> Sheet<T> querySheetDB(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        return querySheetDBAsync(info, readcache, needtotal, distinct, selects, flipper, node).join();
+    }
 
     protected <T> CharSequence createSQLJoin(FilterNode node, final Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
         return node == null ? null : node.createSQLJoin(func, update, joinTabalis, haset, info);
@@ -763,10 +830,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> CharSequence formatValueToString(final EntityInfo<T> info, Object value) {
+        if (value == null) {
+            return null;
+        }
         if ("mysql".equals(dbtype)) {
-            if (value == null) {
-                return null;
-            }
             if (value instanceof CharSequence) {
                 return new StringBuilder().append('\'').append(value.toString().replace("\\", "\\\\").replace("'", "\\'")).append('\'').toString();
             } else if (!(value instanceof Number) && !(value instanceof java.util.Date)
@@ -798,18 +865,20 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entitys.length == 0) {
             return 0;
         }
-        checkEntity("insert", false, entitys);
+        checkEntity("insert", entitys);
         final EntityInfo<T> info = loadEntityInfo((Class<T>) entitys[0].getClass());
         if (isOnlyCache(info)) {
             return insertCache(info, entitys);
         }
-        return insertDB(info, entitys).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                insertCache(info, entitys);
-            }
-        }).join();
+        if (isAsync()) {
+            int rs = insertDBAsync(info, entitys).join();
+            insertCache(info, entitys);
+            return rs;
+        } else {
+            int rs = insertDB(info, entitys);
+            insertCache(info, entitys);
+            return rs;
+        }
     }
 
     @Override
@@ -817,16 +886,21 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entitys.length == 0) {
             return CompletableFuture.completedFuture(0);
         }
-        CompletableFuture future = checkEntity("insert", true, entitys);
-        if (future != null) {
-            return future;
-        }
+        checkEntity("insert", entitys);
         final EntityInfo<T> info = loadEntityInfo((Class<T>) entitys[0].getClass());
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(insertCache(info, entitys));
         }
         if (isAsync()) {
-            return insertDB(info, entitys).whenComplete((rs, t) -> {
+            return insertDBAsync(info, entitys).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    insertCache(info, entitys);
+                }
+            });
+        } else {
+            return supplyAsync(() -> insertDB(info, entitys)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -834,13 +908,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> insertDB(info, entitys).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                insertCache(info, entitys);
-            }
-        });
     }
 
     protected <T> int insertCache(final EntityInfo<T> info, T... entitys) {
@@ -869,7 +936,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entitys.length == 0) {
             return -1;
         }
-        checkEntity("delete", false, entitys);
+        checkEntity("delete", entitys);
         final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final Attribute primary = info.getPrimary();
@@ -886,10 +953,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entitys.length == 0) {
             return CompletableFuture.completedFuture(-1);
         }
-        CompletableFuture future = checkEntity("delete", true, entitys);
-        if (future != null) {
-            return future;
-        }
+        checkEntity("delete", entitys);
         final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final Attribute primary = info.getPrimary();
@@ -910,13 +974,19 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return deleteCache(info, -1, pks);
         }
-        return deleteCompose(info, pks).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                deleteCache(info, rs, pks);
-            }
-        }).join();
+        String[] sqls = deleteSql(info, pks);
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
+        }
+        if (isAsync()) {
+            int rs = deleteDBAsync(info, null, sqls).join();
+            deleteCache(info, rs, pks);
+            return rs;
+        } else {
+            int rs = deleteDB(info, null, sqls);
+            deleteCache(info, rs, pks);
+            return rs;
+        }
     }
 
     @Override
@@ -928,8 +998,20 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(deleteCache(info, -1, pks));
         }
+        String[] sqls = deleteSql(info, pks);
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
+        }
         if (isAsync()) {
-            return deleteCompose(info, pks).whenComplete((rs, t) -> {
+            return deleteDBAsync(info, null, sqls).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    deleteCache(info, rs, pks);
+                }
+            });
+        } else {
+            return supplyAsync(() -> deleteDB(info, null, sqls)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -937,13 +1019,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> deleteCompose(info, pks).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                deleteCache(info, rs, pks);
-            }
-        });
     }
 
     @Override
@@ -962,13 +1037,19 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return deleteCache(info, -1, flipper, node);
         }
-        return this.deleteCompose(info, flipper, node).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                deleteCache(info, rs, flipper, node);
-            }
-        }).join();
+        String[] sqls = deleteSql(info, flipper, node);
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
+        }
+        if (isAsync()) {
+            int rs = deleteDBAsync(info, flipper, sqls).join();
+            deleteCache(info, rs, flipper, sqls);
+            return rs;
+        } else {
+            int rs = deleteDB(info, flipper, sqls);
+            deleteCache(info, rs, flipper, sqls);
+            return rs;
+        }
     }
 
     @Override
@@ -977,8 +1058,20 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(deleteCache(info, -1, flipper, node));
         }
+        String[] sqls = deleteSql(info, flipper, node);
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
+        }
         if (isAsync()) {
-            return this.deleteCompose(info, flipper, node).whenComplete((rs, t) -> {
+            return deleteDBAsync(info, flipper, sqls).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    deleteCache(info, rs, flipper, node);
+                }
+            });
+        } else {
+            return supplyAsync(() -> deleteDB(info, flipper, sqls)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -986,40 +1079,23 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> this.deleteCompose(info, flipper, node).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                deleteCache(info, rs, flipper, node);
-            }
-        });
     }
 
-    protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Serializable... pks) {
-        String sql = deleteSql(info, pks);
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
-        }
-        return deleteDB(info, null, sql);
-    }
-
-    protected <T> CompletableFuture<Integer> deleteCompose(final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
-        return deleteDB(info, flipper, deleteSql(info, flipper, node));
-    }
-
-    protected <T> String deleteSql(final EntityInfo<T> info, final Serializable... pks) {
+    protected <T> String[] deleteSql(final EntityInfo<T> info, final Serializable... pks) {
         if (pks.length == 1) {
-            return "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pks[0], sqlFormatter);
-        }
-        String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + " IN (";
-        for (int i = 0; i < pks.length; i++) {
-            if (i > 0) {
-                sql += ',';
+            String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pks[0], sqlFormatter);
+            return new String[]{sql};
+        } else {
+            String sql = "DELETE FROM " + info.getTable(pks[0]) + " WHERE " + info.getPrimarySQLColumn() + " IN (";
+            for (int i = 0; i < pks.length; i++) {
+                if (i > 0) {
+                    sql += ',';
+                }
+                sql += info.formatSQLValue(info.getPrimarySQLColumn(), pks[i], sqlFormatter);
             }
-            sql += info.formatSQLValue(info.getPrimarySQLColumn(), pks[i], sqlFormatter);
+            sql += ")";
+            return new String[]{sql};
         }
-        sql += ")";
-        return sql;
     }
 
     protected <T> String[] deleteSql(final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
@@ -1036,8 +1112,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         StringBuilder join2 = null;
         if (join != null) {
             String joinstr = join.toString();
-            join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
-            join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
+            join1 = multiSplit('[', ']', ",", new StringBuilder(), joinstr, 0);
+            join2 = multiSplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
         }
 
         if (pgsql && flipper != null && flipper.getLimit() > 0) {
@@ -1078,13 +1154,20 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return clearTableCache(info, node);
         }
-        return this.clearTableCompose(info, node).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                clearTableCache(info, node);
-            }
-        }).join();
+        final String[] tables = info.getTables(node);
+        String[] sqls = clearTableSql(info, tables, node);
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " clearTable sql=" + Arrays.toString(sqls));
+        }
+        if (isAsync()) {
+            int rs = clearTableDBAsync(info, tables, sqls).join();
+            clearTableCache(info, node);
+            return rs;
+        } else {
+            int rs = clearTableDB(info, tables, sqls);
+            clearTableCache(info, node);
+            return rs;
+        }
     }
 
     @Override
@@ -1093,8 +1176,21 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(clearTableCache(info, node));
         }
+        final String[] tables = info.getTables(node);
+        String[] sqls = clearTableSql(info, tables, node);
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " clearTable sql=" + Arrays.toString(sqls));
+        }
         if (isAsync()) {
-            return this.clearTableCompose(info, node).whenComplete((rs, t) -> {
+            return clearTableDBAsync(info, tables, sqls).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    clearTableCache(info, node);
+                }
+            });
+        } else {
+            return supplyAsync(() -> clearTableDB(info, tables, sqls)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1102,33 +1198,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> this.clearTableCompose(info, node).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                clearTableCache(info, node);
-            }
-        });
     }
 
-    protected <T> CompletableFuture<Integer> clearTableCompose(final EntityInfo<T> info, final FilterNode node) {
-        final String[] tables = info.getTables(node);
-        if (tables.length == 1) {
-            String sql = "TRUNCATE TABLE " + tables[0];
-            if (info.isLoggable(logger, Level.FINEST, sql)) {
-                logger.finest(info.getType().getSimpleName() + " clearTable sql=" + sql);
-            }
-            return clearTableDB(info, tables, sql);
-        } else {
-            List<String> sqls = new ArrayList<>();
-            for (String table : tables) {
-                sqls.add("TRUNCATE TABLE " + table);
-            }
-            if (info.isLoggable(logger, Level.FINEST, sqls.get(0))) {
-                logger.finest(info.getType().getSimpleName() + " clearTable sqls=" + sqls);
-            }
-            return clearTableDB(info, tables, sqls.toArray(new String[sqls.size()]));
+    protected <T> String[] clearTableSql(final EntityInfo<T> info, String[] tables, final FilterNode node) {
+        List<String> sqls = new ArrayList<>();
+        for (String table : tables) {
+            sqls.add("TRUNCATE TABLE " + table);
         }
+        return sqls.toArray(new String[sqls.size()]);
     }
 
     //----------------------------- dropTableCompose -----------------------------
@@ -1138,13 +1215,20 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return dropTableCache(info, node);
         }
-        return this.dropTableCompose(info, node).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                dropTableCache(info, node);
-            }
-        }).join();
+        final String[] tables = info.getTables(node);
+        String[] sqls = clearTableSql(info, tables, node);
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " dropTable sql=" + Arrays.toString(sqls));
+        }
+        if (isAsync()) {
+            int rs = dropTableDBAsync(info, tables, sqls).join();
+            dropTableCache(info, node);
+            return rs;
+        } else {
+            int rs = dropTableDB(info, tables, sqls);
+            dropTableCache(info, node);
+            return rs;
+        }
     }
 
     @Override
@@ -1153,8 +1237,21 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(dropTableCache(info, node));
         }
+        final String[] tables = info.getTables(node);
+        String[] sqls = clearTableSql(info, tables, node);
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " dropTable sql=" + Arrays.toString(sqls));
+        }
         if (isAsync()) {
-            return this.dropTableCompose(info, node).whenComplete((rs, t) -> {
+            return dropTableDBAsync(info, tables, sqls).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    dropTableCache(info, node);
+                }
+            });
+        } else {
+            return supplyAsync(() -> dropTableDB(info, tables, sqls)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1162,34 +1259,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> this.dropTableCompose(info, node).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                dropTableCache(info, node);
-            }
-        });
     }
 
-    protected <T> CompletableFuture<Integer> dropTableCompose(final EntityInfo<T> info, final FilterNode node) {
-        if (node == null) {
-            final String table = info.getOriginTable();
-            String sql = "DROP TABLE IF EXISTS " + table;
-            //if (info.isLoggable(logger, Level.FINEST, sql)) logger.finest(info.getType().getSimpleName() + " dropTable sql=" + sql);
-            return dropTableDB(info, new String[]{table}, sql);
-        } else {
-            final String[] tables = info.getTables(node);
-            if (tables.length == 1) {
-                String sql = "DROP TABLE IF EXISTS " + tables[0];
-                return dropTableDB(info, tables, sql);
-            } else {
-                List<String> sqls = new ArrayList<>();
-                for (String table : tables) {
-                    sqls.add("DROP TABLE IF EXISTS " + table);
-                }
-                return dropTableDB(info, tables, sqls.toArray(new String[sqls.size()]));
-            }
+    protected <T> String[] dropTableSql(final EntityInfo<T> info, String[] tables, final FilterNode node) {
+        List<String> sqls = new ArrayList<>();
+        for (String table : tables) {
+            sqls.add("DROP TABLE IF EXISTS " + table);
         }
+        return sqls.toArray(new String[sqls.size()]);
     }
 
     protected <T> int clearTableCache(final EntityInfo<T> info, FilterNode node) {
@@ -1229,7 +1306,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         return count >= 0 ? count : c;
     }
 
-    protected static StringBuilder multisplit(char ch1, char ch2, String split, StringBuilder sb, String str, int from) {
+    protected static StringBuilder multiSplit(char ch1, char ch2, String split, StringBuilder sb, String str, int from) {
         if (str == null) {
             return sb;
         }
@@ -1245,7 +1322,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             sb.append(split);
         }
         sb.append(str.substring(pos1 + 1, pos2));
-        return multisplit(ch1, ch2, split, sb, str, pos2 + 1);
+        return multiSplit(ch1, ch2, split, sb, str, pos2 + 1);
     }
 
     //---------------------------- update ----------------------------
@@ -1262,19 +1339,21 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entitys.length == 0) {
             return -1;
         }
-        checkEntity("update", false, entitys);
+        checkEntity("update", entitys);
         final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
             return updateCache(info, -1, entitys);
         }
-        return updateEntityDB(info, entitys).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, entitys);
-            }
-        }).join();
+        if (isAsync()) {
+            int rs = updateEntityDBAsync(info, entitys).join();
+            updateCache(info, rs, entitys);
+            return rs;
+        } else {
+            int rs = updateEntityDB(info, entitys);
+            updateCache(info, rs, entitys);
+            return rs;
+        }
     }
 
     @Override
@@ -1282,17 +1361,22 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (entitys.length == 0) {
             return CompletableFuture.completedFuture(-1);
         }
-        CompletableFuture future = checkEntity("update", true, entitys);
-        if (future != null) {
-            return future;
-        }
+        checkEntity("update", entitys);
         final Class<T> clazz = (Class<T>) entitys[0].getClass();
         final EntityInfo<T> info = loadEntityInfo(clazz);
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, entitys));
         }
         if (isAsync()) {
-            return updateEntityDB(info, entitys).whenComplete((rs, t) -> {
+            return updateEntityDBAsync(info, entitys).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    updateCache(info, rs, entitys);
+                }
+            });
+        } else {
+            return supplyAsync(() -> updateEntityDB(info, entitys)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1300,13 +1384,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> updateEntityDB(info, entitys).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, entitys);
-            }
-        });
     }
 
     /**
@@ -1326,13 +1403,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return updateCache(info, -1, pk, column, colval);
         }
-        return updateColumnCompose(info, pk, column, colval).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, pk, column, colval);
-            }
-        }).join();
+
+        SqlInfo sql = updateColumnSql(info, pk, column, colval);
+        if (isAsync()) {
+            int rs = updateColumnDBAsync(info, null, sql).join();
+            updateCache(info, rs, pk, column, colval);
+            return rs;
+        } else {
+            int rs = updateColumnDB(info, null, sql);
+            updateCache(info, rs, pk, column, colval);
+            return rs;
+        }
     }
 
     @Override
@@ -1341,8 +1422,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, pk, column, colval));
         }
+
+        SqlInfo sql = updateColumnSql(info, pk, column, colval);
         if (isAsync()) {
-            return updateColumnCompose(info, pk, column, colval).whenComplete((rs, t) -> {
+            return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    updateCache(info, rs, pk, column, colval);
+                }
+            });
+        } else {
+            return supplyAsync(() -> updateColumnDB(info, null, sql)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1350,22 +1441,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> updateColumnCompose(info, pk, column, colval).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, pk, column, colval);
-            }
-        });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
-        Attribute attr = info.getAttribute(column);
-        SqlInfo sql = updateSql(info, pk, column, colval);
-        return updateColumnDB(info, null, sql);
-    }
-
-    protected <T> SqlInfo updateSql(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
+    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
         Attribute attr = info.getAttribute(column);
         Serializable val = getSQLAttrValue(info, attr, colval);
         if (val instanceof byte[]) {
@@ -1393,13 +1471,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return updateCache(info, -1, column, colval, node);
         }
-        return this.updateColumnCompose(info, column, colval, node).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, column, colval, node);
-            }
-        }).join();
+
+        SqlInfo sql = updateColumnSql(info, column, colval, node);
+        if (isAsync()) {
+            int rs = updateColumnDBAsync(info, null, sql).join();
+            updateCache(info, rs, column, colval, node);
+            return rs;
+        } else {
+            int rs = updateColumnDB(info, null, sql);
+            updateCache(info, rs, column, colval, node);
+            return rs;
+        }
     }
 
     @Override
@@ -1408,8 +1490,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, column, colval, node));
         }
+        SqlInfo sql = updateColumnSql(info, column, colval, node);
         if (isAsync()) {
-            return this.updateColumnCompose(info, column, colval, node).whenComplete((rs, t) -> {
+            return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    updateCache(info, rs, column, colval, node);
+                }
+            });
+        } else {
+            return supplyAsync(() -> updateColumnDB(info, null, sql)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1417,22 +1508,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, column, colval, node).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, column, colval, node);
-            }
-        });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final String column, final Serializable colval, final FilterNode node) {
-        Attribute attr = info.getAttribute(column);
-        SqlInfo sql = updateSql(info, column, colval, node);
-        return updateColumnDB(info, null, sql);
-    }
-
-    protected <T> SqlInfo updateSql(final EntityInfo<T> info, final String column, final Serializable colval, final FilterNode node) {
+    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, final String column, final Serializable colval, final FilterNode node) {
         Map<Class, String> joinTabalis = node.getJoinTabalis();
         CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
         CharSequence where = node.createSQLExpress(this, info, joinTabalis);
@@ -1441,8 +1519,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         StringBuilder join2 = null;
         if (join != null) {
             String joinstr = join.toString();
-            join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
-            join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
+            join1 = multiSplit('[', ']', ",", new StringBuilder(), joinstr, 0);
+            join2 = multiSplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
         }
         Attribute attr = info.getAttribute(column);
         Serializable val = getSQLAttrValue(info, attr, colval);
@@ -1497,13 +1575,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return updateCache(info, -1, pk, values);
         }
-        return this.updateColumnCompose(info, pk, values).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, pk, values);
-            }
-        }).join();
+
+        SqlInfo sql = updateColumnSql(info, pk, values);
+        if (isAsync()) {
+            int rs = updateColumnDBAsync(info, null, sql).join();
+            updateCache(info, rs, pk, values);
+            return rs;
+        } else {
+            int rs = updateColumnDB(info, null, sql);
+            updateCache(info, rs, pk, values);
+            return rs;
+        }
     }
 
     @Override
@@ -1515,8 +1597,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, pk, values));
         }
+        SqlInfo sql = updateColumnSql(info, pk, values);
         if (isAsync()) {
-            return this.updateColumnCompose(info, pk, values).whenComplete((rs, t) -> {
+            return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    updateCache(info, rs, pk, values);
+                }
+            });
+        } else {
+            return supplyAsync(() -> updateColumnDB(info, null, sql)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1524,21 +1615,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, pk, values).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, pk, values);
-            }
-        });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final Serializable pk, final ColumnValue... values) {
-        SqlInfo sql = updateSql(info, pk, values);
-        return updateColumnDB(info, null, sql);
-    }
-
-    protected <T> SqlInfo updateSql(final EntityInfo<T> info, final Serializable pk, final ColumnValue... values) {
+    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, final Serializable pk, final ColumnValue... values) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1580,13 +1659,16 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return updateCache(info, -1, node, flipper, values);
         }
-        return this.updateColumnCompose(info, node, flipper, values).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, node, flipper, values);
-            }
-        }).join();
+        SqlInfo sql = updateColumnSql(info, node, flipper, values);
+        if (isAsync()) {
+            int rs = updateColumnDBAsync(info, null, sql).join();
+            updateCache(info, rs, node, flipper, values);
+            return rs;
+        } else {
+            int rs = updateColumnDB(info, null, sql);
+            updateCache(info, rs, node, flipper, values);
+            return rs;
+        }
     }
 
     @Override
@@ -1598,8 +1680,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, node, flipper, values));
         }
+        SqlInfo sql = updateColumnSql(info, node, flipper, values);
         if (isAsync()) {
-            return this.updateColumnCompose(info, node, flipper, values).whenComplete((rs, t) -> {
+            return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    updateCache(info, rs, node, flipper, values);
+                }
+            });
+        } else {
+            return supplyAsync(() -> updateColumnDB(info, null, sql)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1607,21 +1698,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, node, flipper, values).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, node, flipper, values);
-            }
-        });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
-        SqlInfo sql = updateSql(info, node, flipper, values);
-        return updateColumnDB(info, flipper, sql);
-    }
-
-    protected <T> SqlInfo updateSql(final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
+    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1659,8 +1738,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         StringBuilder join2 = null;
         if (join != null) {
             String joinstr = join.toString();
-            join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
-            join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
+            join1 = multiSplit('[', ']', ",", new StringBuilder(), joinstr, 0);
+            join2 = multiSplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
         }
         String sql;
         String[] tables = info.getTables(node);
@@ -1727,13 +1806,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return updateCache(info, -1, false, entity, null, selects);
         }
-        return this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, false, entity, null, selects);
-            }
-        }).join();
+
+        SqlInfo sql = updateColumnSql(info, false, entity, null, selects);
+        if (isAsync()) {
+            int rs = updateColumnDBAsync(info, null, sql).join();
+            updateCache(info, rs, false, entity, null, selects);
+            return rs;
+        } else {
+            int rs = updateColumnDB(info, null, sql);
+            updateCache(info, rs, false, entity, null, selects);
+            return rs;
+        }
     }
 
     @Override
@@ -1750,8 +1833,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, false, entity, null, selects));
         }
+
+        SqlInfo sql = updateColumnSql(info, false, entity, null, selects);
         if (isAsync()) {
-            return this.updateColumnCompose(info, false, entity, null, selects).whenComplete((rs, t) -> {
+            return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    updateCache(info, rs, false, entity, null, selects);
+                }
+            });
+        } else {
+            return supplyAsync(() -> updateColumnDB(info, null, sql)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1759,13 +1852,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, false, entity, null, selects).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, false, entity, null, selects);
-            }
-        });
     }
 
     @Override
@@ -1782,13 +1868,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return updateCache(info, -1, true, entity, node, selects);
         }
-        return this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, true, entity, node, selects);
-            }
-        }).join();
+
+        SqlInfo sql = updateColumnSql(info, true, entity, node, selects);
+        if (isAsync()) {
+            int rs = updateColumnDBAsync(info, null, sql).join();
+            updateCache(info, rs, true, entity, node, selects);
+            return rs;
+        } else {
+            int rs = updateColumnDB(info, null, sql);
+            updateCache(info, rs, true, entity, node, selects);
+            return rs;
+        }
     }
 
     @Override
@@ -1805,8 +1895,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, true, entity, node, selects));
         }
+
+        SqlInfo sql = updateColumnSql(info, true, entity, node, selects);
         if (isAsync()) {
-            return this.updateColumnCompose(info, true, entity, node, selects).whenComplete((rs, t) -> {
+            return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                } else {
+                    updateCache(info, rs, true, entity, node, selects);
+                }
+            });
+        } else {
+            return supplyAsync(() -> updateColumnDB(info, null, sql)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1814,21 +1914,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         }
-        return CompletableFuture.supplyAsync(() -> this.updateColumnCompose(info, true, entity, node, selects).join(), getExecutor()).whenComplete((rs, t) -> {
-            if (t != null) {
-                errorCompleteConsumer.accept(rs, t);
-            } else {
-                updateCache(info, rs, true, entity, node, selects);
-            }
-        });
     }
 
-    protected <T> CompletableFuture<Integer> updateColumnCompose(final EntityInfo<T> info, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
-        SqlInfo sql = updateSql(info, needNode, entity, node, selects);
-        return updateColumnDB(info, null, sql);
-    }
-
-    protected <T> SqlInfo updateSql(final EntityInfo<T> info, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
+    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1864,8 +1952,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             StringBuilder join2 = null;
             if (join != null) {
                 String joinstr = join.toString();
-                join1 = multisplit('[', ']', ",", new StringBuilder(), joinstr, 0);
-                join2 = multisplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
+                join1 = multiSplit('[', ']', ",", new StringBuilder(), joinstr, 0);
+                join2 = multiSplit('{', '}', " AND ", new StringBuilder(), joinstr, 0);
             }
             String sql;
             String[] tables = info.getTables(node);
@@ -1992,7 +2080,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         String column = info.getPrimary().field();
         int c = 0;
         for (Serializable id : pks) {
-            Sheet<T> sheet = querySheetCompose(false, true, false, clazz, null, FLIPPER_ONE, FilterNode.create(column, id)).join();
+            Sheet<T> sheet = querySheet(false, true, false, clazz, null, FLIPPER_ONE, FilterNode.create(column, id));
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
             if (value != null) {
                 c += cache.update(value);
@@ -2017,7 +2105,16 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return map;
             }
         }
-        return (Map) getNumberMapCompose(info, node, columns).join();
+        final String[] tables = info.getTables(node);
+        String sql = getNumberMapSql(info, tables, node, columns);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " getNumberMap sql=" + sql);
+        }
+        if (isAsync()) {
+            return (Map) getNumberMapDBAsync(info, sql, columns).join();
+        } else {
+            return getNumberMapDB(info, sql, columns);
+        }
     }
 
     @Override
@@ -2035,13 +2132,19 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(map);
             }
         }
-        if (isAsync()) {
-            return getNumberMapCompose(info, node, columns);
+        final String[] tables = info.getTables(node);
+        String sql = getNumberMapSql(info, tables, node, columns);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " getNumberMap sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> (Map) getNumberMapCompose(info, node, columns).join(), getExecutor());
+        if (isAsync()) {
+            return getNumberMapDBAsync(info, sql, columns);
+        } else {
+            return supplyAsync(() -> getNumberMapDB(info, sql, columns));
+        }
     }
 
-    protected <N extends Number> CompletableFuture<Map<String, N>> getNumberMapCompose(final EntityInfo info, final FilterNode node, final FilterFuncColumn... columns) {
+    protected <T> String getNumberMapSql(final EntityInfo<T> info, final String[] tables, final FilterNode node, final FilterFuncColumn... columns) {
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final Set<String> haset = new HashSet<>();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
@@ -2055,12 +2158,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 sb.append(ffc.func.getColumn((col == null || col.isEmpty() ? "*" : info.getSQLColumn("a", col))));
             }
         }
-        final String sql = "SELECT " + sb + " FROM " + info.getTable(node) + " a"
+        final String sql = "SELECT " + sb + " FROM " + tables[0] + " a"
             + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " getnumbermap sql=" + sql);
-        }
-        return getNumberMapDB(info, sql, columns);
+        return sql;
     }
 
     @Local
@@ -2088,14 +2188,24 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     //------------------------ getNumberResultCompose -----------------------
     @Override
     public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
-        final EntityInfo info = loadEntityInfo(entityClass);
+        final EntityInfo<?> info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
         if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
             if (node == null || isCacheUseable(node, this)) {
                 return cache.getNumberResult(func, defVal, column, node);
             }
         }
-        return getNumberResultCompose(info, entityClass, func, defVal, column, node).join();
+
+        final String[] tables = info.getTables(node);
+        String sql = getNumberResultSql(info, entityClass, tables, func, defVal, column, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " getNumberResult sql=" + sql);
+        }
+        if (isAsync()) {
+            return getNumberResultDBAsync(info, sql, defVal, column).join();
+        } else {
+            return getNumberResultDB(info, sql, defVal, column);
+        }
     }
 
     @Override
@@ -2107,23 +2217,26 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(cache.getNumberResult(func, defVal, column, node));
             }
         }
-        if (isAsync()) {
-            return getNumberResultCompose(info, entityClass, func, defVal, column, node);
+        final String[] tables = info.getTables(node);
+        String sql = getNumberResultSql(info, entityClass, tables, func, defVal, column, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " getNumberResult sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> getNumberResultCompose(info, entityClass, func, defVal, column, node).join(), getExecutor());
+        if (isAsync()) {
+            return getNumberResultDBAsync(info, sql, defVal, column);
+        } else {
+            return supplyAsync(() -> getNumberResultDB(info, sql, defVal, column));
+        }
     }
 
-    protected CompletableFuture<Number> getNumberResultCompose(final EntityInfo info, final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+    protected <T> String getNumberResultSql(final EntityInfo<T> info, final Class entityClass, final String[] tables, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final Set<String> haset = new HashSet<>();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
-        final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : info.getSQLColumn("a", column))) + " FROM " + info.getTable(node) + " a"
+        final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : info.getSQLColumn("a", column))) + " FROM " + tables[0] + " a"
             + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(entityClass.getSimpleName() + " getNumberResult sql=" + sql);
-        }
-        return getNumberResultDB(info, sql, defVal, column);
+        return sql;
     }
 
     @Local
@@ -2151,7 +2264,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return cache.queryColumnMap(keyColumn, func, funcColumn, node);
             }
         }
-        return (Map) queryColumnMapCompose(info, keyColumn, func, funcColumn, node).join();
+
+        final String[] tables = info.getTables(node);
+        String sql = queryColumnMapSql(info, tables, keyColumn, func, funcColumn, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
+        }
+        if (isAsync()) {
+            return (Map) queryColumnMapDBAsync(info, sql, keyColumn).join();
+        } else {
+            return queryColumnMapDB(info, sql, keyColumn);
+        }
     }
 
     @Override
@@ -2163,13 +2286,19 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(cache.queryColumnMap(keyColumn, func, funcColumn, node));
             }
         }
-        if (isAsync()) {
-            return queryColumnMapCompose(info, keyColumn, func, funcColumn, node);
+        final String[] tables = info.getTables(node);
+        String sql = queryColumnMapSql(info, tables, keyColumn, func, funcColumn, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> (Map) queryColumnMapCompose(info, keyColumn, func, funcColumn, node).join(), getExecutor());
+        if (isAsync()) {
+            return queryColumnMapDBAsync(info, sql, keyColumn);
+        } else {
+            return supplyAsync(() -> queryColumnMapDB(info, sql, keyColumn));
+        }
     }
 
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapCompose(final EntityInfo<T> info, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+    protected <T> String queryColumnMapSql(final EntityInfo<T> info, final String[] tables, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final String keySqlColumn = info.getSQLColumn(null, keyColumn);
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final Set<String> haset = new HashSet<>();
@@ -2177,7 +2306,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
         final String funcSqlColumn = func == null ? info.getSQLColumn("a", funcColumn) : func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : info.getSQLColumn("a", funcColumn)));
 
-        String[] tables = info.getTables(node);
         String joinAndWhere = (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
         String sql;
         if (tables.length == 1) {
@@ -2194,10 +2322,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
             sql = "SELECT a." + keySqlColumn + ", " + funcSqlColumn + " FROM (" + (union) + ") a";
         }
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " querycolumnmap sql=" + sql);
-        }
-        return queryColumnMapDB(info, sql, keyColumn);
+        return sql;
+        //return queryColumnMapDBAsync(info, sql, keyColumn);
     }
 
     @Local
@@ -2239,7 +2365,16 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return cache.queryColumnMap(funcNodes, groupByColumns, node);
             }
         }
-        return (Map) queryColumnMapCompose(info, funcNodes, groupByColumns, node).join();
+        final String[] tables = info.getTables(node);
+        String sql = queryColumnMapSql(info, tables, funcNodes, groupByColumns, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
+        }
+        if (isAsync()) {
+            return (Map) queryColumnMapDBAsync(info, sql, funcNodes, groupByColumns).join();
+        } else {
+            return queryColumnMapDB(info, sql, funcNodes, groupByColumns);
+        }
     }
 
     @Override
@@ -2251,13 +2386,19 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(cache.queryColumnMap(funcNodes, groupByColumns, node));
             }
         }
-        if (isAsync()) {
-            return queryColumnMapCompose(info, funcNodes, groupByColumns, node);
+        final String[] tables = info.getTables(node);
+        String sql = queryColumnMapSql(info, tables, funcNodes, groupByColumns, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> (Map) queryColumnMapCompose(info, funcNodes, groupByColumns, node).join(), getExecutor());
+        if (isAsync()) {
+            return queryColumnMapDBAsync(info, sql, funcNodes, groupByColumns);
+        } else {
+            return supplyAsync(() -> queryColumnMapDB(info, sql, funcNodes, groupByColumns));
+        }
     }
 
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapCompose(final EntityInfo<T> info, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+    protected <T> String queryColumnMapSql(final EntityInfo<T> info, final String[] tables, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
         final StringBuilder groupBySqlColumns = new StringBuilder();
         if (groupByColumns != null && groupByColumns.length > 0) {
             for (int i = 0; i < groupByColumns.length; i++) {
@@ -2283,7 +2424,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
 
-        String[] tables = info.getTables(node);
         String joinAndWhere = (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
         String sql;
         if (tables.length == 1) {
@@ -2314,10 +2454,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (groupBySqlColumns.length() > 0) {
             sql += " GROUP BY " + groupBySqlColumns;
         }
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " querycolumnmap sql=" + sql);
-        }
-        return queryColumnMapDB(info, sql, funcNodes, groupByColumns);
+        return sql;
     }
 
     @Local
@@ -2404,7 +2541,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return rs;
             }
         }
-        return findCompose(info, selects, pk).join();
+        String sql = findSql(info, selects, pk);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+        }
+        if (isAsync()) {
+            return findDBAsync(info, sql, true, selects).join();
+        } else {
+            return findDB(info, sql, true, selects);
+        }
     }
 
     @Override
@@ -2417,19 +2562,24 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(rs);
             }
         }
-        if (isAsync()) {
-            return findCompose(info, selects, pk);
+        String sql = findSql(info, selects, pk);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> findCompose(info, selects, pk).join(), getExecutor());
+        if (isAsync()) {
+            return findDBAsync(info, sql, true, selects);
+        } else {
+            return supplyAsync(() -> findDB(info, sql, true, selects));
+        }
     }
 
-    protected <T> CompletableFuture<T> findCompose(final EntityInfo<T> info, final SelectColumn selects, Serializable pk) {
+    protected <T> String findSql(final EntityInfo<T> info, final SelectColumn selects, Serializable pk) {
         String column = info.getPrimarySQLColumn();
         final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) + " WHERE " + column + "=" + info.formatSQLValue(column, pk, sqlFormatter);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
-        return findDB(info, sql, true, selects);
+        return sql;
     }
 
     @Override
@@ -2439,7 +2589,16 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (cache != null && cache.isFullLoaded() && (node == null || isCacheUseable(node, this))) {
             return cache.find(selects, node);
         }
-        return this.findCompose(info, selects, node).join();
+        final String[] tables = info.getTables(node);
+        String sql = findSql(info, tables, selects, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+        }
+        if (isAsync()) {
+            return findDBAsync(info, sql, false, selects).join();
+        } else {
+            return findDB(info, sql, false, selects);
+        }
     }
 
     @Override
@@ -2449,17 +2608,22 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (cache != null && cache.isFullLoaded() && (node == null || isCacheUseable(node, this))) {
             return CompletableFuture.completedFuture(cache.find(selects, node));
         }
-        if (isAsync()) {
-            return this.findCompose(info, selects, node);
+        final String[] tables = info.getTables(node);
+        String sql = findSql(info, tables, selects, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> this.findCompose(info, selects, node).join(), getExecutor());
+        if (isAsync()) {
+            return findDBAsync(info, sql, false, selects);
+        } else {
+            return supplyAsync(() -> findDB(info, sql, false, selects));
+        }
     }
 
-    protected <T> CompletableFuture<T> findCompose(final EntityInfo<T> info, final SelectColumn selects, final FilterNode node) {
+    protected <T> String findSql(final EntityInfo<T> info, final String[] tables, final SelectColumn selects, final FilterNode node) {
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
-        String[] tables = info.getTables(node);
         String joinAndWhere = (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
         String sql;
         if (tables.length == 1) {
@@ -2474,10 +2638,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
             sql = "SELECT " + info.getQueryColumns("a", selects) + " FROM (" + (union) + ") a";
         }
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
-        }
-        return findDB(info, sql, false, selects);
+        return sql;
     }
 
     @Local
@@ -2499,7 +2660,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return val;
             }
         }
-        return findColumnCompose(info, column, defValue, pk).join();
+        String sql = findColumnSql(info, column, defValue, pk);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
+        }
+        if (isAsync()) {
+            return findColumnDBAsync(info, sql, true, column, defValue).join();
+        } else {
+            return findColumnDB(info, sql, true, column, defValue);
+        }
     }
 
     @Override
@@ -2512,18 +2681,19 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(val);
             }
         }
-        if (isAsync()) {
-            return findColumnCompose(info, column, defValue, pk);
+        String sql = findColumnSql(info, column, defValue, pk);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> findColumnCompose(info, column, defValue, pk).join(), getExecutor());
+        if (isAsync()) {
+            return findColumnDBAsync(info, sql, true, column, defValue);
+        } else {
+            return supplyAsync(() -> findColumnDB(info, sql, true, column, defValue));
+        }
     }
 
-    protected <T> CompletableFuture<Serializable> findColumnCompose(final EntityInfo<T> info, String column, final Serializable defValue, final Serializable pk) {
-        final String sql = "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
-        }
-        return findColumnDB(info, sql, true, column, defValue);
+    protected <T> String findColumnSql(final EntityInfo<T> info, String column, final Serializable defValue, final Serializable pk) {
+        return "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
     }
 
     @Override
@@ -2536,7 +2706,16 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return val;
             }
         }
-        return this.findColumnCompose(info, column, defValue, node).join();
+        final String[] tables = info.getTables(node);
+        String sql = findColumnSql(info, tables, column, defValue, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
+        }
+        if (isAsync()) {
+            return findColumnDBAsync(info, sql, false, column, defValue).join();
+        } else {
+            return findColumnDB(info, sql, false, column, defValue);
+        }
     }
 
     @Override
@@ -2549,17 +2728,22 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(val);
             }
         }
-        if (isAsync()) {
-            return this.findColumnCompose(info, column, defValue, node);
+        final String[] tables = info.getTables(node);
+        String sql = findColumnSql(info, tables, column, defValue, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> this.findColumnCompose(info, column, defValue, node).join(), getExecutor());
+        if (isAsync()) {
+            return findColumnDBAsync(info, sql, false, column, defValue);
+        } else {
+            return supplyAsync(() -> findColumnDB(info, sql, false, column, defValue));
+        }
     }
 
-    protected <T> CompletableFuture<Serializable> findColumnCompose(final EntityInfo<T> info, String column, final Serializable defValue, final FilterNode node) {
+    protected <T> String findColumnSql(final EntityInfo<T> info, String[] tables, String column, final Serializable defValue, final FilterNode node) {
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
-        String[] tables = info.getTables(node);
         String joinAndWhere = (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
         String sql;
         if (tables.length == 1) {
@@ -2574,10 +2758,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
             sql = "SELECT " + info.getSQLColumn("a", column) + " FROM (" + (union) + ") a";
         }
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
-        }
-        return findColumnDB(info, sql, false, column, defValue);
+        return sql;
     }
 
     @Local
@@ -2604,7 +2785,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return rs;
             }
         }
-        return existsCompose(info, pk).join();
+        String sql = existsSql(info, pk);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
+        }
+        if (isAsync()) {
+            return existsDBAsync(info, sql, true).join();
+        } else {
+            return existsDB(info, sql, true);
+        }
     }
 
     @Override
@@ -2617,18 +2806,19 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(rs);
             }
         }
-        if (isAsync()) {
-            return existsCompose(info, pk);
-        }
-        return CompletableFuture.supplyAsync(() -> existsCompose(info, pk).join(), getExecutor());
-    }
-
-    protected <T> CompletableFuture<Boolean> existsCompose(final EntityInfo<T> info, Serializable pk) {
-        final String sql = "SELECT COUNT(*) FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+        String sql = existsSql(info, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         }
-        return existsDB(info, sql, true);
+        if (isAsync()) {
+            return existsDBAsync(info, sql, true);
+        } else {
+            return supplyAsync(() -> existsDB(info, sql, true));
+        }
+    }
+
+    protected <T> String existsSql(final EntityInfo<T> info, Serializable pk) {
+        return "SELECT COUNT(*) FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
     }
 
     @Override
@@ -2641,7 +2831,16 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return rs;
             }
         }
-        return this.existsCompose(info, node).join();
+        final String[] tables = info.getTables(node);
+        String sql = existsSql(info, tables, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
+        }
+        if (isAsync()) {
+            return existsDBAsync(info, sql, false).join();
+        } else {
+            return existsDB(info, sql, false);
+        }
     }
 
     @Override
@@ -2654,17 +2853,23 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(rs);
             }
         }
-        if (isAsync()) {
-            return this.existsCompose(info, node);
+
+        final String[] tables = info.getTables(node);
+        String sql = existsSql(info, tables, node);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         }
-        return CompletableFuture.supplyAsync(() -> this.existsCompose(info, node).join(), getExecutor());
+        if (isAsync()) {
+            return existsDBAsync(info, sql, false);
+        } else {
+            return supplyAsync(() -> existsDB(info, sql, false));
+        }
     }
 
-    protected <T> CompletableFuture<Boolean> existsCompose(final EntityInfo<T> info, FilterNode node) {
+    protected <T> String existsSql(final EntityInfo<T> info, String[] tables, FilterNode node) {
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
-        String[] tables = info.getTables(node);
         String joinAndWhere = (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
         String sql;
         if (tables.length == 1) {
@@ -2679,10 +2884,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
             sql = "SELECT COUNT(" + info.getPrimarySQLColumn("a") + ") FROM (" + (union) + ") a";
         }
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
-        }
-        return existsDB(info, sql, false);
+        return sql;
     }
 
     @Local
@@ -2892,49 +3094,84 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     @Override
     public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return new LinkedHashSet<>(querySheetCompose(true, false, true, clazz, selects, flipper, node).join().list(true));
+        if (isAsync()) {
+            return querySheetAsync(true, false, true, clazz, selects, flipper, node).thenApply((rs) -> new LinkedHashSet<>(rs.list(true))).join();
+        } else {
+            return new LinkedHashSet<>(querySheet(true, false, true, clazz, selects, flipper, node).list(true));
+        }
     }
 
     @Override
     public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheetCompose(true, false, true, clazz, selects, flipper, node).thenApply((rs) -> new LinkedHashSet<>(rs.list(true)));
+        if (isAsync()) {
+            return querySheetAsync(true, false, true, clazz, selects, flipper, node).thenApply((rs) -> new LinkedHashSet<>(rs.list(true)));
+        } else {
+            return supplyAsync(() -> querySheet(true, false, true, clazz, selects, flipper, node)).thenApply((rs) -> new LinkedHashSet<>(rs.list(true)));
+        }
     }
 
     @Override
     public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheetCompose(true, false, false, clazz, selects, flipper, node).join().list(true);
+        if (isAsync()) {
+            return querySheetAsync(true, false, false, clazz, selects, flipper, node).thenApply((rs) -> rs.list(true)).join();
+        } else {
+            return querySheet(true, false, false, clazz, selects, flipper, node).list(true);
+        }
     }
 
     @Override
     public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheetCompose(true, false, false, clazz, selects, flipper, node).thenApply((rs) -> rs.list(true));
+        if (isAsync()) {
+            return querySheetAsync(true, false, false, clazz, selects, flipper, node).thenApply((rs) -> rs.list(true));
+        } else {
+            return supplyAsync(() -> querySheet(true, false, false, clazz, selects, flipper, node)).thenApply((rs) -> rs.list(true));
+        }
     }
 
     @Override
     public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
-        return querySheetCompose(true, true, false, clazz, selects, flipper, node).join();
+        if (isAsync()) {
+            return querySheetAsync(true, true, false, clazz, selects, flipper, node).join();
+        } else {
+            return querySheet(true, true, false, clazz, selects, flipper, node);
+        }
     }
 
     @Override
     public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         if (isAsync()) {
-            return querySheetCompose(true, true, false, clazz, selects, flipper, node);
+            return querySheetAsync(true, true, false, clazz, selects, flipper, node);
+        } else {
+            return supplyAsync(() -> querySheet(true, true, false, clazz, selects, flipper, node));
         }
-        return CompletableFuture.supplyAsync(() -> querySheetCompose(true, true, false, clazz, selects, flipper, node).join(), getExecutor());
     }
 
-    protected <T> CompletableFuture<Sheet<T>> querySheetCompose(final boolean readcache, final boolean needtotal, final boolean distinct, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+    protected <T> Sheet<T> querySheet(final boolean readCache, final boolean needTotal, final boolean distinct, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (readcache && cache != null && cache.isFullLoaded()) {
+        if (readCache && cache != null && cache.isFullLoaded()) {
             if (node == null || isCacheUseable(node, this)) {
                 if (info.isLoggable(logger, Level.FINEST, " cache query predicate = ")) {
                     logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : createPredicate(node, cache)));
                 }
-                return CompletableFuture.completedFuture(cache.querySheet(needtotal, distinct, selects, flipper, node));
+                return cache.querySheet(needTotal, distinct, selects, flipper, node);
             }
         }
-        return querySheetDB(info, readcache, needtotal, distinct, selects, flipper, node);
+        return querySheetDB(info, readCache, needTotal, distinct, selects, flipper, node);
+    }
+
+    protected <T> CompletableFuture<Sheet<T>> querySheetAsync(final boolean readCache, final boolean needTotal, final boolean distinct, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final EntityCache<T> cache = info.getCache();
+        if (readCache && cache != null && cache.isFullLoaded()) {
+            if (node == null || isCacheUseable(node, this)) {
+                if (info.isLoggable(logger, Level.FINEST, " cache query predicate = ")) {
+                    logger.finest(clazz.getSimpleName() + " cache query predicate = " + (node == null ? null : createPredicate(node, cache)));
+                }
+                return CompletableFuture.completedFuture(cache.querySheet(needTotal, distinct, selects, flipper, node));
+            }
+        }
+        return querySheetDBAsync(info, readCache, needTotal, distinct, selects, flipper, node);
     }
 
     protected static class SqlInfo {

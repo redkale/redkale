@@ -365,15 +365,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      *
      * @param <T>     泛型
      * @param action  操作
-     * @param async   是否异步
      * @param entitys 对象集合
      *
-     * @return CompletableFuture
      */
-    protected <T> CompletableFuture checkEntity(String action, boolean async, T... entitys) {
-        if (entitys.length < 1) {
-            return null;
-        }
+    protected <T> void checkEntity(String action, T... entitys) {
         Class clazz = null;
         for (T val : entitys) {
             if (clazz == null) {
@@ -381,18 +376,14 @@ public abstract class AbstractDataSource extends AbstractService implements Data
                 if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
                     throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
                 }
-                continue;
-            }
-            if (clazz != val.getClass()) {
-                if (async) {
-                    CompletableFuture future = new CompletableFuture<>();
-                    future.completeExceptionally(new RuntimeException("DataSource." + action + " must the same Class Entity, but diff is " + clazz + " and " + val.getClass()));
-                    return future;
-                }
+            } else if (clazz != val.getClass()) {
                 throw new SourceException("DataSource." + action + " must the same Class Entity, but diff is " + clazz + " and " + val.getClass());
             }
         }
-        return null;
+    }
+
+    protected <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
+        return CompletableFuture.supplyAsync(supplier, getExecutor());
     }
 
     protected DefaultBatchInfo parseBatchInfo(DefaultDataBatch batch, Function<Class, EntityInfo> func) {
