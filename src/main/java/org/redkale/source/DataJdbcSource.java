@@ -202,12 +202,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, Flipper flipper, final String... sqls) {
-        return supplyAsync(() -> deleteDB(info, flipper, sqls));
+    protected <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, String[] tables, Flipper flipper, final String... sqls) {
+        return supplyAsync(() -> deleteDB(info, tables, flipper, sqls));
     }
 
     @Override
-    protected <T> int deleteDB(EntityInfo<T> info, Flipper flipper, String... sqls) {
+    protected <T> int deleteDB(EntityInfo<T> info, String[] tables, Flipper flipper, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -969,12 +969,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(EntityInfo<T> info, String sql, FilterFuncColumn... columns) {
-        return supplyAsync(() -> getNumberMapDB(info, sql, columns));
+    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterFuncColumn... columns) {
+        return supplyAsync(() -> getNumberMapDB(info, tables, sql, columns));
     }
 
     @Override
-    protected <T, N extends Number> Map<String, N> getNumberMapDB(EntityInfo<T> info, String sql, FilterFuncColumn... columns) {
+    protected <T, N extends Number> Map<String, N> getNumberMapDB(EntityInfo<T> info, String[] tables, String sql, FilterFuncColumn... columns) {
         Connection conn = null;
         final Map map = new HashMap<>();
         final long s = System.currentTimeMillis();
@@ -1031,12 +1031,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Number> getNumberResultDBAsync(EntityInfo<T> info, String sql, Number defVal, String column) {
-        return supplyAsync(() -> getNumberResultDB(info, sql, defVal, column));
+    protected <T> CompletableFuture<Number> getNumberResultDBAsync(EntityInfo<T> info, String[] tables, String sql, Number defVal, String column) {
+        return supplyAsync(() -> getNumberResultDB(info, tables, sql, defVal, column));
     }
 
     @Override
-    protected <T> Number getNumberResultDB(EntityInfo<T> info, String sql, Number defVal, String column) {
+    protected <T> Number getNumberResultDB(EntityInfo<T> info, String[] tables, String sql, Number defVal, String column) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -1086,12 +1086,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(EntityInfo<T> info, String sql, String keyColumn) {
-        return supplyAsync(() -> queryColumnMapDB(info, sql, keyColumn));
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, String keyColumn) {
+        return supplyAsync(() -> queryColumnMapDB(info, tables, sql, keyColumn));
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(EntityInfo<T> info, String sql, String keyColumn) {
+    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, String keyColumn) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         Map<K, N> rs = new LinkedHashMap<>();
@@ -1140,12 +1140,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(EntityInfo<T> info, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
-        return supplyAsync(() -> queryColumnMapDB(info, sql, funcNodes, groupByColumns));
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return supplyAsync(() -> queryColumnMapDB(info, tables, sql, funcNodes, groupByColumns));
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(EntityInfo<T> info, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
         Connection conn = null;
         Map rs = new LinkedHashMap<>();
         final long s = System.currentTimeMillis();
@@ -1209,12 +1209,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<T> findDBAsync(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
-        return supplyAsync(() -> findDB(info, sql, onlypk, selects));
+    protected <T> CompletableFuture<T> findDBAsync(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects) {
+        return supplyAsync(() -> findDB(info, tables, sql, onlypk, selects));
     }
 
     @Override
-    protected <T> T findDB(EntityInfo<T> info, String sql, boolean onlypk, SelectColumn selects) {
+    protected <T> T findDB(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -1259,12 +1259,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, String sql, boolean onlypk, String column, Serializable defValue) {
-        return supplyAsync(() -> findColumnDB(info, sql, onlypk, column, defValue));
+    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue) {
+        return supplyAsync(() -> findColumnDB(info, tables, sql, onlypk, column, defValue));
     }
 
     @Override
-    protected <T> Serializable findColumnDB(EntityInfo<T> info, String sql, boolean onlypk, String column, Serializable defValue) {
+    protected <T> Serializable findColumnDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
@@ -1313,12 +1313,12 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, String sql, boolean onlypk) {
-        return supplyAsync(() -> existsDB(info, sql, onlypk));
+    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk) {
+        return supplyAsync(() -> existsDB(info, tables, sql, onlypk));
     }
 
     @Override
-    protected <T> boolean existsDB(EntityInfo<T> info, String sql, boolean onlypk) {
+    protected <T> boolean existsDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {

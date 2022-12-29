@@ -667,7 +667,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected abstract <T> CompletableFuture<Integer> insertDBAsync(final EntityInfo<T> info, T... entitys);
 
     //删除记录
-    protected abstract <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, Flipper flipper, final String... sqls);
+    protected abstract <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, String[] tables, Flipper flipper, final String... sqls);
 
     //清空表
     protected abstract <T> CompletableFuture<Integer> clearTableDBAsync(final EntityInfo<T> info, String[] tables, final String... sqls);
@@ -682,25 +682,25 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected abstract <T> CompletableFuture<Integer> updateColumnDBAsync(final EntityInfo<T> info, Flipper flipper, final SqlInfo sql);
 
     //查询Number Map数据
-    protected abstract <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(final EntityInfo<T> info, final String sql, final FilterFuncColumn... columns);
+    protected abstract <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final FilterFuncColumn... columns);
 
     //查询Number数据
-    protected abstract <T> CompletableFuture<Number> getNumberResultDBAsync(final EntityInfo<T> info, final String sql, final Number defVal, final String column);
+    protected abstract <T> CompletableFuture<Number> getNumberResultDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final Number defVal, final String column);
 
     //查询Map数据
-    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(final EntityInfo<T> info, final String sql, final String keyColumn);
+    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final String keyColumn);
 
     //查询Map数据
-    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(final EntityInfo<T> info, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns);
+    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns);
 
     //查询单条记录
-    protected abstract <T> CompletableFuture<T> findDBAsync(final EntityInfo<T> info, final String sql, final boolean onlypk, final SelectColumn selects);
+    protected abstract <T> CompletableFuture<T> findDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, final SelectColumn selects);
 
     //查询单条记录的单个字段
-    protected abstract <T> CompletableFuture<Serializable> findColumnDBAsync(final EntityInfo<T> info, final String sql, final boolean onlypk, final String column, final Serializable defValue);
+    protected abstract <T> CompletableFuture<Serializable> findColumnDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, final String column, final Serializable defValue);
 
     //判断记录是否存在
-    protected abstract <T> CompletableFuture<Boolean> existsDBAsync(final EntityInfo<T> info, final String sql, final boolean onlypk);
+    protected abstract <T> CompletableFuture<Boolean> existsDBAsync(final EntityInfo<T> info, final String[] tables, final String sql, final boolean onlypk);
 
     //查询一页数据
     protected abstract <T> CompletableFuture<Sheet<T>> querySheetDBAsync(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node);
@@ -711,8 +711,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     //删除记录
-    protected <T> int deleteDB(final EntityInfo<T> info, Flipper flipper, final String... sqls) {
-        return deleteDBAsync(info, flipper, sqls).join();
+    protected <T> int deleteDB(final EntityInfo<T> info, String[] tables, Flipper flipper, final String... sqls) {
+        return deleteDBAsync(info, tables, flipper, sqls).join();
     }
 
     //清空表
@@ -736,38 +736,38 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     //查询Number Map数据
-    protected <T, N extends Number> Map<String, N> getNumberMapDB(final EntityInfo<T> info, final String sql, final FilterFuncColumn... columns) {
-        return (Map) getNumberMapDBAsync(info, sql, columns).join();
+    protected <T, N extends Number> Map<String, N> getNumberMapDB(final EntityInfo<T> info, String[] tables, final String sql, final FilterFuncColumn... columns) {
+        return (Map) getNumberMapDBAsync(info, tables, sql, columns).join();
     }
 
     //查询Number数据
-    protected <T> Number getNumberResultDB(final EntityInfo<T> info, final String sql, final Number defVal, final String column) {
-        return getNumberResultDBAsync(info, sql, defVal, column).join();
+    protected <T> Number getNumberResultDB(final EntityInfo<T> info, String[] tables, final String sql, final Number defVal, final String column) {
+        return getNumberResultDBAsync(info, tables, sql, defVal, column).join();
     }
 
     //查询Map数据
-    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(final EntityInfo<T> info, final String sql, final String keyColumn) {
-        return (Map) queryColumnMapDBAsync(info, sql, keyColumn).join();
+    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(final EntityInfo<T> info, String[] tables, final String sql, final String keyColumn) {
+        return (Map) queryColumnMapDBAsync(info, tables, sql, keyColumn).join();
     }
 
     //查询Map数据
-    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(final EntityInfo<T> info, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
-        return (Map) queryColumnMapDBAsync(info, sql, funcNodes, groupByColumns).join();
+    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+        return (Map) queryColumnMapDBAsync(info, tables, sql, funcNodes, groupByColumns).join();
     }
 
     //查询单条记录
-    protected <T> T findDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final SelectColumn selects) {
-        return findDBAsync(info, sql, onlypk, selects).join();
+    protected <T> T findDB(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, final SelectColumn selects) {
+        return findDBAsync(info, tables, sql, onlypk, selects).join();
     }
 
     //查询单条记录的单个字段
-    protected <T> Serializable findColumnDB(final EntityInfo<T> info, final String sql, final boolean onlypk, final String column, final Serializable defValue) {
-        return findColumnDBAsync(info, sql, onlypk, column, defValue).join();
+    protected <T> Serializable findColumnDB(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, final String column, final Serializable defValue) {
+        return findColumnDBAsync(info, tables, sql, onlypk, column, defValue).join();
     }
 
     //判断记录是否存在
-    protected <T> boolean existsDB(final EntityInfo<T> info, final String sql, final boolean onlypk) {
-        return existsDBAsync(info, sql, onlypk).join();
+    protected <T> boolean existsDB(final EntityInfo<T> info, final String[] tables, final String sql, final boolean onlypk) {
+        return existsDBAsync(info, tables, sql, onlypk).join();
     }
 
     //查询一页数据
@@ -974,16 +974,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return deleteCache(info, -1, pks);
         }
+        String[] tables = new String[]{info.getTable(pks[0])};
         String[] sqls = deleteSql(info, pks);
         if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
             logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
         }
         if (isAsync()) {
-            int rs = deleteDBAsync(info, null, sqls).join();
+            int rs = deleteDBAsync(info, tables, null, sqls).join();
             deleteCache(info, rs, pks);
             return rs;
         } else {
-            int rs = deleteDB(info, null, sqls);
+            int rs = deleteDB(info, tables, null, sqls);
             deleteCache(info, rs, pks);
             return rs;
         }
@@ -998,12 +999,13 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(deleteCache(info, -1, pks));
         }
+        String[] tables = new String[]{info.getTable(pks[0])};
         String[] sqls = deleteSql(info, pks);
         if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
             logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
         }
         if (isAsync()) {
-            return deleteDBAsync(info, null, sqls).whenComplete((rs, t) -> {
+            return deleteDBAsync(info, tables, null, sqls).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1011,7 +1013,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         } else {
-            return supplyAsync(() -> deleteDB(info, null, sqls)).whenComplete((rs, t) -> {
+            return supplyAsync(() -> deleteDB(info, tables, null, sqls)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1037,16 +1039,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return deleteCache(info, -1, flipper, node);
         }
-        String[] sqls = deleteSql(info, flipper, node);
+        String[] tables = info.getTables(node);
+        String[] sqls = deleteSql(info, tables, flipper, node);
         if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
             logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
         }
         if (isAsync()) {
-            int rs = deleteDBAsync(info, flipper, sqls).join();
+            int rs = deleteDBAsync(info, tables, flipper, sqls).join();
             deleteCache(info, rs, flipper, sqls);
             return rs;
         } else {
-            int rs = deleteDB(info, flipper, sqls);
+            int rs = deleteDB(info, tables, flipper, sqls);
             deleteCache(info, rs, flipper, sqls);
             return rs;
         }
@@ -1058,12 +1061,13 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(deleteCache(info, -1, flipper, node));
         }
-        String[] sqls = deleteSql(info, flipper, node);
+        String[] tables = info.getTables(node);
+        String[] sqls = deleteSql(info, tables, flipper, node);
         if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
             logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
         }
         if (isAsync()) {
-            return deleteDBAsync(info, flipper, sqls).whenComplete((rs, t) -> {
+            return deleteDBAsync(info, tables, flipper, sqls).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1071,7 +1075,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 }
             });
         } else {
-            return supplyAsync(() -> deleteDB(info, flipper, sqls)).whenComplete((rs, t) -> {
+            return supplyAsync(() -> deleteDB(info, tables, flipper, sqls)).whenComplete((rs, t) -> {
                 if (t != null) {
                     errorCompleteConsumer.accept(rs, t);
                 } else {
@@ -1098,7 +1102,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
     }
 
-    protected <T> String[] deleteSql(final EntityInfo<T> info, final Flipper flipper, final FilterNode node) {
+    protected <T> String[] deleteSql(final EntityInfo<T> info, String[] tables, final Flipper flipper, final FilterNode node) {
         boolean pgsql = "postgresql".equals(dbtype());
         Map<Class, String> joinTabalis = null;
         CharSequence join = null;
@@ -1119,7 +1123,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (pgsql && flipper != null && flipper.getLimit() > 0) {
             String wherestr = ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            String[] tables = info.getTables(node);
             List<String> sqls = new ArrayList<>();
             for (String table : tables) {
                 String sql = "DELETE FROM " + table + " a" + (join1 == null ? "" : (", " + join1))
@@ -1129,7 +1132,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
             return sqls.toArray(new String[sqls.size()]);
         } else {
-            String[] tables = info.getTables(node);
             List<String> sqls = new ArrayList<>();
             for (String table : tables) {
                 String sql = "DELETE " + ("mysql".equals(dbtype()) ? "a" : "") + " FROM " + table + " a" + (join1 == null ? "" : (", " + join1))
@@ -2111,9 +2113,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " getNumberMap sql=" + sql);
         }
         if (isAsync()) {
-            return (Map) getNumberMapDBAsync(info, sql, columns).join();
+            return (Map) getNumberMapDBAsync(info, tables, sql, columns).join();
         } else {
-            return getNumberMapDB(info, sql, columns);
+            return getNumberMapDB(info, tables, sql, columns);
         }
     }
 
@@ -2138,9 +2140,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " getNumberMap sql=" + sql);
         }
         if (isAsync()) {
-            return getNumberMapDBAsync(info, sql, columns);
+            return getNumberMapDBAsync(info, tables, sql, columns);
         } else {
-            return supplyAsync(() -> getNumberMapDB(info, sql, columns));
+            return supplyAsync(() -> getNumberMapDB(info, tables, sql, columns));
         }
     }
 
@@ -2202,9 +2204,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " getNumberResult sql=" + sql);
         }
         if (isAsync()) {
-            return getNumberResultDBAsync(info, sql, defVal, column).join();
+            return getNumberResultDBAsync(info, tables, sql, defVal, column).join();
         } else {
-            return getNumberResultDB(info, sql, defVal, column);
+            return getNumberResultDB(info, tables, sql, defVal, column);
         }
     }
 
@@ -2223,9 +2225,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " getNumberResult sql=" + sql);
         }
         if (isAsync()) {
-            return getNumberResultDBAsync(info, sql, defVal, column);
+            return getNumberResultDBAsync(info, tables, sql, defVal, column);
         } else {
-            return supplyAsync(() -> getNumberResultDB(info, sql, defVal, column));
+            return supplyAsync(() -> getNumberResultDB(info, tables, sql, defVal, column));
         }
     }
 
@@ -2271,9 +2273,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
         }
         if (isAsync()) {
-            return (Map) queryColumnMapDBAsync(info, sql, keyColumn).join();
+            return (Map) queryColumnMapDBAsync(info, tables, sql, keyColumn).join();
         } else {
-            return queryColumnMapDB(info, sql, keyColumn);
+            return queryColumnMapDB(info, tables, sql, keyColumn);
         }
     }
 
@@ -2292,9 +2294,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
         }
         if (isAsync()) {
-            return queryColumnMapDBAsync(info, sql, keyColumn);
+            return queryColumnMapDBAsync(info, tables, sql, keyColumn);
         } else {
-            return supplyAsync(() -> queryColumnMapDB(info, sql, keyColumn));
+            return supplyAsync(() -> queryColumnMapDB(info, tables, sql, keyColumn));
         }
     }
 
@@ -2323,7 +2325,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             sql = "SELECT a." + keySqlColumn + ", " + funcSqlColumn + " FROM (" + (union) + ") a";
         }
         return sql;
-        //return queryColumnMapDBAsync(info, sql, keyColumn);
     }
 
     @Local
@@ -2371,9 +2372,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
         }
         if (isAsync()) {
-            return (Map) queryColumnMapDBAsync(info, sql, funcNodes, groupByColumns).join();
+            return (Map) queryColumnMapDBAsync(info, tables, sql, funcNodes, groupByColumns).join();
         } else {
-            return queryColumnMapDB(info, sql, funcNodes, groupByColumns);
+            return queryColumnMapDB(info, tables, sql, funcNodes, groupByColumns);
         }
     }
 
@@ -2392,9 +2393,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
         }
         if (isAsync()) {
-            return queryColumnMapDBAsync(info, sql, funcNodes, groupByColumns);
+            return queryColumnMapDBAsync(info, tables, sql, funcNodes, groupByColumns);
         } else {
-            return supplyAsync(() -> queryColumnMapDB(info, sql, funcNodes, groupByColumns));
+            return supplyAsync(() -> queryColumnMapDB(info, tables, sql, funcNodes, groupByColumns));
         }
     }
 
@@ -2541,14 +2542,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return rs;
             }
         }
+        String table = info.getTable(pk);
         String sql = findSql(info, selects, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
         if (isAsync()) {
-            return findDBAsync(info, sql, true, selects).join();
+            return findDBAsync(info, new String[]{table}, sql, true, selects).join();
         } else {
-            return findDB(info, sql, true, selects);
+            return findDB(info, new String[]{table}, sql, true, selects);
         }
     }
 
@@ -2562,14 +2564,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(rs);
             }
         }
+        String table = info.getTable(pk);
         String sql = findSql(info, selects, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
         if (isAsync()) {
-            return findDBAsync(info, sql, true, selects);
+            return findDBAsync(info, new String[]{table}, sql, true, selects);
         } else {
-            return supplyAsync(() -> findDB(info, sql, true, selects));
+            return supplyAsync(() -> findDB(info, new String[]{table}, sql, true, selects));
         }
     }
 
@@ -2595,9 +2598,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
         if (isAsync()) {
-            return findDBAsync(info, sql, false, selects).join();
+            return findDBAsync(info, tables, sql, false, selects).join();
         } else {
-            return findDB(info, sql, false, selects);
+            return findDB(info, tables, sql, false, selects);
         }
     }
 
@@ -2614,9 +2617,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
         if (isAsync()) {
-            return findDBAsync(info, sql, false, selects);
+            return findDBAsync(info, tables, sql, false, selects);
         } else {
-            return supplyAsync(() -> findDB(info, sql, false, selects));
+            return supplyAsync(() -> findDB(info, tables, sql, false, selects));
         }
     }
 
@@ -2660,14 +2663,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return val;
             }
         }
+        String table = info.getTable(pk);
         String sql = findColumnSql(info, column, defValue, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
         }
         if (isAsync()) {
-            return findColumnDBAsync(info, sql, true, column, defValue).join();
+            return findColumnDBAsync(info, new String[]{table}, sql, true, column, defValue).join();
         } else {
-            return findColumnDB(info, sql, true, column, defValue);
+            return findColumnDB(info, new String[]{table}, sql, true, column, defValue);
         }
     }
 
@@ -2681,14 +2685,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(val);
             }
         }
+        String table = info.getTable(pk);
         String sql = findColumnSql(info, column, defValue, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
         }
         if (isAsync()) {
-            return findColumnDBAsync(info, sql, true, column, defValue);
+            return findColumnDBAsync(info, new String[]{table}, sql, true, column, defValue);
         } else {
-            return supplyAsync(() -> findColumnDB(info, sql, true, column, defValue));
+            return supplyAsync(() -> findColumnDB(info, new String[]{table}, sql, true, column, defValue));
         }
     }
 
@@ -2712,9 +2717,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
         }
         if (isAsync()) {
-            return findColumnDBAsync(info, sql, false, column, defValue).join();
+            return findColumnDBAsync(info, tables, sql, false, column, defValue).join();
         } else {
-            return findColumnDB(info, sql, false, column, defValue);
+            return findColumnDB(info, tables, sql, false, column, defValue);
         }
     }
 
@@ -2734,9 +2739,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
         }
         if (isAsync()) {
-            return findColumnDBAsync(info, sql, false, column, defValue);
+            return findColumnDBAsync(info, tables, sql, false, column, defValue);
         } else {
-            return supplyAsync(() -> findColumnDB(info, sql, false, column, defValue));
+            return supplyAsync(() -> findColumnDB(info, tables, sql, false, column, defValue));
         }
     }
 
@@ -2785,14 +2790,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return rs;
             }
         }
+        String table = info.getTable(pk);
         String sql = existsSql(info, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         }
         if (isAsync()) {
-            return existsDBAsync(info, sql, true).join();
+            return existsDBAsync(info, new String[]{table}, sql, true).join();
         } else {
-            return existsDB(info, sql, true);
+            return existsDB(info, new String[]{table}, sql, true);
         }
     }
 
@@ -2806,14 +2812,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(rs);
             }
         }
+        String table = info.getTable(pk);
         String sql = existsSql(info, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         }
         if (isAsync()) {
-            return existsDBAsync(info, sql, true);
+            return existsDBAsync(info, new String[]{table}, sql, true);
         } else {
-            return supplyAsync(() -> existsDB(info, sql, true));
+            return supplyAsync(() -> existsDB(info, new String[]{table}, sql, true));
         }
     }
 
@@ -2837,9 +2844,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         }
         if (isAsync()) {
-            return existsDBAsync(info, sql, false).join();
+            return existsDBAsync(info, tables, sql, false).join();
         } else {
-            return existsDB(info, sql, false);
+            return existsDB(info, tables, sql, false);
         }
     }
 
@@ -2860,9 +2867,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         }
         if (isAsync()) {
-            return existsDBAsync(info, sql, false);
+            return existsDBAsync(info, tables, sql, false);
         } else {
-            return supplyAsync(() -> existsDB(info, sql, false));
+            return supplyAsync(() -> existsDB(info, tables, sql, false));
         }
     }
 
