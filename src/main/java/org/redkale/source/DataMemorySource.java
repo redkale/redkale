@@ -122,17 +122,17 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    protected <T> int deleteDB(EntityInfo<T> info, String[] tables, Flipper flipper, String... sqls) {
+    protected <T> int deleteDB(EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) {
         return 0;
     }
 
     @Override
-    protected <T> int clearTableDB(EntityInfo<T> info, String[] tables, String... sqls) {
+    protected <T> int clearTableDB(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
         return 0;
     }
 
     @Override
-    protected <T> int dropTableDB(EntityInfo<T> info, String[] tables, String... sqls) {
+    protected <T> int dropTableDB(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
         return 0;
     }
 
@@ -192,17 +192,17 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> deleteDBAsync(EntityInfo<T> info, String[] tables, Flipper flipper, String... sqls) {
+    protected <T> CompletableFuture<Integer> deleteDBAsync(EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) {
         return CompletableFuture.completedFuture(0);
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> clearTableDBAsync(EntityInfo<T> info, String[] tables, String... sqls) {
+    protected <T> CompletableFuture<Integer> clearTableDBAsync(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
         return CompletableFuture.completedFuture(0);
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> dropTableDBAsync(EntityInfo<T> info, String[] tables, String... sqls) {
+    protected <T> CompletableFuture<Integer> dropTableDBAsync(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
         return CompletableFuture.completedFuture(0);
     }
 

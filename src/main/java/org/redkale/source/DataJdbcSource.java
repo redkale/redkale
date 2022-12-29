@@ -202,66 +202,44 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, String[] tables, Flipper flipper, final String... sqls) {
-        return supplyAsync(() -> deleteDB(info, tables, flipper, sqls));
+    protected <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, final String... sqls) {
+        return supplyAsync(() -> deleteDB(info, tables, flipper, node, pkmap, sqls));
     }
 
     @Override
-    protected <T> int deleteDB(EntityInfo<T> info, String[] tables, Flipper flipper, String... sqls) {
+    protected <T> int deleteDB(EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
             conn.setAutoCommit(false);
-            int c = 0;
+            int c;
             if (sqls.length == 1) {
-                String sql = sqls[0];
-                sql += ((flipper == null || flipper.getLimit() < 1) ? "" : (" LIMIT " + flipper.getLimit()));
-                if (info.isLoggable(logger, Level.FINEST, sql)) {
-                    logger.finest(info.getType().getSimpleName() + " delete sql=" + sql);
-                }
                 final Statement stmt = conn.createStatement();
-                c = stmt.executeUpdate(sql);
+                int c1 = stmt.executeUpdate(sqls[0]);
                 stmt.close();
+                c = c1;
             } else {
-                if (flipper == null || flipper.getLimit() < 1) {
-                    if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
-                        logger.finest(info.getType().getSimpleName() + " delete sqls=" + Arrays.toString(sqls));
-                    }
-                    final Statement stmt = conn.createStatement();
-                    for (String sql : sqls) {
-                        stmt.addBatch(sql);
-                    }
-                    int[] cs = stmt.executeBatch();
-                    stmt.close();
-                    for (int cc : cs) {
-                        c += cc;
-                    }
-                } else {
-                    if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
-                        logger.finest(info.getType().getSimpleName() + " limit " + flipper.getLimit() + " delete sqls=" + Arrays.toString(sqls));
-                    }
-                    final Statement stmt = conn.createStatement();
-                    for (String sql : sqls) {
-                        stmt.addBatch(sql + " LIMIT " + flipper.getLimit());
-                    }
-                    int[] cs = stmt.executeBatch();
-                    stmt.close();
-                    for (int cc : cs) {
-                        c += cc;
-                    }
+                final Statement stmt = conn.createStatement();
+                for (String sql : sqls) {
+                    stmt.addBatch(sql);
                 }
+                int c1 = 0;
+                int[] cs = stmt.executeBatch();
+                stmt.close();
+                for (int cc : cs) {
+                    c1 += cc;
+                }
+                c = c1;
             }
             conn.commit();
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException se) {
-                }
+            try {
+                conn.rollback();
+            } catch (SQLException se) {
             }
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
@@ -283,6 +261,57 @@ public class DataJdbcSource extends DataSqlSource {
                             throw new SourceException(e2);
                         }
                     }
+                    //单表结构不存在
+                    return 0;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return 0;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    System.out.println(tableName + " notExistTables : " + notExistTables);
+                    for (String t : notExistTables) {
+                        if (pkmap != null) {
+                            pkmap.remove(t);
+                        } else {
+                            tables = Utility.remove(tables, t);
+                        }
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "deleteDB, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + (pkmap != null ? pkmap.keySet() : Arrays.toString(tables)));
+                    }
+                    if ((pkmap != null ? pkmap.size() : tables.length) == 0) { //分表全部不存在
+                        return 0;
+                    }
+                    sqls = pkmap != null ? deleteSql(info, pkmap) : deleteSql(info, tables, flipper, node);
+                    if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+                        logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
+                    }
+                    try {
+                        final Statement stmt = conn.createStatement();
+                        for (String sql : sqls) {
+                            stmt.addBatch(sql);
+                        }
+                        int c = 0;
+                        int[] cs = stmt.executeBatch();
+                        stmt.close();
+                        for (int cc : cs) {
+                            c += cc;
+                        }
+                        conn.commit();
+                        slowLog(s, sqls);
+                        return c;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
                 } else {
                     throw new SourceException(e);
                 }
@@ -296,45 +325,96 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> clearTableDBAsync(EntityInfo<T> info, final String[] tables, String... sqls) {
-        return supplyAsync(() -> clearTableDB(info, tables, sqls));
+    protected <T> CompletableFuture<Integer> clearTableDBAsync(EntityInfo<T> info, final String[] tables, FilterNode node, String... sqls) {
+        return supplyAsync(() -> clearTableDB(info, tables, node, sqls));
     }
 
     @Override
-    protected <T> int clearTableDB(EntityInfo<T> info, final String[] tables, String... sqls) {
+    protected <T> int clearTableDB(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
             conn.setAutoCommit(false);
-            int c = 0;
-            final Statement stmt = conn.createStatement();
+            int c;
             if (sqls.length == 1) {
-                String sql = sqls[0];
-                c = stmt.executeUpdate(sql);
+                final Statement stmt = conn.createStatement();
+                int c1 = stmt.executeUpdate(sqls[0]);
+                stmt.close();
+                c = c1;
             } else {
+                final Statement stmt = conn.createStatement();
                 for (String sql : sqls) {
                     stmt.addBatch(sql);
                 }
+                int c1 = 0;
                 int[] cs = stmt.executeBatch();
+                stmt.close();
                 for (int cc : cs) {
-                    c += cc;
+                    c1 += cc;
                 }
+                c = c1;
             }
-            stmt.close();
             conn.commit();
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException se) {
-                }
+            try {
+                conn.rollback();
+            } catch (SQLException se) {
             }
             if (isTableNotExist(info, e.getSQLState())) {
-                return -1;
+                if (info.getTableStrategy() == null) {
+                    //单表结构不存在
+                    return 0;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return 0;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "clearTableDB, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return 0;
+                    }
+                    sqls = clearTableSql(info, tables, node);
+                    if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+                        logger.finest(info.getType().getSimpleName() + " clearTable sql=" + Arrays.toString(sqls));
+                    }
+                    try {
+                        final Statement stmt = conn.createStatement();
+                        for (String sql : sqls) {
+                            stmt.addBatch(sql);
+                        }
+                        int c = 0;
+                        int[] cs = stmt.executeBatch();
+                        stmt.close();
+                        for (int cc : cs) {
+                            c += cc;
+                        }
+                        conn.commit();
+                        slowLog(s, sqls);
+                        return c;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
+                } else {
+                    throw new SourceException(e);
+                }
             }
             throw new SourceException(e);
         } finally {
@@ -345,51 +425,96 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> dropTableDBAsync(EntityInfo<T> info, final String[] tables, String... sqls) {
-        return supplyAsync(() -> dropTableDB(info, tables, sqls));
+    protected <T> CompletableFuture<Integer> dropTableDBAsync(EntityInfo<T> info, final String[] tables, FilterNode node, String... sqls) {
+        return supplyAsync(() -> dropTableDB(info, tables, node, sqls));
     }
 
     @Override
-    protected <T> int dropTableDB(EntityInfo<T> info, String[] tables, String... sqls) {
+    protected <T> int dropTableDB(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
             conn.setAutoCommit(false);
-            int c = 0;
-            final Statement stmt = conn.createStatement();
+            int c;
             if (sqls.length == 1) {
-                String sql = sqls[0];
-                c = stmt.executeUpdate(sql);
+                final Statement stmt = conn.createStatement();
+                int c1 = stmt.executeUpdate(sqls[0]);
+                stmt.close();
+                c = c1;
             } else {
+                final Statement stmt = conn.createStatement();
                 for (String sql : sqls) {
                     stmt.addBatch(sql);
                 }
+                int c1 = 0;
                 int[] cs = stmt.executeBatch();
+                stmt.close();
                 for (int cc : cs) {
-                    c += cc;
+                    c1 += cc;
                 }
+                c = c1;
             }
-            stmt.close();
             conn.commit();
-            if (info.getTableStrategy() != null) {
-                for (String table : tables) {
-                    String tablekey = table.indexOf('.') > 0 ? table : (conn.getCatalog() + '.' + table);
-                    info.removeDisTable(tablekey);
-                }
-            }
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException se) {
-                }
+            try {
+                conn.rollback();
+            } catch (SQLException se) {
             }
             if (isTableNotExist(info, e.getSQLState())) {
-                return -1;
+                if (info.getTableStrategy() == null) {
+                    //单表结构不存在
+                    return 0;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return 0;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "dropTableDB, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return 0;
+                    }
+                    sqls = dropTableSql(info, tables, node);
+                    if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+                        logger.finest(info.getType().getSimpleName() + " dropTable sql=" + Arrays.toString(sqls));
+                    }
+                    try {
+                        final Statement stmt = conn.createStatement();
+                        for (String sql : sqls) {
+                            stmt.addBatch(sql);
+                        }
+                        int c = 0;
+                        int[] cs = stmt.executeBatch();
+                        stmt.close();
+                        for (int cc : cs) {
+                            c += cc;
+                        }
+                        conn.commit();
+                        slowLog(s, sqls);
+                        return c;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
+                } else {
+                    throw new SourceException(e);
+                }
             }
             throw new SourceException(e);
         } finally {
@@ -1565,25 +1690,35 @@ public class DataJdbcSource extends DataSqlSource {
         return new String[]{listSql, countSql};
     }
 
+    protected List<String> checkNotExistTablesNoThrows(Connection conn, String[] tables, String firstNotExistTable) {
+        try {
+            return checkNotExistTables(conn, tables, firstNotExistTable);
+        } catch (SQLException e) {
+            throw new SourceException(e);
+        }
+    }
+
     protected List<String> checkNotExistTables(Connection conn, String[] tables, String firstNotExistTable) throws SQLException {
-        String minTableName = (firstNotExistTable.indexOf('.') > 0) ? firstNotExistTable.substring(firstNotExistTable.indexOf('.') + 1) : null;
-        List<String> maybeNoTables = new ArrayList<>();
-        for (String t : tables) {
-            if (!maybeNoTables.isEmpty()) {
-                maybeNoTables.add(t);
-            }
-            if (t.equals(firstNotExistTable) || (minTableName != null && t.equals(minTableName))) {
-                maybeNoTables.add(t);
-            }
-        }
-        if (maybeNoTables.isEmpty()) {
-            return maybeNoTables;
-        }
+//        数据库不一定要按批量提交的SQL顺序执行， 所以第一个不存在的表不一定再tables的第一位, 
+//        比如 DELETE FROM  table1; DELETE FROM  table2;  如果table1、table2都不存在，SQL可能会抛出table2不存在的异常
+//        List<String> maybeNoTables = new ArrayList<>();
+//        String minTableName = (firstNotExistTable.indexOf('.') > 0) ? firstNotExistTable.substring(firstNotExistTable.indexOf('.') + 1) : null;
+//        for (String t : tables) {
+//            if (!maybeNoTables.isEmpty()) {
+//                maybeNoTables.add(t);
+//            }
+//            if (t.equals(firstNotExistTable) || (minTableName != null && t.equals(minTableName))) {
+//                maybeNoTables.add(t);
+//            }
+//        }
+//        if (maybeNoTables.isEmpty()) {
+//            return maybeNoTables;
+//        }
 
         String[] tableTypes = new String[]{"TABLE"};
         DatabaseMetaData dmd = conn.getMetaData();
         List<String> rs = new ArrayList<>();
-        for (String t : maybeNoTables) {
+        for (String t : tables) { //maybeNoTables
             String catalog = null;
             String table = t;
             int pos = t.indexOf('.');
