@@ -25,8 +25,4 @@ public class ClientIOThread extends AsyncIOThread {
         super(name, index, threads, workExecutor, selector, unsafeBufferPool, safeBufferPool);
     }
 
-    @Override
-    public final boolean inClient() {
-        return true;
-    }
 }

@@ -80,6 +80,14 @@ public class WorkThread extends Thread implements Executor {
         }
     }
 
+    public void runWork(Runnable command) {
+        if (workExecutor == null) {
+            command.run();
+        } else {
+            workExecutor.execute(command);
+        }
+    }
+
     public void runAsync(Runnable command) {
         if (workExecutor == null) {
             ForkJoinPool.commonPool().execute(command);
@@ -111,16 +119,6 @@ public class WorkThread extends Thread implements Executor {
      * @return boolean
      */
     public boolean inIO() {
-        return false;
-    }
-
-    /**
-     * 是否客户端的IO线程
-     *
-     * @since 2.8.0
-     * @return boolean
-     */
-    public boolean inClient() {
         return false;
     }
 

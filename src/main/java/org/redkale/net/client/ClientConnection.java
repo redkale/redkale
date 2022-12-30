@@ -203,28 +203,54 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                         workThread = request.workThread;
                         request.workThread = null;
                     }
+//                    if (rs.exc != null) {
+//                        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
+//                            || workThread.getState() != Thread.State.RUNNABLE) {
+//                            if (request != null) {
+//                                Traces.currTraceid(request.traceid);
+//                            }
+//                            respFuture.completeExceptionally(rs.exc);
+//                        } else {
+//                            workThread.execute(() -> {
+//                                if (request != null) {
+//                                    Traces.currTraceid(request.traceid);
+//                                }
+//                                respFuture.completeExceptionally(rs.exc);
+//                            });
+//                        }
+//                    } else {
+//                        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
+//                            || workThread.getState() != Thread.State.RUNNABLE) {
+//                            if (request != null) {
+//                                Traces.currTraceid(request.traceid);
+//                            }
+//                            respFuture.complete(rs.result);
+//                        } else {
+//                            workThread.execute(() -> {
+//                                if (request != null) {
+//                                    Traces.currTraceid(request.traceid);
+//                                }
+//                                respFuture.complete(rs.result);
+//                            });
+//                        }
+//                    }
+                    if (workThread == null || workThread.getWorkExecutor() == null) {
+                        workThread = channel.getAsyncIOThread();
+                    }
                     if (rs.exc != null) {
-                        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
-                            || workThread.getState() != Thread.State.RUNNABLE) {
-                            Traces.currTraceid(request.traceid);
+                        workThread.runWork(() -> {
+                            if (request != null) {
+                                Traces.currTraceid(request.traceid);
+                            }
                             respFuture.completeExceptionally(rs.exc);
-                        } else {
-                            workThread.execute(() -> {
-                                Traces.currTraceid(request.traceid);
-                                respFuture.completeExceptionally(rs.exc);
-                            });
-                        }
+                        });
                     } else {
-                        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
-                            || workThread.getState() != Thread.State.RUNNABLE) {
-                            Traces.currTraceid(request.traceid);
-                            respFuture.complete(rs.result);
-                        } else {
-                            workThread.execute(() -> {
+                        workThread.runWork(() -> {
+                            if (request != null) {
                                 Traces.currTraceid(request.traceid);
-                                respFuture.complete(rs.result);
-                            });
-                        }
+                            }
+                            respFuture.complete(rs.result);
+                        });
                     }
                 } catch (Throwable t) {
                     client.logger.log(Level.INFO, "Complete result error, request: " + respFuture.request, t);
