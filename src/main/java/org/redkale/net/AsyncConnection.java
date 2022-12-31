@@ -81,6 +81,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioThread, final int bufferCapacity, Supplier<ByteBuffer> bufferSupplier,
         Consumer<ByteBuffer> bufferConsumer, SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
+        Objects.requireNonNull(ioGroup);
+        Objects.requireNonNull(ioThread);
         Objects.requireNonNull(bufferSupplier);
         Objects.requireNonNull(bufferConsumer);
         this.client = client;

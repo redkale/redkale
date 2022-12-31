@@ -612,15 +612,17 @@ public final class Application {
             }
 
             //给所有client给一个默认的AsyncGroup
+            final AtomicReference<ExecutorService> clientref = new AtomicReference<>();
             final AtomicInteger wclientCounter = new AtomicInteger();
             final int clientThreads = Math.max(Math.max(2, Utility.cpus()), workThreads / 2);
             clientExecutor = Executors.newFixedThreadPool(clientThreads, (Runnable r) -> {
                 int i = wclientCounter.get();
                 int c = wclientCounter.incrementAndGet();
                 String threadname = "Redkale-Client-WorkThread-" + (c > 9 ? c : ("0" + c));
-                Thread t = new WorkThread(threadname, i, clientThreads, workref.get(), r);
+                Thread t = new WorkThread(threadname, i, clientThreads, clientref.get(), r);
                 return t;
             });
+            clientref.set(clientExecutor);
         }
         this.workExecutor = workExecutor0;
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);

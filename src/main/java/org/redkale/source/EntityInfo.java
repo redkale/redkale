@@ -971,29 +971,6 @@ public final class EntityInfo<T> {
             }
             if ("a".equals(tabalis)) {
                 return querySqlColumnSequenceA;
-            }
-            return tabalis + "." + Utility.joining(querySqlColumns, "," + tabalis + ".");
-        }
-        StringBuilder sb = new StringBuilder();
-        for (Attribute attr : this.attributes) {
-            if (!selects.test(attr.field())) {
-                continue;
-            }
-            if (sb.length() > 0) {
-                sb.append(',');
-            }
-            sb.append(getSQLColumn(tabalis, attr.field()));
-        }
-        if (sb.length() == 0) {
-            sb.append('*');
-        }
-        return sb;
-    }
-
-    public CharSequence getFullQueryColumns(String tabalis, SelectColumn selects) {
-        if (selects == null) {
-            if (tabalis == null) {
-                return querySqlColumnSequence;
             } else {
                 StringBuilder sb = new StringBuilder();
                 String s = tabalis + ".";

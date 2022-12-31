@@ -7,7 +7,7 @@ package org.redkale.util;
 
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.*;
+import java.util.stream.Stream;
 import org.redkale.convert.ConvertColumn;
 
 /**
@@ -50,7 +50,9 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
     }
 
     public Sheet<T> copyTo(Sheet<T> copy) {
-        if (copy == null) return copy;
+        if (copy == null) {
+            return copy;
+        }
         copy.total = this.total;
         Collection<T> data = this.getRows();
         if (data != null) {
@@ -95,7 +97,9 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
 
     public List<T> list(boolean created) {
         Collection<T> data = this.rows;
-        if (data == null) return created ? new ArrayList() : null;
+        if (data == null) {
+            return created ? new ArrayList() : null;
+        }
         return (data instanceof List) ? (List<T>) data : new ArrayList(data);
     }
 
@@ -119,7 +123,9 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
 
     public <R> Sheet<R> map(Function<T, R> mapper) {
         Collection<T> data = this.rows;
-        if (data == null || data.isEmpty()) return (Sheet) this;
+        if (data == null || data.isEmpty()) {
+            return (Sheet) this;
+        }
         final List<R> list = new ArrayList<>();
         for (T item : data) {
             list.add(mapper.apply(item));

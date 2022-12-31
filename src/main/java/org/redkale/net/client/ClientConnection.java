@@ -332,11 +332,12 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     protected abstract ClientCodec createCodec();
 
     protected CompletableFuture<P> writeChannel(R request) {
-        ClientFuture respFuture = createClientFuture(request);
+        ClientFuture respFuture;
         if (request == client.closeRequest) {
-            respFuture.request = null;
+            respFuture = createClientFuture(null);
             closeFuture = respFuture;
         } else {
+            respFuture = createClientFuture(request);
             int rts = this.channel.getReadTimeoutSeconds();
             if (rts > 0 && respFuture.request != null) {
                 respFuture.conn = this;
@@ -353,19 +354,18 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     private void writeChannelInThread(R request, ClientFuture respFuture) {
-        { //保证顺序一致
-            if (client.closeRequest != null && respFuture.request == client.closeRequest) {
-                responseQueue.offer(ClientFuture.EMPTY);
-            } else {
-                request.respFuture = respFuture;
-                responseQueue.offer(respFuture);
-            }
-            requestQueue.offer(request);
-            if (isAuthenticated() && client.reqWritedCounter != null) {
-                client.reqWritedCounter.increment();
-            }
+        //保证顺序一致
+        if (client.closeRequest != null && respFuture.request == client.closeRequest) {
+            responseQueue.offer(ClientFuture.EMPTY);
+        } else {
+            request.respFuture = respFuture;
+            responseQueue.offer(respFuture);
         }
-        if (responseQueue.size() < 2 && writePending.compareAndSet(false, true)) {//responseQueue.size() < 2 && 加了这句会存在偶尔不写数据的问题?
+        requestQueue.offer(request);
+        if (isAuthenticated() && client.reqWritedCounter != null) {
+            client.reqWritedCounter.increment();
+        }
+        if (writePending.compareAndSet(false, true)) {
             continueWrite(true);
         }
     }
@@ -402,14 +402,13 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     public void dispose(Throwable exc) {
         channel.dispose();
-        Throwable e = exc;
+        Throwable e = exc == null ? new ClosedChannelException() : exc;
         CompletableFuture f;
         respWaitingCounter.reset();
+        WorkThread thread = channel.getAsyncIOThread();
         while ((f = responseQueue.poll()) != null) {
-            if (e == null) {
-                e = new ClosedChannelException();
-            }
-            f.completeExceptionally(e);
+            CompletableFuture future = f;
+            thread.runWork(() -> future.completeExceptionally(e));
         }
     }
 

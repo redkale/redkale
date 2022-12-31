@@ -1652,16 +1652,16 @@ public class DataJdbcSource extends DataSqlSource {
             String listSubSql;
             StringBuilder union = new StringBuilder();
             if (tables.length == 1) {
-                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM " + tables[0] + " a" + joinAndWhere;
+                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM " + tables[0] + " a" + joinAndWhere;
             } else {
                 int b = 0;
                 for (String table : tables) {
                     if (!union.isEmpty()) {
                         union.append(" UNION ALL ");
                     }
-                    union.append("SELECT ").append(info.getFullQueryColumns("a", selects)).append(" FROM ").append(table).append(" a").append(joinAndWhere);
+                    union.append("SELECT ").append(info.getQueryColumns("a", selects)).append(" FROM ").append(table).append(" a").append(joinAndWhere);
                 }
-                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getFullQueryColumns("a", selects) + " FROM (" + (union) + ") a";
+                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM (" + (union) + ") a";
             }
             listSql = listSubSql + createSQLOrderby(info, flipper);
             if (mysqlOrPgsql) {

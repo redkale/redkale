@@ -66,32 +66,46 @@ public class AsyncIOThread extends WorkThread {
         return true;
     }
 
+    /**
+     * 不可重置， 防止IO操作不在IO线程中执行
+     *
+     * @param command
+     */
     @Override
-    public void execute(Runnable command) {
+    public final void execute(Runnable command) {
         commandQueue.offer(command);
         selector.wakeup();
     }
 
+    /**
+     * 不可重置， 防止IO操作不在IO线程中执行
+     *
+     * @param commands
+     */
     @Override
-    public void execute(Runnable... commands) {
+    public final void execute(Runnable... commands) {
         for (Runnable command : commands) {
             commandQueue.offer(command);
         }
         selector.wakeup();
     }
 
+    /**
+     * 不可重置， 防止IO操作不在IO线程中执行
+     *
+     * @param commands
+     */
     @Override
-    public void execute(Collection<Runnable> commands) {
-        if (commands == null) {
-            return;
+    public final void execute(Collection<Runnable> commands) {
+        if (commands != null) {
+            for (Runnable command : commands) {
+                commandQueue.offer(command);
+            }
+            selector.wakeup();
         }
-        for (Runnable command : commands) {
-            commandQueue.offer(command);
-        }
-        selector.wakeup();
     }
 
-    public void register(Consumer<Selector> consumer) {
+    public final void register(Consumer<Selector> consumer) {
         registerQueue.offer(consumer);
         selector.wakeup();
     }

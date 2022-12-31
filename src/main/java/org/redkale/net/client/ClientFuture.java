@@ -16,7 +16,7 @@ import org.redkale.net.*;
  */
 public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
 
-    public static final ClientFuture EMPTY = new ClientFuture() {
+    public static final ClientFuture EMPTY = new ClientFuture(null) {
         @Override
         public boolean complete(Object value) {
             return true;
@@ -28,17 +28,13 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
         }
     };
 
-    protected ClientRequest request;
+    protected final ClientRequest request;
 
     ScheduledFuture timeout;
 
     int mergeCount; //合并的个数，不算自身
 
     ClientConnection conn;
-
-    public ClientFuture() {
-        super();
-    }
 
     public ClientFuture(ClientRequest request) {
         super();
@@ -51,7 +47,11 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
 
     @Override //JDK9+
     public <U> ClientFuture<U> newIncompleteFuture() {
-        return new ClientFuture<>();
+        ClientFuture future = new ClientFuture<>(request);
+        future.timeout = timeout;
+        future.mergeCount = mergeCount;
+        future.conn = conn;
+        return future;
     }
 
     public <R extends ClientRequest> R getRequest() {
