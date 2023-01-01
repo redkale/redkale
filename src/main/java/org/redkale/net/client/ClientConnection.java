@@ -64,7 +64,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 closeFuture = null;
                 return;
             }
-            if (continueWrite(false)) {
+            if (sendWrite(false)) {
                 return;
             }
             writePending.compareAndSet(true, false);
@@ -95,7 +95,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         this.pauseWriting.set(false);
     }
 
-    private boolean continueWrite(boolean must) {
+    private boolean sendWrite(boolean must) {
         ClientConnection conn = this;
         ByteArray rw = conn.writeArray;
         rw.clear();
@@ -168,14 +168,14 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             }
             try {
                 attachment.flip();
-                codecResponse(attachment);
+                decodeResponse(attachment);
             } catch (Throwable e) {
                 channel.setReadBuffer(attachment);
                 dispose(e);
             }
         }
 
-        protected void completeResponse(ClientResult<P> rs, ClientFuture respFuture) {
+        protected void completeResponse(ClientResponse<P> rs, ClientFuture respFuture) {
             if (respFuture != null) {
                 if (!respFuture.request.isCompleted()) {
                     if (rs.exc == null) {
@@ -196,8 +196,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                         respFuture.timeout.cancel(true);
                     }
                     ClientRequest request = respFuture.request;
-                    //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", result=" + rs.result);
-                    preComplete(rs.result, (R) request, rs.exc);
+                    //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", message=" + rs.message);
+                    preComplete(rs.message, (R) request, rs.exc);
                     WorkThread workThread = null;
                     if (request != null) {
                         workThread = request.workThread;
@@ -224,13 +224,13 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 //                            if (request != null) {
 //                                Traces.currTraceid(request.traceid);
 //                            }
-//                            respFuture.complete(rs.result);
+//                            respFuture.complete(rs.message);
 //                        } else {
 //                            workThread.execute(() -> {
 //                                if (request != null) {
 //                                    Traces.currTraceid(request.traceid);
 //                                }
-//                                respFuture.complete(rs.result);
+//                                respFuture.complete(rs.message);
 //                            });
 //                        }
 //                    }
@@ -249,7 +249,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                             if (request != null) {
                                 Traces.currTraceid(request.traceid);
                             }
-                            respFuture.complete(rs.result);
+                            respFuture.complete(rs.message);
                         });
                     }
                 } catch (Throwable t) {
@@ -258,12 +258,12 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             }
         }
 
-        public void codecResponse(ByteBuffer buffer) {
-            if (codec.codecResult(buffer, readArray)) { //成功了
+        public void decodeResponse(ByteBuffer buffer) {
+            if (codec.decodeMessages(buffer, readArray)) { //成功了
                 readArray.clear();
-                List<ClientResult<P>> results = codec.removeResults();
+                List<ClientResponse<P>> results = codec.pollMessages();
                 if (results != null) {
-                    for (ClientResult<P> rs : results) {
+                    for (ClientResponse<P> rs : results) {
                         ClientFuture respFuture = responseQueue.poll();
                         if (respFuture != null) {
                             int mergeCount = respFuture.mergeCount;
@@ -281,7 +281,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 }
 
                 if (buffer.hasRemaining()) {
-                    codecResponse(buffer);
+                    decodeResponse(buffer);
                 } else if (responseQueue.isEmpty()) { //队列都已处理完了
                     buffer.clear();
                     channel.setReadBuffer(buffer);
@@ -293,7 +293,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 } else { //还有消息需要读取
                     if ((!requestQueue.isEmpty() || lastHalfRequest != null) && writePending.compareAndSet(false, true)) {
                         //先写后读取
-                        if (!continueWrite(true)) {
+                        if (!sendWrite(true)) {
                             writePending.compareAndSet(true, false);
                         }
                     }
@@ -366,7 +366,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             client.reqWritedCounter.increment();
         }
         if (writePending.compareAndSet(false, true)) {
-            continueWrite(true);
+            sendWrite(true);
         }
     }
 

@@ -23,7 +23,7 @@ import org.redkale.util.ByteArray;
  */
 public abstract class ClientCodec<R extends ClientRequest, P> {
 
-    protected final List<ClientResult<P>> results = new ArrayList<>();
+    protected final List<ClientResponse<P>> results = new ArrayList<>();
 
     protected final ClientConnection connection;
 
@@ -32,17 +32,14 @@ public abstract class ClientCodec<R extends ClientRequest, P> {
     }
 
     //返回true: array会clear, 返回false: buffer会clear
-    public abstract boolean codecResult(ByteBuffer buffer, ByteArray array);
+    public abstract boolean decodeMessages(ByteBuffer buffer, ByteArray array);
 
     protected Queue<ClientFuture> responseQueue() {
         return connection.responseQueue;
     }
 
-    public List<ClientResult<P>> removeResults() {
-        if (results.isEmpty()) {
-            return null;
-        }
-        List<ClientResult<P>> rs = new ArrayList<>(results);
+    public List<ClientResponse<P>> pollMessages() {
+        List<ClientResponse<P>> rs = new ArrayList<>(results);
         this.results.clear();
         return rs;
     }
@@ -51,12 +48,12 @@ public abstract class ClientCodec<R extends ClientRequest, P> {
         return connection;
     }
 
-    public void addResult(P result) {
-        this.results.add(new ClientResult<>(result));
+    public void addMessage(P result) {
+        this.results.add(new ClientResponse<>(result));
     }
 
-    public void addResult(Throwable exc) {
-        this.results.add(new ClientResult<>(exc));
+    public void addMessage(Throwable exc) {
+        this.results.add(new ClientResponse<>(exc));
     }
 
     public void reset() {

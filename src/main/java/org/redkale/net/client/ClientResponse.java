@@ -8,28 +8,28 @@ package org.redkale.net.client;
 /**
  *
  * @author zhangjx
- * @param <P> result
+ * @param <P> message
  */
-public class ClientResult<P> {
+public class ClientResponse<P> {
 
-    protected P result;
+    protected P message;
 
     protected Throwable exc;
 
-    public ClientResult(P result) {
-        this.result = result;
+    public ClientResponse(P result) {
+        this.message = result;
     }
 
-    public ClientResult(Throwable exc) {
+    public ClientResponse(Throwable exc) {
         this.exc = exc;
     }
 
-    public P getResult() {
-        return result;
+    public P getMessage() {
+        return message;
     }
 
-    public void setResult(P result) {
-        this.result = result;
+    public void setMessage(P message) {
+        this.message = message;
     }
 
     public Throwable getExc() {
@@ -45,6 +45,6 @@ public class ClientResult<P> {
         if (exc != null) {
             return "{\"exc\":" + exc + "}";
         }
-        return "{\"result\":" + result + "}";
+        return "{\"message\":" + message + "}";
     }
 }

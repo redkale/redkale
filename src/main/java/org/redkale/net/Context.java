@@ -110,7 +110,7 @@ public class Context {
         }
     }
 
-    protected void executeDispatcher(Request request, Response response) {
+    protected void executeDispatch(Request request, Response response) {
         if (workHashExecutor != null) {
             workHashExecutor.execute(request.getHashid(), () -> prepare.prepare(request, response));
         } else if (workExecutor != null) {

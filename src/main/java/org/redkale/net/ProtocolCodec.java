@@ -169,7 +169,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 request.pipeline(pindex, pindex);
                 channel.setReadBuffer((ByteBuffer) buffer.clear());
             }
-            context.executeDispatcher(request, response);
+            context.executeDispatch(request, response);
             if (pipeline) {
                 final Response pipelineResponse = createResponse();
                 try {
