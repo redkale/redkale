@@ -107,8 +107,9 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             return pool == null ? safeResponsePool.get() : pool.get();
         };
         this.responseConsumer = (v) -> {
-            if (Thread.currentThread() != v.thread && v.thread != null) {
-                v.thread.execute(() -> {
+            WorkThread thread = v.channel != null ? v.channel.getAsyncIOThread() : v.thread;
+            if (thread != null && !thread.inCurrThread()) {
+                thread.execute(() -> {
                     ObjectPool<Response> pool = localResponsePool.get();
                     (pool == null ? safeResponsePool : pool).accept(v);
                 });

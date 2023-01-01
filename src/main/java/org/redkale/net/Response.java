@@ -47,6 +47,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected Servlet<C, R, ? extends Response<C, R>> servlet;
 
+    protected final ByteBuffer writeBuffer;
+
     private final CompletionHandler finishBytesHandler = new CompletionHandler<Integer, Void>() {
 
         @Override
@@ -65,13 +67,21 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
         @Override
         public void completed(Integer result, ByteBuffer attachment) {
-            channel.offerBuffer(attachment);
+            if (attachment != writeBuffer) {
+                channel.offerBuffer(attachment);
+            } else {
+                attachment.clear();
+            }
             finish();
         }
 
         @Override
         public void failed(Throwable exc, ByteBuffer attachment) {
-            channel.offerBuffer(attachment);
+            if (attachment != writeBuffer) {
+                channel.offerBuffer(attachment);
+            } else {
+                attachment.clear();
+            }
             finish(true);
         }
 
@@ -105,6 +115,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.context = context;
         this.request = request;
         this.thread = WorkThread.currWorkThread();
+        this.writeBuffer = context != null ? ByteBuffer.allocateDirect(context.getBufferCapacity()) : null;
     }
 
     protected AsyncConnection removeChannel() {
@@ -217,7 +228,11 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             AsyncConnection conn = removeChannel();
             if (conn != null && conn.protocolCodec != null) {
                 this.responseConsumer.accept(this);
-                conn.read(conn.protocolCodec);
+                if (conn.inCurrThread()) {
+                    conn.read(conn.protocolCodec);
+                } else {
+                    conn.execute(() -> conn.read(conn.protocolCodec));
+                }
             } else {
                 Supplier<Response> poolSupplier = this.responseSupplier;
                 Consumer<Response> poolConsumer = this.responseConsumer;
@@ -270,7 +285,15 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 }
             });
         } else {
-            this.channel.write(bs, offset, length, finishBytesHandler);
+            ByteBuffer buffer = this.writeBuffer;
+            if (buffer != null && buffer.capacity() >= length) {
+                buffer.clear();
+                buffer.put(bs, offset, length);
+                buffer.flip();
+                this.channel.write(buffer, buffer, finishBufferHandler);
+            } else {
+                this.channel.write(bs, offset, length, finishBytesHandler);
+            }
         }
     }
 
