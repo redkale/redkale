@@ -142,7 +142,7 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    protected <T> int updateColumnDB(EntityInfo<T> info, Flipper flipper, SqlInfo sql) {
+    protected <T> int updateColumnDB(EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) {
         return 0;
     }
 
@@ -212,7 +212,7 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateColumnDBAsync(EntityInfo<T> info, Flipper flipper, SqlInfo sql) {
+    protected <T> CompletableFuture<Integer> updateColumnDBAsync(EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) {
         return CompletableFuture.completedFuture(0);
     }
 

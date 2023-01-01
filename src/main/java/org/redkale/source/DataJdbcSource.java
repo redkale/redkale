@@ -999,90 +999,171 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Integer> updateColumnDBAsync(EntityInfo<T> info, Flipper flipper, SqlInfo sql) {
+    protected <T> CompletableFuture<Integer> updateColumnDBAsync(EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) {
         return supplyAsync(() -> updateColumnDB(info, flipper, sql));
     }
 
     @Override
-    protected <T> int updateColumnDB(EntityInfo<T> info, Flipper flipper, SqlInfo sql) { //String sql, boolean prepared, Object... blobs) {
+    protected <T> int updateColumnDB(EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) { //String sql, boolean prepared, Object... blobs) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
             conn.setReadOnly(false);
             conn.setAutoCommit(false);
-            if (sql.blobs != null || sql.tables != null) {
-                final PreparedStatement prestmt = conn.prepareStatement(sql.sql);
-                int c = 0;
-                if (sql.tables == null) {
-                    int index = 0;
-                    for (byte[] param : sql.blobs) {
-                        Blob blob = conn.createBlob();
-                        blob.setBytes(1, param);
-                        prestmt.setBlob(++index, blob);
-                    }
-                    c = prestmt.executeUpdate();
-                } else {
-                    for (String table : sql.tables) {
+            int c = -1;
+            String firstTable = null;
+            try {
+                if (sql.blobs != null || sql.tables != null) {
+                    if (sql.tables == null) {
+                        final PreparedStatement prestmt = conn.prepareStatement(sql.sql);
                         int index = 0;
-                        if (sql.blobs != null) {
-                            for (byte[] param : sql.blobs) {
-                                Blob blob = conn.createBlob();
-                                blob.setBytes(1, param);
-                                prestmt.setBlob(++index, blob);
+                        for (byte[] param : sql.blobs) {
+                            Blob blob = conn.createBlob();
+                            blob.setBytes(1, param);
+                            prestmt.setBlob(++index, blob);
+                        }
+                        if (info.isLoggable(logger, Level.FINEST, sql.sql)) {
+                            logger.finest(info.getType().getSimpleName() + " updateColumn sql=" + sql);
+                        }
+                        c = prestmt.executeUpdate();
+                        prestmt.close();
+                        conn.commit();
+                        slowLog(s, sql.sql);
+                        return c;
+                    } else {
+                        firstTable = sql.tables[0];
+                        List<PreparedStatement> prestmts = new ArrayList<>();
+                        String[] sqls = new String[sql.tables.length];
+                        for (int i = 0; i < sql.tables.length; i++) {
+                            sqls[i] = i == 0 ? sql.sql : sql.sql.replaceFirst(firstTable, sql.tables[i]);
+                            PreparedStatement prestmt = conn.prepareStatement(sqls[i]);
+                            int index = 0;
+                            if (sql.blobs != null) {
+                                for (byte[] param : sql.blobs) {
+                                    Blob blob = conn.createBlob();
+                                    blob.setBytes(1, param);
+                                    prestmt.setBlob(++index, blob);
+                                }
+                            }
+                            prestmt.addBatch();
+                            prestmts.add(prestmt);
+                        }
+                        if (info.isLoggable(logger, Level.FINEST, sql.sql)) {
+                            logger.finest(info.getType().getSimpleName() + " updateColumn sql=" + Arrays.toString(sqls));
+                        }
+                        int c1 = 0;
+                        for (PreparedStatement prestmt : prestmts) {
+                            int[] cs = prestmt.executeBatch();
+                            for (int cc : cs) {
+                                c1 += cc;
+                            }
+                            prestmt.close();
+                        }
+                        c = c1;
+                        conn.commit();
+                        slowLog(s, sqls);
+                    }
+                    return c;
+                } else {
+                    if (info.isLoggable(logger, Level.FINEST, sql.sql)) {
+                        logger.finest(info.getType().getSimpleName() + " updateColumn sql=" + sql);
+                    }
+                    final Statement stmt = conn.createStatement();
+                    c = stmt.executeUpdate(sql.sql);
+                    stmt.close();
+                    conn.commit();
+                    slowLog(s, sql.sql);
+                    return c;
+                }
+            } catch (SQLException se) {
+                conn.rollback();
+                if (isTableNotExist(info, se.getSQLState())) {
+                    if (info.getTableStrategy() == null) {
+                        String[] tableSqls = createTableSqls(info);
+                        if (tableSqls != null) {
+                            try {
+                                Statement st = conn.createStatement();
+                                if (tableSqls.length == 1) {
+                                    st.execute(tableSqls[0]);
+                                } else {
+                                    for (String tableSql : tableSqls) {
+                                        st.addBatch(tableSql);
+                                    }
+                                    st.executeBatch();
+                                }
+                                st.close();
+                            } catch (SQLException e2) {
                             }
                         }
-                        prestmt.setString(++index, table);
-                        prestmt.addBatch();
+                        //表不存在，更新条数为0
+                        return 0;
+                    } else if (sql.tables == null) {
+                        //单一分表不存在
+                        return 0;
+                    } else {
+                        String tableName = parseNotExistTableName(se);
+                        if (tableName == null) {
+                            throw new SourceException(se);
+                        }
+
+                        String[] oldTables = sql.tables;
+                        List<String> notExistTables = checkNotExistTables(conn, oldTables, tableName);
+                        if (notExistTables.isEmpty()) {
+                            throw new SourceException(se);
+                        }
+                        for (String t : notExistTables) {
+                            sql.tables = Utility.remove(sql.tables, t);
+                        }
+                        if (logger.isLoggable(Level.FINE)) {
+                            logger.log(Level.FINE, "updateColumn, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(sql.tables));
+                        }
+                        if (sql.tables.length == 0) { //分表全部不存在
+                            return 0;
+                        }
+                        List<PreparedStatement> prestmts = new ArrayList<>();
+                        String[] sqls = new String[sql.tables.length];
+                        for (int i = 0; i < sql.tables.length; i++) {
+                            sqls[i] = sql.sql.replaceFirst(firstTable, sql.tables[i]);
+                            PreparedStatement prestmt = conn.prepareStatement(sqls[i]);
+                            int index = 0;
+                            if (sql.blobs != null) {
+                                for (byte[] param : sql.blobs) {
+                                    Blob blob = conn.createBlob();
+                                    blob.setBytes(1, param);
+                                    prestmt.setBlob(++index, blob);
+                                }
+                            }
+                            prestmt.addBatch();
+                            prestmts.add(prestmt);
+                        }
+                        if (info.isLoggable(logger, Level.FINEST, sql.sql)) {
+                            logger.finest(info.getType().getSimpleName() + " updateColumn sql=" + Arrays.toString(sqls));
+                        }
+                        int c1 = 0;
+                        for (PreparedStatement prestmt : prestmts) {
+                            int[] cs = prestmt.executeBatch();
+                            for (int cc : cs) {
+                                c1 += cc;
+                            }
+                            prestmt.close();
+                        }
+                        c = c1;
+                        conn.commit();
+                        slowLog(s, sqls);
+                        return c;
                     }
-                    int[] cs = prestmt.executeBatch();
-                    for (int cc : cs) {
-                        c += cc;
-                    }
+                } else {
+                    throw se;
                 }
-                prestmt.close();
-                conn.commit();
-                slowLog(s, sql.sql);
-                return c;
-            } else {
-                if (info.isLoggable(logger, Level.FINEST, sql.sql)) {
-                    logger.finest(info.getType().getSimpleName() + " update sql=" + sql);
-                }
-                final Statement stmt = conn.createStatement();
-                int c = stmt.executeUpdate(sql.sql);
-                stmt.close();
-                conn.commit();
-                slowLog(s, sql.sql);
-                return c;
             }
+        } catch (SourceException sex) {
+            throw sex;
         } catch (SQLException e) {
             if (conn != null) {
                 try {
                     conn.rollback();
                 } catch (SQLException se) {
-                }
-            }
-            if (isTableNotExist(info, e.getSQLState())) {
-                if (info.getTableStrategy() == null) {
-                    String[] tableSqls = createTableSqls(info);
-                    if (tableSqls != null) {
-                        try {
-                            Statement st = conn.createStatement();
-                            if (tableSqls.length == 1) {
-                                st.execute(tableSqls[0]);
-                            } else {
-                                for (String tableSql : tableSqls) {
-                                    st.addBatch(tableSql);
-                                }
-                                st.executeBatch();
-                            }
-                            st.close();
-                        } catch (SQLException e2) {
-                        }
-                    }
-                    return 0;
-                } else {
-                    throw new SourceException(e);
                 }
             }
             throw new SourceException(e);

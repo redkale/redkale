@@ -679,7 +679,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected abstract <T> CompletableFuture<Integer> updateEntityDBAsync(final EntityInfo<T> info, T... entitys);
 
     //更新纪录
-    protected abstract <T> CompletableFuture<Integer> updateColumnDBAsync(final EntityInfo<T> info, Flipper flipper, final SqlInfo sql);
+    protected abstract <T> CompletableFuture<Integer> updateColumnDBAsync(final EntityInfo<T> info, Flipper flipper, final UpdateSqlInfo sql);
 
     //查询Number Map数据
     protected abstract <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final FilterFuncColumn... columns);
@@ -731,7 +731,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     //更新纪录
-    protected <T> int updateColumnDB(final EntityInfo<T> info, Flipper flipper, final SqlInfo sql) {
+    protected <T> int updateColumnDB(final EntityInfo<T> info, Flipper flipper, final UpdateSqlInfo sql) {
         return updateColumnDBAsync(info, flipper, sql).join();
     }
 
@@ -1410,7 +1410,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return updateCache(info, -1, pk, column, colval);
         }
 
-        SqlInfo sql = updateColumnSql(info, pk, column, colval);
+        UpdateSqlInfo sql = updateColumnSql(info, pk, column, colval);
         if (isAsync()) {
             int rs = updateColumnDBAsync(info, null, sql).join();
             updateCache(info, rs, pk, column, colval);
@@ -1429,7 +1429,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return CompletableFuture.completedFuture(updateCache(info, -1, pk, column, colval));
         }
 
-        SqlInfo sql = updateColumnSql(info, pk, column, colval);
+        UpdateSqlInfo sql = updateColumnSql(info, pk, column, colval);
         if (isAsync()) {
             return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1449,13 +1449,13 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
     }
 
-    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
+    protected <T> UpdateSqlInfo updateColumnSql(final EntityInfo<T> info, Serializable pk, String column, final Serializable colval) {
         Attribute attr = info.getAttribute(column);
         Serializable val = getSQLAttrValue(info, attr, colval);
         if (val instanceof byte[]) {
-            return new SqlInfo("UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter), (byte[]) val);
+            return new UpdateSqlInfo("UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter), (byte[]) val);
         } else {
-            return new SqlInfo("UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
+            return new UpdateSqlInfo("UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
                 + info.formatSQLValue(column, val, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter));
         }
     }
@@ -1478,7 +1478,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return updateCache(info, -1, column, colval, node);
         }
 
-        SqlInfo sql = updateColumnSql(info, column, colval, node);
+        UpdateSqlInfo sql = updateColumnSql(info, column, colval, node);
         if (isAsync()) {
             int rs = updateColumnDBAsync(info, null, sql).join();
             updateCache(info, rs, column, colval, node);
@@ -1496,7 +1496,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, column, colval, node));
         }
-        SqlInfo sql = updateColumnSql(info, column, colval, node);
+        UpdateSqlInfo sql = updateColumnSql(info, column, colval, node);
         if (isAsync()) {
             return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1516,7 +1516,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
     }
 
-    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, final String column, final Serializable colval, final FilterNode node) {
+    protected <T> UpdateSqlInfo updateColumnSql(final EntityInfo<T> info, final String column, final Serializable colval, final FilterNode node) {
         Map<Class, String> joinTabalis = node.getJoinTabalis();
         CharSequence join = node.createSQLJoin(this, true, joinTabalis, new HashSet<>(), info);
         CharSequence where = node.createSQLExpress(this, info, joinTabalis);
@@ -1534,31 +1534,17 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         String[] tables = info.getTables(node);
         String sql;
         if (val instanceof byte[]) {
-            if (tables.length == 1) {
-                sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1))
-                    + " SET " + info.getSQLColumn(alias, column) + "=" + prepareParamSign(1)
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            } else {
-                sql = "UPDATE " + prepareParamSign(2) + " a " + (join1 == null ? "" : (", " + join1))
-                    + " SET " + info.getSQLColumn(alias, column) + "=" + prepareParamSign(1)
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            }
-            return new SqlInfo(sql, tables.length == 1 ? null : tables, (byte[]) val);
+            sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1))
+                + " SET " + info.getSQLColumn(alias, column) + "=" + prepareParamSign(1)
+                + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+            return new UpdateSqlInfo(sql, tables.length == 1 ? null : tables, (byte[]) val);
         } else {
-            if (tables.length == 1) {
-                sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1))
-                    + " SET " + info.getSQLColumn(alias, column) + "=" + info.formatSQLValue(val, sqlFormatter)
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            } else {
-                sql = "UPDATE " + prepareParamSign(1) + " a " + (join1 == null ? "" : (", " + join1))
-                    + " SET " + info.getSQLColumn(alias, column) + "=" + info.formatSQLValue(val, sqlFormatter)
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            }
-            return new SqlInfo(sql, tables.length == 1 ? null : tables);
+            sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1))
+                + " SET " + info.getSQLColumn(alias, column) + "=" + info.formatSQLValue(val, sqlFormatter)
+                + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+            return new UpdateSqlInfo(sql, tables.length == 1 ? null : tables);
         }
     }
 
@@ -1582,7 +1568,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return updateCache(info, -1, pk, values);
         }
 
-        SqlInfo sql = updateColumnSql(info, pk, values);
+        UpdateSqlInfo sql = updateColumnSql(info, pk, values);
         if (isAsync()) {
             int rs = updateColumnDBAsync(info, null, sql).join();
             updateCache(info, rs, pk, values);
@@ -1603,7 +1589,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, pk, values));
         }
-        SqlInfo sql = updateColumnSql(info, pk, values);
+        UpdateSqlInfo sql = updateColumnSql(info, pk, values);
         if (isAsync()) {
             return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1623,7 +1609,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
     }
 
-    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, final Serializable pk, final ColumnValue... values) {
+    protected <T> UpdateSqlInfo updateColumnSql(final EntityInfo<T> info, final Serializable pk, final ColumnValue... values) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1653,7 +1639,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             throw new SourceException("update non column-value array");
         }
         String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
-        return new SqlInfo(sql, blobs);
+        return new UpdateSqlInfo(sql, blobs);
     }
 
     @Override
@@ -1665,7 +1651,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return updateCache(info, -1, node, flipper, values);
         }
-        SqlInfo sql = updateColumnSql(info, node, flipper, values);
+        UpdateSqlInfo sql = updateColumnSql(info, node, flipper, values);
         if (isAsync()) {
             int rs = updateColumnDBAsync(info, null, sql).join();
             updateCache(info, rs, node, flipper, values);
@@ -1686,7 +1672,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, node, flipper, values));
         }
-        SqlInfo sql = updateColumnSql(info, node, flipper, values);
+        UpdateSqlInfo sql = updateColumnSql(info, node, flipper, values);
         if (isAsync()) {
             return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1706,7 +1692,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
     }
 
-    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
+    protected <T> UpdateSqlInfo updateColumnSql(final EntityInfo<T> info, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1752,33 +1738,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if (pgsql && flipper != null && flipper.getLimit() > 0) {
             String wherestr = ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            if (tables.length == 1) {
-                sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
-                    + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryColumn() + " FROM " + tables[0]
-                    + wherestr + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
-            } else {
-                String sign = prepareParamSign(++index);
-                sql = "UPDATE " + sign + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
-                    + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryColumn() + " FROM " + sign
-                    + wherestr + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
-            }
+            sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
+                + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryColumn() + " FROM " + tables[0]
+                + wherestr + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
+
         } else {
-            if (tables.length == 1) {
-                sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))))
-                    + info.createSQLOrderby(flipper)
-                    + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
-            } else {
-                String sign = prepareParamSign(++index);
-                sql = "UPDATE " + sign + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))))
-                    + info.createSQLOrderby(flipper)
-                    + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
-            }
+            sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
+                + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))))
+                + info.createSQLOrderby(flipper)
+                + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
         }
-        return new SqlInfo(sql, tables.length == 1 ? null : tables, blobs);
+        return new UpdateSqlInfo(sql, tables.length == 1 ? null : tables, blobs);
     }
 
     //返回不存在的字段名,null表示字段都合法;
@@ -1813,7 +1784,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return updateCache(info, -1, false, entity, null, selects);
         }
 
-        SqlInfo sql = updateColumnSql(info, false, entity, null, selects);
+        UpdateSqlInfo sql = updateColumnSql(info, false, entity, null, selects);
         if (isAsync()) {
             int rs = updateColumnDBAsync(info, null, sql).join();
             updateCache(info, rs, false, entity, null, selects);
@@ -1840,7 +1811,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return CompletableFuture.completedFuture(updateCache(info, -1, false, entity, null, selects));
         }
 
-        SqlInfo sql = updateColumnSql(info, false, entity, null, selects);
+        UpdateSqlInfo sql = updateColumnSql(info, false, entity, null, selects);
         if (isAsync()) {
             return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1875,7 +1846,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return updateCache(info, -1, true, entity, node, selects);
         }
 
-        SqlInfo sql = updateColumnSql(info, true, entity, node, selects);
+        UpdateSqlInfo sql = updateColumnSql(info, true, entity, node, selects);
         if (isAsync()) {
             int rs = updateColumnDBAsync(info, null, sql).join();
             updateCache(info, rs, true, entity, node, selects);
@@ -1902,7 +1873,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             return CompletableFuture.completedFuture(updateCache(info, -1, true, entity, node, selects));
         }
 
-        SqlInfo sql = updateColumnSql(info, true, entity, node, selects);
+        UpdateSqlInfo sql = updateColumnSql(info, true, entity, node, selects);
         if (isAsync()) {
             return updateColumnDBAsync(info, null, sql).whenComplete((rs, t) -> {
                 if (t != null) {
@@ -1922,7 +1893,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         }
     }
 
-    protected <T> SqlInfo updateColumnSql(final EntityInfo<T> info, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
+    protected <T> UpdateSqlInfo updateColumnSql(final EntityInfo<T> info, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -1963,22 +1934,14 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
             String sql;
             String[] tables = info.getTables(node);
-            if (tables.length == 1) {
-                sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-                return new SqlInfo(sql, blobs);
-            } else {
-                String sign = prepareParamSign(++index);
-                sql = "UPDATE " + sign + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
-                    + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
-                    : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-                return new SqlInfo(sql, tables, blobs);
-            }
+            sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
+                + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
+                : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
+            return new UpdateSqlInfo(sql, tables.length == 1 ? null : tables, blobs);
         } else {
             final Serializable id = (Serializable) info.getSQLValue(info.getPrimary(), entity);
             String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(id, sqlFormatter);
-            return new SqlInfo(sql, blobs);
+            return new UpdateSqlInfo(sql, blobs);
         }
     }
 
@@ -3185,23 +3148,23 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         return querySheetDBAsync(info, readCache, needTotal, distinct, selects, flipper, node);
     }
 
-    protected static class SqlInfo {
+    protected static class UpdateSqlInfo {
 
         public String sql; //prepare-sql时表名参数只能是最后一个
 
-        public String[] tables;
+        public String[] tables; //存在值则长度必然大于1，sql为[0]构建的sql
 
         public List<byte[]> blobs; //要么null，要么有内容，不能是empty-list
 
-        public SqlInfo(String sql, byte[]... blobs) {
+        public UpdateSqlInfo(String sql, byte[]... blobs) {
             this(sql, null, blobs);
         }
 
-        public SqlInfo(String sql, List<byte[]> blobs) {
+        public UpdateSqlInfo(String sql, List<byte[]> blobs) {
             this(sql, null, blobs);
         }
 
-        public SqlInfo(String sql, String[] tables, byte[]... blobs) {
+        public UpdateSqlInfo(String sql, String[] tables, byte[]... blobs) {
             this.sql = sql;
             this.tables = tables;
             if (blobs.length > 0) {
@@ -3212,10 +3175,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
         }
 
-        public SqlInfo(String sql, String[] tables, List<byte[]> blobs) {
+        public UpdateSqlInfo(String sql, String[] tables, List<byte[]> blobs) {
             this.sql = sql;
             this.tables = tables;
-            this.blobs = blobs.isEmpty() ? null : blobs;
+            this.blobs = blobs == null || blobs.isEmpty() ? null : blobs;
         }
 
     }
