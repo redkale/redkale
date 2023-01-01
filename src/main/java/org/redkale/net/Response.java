@@ -228,11 +228,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             AsyncConnection conn = removeChannel();
             if (conn != null && conn.protocolCodec != null) {
                 this.responseConsumer.accept(this);
-                if (conn.inCurrThread()) {
-                    conn.read(conn.protocolCodec);
-                } else {
-                    conn.execute(() -> conn.read(conn.protocolCodec));
-                }
+                conn.readInIOThread(conn.protocolCodec);
             } else {
                 Supplier<Response> poolSupplier = this.responseSupplier;
                 Consumer<Response> poolConsumer = this.responseConsumer;
@@ -405,7 +401,11 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
             @Override
             public void completed(Integer result, A attachment) {
-                channel.offerBuffer(buffer);
+                if (buffer != writeBuffer) {
+                    channel.offerBuffer(buffer);
+                } else {
+                    buffer.clear();
+                }
                 if (handler != null) {
                     handler.completed(result, attachment);
                 }
@@ -413,7 +413,11 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
             @Override
             public void failed(Throwable exc, A attachment) {
-                channel.offerBuffer(buffer);
+                if (buffer != writeBuffer) {
+                    channel.offerBuffer(buffer);
+                } else {
+                    buffer.clear();
+                }
                 if (handler != null) {
                     handler.failed(exc, attachment);
                 }
