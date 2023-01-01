@@ -147,37 +147,37 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    protected <T, N extends Number> Map<String, N> getNumberMapDB(EntityInfo<T> info, String[] tables, String sql, FilterFuncColumn... columns) {
+    protected <T, N extends Number> Map<String, N> getNumberMapDB(EntityInfo<T> info, String[] tables, String sql, FilterNode node, FilterFuncColumn... columns) {
         return null;
     }
 
     @Override
-    protected <T> Number getNumberResultDB(EntityInfo<T> info, String[] tables, String sql, Number defVal, String column) {
+    protected <T> Number getNumberResultDB(EntityInfo<T> info, String[] tables, String sql, FilterFunc func, Number defVal, String column, final FilterNode node) {
         return defVal;
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, String keyColumn) {
+    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
         return null;
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, FilterNode node) {
         return null;
     }
 
     @Override
-    protected <T> T findDB(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects) {
+    protected <T> T findDB(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects, Serializable pk, FilterNode node) {
         return null;
     }
 
     @Override
-    protected <T> Serializable findColumnDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue) {
+    protected <T> Serializable findColumnDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue, Serializable pk, FilterNode node) {
         return null;
     }
 
     @Override
-    protected <T> boolean existsDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk) {
+    protected <T> boolean existsDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, Serializable pk, FilterNode node) {
         return false;
     }
 
@@ -217,37 +217,37 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
-    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterFuncColumn... columns) {
+    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterNode node, FilterFuncColumn... columns) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    protected <T> CompletableFuture<Number> getNumberResultDBAsync(EntityInfo<T> info, String[] tables, String sql, Number defVal, String column) {
+    protected <T> CompletableFuture<Number> getNumberResultDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterFunc func, Number defVal, String column, FilterNode node) {
         return CompletableFuture.completedFuture(defVal);
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, String keyColumn) {
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, FilterNode node) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    protected <T> CompletableFuture<T> findDBAsync(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects) {
+    protected <T> CompletableFuture<T> findDBAsync(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects, Serializable pk, FilterNode node) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue) {
+    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue, Serializable pk, FilterNode node) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk) {
+    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, Serializable pk, FilterNode node) {
         return CompletableFuture.completedFuture(false);
     }
 

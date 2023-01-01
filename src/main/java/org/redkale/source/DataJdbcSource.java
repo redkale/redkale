@@ -1175,19 +1175,20 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterFuncColumn... columns) {
-        return supplyAsync(() -> getNumberMapDB(info, tables, sql, columns));
+    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterNode node, FilterFuncColumn... columns) {
+        return supplyAsync(() -> getNumberMapDB(info, tables, sql, node, columns));
     }
 
     @Override
-    protected <T, N extends Number> Map<String, N> getNumberMapDB(EntityInfo<T> info, String[] tables, String sql, FilterFuncColumn... columns) {
+    protected <T, N extends Number> Map<String, N> getNumberMapDB(EntityInfo<T> info, String[] tables, String sql, FilterNode node, FilterFuncColumn... columns) {
         Connection conn = null;
         final Map map = new HashMap<>();
         final long s = System.currentTimeMillis();
+        Statement stmt = null;
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
-            final Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             ResultSet set = stmt.executeQuery(sql);
             if (set.next()) {
                 int index = 0;
@@ -1207,6 +1208,7 @@ public class DataJdbcSource extends DataSqlSource {
             slowLog(s, sql);
             return map;
         } catch (SQLException e) {
+            map.clear();
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
@@ -1225,8 +1227,63 @@ public class DataJdbcSource extends DataSqlSource {
                         } catch (SQLException e2) {
                         }
                     }
+                    return map;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return map;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "getNumberMap, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return map;
+                    }
+
+                    //重新查询一次
+                    try {
+                        sql = getNumberMapSql(info, tables, node, columns);
+                        if (info.isLoggable(logger, Level.FINEST, sql)) {
+                            logger.finest(info.getType().getSimpleName() + " getNumberMap sql=" + sql);
+                        }
+                        if (stmt != null) {
+                            stmt.close();
+                        }
+                        stmt = conn.createStatement();
+                        ResultSet set = stmt.executeQuery(sql);
+                        if (set.next()) {
+                            int index = 0;
+                            for (FilterFuncColumn ffc : columns) {
+                                for (String col : ffc.cols()) {
+                                    Object o = set.getObject(++index);
+                                    Number rs = ffc.getDefvalue();
+                                    if (o != null) {
+                                        rs = (Number) o;
+                                    }
+                                    map.put(ffc.col(col), rs);
+                                }
+                            }
+                        }
+                        set.close();
+                        stmt.close();
+                        slowLog(s, sql);
+                        return map;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
                 }
-                return map;
             }
             throw new SourceException(e);
         } finally {
@@ -1237,18 +1294,19 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Number> getNumberResultDBAsync(EntityInfo<T> info, String[] tables, String sql, Number defVal, String column) {
-        return supplyAsync(() -> getNumberResultDB(info, tables, sql, defVal, column));
+    protected <T> CompletableFuture<Number> getNumberResultDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterFunc func, Number defVal, String column, FilterNode node) {
+        return supplyAsync(() -> getNumberResultDB(info, tables, sql, func, defVal, column, node));
     }
 
     @Override
-    protected <T> Number getNumberResultDB(EntityInfo<T> info, String[] tables, String sql, Number defVal, String column) {
+    protected <T> Number getNumberResultDB(EntityInfo<T> info, String[] tables, String sql, FilterFunc func, Number defVal, String column, FilterNode node) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
+        Statement stmt = null;
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
-            final Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             Number rs = defVal;
             ResultSet set = stmt.executeQuery(sql);
             if (set.next()) {
@@ -1280,8 +1338,57 @@ public class DataJdbcSource extends DataSqlSource {
                         } catch (SQLException e2) {
                         }
                     }
+                    return defVal;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return defVal;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "getNumberResult, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return defVal;
+                    }
+
+                    //重新查询一次
+                    try {
+                        sql = getNumberResultSql(info, info.getType(), tables, func, defVal, column, node);
+                        if (info.isLoggable(logger, Level.FINEST, sql)) {
+                            logger.finest(info.getType().getSimpleName() + " getNumberResult sql=" + sql);
+                        }
+                        if (stmt != null) {
+                            stmt.close();
+                        }
+                        stmt = conn.createStatement();
+                        Number rs = defVal;
+                        ResultSet set = stmt.executeQuery(sql);
+                        if (set.next()) {
+                            Object o = set.getObject(1);
+                            if (o != null) {
+                                rs = (Number) o;
+                            }
+                        }
+                        set.close();
+                        stmt.close();
+                        slowLog(s, sql);
+                        return rs;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
                 }
-                return defVal;
             }
             throw new SourceException(e);
         } finally {
@@ -1292,19 +1399,20 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, String keyColumn) {
-        return supplyAsync(() -> queryColumnMapDB(info, tables, sql, keyColumn));
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
+        return supplyAsync(() -> queryColumnMapDB(info, tables, sql, keyColumn, func, funcColumn, node));
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, String keyColumn) {
+    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
         Map<K, N> rs = new LinkedHashMap<>();
+        Statement stmt = null;
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
-            final Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
             boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
@@ -1316,6 +1424,7 @@ public class DataJdbcSource extends DataSqlSource {
             slowLog(s, sql);
             return rs;
         } catch (SQLException e) {
+            rs.clear();
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
@@ -1334,8 +1443,55 @@ public class DataJdbcSource extends DataSqlSource {
                         } catch (SQLException e2) {
                         }
                     }
+                    return rs;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return rs;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "queryColumnMap, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return rs;
+                    }
+
+                    //重新查询一次
+                    try {
+                        sql = queryColumnMapSql(info, tables, keyColumn, func, funcColumn, node);
+                        if (info.isLoggable(logger, Level.FINEST, sql)) {
+                            logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
+                        }
+                        if (stmt != null) {
+                            stmt.close();
+                        }
+                        stmt = conn.createStatement();
+                        ResultSet set = stmt.executeQuery(sql);
+                        ResultSetMetaData rsd = set.getMetaData();
+                        boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
+                        while (set.next()) {
+                            rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (N) set.getObject(2));
+                        }
+                        set.close();
+                        stmt.close();
+                        slowLog(s, sql);
+                        return rs;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
                 }
-                return rs;
             }
             throw new SourceException(e);
         } finally {
@@ -1346,19 +1502,20 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
-        return supplyAsync(() -> queryColumnMapDB(info, tables, sql, funcNodes, groupByColumns));
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+        return supplyAsync(() -> queryColumnMapDB(info, tables, sql, funcNodes, groupByColumns, node));
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
         Connection conn = null;
         Map rs = new LinkedHashMap<>();
         final long s = System.currentTimeMillis();
+        Statement stmt = null;
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
-            final Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
             boolean[] smallints = null;
@@ -1385,6 +1542,7 @@ public class DataJdbcSource extends DataSqlSource {
             slowLog(s, sql);
             return rs;
         } catch (SQLException e) {
+            rs.clear();
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
@@ -1403,8 +1561,55 @@ public class DataJdbcSource extends DataSqlSource {
                         } catch (SQLException e2) {
                         }
                     }
+                    return rs;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return rs;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "queryColumnMap, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return rs;
+                    }
+
+                    //重新查询一次
+                    try {
+                        sql = queryColumnMapSql(info, tables, funcNodes, groupByColumns, node);
+                        if (info.isLoggable(logger, Level.FINEST, sql)) {
+                            logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
+                        }
+                        if (stmt != null) {
+                            stmt.close();
+                        }
+                        stmt = conn.createStatement();
+                        ResultSet set = stmt.executeQuery(sql);
+                        ResultSetMetaData rsd = set.getMetaData();
+                        boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
+                        while (set.next()) {
+                            rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (N) set.getObject(2));
+                        }
+                        set.close();
+                        stmt.close();
+                        slowLog(s, sql);
+                        return rs;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
                 }
-                return rs;
             }
             throw new SourceException(e);
         } finally {
@@ -1415,18 +1620,19 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<T> findDBAsync(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects) {
-        return supplyAsync(() -> findDB(info, tables, sql, onlypk, selects));
+    protected <T> CompletableFuture<T> findDBAsync(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects, Serializable pk, FilterNode node) {
+        return supplyAsync(() -> findDB(info, tables, sql, onlypk, selects, pk, node));
     }
 
     @Override
-    protected <T> T findDB(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects) {
+    protected <T> T findDB(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects, Serializable pk, FilterNode node) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
+        PreparedStatement ps = null;
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
-            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
             final DataResultSet set = createDataResultSet(info, ps.executeQuery());
             T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
@@ -1453,8 +1659,52 @@ public class DataJdbcSource extends DataSqlSource {
                         } catch (SQLException e2) {
                         }
                     }
+                    return null;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return null;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "find, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return null;
+                    }
+
+                    //重新查询一次
+                    try {
+                        sql = findSql(info, tables, selects, node);
+                        if (info.isLoggable(logger, Level.FINEST, sql)) {
+                            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+                        }
+                        if (ps != null) {
+                            ps.close();
+                        }
+                        ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                        ps.setFetchSize(1);
+                        final DataResultSet set = createDataResultSet(info, ps.executeQuery());
+                        T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
+                        set.close();
+                        ps.close();
+                        slowLog(s, sql);
+                        return rs;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
                 }
-                return null;
             }
             throw new SourceException(e);
         } finally {
@@ -1465,19 +1715,20 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue) {
-        return supplyAsync(() -> findColumnDB(info, tables, sql, onlypk, column, defValue));
+    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue, Serializable pk, FilterNode node) {
+        return supplyAsync(() -> findColumnDB(info, tables, sql, onlypk, column, defValue, pk, node));
     }
 
     @Override
-    protected <T> Serializable findColumnDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue) {
+    protected <T> Serializable findColumnDB(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, String column, Serializable defValue, Serializable pk, FilterNode node) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
+        PreparedStatement ps = null;
+        final Attribute<T, Serializable> attr = info.getAttribute(column);
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
-            final Attribute<T, Serializable> attr = info.getAttribute(column);
-            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(1);
             final DataResultSet set = createDataResultSet(info, ps.executeQuery());
             Serializable val = defValue;
@@ -1507,8 +1758,55 @@ public class DataJdbcSource extends DataSqlSource {
                         } catch (SQLException e2) {
                         }
                     }
+                    return defValue;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return defValue;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "findColumn, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return defValue;
+                    }
+
+                    //重新查询一次
+                    try {
+                        sql = findColumnSql(info, tables, column, defValue, node);
+                        if (info.isLoggable(logger, Level.FINEST, sql)) {
+                            logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
+                        }
+                        if (ps != null) {
+                            ps.close();
+                        }
+                        ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                        ps.setFetchSize(1);
+                        final DataResultSet set = createDataResultSet(info, ps.executeQuery());
+                        Serializable val = defValue;
+                        if (set.next()) {
+                            val = info.getFieldValue(attr, set, 1);
+                        }
+                        set.close();
+                        ps.close();
+                        slowLog(s, sql);
+                        return val == null ? defValue : val;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
                 }
-                return defValue;
             }
             throw new SourceException(e);
         } finally {
@@ -1519,18 +1817,19 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
-    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk) {
-        return supplyAsync(() -> existsDB(info, tables, sql, onlypk));
+    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, Serializable pk, FilterNode node) {
+        return supplyAsync(() -> existsDB(info, tables, sql, onlypk, pk, node));
     }
 
     @Override
-    protected <T> boolean existsDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk) {
+    protected <T> boolean existsDB(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, Serializable pk, FilterNode node) {
         Connection conn = null;
         final long s = System.currentTimeMillis();
+        PreparedStatement ps = null;
         try {
             conn = readPool.pollConnection();
             //conn.setReadOnly(true);
-            final PreparedStatement ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet set = ps.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
             set.close();
@@ -1559,8 +1858,54 @@ public class DataJdbcSource extends DataSqlSource {
                         } catch (SQLException e2) {
                         }
                     }
+                    return false;
+                } else if (tables != null && tables.length == 1) {
+                    //只查一个不存在的分表
+                    return false;
+                } else if (tables != null && tables.length > 1) {
+                    //多分表查询中一个或多个分表不存在
+                    String tableName = parseNotExistTableName(e);
+                    if (tableName == null) {
+                        throw new SourceException(e);
+                    }
+                    String[] oldTables = tables;
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    if (notExistTables.isEmpty()) {
+                        throw new SourceException(e);
+                    }
+                    for (String t : notExistTables) {
+                        tables = Utility.remove(tables, t);
+                    }
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, "exists, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                    }
+                    if (tables.length == 0) { //分表全部不存在
+                        return false;
+                    }
+
+                    //重新查询一次
+                    try {
+                        sql = existsSql(info, tables, node);
+                        if (info.isLoggable(logger, Level.FINEST, sql)) {
+                            logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
+                        }
+                        if (ps != null) {
+                            ps.close();
+                        }
+                        ps = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                        final ResultSet set = ps.executeQuery();
+                        boolean rs = set.next() ? (set.getInt(1) > 0) : false;
+                        set.close();
+                        ps.close();
+                        if (info.isLoggable(logger, Level.FINEST, sql)) {
+                            logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
+                        }
+                        slowLog(s, sql);
+                        return rs;
+                    } catch (SQLException se) {
+                        throw new SourceException(se);
+                    }
                 }
-                return false;
             }
             throw new SourceException(e);
         } finally {
@@ -1631,7 +1976,7 @@ public class DataJdbcSource extends DataSqlSource {
                             tables = Utility.remove(tables, t);
                         }
                         if (logger.isLoggable(Level.FINE)) {
-                            logger.log(Level.FINE, "query sheet, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
+                            logger.log(Level.FINE, "querySheet, old-tables: " + Arrays.toString(oldTables) + ", new-tables: " + Arrays.toString(tables));
                         }
                         if (tables.length == 0) { //分表全部不存在
                             return new Sheet<>(0, new ArrayList());
@@ -1764,7 +2109,7 @@ public class DataJdbcSource extends DataSqlSource {
                 }
                 countSql = countSubSql;
                 if (readCache && info.isLoggable(logger, Level.FINEST, countSql)) {
-                    logger.finest(info.getType().getSimpleName() + " query countsql=" + countSql);
+                    logger.finest(info.getType().getSimpleName() + " querySheet countsql=" + countSql);
                 }
             }
         }
