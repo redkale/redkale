@@ -72,10 +72,14 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
     }
 
     private void runTimeout() {
-        Queue<ClientFuture> responseQueue = conn.responseQueue;
+        Queue<ClientFuture> responseQueue = conn.responseQueue2;
         if (responseQueue != null) {
             responseQueue.remove(this);
         }
+        if (request.getRequestid() != null) {
+            conn.responseMap.remove(request.getRequestid());
+        }
+
         TimeoutException ex = new TimeoutException();
         WorkThread workThread = null;
         if (request != null) {

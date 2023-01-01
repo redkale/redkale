@@ -34,8 +34,8 @@ public abstract class ClientCodec<R extends ClientRequest, P> {
     //返回true: array会clear, 返回false: buffer会clear
     public abstract boolean decodeMessages(ByteBuffer buffer, ByteArray array);
 
-    protected Queue<ClientFuture> responseQueue() {
-        return connection.responseQueue;
+    protected Iterator<ClientFuture> responseIterator() {
+        return connection.responseQueue2.iterator();
     }
 
     public List<ClientResponse<P>> pollMessages() {

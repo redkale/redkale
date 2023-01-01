@@ -5,7 +5,8 @@
  */
 package org.redkale.net.client;
 
-import java.util.function.*;
+import java.io.Serializable;
+import java.util.function.BiConsumer;
 import org.redkale.net.WorkThread;
 import org.redkale.util.*;
 
@@ -28,6 +29,10 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
 
     ClientFuture respFuture;
 
+    public Serializable getRequestid() {
+        return null;
+    }
+
     public long getCreateTime() {
         return createTime;
     }
@@ -45,7 +50,7 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
         return respFuture == null ? -1 : respFuture.mergeCount;
     }
 
-    //是否能合并
+    //是否能合并， requestid=null的情况下值才有效
     protected boolean canMerge(ClientConnection conn) {
         return false;
     }

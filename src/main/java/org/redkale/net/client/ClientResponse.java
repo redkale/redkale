@@ -5,6 +5,8 @@
  */
 package org.redkale.net.client;
 
+import java.io.Serializable;
+
 /**
  *
  * @author zhangjx
@@ -15,6 +17,10 @@ public class ClientResponse<P> {
     protected P message;
 
     protected Throwable exc;
+
+    public Serializable getRequestid() {
+        return null;
+    }
 
     public ClientResponse(P result) {
         this.message = result;
