@@ -38,8 +38,9 @@ public abstract class AbstractService implements Service {
      * @param command 任务
      */
     protected void runAsync(Runnable command) {
-        if (workExecutor != null) {
-            workExecutor.execute(command);
+        ExecutorService executor = this.workExecutor;
+        if (executor != null) {
+            executor.execute(command);
         } else {
             Thread thread = Thread.currentThread();
             if (thread instanceof WorkThread) {
@@ -57,15 +58,16 @@ public abstract class AbstractService implements Service {
      * @param command 任务
      */
     protected void runAsync(int hash, Runnable command) {
-        if (workExecutor != null) {
-            if (workExecutor instanceof ThreadHashExecutor) {
-                ((ThreadHashExecutor) workExecutor).execute(hash, command);
+        ExecutorService executor = this.workExecutor;
+        if (executor != null) {
+            if (executor instanceof ThreadHashExecutor) {
+                ((ThreadHashExecutor) executor).execute(hash, command);
             } else {
                 Thread thread = Thread.currentThread();
                 if (thread instanceof WorkThread) {
                     ((WorkThread) thread).runAsync(hash, command);
                 } else {
-                    workExecutor.execute(command);
+                    executor.execute(command);
                 }
             }
         } else {
@@ -84,11 +86,16 @@ public abstract class AbstractService implements Service {
      * @return ExecutorService
      */
     protected ExecutorService getExecutor() {
-        if (workExecutor != null) return workExecutor;
+        ExecutorService executor = this.workExecutor;
+        if (executor != null) {
+            return executor;
+        }
         Thread thread = Thread.currentThread();
         if (thread instanceof WorkThread) {
             ExecutorService e = ((WorkThread) thread).getWorkExecutor();
-            if (e != null) return e;
+            if (e != null) {
+                return e;
+            }
         }
         return ForkJoinPool.commonPool();
     }

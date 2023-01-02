@@ -8,7 +8,8 @@ package org.redkale.source;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
@@ -16,6 +17,7 @@ import org.redkale.annotation.Comment;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.net.WorkThread;
 import org.redkale.persistence.Entity;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -75,6 +77,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     //@since 2.8.0 //超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 3000
     public static final String DATA_SOURCE_SLOWMS_ERROR = "errorslowms";
 
+    //@since 2.8.0 //sourceExecutor线程数, 默认值: 内核数
+    public static final String DATA_SOURCE_THREADS = "threads";
+
     //@since 2.7.0
     public static final String DATA_SOURCE_AUTOMAPPING = "auto-mapping";
 
@@ -101,6 +106,22 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     //@since 2.7.0
     public static final String DATA_SOURCE_TABLECOPY_SQLTEMPLATE = "tablecopy-sqltemplate";
+
+    private final Object executorLock = new Object();
+
+    private int sourceThreads = Utility.cpus();
+
+    private ExecutorService sourceExecutor;
+
+    @Override
+    public void init(AnyValue conf) {
+        super.init(conf);
+        if (conf.getAnyValue("read") == null) {
+            this.sourceThreads = conf.getIntValue(DATA_SOURCE_THREADS, Utility.cpus());
+        } else {
+            this.sourceThreads = conf.getAnyValue("read").getIntValue(DATA_SOURCE_THREADS, Utility.cpus());
+        }
+    }
 
     @ResourceListener
     public abstract void onResourceChange(ResourceEvent[] events);
@@ -253,6 +274,29 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
+    }
+
+    @Override
+    protected ExecutorService getExecutor() {
+        ExecutorService executor = this.sourceExecutor;
+        if (executor == null) {
+            synchronized (executorLock) {
+                if (this.sourceExecutor == null) {
+                    final AtomicReference<ExecutorService> ref = new AtomicReference<>();
+                    final AtomicInteger counter = new AtomicInteger();
+                    final int threads = sourceThreads;
+                    executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
+                        int i = counter.get();
+                        int c = counter.incrementAndGet();
+                        String threadName = "Redkale-DataSource-WorkThread-" + (c > 9 ? c : ("0" + c));
+                        Thread t = new WorkThread(threadName, i, threads, ref.get(), r);
+                        return t;
+                    });
+                    this.sourceExecutor = executor;
+                }
+            }
+        }
+        return executor;
     }
 
     /**

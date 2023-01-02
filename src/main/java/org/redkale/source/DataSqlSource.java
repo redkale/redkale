@@ -100,6 +100,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     @Override
     public void init(AnyValue conf) {
+        super.init(conf);
         this.config = conf;
         if (conf.getAnyValue("read") == null) { //没有读写分离
             Properties rwConf = new Properties();

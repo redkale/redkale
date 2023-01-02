@@ -618,8 +618,8 @@ public final class Application {
             clientExecutor = Executors.newFixedThreadPool(clientThreads, (Runnable r) -> {
                 int i = wclientCounter.get();
                 int c = wclientCounter.incrementAndGet();
-                String threadname = "Redkale-Client-WorkThread-" + (c > 9 ? c : ("0" + c));
-                Thread t = new WorkThread(threadname, i, clientThreads, clientref.get(), r);
+                String threadName = "Redkale-Client-WorkThread-" + (c > 9 ? c : ("0" + c));
+                Thread t = new WorkThread(threadName, i, clientThreads, clientref.get(), r);
                 return t;
             });
             clientref.set(clientExecutor);
