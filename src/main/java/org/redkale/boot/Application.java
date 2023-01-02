@@ -158,7 +158,7 @@ public final class Application {
     private final TransportFactory sncpTransportFactory;
 
     //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
-    private final AsyncGroup clientAsyncGroup;
+    private final AsyncIOGroup clientAsyncGroup;
 
     //配置源管理接口
     //@since 2.7.0
@@ -628,7 +628,7 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
 
-        this.clientAsyncGroup = new AsyncIOGroup(true, null, clientExecutor, bufferCapacity, bufferPoolSize);
+        this.clientAsyncGroup = new AsyncIOGroup(true, null, clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
         this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);
 
         this.excludelibs = excludelib0;
@@ -2495,7 +2495,7 @@ public final class Application {
         }
         if (this.clientAsyncGroup != null) {
             long s = System.currentTimeMillis();
-            ((AsyncIOGroup) this.clientAsyncGroup).close();
+            ((AsyncIOGroup) this.clientAsyncGroup).dispose();
             logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
         this.sncpTransportFactory.shutdownNow();

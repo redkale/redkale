@@ -31,6 +31,8 @@ public class AsyncIOGroup extends AsyncGroup {
 
     private boolean closed;
 
+    private boolean skipClose;
+
     AsyncIOThread[] ioThreads;
 
     private AsyncIOThread connectThread;
@@ -121,6 +123,19 @@ public class AsyncIOGroup extends AsyncGroup {
 
     @Override
     public AsyncGroup close() {
+        if (skipClose) {
+            return this;
+        } else {
+            return dispose();
+        }
+    }
+
+    public AsyncIOGroup skipClose(boolean skip) {
+        this.skipClose = skip;
+        return this;
+    }
+
+    public AsyncIOGroup dispose() {
         if (shareCount.decrementAndGet() > 0) {
             return this;
         }
