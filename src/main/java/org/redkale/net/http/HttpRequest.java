@@ -291,7 +291,8 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     @Override
-    protected int readHeader(final ByteBuffer buffer, final Request last) {
+    protected int readHeader(final ByteBuffer buf, final Request last) {
+        final ByteBuffer buffer = buf;
         ByteArray bytes = array;
         if (this.readState == READ_STATE_ROUTE) {
             int rs = readMethodLine(buffer);
@@ -386,7 +387,8 @@ public class HttpRequest extends Request<HttpContext> {
         return 0;
     }
 
-    private int loadHeaderBytes(final ByteBuffer buffer) {
+    private int loadHeaderBytes(final ByteBuffer buf) {
+        final ByteBuffer buffer = buf;
         ByteArray bytes = array;
         int remain = buffer.remaining();
         byte b1, b2, b3, b4;
@@ -461,7 +463,8 @@ public class HttpRequest extends Request<HttpContext> {
 //        return len;
 //    }
     //解析 GET /xxx HTTP/1.1
-    private int readMethodLine(final ByteBuffer buffer) {
+    private int readMethodLine(final ByteBuffer buf) {
+        final ByteBuffer buffer = buf;
         Charset charset = this.context.getCharset();
         int remain = buffer.remaining();
         int size;
@@ -579,7 +582,8 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     //解析Header Connection: keep-alive
-    private int readHeaderLines(final ByteBuffer buffer, ByteArray bytes) {
+    private int readHeaderLines(final ByteBuffer buf, ByteArray bytes) {
+        final ByteBuffer buffer = buf;
         Charset charset = this.context.getCharset();
         int remain = buffer.remaining();
         for (;;) {
