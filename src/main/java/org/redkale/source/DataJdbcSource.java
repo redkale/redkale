@@ -268,16 +268,15 @@ public class DataJdbcSource extends DataSqlSource {
                     return 0;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
-                    System.out.println(tableName + " notExistTables : " + notExistTables);
                     for (String t : notExistTables) {
                         if (pkmap != null) {
                             pkmap.remove(t);
@@ -373,12 +372,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return 0;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -473,12 +472,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return 0;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -878,8 +877,8 @@ public class DataJdbcSource extends DataSqlSource {
                         //表不存在，更新条数为0
                         return 0;
                     } else {
-                        String tableName = parseNotExistTableName(se);
-                        if (tableName == null || prepareInfos == null) {
+                        //String tableName = parseNotExistTableName(se);
+                        if (prepareInfos == null) {
                             throw new SourceException(se);
                         }
                         for (PreparedStatement stmt : prestmts) {
@@ -887,7 +886,7 @@ public class DataJdbcSource extends DataSqlSource {
                         }
 
                         String[] oldTables = prepareInfos.keySet().toArray(new String[prepareInfos.size()]);
-                        List<String> notExistTables = checkNotExistTables(conn, oldTables, tableName);
+                        List<String> notExistTables = checkNotExistTables(conn, oldTables);
                         if (notExistTables.isEmpty()) {
                             throw new SourceException(se);
                         }
@@ -1102,13 +1101,12 @@ public class DataJdbcSource extends DataSqlSource {
                         //单一分表不存在
                         return 0;
                     } else {
-                        String tableName = parseNotExistTableName(se);
-                        if (tableName == null) {
-                            throw new SourceException(se);
-                        }
-
+//                        String tableName = parseNotExistTableName(se);
+//                        if (tableName == null) {
+//                            throw new SourceException(se);
+//                        }
                         String[] oldTables = sql.tables;
-                        List<String> notExistTables = checkNotExistTables(conn, oldTables, tableName);
+                        List<String> notExistTables = checkNotExistTables(conn, oldTables);
                         if (notExistTables.isEmpty()) {
                             throw new SourceException(se);
                         }
@@ -1233,12 +1231,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return map;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -1344,12 +1342,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return defVal;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -1449,12 +1447,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return rs;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -1567,12 +1565,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return rs;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -1665,12 +1663,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return null;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -1764,12 +1762,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return defValue;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -1864,12 +1862,12 @@ public class DataJdbcSource extends DataSqlSource {
                     return false;
                 } else if (tables != null && tables.length > 1) {
                     //多分表查询中一个或多个分表不存在
-                    String tableName = parseNotExistTableName(e);
-                    if (tableName == null) {
-                        throw new SourceException(e);
-                    }
+//                    String tableName = parseNotExistTableName(e);
+//                    if (tableName == null) {
+//                        throw new SourceException(e);
+//                    }
                     String[] oldTables = tables;
-                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables, tableName);
+                    List<String> notExistTables = checkNotExistTablesNoThrows(conn, tables);
                     if (notExistTables.isEmpty()) {
                         throw new SourceException(e);
                     }
@@ -1963,12 +1961,12 @@ public class DataJdbcSource extends DataSqlSource {
                         return new Sheet<>(0, new ArrayList());
                     } else if (tables != null && tables.length > 1) {
                         //多分表查询中一个或多个分表不存在
-                        String tableName = parseNotExistTableName(se);
-                        if (tableName == null) {
-                            throw new SourceException(se);
-                        }
+//                        String tableName = parseNotExistTableName(se);
+//                        if (tableName == null) {
+//                            throw new SourceException(se);
+//                        }
                         String[] oldTables = tables;
-                        List<String> notExistTables = checkNotExistTables(conn, tables, tableName);
+                        List<String> notExistTables = checkNotExistTables(conn, tables);
                         if (notExistTables.isEmpty()) {
                             throw new SourceException(se);
                         }
@@ -1980,6 +1978,9 @@ public class DataJdbcSource extends DataSqlSource {
                         }
                         if (tables.length == 0) { //分表全部不存在
                             return new Sheet<>(0, new ArrayList());
+                        }
+                        if (tables.length == oldTables.length) { //没有变化, 不异常会陷入死循环
+                            throw new SourceException(se);
                         }
 
                         //重新查询一次
@@ -2116,15 +2117,15 @@ public class DataJdbcSource extends DataSqlSource {
         return new String[]{listSql, countSql};
     }
 
-    protected List<String> checkNotExistTablesNoThrows(Connection conn, String[] tables, String firstNotExistTable) {
+    protected List<String> checkNotExistTablesNoThrows(Connection conn, String[] tables) {
         try {
-            return checkNotExistTables(conn, tables, firstNotExistTable);
+            return checkNotExistTables(conn, tables); //, firstNotExistTable
         } catch (SQLException e) {
             throw new SourceException(e);
         }
     }
 
-    protected List<String> checkNotExistTables(Connection conn, String[] tables, String firstNotExistTable) throws SQLException {
+    protected List<String> checkNotExistTables(Connection conn, String[] tables) throws SQLException { //, String firstNotExistTable
 //        数据库不一定要按批量提交的SQL顺序执行， 所以第一个不存在的表不一定再tables的第一位, 
 //        比如 DELETE FROM  table1; DELETE FROM  table2;  如果table1、table2都不存在，SQL可能会抛出table2不存在的异常
 //        List<String> maybeNoTables = new ArrayList<>();
