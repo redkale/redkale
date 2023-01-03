@@ -35,7 +35,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> {
     public abstract boolean decodeMessages(ByteBuffer buffer, ByteArray array);
 
     protected Iterator<ClientFuture> responseIterator() {
-        return connection.responseQueue2.iterator();
+        return connection.responseQueue.iterator();
     }
 
     public List<ClientResponse<P>> pollMessages() {

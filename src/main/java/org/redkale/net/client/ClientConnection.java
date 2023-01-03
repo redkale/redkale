@@ -52,7 +52,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final Queue<R> requestQueue = new ArrayDeque<>();
 
-    final ArrayDeque<ClientFuture> responseQueue2 = new ArrayDeque<>();
+    final ArrayDeque<ClientFuture> responseQueue = new ArrayDeque<>();
 
     //key: requestid
     final HashMap<Serializable, ClientFuture> responseMap = new LinkedHashMap<>();
@@ -96,7 +96,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     protected boolean isWaitingResponseEmpty() {
-        return responseQueue2.isEmpty() && responseMap.isEmpty();
+        return responseQueue.isEmpty() && responseMap.isEmpty();
     }
 
     protected void resumeWrite() {
@@ -107,7 +107,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         ClientConnection conn = this;
         ByteArray rw = conn.writeArray;
         rw.clear();
-        int pipelines = maxPipelines > 1 ? (maxPipelines - responseQueue2.size() - responseMap.size()) : 1;
+        int pipelines = maxPipelines > 1 ? (maxPipelines - responseQueue.size() - responseMap.size()) : 1;
         if (must && pipelines < 1) {
             pipelines = 1;
         }
@@ -189,7 +189,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                     if (rs.exc == null) {
                         Serializable reqid = respFuture.request.getRequestid();
                         if (reqid == null) {
-                            responseQueue2.offerFirst(respFuture);
+                            responseQueue.offerFirst(respFuture);
                         } else {
                             responseMap.put(reqid, respFuture);
                         }
@@ -278,13 +278,13 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 if (results != null) {
                     for (ClientResponse<P> rs : results) {
                         Serializable reqid = rs.getRequestid();
-                        ClientFuture respFuture = reqid == null ? responseQueue2.poll() : responseMap.remove(reqid);
+                        ClientFuture respFuture = reqid == null ? responseQueue.poll() : responseMap.remove(reqid);
                         if (respFuture != null) {
                             int mergeCount = respFuture.mergeCount;
                             completeResponse(rs, respFuture);
                             if (mergeCount > 0) {
                                 for (int i = 0; i < mergeCount; i++) {
-                                    respFuture = reqid == null ? responseQueue2.poll() : responseMap.remove(reqid);
+                                    respFuture = reqid == null ? responseQueue.poll() : responseMap.remove(reqid);
                                     if (respFuture != null) {
                                         completeResponse(rs, respFuture);
                                     }
@@ -371,11 +371,11 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         Serializable reqid = request.getRequestid();
         //保证顺序一致
         if (client.closeRequest != null && respFuture.request == client.closeRequest) {
-            responseQueue2.offer(ClientFuture.EMPTY);
+            responseQueue.offer(ClientFuture.EMPTY);
         } else {
             request.respFuture = respFuture;
             if (reqid == null) {
-                responseQueue2.offer(respFuture);
+                responseQueue.offer(respFuture);
             } else {
                 responseMap.put(reqid, respFuture);
             }
@@ -425,8 +425,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         CompletableFuture f;
         respWaitingCounter.reset();
         WorkThread thread = channel.getAsyncIOThread();
-        if (!responseQueue2.isEmpty()) {
-            while ((f = responseQueue2.poll()) != null) {
+        if (!responseQueue.isEmpty()) {
+            while ((f = responseQueue.poll()) != null) {
                 CompletableFuture future = f;
                 thread.runWork(() -> future.completeExceptionally(e));
             }

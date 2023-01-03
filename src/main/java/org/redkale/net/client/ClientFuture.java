@@ -72,7 +72,7 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
     }
 
     private void runTimeout() {
-        Queue<ClientFuture> responseQueue = conn.responseQueue2;
+        Queue<ClientFuture> responseQueue = conn.responseQueue;
         if (responseQueue != null) {
             responseQueue.remove(this);
         }
