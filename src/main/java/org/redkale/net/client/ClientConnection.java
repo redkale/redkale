@@ -348,7 +348,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected abstract ClientCodec createCodec();
 
-    protected CompletableFuture<P> writeChannel(R request) {
+    protected final CompletableFuture<P> writeChannel(R request) {
         ClientFuture respFuture;
         if (request == client.closeRequest) {
             respFuture = createClientFuture(null);

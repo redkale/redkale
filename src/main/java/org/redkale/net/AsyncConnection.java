@@ -16,8 +16,6 @@ import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.*;
 import javax.net.ssl.*;
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
-import static javax.net.ssl.SSLEngineResult.Status.*;
 import org.redkale.util.*;
 
 /**
@@ -44,13 +42,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     protected final AsyncGroup ioGroup;
 
-    protected final AsyncIOThread ioReadThread;
-
-    protected final AsyncIOThread ioWriteThread;
-
     protected final boolean client;
 
     protected final int bufferCapacity;
+
+    protected final AsyncIOThread ioReadThread;
+
+    protected final AsyncIOThread ioWriteThread;
 
     private final Supplier<ByteBuffer> readBufferSupplier;
 
@@ -84,32 +82,18 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread,
         final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
-        this(client, ioGroup, ioReadThread, ioWriteThread, bufferCapacity,
-            ioReadThread.getBufferSupplier(), ioReadThread.getBufferConsumer(),
-            ioWriteThread.getBufferSupplier(), ioWriteThread.getBufferConsumer(),
-            sslBuilder, sslContext, livingCounter, closedCounter);
-    }
-
-    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread, final int bufferCapacity,
-        Supplier<ByteBuffer> readBufferSupplier, Consumer<ByteBuffer> readBufferConsumer,
-        Supplier<ByteBuffer> writeBufferSupplier, Consumer<ByteBuffer> writeBufferConsumer,
-        SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
         Objects.requireNonNull(ioGroup);
         Objects.requireNonNull(ioReadThread);
         Objects.requireNonNull(ioWriteThread);
-        Objects.requireNonNull(readBufferSupplier);
-        Objects.requireNonNull(readBufferConsumer);
-        Objects.requireNonNull(writeBufferSupplier);
-        Objects.requireNonNull(writeBufferConsumer);
         this.client = client;
         this.ioGroup = ioGroup;
         this.ioReadThread = ioReadThread;
         this.ioWriteThread = ioWriteThread;
         this.bufferCapacity = bufferCapacity;
-        this.readBufferSupplier = readBufferSupplier;
-        this.readBufferConsumer = readBufferConsumer;
-        this.writeBufferSupplier = writeBufferSupplier;
-        this.writeBufferConsumer = writeBufferConsumer;
+        this.readBufferSupplier = ioReadThread.getBufferSupplier();
+        this.readBufferConsumer = ioReadThread.getBufferConsumer();
+        this.writeBufferSupplier = ioWriteThread.getBufferSupplier();
+        this.writeBufferConsumer = ioWriteThread.getBufferConsumer();
         this.livingCounter = livingCounter;
         this.closedCounter = closedCounter;
         if (client) { //client模式下无SSLBuilder
