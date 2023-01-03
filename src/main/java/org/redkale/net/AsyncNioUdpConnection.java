@@ -24,9 +24,9 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     private final DatagramChannel channel;
 
-    public AsyncNioUdpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioThread, AsyncIOThread connectThread, DatagramChannel ch,
+    public AsyncNioUdpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread, AsyncIOThread connectThread, DatagramChannel ch,
         SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress addr0, LongAdder livingCounter, LongAdder closedCounter) {
-        super(client, ioGroup, ioThread, connectThread, ioGroup.bufferCapacity, ioThread.getBufferSupplier(), ioThread.getBufferConsumer(), sslBuilder, sslContext, livingCounter, closedCounter);
+        super(client, ioGroup, ioReadThread, ioWriteThread, connectThread, ioGroup.bufferCapacity, sslBuilder, sslContext, livingCounter, closedCounter);
         this.channel = ch;
         SocketAddress addr = addr0;
         if (addr == null) {

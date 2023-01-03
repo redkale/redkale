@@ -137,7 +137,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
     }
 
     private void accept(SocketAddress address, ByteBuffer buffer) throws IOException {
-        AsyncIOThread readThread = ioGroup.nextIOThread();
+        AsyncIOThread[] ioThreads = ioGroup.nextIOThreads();
         LongAdder connCreateCounter = ioGroup.connCreateCounter;
         if (connCreateCounter != null) {
             connCreateCounter.increment();
@@ -146,7 +146,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         if (connLivingCounter != null) {
             connLivingCounter.increment();
         }
-        AsyncNioUdpConnection conn = new AsyncNioUdpConnection(false, ioGroup, readThread, ioGroup.connectThread(), this.serverChannel, context.getSSLBuilder(), context.getSSLContext(), address, connLivingCounter, ioGroup.connClosedCounter);
+        AsyncNioUdpConnection conn = new AsyncNioUdpConnection(false, ioGroup, ioThreads[0], ioThreads[1], ioGroup.connectThread(), this.serverChannel, context.getSSLBuilder(), context.getSSLContext(), address, connLivingCounter, ioGroup.connClosedCounter);
         ProtocolCodec codec = new ProtocolCodec(context, responseSupplier, responseConsumer, conn);
         conn.protocolCodec = codec;
         if (conn.sslEngine == null) {

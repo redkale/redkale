@@ -27,9 +27,9 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
 
     private final SocketChannel channel;
 
-    public AsyncNioTcpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioThread, AsyncIOThread connectThread,
+    public AsyncNioTcpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread, AsyncIOThread connectThread,
         SocketChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress addr0, LongAdder livingCounter, LongAdder closedCounter) {
-        super(client, ioGroup, ioThread, connectThread, ioGroup.bufferCapacity, ioThread.getBufferSupplier(), ioThread.getBufferConsumer(), sslBuilder, sslContext, livingCounter, closedCounter);
+        super(client, ioGroup, ioReadThread, ioWriteThread, connectThread, ioGroup.bufferCapacity, sslBuilder, sslContext, livingCounter, closedCounter);
         this.channel = ch;
         SocketAddress addr = addr0;
         if (addr == null) {
@@ -40,7 +40,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
             }
         }
         this.remoteAddress = addr;
-        ioThread.connCounter.incrementAndGet();
+        ioReadThread.connCounter.incrementAndGet();
     }
 
     @Override

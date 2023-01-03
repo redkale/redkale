@@ -161,7 +161,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
         channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
         channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
-        AsyncIOThread readThread = ioGroup.nextIOThread();
+        AsyncIOThread[] ioThreads = ioGroup.nextIOThreads();
         LongAdder connCreateCounter = ioGroup.connCreateCounter;
         if (connCreateCounter != null) {
             connCreateCounter.increment();
@@ -170,7 +170,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         if (connLivingCounter != null) {
             connLivingCounter.increment();
         }
-        AsyncNioTcpConnection conn = new AsyncNioTcpConnection(false, ioGroup, readThread, ioGroup.connectThread(), channel, context.getSSLBuilder(), context.getSSLContext(), null, connLivingCounter, ioGroup.connClosedCounter);
+        AsyncNioTcpConnection conn = new AsyncNioTcpConnection(false, ioGroup, ioThreads[0], ioThreads[1], ioGroup.connectThread(), channel, context.getSSLBuilder(), context.getSSLContext(), null, connLivingCounter, ioGroup.connClosedCounter);
         ProtocolCodec codec = new ProtocolCodec(context, responseSupplier, responseConsumer, conn);
         conn.protocolCodec = codec;
         if (conn.sslEngine == null) {

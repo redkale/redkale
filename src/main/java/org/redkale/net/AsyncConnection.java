@@ -52,9 +52,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     protected final int bufferCapacity;
 
-    private final Supplier<ByteBuffer> bufferSupplier;
+    private final Supplier<ByteBuffer> readBufferSupplier;
 
-    private final Consumer<ByteBuffer> bufferConsumer;
+    private final Consumer<ByteBuffer> readBufferConsumer;
+
+    private final Supplier<ByteBuffer> writeBufferSupplier;
+
+    private final Consumer<ByteBuffer> writeBufferConsumer;
 
     private ByteBufferWriter pipelineWriter;
 
@@ -78,24 +82,34 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     //用于服务端的Socket, 等同于一直存在的readCompletionHandler
     ProtocolCodec protocolCodec;
 
-    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioThread, final int bufferCapacity, ObjectPool<ByteBuffer> bufferPool,
-        SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
-        this(client, ioGroup, ioThread, bufferCapacity, bufferPool, bufferPool, sslBuilder, sslContext, livingCounter, closedCounter);
+    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread,
+        final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
+        this(client, ioGroup, ioReadThread, ioWriteThread, bufferCapacity,
+            ioReadThread.getBufferSupplier(), ioReadThread.getBufferConsumer(),
+            ioWriteThread.getBufferSupplier(), ioWriteThread.getBufferConsumer(),
+            sslBuilder, sslContext, livingCounter, closedCounter);
     }
 
-    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioThread, final int bufferCapacity, Supplier<ByteBuffer> bufferSupplier,
-        Consumer<ByteBuffer> bufferConsumer, SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
+    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread, final int bufferCapacity,
+        Supplier<ByteBuffer> readBufferSupplier, Consumer<ByteBuffer> readBufferConsumer,
+        Supplier<ByteBuffer> writeBufferSupplier, Consumer<ByteBuffer> writeBufferConsumer,
+        SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
         Objects.requireNonNull(ioGroup);
-        Objects.requireNonNull(ioThread);
-        Objects.requireNonNull(bufferSupplier);
-        Objects.requireNonNull(bufferConsumer);
+        Objects.requireNonNull(ioReadThread);
+        Objects.requireNonNull(ioWriteThread);
+        Objects.requireNonNull(readBufferSupplier);
+        Objects.requireNonNull(readBufferConsumer);
+        Objects.requireNonNull(writeBufferSupplier);
+        Objects.requireNonNull(writeBufferConsumer);
         this.client = client;
         this.ioGroup = ioGroup;
-        this.ioReadThread = ioThread;
-        this.ioWriteThread = ioThread;
+        this.ioReadThread = ioReadThread;
+        this.ioWriteThread = ioWriteThread;
         this.bufferCapacity = bufferCapacity;
-        this.bufferSupplier = bufferSupplier;
-        this.bufferConsumer = bufferConsumer;
+        this.readBufferSupplier = readBufferSupplier;
+        this.readBufferConsumer = readBufferConsumer;
+        this.writeBufferSupplier = writeBufferSupplier;
+        this.writeBufferConsumer = writeBufferConsumer;
         this.livingCounter = livingCounter;
         this.closedCounter = closedCounter;
         if (client) { //client模式下无SSLBuilder
@@ -114,19 +128,19 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     }
 
     public Supplier<ByteBuffer> getReadBufferSupplier() {
-        return this.bufferSupplier;
+        return this.readBufferSupplier;
     }
 
     public Consumer<ByteBuffer> getReadBufferConsumer() {
-        return this.bufferConsumer;
+        return this.readBufferConsumer;
     }
 
     public Supplier<ByteBuffer> getWriteBufferSupplier() {
-        return this.bufferSupplier;
+        return this.writeBufferSupplier;
     }
 
     public Consumer<ByteBuffer> getWriteBufferConsumer() {
-        return this.bufferConsumer;
+        return this.writeBufferConsumer;
     }
 
     public final long getLastReadTime() {
@@ -337,7 +351,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             };
             write(buffer, null, newhandler);
         } else {
-            ByteBufferWriter writer = ByteBufferWriter.create(sslEngine == null ? bufferSupplier : () -> pollWriteSSLBuffer(), buffer);
+            ByteBufferWriter writer = ByteBufferWriter.create(sslEngine == null ? writeBufferSupplier : () -> pollWriteSSLBuffer(), buffer);
             writer.put(headerContent, headerOffset, headerLength);
             if (bodyLength > 0) {
                 writer.put(bodyContent, bodyOffset, bodyLength);
@@ -583,7 +597,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             this.readSSLHalfBuffer = null;
             return rs;
         }
-        return bufferSupplier.get();
+        return readBufferSupplier.get();
     }
 
     public ByteBuffer pollReadBuffer() {
@@ -592,21 +606,21 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             this.readBuffer = null;
             return rs;
         }
-        return bufferSupplier.get();
+        return readBufferSupplier.get();
     }
 
     public void offerReadBuffer(ByteBuffer buffer) {
         if (buffer == null) {
             return;
         }
-        bufferConsumer.accept(buffer);
+        readBufferConsumer.accept(buffer);
     }
 
     public void offerReadBuffer(ByteBuffer... buffers) {
         if (buffers == null) {
             return;
         }
-        Consumer<ByteBuffer> consumer = this.bufferConsumer;
+        Consumer<ByteBuffer> consumer = this.readBufferConsumer;
         for (ByteBuffer buffer : buffers) {
             consumer.accept(buffer);
         }
@@ -616,25 +630,25 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         if (buffer == null) {
             return;
         }
-        bufferConsumer.accept(buffer);
+        writeBufferConsumer.accept(buffer);
     }
 
     public void offerWriteBuffer(ByteBuffer... buffers) {
         if (buffers == null) {
             return;
         }
-        Consumer<ByteBuffer> consumer = this.bufferConsumer;
+        Consumer<ByteBuffer> consumer = this.writeBufferConsumer;
         for (ByteBuffer buffer : buffers) {
             consumer.accept(buffer);
         }
     }
 
     public ByteBuffer pollWriteSSLBuffer() {
-        return bufferSupplier.get();
+        return writeBufferSupplier.get();
     }
 
     public ByteBuffer pollWriteBuffer() {
-        return bufferSupplier.get();
+        return writeBufferSupplier.get();
     }
 
     public void dispose() {//同close， 只是去掉throws IOException
@@ -674,7 +688,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             }
         }
         if (this.readBuffer != null) {
-            Consumer<ByteBuffer> consumer = this.bufferConsumer;
+            Consumer<ByteBuffer> consumer = this.readBufferConsumer;
             if (consumer != null) {
                 consumer.accept(this.readBuffer);
             }

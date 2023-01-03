@@ -12,9 +12,9 @@ import java.nio.channels.*;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.*;
+import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
-import org.redkale.util.*;
+import org.redkale.util.ByteBufferWriter;
 
 /**
  *
@@ -99,15 +99,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SelectionKey writeKey;
 
-    public AsyncNioConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioThread, AsyncIOThread connectThread,
-        final int bufferCapacity, ObjectPool<ByteBuffer> bufferPool, SSLBuilder sslBuilder, SSLContext sslContext, LongAdder livingCounter, LongAdder closedCounter) {
-        super(client, ioGroup, ioThread, bufferCapacity, bufferPool, sslBuilder, sslContext, livingCounter, closedCounter);
-        this.connectThread = connectThread;
-    }
-
-    public AsyncNioConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioThread, AsyncIOThread connectThread,
-        final int bufferCapacity, Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer, SSLBuilder sslBuilder, SSLContext sslContext, LongAdder livingCounter, LongAdder closedCounter) {
-        super(client, ioGroup, ioThread, bufferCapacity, bufferSupplier, bufferConsumer, sslBuilder, sslContext, livingCounter, closedCounter);
+    public AsyncNioConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread, AsyncIOThread connectThread,
+        final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext, LongAdder livingCounter, LongAdder closedCounter) {
+        super(client, ioGroup, ioReadThread, ioWriteThread, bufferCapacity, sslBuilder, sslContext, livingCounter, closedCounter);
         this.connectThread = connectThread;
     }
 

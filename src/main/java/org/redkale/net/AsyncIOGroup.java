@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import org.redkale.annotation.ResourceType;
@@ -33,7 +34,11 @@ public class AsyncIOGroup extends AsyncGroup {
 
     private boolean skipClose;
 
-    AsyncIOThread[] ioThreads;
+    //必须与ioWriteThreads数量相同
+    private AsyncIOThread[] ioReadThreads;
+
+    //必须与ioReadThreads数量相同
+    private AsyncIOThread[] ioWriteThreads;
 
     private AsyncIOThread connectThread;
 
@@ -72,14 +77,23 @@ public class AsyncIOGroup extends AsyncGroup {
     public AsyncIOGroup(boolean client, String threadPrefixName0, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
         this.bufferCapacity = bufferCapacity;
         final String threadPrefixName = threadPrefixName0 == null ? "Redkale-Client-IOThread" : threadPrefixName0;
-        this.ioThreads = new AsyncIOThread[Utility.cpus()];
+        final int threads = Utility.cpus();
+        this.ioReadThreads = new AsyncIOThread[threads];
+        this.ioWriteThreads = new AsyncIOThread[threads];
         try {
-            for (int i = 0; i < this.ioThreads.length; i++) {
-                ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
+            for (int i = 0; i < threads; i++) {
+                ObjectPool<ByteBuffer> unsafeReadBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
                 String name = threadPrefixName + "-" + (i >= 9 ? (i + 1) : ("0" + (i + 1)));
-                this.ioThreads[i] = client ? new ClientIOThread(name, i, ioThreads.length, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool)
-                    : new AsyncIOThread(name, i, ioThreads.length, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
+                this.ioReadThreads[i] = client ? new ClientIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool)
+                    : new AsyncIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                if (client) {
+                    this.ioReadThreads[i] = new ClientIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                    this.ioWriteThreads[i] = this.ioReadThreads[i];
+                } else {
+                    this.ioReadThreads[i] = new AsyncIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                    this.ioWriteThreads[i] = this.ioReadThreads[i];
+                }
             }
             if (client) {
                 ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
@@ -99,10 +113,6 @@ public class AsyncIOGroup extends AsyncGroup {
         });
     }
 
-    public int size() {
-        return this.ioThreads.length;
-    }
-
     @Override
     public AsyncGroup start() {
         if (started) {
@@ -111,8 +121,11 @@ public class AsyncIOGroup extends AsyncGroup {
         if (closed) {
             throw new RuntimeException("group is closed");
         }
-        for (AsyncIOThread thread : ioThreads) {
-            thread.start();
+        for (int i = 0; i < this.ioReadThreads.length; i++) {
+            this.ioReadThreads[i].start();
+            if (this.ioWriteThreads[i] != this.ioReadThreads[i]) {
+                this.ioWriteThreads[i].start();
+            }
         }
         if (connectThread != null) {
             connectThread.start();
@@ -142,8 +155,11 @@ public class AsyncIOGroup extends AsyncGroup {
         if (closed) {
             return this;
         }
-        for (AsyncIOThread thread : ioThreads) {
-            thread.close();
+        for (int i = 0; i < this.ioReadThreads.length; i++) {
+            this.ioReadThreads[i].close();
+            if (this.ioWriteThreads[i] != this.ioReadThreads[i]) {
+                this.ioWriteThreads[i].close();
+            }
         }
         if (connectThread != null) {
             connectThread.close();
@@ -165,8 +181,9 @@ public class AsyncIOGroup extends AsyncGroup {
         return connClosedCounter;
     }
 
-    public AsyncIOThread nextIOThread() {
-        return ioThreads[Math.abs(readIndex.getAndIncrement()) % ioThreads.length];
+    public AsyncIOThread[] nextIOThreads() {
+        int i = Math.abs(readIndex.getAndIncrement()) % ioReadThreads.length;
+        return new AsyncIOThread[]{ioReadThreads[i], ioWriteThreads[i]};
     }
 
     public AsyncIOThread connectThread() {
@@ -202,32 +219,47 @@ public class AsyncIOGroup extends AsyncGroup {
         }
     }
 
-    @Override
-    public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        SocketChannel channel;
+    //创建一个AsyncConnection对象，只给测试代码使用
+    public AsyncConnection newTCPClientConnection() {
         try {
-            channel = SocketChannel.open();
-            channel.configureBlocking(false);
-            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-            channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-            channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            return newTCPClientConnection(null);
         } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
+            throw new RuntimeException(e);
         }
-        AsyncIOThread ioThread = null;
+    }
+
+    private AsyncNioTcpConnection newTCPClientConnection(final SocketAddress address) throws IOException {
+        SocketChannel channel = SocketChannel.open();
+        channel.configureBlocking(false);
+        channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+
+        AsyncIOThread[] ioThreads = null;
         Thread currThread = Thread.currentThread();
         if (currThread instanceof AsyncIOThread) {
-            for (AsyncIOThread thread : ioThreads) {
-                if (thread == currThread) {
-                    ioThread = thread;
+            for (int i = 0; i < this.ioReadThreads.length; i++) {
+                if (this.ioReadThreads[i] == currThread || this.ioWriteThreads[i] == currThread) {
+                    ioThreads = new AsyncIOThread[]{this.ioReadThreads[i], this.ioWriteThreads[i]};
                     break;
                 }
             }
         }
-        if (ioThread == null) {
-            ioThread = nextIOThread();
+        if (ioThreads == null) {
+            ioThreads = nextIOThreads();
         }
-        final AsyncNioTcpConnection conn = new AsyncNioTcpConnection(true, this, ioThread, connectThread, channel, null, null, address, connLivingCounter, connClosedCounter);
+        return new AsyncNioTcpConnection(true, this, ioThreads[0], ioThreads[1], connectThread, channel, null, null, address, connLivingCounter, connClosedCounter);
+    }
+
+    @Override
+    public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+        Objects.requireNonNull(address);
+        AsyncNioTcpConnection conn;
+        try {
+            conn = newTCPClientConnection(address);
+        } catch (IOException e) {
+            return CompletableFuture.failedFuture(e);
+        }
         final CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
@@ -261,30 +293,41 @@ public class AsyncIOGroup extends AsyncGroup {
         return Utility.orTimeout(future, 30, TimeUnit.SECONDS);
     }
 
-    @Override
-    public CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        DatagramChannel channel;
+    //创建一个AsyncConnection对象，只给测试代码使用
+    public AsyncConnection newUDPClientConnection() {
         try {
-            channel = DatagramChannel.open();
+            return newUDPClientConnection(null);
         } catch (IOException e) {
-            CompletableFuture future = new CompletableFuture();
-            future.completeExceptionally(e);
-            return future;
+            throw new RuntimeException(e);
         }
-        AsyncIOThread ioThread = null;
+    }
+
+    private AsyncNioUdpConnection newUDPClientConnection(final SocketAddress address) throws IOException {
+        DatagramChannel channel = DatagramChannel.open();
+        AsyncIOThread[] ioThreads = null;
         Thread currThread = Thread.currentThread();
         if (currThread instanceof AsyncIOThread) {
-            for (AsyncIOThread thread : ioThreads) {
-                if (thread == currThread) {
-                    ioThread = thread;
+            for (int i = 0; i < this.ioReadThreads.length; i++) {
+                if (this.ioReadThreads[i] == currThread || this.ioWriteThreads[i] == currThread) {
+                    ioThreads = new AsyncIOThread[]{this.ioReadThreads[i], this.ioWriteThreads[i]};
                     break;
                 }
             }
         }
-        if (ioThread == null) {
-            ioThread = nextIOThread();
+        if (ioThreads == null) {
+            ioThreads = nextIOThreads();
         }
-        AsyncNioUdpConnection conn = new AsyncNioUdpConnection(true, this, ioThread, connectThread, channel, null, null, address, connLivingCounter, connClosedCounter);
+        return new AsyncNioUdpConnection(true, this, ioThreads[0], ioThreads[1], connectThread, channel, null, null, address, connLivingCounter, connClosedCounter);
+    }
+
+    @Override
+    public CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+        AsyncNioUdpConnection conn;
+        try {
+            conn = newUDPClientConnection(address);
+        } catch (IOException e) {
+            return CompletableFuture.failedFuture(e);
+        }
         CompletableFuture future = new CompletableFuture();
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
