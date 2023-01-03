@@ -85,8 +85,6 @@ public class AsyncIOGroup extends AsyncGroup {
                 ObjectPool<ByteBuffer> unsafeReadBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
                 String name = threadPrefixName + "-" + (i >= 9 ? (i + 1) : ("0" + (i + 1)));
-                this.ioReadThreads[i] = client ? new ClientIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool)
-                    : new AsyncIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
                 if (client) {
                     this.ioReadThreads[i] = new ClientIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
                     this.ioWriteThreads[i] = this.ioReadThreads[i];
