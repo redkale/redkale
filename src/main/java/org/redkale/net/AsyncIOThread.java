@@ -30,6 +30,7 @@ public class AsyncIOThread extends WorkThread {
 
     final Selector selector;
 
+    //如果有read/write两IOThread，只记readThread
     final AtomicInteger connCounter = new AtomicInteger();
 
     private final Supplier<ByteBuffer> bufferSupplier;

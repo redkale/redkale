@@ -64,10 +64,10 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
             return;
         }
         AsyncConnection channel = conn.getChannel();
-        if (channel.inCurrThread()) {
+        if (channel.inCurrReadThread()) {
             this.runTimeout();
         } else {
-            channel.execute(this::runTimeout);
+            channel.executeRead(this::runTimeout);
         }
     }
 
@@ -93,7 +93,7 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
 //            workThread.execute(() -> completeExceptionally(ex));
 //        }
         if (workThread == null || workThread.getWorkExecutor() == null) {
-            workThread = conn.getChannel().getAsyncIOThread();
+            workThread = conn.getChannel().getReadIOThread();
         }
         workThread.runWork(() -> completeExceptionally(ex));
     }

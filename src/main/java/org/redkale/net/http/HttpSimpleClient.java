@@ -120,7 +120,9 @@ public class HttpSimpleClient {
                 });
             }
             array.put((byte) '\r', (byte) '\n');
-            if (body != null) array.put(body);
+            if (body != null) {
+                array.put(body);
+            }
             final CompletableFuture<HttpResult<byte[]>> future = new CompletableFuture();
             conn.write(array, new CompletionHandler<Integer, Void>() {
                 @Override
@@ -213,14 +215,16 @@ public class HttpSimpleClient {
                         return;
                     }
                 }
-                if (buffer.hasRemaining()) array.put(buffer, buffer.remaining());
+                if (buffer.hasRemaining()) {
+                    array.put(buffer, buffer.remaining());
+                }
                 this.readState = READ_STATE_END;
             }
             if (responseResult.getStatus() <= 200) {
                 this.responseResult.setResult(array.getBytes());
             }
             this.future.complete(this.responseResult);
-            conn.offerBuffer(buffer);
+            conn.offerReadBuffer(buffer);
             conn.dispose();
         }
 
@@ -240,7 +244,9 @@ public class HttpSimpleClient {
                         buffer.put((byte) '\r');
                         return 1;
                     }
-                    if (buffer.get() != '\n') return -1;
+                    if (buffer.get() != '\n') {
+                        return -1;
+                    }
                     break;
                 }
                 bytes.put(b);
@@ -273,7 +279,9 @@ public class HttpSimpleClient {
                 remain--;
                 byte b1 = buffer.get();
                 byte b2 = buffer.get();
-                if (b1 == '\r' && b2 == '\n') return 0;
+                if (b1 == '\r' && b2 == '\n') {
+                    return 0;
+                }
                 bytes.put(b1, b2);
                 for (;;) {  // name
                     if (remain-- < 1) {
@@ -282,7 +290,9 @@ public class HttpSimpleClient {
                         return 1;
                     }
                     byte b = buffer.get();
-                    if (b == ':') break;
+                    if (b == ':') {
+                        break;
+                    }
                     bytes.put(b);
                 }
                 String name = parseHeaderName(bytes, null);
@@ -317,7 +327,9 @@ public class HttpSimpleClient {
                             buffer.put((byte) '\r');
                             return 1;
                         }
-                        if (buffer.get() != '\n') return -1;
+                        if (buffer.get() != '\n') {
+                            return -1;
+                        }
                         break;
                     }
                     if (first) {
@@ -346,7 +358,7 @@ public class HttpSimpleClient {
 
         @Override
         public void failed(Throwable exc, ByteBuffer attachment) {
-            conn.offerBuffer(attachment);
+            conn.offerReadBuffer(attachment);
             conn.dispose();
             future.completeExceptionally(exc);
         }

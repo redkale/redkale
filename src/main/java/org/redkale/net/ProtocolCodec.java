@@ -56,7 +56,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
     @Override
     public void completed(Integer count, ByteBuffer buffer) {
         if (count < 1) {
-            channel.offerBuffer(buffer);
+            channel.offerReadBuffer(buffer);
             channel.dispose(); // response.init(channel); 在调用之前异常
             return;
         }
@@ -78,7 +78,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
 
     @Override
     public void failed(Throwable exc, ByteBuffer buffer) {
-        channel.offerBuffer(buffer);
+        channel.offerReadBuffer(buffer);
         channel.dispose();// response.init(channel); 在调用之前异常
         if (exc != null && context.logger.isLoggable(Level.FINEST)
             && !(exc instanceof SocketException && "Connection reset".equals(exc.getMessage()))) {
@@ -135,7 +135,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         if (rs < 0) {  //表示数据格式不正确
             final DispatcherServlet preparer = context.prepare;
             preparer.incrExecuteCounter();
-            channel.offerBuffer(buffer);
+            channel.offerReadBuffer(buffer);
             if (rs != Integer.MIN_VALUE) {
                 preparer.incrIllRequestCounter();
             }
@@ -178,7 +178,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 @Override
                 public void completed(Integer count, ByteBuffer attachment) {
                     if (count < 1) {
-                        channel.offerBuffer(attachment);
+                        channel.offerReadBuffer(attachment);
                         channel.dispose();
                         return;
                     }
@@ -189,7 +189,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
                     context.prepare.incrIllRequestCounter();
-                    channel.offerBuffer(attachment);
+                    channel.offerReadBuffer(attachment);
                     response.finish(true);
                     if (exc != null) {
                         request.context.logger.log(Level.FINER, "Servlet read channel erroneous, force to close channel ", exc);

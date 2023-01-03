@@ -44,7 +44,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     protected final AsyncGroup ioGroup;
 
-    protected final AsyncIOThread ioThread;
+    protected final AsyncIOThread ioReadThread;
+
+    protected final AsyncIOThread ioWriteThread;
 
     protected final boolean client;
 
@@ -89,7 +91,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         Objects.requireNonNull(bufferConsumer);
         this.client = client;
         this.ioGroup = ioGroup;
-        this.ioThread = ioThread;
+        this.ioReadThread = ioThread;
+        this.ioWriteThread = ioThread;
         this.bufferCapacity = bufferCapacity;
         this.bufferSupplier = bufferSupplier;
         this.bufferConsumer = bufferConsumer;
@@ -110,11 +113,19 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         }
     }
 
-    public Supplier<ByteBuffer> getBufferSupplier() {
+    public Supplier<ByteBuffer> getReadBufferSupplier() {
         return this.bufferSupplier;
     }
 
-    public Consumer<ByteBuffer> getBufferConsumer() {
+    public Consumer<ByteBuffer> getReadBufferConsumer() {
+        return this.bufferConsumer;
+    }
+
+    public Supplier<ByteBuffer> getWriteBufferSupplier() {
+        return this.bufferSupplier;
+    }
+
+    public Consumer<ByteBuffer> getWriteBufferConsumer() {
         return this.bufferConsumer;
     }
 
@@ -138,24 +149,44 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         return eventing.decrementAndGet();
     }
 
-    public final void execute(Runnable command) {
-        ioThread.execute(command);
+    public final void executeRead(Runnable command) {
+        ioReadThread.execute(command);
     }
 
-    public final void execute(Runnable... commands) {
-        ioThread.execute(commands);
+    public final void executeRead(Runnable... commands) {
+        ioReadThread.execute(commands);
     }
 
-    public final void execute(Collection<Runnable> commands) {
-        ioThread.execute(commands);
+    public final void executeRead(Collection<Runnable> commands) {
+        ioReadThread.execute(commands);
     }
 
-    public final boolean inCurrThread() {
-        return ioThread.inCurrThread();
+    public final void executeWrite(Runnable command) {
+        ioWriteThread.execute(command);
     }
 
-    public final AsyncIOThread getAsyncIOThread() {
-        return ioThread;
+    public final void executeWrite(Runnable... commands) {
+        ioWriteThread.execute(commands);
+    }
+
+    public final void executeWrite(Collection<Runnable> commands) {
+        ioWriteThread.execute(commands);
+    }
+
+    public final boolean inCurrReadThread() {
+        return ioReadThread.inCurrThread();
+    }
+
+    public final boolean inCurrWriteThread() {
+        return ioWriteThread.inCurrThread();
+    }
+
+    public final AsyncIOThread getReadIOThread() {
+        return ioReadThread;
+    }
+
+    public final AsyncIOThread getWriteIOThread() {
+        return ioWriteThread;
     }
 
     @Override
@@ -196,10 +227,10 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     }
 
     public final void startReadInIOThread(CompletionHandler<Integer, ByteBuffer> handler) {
-        if (inCurrThread()) {
+        if (inCurrReadThread()) {
             startRead(handler);
         } else {
-            execute(() -> startRead(handler));
+            executeRead(() -> startRead(handler));
         }
     }
 
@@ -212,10 +243,10 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     }
 
     public final void readInIOThread(CompletionHandler<Integer, ByteBuffer> handler) {
-        if (inCurrThread()) {
+        if (inCurrReadThread()) {
             read(handler);
         } else {
-            execute(() -> read(handler));
+            executeRead(() -> read(handler));
         }
     }
 
@@ -294,13 +325,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer result, Void attachment) {
-                    offerBuffer(buffer);
+                    offerWriteBuffer(buffer);
                     handler.completed(result, attachment);
                 }
 
                 @Override
                 public void failed(Throwable exc, Void attachment) {
-                    offerBuffer(buffer);
+                    offerWriteBuffer(buffer);
                     handler.failed(exc, attachment);
                 }
             };
@@ -318,13 +349,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer result, Void attachment) {
-                    offerBuffer(buffers);
+                    offerWriteBuffer(buffers);
                     handler.completed(result, attachment);
                 }
 
                 @Override
                 public void failed(Throwable exc, Void attachment) {
-                    offerBuffer(buffers);
+                    offerWriteBuffer(buffers);
                     handler.failed(exc, attachment);
                 }
             };
@@ -358,13 +389,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             CompletionHandler<Integer, ? super A> newhandler = new CompletionHandler<Integer, A>() {
                 @Override
                 public void completed(Integer result, A attachment) {
-                    offerBuffer(srcs);
+                    offerWriteBuffer(srcs);
                     handler.completed(result, attachment);
                 }
 
                 @Override
                 public void failed(Throwable exc, A attachment) {
-                    offerBuffer(srcs);
+                    offerWriteBuffer(srcs);
                     handler.failed(exc, attachment);
                 }
             };
@@ -386,7 +417,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         synchronized (this) {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
-                writer = ByteBufferWriter.create(getBufferSupplier());
+                writer = ByteBufferWriter.create(getWriteBufferSupplier());
                 this.pipelineWriter = writer;
             }
             if (this.pipelineDataNode == null && pipelineIndex == writer.getWriteBytesCounter() + 1) {
@@ -424,7 +455,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         synchronized (this) {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
-                writer = ByteBufferWriter.create(getBufferSupplier());
+                writer = ByteBufferWriter.create(getWriteBufferSupplier());
                 this.pipelineWriter = writer;
             }
             if (this.pipelineDataNode == null && pipelineIndex == writer.getWriteBytesCounter() + 1) {
@@ -564,14 +595,31 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         return bufferSupplier.get();
     }
 
-    public void offerBuffer(ByteBuffer buffer) {
+    public void offerReadBuffer(ByteBuffer buffer) {
         if (buffer == null) {
             return;
         }
         bufferConsumer.accept(buffer);
     }
 
-    public void offerBuffer(ByteBuffer... buffers) {
+    public void offerReadBuffer(ByteBuffer... buffers) {
+        if (buffers == null) {
+            return;
+        }
+        Consumer<ByteBuffer> consumer = this.bufferConsumer;
+        for (ByteBuffer buffer : buffers) {
+            consumer.accept(buffer);
+        }
+    }
+
+    public void offerWriteBuffer(ByteBuffer buffer) {
+        if (buffer == null) {
+            return;
+        }
+        bufferConsumer.accept(buffer);
+    }
+
+    public void offerWriteBuffer(ByteBuffer... buffers) {
         if (buffers == null) {
             return;
         }
@@ -712,8 +760,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             SSLEngineResult engineResult = engine.unwrap(netBuffer, appBuffer);
             if (engineResult.getStatus() == SSLEngineResult.Status.CLOSED
                 && (engineResult.getHandshakeStatus() == NOT_HANDSHAKING || engineResult.getHandshakeStatus() == FINISHED)) {
-                offerBuffer(netBuffer);
-                offerBuffer(appBuffer);
+                offerReadBuffer(netBuffer);
+                offerReadBuffer(appBuffer);
                 return null;
             }
             hss = engineResult.getHandshakeStatus();
@@ -750,7 +798,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                         return; //CLOSED，netBuffer已被回收
                     }
                     if (AsyncConnection.this.readSSLHalfBuffer != netBuffer) {
-                        offerBuffer(netBuffer);
+                        offerReadBuffer(netBuffer);
                     }
                     if (AsyncConnection.this.readBuffer != null) {
                         ByteBuffer rsBuffer = AsyncConnection.this.readBuffer;
@@ -758,7 +806,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                         appBuffer.flip();
                         if (rsBuffer.remaining() >= appBuffer.remaining()) {
                             rsBuffer.put(appBuffer);
-                            offerBuffer(appBuffer);
+                            offerReadBuffer(appBuffer);
                             appBuffer = rsBuffer;
                         } else {
                             while (rsBuffer.hasRemaining()) rsBuffer.put(appBuffer.get());
@@ -860,13 +908,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 writeImpl(netBuffers[0], null, new CompletionHandler<Integer, Void>() {
                     @Override
                     public void completed(Integer count, Void attachment) {
-                        offerBuffer(netBuffers[0]);
+                        offerWriteBuffer(netBuffers[0]);
                         callback.accept(null);
                     }
 
                     @Override
                     public void failed(Throwable t, Void attachment) {
-                        offerBuffer(netBuffers[0]);
+                        offerWriteBuffer(netBuffers[0]);
                         callback.accept(t);
                     }
                 });
@@ -874,20 +922,20 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 writeImpl(netBuffers, 0, netBuffers.length, null, new CompletionHandler<Integer, Void>() {
                     @Override
                     public void completed(Integer count, Void attachment) {
-                        offerBuffer(netBuffers);
+                        offerWriteBuffer(netBuffers);
                         callback.accept(null);
                     }
 
                     @Override
                     public void failed(Throwable t, Void attachment) {
-                        offerBuffer(netBuffers);
+                        offerWriteBuffer(netBuffers);
                         callback.accept(t);
                     }
                 });
             }
             return true;
         } else {
-            offerBuffer(netBuffers);
+            offerWriteBuffer(netBuffers);
             return false;
         }
     }
@@ -899,13 +947,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 writeImpl(netBuffers[0], null, new CompletionHandler<Integer, Void>() {
                     @Override
                     public void completed(Integer count, Void attachment) {
-                        offerBuffer(netBuffers[0]);
+                        offerWriteBuffer(netBuffers[0]);
                         callback.accept(null);
                     }
 
                     @Override
                     public void failed(Throwable t, Void attachment) {
-                        offerBuffer(netBuffers[0]);
+                        offerWriteBuffer(netBuffers[0]);
                         callback.accept(t);
                     }
                 });
@@ -913,20 +961,20 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 writeImpl(netBuffers, 0, netBuffers.length, null, new CompletionHandler<Integer, Void>() {
                     @Override
                     public void completed(Integer count, Void attachment) {
-                        offerBuffer(netBuffers);
+                        offerWriteBuffer(netBuffers);
                         callback.accept(null);
                     }
 
                     @Override
                     public void failed(Throwable t, Void attachment) {
-                        offerBuffer(netBuffers);
+                        offerWriteBuffer(netBuffers);
                         callback.accept(t);
                     }
                 });
             }
             return true;
         } else {
-            offerBuffer(netBuffers);
+            offerWriteBuffer(netBuffers);
             return false;
         }
     }
@@ -974,7 +1022,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                             if (count < 1) {
                                 callback.accept(new IOException("read data error"));
                             } else {
-                                offerBuffer(attachment);
+                                offerReadBuffer(attachment);
                                 doHandshake(callback);
                             }
                         }

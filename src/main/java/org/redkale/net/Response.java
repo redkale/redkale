@@ -68,7 +68,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         @Override
         public void completed(Integer result, ByteBuffer attachment) {
             if (attachment != writeBuffer) {
-                channel.offerBuffer(attachment);
+                channel.offerWriteBuffer(attachment);
             } else {
                 attachment.clear();
             }
@@ -78,7 +78,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         @Override
         public void failed(Throwable exc, ByteBuffer attachment) {
             if (attachment != writeBuffer) {
-                channel.offerBuffer(attachment);
+                channel.offerWriteBuffer(attachment);
             } else {
                 attachment.clear();
             }
@@ -93,7 +93,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         public void completed(final Integer result, final ByteBuffer[] attachments) {
             if (attachments != null) {
                 for (ByteBuffer attachment : attachments) {
-                    channel.offerBuffer(attachment);
+                    channel.offerWriteBuffer(attachment);
                 }
             }
             finish();
@@ -103,7 +103,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         public void failed(Throwable exc, final ByteBuffer[] attachments) {
             if (attachments != null) {
                 for (ByteBuffer attachment : attachments) {
-                    channel.offerBuffer(attachment);
+                    channel.offerWriteBuffer(attachment);
                 }
             }
             finish(true);
@@ -402,7 +402,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             @Override
             public void completed(Integer result, A attachment) {
                 if (buffer != writeBuffer) {
-                    channel.offerBuffer(buffer);
+                    channel.offerWriteBuffer(buffer);
                 } else {
                     buffer.clear();
                 }
@@ -414,7 +414,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             @Override
             public void failed(Throwable exc, A attachment) {
                 if (buffer != writeBuffer) {
-                    channel.offerBuffer(buffer);
+                    channel.offerWriteBuffer(buffer);
                 } else {
                     buffer.clear();
                 }
@@ -431,7 +431,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
             @Override
             public void completed(Integer result, A attachment) {
-                channel.offerBuffer(buffers);
+                channel.offerWriteBuffer(buffers);
                 if (handler != null) {
                     handler.completed(result, attachment);
                 }
@@ -440,7 +440,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             @Override
             public void failed(Throwable exc, A attachment) {
                 for (ByteBuffer buffer : buffers) {
-                    channel.offerBuffer(buffer);
+                    channel.offerWriteBuffer(buffer);
                 }
                 if (handler != null) {
                     handler.failed(exc, attachment);

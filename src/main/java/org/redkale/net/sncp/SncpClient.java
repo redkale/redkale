@@ -381,7 +381,7 @@ public final class SncpClient {
                             try {
                                 if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
                                     future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data, params=" + JsonConvert.root().convertTo(params)));
-                                    conn.offerBuffer(buffer);
+                                    conn.offerReadBuffer(buffer);
                                     transport.offerConnection(true, conn);
                                     return;
                                 }
@@ -400,7 +400,7 @@ public final class SncpClient {
                                         conn.setReadBuffer(buffer);
                                         conn.read(this);
                                     } else {
-                                        conn.offerBuffer(buffer);
+                                        conn.offerReadBuffer(buffer);
                                         success();
                                     }
                                     return;
@@ -424,7 +424,7 @@ public final class SncpClient {
                                 } else {
                                     this.body = new byte[respBodyLength];
                                     buffer.get(body, 0, respBodyLength);
-                                    conn.offerBuffer(buffer);
+                                    conn.offerReadBuffer(buffer);
                                     success();
                                 }
                             } catch (Throwable e) {
@@ -465,7 +465,7 @@ public final class SncpClient {
                         @Override
                         public void failed(Throwable exc, ByteBuffer attachment2) {
                             future.completeExceptionally(new RpcRemoteException(action.method + " sncp remote exec failed, params=" + JsonConvert.root().convertTo(params)));
-                            conn.offerBuffer(attachment2);
+                            conn.offerReadBuffer(attachment2);
                             transport.offerConnection(true, conn);
                             if (handler != null) {
                                 final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;

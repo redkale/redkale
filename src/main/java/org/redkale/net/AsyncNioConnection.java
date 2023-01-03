@@ -43,7 +43,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected SelectionKey connectKey;
 
     //-------------------------------- 读操作 --------------------------------------
-    protected final AsyncNioCompletionHandler<ByteBuffer> readTimeoutCompletionHandler = new AsyncNioCompletionHandler<>(this);
+    protected final AsyncNioCompletionHandler<ByteBuffer> readTimeoutCompletionHandler = new AsyncNioCompletionHandler<>(true, this);
 
     protected int readTimeoutSeconds;
 
@@ -58,7 +58,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected SelectionKey readKey;
 
     //-------------------------------- 写操作 --------------------------------------
-    protected final AsyncNioCompletionHandler<Object> writeTimeoutCompletionHandler = new AsyncNioCompletionHandler<>(this);
+    protected final AsyncNioCompletionHandler<Object> writeTimeoutCompletionHandler = new AsyncNioCompletionHandler<>(false, this);
 
     protected int writeTimeoutSeconds;
 
@@ -138,7 +138,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     @Override
     protected void startHandshake(final Consumer<Throwable> callback) {
-        ((AsyncIOThread) ioThread).register(t -> super.startHandshake(callback));
+        ioReadThread.register(t -> super.startHandshake(callback));
     }
 
     @Override
@@ -168,9 +168,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
             this.readCompletionHandler = handler;
         }
         if (client) {
-            doRead(this.ioThread.inCurrThread());
+            doRead(this.ioReadThread.inCurrThread());
         } else {
-            doRead(currReadInvoker < MAX_INVOKER_ONSTACK || this.ioThread.inCurrThread()); //同一线程中Selector.wakeup无效
+            doRead(currReadInvoker < MAX_INVOKER_ONSTACK || this.ioReadThread.inCurrThread()); //同一线程中Selector.wakeup无效
         }
     }
 
@@ -285,7 +285,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             if (readCount != 0) {
                 handleRead(readCount, null);
             } else if (readKey == null) {
-                ((AsyncIOThread) ioThread).register(selector -> {
+                ioReadThread.register(selector -> {
                     try {
                         readKey = implRegister(selector, SelectionKey.OP_READ);
                         readKey.attach(this);
@@ -294,7 +294,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     }
                 });
             } else {
-                ((AsyncIOGroup) ioGroup).interestOpsOr((AsyncIOThread) ioThread, readKey, SelectionKey.OP_READ);
+                ((AsyncIOGroup) ioGroup).interestOpsOr(ioReadThread, readKey, SelectionKey.OP_READ);
             }
         } catch (Exception e) {
             handleRead(0, e);
@@ -333,7 +333,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                         writeByteTuple2Callback = null;
                         writeByteTuple2Attachment = null;
                     } else {
-                        ByteBufferWriter writer = ByteBufferWriter.create(getBufferSupplier(), buffer);
+                        ByteBufferWriter writer = ByteBufferWriter.create(getWriteBufferSupplier(), buffer);
                         writer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
                         if (writeByteTuple2Length > 0) {
                             writer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
@@ -399,7 +399,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             if (writeOver && (totalCount != 0 || !hasRemain)) {
                 handleWrite(writeTotal + totalCount, null);
             } else if (writeKey == null) {
-                ((AsyncIOThread) ioThread).register(selector -> {
+                ioWriteThread.register(selector -> {
                     try {
                         writeKey = implRegister(selector, SelectionKey.OP_WRITE);
                         writeKey.attach(this);
@@ -408,7 +408,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     }
                 });
             } else {
-                ((AsyncIOGroup) ioGroup).interestOpsOr((AsyncIOThread) ioThread, writeKey, SelectionKey.OP_WRITE);
+                ((AsyncIOGroup) ioGroup).interestOpsOr(ioWriteThread, writeKey, SelectionKey.OP_WRITE);
             }
         } catch (IOException e) {
             handleWrite(0, e);
@@ -428,14 +428,14 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.connectPending = false;//必须放最后
 
         if (handler != null) {
-            if (!client || inCurrThread()) {  //client模式下必须保证read、write在ioThread内运行
+            if (!client || inCurrWriteThread()) {  //client模式下必须保证read、write在ioThread内运行
                 if (t == null) {
                     handler.completed(null, attach);
                 } else {
                     handler.failed(t, attach);
                 }
             } else {
-                ioThread.execute(() -> {
+                ioWriteThread.execute(() -> {
                     if (t == null) {
                         handler.completed(null, attach);
                     } else {
@@ -537,7 +537,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             @Override
             public void close() throws IOException {
                 if (bb != null) {
-                    offerBuffer(bb);
+                    offerReadBuffer(bb);
                     bb = null;
                 }
                 reader.close();

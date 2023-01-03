@@ -1331,7 +1331,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 try {
                     if (fileChannel != null && sends >= limit) {
                         if (buffer != null) {
-                            channel.offerBuffer(buffer);
+                            channel.offerWriteBuffer(buffer);
                         }
                         try {
                             fileChannel.close();
@@ -1377,7 +1377,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             @Override
             public void failed(Throwable exc, Void attachment) {
                 if (buffer != null) {
-                    channel.offerBuffer(buffer);
+                    channel.offerWriteBuffer(buffer);
                 }
                 if (logger.isLoggable(Level.FINER)) {
                     logger.log(Level.FINER, "finishFile error", exc);

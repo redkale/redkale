@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.util.ByteBufferReader;
 
@@ -42,21 +41,6 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
         }
         this.remoteAddress = addr;
         ioThread.connCounter.incrementAndGet();
-    }
-
-    public AsyncNioTcpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioThread, AsyncIOThread connectThread, Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
-        SocketChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress addr0, LongAdder livingCounter, LongAdder closedCounter) {
-        super(client, ioGroup, ioThread, connectThread, ioGroup.bufferCapacity, bufferSupplier, bufferConsumer, sslBuilder, sslContext, livingCounter, closedCounter);
-        this.channel = ch;
-        SocketAddress addr = addr0;
-        if (addr == null) {
-            try {
-                addr = ch.getRemoteAddress();
-            } catch (Exception e) {
-                //do nothing
-            }
-        }
-        this.remoteAddress = addr;
     }
 
     @Override
@@ -113,6 +97,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
         }
     }
 
+    @Override
     public ReadableByteChannel readableByteChannel() {
         if (this.sslEngine == null) {
             return this.channel;
@@ -131,7 +116,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
                         bb.put(halfBuffer.get());
                     }
                     if (!halfBuffer.hasRemaining()) {
-                        offerBuffer(halfBuffer);
+                        offerReadBuffer(halfBuffer);
                         halfBuffer = null;
                     }
                     return bb.position() - pos;
@@ -150,11 +135,11 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
                     if (appBuffer.hasRemaining()) {
                         halfBuffer = appBuffer;
                     } else {
-                        offerBuffer(appBuffer);
+                        offerReadBuffer(appBuffer);
                     }
                     return bb.position() - pos;
                 } else {
-                    offerBuffer(netBuffer);
+                    offerReadBuffer(netBuffer);
                     return 0;
                 }
             }
@@ -167,7 +152,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
             @Override
             public void close() throws IOException {
                 if (halfBuffer != null) {
-                    offerBuffer(halfBuffer);
+                    offerReadBuffer(halfBuffer);
                     halfBuffer = null;
                 }
                 self.close();
@@ -199,7 +184,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
                         channel.write(netBuffers);
                     }
                 }
-                offerBuffer(netBuffers);
+                offerWriteBuffer(netBuffers);
                 return len;
             }
 
@@ -285,7 +270,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
     @Override
     public final void close() throws IOException {
         super.close();
-        ((AsyncIOThread) ioThread).connCounter.decrementAndGet();
+        ioReadThread.connCounter.decrementAndGet();
         channel.shutdownInput();
         channel.shutdownOutput();
         channel.close();

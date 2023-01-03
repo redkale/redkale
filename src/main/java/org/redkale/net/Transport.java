@@ -365,13 +365,13 @@ public final class Transport {
                             if (handler != null) {
                                 handler.completed(result, att);
                             }
-                            conn.offerBuffer(attachment);
+                            conn.offerWriteBuffer(attachment);
                             offerConnection(false, conn);
                         }
 
                         @Override
                         public void failed(Throwable exc, ByteBuffer attachment) {
-                            conn.offerBuffer(attachment);
+                            conn.offerWriteBuffer(attachment);
                             offerConnection(true, conn);
                         }
                     });
@@ -380,7 +380,7 @@ public final class Transport {
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
-                    conn.offerBuffer(attachment);
+                    conn.offerWriteBuffer(attachment);
                     offerConnection(true, conn);
                 }
             });

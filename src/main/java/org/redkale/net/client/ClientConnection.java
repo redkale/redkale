@@ -63,7 +63,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         public void completed(Integer result, Void attachment) {
             if (writeLastRequest != null && writeLastRequest == client.closeRequest) {
                 if (closeFuture != null) {
-                    channel.getAsyncIOThread().runWork(() -> {
+                    channel.getWriteIOThread().runWork(() -> {
                         closeFuture.complete(null);
                     });
                 }
@@ -251,7 +251,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 //                        }
 //                    }
                     if (workThread == null || workThread.getWorkExecutor() == null) {
-                        workThread = channel.getAsyncIOThread();
+                        workThread = channel.getReadIOThread();
                     }
                     if (rs.exc != null) {
                         workThread.runWork(() -> {
@@ -362,10 +362,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             }
         }
         respWaitingCounter.increment(); //放在writeChannelInThread计数会延迟，导致不准确
-        if (channel.inCurrThread()) {
+        if (channel.inCurrWriteThread()) {
             writeChannelInThread(request, respFuture);
         } else {
-            channel.execute(() -> writeChannelInThread(request, respFuture));
+            channel.executeWrite(() -> writeChannelInThread(request, respFuture));
         }
         return respFuture;
     }
@@ -427,7 +427,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         Throwable e = exc == null ? new ClosedChannelException() : exc;
         CompletableFuture f;
         respWaitingCounter.reset();
-        WorkThread thread = channel.getAsyncIOThread();
+        WorkThread thread = channel.getReadIOThread();
         if (!responseQueue.isEmpty()) {
             while ((f = responseQueue.poll()) != null) {
                 CompletableFuture future = f;

@@ -139,7 +139,9 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     public final CompletableFuture<Integer> sendPing(byte[] data) {
-        if (data == null) return sendPing();
+        if (data == null) {
+            return sendPing();
+        }
         this.lastPingTime = System.currentTimeMillis();
         return sendPacket(new WebSocketPacket(FrameType.PING, data));
     }
@@ -237,7 +239,9 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
         if (this._writeHandler == null) {
-            if (delayPackets == null) delayPackets = new ArrayList<>();
+            if (delayPackets == null) {
+                delayPackets = new ArrayList<>();
+            }
             delayPackets.add(packet);
             return CompletableFuture.completedFuture(RETCODE_DEAYSEND);
         }
@@ -355,12 +359,16 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示异常
      */
     public final CompletableFuture<Integer> sendMessage(final Convert convert, Object message, boolean last, Serializable... userids) {
-        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        if (_engine.node == null) {
+            return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        }
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(convert, json, last, userids));
         }
         CompletableFuture<Integer> rs = _engine.node.sendMessage(convert, message, last, userids);
-        if (_engine.logger.isLoggable(Level.FINER)) _engine.logger.finer("userids:" + Arrays.toString(userids) + " send websocket message(" + message + ")");
+        if (_engine.logger.isLoggable(Level.FINER)) {
+            _engine.logger.finer("userids:" + Arrays.toString(userids) + " send websocket message(" + message + ")");
+        }
         return rs;
     }
 
@@ -461,12 +469,16 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message, final boolean last) {
-        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        if (_engine.node == null) {
+            return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        }
         if (message instanceof CompletableFuture) {
             return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(wsrange, convert, json, last));
         }
         CompletableFuture<Integer> rs = _engine.node.broadcastMessage(wsrange, convert, message, last);
-        if (_engine.logger.isLoggable(Level.FINER)) _engine.logger.finer("broadcast send websocket message(" + message + ")");
+        if (_engine.logger.isLoggable(Level.FINER)) {
+            _engine.logger.finer("broadcast send websocket message(" + message + ")");
+        }
         return rs;
     }
 
@@ -479,9 +491,13 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示异常
      */
     public final CompletableFuture<Integer> sendAction(final WebSocketAction action, Serializable... userids) {
-        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        if (_engine.node == null) {
+            return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        }
         CompletableFuture<Integer> rs = _engine.node.sendAction(action, userids);
-        if (_engine.logger.isLoggable(Level.FINER)) _engine.logger.finer("userids:" + Arrays.toString(userids) + " send websocket action(" + action + ")");
+        if (_engine.logger.isLoggable(Level.FINER)) {
+            _engine.logger.finer("userids:" + Arrays.toString(userids) + " send websocket action(" + action + ")");
+        }
         return rs;
     }
 
@@ -493,9 +509,13 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     public final CompletableFuture<Integer> broadcastAction(final WebSocketAction action) {
-        if (_engine.node == null) return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        if (_engine.node == null) {
+            return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
+        }
         CompletableFuture<Integer> rs = _engine.node.broadcastAction(action);
-        if (_engine.logger.isLoggable(Level.FINER)) _engine.logger.finer("broadcast send websocket action(" + action + ")");
+        if (_engine.logger.isLoggable(Level.FINER)) {
+            _engine.logger.finer("broadcast send websocket action(" + action + ")");
+        }
         return rs;
     }
 
@@ -508,7 +528,9 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 地址列表
      */
     public CompletableFuture<Set<WebSocketAddress>> getRpcNodeAddresses(final Serializable userid) {
-        if (_engine.node == null) return CompletableFuture.completedFuture(null);
+        if (_engine.node == null) {
+            return CompletableFuture.completedFuture(null);
+        }
         return _engine.node.getRpcNodeAddresses(userid);
     }
 
@@ -522,7 +544,9 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 地址集合
      */
     public CompletableFuture<Map<WebSocketAddress, List<String>>> getRpcNodeWebSocketAddresses(final Serializable userid) {
-        if (_engine.node == null) return CompletableFuture.completedFuture(null);
+        if (_engine.node == null) {
+            return CompletableFuture.completedFuture(null);
+        }
         return _engine.node.getRpcNodeWebSocketAddresses(userid);
     }
 
@@ -534,7 +558,9 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return CompletableFuture
      */
     public CompletableFuture<Void> changeUserid(final G newuserid) {
-        if (newuserid == null) throw new NullPointerException("newuserid is null");
+        if (newuserid == null) {
+            throw new NullPointerException("newuserid is null");
+        }
         return _engine.changeLocalUserid(this, newuserid);
     }
 
@@ -593,7 +619,9 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @param value 属性值
      */
     public final void setAttribute(String name, Object value) {
-        if (attributes == null) attributes = new HashMap<>();
+        if (attributes == null) {
+            attributes = new HashMap<>();
+        }
         attributes.put(name, value);
     }
 
@@ -696,8 +724,8 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return Supplier
      */
-    protected Supplier<ByteBuffer> getBufferSupplier() {
-        return this._channel.getBufferSupplier();
+    protected Supplier<ByteBuffer> getReadBufferSupplier() {
+        return this._channel.getReadBufferSupplier();
     }
 
     /**
@@ -705,8 +733,26 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return Consumer
      */
-    protected Consumer<ByteBuffer> getBufferConsumer() {
-        return this._channel.getBufferConsumer();
+    protected Consumer<ByteBuffer> getReadBufferConsumer() {
+        return this._channel.getReadBufferConsumer();
+    }
+
+    /**
+     * 获取ByteBuffer生成器
+     *
+     * @return Supplier
+     */
+    protected Supplier<ByteBuffer> getWriteBufferSupplier() {
+        return this._channel.getWriteBufferSupplier();
+    }
+
+    /**
+     * 获取ByteBuffer回收器
+     *
+     * @return Consumer
+     */
+    protected Consumer<ByteBuffer> getWriteBufferConsumer() {
+        return this._channel.getWriteBufferConsumer();
     }
 
     //-------------------------------------------------------------------
@@ -896,23 +942,37 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 显式地关闭WebSocket
      */
     public final void close() {
-        if (this.deflater != null) this.deflater.end();
-        if (this.inflater != null) this.inflater.end();
+        if (this.deflater != null) {
+            this.deflater.end();
+        }
+        if (this.inflater != null) {
+            this.inflater.end();
+        }
         CompletableFuture<Void> future = kill(CLOSECODE_SERVERCLOSE, "user close");
-        if (future != null) future.join();
+        if (future != null) {
+            future.join();
+        }
     }
 
     //closeRunner
     CompletableFuture<Void> kill(int code, String reason) {
-        if (closed) return null;
+        if (closed) {
+            return null;
+        }
         synchronized (this) {
-            if (closed) return null;
+            if (closed) {
+                return null;
+            }
             closed = true;
-            if (_channel == null) return null;
+            if (_channel == null) {
+                return null;
+            }
             CompletableFuture<Void> future = _engine.removeLocalThenDisconnect(this);
             _channel.dispose();
             CompletableFuture closeFuture = onClose(code, reason);
-            if (closeFuture == null) return future;
+            if (closeFuture == null) {
+                return future;
+            }
             return CompletableFuture.allOf(future, closeFuture);
         }
     }

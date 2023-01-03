@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.*;
 import javax.net.ssl.SSLContext;
 
 /**
@@ -28,23 +27,6 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
     public AsyncNioUdpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioThread, AsyncIOThread connectThread, DatagramChannel ch,
         SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress addr0, LongAdder livingCounter, LongAdder closedCounter) {
         super(client, ioGroup, ioThread, connectThread, ioGroup.bufferCapacity, ioThread.getBufferSupplier(), ioThread.getBufferConsumer(), sslBuilder, sslContext, livingCounter, closedCounter);
-        this.channel = ch;
-        SocketAddress addr = addr0;
-        if (addr == null) {
-            try {
-                addr = ch.getRemoteAddress();
-            } catch (Exception e) {
-                //do nothing
-            }
-        }
-        this.remoteAddress = addr;
-    }
-
-    public AsyncNioUdpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioThread, AsyncIOThread connectThread,
-        Supplier<ByteBuffer> bufferSupplier, Consumer<ByteBuffer> bufferConsumer,
-        DatagramChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress addr0,
-        LongAdder livingCounter, LongAdder closedCounter) {
-        super(client, ioGroup, ioThread, connectThread, ioGroup.bufferCapacity, bufferSupplier, bufferConsumer, sslBuilder, sslContext, livingCounter, closedCounter);
         this.channel = ch;
         SocketAddress addr = addr0;
         if (addr == null) {

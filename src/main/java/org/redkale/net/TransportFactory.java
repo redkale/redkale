@@ -347,7 +347,7 @@ public class TransportFactory {
                                     @Override
                                     public void completed(Integer result, ByteBuffer pongBuffer) {
                                         if (counter > 3) {
-                                            localconn.offerBuffer(pongBuffer);
+                                            localconn.offerWriteBuffer(pongBuffer);
                                             localconn.dispose();
                                             return;
                                         }
@@ -357,13 +357,13 @@ public class TransportFactory {
                                             localconn.read(this);
                                             return;
                                         }
-                                        localconn.offerBuffer(pongBuffer);
+                                        localconn.offerWriteBuffer(pongBuffer);
                                         localqueue.offer(localconn);
                                     }
 
                                     @Override
                                     public void failed(Throwable exc, ByteBuffer pongBuffer) {
-                                        localconn.offerBuffer(pongBuffer);
+                                        localconn.offerWriteBuffer(pongBuffer);
                                         localconn.dispose();
                                     }
                                 });
