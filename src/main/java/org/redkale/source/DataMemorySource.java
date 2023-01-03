@@ -202,6 +202,11 @@ public class DataMemorySource extends DataSqlSource implements SearchSource {
     }
 
     @Override
+    protected <T> CompletableFuture<Integer> createTableDBAsync(EntityInfo<T> info, String copyTableSql, Serializable pk, String... sqls) {
+        return CompletableFuture.completedFuture(0);
+    }
+
+    @Override
     protected <T> CompletableFuture<Integer> dropTableDBAsync(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
         return CompletableFuture.completedFuture(0);
     }

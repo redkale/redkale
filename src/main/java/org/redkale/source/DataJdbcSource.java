@@ -706,8 +706,143 @@ public class DataJdbcSource extends DataSqlSource {
     }
 
     @Override
+    protected <T> CompletableFuture<Integer> createTableDBAsync(EntityInfo<T> info, String copyTableSql, final Serializable pk, String... sqls) {
+        return supplyAsync(() -> createTableDB(info, copyTableSql, pk, sqls));
+    }
+
+    @Override
     protected <T> CompletableFuture<Integer> dropTableDBAsync(EntityInfo<T> info, final String[] tables, FilterNode node, String... sqls) {
         return supplyAsync(() -> dropTableDB(info, tables, node, sqls));
+    }
+
+    @Override
+    protected <T> int createTableDB(EntityInfo<T> info, String copyTableSql, Serializable pk, String... sqls) {
+        Connection conn = null;
+        Statement stmt;
+        final long s = System.currentTimeMillis();
+        try {
+            conn = writePool.pollConnection();
+            conn.setReadOnly(false);
+            conn.setAutoCommit(false);
+            int c;
+            if (copyTableSql == null) {
+                if (sqls.length == 1) {
+                    stmt = conn.createStatement();
+                    int c1 = stmt.executeUpdate(sqls[0]);
+                    stmt.close();
+                    c = c1;
+                } else {
+                    stmt = conn.createStatement();
+                    for (String sql : sqls) {
+                        stmt.addBatch(sql);
+                    }
+                    int c1 = 0;
+                    int[] cs = stmt.executeBatch();
+                    stmt.close();
+                    for (int cc : cs) {
+                        c1 += cc;
+                    }
+                    c = c1;
+                }
+            } else { //建分表
+                try {
+                    stmt = conn.createStatement();
+                    c = stmt.executeUpdate(copyTableSql);
+                } catch (SQLException se) {
+                    if (isTableNotExist(info, se.getSQLState())) { //分表的原始表不存在
+                        final String newTable = info.getTable(pk);
+                        if (newTable.indexOf('.') <= 0) { //分表的原始表不存在
+                            if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+                                logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
+                            }
+                            //创建原始表
+                            stmt = conn.createStatement();
+                            if (sqls.length == 1) {
+                                stmt.execute(sqls[0]);
+                            } else {
+                                for (String tableSql : sqls) {
+                                    stmt.addBatch(tableSql);
+                                }
+                                stmt.executeBatch();
+                            }
+                            stmt.close();
+                            //再执行一遍创建分表操作
+                            if (info.isLoggable(logger, Level.FINEST, copyTableSql)) {
+                                logger.finest(info.getType().getSimpleName() + " createTable sql=" + copyTableSql);
+                            }
+                            stmt = conn.createStatement();
+                            c = stmt.executeUpdate(copyTableSql);
+                            stmt.close();
+
+                        } else { //需要先建库
+                            String newCatalog = newTable.substring(0, newTable.indexOf('.'));
+                            String catalogSql = ("postgresql".equals(dbtype()) ? "CREATE SCHEMA IF NOT EXISTS " : "CREATE DATABASE IF NOT EXISTS ") + newCatalog;
+                            try {
+                                if (info.isLoggable(logger, Level.FINEST, catalogSql)) {
+                                    logger.finest(info.getType().getSimpleName() + " createCatalog sql=" + catalogSql);
+                                }
+                                stmt = conn.createStatement();
+                                stmt.executeUpdate(catalogSql);
+                                stmt.close();
+                            } catch (SQLException sqle1) {
+                                logger.log(Level.SEVERE, "create database " + copyTableSql + " error", sqle1);
+                            }
+                            try {
+                                //再执行一遍创建分表操作
+                                if (info.isLoggable(logger, Level.FINEST, copyTableSql)) {
+                                    logger.finest(info.getType().getSimpleName() + " createTable sql=" + copyTableSql);
+                                }
+                                stmt = conn.createStatement();
+                                c = stmt.executeUpdate(copyTableSql);
+                                stmt.close();
+                            } catch (SQLException sqle2) {
+                                if (isTableNotExist(info, sqle2.getSQLState())) {
+                                    if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+                                        logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
+                                    }
+                                    //创建原始表
+                                    stmt = conn.createStatement();
+                                    if (sqls.length == 1) {
+                                        stmt.execute(sqls[0]);
+                                    } else {
+                                        for (String tableSql : sqls) {
+                                            stmt.addBatch(tableSql);
+                                        }
+                                        stmt.executeBatch();
+                                    }
+                                    stmt.close();
+                                    //再执行一遍创建分表操作
+                                    if (info.isLoggable(logger, Level.FINEST, copyTableSql)) {
+                                        logger.finest(info.getType().getSimpleName() + " createTable sql=" + copyTableSql);
+                                    }
+                                    stmt = conn.createStatement();
+                                    c = stmt.executeUpdate(copyTableSql);
+                                    stmt.close();
+                                } else {
+                                    throw new SourceException(sqle2);
+                                }
+                            }
+                        }
+                    }
+                    throw new SourceException(se);
+                }
+            }
+            conn.commit();
+            slowLog(s, sqls);
+            return c;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException se) {
+                }
+            }
+            throw new SourceException(e);
+        } finally {
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
+        }
     }
 
     @Override

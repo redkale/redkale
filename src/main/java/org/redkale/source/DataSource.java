@@ -97,7 +97,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数
      */
     default <T> int insert(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return 0;
+        if (entitys == null || entitys.isEmpty()) {
+            return 0;
+        }
         return insert(entitys.toArray());
     }
 
@@ -110,7 +112,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数
      */
     default <T> int insert(final Stream<T> entitys) {
-        if (entitys == null) return 0;
+        if (entitys == null) {
+            return 0;
+        }
         return insert(entitys.toArray());
     }
 
@@ -133,7 +137,9 @@ public interface DataSource extends Resourcable {
      * @return CompletableFuture
      */
     default <T> CompletableFuture<Integer> insertAsync(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        if (entitys == null || entitys.isEmpty()) {
+            return CompletableFuture.completedFuture(0);
+        }
         return insertAsync(entitys.toArray());
     }
 
@@ -146,7 +152,9 @@ public interface DataSource extends Resourcable {
      * @return CompletableFuture
      */
     default <T> CompletableFuture<Integer> insertAsync(final Stream<T> entitys) {
-        if (entitys == null) return CompletableFuture.completedFuture(0);
+        if (entitys == null) {
+            return CompletableFuture.completedFuture(0);
+        }
         return insertAsync(entitys.toArray());
     }
 
@@ -172,7 +180,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数
      */
     default <T> int delete(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return 0;
+        if (entitys == null || entitys.isEmpty()) {
+            return 0;
+        }
         return delete(entitys.toArray());
     }
 
@@ -186,7 +196,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数
      */
     default <T> int delete(final Stream<T> entitys) {
-        if (entitys == null) return 0;
+        if (entitys == null) {
+            return 0;
+        }
         return delete(entitys.toArray());
     }
 
@@ -211,7 +223,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     default <T> CompletableFuture<Integer> deleteAsync(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        if (entitys == null || entitys.isEmpty()) {
+            return CompletableFuture.completedFuture(0);
+        }
         return deleteAsync(entitys.toArray());
     }
 
@@ -225,7 +239,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     default <T> CompletableFuture<Integer> deleteAsync(final Stream<T> entitys) {
-        if (entitys == null) return CompletableFuture.completedFuture(0);
+        if (entitys == null) {
+            return CompletableFuture.completedFuture(0);
+        }
         return deleteAsync(entitys.toArray());
     }
 
@@ -360,6 +376,31 @@ public interface DataSource extends Resourcable {
      */
     public <T> CompletableFuture<Integer> clearTableAsync(final Class<T> clazz, final FilterNode node);
 
+    //------------------------createTable---------------------------
+    /**
+     * 删除表  <br>
+     * 等价SQL: DROP TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param pk    主键
+     *
+     * @return 建表结果
+     */
+    public <T> int createTable(final Class<T> clazz, final Serializable pk);
+
+    /**
+     * 删除表  <br>
+     * 等价SQL: DROP TABLE {table}<br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param pk    主键
+     *
+     * @return 建表结果
+     */
+    public <T> CompletableFuture<Integer> createTableAsync(final Class<T> clazz, final Serializable pk);
+
     //------------------------dropAsync---------------------------
     /**
      * 删除表  <br>
@@ -439,7 +480,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数
      */
     default <T> int update(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return 0;
+        if (entitys == null || entitys.isEmpty()) {
+            return 0;
+        }
         return update(entitys.toArray());
     }
 
@@ -456,7 +499,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数
      */
     default <T> int update(final Stream<T> entitys) {
-        if (entitys == null) return 0;
+        if (entitys == null) {
+            return 0;
+        }
         return update(entitys.toArray());
     }
 
@@ -487,7 +532,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     default <T> CompletableFuture<Integer> updateAsync(final Collection<T> entitys) {
-        if (entitys == null || entitys.isEmpty()) return CompletableFuture.completedFuture(0);
+        if (entitys == null || entitys.isEmpty()) {
+            return CompletableFuture.completedFuture(0);
+        }
         return updateAsync(entitys.toArray());
     }
 
@@ -504,7 +551,9 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     default <T> CompletableFuture<Integer> updateAsync(final Stream<T> entitys) {
-        if (entitys == null) return CompletableFuture.completedFuture(0);
+        if (entitys == null) {
+            return CompletableFuture.completedFuture(0);
+        }
         return updateAsync(entitys.toArray());
     }
 

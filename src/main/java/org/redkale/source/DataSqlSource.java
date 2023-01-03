@@ -673,6 +673,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     //清空表
     protected abstract <T> CompletableFuture<Integer> clearTableDBAsync(final EntityInfo<T> info, String[] tables, FilterNode node, final String... sqls);
 
+    //建表
+    protected abstract <T> CompletableFuture<Integer> createTableDBAsync(final EntityInfo<T> info, String copyTableSql, Serializable pk, final String... sqls);
+
     //删除表
     protected abstract <T> CompletableFuture<Integer> dropTableDBAsync(final EntityInfo<T> info, String[] tables, FilterNode node, final String... sqls);
 
@@ -719,6 +722,11 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     //清空表
     protected <T> int clearTableDB(final EntityInfo<T> info, String[] tables, FilterNode node, final String... sqls) {
         return clearTableDBAsync(info, tables, node, sqls).join();
+    }
+
+    //建表
+    protected <T> int createTableDB(final EntityInfo<T> info, String copyTableSql, Serializable pk, final String... sqls) {
+        return createTableDBAsync(info, copyTableSql, pk, sqls).join();
     }
 
     //删除表
@@ -1215,7 +1223,60 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         return sqls.toArray(new String[sqls.size()]);
     }
 
-    //----------------------------- dropTableCompose -----------------------------
+    //----------------------------- dropTable -----------------------------
+    @Override
+    public <T> int createTable(final Class<T> clazz, final Serializable pk) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final String[] sqls = createTableSqls(info);
+        if (sqls == null) {
+            return -1;
+        }
+        String copyTableSql = info.getTableStrategy() == null ? null : getTableCopySQL(info, info.getTable(pk));
+        if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+            logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
+        }
+        if (isAsync()) {
+            int rs = createTableDBAsync(info, copyTableSql, pk, sqls).join();
+            return rs;
+        } else {
+            int rs = createTableDB(info, copyTableSql, pk, sqls);
+            return rs;
+        }
+    }
+
+    @Override
+    public <T> CompletableFuture<Integer> createTableAsync(final Class<T> clazz, final Serializable pk) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        final String[] sqls = createTableSqls(info);
+        if (sqls == null) {
+            return CompletableFuture.completedFuture(-1);
+        }
+        String copyTableSql = info.getTableStrategy() == null ? null : getTableCopySQL(info, info.getTable(pk));
+        if (copyTableSql == null) {
+            if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
+                logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
+            }
+        } else {
+            if (info.isLoggable(logger, Level.FINEST, copyTableSql)) {
+                logger.finest(info.getType().getSimpleName() + " createTable sql=" + copyTableSql);
+            }
+        }
+        if (isAsync()) {
+            return createTableDBAsync(info, copyTableSql, pk, sqls).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                }
+            });
+        } else {
+            return supplyAsync(() -> createTableDB(info, copyTableSql, pk, sqls)).whenComplete((rs, t) -> {
+                if (t != null) {
+                    errorCompleteConsumer.accept(rs, t);
+                }
+            });
+        }
+    }
+
+    //----------------------------- dropTable -----------------------------
     @Override
     public <T> int dropTable(Class<T> clazz, FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
