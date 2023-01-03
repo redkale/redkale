@@ -63,7 +63,9 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         public void completed(Integer result, Void attachment) {
             if (writeLastRequest != null && writeLastRequest == client.closeRequest) {
                 if (closeFuture != null) {
-                    closeFuture.complete(null);
+                    channel.getAsyncIOThread().runWork(() -> {
+                        closeFuture.complete(null);
+                    });
                 }
                 closeFuture = null;
                 return;
@@ -103,6 +105,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         this.pauseWriting.set(false);
     }
 
+    //有写入数据返回true，否则返回false
     private boolean sendWrite(boolean must) {
         ClientConnection conn = this;
         ByteArray rw = conn.writeArray;

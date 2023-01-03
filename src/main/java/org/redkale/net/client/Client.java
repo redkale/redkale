@@ -26,7 +26,7 @@ import org.redkale.util.*;
  */
 public abstract class Client<R extends ClientRequest, P> {
 
-    public static final int DEFAULT_MAX_PIPELINES = 256;
+    public static final int DEFAULT_MAX_PIPELINES = 128;
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -77,15 +77,15 @@ public abstract class Client<R extends ClientRequest, P> {
     protected Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate;
 
     protected Client(AsyncGroup group, ClientAddress address) {
-        this(group, true, address, Utility.cpus(), 16, null, null, null);
+        this(group, true, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
     }
 
     protected Client(AsyncGroup group, boolean tcp, ClientAddress address) {
-        this(group, tcp, address, Utility.cpus(), 16, null, null, null);
+        this(group, tcp, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
     }
 
     protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns) {
-        this(group, tcp, address, maxconns, 16, null, null, null);
+        this(group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, null, null);
     }
 
     protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns, int maxPipelines) {
@@ -94,12 +94,12 @@ public abstract class Client<R extends ClientRequest, P> {
 
     protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
         Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        this(group, tcp, address, maxconns, 16, null, null, authenticate);
+        this(group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, null, authenticate);
     }
 
     protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
         R closeRequest, Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        this(group, tcp, address, maxconns, 16, null, closeRequest, authenticate);
+        this(group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, closeRequest, authenticate);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")

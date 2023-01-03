@@ -305,14 +305,14 @@ public class HttpRequest extends Request<HttpContext> {
             if (last != null && ((HttpRequest) last).headerLength > 0) {
                 final HttpRequest httplast = (HttpRequest) last;
                 int bufremain = buffer.remaining();
-                int remainhalf = httplast.headerLength - this.headerHalfLen;
-                if (remainhalf > bufremain) {
+                int remainHalf = httplast.headerLength - this.headerHalfLen;
+                if (remainHalf > bufremain) {
                     bytes.put(buffer);
                     this.headerHalfLen += bufremain;
                     buffer.clear();
                     return 1;
                 }
-                buffer.position(buffer.position() + remainhalf);
+                buffer.position(buffer.position() + remainHalf);
                 this.contentType = httplast.contentType;
                 this.contentLength = httplast.contentLength;
                 this.host = httplast.host;

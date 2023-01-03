@@ -8,7 +8,6 @@ package org.redkale.net;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import java.util.logging.Level;
 
@@ -129,33 +128,26 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         }
     }
 
-    protected void decode(final ByteBuffer buffer, final Response response, final int pipelineIndex, final Request lastreq) {
+    protected void decode(final ByteBuffer buffer, final Response response, final int pipelineIndex, final Request lastReq) {
         response.init(channel);
         final Request request = response.request;
-        final int rs = request.readHeader(buffer, lastreq);
+        final int rs = request.readHeader(buffer, lastReq);
         if (rs < 0) {  //表示数据格式不正确
             final DispatcherServlet preparer = context.prepare;
-            LongAdder ec = preparer.executeCounter;
-            if (ec != null) {
-                ec.increment();
-            }
+            preparer.incrExecuteCounter();
             channel.offerBuffer(buffer);
-            if (rs != Integer.MIN_VALUE && preparer.illRequestCounter != null) {
-                preparer.illRequestCounter.increment();
+            if (rs != Integer.MIN_VALUE) {
+                preparer.incrIllRequestCounter();
             }
             response.finish(true);
             if (context.logger.isLoggable(Level.FINEST)) {
                 context.logger.log(Level.FINEST, "request.readHeader erroneous (" + rs + "), force to close channel ");
             }
         } else if (rs == 0) {
-            final DispatcherServlet preparer = context.prepare;
-            LongAdder ec = preparer.executeCounter;
-            if (ec != null) {
-                ec.increment();
-            }
+            context.prepare.incrExecuteCounter();
             int pindex = pipelineIndex;
             boolean pipeline = false;
-            Request hreq = lastreq;
+            Request hreq = lastReq;
             if (buffer.hasRemaining()) {
                 pipeline = true;
                 if (pindex == 0) {
@@ -191,14 +183,12 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                         return;
                     }
                     attachment.flip();
-                    decode(attachment, response, pipelineIndex, lastreq);
+                    decode(attachment, response, pipelineIndex, lastReq);
                 }
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
-                    if (context.prepare.illRequestCounter != null) {
-                        context.prepare.illRequestCounter.increment();
-                    }
+                    context.prepare.incrIllRequestCounter();
                     channel.offerBuffer(attachment);
                     response.finish(true);
                     if (exc != null) {

@@ -31,11 +31,9 @@ import org.redkale.util.*;
  */
 public abstract class DispatcherServlet<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>, S extends Servlet<C, R, P>> extends Servlet<C, R, P> {
 
-    protected final LongAdder executeCounter = new LongAdder(); //执行请求次数
+    private final LongAdder executeCounter = new LongAdder(); //执行请求次数
 
-    protected final LongAdder illRequestCounter = new LongAdder(); //错误请求次数
-
-    protected Application application;
+    private final LongAdder illRequestCounter = new LongAdder(); //错误请求次数
 
     private final Object servletLock = new Object();
 
@@ -47,7 +45,17 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     private final List<Filter<C, R, P>> filters = new ArrayList<>();
 
+    protected Application application;
+
     protected Filter<C, R, P> headFilter;
+
+    protected void incrExecuteCounter() {
+        executeCounter.increment();
+    }
+
+    protected void incrIllRequestCounter() {
+        illRequestCounter.increment();
+    }
 
     protected void putServlet(S servlet) {
         synchronized (servletLock) {
@@ -265,4 +273,13 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     protected Stream<S> servletStream() {
         return servlets.stream();
     }
+
+    public Long getExecuteCounter() {
+        return executeCounter.longValue();
+    }
+
+    public Long getIllRequestCounter() {
+        return illRequestCounter.longValue();
+    }
+
 }
