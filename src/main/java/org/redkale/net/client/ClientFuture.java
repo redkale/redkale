@@ -26,19 +26,53 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
         public boolean completeExceptionally(Throwable ex) {
             return true;
         }
+
+        @Override
+        void setConn(ClientConnection conn) {
+        }
+
+        @Override
+        void setTimeout(ScheduledFuture timeout) {
+        }
+
+        @Override
+        void incrMergeCount() {
+        }
+
+        @Override
+        public void run() {
+        }
     };
 
     protected final ClientRequest request;
 
-    ScheduledFuture timeout;
+    private ScheduledFuture timeout;
 
-    int mergeCount; //合并的个数，不算自身
+    private int mergeCount; //合并的个数，不算自身
 
-    ClientConnection conn;
+    private ClientConnection conn;
 
     public ClientFuture(ClientRequest request) {
         super();
         this.request = request;
+    }
+
+    void setConn(ClientConnection conn) {
+        this.conn = conn;
+    }
+
+    void setTimeout(ScheduledFuture timeout) {
+        this.timeout = timeout;
+    }
+
+    void cancelTimeout() {
+        if (timeout != null) {
+            timeout.cancel(true);
+        }
+    }
+
+    void incrMergeCount() {
+        mergeCount++;
     }
 
     public int getMergeCount() {

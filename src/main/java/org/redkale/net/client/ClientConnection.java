@@ -142,7 +142,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                     }
                     ClientFuture<R> f = entry.getValue();
                     if (f != null) {
-                        f.mergeCount++;
+                        f.incrMergeCount();
                     }
                     //req.respFuture.mergeCount++;
                 }
@@ -214,9 +214,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                     client.respDoneCounter.increment();
                 }
                 try {
-                    if (respFuture.timeout != null) {
-                        respFuture.timeout.cancel(true);
-                    }
+                    respFuture.cancelTimeout();
                     ClientRequest request = respFuture.request;
                     //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", message=" + rs.message);
                     preComplete(rs.message, (R) request, rs.exc);
@@ -289,7 +287,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                         Serializable reqid = rs.getRequestid();
                         ClientFuture respFuture = reqid == null ? responseQueue.poll() : responseMap.remove(reqid);
                         if (respFuture != null) {
-                            int mergeCount = respFuture.mergeCount;
+                            int mergeCount = respFuture.getMergeCount();
                             completeResponse(rs, respFuture);
                             if (mergeCount > 0) {
                                 for (int i = 0; i < mergeCount; i++) {
@@ -363,8 +361,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             respFuture = createClientFuture(request);
             int rts = this.channel.getReadTimeoutSeconds();
             if (rts > 0 && respFuture.request != null) {
-                respFuture.conn = this;
-                respFuture.timeout = client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS);
+                respFuture.setConn(this);
+                respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
             }
         }
         respWaitingCounter.increment(); //放在writeChannelInThread计数会延迟，导致不准确
