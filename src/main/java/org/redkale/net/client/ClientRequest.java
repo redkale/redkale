@@ -33,6 +33,11 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
         return null;
     }
 
+    //关闭请求一定要返回false
+    public boolean isCloseType() {
+        return false;
+    }
+
     public long getCreateTime() {
         return createTime;
     }

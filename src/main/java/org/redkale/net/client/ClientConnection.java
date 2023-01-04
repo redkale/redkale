@@ -61,7 +61,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
         @Override
         public void completed(Integer result, Void attachment) {
-            if (writeLastRequest != null && writeLastRequest == client.closeRequest) {
+            if (writeLastRequest != null && writeLastRequest.isCloseType()) {
                 if (closeFuture != null) {
                     channel.getWriteIOThread().runWork(() -> {
                         closeFuture.complete(null);
@@ -350,7 +350,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final CompletableFuture<P> writeChannel(R request) {
         ClientFuture respFuture;
-        if (request == client.closeRequest) {
+        if (request.isCloseType()) {
             respFuture = createClientFuture(null);
             closeFuture = respFuture;
         } else {
@@ -373,7 +373,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     private void writeChannelInThread(R request, ClientFuture respFuture) {
         Serializable reqid = request.getRequestid();
         //保证顺序一致
-        if (client.closeRequest != null && respFuture.request == client.closeRequest) {
+        if (respFuture.request.isCloseType()) {
             responseQueue.offer(ClientFuture.EMPTY);
         } else {
             request.respFuture = respFuture;
