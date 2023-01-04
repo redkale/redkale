@@ -59,9 +59,15 @@ public final class ByteArray implements ByteTuple {
      */
     public OutputStream newOutputStream() {
         return new OutputStream() {
+
             @Override
             public void write(int b) throws IOException {
-                ByteArray.this.put((byte) b);
+                put((byte) b);
+            }
+
+            @Override
+            public void write(byte b[], int off, int len) throws IOException {
+                put(b, off, len);
             }
         };
     }

@@ -48,6 +48,9 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             }
             factory.register(type, this);
             this.componentEncoder = factory.loadEncoder(this.componentType);
+            if (componentEncoder == null) {
+                throw new ConvertException("ArrayEncoder init componentEncoder error, componentType = " + this.componentType);
+            }
             this.anyEncoder = factory.getAnyEncoder();
             this.subTypeFinal = (this.componentType instanceof Class) && Modifier.isFinal(((Class) this.componentType).getModifiers());
         } finally {
@@ -84,13 +87,16 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                         e.printStackTrace();
                     }
                 }
+                itemEncoder = this.componentEncoder;
             }
         }
         if (subTypeFinal) {
             if (out.writeArrayB(value.length, this, itemEncoder, value) < 0) {
                 for (int i = 0;; i++) {
                     writeMemberValue(out, member, itemEncoder, value[i], i);
-                    if (i == iMax) break;
+                    if (i == iMax) {
+                        break;
+                    }
                     out.writeArrayMark();
                 }
             }
@@ -100,7 +106,9 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 for (int i = 0;; i++) {
                     Object v = value[i];
                     writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? itemEncoder : anyEncoder), v, i);
-                    if (i == iMax) break;
+                    if (i == iMax) {
+                        break;
+                    }
                     out.writeArrayMark();
                 }
             }

@@ -5,14 +5,13 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.annotation.ConstructorParameters;
-import org.redkale.asm.MethodDebugVisitor;
 import java.nio.channels.CompletionHandler;
-import java.security.*;
-import java.util.concurrent.*;
-import org.redkale.asm.*;
+import java.security.SecureRandom;
+import java.util.concurrent.ConcurrentHashMap;
+import org.redkale.annotation.ConstructorParameters;
 import static org.redkale.asm.Opcodes.*;
-import org.redkale.net.*;
+import org.redkale.asm.*;
+import org.redkale.net.Context;
 import org.redkale.util.*;
 
 /**
@@ -39,6 +38,7 @@ public class HttpContext extends Context {
 
     protected final AnyValue rpcAuthenticatorConfig;
 
+    //所有Servlet方法都不需要读取http-header，lazyHeaders=true
     protected boolean lazyHeaders; //存在动态改值
 
 //    protected RequestURINode[] uriCacheNodes;
