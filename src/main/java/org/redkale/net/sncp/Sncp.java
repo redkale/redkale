@@ -57,9 +57,9 @@ public abstract class Sncp {
     private Sncp() {
     }
 
-    public static DLong hash(final java.lang.reflect.Method method) {
+    public static Uint128 hash(final java.lang.reflect.Method method) {
         if (method == null) {
-            return DLong.ZERO;
+            return Uint128.ZERO;
         }
         StringBuilder sb = new StringBuilder(); //不能使用method.toString() 因为包含declaringClass信息导致接口与实现类的方法hash不一致
         sb.append(method.getReturnType().getName()).append(' ');
@@ -84,15 +84,15 @@ public abstract class Sncp {
      *
      * @return hash值
      */
-    public static DLong hash(final String name) {
+    public static Uint128 hash(final String name) {
         if (name == null || name.isEmpty()) {
-            return DLong.ZERO;
+            return Uint128.ZERO;
         }
         byte[] bytes = name.trim().getBytes();
         synchronized (md5) {
             bytes = md5.digest(bytes);
         }
-        return DLong.create(bytes);
+        return Uint128.create(bytes);
     }
 
     public static boolean isRemote(Service service) {

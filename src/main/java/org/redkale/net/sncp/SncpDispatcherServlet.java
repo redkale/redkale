@@ -17,12 +17,12 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class SncpDispatcherServlet extends DispatcherServlet<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
+public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
     private final Object sncplock = new Object();
 
     @Override
-    public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, DLong... mappings) {
+    public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, Uint128... mappings) {
         synchronized (sncplock) {
             for (SncpServlet s : getServlets()) {
                 if (s.service == servlet.service) {

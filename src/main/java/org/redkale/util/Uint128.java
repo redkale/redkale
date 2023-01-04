@@ -10,26 +10,26 @@ import java.util.Arrays;
 
 /**
  * 16bytes数据结构
- * 注意： 为了提高性能， DLong中的bytes是直接返回， 不得对bytes的内容进行修改。
+ * 注意： 为了提高性能， Uint128中的bytes是直接返回， 不得对bytes的内容进行修改。
  *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public final class DLong extends Number implements Comparable<DLong> {
+public final class Uint128 extends Number implements Comparable<Uint128> {
 
-    public static final DLong ZERO = new DLong(new byte[16]);
+    public static final Uint128 ZERO = new Uint128(new byte[16]);
 
     protected final byte[] value;
 
-    protected DLong(long v1, long v2) {  //暂时不用
+    protected Uint128(long v1, long v2) {  //暂时不用
         this.value = new byte[]{(byte) (v1 >> 56), (byte) (v1 >> 48), (byte) (v1 >> 40), (byte) (v1 >> 32),
             (byte) (v1 >> 24), (byte) (v1 >> 16), (byte) (v1 >> 8), (byte) v1, (byte) (v2 >> 56), (byte) (v2 >> 48), (byte) (v2 >> 40), (byte) (v2 >> 32),
             (byte) (v2 >> 24), (byte) (v2 >> 16), (byte) (v2 >> 8), (byte) v2};
     }
 
-    protected DLong(byte[] bytes) {
+    protected Uint128(byte[] bytes) {
         if (bytes == null || bytes.length != 16) {
             throw new NumberFormatException("Not 16 length bytes");
         }
@@ -44,27 +44,27 @@ public final class DLong extends Number implements Comparable<DLong> {
         return value;
     }
 
-    public static DLong create(byte[] bytes) {
-        return new DLong(bytes);
+    public static Uint128 create(byte[] bytes) {
+        return new Uint128(bytes);
     }
 
-    public static DLong read(ByteBuffer buffer) {
+    public static Uint128 read(ByteBuffer buffer) {
         byte[] bs = new byte[16];
         buffer.get(bs);
-        return new DLong(bs);
+        return new Uint128(bs);
     }
 
-    public static ByteBuffer write(ByteBuffer buffer, DLong dlong) {
+    public static ByteBuffer write(ByteBuffer buffer, Uint128 dlong) {
         buffer.put(dlong.value);
         return buffer;
     }
 
-    public static ByteArray write(ByteArray array, DLong dlong) {
+    public static ByteArray write(ByteArray array, Uint128 dlong) {
         array.put(dlong.value);
         return array;
     }
 
-    public static ByteArray write(ByteArray array, int offset, DLong dlong) {
+    public static ByteArray write(ByteArray array, int offset, Uint128 dlong) {
         array.put(offset, dlong.value);
         return array;
     }
@@ -81,7 +81,7 @@ public final class DLong extends Number implements Comparable<DLong> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final DLong other = (DLong) obj;
+        final Uint128 other = (Uint128) obj;
         return Arrays.equals(this.value, other.value);
     }
 
@@ -126,7 +126,7 @@ public final class DLong extends Number implements Comparable<DLong> {
     }
 
     @Override
-    public int compareTo(DLong o) {
+    public int compareTo(Uint128 o) {
         if (o == null) {
             return 1;
         }

@@ -90,19 +90,19 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
             request.getActionid(), request.getTraceid(), this.addrBytes, this.addrPort, bodyLength, retcode);
     }
 
-    protected static void fillRespHeader(ByteArray buffer, long seqid, DLong serviceid, int serviceVersion,
-        DLong actionid, String traceid, byte[] addrBytes, int addrPort, int bodyLength, int retcode) {
+    protected static void fillRespHeader(ByteArray buffer, long seqid, Uint128 serviceid, int serviceVersion,
+        Uint128 actionid, String traceid, byte[] addrBytes, int addrPort, int bodyLength, int retcode) {
         //---------------------head----------------------------------
         int offset = 0;
         buffer.putLong(offset, seqid);
         offset += 8;
         buffer.putChar(offset, (char) SncpRequest.HEADER_SIZE);
         offset += 2;
-        DLong.write(buffer, offset, serviceid);
+        Uint128.write(buffer, offset, serviceid);
         offset += 16;
         buffer.putInt(offset, serviceVersion);
         offset += 4;
-        DLong.write(buffer, offset, actionid);
+        Uint128.write(buffer, offset, actionid);
         offset += 16;
         buffer.put(offset, addrBytes);
         offset += addrBytes.length; //4

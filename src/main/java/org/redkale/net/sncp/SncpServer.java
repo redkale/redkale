@@ -24,7 +24,7 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
-public class SncpServer extends Server<DLong, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
+public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
     private final AtomicInteger maxTypeLength = new AtomicInteger();
 

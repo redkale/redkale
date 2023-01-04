@@ -44,7 +44,7 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
         return type;
     }
 
-    public abstract DLong getServiceid();
+    public abstract Uint128 getServiceid();
 
     protected ExecutorService getExecutor() {
         Thread thread = Thread.currentThread();

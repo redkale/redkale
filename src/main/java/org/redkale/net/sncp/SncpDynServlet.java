@@ -39,9 +39,9 @@ public final class SncpDynServlet extends SncpServlet {
 
     private static final Logger logger = Logger.getLogger(SncpDynServlet.class.getSimpleName());
 
-    private final DLong serviceid;
+    private final Uint128 serviceid;
 
-    private final HashMap<DLong, SncpServletAction> actions = new HashMap<>();
+    private final HashMap<Uint128, SncpServletAction> actions = new HashMap<>();
 
     public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class serviceOrSourceType, final Service service,
         final AtomicInteger maxTypeLength, AtomicInteger maxNameLength) {
@@ -49,7 +49,7 @@ public final class SncpDynServlet extends SncpServlet {
         this.maxTypeLength = maxTypeLength;
         this.maxNameLength = maxNameLength;
         this.serviceid = Sncp.hash(type.getName() + ':' + serviceName);
-        Set<DLong> actionids = new HashSet<>();
+        Set<Uint128> actionids = new HashSet<>();
         RedkaleClassLoader.putReflectionPublicMethods(service.getClass().getName());
         for (java.lang.reflect.Method method : service.getClass().getMethods()) {
             if (method.isSynthetic()) {
@@ -79,7 +79,7 @@ public final class SncpDynServlet extends SncpServlet {
                 }
             }
 
-            final DLong actionid = Sncp.hash(method);
+            final Uint128 actionid = Sncp.hash(method);
             SncpServletAction action;
             try {
                 action = SncpServletAction.create(service, actionid, method);
@@ -114,7 +114,7 @@ public final class SncpDynServlet extends SncpServlet {
     }
 
     @Override
-    public DLong getServiceid() {
+    public Uint128 getServiceid() {
         return serviceid;
     }
 
@@ -326,7 +326,7 @@ public final class SncpDynServlet extends SncpServlet {
          * @return SncpServletAction
          */
         @SuppressWarnings("unchecked")
-        public static SncpServletAction create(final Service service, final DLong actionid, final Method method) {
+        public static SncpServletAction create(final Service service, final Uint128 actionid, final Method method) {
             final Class serviceClass = service.getClass();
             final String supDynName = SncpServletAction.class.getName().replace('.', '/');
             final String serviceName = serviceClass.getName().replace('.', '/');

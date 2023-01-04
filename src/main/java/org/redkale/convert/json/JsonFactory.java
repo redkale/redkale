@@ -11,7 +11,7 @@ import java.math.*;
 import java.net.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
-import org.redkale.util.DLong;
+import org.redkale.util.Uint128;
 
 /**
  * JSON的ConvertFactory
@@ -38,7 +38,7 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         if (parent == null) {
             this.register(InetAddress.class, InetAddressSimpledCoder.InetAddressJsonSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
-            this.register(DLong.class, DLongSimpledCoder.DLongJsonSimpledCoder.instance);
+            this.register(Uint128.class, Uint128SimpledCoder.Uint128JsonSimpledCoder.instance);
             this.register(BigInteger.class, BigIntegerSimpledCoder.BigIntegerJsonSimpledCoder.instance);
             this.register(BigDecimal.class, BigDecimalSimpledCoder.BigDecimalJsonSimpledCoder.instance);
             this.register(java.time.Instant.class, InstantSimpledCoder.InstantJsonSimpledCoder.instance);

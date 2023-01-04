@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.logging.*;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.net.Request;
-import org.redkale.util.DLong;
+import org.redkale.util.Uint128;
 
 /**
  *
@@ -41,9 +41,9 @@ public class SncpRequest extends Request<SncpContext> {
 
     private int serviceVersion;
 
-    private DLong serviceid;
+    private Uint128 serviceid;
 
-    private DLong actionid;
+    private Uint128 actionid;
 
     private int bodyLength;
 
@@ -82,9 +82,9 @@ public class SncpRequest extends Request<SncpContext> {
                 }
                 return -1;
             }
-            this.serviceid = DLong.read(buffer); //16
+            this.serviceid = Uint128.read(buffer); //16
             this.serviceVersion = buffer.getInt(); //4
-            this.actionid = DLong.read(buffer); //16
+            this.actionid = Uint128.read(buffer); //16
             buffer.get(addrBytes); //ipaddr   //6
             this.bodyLength = buffer.getInt(); //4
 
@@ -159,11 +159,11 @@ public class SncpRequest extends Request<SncpContext> {
         return serviceVersion;
     }
 
-    public DLong getServiceid() {
+    public Uint128 getServiceid() {
         return serviceid;
     }
 
-    public DLong getActionid() {
+    public Uint128 getActionid() {
         return actionid;
     }
 

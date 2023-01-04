@@ -19,15 +19,15 @@ import org.redkale.util.*;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, DLong> {
+public final class Uint128SimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Uint128> {
 
     private static final ByteArraySimpledCoder bsSimpledCoder = ByteArraySimpledCoder.instance;
 
-    public static final DLongSimpledCoder instance = new DLongSimpledCoder();
+    public static final Uint128SimpledCoder instance = new Uint128SimpledCoder();
 
     @Override
     @SuppressWarnings("unchecked")
-    public void convertTo(final W out, final DLong value) {
+    public void convertTo(final W out, final Uint128 value) {
         if (value == null) {
             out.writeNull();
         } else {
@@ -37,26 +37,26 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
 
     @Override
     @SuppressWarnings("unchecked")
-    public DLong convertFrom(R in) {
+    public Uint128 convertFrom(R in) {
         byte[] bs = bsSimpledCoder.convertFrom(in);
         if (bs == null) {
             return null;
         }
-        return DLong.create(bs);
+        return Uint128.create(bs);
     }
 
     /**
-     * DLong 的JsonSimpledCoder实现
+     * Uint128 的JsonSimpledCoder实现
      *
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public static class DLongJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, DLong> {
+    public static class Uint128JsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, Uint128> {
 
-        public static final DLongJsonSimpledCoder instance = new DLongJsonSimpledCoder();
+        public static final Uint128JsonSimpledCoder instance = new Uint128JsonSimpledCoder();
 
         @Override
-        public void convertTo(final W out, final DLong value) {
+        public void convertTo(final W out, final Uint128 value) {
             if (value == null) {
                 out.writeNull();
             } else {
@@ -65,12 +65,12 @@ public final class DLongSimpledCoder<R extends Reader, W extends Writer> extends
         }
 
         @Override
-        public DLong convertFrom(R in) {
+        public Uint128 convertFrom(R in) {
             final String str = in.readSmallString();
             if (str == null) {
                 return null;
             }
-            return DLong.create(Utility.hexToBin(str));
+            return Uint128.create(Utility.hexToBin(str));
         }
     }
 }

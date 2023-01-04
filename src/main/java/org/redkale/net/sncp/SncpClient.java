@@ -49,7 +49,7 @@ public final class SncpClient {
 
     private final int addrPort;
 
-    protected final DLong serviceid;
+    protected final Uint128 serviceid;
 
     protected final int serviceVersion;
 
@@ -116,7 +116,7 @@ public final class SncpClient {
         return clientSncpAddress;
     }
 
-    public DLong getServiceid() {
+    public Uint128 getServiceid() {
         return serviceid;
     }
 
@@ -174,7 +174,7 @@ public final class SncpClient {
     public static List<Method> parseMethod(final Class serviceClass) {
         final List<Method> list = new ArrayList<>();
         final List<Method> multis = new ArrayList<>();
-        final Map<DLong, Method> actionids = new HashMap<>();
+        final Map<Uint128, Method> actionids = new HashMap<>();
         for (final java.lang.reflect.Method method : serviceClass.getMethods()) {
             if (method.isSynthetic()) {
                 continue;
@@ -204,7 +204,7 @@ public final class SncpClient {
             }
             //if (onlySncpDyn && method.getAnnotation(SncpDyn.class) == null) continue;
 
-            DLong actionid = Sncp.hash(method);
+            Uint128 actionid = Sncp.hash(method);
             Method old = actionids.get(actionid);
             if (old != null) {
                 if (old.getDeclaringClass().equals(method.getDeclaringClass())) {
@@ -314,7 +314,7 @@ public final class SncpClient {
         }
         final int reqBodyLength = writer.count() - HEADER_SIZE; //body总长度
         final long seqid = System.nanoTime();
-        final DLong actionid = action.actionid;
+        final Uint128 actionid = action.actionid;
         if (messageAgent != null) { //MQ模式
             final ByteArray reqbytes = writer.toByteArray();
             fillHeader(reqbytes, seqid, actionid, traceid, reqBodyLength);
@@ -499,7 +499,7 @@ public final class SncpClient {
         if (buffer.getChar() != HEADER_SIZE) {
             throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
         }
-        DLong rserviceid = DLong.read(buffer);
+        Uint128 rserviceid = Uint128.read(buffer);
         if (!rserviceid.equals(this.serviceid)) {
             throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
         }
@@ -507,8 +507,8 @@ public final class SncpClient {
         if (version != this.serviceVersion) {
             throw new RuntimeException("sncp(" + action.method + ") response.serviceVersion = " + serviceVersion + ", but request.serviceVersion =" + version);
         }
-        DLong raction = DLong.read(buffer);
-        DLong actid = action.actionid;
+        Uint128 raction = Uint128.read(buffer);
+        Uint128 actid = action.actionid;
         if (!actid.equals(raction)) {
             throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
         }
@@ -516,14 +516,14 @@ public final class SncpClient {
         buffer.getChar(); //端口
     }
 
-    private void fillHeader(ByteArray buffer, long seqid, DLong actionid, String traceid, int bodyLength) {
+    private void fillHeader(ByteArray buffer, long seqid, Uint128 actionid, String traceid, int bodyLength) {
         fillRespHeader(buffer, seqid, this.serviceid, this.serviceVersion,
             actionid, traceid, this.addrBytes, this.addrPort, bodyLength, 0); //结果码， 请求方固定传0  
     }
 
     protected static final class SncpAction {
 
-        protected final DLong actionid;
+        protected final Uint128 actionid;
 
         protected final Method method;
 
@@ -550,7 +550,7 @@ public final class SncpClient {
         protected final Creator<? extends CompletableFuture> futureCreator;
 
         @SuppressWarnings("unchecked")
-        public SncpAction(final Class clazz, Method method, DLong actionid) {
+        public SncpAction(final Class clazz, Method method, Uint128 actionid) {
             this.actionid = actionid == null ? Sncp.hash(method) : actionid;
             Type rt = TypeToken.getGenericType(method.getGenericReturnType(), clazz);
             this.resultTypes = rt == void.class ? null : rt;
