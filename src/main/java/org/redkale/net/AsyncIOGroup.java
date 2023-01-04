@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import org.redkale.annotation.ResourceType;
+import org.redkale.net.client.*;
 import org.redkale.util.*;
 
 /**
@@ -82,14 +83,20 @@ public class AsyncIOGroup extends AsyncGroup {
         this.ioWriteThreads = new AsyncIOThread[threads];
         try {
             for (int i = 0; i < threads; i++) {
+                String postfix = "-" + (i >= 9 ? (i + 1) : ("0" + (i + 1)));
                 ObjectPool<ByteBuffer> unsafeReadBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
-                String name = threadPrefixName + "-" + (i >= 9 ? (i + 1) : ("0" + (i + 1)));
                 if (client) {
-                    this.ioReadThreads[i] = new ClientIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                    this.ioReadThreads[i] = new ClientIOThread(threadPrefixName + postfix, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
                     this.ioWriteThreads[i] = this.ioReadThreads[i];
+                    if (false) {
+                        this.ioReadThreads[i].setName(threadPrefixName + "-Read" + postfix);
+                        ObjectPool<ByteBuffer> unsafeWriteBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
+                            safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
+                        this.ioWriteThreads[i] = new ClientWriteIOThread(threadPrefixName + "-Write" + postfix, i, threads, workExecutor, Selector.open(), unsafeWriteBufferPool, safeBufferPool);
+                    }
                 } else {
-                    this.ioReadThreads[i] = new AsyncIOThread(name, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                    this.ioReadThreads[i] = new AsyncIOThread(threadPrefixName + postfix, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
                     this.ioWriteThreads[i] = this.ioReadThreads[i];
                 }
             }

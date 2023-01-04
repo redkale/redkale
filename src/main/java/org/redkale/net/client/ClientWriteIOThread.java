@@ -7,7 +7,6 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 import java.util.concurrent.*;
-import org.redkale.net.ClientIOThread;
 import org.redkale.util.*;
 
 /**
@@ -29,7 +28,7 @@ public class ClientWriteIOThread extends ClientIOThread {
 
     @Override
     public void run() {
-        while (!this.closed) {
+        while (!isClosed()) {
             ClientEntity entity;
             try {
                 while ((entity = requestQueue.take()) != null) {

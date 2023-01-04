@@ -52,6 +52,10 @@ public class AsyncIOThread extends WorkThread {
         this.bufferConsumer = (v) -> (inCurrThread() ? unsafeBufferPool : safeBufferPool).accept(v);
     }
 
+    protected boolean isClosed() {
+        return closed;
+    }
+
     public static AsyncIOThread currAsyncIOThread() {
         Thread t = Thread.currentThread();
         return t instanceof AsyncIOThread ? (AsyncIOThread) t : null;
@@ -127,7 +131,7 @@ public class AsyncIOThread extends WorkThread {
     public void run() {
         final Queue<Runnable> commands = this.commandQueue;
         final Queue<Consumer<Selector>> registers = this.registerQueue;
-        while (!this.closed) {
+        while (!isClosed()) {
             try {
                 Consumer<Selector> register;
                 while ((register = registers.poll()) != null) {

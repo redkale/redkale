@@ -16,6 +16,8 @@ import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.*;
 import javax.net.ssl.*;
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
+import static javax.net.ssl.SSLEngineResult.Status.*;
 import org.redkale.util.*;
 
 /**
@@ -671,7 +673,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             } catch (Exception io) {
             }
         }
-        if (this.readBuffer != null) {
+        if (this.readBuffer != null && Thread.currentThread() == this.ioReadThread) {
             Consumer<ByteBuffer> consumer = this.readBufferConsumer;
             if (consumer != null) {
                 consumer.accept(this.readBuffer);

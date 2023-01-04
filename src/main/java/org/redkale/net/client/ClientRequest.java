@@ -27,8 +27,6 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
 
     protected String traceid;
 
-    ClientFuture respFuture;
-
     public Serializable getRequestid() {
         return null;
     }
@@ -49,10 +47,6 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
     public <T extends ClientRequest> T currThread(WorkThread thread) {
         this.workThread = thread;
         return (T) this;
-    }
-
-    public int getMergeCount() {
-        return respFuture == null ? -1 : respFuture.mergeCount;
     }
 
     //是否能合并， requestid=null的情况下值才有效

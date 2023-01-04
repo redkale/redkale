@@ -8,6 +8,7 @@ package org.redkale.net.client;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -50,7 +51,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final AtomicBoolean writePending = new AtomicBoolean();
 
-    protected final Queue<R> requestQueue = new ArrayDeque<>();
+    protected final Queue<SimpleEntry<R, ClientFuture<R>>> requestQueue = new ArrayDeque<>();
 
     final ArrayDeque<ClientFuture> responseQueue = new ArrayDeque<>();
 
@@ -85,7 +86,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected int maxPipelines; //最大并行处理数
 
-    protected R lastHalfRequest;
+    protected SimpleEntry<R, ClientFuture<R>> lastHalfEntry;
 
     protected ClientConnection setMaxPipelines(int maxPipelines) {
         this.maxPipelines = maxPipelines;
@@ -120,37 +121,42 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             if (pw.get()) {
                 break;
             }
-            R req;
-            if (lastHalfRequest == null) {
-                req = requestQueue.poll();
+            SimpleEntry<R, ClientFuture<R>> entry;
+            if (lastHalfEntry == null) {
+                entry = requestQueue.poll();
             } else {
-                req = lastHalfRequest;
-                lastHalfRequest = null;
+                entry = lastHalfEntry;
+                lastHalfEntry = null;
             }
-            if (req == null) {
+            if (entry == null) {
                 break;
             }
+            R req = entry.getKey();
             writeLastRequest = req;
             if (req.getRequestid() == null && req.canMerge(conn)) {
-                R r;
+                SimpleEntry<R, ClientFuture<R>> r;
                 while ((r = requestQueue.poll()) != null) {
                     i++;
-                    if (!req.merge(conn, r)) {
+                    if (!req.merge(conn, r.getKey())) {
                         break;
                     }
-                    req.respFuture.mergeCount++;
+                    ClientFuture<R> f = entry.getValue();
+                    if (f != null) {
+                        f.mergeCount++;
+                    }
+                    //req.respFuture.mergeCount++;
                 }
                 req.accept(conn, rw);
                 if (r != null) {
-                    r.accept(conn, rw);
-                    req = r;
+                    r.getKey().accept(conn, rw);
+                    req = r.getKey();
                 }
             } else {
                 req.accept(conn, rw);
             }
             c++;
             if (!req.isCompleted()) {
-                lastHalfRequest = req;
+                lastHalfEntry = entry;
                 this.pauseWriting.set(true);
                 break;
             }
@@ -199,7 +205,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                         pauseWriting.set(false);
                         return;
                     } else { //异常了需要清掉半包
-                        lastHalfRequest = null;
+                        lastHalfEntry = null;
                         pauseWriting.set(false);
                     }
                 }
@@ -308,7 +314,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                         channel.read(this);
                     }
                 } else { //还有消息需要读取
-                    if ((!requestQueue.isEmpty() || lastHalfRequest != null) && writePending.compareAndSet(false, true)) {
+                    if ((!requestQueue.isEmpty() || lastHalfEntry != null) && writePending.compareAndSet(false, true)) {
                         //先写后读取
                         if (!sendWrite(true)) {
                             writePending.compareAndSet(true, false);
@@ -370,20 +376,22 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         return respFuture;
     }
 
-    private void writeChannelInThread(R request, ClientFuture respFuture) {
+    private void writeChannelInThread(R request, ClientFuture<R> respFuture) {
         Serializable reqid = request.getRequestid();
         //保证顺序一致
-        if (respFuture.request.isCloseType()) {
+        ClientFuture future;
+        if (request.isCloseType()) {
+            future = null;
             responseQueue.offer(ClientFuture.EMPTY);
         } else {
-            request.respFuture = respFuture;
+            future = respFuture;
             if (reqid == null) {
                 responseQueue.offer(respFuture);
             } else {
                 responseMap.put(reqid, respFuture);
             }
         }
-        requestQueue.offer(request);
+        requestQueue.offer(new SimpleEntry<>(request, future));
         if (isAuthenticated() && client.reqWritedCounter != null) {
             client.reqWritedCounter.increment();
         }
