@@ -2351,7 +2351,7 @@ public final class Application {
                     clusterRemovedKeys.forEach(k -> {
                         sb.append(ClusterAgent.class.getSimpleName()).append(" skip change '").append(k).append("'\r\n");
                     });
-                    if (!sb.isEmpty()) {
+                    if (sb.length() > 0) {
                         logger.log(Level.INFO, sb.toString());
                     }
                 }

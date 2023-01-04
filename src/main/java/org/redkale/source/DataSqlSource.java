@@ -210,7 +210,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
         }
         afterResourceChange();
-        if (!sb.isEmpty()) {
+        if (sb.length() > 0) {
             logger.log(Level.INFO, sb.toString());
         }
     }
@@ -2345,7 +2345,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             int b = 0;
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
-                if (!union.isEmpty()) {
+                if (union.length() > 0) {
                     union.append(" UNION ALL ");
                 }
                 union.append("SELECT a.").append(keySqlColumn).append(", ").append(funcSqlColumn)
@@ -2465,7 +2465,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         } else {
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
-                if (!union.isEmpty()) {
+                if (union.length() > 0) {
                     union.append(" UNION ALL ");
                 }
                 String subsql = "SELECT ";
@@ -2663,7 +2663,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         } else {
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
-                if (!union.isEmpty()) {
+                if (union.length() > 0) {
                     union.append(" UNION ALL ");
                 }
                 union.append("SELECT ").append(info.getQueryColumns("a", selects)).append(" FROM ").append(table).append(" a").append(joinAndWhere);
@@ -2785,7 +2785,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         } else {
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
-                if (!union.isEmpty()) {
+                if (union.length() > 0) {
                     union.append(" UNION ALL ");
                 }
                 union.append("SELECT ").append(info.getSQLColumn("a", column)).append(" FROM ").append(table).append(" a").append(joinAndWhere);
@@ -2913,7 +2913,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         } else {
             StringBuilder union = new StringBuilder();
             for (String table : tables) {
-                if (!union.isEmpty()) {
+                if (union.length() > 0) {
                     union.append(" UNION ALL ");
                 }
                 union.append("SELECT ").append(info.getPrimarySQLColumn("a")).append(" FROM ").append(table).append(" a").append(joinAndWhere);

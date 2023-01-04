@@ -77,7 +77,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
             this.ttls = newTtls;
             start();
         }
-        if (!sb.isEmpty()) {
+        if (sb.length() > 0) {
             logger.log(Level.INFO, sb.toString());
         }
     }

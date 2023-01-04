@@ -2218,7 +2218,7 @@ public class DataJdbcSource extends DataSqlSource {
             } else {
                 int b = 0;
                 for (String table : tables) {
-                    if (!union.isEmpty()) {
+                    if (union.length() > 0) {
                         union.append(" UNION ALL ");
                     }
                     union.append("SELECT ").append(info.getQueryColumns("a", selects)).append(" FROM ").append(table).append(" a").append(joinAndWhere);
