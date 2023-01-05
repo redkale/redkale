@@ -54,7 +54,8 @@ public class ClientAddress implements java.io.Serializable {
     public CompletableFuture<AsyncConnection> createClient(final boolean tcp, final AsyncGroup group, int readTimeoutSeconds, int writeTimeoutSeconds) {
         SocketAddress addr = address;
         if (addr == null) {
-            if (this.addresses == null) {
+            SocketAddress[] addrs = this.addresses;
+            if (addrs == null) {
                 synchronized (this) {
                     if (this.addresses == null) {
                         int size = 0;
@@ -70,11 +71,11 @@ public class ClientAddress implements java.io.Serializable {
                                 newAddrs[++index] = w.getAddress();
                             }
                         }
+                        addrs = newAddrs;
                         this.addresses = newAddrs;
                     }
                 }
             }
-            SocketAddress[] addrs = addresses;
             addr = addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
         }
         return group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds);
