@@ -483,10 +483,11 @@ public class HttpRequest extends Request<HttpContext> {
                 bytes.put(b);
             }
             size = bytes.length();
-            if (size == 3 && bytes.get(0) == 'G' && bytes.get(1) == 'E' && bytes.get(2) == 'T') {
+            byte[] content = bytes.content();
+            if (size == 3 && content[0] == 'G' && content[1] == 'E' && content[2] == 'T') {
                 this.method = KEY_GET;
                 this.getmethod = true;
-            } else if (size == 4 && bytes.get(0) == 'P' && bytes.get(1) == 'O' && bytes.get(2) == 'S' && bytes.get(3) == 'T') {
+            } else if (size == 4 && content[0] == 'P' && content[1] == 'O' && content[2] == 'S' && content[3] == 'T') {
                 this.method = KEY_POST;
                 this.getmethod = false;
             } else {
@@ -542,6 +543,8 @@ public class HttpRequest extends Request<HttpContext> {
                     }
                 } else {
                     this.requestURI = bytes.toString(charset);
+                    this.lastRequestURIString = null;
+                    this.lastRequestURIBytes = null;
                 }
                 this.queryBytes = EMPTY_BYTES;
             }
@@ -570,9 +573,10 @@ public class HttpRequest extends Request<HttpContext> {
             bytes.put(b);
         }
         size = bytes.length();
-        if (size == 8 && bytes.get(0) == 'H' && bytes.get(5) == '1' && bytes.get(7) == '1') {
+        byte[] content = bytes.content();
+        if (size == 8 && content[0] == 'H' && content[5] == '1' && content[7] == '1') {
             this.protocol = KEY_HTTP_1_1;
-        } else if (size == 8 && bytes.get(0) == 'H' && bytes.get(5) == '2' && bytes.get(7) == '0') {
+        } else if (size == 8 && content[0] == 'H' && content[5] == '2' && content[7] == '0') {
             this.protocol = KEY_HTTP_2_0;
         } else {
             this.protocol = bytes.toString(charset);
@@ -693,17 +697,18 @@ public class HttpRequest extends Request<HttpContext> {
                 case "Connection":
                 case "connection":
                     if (vallen > 0) {
-                        if (bytes.get(0) == 'c' && vallen == 5
-                            && bytes.get(1) == 'l' && bytes.get(2) == 'o'
-                            && bytes.get(3) == 's' && bytes.get(4) == 'e') {
+                        byte[] content = bytes.content();
+                        if (content[0] == 'c' && vallen == 5
+                            && content[1] == 'l' && content[2] == 'o'
+                            && content[3] == 's' && content[4] == 'e') {
                             value = "close";
                             this.setKeepAlive(false);
-                        } else if (bytes.get(0) == 'k' && vallen == 10
-                            && bytes.get(1) == 'e' && bytes.get(2) == 'e'
-                            && bytes.get(3) == 'p' && bytes.get(4) == '-'
-                            && bytes.get(5) == 'a' && bytes.get(6) == 'l'
-                            && bytes.get(7) == 'i' && bytes.get(8) == 'v'
-                            && bytes.get(9) == 'e') {
+                        } else if (content[0] == 'k' && vallen == 10
+                            && content[1] == 'e' && content[2] == 'e'
+                            && content[3] == 'p' && content[4] == '-'
+                            && content[5] == 'a' && content[6] == 'l'
+                            && content[7] == 'i' && content[8] == 'v'
+                            && content[9] == 'e') {
                             value = "keep-alive";
                             //if (context.getAliveTimeoutSeconds() >= 0) {
                             this.setKeepAlive(true);

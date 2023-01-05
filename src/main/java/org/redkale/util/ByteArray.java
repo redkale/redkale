@@ -97,6 +97,58 @@ public final class ByteArray implements ByteTuple {
     }
 
     /**
+     * 比较内容是否相同
+     *
+     * @param bytes  待比较内容
+     * @param offset 偏移量
+     * @param length 长度
+     *
+     * @return 是否相同
+     */
+    public boolean equal(final byte[] bytes, int offset, int length) {
+        if (bytes == null) {
+            return false;
+        }
+        if (count != length) {
+            return false;
+        }
+        byte[] ba = content;
+        int len = count;
+        int off = offset;
+        for (int i = 0; i < len; i++) {
+            if (ba[i] != bytes[off + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 比较内容是否相同
+     *
+     * @param bytes 待比较内容
+     *
+     * @return 是否相同
+     */
+    public boolean equal(final ByteArray bytes) {
+        if (bytes == null) {
+            return false;
+        }
+        if (count != bytes.count) {
+            return false;
+        }
+        byte[] ba1 = content;
+        byte[] ba2 = bytes.content;
+        int len = count;
+        for (int i = 0; i < len; i++) {
+            if (ba1[i] != ba2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * 判断内容是否为空
      *
      * @return 是否为空
