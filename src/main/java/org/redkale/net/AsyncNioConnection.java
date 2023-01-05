@@ -27,7 +27,7 @@ import org.redkale.util.ByteBufferWriter;
  */
 abstract class AsyncNioConnection extends AsyncConnection {
 
-    protected static final int MAX_INVOKER_ONSTACK = Integer.getInteger("redkale.net.invoker.max.onstack", 16);
+    protected static final int MAX_INVOKER_ONSTACK = Integer.getInteger("redkale.net.invoker.max.onstack", 8);
 
     final AsyncIOThread connectThread;
 
@@ -164,7 +164,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         if (client) {
             doRead(this.ioReadThread.inCurrThread());
         } else {
-            doRead(currReadInvoker < MAX_INVOKER_ONSTACK || this.ioReadThread.inCurrThread()); //同一线程中Selector.wakeup无效
+            doRead(this.ioReadThread.inCurrThread() || currReadInvoker < MAX_INVOKER_ONSTACK); //同一线程中Selector.wakeup无效
         }
     }
 
