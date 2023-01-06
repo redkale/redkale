@@ -258,8 +258,8 @@ public class HttpRequest extends Request<HttpContext> {
         return maybews && "Upgrade".equalsIgnoreCase(getHeader("Connection")) && "GET".equalsIgnoreCase(method);
     }
 
-    protected void setPipelineOver(boolean pipelineOver) {
-        this.pipelineOver = pipelineOver;
+    protected void setPipelineCompleted(boolean pipelineCompleted) {
+        this.pipelineCompleted = pipelineCompleted;
     }
 
     protected void setKeepAlive(boolean keepAlive) {

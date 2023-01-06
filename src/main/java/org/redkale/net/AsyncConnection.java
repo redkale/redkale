@@ -13,8 +13,6 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
-import static javax.net.ssl.SSLEngineResult.Status.*;
 import javax.net.ssl.*;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.*;
@@ -42,7 +40,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     private Object subobject; //用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
 
-    protected final AsyncGroup ioGroup;
+    protected final AsyncIOGroup ioGroup;
 
     protected final boolean client;
 
@@ -82,7 +80,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     //用于服务端的Socket, 等同于一直存在的readCompletionHandler
     ProtocolCodec protocolCodec;
 
-    protected AsyncConnection(boolean client, AsyncGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread,
+    protected AsyncConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread,
         final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
         Objects.requireNonNull(ioGroup);
         Objects.requireNonNull(ioReadThread);

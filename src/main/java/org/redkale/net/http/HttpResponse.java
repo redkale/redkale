@@ -963,7 +963,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (pipelineIndex > 0) {
             boolean over = this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data);
             if (over) {
-                request.setPipelineOver(true);
+                request.setPipelineCompleted(true);
                 this.channel.flushPipelineData(this.pipelineWriteHandler);
             } else {
                 removeChannel();

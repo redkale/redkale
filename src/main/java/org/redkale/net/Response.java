@@ -137,7 +137,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.output = null;
         this.filter = null;
         this.servlet = null;
-        boolean notpipeline = request.pipelineIndex == 0 || request.pipelineOver;
+        boolean notpipeline = request.pipelineIndex == 0 || request.pipelineCompleted;
         request.recycle();
         if (channel != null) {
             if (notpipeline) {
@@ -224,7 +224,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             this.recycleListener = null;
         }
-        if (request.keepAlive && (request.pipelineIndex == 0 || request.pipelineOver)) {
+        if (request.keepAlive && (request.pipelineIndex == 0 || request.pipelineCompleted)) {
             AsyncConnection conn = removeChannel();
             if (conn != null && conn.protocolCodec != null) {
                 this.responseConsumer.accept(this);

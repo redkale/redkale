@@ -288,7 +288,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     }
                 });
             } else {
-                ((AsyncIOGroup) ioGroup).interestOpsOr(ioReadThread, readKey, SelectionKey.OP_READ);
+                ioGroup.interestOpsOr(ioReadThread, readKey, SelectionKey.OP_READ);
             }
         } catch (Exception e) {
             handleRead(0, e);
@@ -301,7 +301,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             final boolean invokeDirect = direct;
             int totalCount = 0;
             boolean hasRemain = true;
-            boolean writeOver = true;
+            boolean writeCompleted = true;
             if (invokeDirect) {
                 currWriteInvoker++;
             }
@@ -373,7 +373,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 }
                 if (writeCount == 0) {
                     if (hasRemain) {
-                        writeOver = false;
+                        writeCompleted = false;
                         writeTotal = totalCount;
                     }
                     break;
@@ -390,7 +390,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 }
             }
 
-            if (writeOver && (totalCount != 0 || !hasRemain)) {
+            if (writeCompleted && (totalCount != 0 || !hasRemain)) {
                 handleWrite(writeTotal + totalCount, null);
             } else if (writeKey == null) {
                 ioWriteThread.register(selector -> {
@@ -402,7 +402,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     }
                 });
             } else {
-                ((AsyncIOGroup) ioGroup).interestOpsOr(ioWriteThread, writeKey, SelectionKey.OP_WRITE);
+                ioGroup.interestOpsOr(ioWriteThread, writeKey, SelectionKey.OP_WRITE);
             }
         } catch (IOException e) {
             handleWrite(0, e);
@@ -483,7 +483,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         }
     }
 
-    @Deprecated(since = "2.5.0") 
+    @Deprecated(since = "2.5.0")
     protected abstract ReadableByteChannel readableByteChannel();
 
     @Deprecated(since = "2.5.0")

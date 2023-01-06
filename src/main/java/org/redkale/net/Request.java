@@ -37,7 +37,7 @@ public abstract class Request<C extends Context> {
 
     protected int pipelineCount;
 
-    protected boolean pipelineOver;
+    protected boolean pipelineCompleted;
 
     protected int hashid;
 
@@ -67,7 +67,7 @@ public abstract class Request<C extends Context> {
         this.keepAlive = request.keepAlive;
         this.pipelineIndex = request.pipelineIndex;
         this.pipelineCount = request.pipelineCount;
-        this.pipelineOver = request.pipelineOver;
+        this.pipelineCompleted = request.pipelineCompleted;
         this.hashid = request.hashid;
         this.traceid = request.traceid;
         this.channel = request.channel;
@@ -101,7 +101,7 @@ public abstract class Request<C extends Context> {
         createTime = 0;
         pipelineIndex = 0;
         pipelineCount = 0;
-        pipelineOver = false;
+        pipelineCompleted = false;
         keepAlive = false;
         attributes.clear();
         channel = null; // close it by response
