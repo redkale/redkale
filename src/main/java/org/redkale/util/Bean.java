@@ -5,16 +5,16 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  * 标记参数bean
  *
  * @since 2.5.0
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Inherited
 @Documented
 @Target(TYPE)

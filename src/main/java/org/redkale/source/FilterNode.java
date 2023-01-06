@@ -347,17 +347,17 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return new FilterNode(column, express, itemand, value);
     }
 
-    @Deprecated //@deprecated @since 2.8.0
+    @Deprecated(since = "2.8.0")
     public static FilterNode filter(String column, Serializable value) {
         return create(column, null, value);
     }
 
-    @Deprecated //@deprecated @since 2.8.0
+    @Deprecated(since = "2.8.0")
     public static FilterNode filter(String column, FilterExpress express, Serializable value) {
         return create(column, express, true, value);
     }
 
-    @Deprecated //@deprecated @since 2.8.0
+    @Deprecated(since = "2.8.0")
     public static FilterNode filter(String column, FilterExpress express, boolean itemand, Serializable value) {
         return new FilterNode(column, express, itemand, value);
     }

@@ -54,7 +54,7 @@ public interface DistributeTableStrategy<T> {
      *
      * @return 带库名的全表名
      */
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default String getTable(String table, FilterNode node) {
         return getTables(table, node)[0];
     }

@@ -5,7 +5,6 @@
  */
 package org.redkale.util;
 
-import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
@@ -19,7 +18,7 @@ import static java.lang.annotation.ElementType.*;
  * @author zhangjx
  * @deprecated replaced by org.redkale.annotation.ConstructorParameters
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Documented
 @Target({METHOD, CONSTRUCTOR})
 @Retention(RUNTIME)

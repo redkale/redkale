@@ -20,7 +20,7 @@ import org.redkale.util.Utility;
  *
  * @deprecated 2.5.0 JDK9以上用byte[]代替char[]会有更好的性能
  */
-@Deprecated
+@Deprecated(since = "2.5.0")
 public class JsonCharsWriter extends JsonWriter {
 
     private static final char[] CHARS_TUREVALUE = "true".toCharArray();

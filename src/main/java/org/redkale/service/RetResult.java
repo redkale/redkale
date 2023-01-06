@@ -51,7 +51,7 @@ public class RetResult<T> implements Serializable {
     protected T result;
 
     @ConvertColumn(index = 5)
-    @Deprecated //@since 2.5.0
+    @Deprecated(since = "2.5.0")
     protected Map<String, String> attach;
 
     @ConvertDisabled
@@ -228,7 +228,7 @@ public class RetResult<T> implements Serializable {
      *
      * @return RetResult
      */
-    @Deprecated
+    @Deprecated(since = "2.5.0")
     public RetResult<T> attach(Map<String, String> attach) {
         this.attach = attach;
         System.err.println("RetResult.attach is deprecated");
@@ -243,7 +243,7 @@ public class RetResult<T> implements Serializable {
      *
      * @return RetResult
      */
-    @Deprecated
+    @Deprecated(since = "2.5.0")
     public RetResult<T> attach(String key, Object value) {
         System.err.println("RetResult.attach is deprecated");
         if (this.attach == null) {
@@ -260,7 +260,7 @@ public class RetResult<T> implements Serializable {
      *
      * @return RetResult
      */
-    @Deprecated
+    @Deprecated(since = "2.5.0")
     public RetResult<T> clearAttach() {
         this.attach = null;
         return this;
@@ -312,7 +312,7 @@ public class RetResult<T> implements Serializable {
      *
      * @return 结果附件
      */
-    @Deprecated
+    @Deprecated(since = "2.5.0")
     public Map<String, String> getAttach() {
         return attach;
     }
@@ -322,7 +322,7 @@ public class RetResult<T> implements Serializable {
      *
      * @param attach Map
      */
-    @Deprecated
+    @Deprecated(since = "2.5.0")
     public void setAttach(Map<String, String> attach) {
         this.attach = attach;
     }
@@ -335,7 +335,7 @@ public class RetResult<T> implements Serializable {
      *
      * @return 结果值
      */
-    @Deprecated
+    @Deprecated(since = "2.5.0")
     public String getAttach(String name, String defValue) {
         System.err.println("RetResult.attach is deprecated");
         return attach == null ? defValue : attach.getOrDefault(name, defValue);

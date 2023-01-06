@@ -21,7 +21,7 @@ import java.util.function.BiFunction;
  * @author zhangjx
  * @deprecated  replaced by org.redkale.persistence.VirtualEntity
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Documented
 @Target(TYPE)
 @Retention(RUNTIME)

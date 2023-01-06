@@ -15,11 +15,10 @@
  ***************************************************************************** */
 package org.redkale.persistence;
 
-import java.lang.annotation.Target;
-import java.lang.annotation.Retention;
-import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  * Specifies the mapped column for a persistent property or field.
@@ -110,14 +109,6 @@ public @interface Column {
      */
     boolean updatable() default true;
 
-    /**
-     * (Optional) The name of the table that contains the column.
-     * If absent the column is assumed to be in the primary table.
-     *
-     * @return String
-     */
-    @Deprecated
-    String table() default "";
 
     /**
      * (Optional) The column length. (Applies only if a

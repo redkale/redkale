@@ -5,17 +5,16 @@
  */
 package org.redkale.service;
 
-import org.redkale.util.RedkaleClassLoader;
-
 import java.io.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
 import static org.redkale.boot.Application.*;
+import org.redkale.util.RedkaleClassLoader;
 
 /**
  * 用于定义错误码的注解  <br>
@@ -106,9 +105,5 @@ public @interface RetLabel {
             return rets;
         }
 
-//        @Deprecated
-//        public static Map<Integer, String> load(Class clazz) {
-//            return loadMap(clazz).computeIfAbsent("", (k) -> new LinkedHashMap<>());
-//        }
     }
 }

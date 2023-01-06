@@ -15,9 +15,9 @@
  ***************************************************************************** */
 package javax.persistence;
 
-import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
 
 /**
  * Specifies the mapped column for a persistent property or field.
@@ -49,7 +49,7 @@ import java.lang.annotation.*;
  * 
  * @deprecated replace by org.redkale.persistence.Column
  */
-@Deprecated
+@Deprecated(since = "2.8.0") 
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Column {

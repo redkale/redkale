@@ -41,7 +41,7 @@ import java.lang.annotation.*;
  * @deprecated replace by org.redkale.persistence.Index
  *
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Target({})
 @Retention(RUNTIME)
 public @interface Index {

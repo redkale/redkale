@@ -300,34 +300,34 @@ public interface CacheSource extends Resourcable {
     public long dbsize();
 
     //------------------------ collection ------------------------
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public <T> Collection<T> getCollection(final String key, final Type componentType);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public int getCollectionSize(final String key);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public Collection<String> getStringCollection(final String key);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public Collection<String> getexStringCollection(final String key, final int expireSeconds);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public Collection<Long> getLongCollection(final String key);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public Collection<Long> getexLongCollection(final String key, final int expireSeconds);
 
     //---------------------- CompletableFuture 异步版 ---------------------------------
@@ -601,478 +601,478 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Long> dbsizeAsync();
 
     //------------------------ collectionAsync ------------------------
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(final String key, final Type componentType);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(final boolean set, final Type componentType, final String... keys);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Integer> getCollectionSizeAsync(final String key);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getexCollectionAsync(final String key, final int expireSeconds, final Type componentType);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<String>> getexStringCollectionAsync(final String key, final int expireSeconds);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys);
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds);
 
     //-------------------------- 过期方法 ----------------------------------
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds) {
         return expireAsync(key, expireSeconds);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> hremoveAsync(final String key, String... fields) {
         return hdelAsync(key, fields);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final T value) {
         return setexAsync(key, expireSeconds, convert, value.getClass(), value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Type type, final T value) {
         return setexAsync(key, expireSeconds, type, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Void> setAsync(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
         return setexAsync(key, expireSeconds, convert, type, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Void> setExpireSecondsAsync(final String key, final int expireSeconds) {
         return expireAsync(key, expireSeconds);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeAsync(final String key) {
         return delAsync(key);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default int hremove(final String key, String... fields) {
         return hdel(key, fields);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void refresh(final String key, final int expireSeconds) {
         expire(key, expireSeconds);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> void set(final int expireSeconds, final String key, final Convert convert, final T value) {
         setex(key, expireSeconds, convert, value.getClass(), value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> void set(final int expireSeconds, final String key, final Type type, final T value) {
         setex(key, expireSeconds, type, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> void set(final int expireSeconds, final String key, final Convert convert, final Type type, final T value) {
         setex(key, expireSeconds, convert, type, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void setExpireSeconds(final String key, final int expireSeconds) {
         expire(key, expireSeconds);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default int remove(final String key) {
         return del(key);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void setString(final int expireSeconds, final String key, final String value) {
         setexString(key, expireSeconds, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void setLong(final int expireSeconds, final String key, final long value) {
         setexLong(key, expireSeconds, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void setBytes(final int expireSeconds, final String key, final byte[] value) {
         setexBytes(key, expireSeconds, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<T> getAndRefreshAsync(final String key, final int expireSeconds, final Type type) {
         return getexAsync(key, expireSeconds, type);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> T getAndRefresh(final String key, final int expireSeconds, final Type type) {
         return getex(key, expireSeconds, type);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default String getStringAndRefresh(final String key, final int expireSeconds) {
         return getexString(key, expireSeconds);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default long getLongAndRefresh(final String key, final int expireSeconds, long defValue) {
         return getexLong(key, expireSeconds, defValue);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default byte[] getBytesAndRefresh(final String key, final int expireSeconds) {
         return getexBytes(key, expireSeconds);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue) {
         return getexLongAsync(key, expireSeconds, defValue);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<String> getStringAndRefreshAsync(final String key, final int expireSeconds) {
         return getexStringAsync(key, expireSeconds);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds) {
         return getexBytesAsync(key, expireSeconds);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default int hsize(final String key) {
         return hlen(key);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> hsizeAsync(final String key) {
         return hlenAsync(key);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> void appendSetItem(final String key, final Type componentType, final T value) {
         sadd(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> int removeSetItem(final String key, final Type componentType, final T value) {
         return srem(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> T spopSetItem(final String key, final Type componentType) {
         return CacheSource.this.spop(key, componentType);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> Set<T> spopSetItem(final String key, final int count, final Type componentType) {
         return spop(key, count, componentType);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> boolean existsSetItem(final String key, final Type componentType, final T value) {
         return sismember(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Boolean> existsSetItemAsync(final String key, final Type componentType, final T value) {
         return sismemberAsync(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Void> appendSetItemAsync(final String key, final Type componentType, final T value) {
         return saddAsync(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Integer> removeSetItemAsync(final String key, final Type componentType, final T value) {
         return sremAsync(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<T> spopSetItemAsync(final String key, final Type componentType) {
         return spopAsync(key, componentType);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Set<T>> spopSetItemAsync(final String key, final int count, final Type componentType) {
         return spopAsync(key, count, componentType);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default boolean existsStringSetItem(final String key, final String value) {
         return sismemberString(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void appendStringSetItem(final String key, final String value) {
         saddString(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default int removeStringSetItem(final String key, final String value) {
         return sremString(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default String spopStringSetItem(final String key) {
         return spopString(key);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default Set<String> spopStringSetItem(final String key, final int count) {
         return spopString(key, count);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default boolean existsLongSetItem(final String key, final long value) {
         return sismemberLong(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void appendLongSetItem(final String key, final long value) {
         saddLong(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default int removeLongSetItem(final String key, final long value) {
         return sremLong(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default Long spopLongSetItem(final String key) {
         return spopLong(key);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default Set<Long> spopLongSetItem(final String key, final int count) {
         return spopLong(key, count);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Boolean> existsStringSetItemAsync(final String key, final String value) {
         return sismemberStringAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Void> appendStringSetItemAsync(final String key, final String value) {
         return saddStringAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeStringSetItemAsync(final String key, final String value) {
         return sremStringAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<String> spopStringSetItemAsync(final String key) {
         return spopStringAsync(key);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Set<String>> spopStringSetItemAsync(final String key, final int count) {
         return spopStringAsync(key, count);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Boolean> existsLongSetItemAsync(final String key, final long value) {
         return sismemberLongAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Void> appendLongSetItemAsync(final String key, final long value) {
         return saddLongAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeLongSetItemAsync(final String key, final long value) {
         return sremLongAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Long> spopLongSetItemAsync(final String key) {
         return spopLongAsync(key);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Set<Long>> spopLongSetItemAsync(final String key, final int count) {
         return spopLongAsync(key, count);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Void> appendListItemAsync(final String key, final Type componentType, final T value) {
         return rpushAsync(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Integer> removeListItemAsync(final String key, final Type componentType, final T value) {
         return lremAsync(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Void> appendStringListItemAsync(final String key, final String value) {
         return rpushStringAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeStringListItemAsync(final String key, final String value) {
         return lremStringAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Void> appendLongListItemAsync(final String key, final long value) {
         return rpushLongAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeLongListItemAsync(final String key, final long value) {
         return lremLongAsync(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> void appendListItem(final String key, final Type componentType, final T value) {
         rpush(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> int removeListItem(final String key, final Type componentType, final T value) {
         return lrem(key, componentType, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void appendStringListItem(final String key, final String value) {
         rpushString(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default int removeStringListItem(final String key, final String value) {
         return lremString(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default void appendLongListItem(final String key, final long value) {
         rpushLong(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default int removeLongListItem(final String key, final long value) {
         return lremLong(key, value);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default List<String> queryKeys() {
         return keys();
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default List<String> queryKeysStartsWith(String startsWith) {
         return keys(startsWith + "*");
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default List<String> queryKeysEndsWith(String endsWith) {
         return keys("*" + endsWith);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<List<String>> queryKeysAsync() {
         return keysAsync();
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<List<String>> queryKeysStartsWithAsync(String startsWith) {
         return keysAsync(startsWith + "*");
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<List<String>> queryKeysEndsWithAsync(String endsWith) {
         return keysAsync("*" + endsWith);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> Map<String, T> getMap(final Type componentType, final String... keys) {
         return mget(componentType, keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default Map<String, String> getStringMap(final String... keys) {
         return mgetString(keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default Map<String, Long> getLongMap(final String... keys) {
         return mgetLong(keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys) {
         return mgetAsync(componentType, keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys) {
         return mgetStringAsync(keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
         return mgetLongAsync(keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default long incr(final String key, long num) {
         return incrby(key, num);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default long decr(final String key, long num) {
         return decrby(key, num);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default String[] getStringArray(final String... keys) {
         return mgetsString(keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default Long[] getLongArray(final String... keys) {
         return mgetsLong(keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<String[]> getStringArrayAsync(final String... keys) {
         return mgetsStringAsync(keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Long[]> getLongArrayAsync(final String... keys) {
         return mgetsLongAsync(keys);
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> getKeySizeAsync() {
         return dbsizeAsync().thenApply(v -> v.intValue());
     }
 
-    @Deprecated
+    @Deprecated(since = "2.8.0")
     default int getKeySize() {
         return (int) dbsize();
     }

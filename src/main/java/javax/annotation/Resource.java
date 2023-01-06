@@ -12,7 +12,7 @@ import java.lang.annotation.*;
  *
  * @deprecated replace by org.redkale.annotation.Resource
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {

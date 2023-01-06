@@ -5,9 +5,9 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 
 /**
  * 等于level日志级别且包含keys字符串的日志才会被排除 <br>
@@ -26,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author zhangjx
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Documented
 @Target({TYPE})
 @Retention(RUNTIME)

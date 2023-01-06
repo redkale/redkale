@@ -483,10 +483,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
         }
     }
 
-    @Deprecated //@since 2.5.0
+    @Deprecated(since = "2.5.0") 
     protected abstract ReadableByteChannel readableByteChannel();
 
-    @Deprecated //@since 2.5.0
+    @Deprecated(since = "2.5.0")
     protected abstract WritableByteChannel writableByteChannel();
 
     protected InputStream newInputStream() {

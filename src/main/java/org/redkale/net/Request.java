@@ -5,7 +5,7 @@
  */
 package org.redkale.net;
 
-import java.io.*;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.*;
 import org.redkale.convert.ConvertDisabled;
@@ -157,7 +157,7 @@ public abstract class Request<C extends Context> {
         return this.context;
     }
 
-    @Deprecated //since 2.7.0 replace by getCreateTime()
+    @Deprecated(since = "2.7.0") //replace by getCreateTime()
     @ConvertDisabled
     public long getCreatetime() {
         return createTime;

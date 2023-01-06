@@ -5,9 +5,9 @@
  */
 package org.redkale.util;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 标记注释，备注
@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author zhangjx
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Inherited
 @Documented
 @Target({TYPE, METHOD, FIELD, PARAMETER, CONSTRUCTOR, LOCAL_VARIABLE, ANNOTATION_TYPE, TYPE_PARAMETER})

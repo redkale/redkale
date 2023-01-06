@@ -100,10 +100,10 @@ public @interface HttpMapping {
     /**
      * 输出结果的数据类型集合，由于结果类型可能是泛型而注解的参数值不支持泛型，因此加入明细数据类型集合
      *
-     * @deprecated 2.5.0
+     * @deprecated
      * @return Class[]
      */
-    @Deprecated
+    @Deprecated(since = "2.5.0")
     Class[] results() default {};
 
     /**

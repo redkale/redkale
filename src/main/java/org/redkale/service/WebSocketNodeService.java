@@ -6,11 +6,9 @@
 package org.redkale.service;
 
 import java.util.logging.Level;
-
-import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceType;
-import org.redkale.net.http.*;
-import org.redkale.util.*;
+import org.redkale.annotation.*;
+import org.redkale.net.http.WebSocketNode;
+import org.redkale.util.AnyValue;
 
 /**
  * 由 org.redkale.net.http.WebSocketNodeService 代替
@@ -21,7 +19,7 @@ import org.redkale.util.*;
  * @deprecated 2.6.0
  * @author zhangjx
  */
-@Deprecated
+@Deprecated(since = "2.6.0")
 @AutoLoad(false)
 @ResourceType(WebSocketNode.class)
 public class WebSocketNodeService extends org.redkale.net.http.WebSocketNodeService {

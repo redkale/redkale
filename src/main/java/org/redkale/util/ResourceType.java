@@ -21,7 +21,7 @@ import java.lang.annotation.*;
  *
  * @deprecated replaced by org.redkale.annotation.ResourceType
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Inherited
 @Documented
 @Target({TYPE})

@@ -21,7 +21,7 @@ import java.lang.annotation.*;
  * 
  * @deprecated  replaced by org.redkale.persistence.SearchColumn
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Target({FIELD})
 @Retention(RUNTIME)
 public @interface SearchColumn {

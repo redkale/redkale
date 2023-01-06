@@ -15,64 +15,64 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-@Deprecated //@deprecated @since 2.7.0
+@Deprecated(since = "2.7.0")
 public final class DataSources {
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_DATASOURCE_CLASS = "javax.persistence.datasource";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_TABLE_AUTODDL = "javax.persistence.table.autoddl";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_CACHE_MODE = "javax.persistence.cachemode";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_CONNECTIONS_LIMIT = "javax.persistence.connections.limit";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_CONNECTIONSCAPACITY = "javax.persistence.connections.bufcapacity";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_CONTAIN_SQLTEMPLATE = "javax.persistence.contain.sqltemplate";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_NOTCONTAIN_SQLTEMPLATE = "javax.persistence.notcontain.sqltemplate";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_TABLENOTEXIST_SQLSTATES = "javax.persistence.tablenotexist.sqlstates";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_TABLECOPY_SQLTEMPLATE = "javax.persistence.tablecopy.sqltemplate";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_CONNECTTIMEOUT_SECONDS = "javax.persistence.connecttimeout";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_READTIMEOUT_SECONDS = "javax.persistence.readtimeout";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_WRITETIMEOUT_SECONDS = "javax.persistence.writetimeout";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_URL = "javax.persistence.jdbc.url";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_USER = "javax.persistence.jdbc.user";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_PWD = "javax.persistence.jdbc.password";
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     private static final String JDBC_ENCODING = "javax.persistence.jdbc.encoding";
 
-    @Deprecated //@deprecated @since 2.5.0
+    @Deprecated(since = "2.5.0")
     private static final String JDBC_DRIVER = "javax.persistence.jdbc.driver";
 
-    @Deprecated //@deprecated @since 2.5.0
+    @Deprecated(since = "2.5.0")
     private static final String JDBC_SOURCE = "javax.persistence.jdbc.source";
 
     //@since 2.4.0 for SearchSource  default value: true
@@ -81,7 +81,7 @@ public final class DataSources {
     private DataSources() {
     }
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     public static DataSource createDataSource(final String unitName, final AnyValue conf) throws IOException {
         Properties prop = new Properties();
         AnyValue[] confs = conf.getAnyValues("property");
@@ -97,17 +97,17 @@ public final class DataSources {
         return createDataSource(unitName, prop, prop);
     }
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     public static DataSource createDataSource(final String unitName, Properties prop) throws IOException {
         return createDataSource(unitName, prop, prop);
     }
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     public static DataSource createDataSource(final String unitName, Properties readprop, Properties writeprop) throws IOException {
         return createDataSource(unitName, null, readprop, writeprop);
     }
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     public static DataSource createDataSource(final String unitName, URL persistxml, Properties readprop, Properties writeprop) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
 //        String impl = readprop.getProperty(JDBC_DATASOURCE_CLASS, DataJdbcSource.class.getName());
@@ -182,14 +182,14 @@ public final class DataSources {
 //        }
     }
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     public static DataSource createDataSource(final String confURI, final String unitName) throws IOException {
         return createDataSource(unitName, System.getProperty(DATASOURCE_CONFPATH, "").isEmpty()
             ? RedkaleClassLoader.getConfResourceAsURI(confURI, "persistence.xml").toURL()
             : (System.getProperty(DATASOURCE_CONFPATH, "").contains("://") ? URI.create(System.getProperty(DATASOURCE_CONFPATH)).toURL() : new File(System.getProperty(DATASOURCE_CONFPATH)).toURI().toURL()));
     }
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     public static DataSource createDataSource(final String unitName, URL persistxml) throws IOException {
         if (persistxml == null) {
             persistxml = DataSources.class.getResource("/persistence.xml");
@@ -302,7 +302,7 @@ public final class DataSources {
         return key;
     }
 
-    @Deprecated //@deprecated @since 2.7.0
+    @Deprecated(since = "2.7.0")
     public static Map<String, Properties> loadPersistenceXml(final InputStream in0) {
         final Map<String, Properties> map = new TreeMap<>();
         try (final InputStream in = in0) {

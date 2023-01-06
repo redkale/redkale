@@ -22,10 +22,10 @@ import java.lang.annotation.*;
  * 值越大，优先级越高
  *
  * @since Common Annotations 1.2
- * 
+ *
  * @deprecated replace by org.redkale.annotation.Priority
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Priority {

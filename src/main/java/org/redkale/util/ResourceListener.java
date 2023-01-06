@@ -48,7 +48,7 @@ import java.lang.annotation.*;
  * @author zhangjx
  * @deprecated replaced by org.redkale.annotation.ResourceListener
  */
-@Deprecated
+@Deprecated(since = "2.8.0")
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
