@@ -33,13 +33,13 @@ public final class MultiContext {
 
     private final String boundary;
 
-    private final byte[] endboundarray;
+    private final byte[] endBoundarray;
 
     private final ByteArray buf = new ByteArray(64);
 
     private final Map<String, String> parameters;
 
-    private final Pattern fielnamePattern;
+    private final Pattern fileNamePattern;
 
     private static final Iterable<MultiPart> emptyIterable = () -> new Iterator<MultiPart>() {
 
@@ -54,14 +54,14 @@ public final class MultiContext {
         }
     };
 
-    public MultiContext(final Charset charsetName, final String contentType, final Map<String, String> params, final InputStream in, String fielnameRegex) {
+    public MultiContext(final Charset charsetName, final String contentType, final Map<String, String> params, final InputStream in, String fileNameRegex) {
         this.charset = charsetName == null ? StandardCharsets.UTF_8 : charsetName;
         this.contentType = contentType == null ? "" : contentType.trim();
         this.parameters = params;
         this.boundary = parseBoundary(this.contentType);
-        this.endboundarray = ("--" + this.boundary + "--").getBytes();
+        this.endBoundarray = ("--" + this.boundary + "--").getBytes();
         this.in = in instanceof BufferedInputStream ? in : new BufferedInputStream(in);
-        this.fielnamePattern = fielnameRegex == null || fielnameRegex.isEmpty() ? null : Pattern.compile(fielnameRegex);
+        this.fileNamePattern = fileNameRegex == null || fileNameRegex.isEmpty() ? null : Pattern.compile(fileNameRegex);
     }
 
     private String parseBoundary(String contentType) {
@@ -91,13 +91,13 @@ public final class MultiContext {
      * 获取第一个文件的二进制
      *
      * @param max            可接收的文件大小最大值
-     * @param filenameReg    可接收的文件名正则表达式
-     * @param contentTypeReg 可接收的ContentType正则表达式
+     * @param fileNameRegx    可接收的文件名正则表达式
+     * @param contentTypeRegx 可接收的ContentType正则表达式
      *
      * @return 二进制文件
      * @throws IOException IOException
      */
-    public byte[] partsFirstBytes(final long max, final String filenameReg, final String contentTypeReg) throws IOException {
+    public byte[] partsFirstBytes(final long max, final String fileNameRegx, final String contentTypeRegx) throws IOException {
         if (!isMultipart()) {
             return null;
         }
@@ -108,10 +108,10 @@ public final class MultiContext {
                 continue;//不遍历完后面getParameter可能获取不到值
             }
             has = true;
-            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) {
+            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFilename().matches(fileNameRegx)) {
                 continue;
             }
-            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) {
+            if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
                 continue;
             }
             tmpfile = part.getContentBytes(max < 1 ? Long.MAX_VALUE : max);
@@ -140,13 +140,13 @@ public final class MultiContext {
      *
      * @param home           进程目录
      * @param max            可接收的文件大小最大值
-     * @param filenameReg    可接收的文件名正则表达式
-     * @param contentTypeReg 可接收的ContentType正则表达式
+     * @param fileNameRegx    可接收的文件名正则表达式
+     * @param contentTypeRegx 可接收的ContentType正则表达式
      *
      * @return 文件
      * @throws IOException IOException
      */
-    public File partsFirstFile(final File home, final long max, final String filenameReg, final String contentTypeReg) throws IOException {
+    public File partsFirstFile(final File home, final long max, final String fileNameRegx, final String contentTypeRegx) throws IOException {
         if (!isMultipart()) {
             return null;
         }
@@ -157,13 +157,13 @@ public final class MultiContext {
                 continue; //不遍历完后面getParameter可能获取不到值
             }
             has = true;
-            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) {
+            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFileName().matches(fileNameRegx)) {
                 continue;
             }
-            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) {
+            if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
                 continue;
             }
-            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFilename());
+            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFileName());
             File parent = file.getParentFile();
             if (!parent.isDirectory()) {
                 parent.mkdirs();
@@ -185,25 +185,25 @@ public final class MultiContext {
      *
      * @param home           进程目录
      * @param max            可接收的文件大小最大值
-     * @param filenameReg    可接收的文件名正则表达式
-     * @param contentTypeReg 可接收的ContentType正则表达式
+     * @param fileNameRegx    可接收的文件名正则表达式
+     * @param contentTypeRegx 可接收的ContentType正则表达式
      *
      * @return 文件列表
      * @throws IOException IOException
      */
-    public File[] partsFiles(final File home, final long max, final String filenameReg, final String contentTypeReg) throws IOException {
+    public File[] partsFiles(final File home, final long max, final String fileNameRegx, final String contentTypeRegx) throws IOException {
         if (!isMultipart()) {
             return null;
         }
         List<File> files = null;
         for (MultiPart part : parts()) {
-            if (filenameReg != null && !filenameReg.isEmpty() && !part.getFilename().matches(filenameReg)) {
+            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFileName().matches(fileNameRegx)) {
                 continue;
             }
-            if (contentTypeReg != null && !contentTypeReg.isEmpty() && !part.getContentType().matches(contentTypeReg)) {
+            if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
                 continue;
             }
-            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFilename());
+            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFileName());
             File parent = file.getParentFile();
             if (!parent.isDirectory()) {
                 parent.mkdirs();
@@ -233,7 +233,7 @@ public final class MultiContext {
             return emptyIterable;
         }
         final String boundarystr = "--" + this.boundary;
-        final Pattern fielnameReg = this.fielnamePattern;
+        final Pattern fileNameRegx = this.fileNamePattern;
         final String endboundary = boundarystr + "--";
         final byte[] boundarray = ("\n" + boundarystr).getBytes();
         final byte[] buffer = new byte[boundarray.length];
@@ -358,7 +358,7 @@ public final class MultiContext {
                             }
                         };
                         this.lastentry = new MultiPart(filename, name, contentType, counter, source);
-                        if (fielnameReg != null && !fielnameReg.matcher(filename).matches()) {
+                        if (fileNameRegx != null && !fileNameRegx.matcher(filename).matches()) {
                             return this.hasNext();
                         }
                         return true;
@@ -394,7 +394,7 @@ public final class MultiContext {
     private String readLine(boolean bd) throws IOException { // bd : 是否是读取boundary
         byte lasted = '\r';
         buf.clear();
-        final int bc = this.endboundarray.length;
+        final int bc = this.endBoundarray.length;
         int c = 0;
         for (;;) {
             int b = in.read();
@@ -408,7 +408,7 @@ public final class MultiContext {
             lasted = (byte) b;
             if (bd && bc == c) {
                 buf.put(lasted);
-                if (buf.equal(this.endboundarray)) {
+                if (buf.equal(this.endBoundarray)) {
                     break;
                 }
                 buf.removeLastByte();
