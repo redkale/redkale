@@ -54,7 +54,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
     }
 
     private void open() {
-        final String name = "Redkale-" + getClass().getSimpleName() + "-Thread";
+        final String name = "Redkale-Logging-" + getClass().getSimpleName().replace("Logging", "") + "-Thread";
         final int batchSize = 100; //批量最多100条
         final List<SearchLogRecord> logList = new ArrayList<>();
         final SimpleFormatter formatter = new SimpleFormatter();
