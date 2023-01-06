@@ -29,7 +29,7 @@ public final class ByteArray implements ByteTuple {
     }
 
     public ByteArray(int size) {
-        content = new byte[Math.max(128, size)];
+        content = new byte[Math.max(1, size)];
     }
 
     public ByteArray(ByteTuple tuple) {
