@@ -500,6 +500,7 @@ public class HttpRequest extends Request<HttpContext> {
         if (this.requestURI == null) {
             int qst = -1;//?的位置
             boolean decodeable = false;
+            boolean latin1 = true;
             for (;;) {
                 if (remain-- < 1) {
                     buffer.clear();
@@ -513,12 +514,14 @@ public class HttpRequest extends Request<HttpContext> {
                     qst = bytes.length();
                 } else if (!decodeable && (b == '+' || b == '%')) {
                     decodeable = true;
+                } else if (latin1 && (b < 0x20 || b >= 0x80)) {
+                    latin1 = false;
                 }
                 bytes.put(b);
             }
             size = bytes.length();
             if (qst > 0) {
-                this.requestURI = decodeable ? toDecodeString(bytes, 0, qst, charset) : bytes.toString(0, qst, charset);
+                this.requestURI = decodeable ? toDecodeString(bytes, 0, qst, charset) : bytes.toString(latin1, 0, qst, charset);
                 this.queryBytes = bytes.getBytes(qst + 1, size - qst - 1);
                 this.lastRequestURIString = null;
                 this.lastRequestURIBytes = null;
@@ -537,12 +540,12 @@ public class HttpRequest extends Request<HttpContext> {
                     if (lastURIBytes != null && lastURIBytes.length == size && bytes.equal(lastURIBytes)) {
                         this.requestURI = this.lastRequestURIString;
                     } else {
-                        this.requestURI = bytes.toString(charset);
+                        this.requestURI = bytes.toString(latin1, charset);
                         this.lastRequestURIString = this.requestURI;
                         this.lastRequestURIBytes = bytes.getBytes();
                     }
                 } else {
-                    this.requestURI = bytes.toString(charset);
+                    this.requestURI = bytes.toString(latin1, charset);
                     this.lastRequestURIString = null;
                     this.lastRequestURIBytes = null;
                 }
@@ -608,6 +611,13 @@ public class HttpRequest extends Request<HttpContext> {
             if (b1 == '\r' && b2 == '\n') {
                 return 0;
             }
+            boolean latin1 = true;
+            if (latin1 && (b1 < 0x20 || b1 >= 0x80)) {
+                latin1 = false;
+            }
+            if (latin1 && (b2 < 0x20 || b2 >= 0x80)) {
+                latin1 = false;
+            }
             bytes.put(b1, b2);
             for (;;) {  // name
                 if (remain-- < 1) {
@@ -618,10 +628,12 @@ public class HttpRequest extends Request<HttpContext> {
                 byte b = buffer.get();
                 if (b == ':') {
                     break;
+                } else if (latin1 && (b < 0x20 || b >= 0x80)) {
+                    latin1 = false;
                 }
                 bytes.put(b);
             }
-            String name = parseHeaderName(bytes, charset);
+            String name = parseHeaderName(latin1, bytes, charset);
             bytes.clear();
             boolean first = true;
             int space = 0;
@@ -672,12 +684,12 @@ public class HttpRequest extends Request<HttpContext> {
             switch (name) {
                 case "Content-Type":
                 case "content-type":
-                    value = bytes.toString(charset);
+                    value = bytes.toString(true, charset);
                     this.contentType = value;
                     break;
                 case "Content-Length":
                 case "content-length":
-                    value = bytes.toString(charset);
+                    value = bytes.toString(true, charset);
                     this.contentLength = Long.decode(value);
                     break;
                 case "Host":
@@ -724,7 +736,7 @@ public class HttpRequest extends Request<HttpContext> {
                     break;
                 case "Upgrade":
                 case "upgrade":
-                    value = bytes.toString(charset);
+                    value = bytes.toString(true, charset);
                     this.maybews = "websocket".equalsIgnoreCase(value);
                     headers.put("Upgrade", value);
                     break;
@@ -733,7 +745,7 @@ public class HttpRequest extends Request<HttpContext> {
                     headers.put("User-Agent", value);
                     break;
                 case Rest.REST_HEADER_RPC:
-                    value = bytes.toString(charset);
+                    value = bytes.toString(true, charset);
                     this.rpc = "true".equalsIgnoreCase(value);
                     headers.put(name, value);
                     break;
@@ -744,18 +756,18 @@ public class HttpRequest extends Request<HttpContext> {
                     headers.put(name, value);
                     break;
                 case Rest.REST_HEADER_PARAM_FROM_BODY:
-                    value = bytes.toString(charset);
+                    value = bytes.toString(true, charset);
                     this.frombody = "true".equalsIgnoreCase(value);
                     headers.put(name, value);
                     break;
                 case Rest.REST_HEADER_REQ_CONVERT_TYPE:
-                    value = bytes.toString(charset);
+                    value = bytes.toString(true, charset);
                     reqConvertType = ConvertType.valueOf(value);
                     reqConvert = ConvertFactory.findConvert(reqConvertType);
                     headers.put(name, value);
                     break;
                 case Rest.REST_HEADER_RESP_CONVERT_TYPE:
-                    value = bytes.toString(charset);
+                    value = bytes.toString(true, charset);
                     respConvertType = ConvertType.valueOf(value);
                     respConvert = ConvertFactory.findConvert(respConvertType);
                     headers.put(name, value);
@@ -783,7 +795,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-    static String parseHeaderName(ByteArray bytes, Charset charset) {
+    static String parseHeaderName(boolean latin1, ByteArray bytes, Charset charset) {
         final int size = bytes.length();
         final byte[] bs = bytes.content();
         final byte first = bs[0];
@@ -817,7 +829,7 @@ public class HttpRequest extends Request<HttpContext> {
                 }
             }
         }
-        return bytes.toString(charset);
+        return bytes.toString(latin1, charset);
     }
 
     @Override
@@ -971,6 +983,13 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static String toDecodeString(ByteArray array, int offset, int len, final Charset charset) {
         byte[] content = array.content();
+        if (len == 1) {
+            return Character.toString(content[offset]);
+        } else if (len == 2 && content[offset] >= '0' && content[offset] <= '9') {
+            return new String(content, 0, offset, len);
+        } else if (len == 3 && content[offset + 1] >= '0' && content[offset + 1] <= '9') {
+            return new String(content, 0, offset, len);
+        }
         int start = offset;
         final int end = offset + len;
         boolean flag = false; //是否需要转义

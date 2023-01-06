@@ -282,6 +282,13 @@ public class HttpSimpleClient {
                 if (b1 == '\r' && b2 == '\n') {
                     return 0;
                 }
+                boolean latin1 = true;
+                if (latin1 && (b1 < 0x20 || b1 >= 0x80)) {
+                    latin1 = false;
+                }
+                if (latin1 && (b2 < 0x20 || b2 >= 0x80)) {
+                    latin1 = false;
+                }
                 bytes.put(b1, b2);
                 for (;;) {  // name
                     if (remain-- < 1) {
@@ -292,10 +299,12 @@ public class HttpSimpleClient {
                     byte b = buffer.get();
                     if (b == ':') {
                         break;
+                    } else if (latin1 && (b < 0x20 || b >= 0x80)) {
+                        latin1 = false;
                     }
                     bytes.put(b);
                 }
-                String name = parseHeaderName(bytes, null);
+                String name = parseHeaderName(latin1, bytes, null);
                 bytes.clear();
                 boolean first = true;
                 int space = 0;
@@ -345,7 +354,7 @@ public class HttpSimpleClient {
                 switch (name) {
                     case "Content-Length":
                     case "content-length":
-                        value = bytes.toString(null);
+                        value = bytes.toString(true, null);
                         this.contentLength = Integer.decode(value);
                         result.header(name, value);
                         break;

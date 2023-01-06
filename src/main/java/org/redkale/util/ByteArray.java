@@ -937,6 +937,21 @@ public final class ByteArray implements ByteTuple {
     }
 
     /**
+     * 按指定字符集转成字符串
+     *
+     * @param latin1  是否LATIN1
+     * @param charset 字符集
+     *
+     * @return 字符串
+     */
+    public String toString(final boolean latin1, final Charset charset) {
+        if (latin1) {
+            return new String(content, 0, 0, count);
+        }
+        return new String(content, 0, count, charset == null ? StandardCharsets.UTF_8 : charset);
+    }
+
+    /**
      * 将指定的起始位置和长度按指定字符集转成字符串
      *
      * @param offset  起始位置
@@ -946,10 +961,24 @@ public final class ByteArray implements ByteTuple {
      * @return 字符串
      */
     public String toString(final int offset, int len, final Charset charset) {
-        if (charset == null) {
-            return new String(content, offset, len, StandardCharsets.UTF_8);
+        return new String(content, offset, len, charset == null ? StandardCharsets.UTF_8 : charset);
+    }
+
+    /**
+     * 将指定的起始位置和长度按指定字符集转成字符串
+     *
+     * @param latin1  是否LATIN1
+     * @param offset  起始位置
+     * @param len     长度
+     * @param charset 字符集
+     *
+     * @return 字符串
+     */
+    public String toString(final boolean latin1, int offset, int len, final Charset charset) {
+        if (latin1) {
+            return new String(content, 0, offset, len);
         }
-        return new String(content, offset, len, charset);
+        return new String(content, offset, len, charset == null ? StandardCharsets.UTF_8 : charset);
     }
 
     /**
