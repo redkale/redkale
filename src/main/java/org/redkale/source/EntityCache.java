@@ -152,7 +152,7 @@ public final class EntityCache<T> {
         }
         if (this.interval > 0 && this.scheduler == null && info.fullloader != null) {
             this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-                final Thread t = new Thread(r, "Redkale-EntityCache-" + type + "-Thread");
+                final Thread t = new Thread(r, "Redkale-EntityCache-" + type.getSimpleName() + "-Thread");
                 t.setDaemon(true);
                 return t;
             });

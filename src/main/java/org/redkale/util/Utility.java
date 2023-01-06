@@ -427,6 +427,44 @@ public final class Utility {
     }
 
     /**
+     * 将字符串首字母大写
+     *
+     * @param str 字符串
+     *
+     * @return 首字母大写
+     */
+    public static String firstCharUpperCase(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        if (Character.isUpperCase(str.charAt(0))) {
+            return str;
+        }
+        char[] chs = str.toCharArray();
+        chs[0] = Character.toUpperCase(chs[0]);
+        return new String(chs);
+    }
+
+    /**
+     * 将字符串首字母小写
+     *
+     * @param str 字符串
+     *
+     * @return 首字母小写
+     */
+    public static String firstCharLowerCase(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        if (Character.isLowerCase(str.charAt(0))) {
+            return str;
+        }
+        char[] chs = str.toCharArray();
+        chs[0] = Character.toLowerCase(chs[0]);
+        return new String(chs);
+    }
+
+    /**
      * 将多个key:value的字符串键值对组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略
      * 类似 JDK9中的 Map.of 方法
      *

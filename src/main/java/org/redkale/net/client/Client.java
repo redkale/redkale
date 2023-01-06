@@ -24,11 +24,13 @@ import org.redkale.util.*;
  * @param <R> 请求对象
  * @param <P> 响应对象
  */
-public abstract class Client<R extends ClientRequest, P> {
+public abstract class Client<R extends ClientRequest, P> implements Resourcable {
 
     public static final int DEFAULT_MAX_PIPELINES = 128;
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+
+    protected final String name;
 
     protected final AsyncGroup group; //连接构造器
 
@@ -76,39 +78,40 @@ public abstract class Client<R extends ClientRequest, P> {
     //创建连接后进行的登录鉴权操作
     protected Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate;
 
-    protected Client(AsyncGroup group, ClientAddress address) {
-        this(group, true, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
+    protected Client(String name, AsyncGroup group, ClientAddress address) {
+        this(name, group, true, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, ClientAddress address) {
-        this(group, tcp, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address) {
+        this(name, group, tcp, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns) {
-        this(group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, null, null);
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns) {
+        this(name, group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, null, null);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns, int maxPipelines) {
-        this(group, tcp, address, maxconns, maxPipelines, null, null, null);
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns, int maxPipelines) {
+        this(name, group, tcp, address, maxconns, maxPipelines, null, null, null);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
         Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        this(group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, null, authenticate);
+        this(name, group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, null, authenticate);
     }
 
-    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
         Supplier<R> closeRequestSupplier, Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        this(group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, closeRequestSupplier, authenticate);
+        this(name, group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, closeRequestSupplier, authenticate);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    protected Client(AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
         int maxPipelines, Supplier<R> pingRequestSupplier, Supplier<R> closeRequestSupplier, Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
         if (maxPipelines < 1) {
             throw new IllegalArgumentException("maxPipelines must bigger 0");
         }
         address.checkValid();
+        this.name = name;
         this.group = group;
         this.tcp = tcp;
         this.address = address;
@@ -128,7 +131,7 @@ public abstract class Client<R extends ClientRequest, P> {
         }
         //timeoutScheduler 不仅仅给超时用， 还给write用
         this.timeoutScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-            final Thread t = new Thread(r, "Redkale-" + Client.this.getClass().getSimpleName() + "-Interval-Thread");
+            final Thread t = new Thread(r, "Redkale-" + Client.this.getClass().getSimpleName() + "-" + resourceName() + "-Timeout-Thread");
             t.setDaemon(true);
             return t;
         });
@@ -303,6 +306,15 @@ public abstract class Client<R extends ClientRequest, P> {
             s += a.longValue();
         }
         return s;
+    }
+
+    @Override
+    public String resourceName() {
+        return name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public int getReadTimeoutSeconds() {

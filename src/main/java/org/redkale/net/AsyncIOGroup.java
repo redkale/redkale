@@ -64,8 +64,8 @@ public class AsyncIOGroup extends AsyncGroup {
         this(true, null, null, bufferCapacity, bufferPoolSize);
     }
 
-    public AsyncIOGroup(boolean client, String threadPrefixName, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
-        this(client, threadPrefixName, workExecutor, bufferCapacity, ObjectPool.createSafePool(null, null, bufferPoolSize,
+    public AsyncIOGroup(boolean client, String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
+        this(client, threadNameFormat, workExecutor, bufferCapacity, ObjectPool.createSafePool(null, null, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) {
                     return false;
@@ -75,44 +75,41 @@ public class AsyncIOGroup extends AsyncGroup {
             }));
     }
 
-    public AsyncIOGroup(boolean client, String threadPrefixName0, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
+    public AsyncIOGroup(boolean client, String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
         this.bufferCapacity = bufferCapacity;
-        final String threadPrefixName = threadPrefixName0 == null ? "Redkale-Client-IOThread" : threadPrefixName0;
         final int threads = Utility.cpus();
         this.ioReadThreads = new AsyncIOThread[threads];
         this.ioWriteThreads = new AsyncIOThread[threads];
         try {
             for (int i = 0; i < threads; i++) {
-                String postfix = "-" + (i >= 9 ? (i + 1) : ("0" + (i + 1)));
+                String indexfix = WorkThread.formatIndex(threads, i + 1);
                 ObjectPool<ByteBuffer> unsafeReadBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
                 if (client) {
-                    this.ioReadThreads[i] = new ClientIOThread(threadPrefixName + postfix, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                    this.ioReadThreads[i] = new ClientIOThread(String.format(threadNameFormat, indexfix), i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
                     this.ioWriteThreads[i] = this.ioReadThreads[i];
-                    if (false) {
-                        this.ioReadThreads[i].setName(threadPrefixName + "-Read" + postfix);
+                    if (System.currentTimeMillis() < 1) { //暂时不使用
+                        this.ioReadThreads[i].setName(String.format(threadNameFormat, "Read-" + indexfix));
                         ObjectPool<ByteBuffer> unsafeWriteBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                             safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
-                        this.ioWriteThreads[i] = new ClientWriteIOThread(threadPrefixName + "-Write" + postfix, i, threads, workExecutor, Selector.open(), unsafeWriteBufferPool, safeBufferPool);
+                        this.ioWriteThreads[i] = new ClientWriteIOThread(String.format(threadNameFormat, "Write-" + indexfix), i, threads, workExecutor, Selector.open(), unsafeWriteBufferPool, safeBufferPool);
                     }
                 } else {
-                    this.ioReadThreads[i] = new AsyncIOThread(threadPrefixName + postfix, i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                    this.ioReadThreads[i] = new AsyncIOThread(String.format(threadNameFormat, indexfix), i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
                     this.ioWriteThreads[i] = this.ioReadThreads[i];
                 }
             }
             if (client) {
                 ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
-                String name = threadPrefixName.replace("ServletThread", "ConnectThread").replace("IOThread", "IOConnectThread");
-                this.connectThread = client ? new ClientIOThread(name, 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool)
-                    : new AsyncIOThread(name, 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
+                this.connectThread = client ? new ClientIOThread(String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool)
+                    : new AsyncIOThread(String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
-            Thread t = new Thread(r);
-            t.setName(threadPrefixName + "-Timeout");
+            Thread t = new Thread(r, String.format(threadNameFormat, "Timeout"));
             t.setDaemon(true);
             return t;
         });

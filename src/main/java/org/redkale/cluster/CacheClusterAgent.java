@@ -8,6 +8,7 @@ package org.redkale.cluster;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
@@ -115,12 +116,12 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     @Override
     public void start() {
         if (this.scheduler == null) {
+            AtomicInteger counter = new AtomicInteger();
             this.scheduler = new ScheduledThreadPoolExecutor(4, (Runnable r) -> {
-                final Thread t = new Thread(r, "Redkale-" + CacheClusterAgent.class.getSimpleName() + "-Task-Thread");
+                final Thread t = new Thread(r, "Redkale-" + CacheClusterAgent.class.getSimpleName() + "-Task-Thread-" + counter.incrementAndGet());
                 t.setDaemon(true);
                 return t;
             });
-
         }
         if (this.taskFuture != null) {
             this.taskFuture.cancel(true);

@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
@@ -282,19 +281,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         if (executor == null) {
             synchronized (executorLock) {
                 if (this.sourceExecutor == null) {
-                    final AtomicReference<ExecutorService> ref = new AtomicReference<>();
-                    final AtomicInteger counter = new AtomicInteger();
-                    final int threads = sourceThreads;
-                    executor = Executors.newFixedThreadPool(threads, (Runnable r) -> {
-                        int i = counter.get();
-                        int c = counter.incrementAndGet();
-                        String threadName = "Redkale-DataSource-WorkThread-" + (c > 9 ? c : ("0" + c));
-                        Thread t = new WorkThread(threadName, i, threads, ref.get(), r);
-                        return t;
-                    });
-                    this.sourceExecutor = executor;
+                    this.sourceExecutor = WorkThread.createExecutor(sourceThreads, "Redkale-DataSource-WorkThread-" + resourceName() + "-%s");
                 }
             }
+            executor = this.sourceExecutor;
         }
         return executor;
     }

@@ -118,13 +118,13 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             ObjectPool<Response> pool = localResponsePool.get();
             (pool == null ? safeResponsePool : pool).accept(v);
         };
-        final String threadPrefixName = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread");
-        this.ioGroup = new AsyncIOGroup(false, threadPrefixName, null, server.bufferCapacity, bufferPool);
+        final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
+        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, server.bufferCapacity, bufferPool);
         this.ioGroup.start();
 
         this.acceptThread = new Thread() {
             {
-                setName(threadPrefixName.replace("ServletThread", "AcceptThread"));
+                setName(String.format(threadNameFormat, "Accept"));
             }
 
             @Override

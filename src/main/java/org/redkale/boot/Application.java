@@ -590,45 +590,22 @@ public final class Application {
             final int workThreads = executorConf.getIntValue("threads", Math.max(2, Utility.cpus()));
             boolean workHash = executorConf.getBoolValue("hash", false);
             if (workThreads > 0) {
-                final AtomicInteger workCounter = new AtomicInteger();
                 if (workHash) {
-                    workExecutor0 = new ThreadHashExecutor(workThreads, (Runnable r) -> {
-                        int i = workCounter.get();
-                        int c = workCounter.incrementAndGet();
-                        String threadname = "Redkale-HashWorkThread-" + (c > 9 ? c : ("0" + c));
-                        Thread t = new WorkThread(threadname, i, workThreads, workref.get(), r);
-                        return t;
-                    });
+                    workExecutor0 = WorkThread.createHashExecutor(workThreads, "Redkale-HashWorkThread-%s");
                 } else {
-                    workExecutor0 = Executors.newFixedThreadPool(workThreads, (Runnable r) -> {
-                        int i = workCounter.get();
-                        int c = workCounter.incrementAndGet();
-                        String threadname = "Redkale-WorkThread-" + (c > 9 ? c : ("0" + c));
-                        Thread t = new WorkThread(threadname, i, workThreads, workref.get(), r);
-                        return t;
-                    });
+                    workExecutor0 = WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s");
                 }
                 workref.set(workExecutor0);
             }
-
-            //给所有client给一个默认的AsyncGroup
-            final AtomicReference<ExecutorService> clientref = new AtomicReference<>();
-            final AtomicInteger wclientCounter = new AtomicInteger();
+            //给所有client给一个默认的ExecutorService
             final int clientThreads = Math.max(Math.max(2, Utility.cpus()), workThreads / 2);
-            clientExecutor = Executors.newFixedThreadPool(clientThreads, (Runnable r) -> {
-                int i = wclientCounter.get();
-                int c = wclientCounter.incrementAndGet();
-                String threadName = "Redkale-Client-WorkThread-" + (c > 9 ? c : ("0" + c));
-                Thread t = new WorkThread(threadName, i, clientThreads, clientref.get(), r);
-                return t;
-            });
-            clientref.set(clientExecutor);
+            clientExecutor = WorkThread.createExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
         }
         this.workExecutor = workExecutor0;
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
 
-        this.clientAsyncGroup = new AsyncIOGroup(true, null, clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
+        this.clientAsyncGroup = new AsyncIOGroup(true, "Redkale-DefaultClient-IOThread-%s", clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
         this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);
 
         this.excludelibs = excludelib0;

@@ -91,8 +91,7 @@ public abstract class MessageAgent implements Resourcable {
         }
         // application (it doesn't execute completion handlers).
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
-            Thread t = new Thread(r);
-            t.setName("Redkale-MessageAgent-Timeout-Thread");
+            Thread t = new Thread(r, "Redkale-MessageAgent-Timeout-Thread");
             t.setDaemon(true);
             return t;
         });

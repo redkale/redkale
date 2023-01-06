@@ -121,7 +121,7 @@ public class WebSocketEngine {
             return;
         }
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-            final Thread t = new Thread(r, "Redkale-" + engineid + "-WebSocket-LiveInterval-Thread");
+            final Thread t = new Thread(r, "Redkale-WebSocket-" + engineid + "-LiveInterval-Thread");
             t.setDaemon(true);
             return t;
         });

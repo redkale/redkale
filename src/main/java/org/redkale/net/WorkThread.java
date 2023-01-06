@@ -7,6 +7,7 @@ package org.redkale.net;
 
 import java.util.Collection;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import org.redkale.util.ThreadHashExecutor;
 
 /**
@@ -42,6 +43,46 @@ public class WorkThread extends Thread implements Executor {
     public static WorkThread currWorkThread() {
         Thread t = Thread.currentThread();
         return t instanceof WorkThread ? (WorkThread) t : null;
+    }
+
+    public static ExecutorService createHashExecutor(final int threads, final String threadNameFormat) {
+        final AtomicReference<ExecutorService> ref = new AtomicReference<>();
+        final AtomicInteger counter = new AtomicInteger();
+        return new ThreadHashExecutor(threads, (Runnable r) -> {
+            int i = counter.get();
+            int c = counter.incrementAndGet();
+            String threadName = String.format(threadNameFormat, formatIndex(threads, c));
+            Thread t = new WorkThread(threadName, i, threads, ref.get(), r);
+            return t;
+        });
+    }
+
+    public static ExecutorService createExecutor(final int threads, final String threadNameFormat) {
+        final AtomicReference<ExecutorService> ref = new AtomicReference<>();
+        final AtomicInteger counter = new AtomicInteger();
+        return Executors.newFixedThreadPool(threads, (Runnable r) -> {
+            int i = counter.get();
+            int c = counter.incrementAndGet();
+            String threadName = String.format(threadNameFormat, formatIndex(threads, c));
+            Thread t = new WorkThread(threadName, i, threads, ref.get(), r);
+            return t;
+        });
+    }
+
+    public static String formatIndex(int threads, int index) {
+        String v = String.valueOf(index);
+        if (threads >= 100) {
+            if (index < 10) {
+                v = "00" + v;
+            } else if (index < 100) {
+                v = "0" + v;
+            }
+        } else if (threads >= 10) {
+            if (index < 10) {
+                v = "0" + v;
+            }
+        }
+        return v;
     }
 
     @Override

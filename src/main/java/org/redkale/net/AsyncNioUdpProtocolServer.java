@@ -106,8 +106,8 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
             ObjectPool<Response> pool = localResponsePool.get();
             (pool == null ? safeResponsePool : pool).accept(v);
         };
-        final String threadPrefixName = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread");
-        this.ioGroup = new AsyncIOGroup(false, threadPrefixName, null, server.bufferCapacity, safeBufferPool);
+        final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
+        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, server.bufferCapacity, safeBufferPool);
         this.ioGroup.start();
         this.serverChannel.register(this.selector, SelectionKey.OP_READ);
 
@@ -116,7 +116,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
                 safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
 
             {
-                setName(threadPrefixName.replace("ServletThread", "AcceptThread"));
+                setName(String.format(threadNameFormat, "Accept"));
             }
 
             @Override

@@ -127,7 +127,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
     }
 
     private void open() {
-        final String name = "Redkale-Logging-" + getClass().getSimpleName() + "-Thread";
+        final String name = "Redkale-Logging-" + getClass().getSimpleName().replace("Logging", "") + "-Thread";
         new Thread() {
             {
                 setName(name);
