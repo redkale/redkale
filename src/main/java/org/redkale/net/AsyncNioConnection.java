@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
-import org.redkale.util.ByteBufferWriter;
+import org.redkale.util.*;
 
 /**
  *
@@ -27,7 +27,7 @@ import org.redkale.util.ByteBufferWriter;
  */
 abstract class AsyncNioConnection extends AsyncConnection {
 
-    protected static final int MAX_INVOKER_ONSTACK = Integer.getInteger("redkale.net.invoker.max.onstack", 8);
+    protected static final int MAX_INVOKER_ONSTACK = Integer.getInteger("redkale.net.invoker.max.onstack", Utility.cpus());
 
     final AsyncIOThread connectThread;
 

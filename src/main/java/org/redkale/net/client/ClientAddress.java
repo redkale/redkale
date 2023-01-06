@@ -79,7 +79,9 @@ public class ClientAddress implements java.io.Serializable {
 
     private static SocketAddress[] createAddressArray(List<WeightAddress> ws) {
         int min = 0;
+        int size = 0; //20,35,45去掉最大公约数，数组长度为:4+7+9=20
         for (WeightAddress w : ws) {
+            size += w.getWeight();
             if (min == 0 || w.getWeight() < min) {
                 min = w.getWeight();
             }
@@ -97,10 +99,7 @@ public class ClientAddress implements java.io.Serializable {
                 divisor = i;
             }
         }
-        int size = 0; //20,35,45去掉最大公约数，数组长度为:4+7+9=20
-        for (WeightAddress w : ws) {
-            size += w.getWeight() / divisor;
-        }
+        size /= divisor;
         SocketAddress[] newAddrs = new SocketAddress[size];
         int index = -1;
         for (int i = 0; i < ws.size(); i++) {

@@ -484,14 +484,26 @@ public class HttpRequest extends Request<HttpContext> {
             }
             size = bytes.length();
             byte[] content = bytes.content();
-            if (size == 3 && content[0] == 'G' && content[1] == 'E' && content[2] == 'T') {
-                this.method = KEY_GET;
-                this.getmethod = true;
-            } else if (size == 4 && content[0] == 'P' && content[1] == 'O' && content[2] == 'S' && content[3] == 'T') {
-                this.method = KEY_POST;
+            if (size == 3) {
+                if (content[0] == 'G' && content[1] == 'E' && content[2] == 'T') {
+                    this.method = KEY_GET;
+                    this.getmethod = true;
+                } else if (content[0] == 'P' && content[1] == 'U' && content[2] == 'T') {
+                    this.method = "PUT";
+                    this.getmethod = false;
+                } else {
+                    this.method = bytes.toString(true, charset);
+                    this.getmethod = false;
+                }
+            } else if (size == 4) {
                 this.getmethod = false;
+                if (content[0] == 'P' && content[1] == 'O' && content[2] == 'S' && content[3] == 'T') {
+                    this.method = KEY_POST;
+                } else {
+                    this.method = bytes.toString(true, charset);
+                }
             } else {
-                this.method = bytes.toString(charset);
+                this.method = bytes.toString(true, charset);
                 this.getmethod = false;
             }
             bytes.clear();
@@ -522,11 +534,12 @@ public class HttpRequest extends Request<HttpContext> {
             size = bytes.length();
             if (qst > 0) {
                 this.requestURI = decodeable ? toDecodeString(bytes, 0, qst, charset) : bytes.toString(latin1, 0, qst, charset);
-                this.queryBytes = bytes.getBytes(qst + 1, size - qst - 1);
+                int qlen = size - qst - 1;
+                this.queryBytes = bytes.getBytes(qst + 1, qlen);
                 this.lastRequestURIString = null;
                 this.lastRequestURIBytes = null;
                 try {
-                    addParameter(bytes, qst + 1, size - qst - 1);
+                    addParameter(bytes, qst + 1, qlen);
                 } catch (Exception e) {
                     this.context.getLogger().log(Level.WARNING, "HttpRequest.addParameter error: " + bytes.toString(), e);
                 }
@@ -582,7 +595,7 @@ public class HttpRequest extends Request<HttpContext> {
         } else if (size == 8 && content[0] == 'H' && content[5] == '2' && content[7] == '0') {
             this.protocol = KEY_HTTP_2_0;
         } else {
-            this.protocol = bytes.toString(charset);
+            this.protocol = bytes.toString(true, charset);
         }
         bytes.clear();
         return 0;
@@ -985,9 +998,9 @@ public class HttpRequest extends Request<HttpContext> {
         byte[] content = array.content();
         if (len == 1) {
             return Character.toString(content[offset]);
-        } else if (len == 2 && content[offset] >= '0' && content[offset] <= '9') {
+        } else if (len == 2 && content[offset] >= 0x20 && content[offset] < 0x80) {
             return new String(content, 0, offset, len);
-        } else if (len == 3 && content[offset + 1] >= '0' && content[offset + 1] <= '9') {
+        } else if (len == 3 && content[offset + 1] >= 0x20 && content[offset + 1] < 0x80) {
             return new String(content, 0, offset, len);
         }
         int start = offset;
