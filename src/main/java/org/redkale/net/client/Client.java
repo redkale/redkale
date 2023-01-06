@@ -108,6 +108,7 @@ public abstract class Client<R extends ClientRequest, P> {
         if (maxPipelines < 1) {
             throw new IllegalArgumentException("maxPipelines must bigger 0");
         }
+        address.checkValid();
         this.group = group;
         this.tcp = tcp;
         this.address = address;

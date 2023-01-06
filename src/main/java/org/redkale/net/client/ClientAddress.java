@@ -46,9 +46,18 @@ public class ClientAddress implements java.io.Serializable {
         return this;
     }
 
-    public void updateWeightAddress(List<WeightAddress> addrs) {
-        this.weights = new ArrayList<>(addrs);
-        this.addresses = null;
+    public void updateAddress(SocketAddress addr, List<WeightAddress> addrs) {
+        if (addr == null && (addrs == null || addrs.isEmpty())) {
+            throw new NullPointerException("address is empty");
+        }
+        setWeights(addrs);
+        setAddress(addr);
+    }
+
+    public void checkValid() {
+        if (address == null && (weights == null || weights.isEmpty())) {
+            throw new NullPointerException("address is empty");
+        }
     }
 
     public CompletableFuture<AsyncConnection> createClient(final boolean tcp, final AsyncGroup group, int readTimeoutSeconds, int writeTimeoutSeconds) {
@@ -58,21 +67,8 @@ public class ClientAddress implements java.io.Serializable {
             if (addrs == null) {
                 synchronized (this) {
                     if (this.addresses == null) {
-                        int size = 0;
-                        List<WeightAddress> ws = this.weights;
-                        for (WeightAddress w : ws) {
-                            size += w.getWeight();
-                        }
-                        SocketAddress[] newAddrs = new SocketAddress[size];
-                        int index = -1;
-                        for (int i = 0; i < ws.size(); i++) {
-                            WeightAddress w = ws.get(i);
-                            for (int j = 0; j < w.getWeight(); j++) {
-                                newAddrs[++index] = w.getAddress();
-                            }
-                        }
-                        addrs = newAddrs;
-                        this.addresses = newAddrs;
+                        this.addresses = createAddressArray(this.weights);
+                        addrs = this.addresses;
                     }
                 }
             }
@@ -81,12 +77,57 @@ public class ClientAddress implements java.io.Serializable {
         return group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
+    private static SocketAddress[] createAddressArray(List<WeightAddress> ws) {
+        int min = 0;
+        for (WeightAddress w : ws) {
+            if (min == 0 || w.getWeight() < min) {
+                min = w.getWeight();
+            }
+        }
+        int divisor = 1; //最大公约数
+        for (int i = 2; i <= min; i++) {
+            boolean all = true;
+            for (WeightAddress w : ws) {
+                if (w.getWeight() % i > 0) {
+                    all = false;
+                    break;
+                }
+            }
+            if (all) {
+                divisor = i;
+            }
+        }
+        int size = 0; //20,35,45去掉最大公约数，数组长度为:4+7+9=20
+        for (WeightAddress w : ws) {
+            size += w.getWeight() / divisor;
+        }
+        SocketAddress[] newAddrs = new SocketAddress[size];
+        int index = -1;
+        for (int i = 0; i < ws.size(); i++) {
+            WeightAddress w = ws.get(i);
+            int z = w.getWeight() / divisor;
+            for (int j = 0; j < z; j++) {
+                newAddrs[++index] = w.getAddress();
+            }
+        }
+        return newAddrs;
+    }
+
     public SocketAddress getAddress() {
         return address;
     }
 
     public void setAddress(SocketAddress address) {
         this.address = address;
+    }
+
+    public List<WeightAddress> getWeights() {
+        return weights;
+    }
+
+    public void setWeights(List<WeightAddress> weights) {
+        this.weights = weights == null ? null : new ArrayList<>(weights);
+        this.addresses = null;
     }
 
     @Override
