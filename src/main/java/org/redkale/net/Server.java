@@ -322,9 +322,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     public void changeAddress(Application application, final InetSocketAddress addr) throws IOException {
         long s = System.currentTimeMillis();
         Objects.requireNonNull(addr);
-        final InetSocketAddress oldAddress = context.address;
+        final InetSocketAddress oldAddress = context.serverAddress;
         final ProtocolServer oldServerChannel = this.serverChannel;
-        context.address = addr;
+        context.serverAddress = addr;
         ProtocolServer newServerChannel = null;
         try {
             newServerChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
@@ -332,10 +332,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             newServerChannel.bind(addr, backlog);
             newServerChannel.accept(application, this);
         } catch (IOException e) {
-            context.address = oldAddress;
+            context.serverAddress = oldAddress;
             throw e;
         }
-        this.address = context.address;
+        this.address = context.serverAddress;
         this.serverChannel = newServerChannel;
         logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol))
             + " change address listen: " + address + ", started in " + (System.currentTimeMillis() - s) + " ms");
@@ -414,7 +414,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         contextConfig.maxconns = this.maxconns;
         contextConfig.maxbody = this.maxbody;
         contextConfig.charset = this.charset;
-        contextConfig.address = this.address;
+        contextConfig.serverAddress = this.address;
         contextConfig.prepare = this.dispatcher;
         contextConfig.resourceFactory = this.resourceFactory;
         contextConfig.aliveTimeoutSeconds = this.aliveTimeoutSeconds;

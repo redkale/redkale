@@ -117,7 +117,7 @@ public final class Transport {
                         if (hasold) {
                             continue;
                         }
-                        list.add(new TransportNode(factory.poolmaxconns, addr));
+                        list.add(new TransportNode(factory.poolMaxConns, addr));
                     }
                 }
                 this.transportNodes = list.toArray(new TransportNode[list.size()]);
@@ -139,14 +139,14 @@ public final class Transport {
         }
         synchronized (this) {
             if (this.transportNodes.length == 0) {
-                this.transportNodes = new TransportNode[]{new TransportNode(factory.poolmaxconns, addr)};
+                this.transportNodes = new TransportNode[]{new TransportNode(factory.poolMaxConns, addr)};
             } else {
                 for (TransportNode i : this.transportNodes) {
                     if (addr.equals(i.address)) {
                         return false;
                     }
                 }
-                this.transportNodes = Utility.append(transportNodes, new TransportNode(factory.poolmaxconns, addr));
+                this.transportNodes = Utility.append(transportNodes, new TransportNode(factory.poolMaxConns, addr));
             }
             return true;
         }
@@ -157,7 +157,7 @@ public final class Transport {
             return false;
         }
         synchronized (this) {
-            this.transportNodes = Utility.remove(transportNodes, new TransportNode(factory.poolmaxconns, addr));
+            this.transportNodes = Utility.remove(transportNodes, new TransportNode(factory.poolMaxConns, addr));
         }
         return true;
     }

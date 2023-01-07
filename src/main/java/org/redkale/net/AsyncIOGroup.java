@@ -61,7 +61,7 @@ public class AsyncIOGroup extends AsyncGroup {
     private ScheduledThreadPoolExecutor timeoutExecutor;
 
     public AsyncIOGroup(final int bufferCapacity, final int bufferPoolSize) {
-        this(true, null, null, bufferCapacity, bufferPoolSize);
+        this(true, "Redkale-AnonymousClient-IOThread-%s", null, bufferCapacity, bufferPoolSize);
     }
 
     public AsyncIOGroup(boolean client, String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {

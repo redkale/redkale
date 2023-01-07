@@ -72,14 +72,14 @@ public class Context {
     protected int writeTimeoutSeconds;
 
     //服务的监听地址
-    protected InetSocketAddress address;
+    protected InetSocketAddress serverAddress;
 
     //字符集
     protected Charset charset;
 
     public Context(ContextConfig config) {
         this(config.serverStartTime, config.logger, config.workExecutor, config.sslBuilder, config.sslContext,
-            config.bufferCapacity, config.maxconns, config.maxbody, config.charset, config.address, config.resourceFactory,
+            config.bufferCapacity, config.maxconns, config.maxbody, config.charset, config.serverAddress, config.resourceFactory,
             config.prepare, config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
     }
 
@@ -95,7 +95,7 @@ public class Context {
         this.maxconns = maxconns;
         this.maxbody = maxbody;
         this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
-        this.address = address;
+        this.serverAddress = address;
         this.prepare = prepare;
         this.resourceFactory = resourceFactory;
         this.aliveTimeoutSeconds = aliveTimeoutSeconds;
@@ -180,7 +180,7 @@ public class Context {
     }
 
     public InetSocketAddress getServerAddress() {
-        return address;
+        return serverAddress;
     }
 
     public long getServerStartTime() {
@@ -240,7 +240,7 @@ public class Context {
         public DispatcherServlet prepare;
 
         //服务的监听地址
-        public InetSocketAddress address;
+        public InetSocketAddress serverAddress;
 
         //字符集
         public Charset charset;

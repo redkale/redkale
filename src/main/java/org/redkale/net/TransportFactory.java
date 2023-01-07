@@ -57,10 +57,10 @@ public class TransportFactory {
     protected final List<WeakReference<Transport>> transportReferences = new CopyOnWriteArrayList<>();
 
     //连接池大小
-    protected int poolmaxconns = Integer.getInteger("redkale.net.transport.pool.maxconns", Math.max(100, Utility.cpus() * 16)); //最少是wsthreads的两倍
+    protected int poolMaxConns = Integer.getInteger("redkale.net.transport.pool.maxconns", Math.max(100, Utility.cpus() * 16)); //最少是wsthreads的两倍
 
     //检查不可用地址周期， 单位：秒
-    protected int checkinterval = Integer.getInteger("redkale.net.transport.check.interval", 30);
+    protected int checkInterval = Integer.getInteger("redkale.net.transport.check.interval", 30);
 
     //心跳周期， 单位：秒
     protected int pinginterval;
@@ -105,17 +105,17 @@ public class TransportFactory {
 
     public void init(AnyValue conf, ByteBuffer pingBuffer, int pongLength) {
         if (conf != null) {
-            this.poolmaxconns = conf.getIntValue(NAME_POOLMAXCONNS, this.poolmaxconns);
+            this.poolMaxConns = conf.getIntValue(NAME_POOLMAXCONNS, this.poolMaxConns);
             this.pinginterval = conf.getIntValue(NAME_PINGINTERVAL, this.pinginterval);
-            this.checkinterval = conf.getIntValue(NAME_CHECKINTERVAL, this.checkinterval);
-            if (this.poolmaxconns < 2) {
-                this.poolmaxconns = 2;
+            this.checkInterval = conf.getIntValue(NAME_CHECKINTERVAL, this.checkInterval);
+            if (this.poolMaxConns < 2) {
+                this.poolMaxConns = 2;
             }
             if (this.pinginterval < 2) {
                 this.pinginterval = 2;
             }
-            if (this.checkinterval < 2) {
-                this.checkinterval = 2;
+            if (this.checkInterval < 2) {
+                this.checkInterval = 2;
             }
         }
         this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -127,9 +127,9 @@ public class TransportFactory {
             try {
                 checks();
             } catch (Throwable t) {
-                logger.log(Level.SEVERE, "TransportFactory schedule(interval=" + checkinterval + "s) check error", t);
+                logger.log(Level.SEVERE, "TransportFactory schedule(interval=" + checkInterval + "s) check error", t);
             }
-        }, checkinterval, checkinterval, TimeUnit.SECONDS);
+        }, checkInterval, checkInterval, TimeUnit.SECONDS);
 
         if (this.pinginterval > 0) {
             if (pingBuffer != null) {
