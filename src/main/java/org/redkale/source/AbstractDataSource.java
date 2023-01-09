@@ -13,8 +13,10 @@ import java.util.function.*;
 import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Comment;
+import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
+import static org.redkale.boot.Application.RESNAME_APP_EXECUTOR;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.WorkThread;
 import org.redkale.persistence.Entity;
@@ -110,6 +112,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     private int sourceThreads = Utility.cpus();
 
+    @Resource(name = RESNAME_APP_EXECUTOR, required = false)
     private ExecutorService sourceExecutor;
 
     @Override

@@ -582,25 +582,25 @@ public final class Application {
 
         ExecutorService workExecutor0 = null;
         ExecutorService clientExecutor;
-        {
-            if (executorConf == null) {
-                executorConf = DefaultAnyValue.create();
+        if (executorConf == null) {
+            executorConf = DefaultAnyValue.create();
+        }
+        final int workThreads = executorConf.getIntValue("threads", Math.max(2, Utility.cpus()));
+        boolean workHash = executorConf.getBoolValue("hash", false);
+        if (workThreads > 0) {
+            if (workHash) {
+                workExecutor0 = WorkThread.createHashExecutor(workThreads, "Redkale-HashWorkThread-%s");
+            } else {
+                workExecutor0 = WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s");
             }
-            final AtomicReference<ExecutorService> workref = new AtomicReference<>();
-            final int workThreads = executorConf.getIntValue("threads", Math.max(2, Utility.cpus()));
-            boolean workHash = executorConf.getBoolValue("hash", false);
-            if (workThreads > 0) {
-                if (workHash) {
-                    workExecutor0 = WorkThread.createHashExecutor(workThreads, "Redkale-HashWorkThread-%s");
-                } else {
-                    workExecutor0 = WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s");
-                }
-                workref.set(workExecutor0);
-            }
+        }
+        clientExecutor = workExecutor0;
+        if (clientExecutor == null) {
             //给所有client给一个默认的ExecutorService
-            final int clientThreads = Math.max(Math.max(2, Utility.cpus()), workThreads / 2);
+            final int clientThreads = Math.max(Math.max(2, Utility.cpus()), workThreads);
             clientExecutor = WorkThread.createExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
         }
+
         this.workExecutor = workExecutor0;
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);

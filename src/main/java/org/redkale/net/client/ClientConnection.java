@@ -223,37 +223,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                         workThread = request.workThread;
                         request.workThread = null;
                     }
-//                    if (rs.exc != null) {
-//                        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
-//                            || workThread.getState() != Thread.State.RUNNABLE) {
-//                            if (request != null) {
-//                                Traces.currTraceid(request.traceid);
-//                            }
-//                            respFuture.completeExceptionally(rs.exc);
-//                        } else {
-//                            workThread.execute(() -> {
-//                                if (request != null) {
-//                                    Traces.currTraceid(request.traceid);
-//                                }
-//                                respFuture.completeExceptionally(rs.exc);
-//                            });
-//                        }
-//                    } else {
-//                        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
-//                            || workThread.getState() != Thread.State.RUNNABLE) {
-//                            if (request != null) {
-//                                Traces.currTraceid(request.traceid);
-//                            }
-//                            respFuture.complete(rs.message);
-//                        } else {
-//                            workThread.execute(() -> {
-//                                if (request != null) {
-//                                    Traces.currTraceid(request.traceid);
-//                                }
-//                                respFuture.complete(rs.message);
-//                            });
-//                        }
-//                    }
                     if (workThread == null || workThread.getWorkExecutor() == null) {
                         workThread = channel.getReadIOThread();
                     }
