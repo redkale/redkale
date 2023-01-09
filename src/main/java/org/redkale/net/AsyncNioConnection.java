@@ -62,8 +62,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected int writeTimeoutSeconds;
 
-    int currWriteInvoker;
-
     protected byte[] writeByteTuple1Array;
 
     protected int writeByteTuple1Offset;
@@ -154,10 +152,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
         }
         this.readPending = true;
         if (this.readTimeoutSeconds > 0) {
-            AsyncNioCompletionHandler newhandler = this.readTimeoutCompletionHandler;
-            newhandler.handler(handler, this.readByteBuffer);   // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
-            this.readCompletionHandler = newhandler;
-            newhandler.timeoutFuture = ioGroup.scheduleTimeout(newhandler, this.readTimeoutSeconds, TimeUnit.SECONDS);
+            AsyncNioCompletionHandler newHandler = this.readTimeoutCompletionHandler;
+            newHandler.handler(handler, this.readByteBuffer);   // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
+            this.readCompletionHandler = newHandler;
+            newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.readTimeoutSeconds, TimeUnit.SECONDS);
         } else {
             this.readCompletionHandler = handler;
         }
@@ -196,14 +194,14 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeByteTuple2Attachment = bodyAttachment;
         this.writeAttachment = null;
         if (this.writeTimeoutSeconds > 0) {
-            AsyncNioCompletionHandler newhandler = this.writeTimeoutCompletionHandler;
-            newhandler.handler(handler, null);   // new AsyncNioCompletionHandler(handler, null);
-            this.writeCompletionHandler = newhandler;
-            newhandler.timeoutFuture = ioGroup.scheduleTimeout(newhandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
+            AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
+            newHandler.handler(handler, null);   // new AsyncNioCompletionHandler(handler, null);
+            this.writeCompletionHandler = newHandler;
+            newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
         } else {
-            AsyncNioCompletionHandler newhandler = this.writeTimeoutCompletionHandler;
-            newhandler.handler(handler, null);   // new AsyncNioCompletionHandler(handler, null);
-            this.writeCompletionHandler = newhandler;
+            AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
+            newHandler.handler(handler, null);   // new AsyncNioCompletionHandler(handler, null);
+            this.writeCompletionHandler = newHandler;
         }
         doWrite(true); //如果不是true，则bodyCallback的执行可能会切换线程
     }
@@ -224,14 +222,14 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeByteBuffer = src;
         this.writeAttachment = attachment;
         if (this.writeTimeoutSeconds > 0) {
-            AsyncNioCompletionHandler newhandler = this.writeTimeoutCompletionHandler;
-            newhandler.handler(handler, attachment);   // new AsyncNioCompletionHandler(handler, attachment);
-            this.writeCompletionHandler = newhandler;
-            newhandler.timeoutFuture = ioGroup.scheduleTimeout(newhandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
+            AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
+            newHandler.handler(handler, attachment);   // new AsyncNioCompletionHandler(handler, attachment);
+            this.writeCompletionHandler = newHandler;
+            newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
         } else {
             this.writeCompletionHandler = (CompletionHandler) handler;
         }
-        doWrite(true); // || !client || currWriteInvoker < MAX_INVOKER_ONSTACK // !client && ioThread.workExecutor == null
+        doWrite(true);
     }
 
     @Override
@@ -252,14 +250,14 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeLength = length;
         this.writeAttachment = attachment;
         if (this.writeTimeoutSeconds > 0) {
-            AsyncNioCompletionHandler newhandler = this.writeTimeoutCompletionHandler;
-            newhandler.handler(handler, attachment);   // new AsyncNioCompletionHandler(handler, attachment);
-            this.writeCompletionHandler = newhandler;
-            newhandler.timeoutFuture = ioGroup.scheduleTimeout(newhandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
+            AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
+            newHandler.handler(handler, attachment);   // new AsyncNioCompletionHandler(handler, attachment);
+            this.writeCompletionHandler = newHandler;
+            newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
         } else {
             this.writeCompletionHandler = (CompletionHandler) handler;
         }
-        doWrite(true); // || !client || currWriteInvoker < MAX_INVOKER_ONSTACK // !client && ioThread.workExecutor == null
+        doWrite(true);
     }
 
     public void doRead(boolean direct) {
@@ -303,9 +301,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
             int totalCount = 0;
             boolean hasRemain = true;
             boolean writeCompleted = true;
-            if (invokeDirect) {
-                currWriteInvoker++;
-            }
             while (invokeDirect && hasRemain) { //必须要将buffer写完为止
                 if (writeByteTuple1Array != null) {
                     final ByteBuffer buffer = pollWriteBuffer();

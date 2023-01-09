@@ -320,7 +320,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 }
             }
             buffer.flip();
-            CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
+            CompletionHandler<Integer, Void> newHandler = new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer result, Void attachment) {
                     offerWriteBuffer(buffer);
@@ -333,7 +333,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                     handler.failed(exc, attachment);
                 }
             };
-            write(buffer, null, newhandler);
+            write(buffer, null, newHandler);
         } else {
             ByteBufferWriter writer = ByteBufferWriter.create(sslEngine == null ? writeBufferSupplier : () -> pollWriteSSLBuffer(), buffer);
             writer.put(headerContent, headerOffset, headerLength);
@@ -344,7 +344,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 }
             }
             final ByteBuffer[] buffers = writer.toBuffers();
-            CompletionHandler<Integer, Void> newhandler = new CompletionHandler<Integer, Void>() {
+            CompletionHandler<Integer, Void> newHandler = new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer result, Void attachment) {
                     offerWriteBuffer(buffers);
@@ -357,7 +357,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                     handler.failed(exc, attachment);
                 }
             };
-            write(buffers, null, newhandler);
+            write(buffers, null, newHandler);
         }
     }
 
@@ -384,7 +384,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             handler.completed(0, attachment);
         } else {
             ByteBuffer[] srcs = writer.toBuffers();
-            CompletionHandler<Integer, ? super A> newhandler = new CompletionHandler<Integer, A>() {
+            CompletionHandler<Integer, ? super A> newHandler = new CompletionHandler<Integer, A>() {
                 @Override
                 public void completed(Integer result, A attachment) {
                     offerWriteBuffer(srcs);
@@ -398,9 +398,9 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 }
             };
             if (srcs.length == 1) {
-                write(srcs[0], attachment, newhandler);
+                write(srcs[0], attachment, newHandler);
             } else {
-                write(srcs, attachment, newhandler);
+                write(srcs, attachment, newHandler);
             }
         }
     }

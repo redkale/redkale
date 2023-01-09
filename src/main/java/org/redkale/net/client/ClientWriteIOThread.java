@@ -28,6 +28,8 @@ public class ClientWriteIOThread extends ClientIOThread {
 
     @Override
     public void run() {
+        final ByteBuffer buffer = getBufferSupplier().get();
+        final int capacity = buffer.capacity();
         while (!isClosed()) {
             ClientEntity entity;
             try {
@@ -44,7 +46,14 @@ public class ClientWriteIOThread extends ClientIOThread {
                     ByteArray rw = conn.writeArray;
                     rw.clear();
                     request.accept(conn, rw);
-                    conn.channel.write(rw, conn.writeHandler);
+                    if (rw.length() <= capacity) {
+                        buffer.clear();
+                        buffer.put(rw.content(), 0, rw.length());
+                        buffer.flip();
+                        conn.channel.write(buffer, null, conn.writeHandler);
+                    } else {
+                        conn.channel.write(rw, conn.writeHandler);
+                    }
                 }
             } catch (InterruptedException e) {
             }

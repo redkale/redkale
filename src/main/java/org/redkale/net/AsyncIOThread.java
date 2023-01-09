@@ -176,7 +176,6 @@ public class AsyncIOThread extends WorkThread {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
                             conn.doRead(true);
                         } else if (conn.writeCompletionHandler != null && key.isWritable()) {
-                            conn.currWriteInvoker = 0;
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
                             conn.doWrite(true);
                         }
@@ -186,7 +185,6 @@ public class AsyncIOThread extends WorkThread {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_READ); //不放开这行，在CompletableFuture时容易ReadPending
                             conn.doRead(true);
                         } else if (conn.writeCompletionHandler != null && key.isWritable()) {
-                            conn.currWriteInvoker = 0;
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
                             conn.doWrite(true);
                         } else if (key.isConnectable()) {
