@@ -43,12 +43,12 @@ public final class SncpDynServlet extends SncpServlet {
 
     private final HashMap<Uint128, SncpServletAction> actions = new HashMap<>();
 
-    public SncpDynServlet(final BsonConvert convert, final String serviceName, final Class serviceOrSourceType, final Service service,
+    public SncpDynServlet(final BsonConvert convert, final String serviceResourceName, final Class serviceResourceType, final Service service,
         final AtomicInteger maxTypeLength, AtomicInteger maxNameLength) {
-        super(serviceName, serviceOrSourceType, service);
+        super(serviceResourceName, serviceResourceType, service);
         this.maxTypeLength = maxTypeLength;
         this.maxNameLength = maxNameLength;
-        this.serviceid = Sncp.hash(type.getName() + ':' + serviceName);
+        this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
         Set<Uint128> actionids = new HashSet<>();
         RedkaleClassLoader.putReflectionPublicMethods(service.getClass().getName());
         for (java.lang.reflect.Method method : service.getClass().getMethods()) {
@@ -79,21 +79,21 @@ public final class SncpDynServlet extends SncpServlet {
                 }
             }
 
-            final Uint128 actionid = Sncp.hash(method);
+            final Uint128 actionid = Sncp.actionid(method);
             SncpServletAction action;
             try {
                 action = SncpServletAction.create(service, actionid, method);
             } catch (RuntimeException e) {
-                throw new RuntimeException(method + " create " + SncpServletAction.class.getSimpleName() + " error", e);
+                throw new SncpException(method + " create " + SncpServletAction.class.getSimpleName() + " error", e);
             }
             action.convert = convert;
             if (actionids.contains(actionid)) {
-                throw new RuntimeException(type.getName() + " have action(Method=" + method + ", actionid=" + actionid + ") same to (" + actions.get(actionid).method + ")");
+                throw new SncpException(type.getName() + " have action(Method=" + method + ", actionid=" + actionid + ") same to (" + actions.get(actionid).method + ")");
             }
             actions.put(actionid, action);
             actionids.add(actionid);
         }
-        maxNameLength.set(Math.max(maxNameLength.get(), serviceName.length() + 1));
+        maxNameLength.set(Math.max(maxNameLength.get(), serviceResourceName.length() + 1));
         maxTypeLength.set(Math.max(maxTypeLength.get(), type.getName().length()));
     }
 
@@ -384,7 +384,7 @@ public final class SncpDynServlet extends SncpServlet {
                 try {
                     convertFromDesc = Type.getMethodDescriptor(BsonConvert.class.getMethod("convertFrom", java.lang.reflect.Type.class, BsonReader.class));
                 } catch (Exception ex) {
-                    throw new RuntimeException(ex); //不可能会发生
+                    throw new SncpException(ex); //不可能会发生
                 }
                 { // action方法
                     mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + convertReaderDesc + convertWriterDesc + asyncHandlerDesc + ")V", null, new String[]{"java/lang/Throwable"}));
@@ -397,10 +397,10 @@ public final class SncpDynServlet extends SncpServlet {
                     for (int i = 0; i < paramClasses.length; i++) { //反序列化方法的每个参数
                         if (CompletionHandler.class.isAssignableFrom(paramClasses[i])) {
                             if (boolReturnTypeFuture) {
-                                throw new RuntimeException(method + " have both CompletionHandler and CompletableFuture");
+                                throw new SncpException(method + " have both CompletionHandler and CompletableFuture");
                             }
                             if (handlerFuncIndex >= 0) {
-                                throw new RuntimeException(method + " have more than one CompletionHandler type parameter");
+                                throw new SncpException(method + " have more than one CompletionHandler type parameter");
                             }
                             Sncp.checkAsyncModifier(paramClasses[i], method);
                             handlerFuncIndex = i;
@@ -463,7 +463,7 @@ public final class SncpDynServlet extends SncpServlet {
                                 mv.visitTypeInsn(CHECKCAST, bigPrimitiveName);
                                 mv.visitMethodInsn(INVOKEVIRTUAL, bigPrimitiveName, pm.getName(), Type.getMethodDescriptor(pm), false);
                             } catch (Exception ex) {
-                                throw new RuntimeException(ex); //不可能会发生
+                                throw new SncpException(ex); //不可能会发生
                             }
                             mv.visitVarInsn(storecode, store);
                         } else {
@@ -539,7 +539,7 @@ public final class SncpDynServlet extends SncpServlet {
                                 Method vo = bigClass.getMethod("valueOf", returnClass);
                                 mv.visitMethodInsn(INVOKESTATIC, bigClass.getName().replace('.', '/'), vo.getName(), Type.getMethodDescriptor(vo), false);
                             } catch (Exception ex) {
-                                throw new RuntimeException(ex); //不可能会发生
+                                throw new SncpException(ex); //不可能会发生
                             }
                         }
                         mv.visitVarInsn(ASTORE, store);  //11
@@ -688,7 +688,7 @@ public final class SncpDynServlet extends SncpServlet {
                 newClazz.getField("service").set(instance, service);
                 return instance;
             } catch (Exception ex) {
-                throw new RuntimeException(ex); //不可能会发生
+                throw new SncpException(ex); //不可能会发生
             }
         }
     }

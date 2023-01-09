@@ -137,7 +137,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                 } else if (lengthCode == 0x7F) {//0x7E=127   长度>65535
                     length = (int) realbuf.getLong();
                 } else {
-                    throw new RuntimeException("read webSocket packet lengthCode (" + (int) lengthCode + ") error");
+                    throw new HttpException("read webSocket packet lengthCode (" + (int) lengthCode + ") error");
                 }
                 byte[] masks0 = null;
                 if (masked) {
@@ -194,7 +194,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
             } else if (lengthCode == 0x7F) {//0x7E=127   长度>65535
                 length = (int) realbuf.getLong();
             } else {
-                throw new RuntimeException("read webSocket packet lengthCode (" + (int) lengthCode + ") error");
+                throw new HttpException("read webSocket packet lengthCode (" + (int) lengthCode + ") error");
             }
             byte[] masks0 = null;
             if (masked) {

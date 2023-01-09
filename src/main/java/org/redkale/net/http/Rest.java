@@ -188,7 +188,7 @@ public final class Rest {
                     return JsonFactory.create().skipAllIgnore(true);
                 }
                 if (types.contains(rc.type())) {
-                    throw new RuntimeException("@RestConvert type(" + rc.type() + ") repeat");
+                    throw new RestException("@RestConvert type(" + rc.type() + ") repeat");
                 }
                 if (rc.skipIgnore()) {
                     childFactory.registerSkipIgnore(rc.type());
@@ -310,17 +310,17 @@ public final class Rest {
 
     public static <T extends WebSocketServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType, MessageAgent messageAgent) {
         if (webSocketType == null) {
-            throw new RuntimeException("Rest WebSocket Class is null on createRestWebSocketServlet");
+            throw new RestException("Rest WebSocket Class is null on createRestWebSocketServlet");
         }
         if (Modifier.isAbstract(webSocketType.getModifiers())) {
-            throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
+            throw new RestException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
         }
         if (Modifier.isFinal(webSocketType.getModifiers())) {
-            throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
+            throw new RestException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
         }
         final RestWebSocket rws = webSocketType.getAnnotation(RestWebSocket.class);
         if (rws == null || rws.ignore()) {
-            throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") have not @RestWebSocket or @RestWebSocket.ignore=true on createRestWebSocketServlet");
+            throw new RestException("Rest WebSocket Class(" + webSocketType + ") have not @RestWebSocket or @RestWebSocket.ignore=true on createRestWebSocketServlet");
         }
         boolean valid = false;
         for (Constructor c : webSocketType.getDeclaredConstructors()) {
@@ -330,14 +330,14 @@ public final class Rest {
             }
         }
         if (!valid) {
-            throw new RuntimeException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
+            throw new RestException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
         }
         final String rwsname = ResourceFactory.formatResourceName(rws.name());
         if (!checkName(rws.catalog())) {
-            throw new RuntimeException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RestException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         if (!checkName(rwsname)) {
-            throw new RuntimeException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RestException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
 
         //----------------------------------------------------------------------------------------
@@ -354,13 +354,13 @@ public final class Rest {
                     continue;
                 }
                 if (Modifier.isStatic(field.getModifiers())) {
-                    throw new RuntimeException(field + " cannot static on createRestWebSocketServlet");
+                    throw new RestException(field + " cannot static on createRestWebSocketServlet");
                 }
                 if (Modifier.isFinal(field.getModifiers())) {
-                    throw new RuntimeException(field + " cannot final on createRestWebSocketServlet");
+                    throw new RestException(field + " cannot final on createRestWebSocketServlet");
                 }
                 if (!Modifier.isPublic(field.getModifiers()) && !Modifier.isProtected(field.getModifiers())) {
-                    throw new RuntimeException(field + " must be public or protected on createRestWebSocketServlet");
+                    throw new RestException(field + " must be public or protected on createRestWebSocketServlet");
                 }
                 resourcesFieldNameSet.add(field.getName());
                 resourcesFieldSet.add(field);
@@ -391,25 +391,25 @@ public final class Rest {
             }
             String name = rom.name();
             if (!"*".equals(name) && !checkName(name)) {
-                throw new RuntimeException("@RestOnMessage.name contains illegal characters on (" + method + ")");
+                throw new RestException("@RestOnMessage.name contains illegal characters on (" + method + ")");
             }
             if (Modifier.isFinal(method.getModifiers())) {
-                throw new RuntimeException("@RestOnMessage method can not final but (" + method + ")");
+                throw new RestException("@RestOnMessage method can not final but (" + method + ")");
             }
             if (Modifier.isStatic(method.getModifiers())) {
-                throw new RuntimeException("@RestOnMessage method can not static but (" + method + ")");
+                throw new RestException("@RestOnMessage method can not static but (" + method + ")");
             }
             if (method.getReturnType() != void.class) {
-                throw new RuntimeException("@RestOnMessage method must return void but (" + method + ")");
+                throw new RestException("@RestOnMessage method must return void but (" + method + ")");
             }
             if (method.getExceptionTypes().length > 0) {
-                throw new RuntimeException("@RestOnMessage method can not throw exception but (" + method + ")");
+                throw new RestException("@RestOnMessage method can not throw exception but (" + method + ")");
             }
             if (name.isEmpty()) {
-                throw new RuntimeException(method + " RestOnMessage.name is empty createRestWebSocketServlet");
+                throw new RestException(method + " RestOnMessage.name is empty createRestWebSocketServlet");
             }
             if (messageNames.contains(name)) {
-                throw new RuntimeException(method + " repeat RestOnMessage.name(" + name + ") createRestWebSocketServlet");
+                throw new RestException(method + " repeat RestOnMessage.name(" + name + ") createRestWebSocketServlet");
             }
             messageNames.add(name);
             if ("*".equals(name)) {
@@ -649,7 +649,7 @@ public final class Rest {
                     paramname = names.get(j);
                 }
                 if (paramnames.contains(paramname)) {
-                    throw new RuntimeException(method + " has same @RestParam.name");
+                    throw new RestException(method + " has same @RestParam.name");
                 }
                 paramnames.add(paramname);
                 paramap.put(paramname, param);
@@ -971,7 +971,7 @@ public final class Rest {
             }
             return servlet;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RestException(e);
         }
     }
 
@@ -979,19 +979,19 @@ public final class Rest {
         final Class<T> baseServletType, final Class<? extends Service> serviceType) {
 
         if (baseServletType == null || serviceType == null) {
-            throw new RuntimeException(" Servlet or Service is null Class on createRestServlet");
+            throw new RestException(" Servlet or Service is null Class on createRestServlet");
         }
         if (!HttpServlet.class.isAssignableFrom(baseServletType)) {
-            throw new RuntimeException(baseServletType + " is not HttpServlet Class on createRestServlet");
+            throw new RestException(baseServletType + " is not HttpServlet Class on createRestServlet");
         }
         int mod = baseServletType.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) {
-            throw new RuntimeException(baseServletType + " is not Public Class on createRestServlet");
+            throw new RestException(baseServletType + " is not Public Class on createRestServlet");
         }
         if (java.lang.reflect.Modifier.isAbstract(mod)) {
             for (Method m : baseServletType.getDeclaredMethods()) {
                 if (java.lang.reflect.Modifier.isAbstract(m.getModifiers())) { //@since 2.4.0
-                    throw new RuntimeException(baseServletType + " cannot contains a abstract Method on " + baseServletType);
+                    throw new RestException(baseServletType + " cannot contains a abstract Method on " + baseServletType);
                 }
             }
         }
@@ -1032,13 +1032,13 @@ public final class Rest {
         HttpUserType hut = baseServletType.getAnnotation(HttpUserType.class);
         final Class userType = (userType0 == null || userType0 == Object.class) ? (hut == null ? null : hut.value()) : userType0;
         if (userType != null && (userType.isPrimitive() || userType.getName().startsWith("java.") || userType.getName().startsWith("javax."))) {
-            throw new RuntimeException(HttpUserType.class.getSimpleName() + " must be a JavaBean but found " + userType);
+            throw new RestException(HttpUserType.class.getSimpleName() + " must be a JavaBean but found " + userType);
         }
 
         final String supDynName = baseServletType.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) {
-            throw new RuntimeException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
+            throw new RestException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
         }
         final boolean serrpconly = controller != null && controller.rpconly();
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
@@ -1485,10 +1485,10 @@ public final class Rest {
         final String bigmodulename = getWebModuleName(serviceType);
         final String catalog = controller == null ? "" : controller.catalog();
         if (!checkName(catalog)) {
-            throw new RuntimeException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         if (!checkName(defmodulename)) {
-            throw new RuntimeException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -1516,10 +1516,10 @@ public final class Rest {
         int methodidex = 0;
         final MessageMultiConsumer mmc = serviceType.getAnnotation(MessageMultiConsumer.class);
         if (mmc != null && (mmc.module() == null || mmc.module().isEmpty())) {
-            throw new RuntimeException("@" + MessageMultiConsumer.class.getSimpleName() + ".module can not empty in " + serviceType.getName());
+            throw new RestException("@" + MessageMultiConsumer.class.getSimpleName() + ".module can not empty in " + serviceType.getName());
         }
         if (mmc != null && !checkName2(mmc.module())) {
-            throw new RuntimeException(serviceType.getName() + " have illegal " + MessageMultiConsumer.class.getSimpleName() + ".module, only 0-9 a-z A-Z _ - . cannot begin 0-9");
+            throw new RestException(serviceType.getName() + " have illegal " + MessageMultiConsumer.class.getSimpleName() + ".module, only 0-9 a-z A-Z _ - . cannot begin 0-9");
         }
         if (mmc != null) {
             MethodDebugVisitor.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(mmc.annotationType()), true), mmc);
@@ -1577,26 +1577,26 @@ public final class Rest {
             if (extypes.length > 0) {
                 for (Class exp : extypes) {
                     if (!RuntimeException.class.isAssignableFrom(exp) && !IOException.class.isAssignableFrom(exp)) {
-                        throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with throws IOException");
+                        throw new RestException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with throws IOException");
                     }
                 }
             }
             if (mmc != null && method.getReturnType() != void.class) {
-                throw new RuntimeException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with return void by @" + MessageMultiConsumer.class.getSimpleName() + " Service");
+                throw new RestException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with return void by @" + MessageMultiConsumer.class.getSimpleName() + " Service");
             }
             paramTypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
             retvalTypes.add(formatRestReturnType(method, serviceType));
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
                 MappingEntry entry = new MappingEntry(serrpconly, methodidex, null, bigmodulename, method);
                 if (entrys.contains(entry)) {
-                    throw new RuntimeException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
+                    throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                 }
                 entrys.add(entry);
             } else {
                 for (RestMapping mapping : mappings) {
                     MappingEntry entry = new MappingEntry(serrpconly, methodidex, mapping, defmodulename, method);
                     if (entrys.contains(entry)) {
-                        throw new RuntimeException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
+                        throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                     }
                     entrys.add(entry);
                 }
@@ -1786,58 +1786,58 @@ public final class Rest {
                 RestHeader annhead = param.getAnnotation(RestHeader.class);
                 if (annhead != null) {
                     if (ptype != String.class && ptype != InetSocketAddress.class) {
-                        throw new RuntimeException("@RestHeader must on String or InetSocketAddress Parameter in " + method);
+                        throw new RestException("@RestHeader must on String or InetSocketAddress Parameter in " + method);
                     }
                     n = annhead.name();
                     radix = annhead.radix();
                     comment = annhead.comment();
                     required = false;
                     if (n.isEmpty()) {
-                        throw new RuntimeException("@RestHeader.value is illegal in " + method);
+                        throw new RestException("@RestHeader.value is illegal in " + method);
                     }
                 }
                 RestCookie anncookie = param.getAnnotation(RestCookie.class);
                 if (anncookie != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestCookie and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestCookie and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
-                        throw new RuntimeException("@RestCookie must on String Parameter in " + method);
+                        throw new RestException("@RestCookie must on String Parameter in " + method);
                     }
                     n = anncookie.name();
                     radix = anncookie.radix();
                     comment = anncookie.comment();
                     required = false;
                     if (n.isEmpty()) {
-                        throw new RuntimeException("@RestCookie.value is illegal in " + method);
+                        throw new RestException("@RestCookie.value is illegal in " + method);
                     }
                 }
                 RestSessionid annsid = param.getAnnotation(RestSessionid.class);
                 if (annsid != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestSessionid and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestSessionid and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestSessionid and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestSessionid and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
-                        throw new RuntimeException("@RestSessionid must on String Parameter in " + method);
+                        throw new RestException("@RestSessionid must on String Parameter in " + method);
                     }
                     required = false;
                 }
                 RestAddress annaddr = param.getAnnotation(RestAddress.class);
                 if (annaddr != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestAddress and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestAddress and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestAddress and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestAddress and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RuntimeException("@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
-                        throw new RuntimeException("@RestAddress must on String Parameter in " + method);
+                        throw new RestException("@RestAddress must on String Parameter in " + method);
                     }
                     comment = annaddr.comment();
                     required = false;
@@ -1845,19 +1845,19 @@ public final class Rest {
                 RestLocale annlocale = param.getAnnotation(RestLocale.class);
                 if (annlocale != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestLocale and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestLocale and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestLocale and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestLocale and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RuntimeException("@RestLocale and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestLocale and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RuntimeException("@RestLocale and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException("@RestLocale and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
-                        throw new RuntimeException("@RestAddress must on String Parameter in " + method);
+                        throw new RestException("@RestAddress must on String Parameter in " + method);
                     }
                     comment = annlocale.comment();
                     required = false;
@@ -1865,52 +1865,52 @@ public final class Rest {
                 RestBody annbody = param.getAnnotation(RestBody.class);
                 if (annbody != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestBody and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestBody and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestBody and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestBody and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RuntimeException("@RestBody and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestBody and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RuntimeException("@RestBody and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException("@RestBody and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RuntimeException("@RestBody and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException("@RestBody and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (ptype.isPrimitive()) {
-                        throw new RuntimeException("@RestBody cannot on primitive type Parameter in " + method);
+                        throw new RestException("@RestBody cannot on primitive type Parameter in " + method);
                     }
                     comment = annbody.comment();
                 }
                 RestUploadFile annfile = param.getAnnotation(RestUploadFile.class);
                 if (annfile != null) {
                     if (mupload != null) {
-                        throw new RuntimeException("@RestUploadFile repeat in " + method);
+                        throw new RestException("@RestUploadFile repeat in " + method);
                     }
                     mupload = annfile;
                     muploadType = ptype;
                     if (annhead != null) {
-                        throw new RuntimeException("@RestUploadFile and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUploadFile and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestUploadFile and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUploadFile and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RuntimeException("@RestUploadFile and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUploadFile and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RuntimeException("@RestUploadFile and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUploadFile and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RuntimeException("@RestUploadFile and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUploadFile and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RuntimeException("@RestUploadFile and @RestBody cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUploadFile and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (ptype != byte[].class && ptype != File.class && ptype != File[].class) {
-                        throw new RuntimeException("@RestUploadFile must on byte[] or File or File[] Parameter in " + method);
+                        throw new RestException("@RestUploadFile must on byte[] or File or File[] Parameter in " + method);
                     }
                     comment = annfile.comment();
                 }
@@ -1918,28 +1918,28 @@ public final class Rest {
                 RestURI annuri = param.getAnnotation(RestURI.class);
                 if (annuri != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestURI and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestURI and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestURI and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestURI and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RuntimeException("@RestURI and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestURI and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RuntimeException("@RestURI and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException("@RestURI and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RuntimeException("@RestURI and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException("@RestURI and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RuntimeException("@RestURI and @RestBody cannot on the same Parameter in " + method);
+                        throw new RestException("@RestURI and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RuntimeException("@RestURI and @RestUploadFile cannot on the same Parameter in " + method);
+                        throw new RestException("@RestURI and @RestUploadFile cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
-                        throw new RuntimeException("@RestURI must on String Parameter in " + method);
+                        throw new RestException("@RestURI must on String Parameter in " + method);
                     }
                     comment = annuri.comment();
                 }
@@ -1947,28 +1947,28 @@ public final class Rest {
                 RestUserid userid = param.getAnnotation(RestUserid.class);
                 if (userid != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestUserid and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUserid and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestUserid and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUserid and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RuntimeException("@RestUserid and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUserid and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RuntimeException("@RestUserid and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUserid and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RuntimeException("@RestUserid and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUserid and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RuntimeException("@RestUserid and @RestBody cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUserid and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RuntimeException("@RestUserid and @RestUploadFile cannot on the same Parameter in " + method);
+                        throw new RestException("@RestUserid and @RestUploadFile cannot on the same Parameter in " + method);
                     }
                     if (!ptype.isPrimitive() && !java.io.Serializable.class.isAssignableFrom(ptype)) {
-                        throw new RuntimeException("@RestUserid must on java.io.Serializable Parameter in " + method);
+                        throw new RestException("@RestUserid must on java.io.Serializable Parameter in " + method);
                     }
                     comment = "";
                     required = false;
@@ -1977,31 +1977,31 @@ public final class Rest {
                 RestHeaders annheaders = param.getAnnotation(RestHeaders.class);
                 if (annheaders != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestHeaders and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestHeaders and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestHeaders and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestHeaders and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RuntimeException("@RestHeaders and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestHeaders and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RuntimeException("@RestHeaders and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException("@RestHeaders and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RuntimeException("@RestHeaders and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException("@RestHeaders and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RuntimeException("@RestHeaders and @RestBody cannot on the same Parameter in " + method);
+                        throw new RestException("@RestHeaders and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RuntimeException("@RestHeaders and @RestUploadFile cannot on the same Parameter in " + method);
+                        throw new RestException("@RestHeaders and @RestUploadFile cannot on the same Parameter in " + method);
                     }
                     if (userid != null) {
-                        throw new RuntimeException("@RestHeaders and @RestUserid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestHeaders and @RestUserid cannot on the same Parameter in " + method);
                     }
                     if (!TYPE_MAP_STRING_STRING.equals(param.getParameterizedType())) {
-                        throw new RuntimeException("@RestHeaders must on Map<String, String> Parameter in " + method);
+                        throw new RestException("@RestHeaders must on Map<String, String> Parameter in " + method);
                     }
                     comment = "";
                     required = false;
@@ -2009,34 +2009,34 @@ public final class Rest {
                 RestParams annparams = param.getAnnotation(RestParams.class);
                 if (annparams != null) {
                     if (annhead != null) {
-                        throw new RuntimeException("@RestParams and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RuntimeException("@RestParams and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RuntimeException("@RestParams and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RuntimeException("@RestParams and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RuntimeException("@RestParams and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RuntimeException("@RestParams and @RestBody cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RuntimeException("@RestParams and @RestUploadFile cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestUploadFile cannot on the same Parameter in " + method);
                     }
                     if (userid != null) {
-                        throw new RuntimeException("@RestParams and @RestUserid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestUserid cannot on the same Parameter in " + method);
                     }
                     if (annheaders != null) {
-                        throw new RuntimeException("@RestParams and @RestHeaders cannot on the same Parameter in " + method);
+                        throw new RestException("@RestParams and @RestHeaders cannot on the same Parameter in " + method);
                     }
                     if (!TYPE_MAP_STRING_STRING.equals(param.getParameterizedType())) {
-                        throw new RuntimeException("@RestParams must on Map<String, String> Parameter in " + method);
+                        throw new RestException("@RestParams must on Map<String, String> Parameter in " + method);
                     }
                     comment = "";
                 }
@@ -2066,7 +2066,7 @@ public final class Rest {
                     } else if (ptype == Flipper.class) {
                         n = "flipper";
                     } else {
-                        throw new RuntimeException("Parameter " + param.getName() + " not found name by @RestParam  in " + method);
+                        throw new RestException("Parameter " + param.getName() + " not found name by @RestParam  in " + method);
                     }
                 }
                 if (annhead == null && anncookie == null && annsid == null && annaddr == null && annlocale == null && annbody == null && annfile == null
@@ -2089,7 +2089,7 @@ public final class Rest {
                                 continue;
                             }
                             if (mupload != null) {
-                                throw new RuntimeException("@RestUploadFile repeat in " + method + " or field " + field);
+                                throw new RestException("@RestUploadFile repeat in " + method + " or field " + field);
                             }
                             mupload = ruf;
                             muploadType = field.getType();
@@ -2508,7 +2508,7 @@ public final class Rest {
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
-                        throw new RuntimeException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
+                        throw new RestException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
                     }
                 } else if (pname.charAt(0) == '#') { //从request.getRequstURIPath 中去参数
                     if (ptype == boolean.class) {
@@ -2590,7 +2590,7 @@ public final class Rest {
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
-                        throw new RuntimeException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
+                        throw new RestException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
                     }
                 } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
                     mv.visitVarInsn(ALOAD, 1);
@@ -2736,29 +2736,29 @@ public final class Rest {
                                 continue;
                             }
                             if (rh != null && field.getType() != String.class && field.getType() != InetSocketAddress.class) {
-                                throw new RuntimeException("@RestHeader must on String Field in " + field);
+                                throw new RestException("@RestHeader must on String Field in " + field);
                             }
                             if (rc != null && field.getType() != String.class) {
-                                throw new RuntimeException("@RestCookie must on String Field in " + field);
+                                throw new RestException("@RestCookie must on String Field in " + field);
                             }
                             if (rs != null && field.getType() != String.class) {
-                                throw new RuntimeException("@RestSessionid must on String Field in " + field);
+                                throw new RestException("@RestSessionid must on String Field in " + field);
                             }
                             if (ra != null && field.getType() != String.class) {
-                                throw new RuntimeException("@RestAddress must on String Field in " + field);
+                                throw new RestException("@RestAddress must on String Field in " + field);
                             }
                             if (rl != null && field.getType() != String.class) {
-                                throw new RuntimeException("@RestLocale must on String Field in " + field);
+                                throw new RestException("@RestLocale must on String Field in " + field);
                             }
                             if (rb != null && field.getType().isPrimitive()) {
-                                throw new RuntimeException("@RestBody must on cannot on primitive type Field in " + field);
+                                throw new RestException("@RestBody must on cannot on primitive type Field in " + field);
                             }
                             if (ru != null && field.getType() != byte[].class && field.getType() != File.class && field.getType() != File[].class) {
-                                throw new RuntimeException("@RestUploadFile must on byte[] or File or File[] Field in " + field);
+                                throw new RestException("@RestUploadFile must on byte[] or File or File[] Field in " + field);
                             }
 
                             if (ri != null && field.getType() != String.class) {
-                                throw new RuntimeException("@RestURI must on String Field in " + field);
+                                throw new RestException("@RestURI must on String Field in " + field);
                             }
                             org.redkale.util.Attribute attr = org.redkale.util.Attribute.create(loop, field);
                             String attrFieldName;
@@ -3330,7 +3330,7 @@ public final class Rest {
                     RedkaleClassLoader.putDynClass(n, bs, newLoader.findClass(n));
                     RedkaleClassLoader.putReflectionClass(n);
                 } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+                    throw new RestException(e);
                 }
             });
             RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
@@ -3407,7 +3407,7 @@ public final class Rest {
             RedkaleClassLoader.putReflectionField(HttpServlet.class.getName(), tmpentrysfield);
             return obj;
         } catch (Throwable e) {
-            throw new RuntimeException(e);
+            throw new RestException(e);
         }
     }
 

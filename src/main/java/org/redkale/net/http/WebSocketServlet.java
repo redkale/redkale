@@ -7,17 +7,17 @@ package org.redkale.net.http;
 
 import java.io.*;
 import java.lang.reflect.*;
-import java.net.*;
-import java.nio.*;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
-import java.security.*;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.zip.*;
-import org.redkale.annotation.*;
 import org.redkale.annotation.Comment;
+import org.redkale.annotation.*;
 import org.redkale.boot.Application;
 import static org.redkale.boot.Application.RESNAME_SERVER_RESFACTORY;
 import org.redkale.convert.Convert;
@@ -166,7 +166,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, cryptorClass);
                         if (resourceFactory != null && this.cryptor != null) resourceFactory.inject(this.cryptor);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new HttpException(e);
                     }
                 }
             }
@@ -389,7 +389,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         try {
             return MessageDigest.getInstance("SHA-1");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new HttpException(e);
         }
     }
 

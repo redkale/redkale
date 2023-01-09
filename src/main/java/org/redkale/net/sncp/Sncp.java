@@ -57,7 +57,7 @@ public abstract class Sncp {
     private Sncp() {
     }
 
-    public static Uint128 hash(final java.lang.reflect.Method method) {
+    public static Uint128 actionid(final java.lang.reflect.Method method) {
         if (method == null) {
             return Uint128.ZERO;
         }
@@ -77,6 +77,10 @@ public abstract class Sncp {
         return hash(sb.toString());
     }
 
+    public static Uint128 serviceid(String serviceResourceName, Class serviceResourceType) {
+        return hash(serviceResourceType.getName() + ':' + serviceResourceName);
+    }
+
     /**
      * 对类名或者name字符串进行hash。
      *
@@ -84,7 +88,7 @@ public abstract class Sncp {
      *
      * @return hash值
      */
-    public static Uint128 hash(final String name) {
+    private static Uint128 hash(final String name) {
         if (name == null || name.isEmpty()) {
             return Uint128.ZERO;
         }
@@ -153,7 +157,7 @@ public abstract class Sncp {
             ts.setAccessible(true);
             return (AnyValue) ts.get(service);
         } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_conf");
+            throw new SncpException(service + " not found " + FIELDPREFIX + "_conf");
         }
     }
 
@@ -166,7 +170,7 @@ public abstract class Sncp {
             ts.setAccessible(true);
             return (SncpClient) ts.get(service);
         } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_client");
+            throw new SncpException(service + " not found " + FIELDPREFIX + "_client");
         }
     }
 
@@ -179,7 +183,7 @@ public abstract class Sncp {
             ts.setAccessible(true);
             return (MessageAgent) ts.get(service);
         } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_messageagent");
+            throw new SncpException(service + " not found " + FIELDPREFIX + "_messageagent");
         }
     }
 
@@ -197,7 +201,7 @@ public abstract class Sncp {
                 c.set(service, messageAgent);
             }
         } catch (Exception e) {
-            throw new RuntimeException(service + " not found " + FIELDPREFIX + "_messageagent");
+            throw new SncpException(service + " not found " + FIELDPREFIX + "_messageagent");
         }
     }
 
@@ -222,10 +226,10 @@ public abstract class Sncp {
             return;
         }
         if (Modifier.isFinal(param.getModifiers())) {
-            throw new RuntimeException("CompletionHandler Type Parameter on {" + method + "} cannot final modifier");
+            throw new SncpException("CompletionHandler Type Parameter on {" + method + "} cannot final modifier");
         }
         if (!Modifier.isPublic(param.getModifiers())) {
-            throw new RuntimeException("CompletionHandler Type Parameter on {" + method + "} must be public modifier");
+            throw new SncpException("CompletionHandler Type Parameter on {" + method + "} must be public modifier");
         }
         if (param.isInterface()) {
             return;
@@ -245,21 +249,21 @@ public abstract class Sncp {
             constructorflag = true;
         }
         if (!constructorflag) {
-            throw new RuntimeException(param + " must have a empty parameter Constructor");
+            throw new SncpException(param + " must have a empty parameter Constructor");
         }
         for (Method m : param.getMethods()) {
             if (m.getName().equals("completed") && Modifier.isFinal(m.getModifiers())) {
-                throw new RuntimeException(param + "'s completed method cannot final modifier");
+                throw new SncpException(param + "'s completed method cannot final modifier");
             } else if (m.getName().equals("failed") && Modifier.isFinal(m.getModifiers())) {
-                throw new RuntimeException(param + "'s failed method cannot final modifier");
+                throw new SncpException(param + "'s failed method cannot final modifier");
             } else if (m.getName().equals("sncp_getParams") && Modifier.isFinal(m.getModifiers())) {
-                throw new RuntimeException(param + "'s sncp_getParams method cannot final modifier");
+                throw new SncpException(param + "'s sncp_getParams method cannot final modifier");
             } else if (m.getName().equals("sncp_setParams") && Modifier.isFinal(m.getModifiers())) {
-                throw new RuntimeException(param + "'s sncp_setParams method cannot final modifier");
+                throw new SncpException(param + "'s sncp_setParams method cannot final modifier");
             } else if (m.getName().equals("sncp_setFuture") && Modifier.isFinal(m.getModifiers())) {
-                throw new RuntimeException(param + "'s sncp_setFuture method cannot final modifier");
+                throw new SncpException(param + "'s sncp_setFuture method cannot final modifier");
             } else if (m.getName().equals("sncp_getFuture") && Modifier.isFinal(m.getModifiers())) {
-                throw new RuntimeException(param + "'s sncp_getFuture method cannot final modifier");
+                throw new SncpException(param + "'s sncp_getFuture method cannot final modifier");
             }
         }
     }
@@ -331,19 +335,17 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     protected static <T extends Service> Class<? extends T> createLocalServiceClass(ClassLoader classLoader, final String name, final Class<T> serviceImplClass) {
-        if (serviceImplClass == null) {
-            return null;
-        }
+        Objects.requireNonNull(serviceImplClass);
         if (!Service.class.isAssignableFrom(serviceImplClass)) {
-            return serviceImplClass;
+            throw new SncpException(serviceImplClass + " is not Service type");
         }
         ResourceFactory.checkResourceName(name);
         int mod = serviceImplClass.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) {
-            return serviceImplClass;
+            throw new SncpException(serviceImplClass + " is not public");
         }
         if (java.lang.reflect.Modifier.isAbstract(mod)) {
-            return serviceImplClass;
+            throw new SncpException(serviceImplClass + " is abstract");
         }
         final String supDynName = serviceImplClass.getName().replace('.', '/');
         final String clientName = SncpClient.class.getName().replace('.', '/');
@@ -362,7 +364,7 @@ public abstract class Sncp {
                 }
             }
             if (!normal) {
-                throw new RuntimeException(serviceImplClass + "'s resource name is illegal, must be 0-9 _ a-z A-Z");
+                throw new SncpException(serviceImplClass + "'s resource name is illegal, must be 0-9 _ a-z A-Z");
             }
             newDynName += "_" + (normal ? name : hash(name));
         }
@@ -568,7 +570,7 @@ public abstract class Sncp {
         } catch (RuntimeException rex) {
             throw rex;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new SncpException(ex);
         }
     }
 
@@ -843,7 +845,7 @@ public abstract class Sncp {
                             java.lang.reflect.Method pm = bigPrimitiveClass.getMethod(returnclz.getSimpleName() + "Value");
                             mv.visitMethodInsn(INVOKEVIRTUAL, bigPrimitiveName, pm.getName(), Type.getMethodDescriptor(pm), false);
                         } catch (Exception ex) {
-                            throw new RuntimeException(ex); //不可能会发生
+                            throw new SncpException(ex); //不可能会发生
                         }
                         if (returnclz == long.class) {
                             mv.visitInsn(LRETURN);
@@ -908,7 +910,7 @@ public abstract class Sncp {
             }
             return service;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new SncpException(ex);
         }
 
     }

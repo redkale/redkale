@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import org.redkale.net.*;
 import org.redkale.service.Service;
-import org.redkale.util.*;
+import org.redkale.util.Uint128;
 
 /**
  *
@@ -26,10 +26,10 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
 
     protected final Service service;
 
-    protected SncpServlet(String serviceName, Class serviceOrSourceType, Service service) {
-        this.type = serviceOrSourceType;
+    protected SncpServlet(String serviceResourceName, Class serviceResourceType, Service service) {
+        this.serviceName = serviceResourceName;
+        this.type = serviceResourceType;
         this.service = service;
-        this.serviceName = serviceName;
     }
 
     public Service getService() {
@@ -56,7 +56,9 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
 
     @Override
     public final boolean equals(Object obj) {
-        if (!(obj instanceof SncpServlet)) return false;
+        if (!(obj instanceof SncpServlet)) {
+            return false;
+        }
         return Objects.equals(getServiceid(), ((SncpServlet) obj).getServiceid());
     }
 

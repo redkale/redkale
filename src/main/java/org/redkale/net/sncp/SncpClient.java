@@ -73,29 +73,28 @@ public final class SncpClient {
     //远程模式, 可能为null
     protected Transport remoteGroupTransport;
 
-    public <T extends Service> SncpClient(final String serviceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent messageAgent, final TransportFactory factory,
+    public <T extends Service> SncpClient(final String serviceResourceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent messageAgent, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
         this.remote = remote;
         this.messageAgent = messageAgent;
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
         this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(service);
-        Class<?> tn = serviceTypeOrImplClass;
         this.serviceClass = serviceClass;
         this.serviceVersion = 0; //暂不实现Version
         this.clientSncpAddress = clientSncpAddress;
-        this.name = serviceName;
-        tn = ResourceFactory.getResourceType(tn);
-        this.serviceid = Sncp.hash(tn.getName() + ':' + serviceName);
+        this.name = serviceResourceName;
+        Class<?> serviceResourceType = ResourceFactory.getResourceType(serviceTypeOrImplClass); //serviceResourceType
+        this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
         for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
-            methodens.add(new SncpAction(serviceClass, method, Sncp.hash(method)));
+            methodens.add(new SncpAction(serviceClass, method, Sncp.actionid(method)));
         }
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
         this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
         if (this.addrBytes.length != 4) {
-            throw new RuntimeException("SNCP clientAddress only support IPv4");
+            throw new SncpException("SNCP clientAddress only support IPv4");
         }
     }
 
@@ -103,7 +102,7 @@ public final class SncpClient {
         final List<SncpAction> actions = new ArrayList<>();
         //------------------------------------------------------------------------------
         for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
-            actions.add(new SncpAction(serviceClass, method, Sncp.hash(method)));
+            actions.add(new SncpAction(serviceClass, method, Sncp.actionid(method)));
         }
         return actions;
     }
@@ -204,11 +203,11 @@ public final class SncpClient {
             }
             //if (onlySncpDyn && method.getAnnotation(SncpDyn.class) == null) continue;
 
-            Uint128 actionid = Sncp.hash(method);
+            Uint128 actionid = Sncp.actionid(method);
             Method old = actionids.get(actionid);
             if (old != null) {
                 if (old.getDeclaringClass().equals(method.getDeclaringClass())) {
-                    throw new RuntimeException(serviceClass.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
+                    throw new SncpException(serviceClass.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
                 }
                 continue;
             }
@@ -341,7 +340,7 @@ public final class SncpClient {
                 final int retcode = buffer.getInt();
                 if (retcode != 0) {
                     logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + "), params=" + JsonConvert.root().convertTo(params));
-                    throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                    throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
                 }
                 byte[] body = new byte[respBodyLength];
                 buffer.get(body, 0, respBodyLength);
@@ -411,7 +410,7 @@ public final class SncpClient {
                                 final int retcode = buffer.getInt();
                                 if (retcode != 0) {
                                     logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + "), params=" + JsonConvert.root().convertTo(params));
-                                    throw new RuntimeException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                                    throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
                                 }
 
                                 if (respBodyLength > buffer.remaining()) { // 数据不全，需要继续读取
@@ -494,23 +493,23 @@ public final class SncpClient {
     private void checkResult(long seqid, final SncpAction action, ByteBuffer buffer) {
         long rseqid = buffer.getLong();
         if (rseqid != seqid) {
-            throw new RuntimeException("sncp(" + action.method + ") response.seqid = " + seqid + ", but request.seqid =" + rseqid);
+            throw new SncpException("sncp(" + action.method + ") response.seqid = " + seqid + ", but request.seqid =" + rseqid);
         }
         if (buffer.getChar() != HEADER_SIZE) {
-            throw new RuntimeException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
+            throw new SncpException("sncp(" + action.method + ") buffer receive header.length not " + HEADER_SIZE);
         }
         Uint128 rserviceid = Uint128.read(buffer);
         if (!rserviceid.equals(this.serviceid)) {
-            throw new RuntimeException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
+            throw new SncpException("sncp(" + action.method + ") response.serviceid = " + serviceid + ", but request.serviceid =" + rserviceid);
         }
         int version = buffer.getInt();
         if (version != this.serviceVersion) {
-            throw new RuntimeException("sncp(" + action.method + ") response.serviceVersion = " + serviceVersion + ", but request.serviceVersion =" + version);
+            throw new SncpException("sncp(" + action.method + ") response.serviceVersion = " + serviceVersion + ", but request.serviceVersion =" + version);
         }
         Uint128 raction = Uint128.read(buffer);
         Uint128 actid = action.actionid;
         if (!actid.equals(raction)) {
-            throw new RuntimeException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
+            throw new SncpException("sncp(" + action.method + ") response.actionid = " + action.actionid + ", but request.actionid =(" + raction + ")");
         }
         buffer.getInt();  //地址
         buffer.getChar(); //端口
@@ -551,7 +550,7 @@ public final class SncpClient {
 
         @SuppressWarnings("unchecked")
         public SncpAction(final Class clazz, Method method, Uint128 actionid) {
-            this.actionid = actionid == null ? Sncp.hash(method) : actionid;
+            this.actionid = actionid == null ? Sncp.actionid(method) : actionid;
             Type rt = TypeToken.getGenericType(method.getGenericReturnType(), clazz);
             this.resultTypes = rt == void.class ? null : rt;
             this.boolReturnTypeFuture = CompletableFuture.class.isAssignableFrom(method.getReturnType());
@@ -572,10 +571,10 @@ public final class SncpClient {
                 for (int i = 0; i < params.length; i++) {
                     if (CompletionHandler.class.isAssignableFrom(params[i])) {
                         if (boolReturnTypeFuture) {
-                            throw new RuntimeException(method + " have both CompletionHandler and CompletableFuture");
+                            throw new SncpException(method + " have both CompletionHandler and CompletableFuture");
                         }
                         if (handlerFuncIndex >= 0) {
-                            throw new RuntimeException(method + " have more than one CompletionHandler type parameter");
+                            throw new SncpException(method + " have more than one CompletionHandler type parameter");
                         }
                         Sncp.checkAsyncModifier(params[i], method);
                         handlerFuncIndex = i;
@@ -587,7 +586,7 @@ public final class SncpClient {
                         for (Annotation ann : anns[i]) {
                             if (ann.annotationType() == RpcAttachment.class) {
                                 if (handlerAttachIndex >= 0) {
-                                    throw new RuntimeException(method + " have more than one @RpcAttachment parameter");
+                                    throw new SncpException(method + " have more than one @RpcAttachment parameter");
                                 }
                                 handlerAttachIndex = i;
                             } else if (ann.annotationType() == RpcTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
@@ -620,7 +619,7 @@ public final class SncpClient {
             this.handlerAttachParamIndex = handlerAttachIndex;
             this.paramAttrs = hasattr ? atts : null;
             if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) {
-                throw new RuntimeException(method + " have CompletionHandler type parameter but return type is not void");
+                throw new SncpException(method + " have CompletionHandler type parameter but return type is not void");
             }
         }
 

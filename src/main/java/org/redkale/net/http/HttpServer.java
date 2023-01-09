@@ -326,7 +326,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             }
             mapfield.set(servlet, map);
         } catch (Exception e) {
-            throw new RuntimeException(serviceType + " generate rest servlet error", e);
+            throw new HttpException(serviceType + " generate rest servlet error", e);
         }
         if (first) {
             this.dispatcher.addServlet(servlet, prefix, sncp ? Sncp.getConf(service) : null);
@@ -514,19 +514,19 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         if (rpcAuthenticatorConfig != null) {
             String impl = rpcAuthenticatorConfig.getValue("authenticator", "").trim();
             if (impl.isEmpty()) {
-                throw new RuntimeException("init HttpRpcAuthenticator(" + impl + ") error");
+                throw new HttpException("init HttpRpcAuthenticator(" + impl + ") error");
             }
             try {
                 Class implClass = serverClassLoader.loadClass(impl);
                 if (!HttpRpcAuthenticator.class.isAssignableFrom(implClass)) {
-                    throw new RuntimeException("" + impl + " not HttpRpcAuthenticator implement class");
+                    throw new HttpException("" + impl + " not HttpRpcAuthenticator implement class");
                 }
                 RedkaleClassLoader.putReflectionPublicConstructors(implClass, implClass.getName());
                 contextConfig.rpcAuthenticator = (HttpRpcAuthenticator) implClass.getConstructor().newInstance();
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception e) {
-                throw new RuntimeException("init HttpRpcAuthenticator(" + impl + ") error", e);
+                throw new HttpException("init HttpRpcAuthenticator(" + impl + ") error", e);
             }
         }
         return new HttpContext(contextConfig);

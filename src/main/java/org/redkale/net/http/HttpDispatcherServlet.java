@@ -426,7 +426,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 }
                 if (this.allMapStrings.containsKey(mappingPath)) {
                     Class old = this.allMapStrings.get(mappingPath);
-                    throw new RuntimeException("mapping [" + mappingPath + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
+                    throw new HttpException("mapping [" + mappingPath + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
                 }
                 this.allMapStrings.put(mappingPath, servlet.getClass());
             }

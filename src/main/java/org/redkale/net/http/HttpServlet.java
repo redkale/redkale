@@ -282,7 +282,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     if (nameset.get(name) != clz) {
                         continue;
                     }
-                    throw new RuntimeException(this.getClass().getSimpleName() + " have two same " + HttpMapping.class.getSimpleName() + "(" + name + ")");
+                    throw new HttpException(this.getClass().getSimpleName() + " have two same " + HttpMapping.class.getSimpleName() + "(" + name + ")");
                 }
                 nameset.put(name, clz);
                 map.put(name, new ActionEntry(serviceid, actionid, name, methods, method, createActionServlet(method)));
@@ -480,7 +480,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), field);
             return instance;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new HttpException(ex);
         }
     }
 
