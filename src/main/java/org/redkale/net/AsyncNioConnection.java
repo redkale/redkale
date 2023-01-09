@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
-import org.redkale.util.*;
+import org.redkale.util.ByteBufferWriter;
 
 /**
  *
@@ -27,7 +27,7 @@ import org.redkale.util.*;
  */
 abstract class AsyncNioConnection extends AsyncConnection {
 
-    protected static final int MAX_INVOKER_ONSTACK = Integer.getInteger("redkale.net.invoker.max.onstack", Utility.cpus());
+    protected static final int MAX_INVOKER_ONSTACK = Integer.getInteger("redkale.net.invoker.max.onstack", 16);
 
     final AsyncIOThread connectThread;
 
@@ -161,11 +161,12 @@ abstract class AsyncNioConnection extends AsyncConnection {
         } else {
             this.readCompletionHandler = handler;
         }
-        if (client) {
-            doRead(this.ioReadThread.inCurrThread());
-        } else {
-            doRead(this.ioReadThread.inCurrThread() || currReadInvoker < MAX_INVOKER_ONSTACK); //同一线程中Selector.wakeup无效
-        }
+        doRead(this.ioReadThread.inCurrThread());
+//        if (client) {
+//            doRead(this.ioReadThread.inCurrThread());
+//        } else {
+//            doRead(this.ioReadThread.inCurrThread() || currReadInvoker < MAX_INVOKER_ONSTACK); //同一线程中Selector.wakeup无效
+//        }
     }
 
     @Override
