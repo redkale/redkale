@@ -361,6 +361,73 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         }
     }
 
+    //src写完才会回调
+    public final <A> void writeInIOThread(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        if (inCurrWriteThread()) {
+            write(src, attachment, handler);
+        } else {
+            executeWrite(() -> write(src, attachment, handler));
+        }
+    }
+
+    //srcs写完才会回调
+    public final <A> void writeInIOThread(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        if (inCurrWriteThread()) {
+            write(srcs, offset, length, attachment, handler);
+        } else {
+            executeWrite(() -> write(srcs, offset, length, attachment, handler));
+        }
+    }
+
+    //srcs写完才会回调
+    public final <A> void writeInIOThread(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        if (inCurrWriteThread()) {
+            write(srcs, attachment, handler);
+        } else {
+            executeWrite(() -> write(srcs, attachment, handler));
+        }
+    }
+
+    public final void writeInIOThread(byte[] bytes, CompletionHandler<Integer, Void> handler) {
+        if (inCurrWriteThread()) {
+            write(bytes, handler);
+        } else {
+            executeWrite(() -> write(bytes, handler));
+        }
+    }
+
+    public final void writeInIOThread(ByteTuple array, CompletionHandler<Integer, Void> handler) {
+        if (inCurrWriteThread()) {
+            write(array, handler);
+        } else {
+            executeWrite(() -> write(array, handler));
+        }
+    }
+
+    public final void writeInIOThread(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
+        if (inCurrWriteThread()) {
+            write(bytes, offset, length, handler);
+        } else {
+            executeWrite(() -> write(bytes, offset, length, handler));
+        }
+    }
+
+    public final void writeInIOThread(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
+        if (inCurrWriteThread()) {
+            write(header, body, handler);
+        } else {
+            executeWrite(() -> write(header, body, handler));
+        }
+    }
+
+    public final void writeInIOThread(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
+        if (inCurrWriteThread()) {
+            write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, handler);
+        } else {
+            executeWrite(() -> write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, handler));
+        }
+    }
+
     public void setReadBuffer(ByteBuffer buffer) {
         if (this.readBuffer != null) {
             throw new RuntimeException("repeat AsyncConnection.setReadBuffer");
