@@ -6,7 +6,6 @@
 package org.redkale.net.sncp;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
@@ -21,7 +20,7 @@ import org.redkale.asm.Type;
 import org.redkale.convert.bson.*;
 import org.redkale.net.sncp.SncpAsyncHandler.DefaultSncpAsyncHandler;
 import static org.redkale.net.sncp.SncpRequest.DEFAULT_HEADER;
-import org.redkale.service.*;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
@@ -49,49 +48,16 @@ public final class SncpDynServlet extends SncpServlet {
         this.maxTypeLength = maxTypeLength;
         this.maxNameLength = maxNameLength;
         this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
-        Set<Uint128> actionids = new HashSet<>();
         RedkaleClassLoader.putReflectionPublicMethods(service.getClass().getName());
-        for (java.lang.reflect.Method method : service.getClass().getMethods()) {
-            if (method.isSynthetic()) {
-                continue;
-            }
-            if (Modifier.isStatic(method.getModifiers())) {
-                continue;
-            }
-            if (Modifier.isFinal(method.getModifiers())) {
-                continue;
-            }
-            if (method.getAnnotation(Local.class) != null) {
-                continue;
-            }
-            if (method.getName().equals("getClass") || method.getName().equals("toString")) {
-                continue;
-            }
-            if (method.getName().equals("equals") || method.getName().equals("hashCode")) {
-                continue;
-            }
-            if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) {
-                continue;
-            }
-            if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == AnyValue.class) {
-                if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) {
-                    continue;
-                }
-            }
-
-            final Uint128 actionid = Sncp.actionid(method);
+        for (Map.Entry<Uint128, Method> en : SncpClient.parseMethodActions(service.getClass()).entrySet()) {
             SncpServletAction action;
             try {
-                action = SncpServletAction.create(service, actionid, method);
+                action = SncpServletAction.create(service, en.getKey(), en.getValue());
             } catch (RuntimeException e) {
-                throw new SncpException(method + " create " + SncpServletAction.class.getSimpleName() + " error", e);
+                throw new SncpException(en.getValue() + " create " + SncpServletAction.class.getSimpleName() + " error", e);
             }
             action.convert = convert;
-            if (actionids.contains(actionid)) {
-                throw new SncpException(type.getName() + " have action(Method=" + method + ", actionid=" + actionid + ") same to (" + actions.get(actionid).method + ")");
-            }
-            actions.put(actionid, action);
-            actionids.add(actionid);
+            actions.put(en.getKey(), action);
         }
         maxNameLength.set(Math.max(maxNameLength.get(), serviceResourceName.length() + 1));
         maxTypeLength.set(Math.max(maxTypeLength.get(), type.getName().length()));
@@ -662,29 +628,6 @@ public final class SncpDynServlet extends SncpServlet {
                 instance.handlerFuncParamIndex = handlerFuncIndex;
                 instance.handlerFuncParamClass = handlerFuncClass;
                 instance.boolReturnTypeFuture = boolReturnTypeFuture;
-
-                org.redkale.util.Attribute[] atts = new org.redkale.util.Attribute[originalParamTypes.length + 1];
-                Annotation[][] anns = method.getParameterAnnotations();
-                boolean hasattr = false;
-                for (int i = 0; i < anns.length; i++) {
-                    if (anns[i].length > 0) {
-                        for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == RpcCall.class) {
-                                try {
-                                    atts[i + 1] = ((RpcCall) ann).value().getDeclaredConstructor().newInstance();
-                                    RedkaleClassLoader.putReflectionDeclaredConstructors(((RpcCall) ann).value(), ((RpcCall) ann).value().getName());
-                                    hasattr = true;
-                                } catch (Exception e) {
-                                    logger.log(Level.SEVERE, RpcCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (hasattr) {
-                    instance.paramAttrs = atts;
-                }
                 newClazz.getField("service").set(instance, service);
                 return instance;
             } catch (Exception ex) {

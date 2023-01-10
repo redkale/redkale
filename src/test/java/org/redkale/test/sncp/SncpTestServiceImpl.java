@@ -8,8 +8,7 @@ package org.redkale.test.sncp;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
-import java.util.concurrent.*;
-
+import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.ResourceType;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
@@ -84,7 +83,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     @Override
-    public void insert(@RpcCall(RpcCallArrayAttribute.class) SncpTestBean... beans) {
+    public void insert(SncpTestBean... beans) {
         for (SncpTestBean bean : beans) {
             bean.setId(System.currentTimeMillis());
         }
@@ -98,11 +97,13 @@ public class SncpTestServiceImpl implements SncpTestIService {
 
     public void queryResult(CompletionHandler<String, SncpTestBean> handler, @RpcAttachment SncpTestBean bean) {
         System.out.println(Thread.currentThread().getName() + " handler 运行了queryResult方法");
-        if (handler != null) handler.completed("result: " + bean, bean);
+        if (handler != null) {
+            handler.completed("result: " + bean, bean);
+        }
     }
 
     @Override
-    public String updateBean(@RpcCall(CallAttribute.class) SncpTestBean bean) {
+    public String updateBean(SncpTestBean bean) {
         bean.setId(System.currentTimeMillis());
         System.out.println(Thread.currentThread().getName() + " 运行了updateBean方法");
         return "result: " + bean;
@@ -120,7 +121,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : SncpClient.parseMethod(service.getClass())) {
+        for (Method method : SncpClient.parseMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
@@ -129,7 +130,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : SncpClient.parseMethod(service.getClass())) {
+        for (Method method : SncpClient.parseMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
@@ -138,7 +139,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : SncpClient.parseMethod(service.getClass())) {
+        for (Method method : SncpClient.parseMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");

@@ -6,7 +6,7 @@
 package org.redkale.test.sncp;
 
 import java.util.concurrent.CompletableFuture;
-import org.redkale.service.*;
+import org.redkale.service.Service;
 
 /**
  *
@@ -22,7 +22,7 @@ public interface SncpTestIService extends Service {
 
     public CompletableFuture<String> queryResultAsync(SncpTestBean bean);
 
-    public void insert(@RpcCall(RpcCallArrayAttribute.class) SncpTestBean... beans);
+    public void insert(SncpTestBean... beans);
 
-    public String updateBean(@RpcCall(SncpTestServiceImpl.CallAttribute.class) SncpTestBean bean);
+    public String updateBean(SncpTestBean bean);
 }

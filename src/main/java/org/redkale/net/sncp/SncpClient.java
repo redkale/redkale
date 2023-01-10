@@ -87,8 +87,8 @@ public final class SncpClient {
         this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
         final List<SncpAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
-        for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
-            methodens.add(new SncpAction(serviceClass, method, Sncp.actionid(method)));
+        for (Map.Entry<Uint128, Method> en : parseMethodActions(serviceClass).entrySet()) {
+            methodens.add(new SncpAction(serviceClass, en.getValue(), en.getKey()));
         }
         this.actions = methodens.toArray(new SncpAction[methodens.size()]);
         this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
@@ -101,8 +101,8 @@ public final class SncpClient {
     static List<SncpAction> getSncpActions(final Class serviceClass) {
         final List<SncpAction> actions = new ArrayList<>();
         //------------------------------------------------------------------------------
-        for (java.lang.reflect.Method method : parseMethod(serviceClass)) {
-            actions.add(new SncpAction(serviceClass, method, Sncp.actionid(method)));
+        for (Map.Entry<Uint128, Method> en : parseMethodActions(serviceClass).entrySet()) {
+            actions.add(new SncpAction(serviceClass, en.getValue(), en.getKey()));
         }
         return actions;
     }
@@ -170,10 +170,10 @@ public final class SncpClient {
             + ", actions.size = " + actions.length + ")";
     }
 
-    public static List<Method> parseMethod(final Class serviceClass) {
+    public static LinkedHashMap<Uint128, Method> parseMethodActions(final Class serviceClass) {
         final List<Method> list = new ArrayList<>();
         final List<Method> multis = new ArrayList<>();
-        final Map<Uint128, Method> actionids = new HashMap<>();
+        final Map<Uint128, Method> actionids = new LinkedHashMap<>();
         for (final java.lang.reflect.Method method : serviceClass.getMethods()) {
             if (method.isSynthetic()) {
                 continue;
@@ -201,7 +201,6 @@ public final class SncpClient {
                     continue;
                 }
             }
-            //if (onlySncpDyn && method.getAnnotation(SncpDyn.class) == null) continue;
 
             Uint128 actionid = Sncp.actionid(method);
             Method old = actionids.get(actionid);
@@ -230,7 +229,16 @@ public final class SncpClient {
         });
         //带SncpDyn必须排在前面
         multis.addAll(list);
-        return multis;
+        final LinkedHashMap<Uint128, Method> rs = new LinkedHashMap<>();
+        for (Method method : multis) {
+            for (Map.Entry<Uint128, Method> en : actionids.entrySet()) {
+                if (en.getValue() == method) {
+                    rs.put(en.getKey(), en.getValue());
+                    break;
+                }
+            }
+        }
+        return rs;
     }
 
     //只给远程模式调用的
@@ -595,18 +603,6 @@ public final class SncpClient {
                                 sourceAddrIndex = i;
                             } else if (ann.annotationType() == RpcTargetTopic.class && String.class.isAssignableFrom(params[i])) {
                                 tpoicAddrIndex = i;
-                            }
-                        }
-                        for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == RpcCall.class) {
-                                try {
-                                    atts[i + 1] = ((RpcCall) ann).value().getDeclaredConstructor().newInstance();
-                                    RedkaleClassLoader.putReflectionDeclaredConstructors(((RpcCall) ann).value(), ((RpcCall) ann).value().getName());
-                                    hasattr = true;
-                                } catch (Exception e) {
-                                    logger.log(Level.SEVERE, RpcCall.class.getSimpleName() + ".attribute cannot a newInstance for" + method, e);
-                                }
-                                break;
                             }
                         }
                     }

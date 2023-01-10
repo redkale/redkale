@@ -57,9 +57,17 @@ public abstract class Sncp {
     private Sncp() {
     }
 
+    public static Uint128 actionid(final RpcAction action) {
+        return hash(action.name());
+    }
+
     public static Uint128 actionid(final java.lang.reflect.Method method) {
         if (method == null) {
             return Uint128.ZERO;
+        }
+        RpcAction action = method.getAnnotation(RpcAction.class);
+        if (action != null) {
+            return hash(action.name());
         }
         StringBuilder sb = new StringBuilder(); //不能使用method.toString() 因为包含declaringClass信息导致接口与实现类的方法hash不一致
         sb.append(method.getReturnType().getName()).append(' ');
