@@ -208,7 +208,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             return;
         }
         if (this.node.localEngine.isLocalConnLimited()) {
-            if (debug) logger.finest("WebSocket connections limit, wsmaxconns=" + this.node.localEngine.getLocalWsmaxconns());
+            if (debug) logger.finest("WebSocket connections limit, wsmaxconns=" + this.node.localEngine.getLocalWsMaxConns());
             response.finish(true);
             return;
         }

@@ -74,7 +74,7 @@ public abstract class WebSocketNode {
         this.tryAcquireSeconds = Integer.getInteger("redkale.http.websocket.tryAcquireSeconds", 12);
 
         if (localEngine != null) {
-            int wsthreads = localEngine.wsthreads;
+            int wsthreads = localEngine.wsThreads;
             if (wsthreads == 0) wsthreads = Utility.cpus() * 8;
             if (wsthreads > 0) this.semaphore = new Semaphore(wsthreads);
         }

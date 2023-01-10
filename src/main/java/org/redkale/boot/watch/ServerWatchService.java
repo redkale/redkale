@@ -71,7 +71,7 @@ public class ServerWatchService extends AbstractWatchService {
             server.changeAddress(application, newAddr);
         } catch (IOException e) {
             e.printStackTrace();
-            return new RetResult(RET_SERVER_CHANGEPORT_ERROR, "changeaddress error");
+            return new RetResult(RET_SERVER_CHANGEPORT_ERROR, "changeAddress error");
         }
         return RetResult.success();
     }
@@ -97,8 +97,8 @@ public class ServerWatchService extends AbstractWatchService {
         rs.put("bufferCapacity", server.getBufferCapacity());
         rs.put("bufferPoolSize", server.getBufferPoolSize());
         rs.put("charset", server.getCharset() == null ? "UTF-8" : server.getCharset().name());
-        rs.put("maxbody", server.getMaxbody());
-        rs.put("maxconns", server.getMaxconns());
+        rs.put("maxbody", server.getMaxBody());
+        rs.put("maxconns", server.getMaxConns());
         rs.put("serverStartTime", server.getServerStartTime());
         rs.put("responsePoolSize", server.getResponsePoolSize());
         rs.put("readTimeoutSeconds", server.getReadTimeoutSeconds());

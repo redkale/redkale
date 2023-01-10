@@ -94,10 +94,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected int responsePoolSize;
 
     //最大连接数, 为0表示没限制
-    protected int maxconns;
+    protected int maxConns;
 
     //请求包大小的上限，单位:字节
-    protected int maxbody;
+    protected int maxBody;
 
     //Keep-Alive IO读取的超时秒数，小于1视为不设置
     protected int aliveTimeoutSeconds;
@@ -122,12 +122,12 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.config = config;
         this.address = new InetSocketAddress(config.getValue("host", "0.0.0.0"), config.getIntValue("port", 80));
         this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
-        this.maxconns = config.getIntValue("maxconns", 0);
+        this.maxConns = config.getIntValue("maxconns", 0);
         this.aliveTimeoutSeconds = config.getIntValue("aliveTimeoutSeconds", 30);
         this.readTimeoutSeconds = config.getIntValue("readTimeoutSeconds", 0);
         this.writeTimeoutSeconds = config.getIntValue("writeTimeoutSeconds", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 1024);
-        this.maxbody = parseLenth(config.getValue("maxbody"), 64 * 1024);
+        this.maxBody = parseLenth(config.getValue("maxbody"), 64 * 1024);
         int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(netprotocol) ? 1350 : 32 * 1024);
         this.bufferCapacity = "UDP".equalsIgnoreCase(netprotocol) ? bufCapacity : (bufCapacity < 1024 ? 1024 : bufCapacity);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Utility.cpus() * 8);
@@ -271,8 +271,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return responsePoolSize;
     }
 
-    public int getMaxbody() {
-        return maxbody;
+    public int getMaxBody() {
+        return maxBody;
     }
 
     public int getAliveTimeoutSeconds() {
@@ -287,8 +287,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         return writeTimeoutSeconds;
     }
 
-    public int getMaxconns() {
-        return maxconns;
+    public int getMaxConns() {
+        return maxConns;
     }
 
     @SuppressWarnings("unchecked")
@@ -309,7 +309,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         postStart();
         logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())
             + ", cpu: " + Utility.cpus() + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
-            + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxbody)
+            + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxBody)
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms\r\n");
     }
 
@@ -355,13 +355,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         }
     }
 
-    public void changeMaxconns(final int newmaxconns) {
-        this.maxconns = newmaxconns;
+    public void changeMaxconns(final int newMaxConns) {
+        this.maxConns = newMaxConns;
         if (this.context != null) {
-            this.context.maxconns = newmaxconns;
+            this.context.maxConns = newMaxConns;
         }
         if (this.serverChannel != null) {
-            this.serverChannel.maxconns = newmaxconns;
+            this.serverChannel.maxConns = newMaxConns;
         }
     }
 
@@ -373,9 +373,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     public void changeMaxbody(final int newmaxbody) {
-        this.maxbody = newmaxbody;
+        this.maxBody = newmaxbody;
         if (this.context != null) {
-            this.context.maxbody = newmaxbody;
+            this.context.maxBody = newmaxbody;
         }
     }
 
@@ -411,8 +411,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         contextConfig.sslBuilder = this.sslBuilder;
         contextConfig.sslContext = this.sslContext;
         contextConfig.bufferCapacity = this.bufferCapacity;
-        contextConfig.maxconns = this.maxconns;
-        contextConfig.maxbody = this.maxbody;
+        contextConfig.maxConns = this.maxConns;
+        contextConfig.maxBody = this.maxBody;
         contextConfig.charset = this.charset;
         contextConfig.serverAddress = this.address;
         contextConfig.prepare = this.dispatcher;

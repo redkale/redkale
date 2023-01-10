@@ -86,26 +86,26 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
         this(name, group, tcp, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
     }
 
-    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns) {
-        this(name, group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, null, null);
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns) {
+        this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, null, null);
     }
 
-    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns, int maxPipelines) {
-        this(name, group, tcp, address, maxconns, maxPipelines, null, null, null);
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns, int maxPipelines) {
+        this(name, group, tcp, address, maxConns, maxPipelines, null, null, null);
     }
 
-    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
         Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        this(name, group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, null, authenticate);
+        this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, null, authenticate);
     }
 
-    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
         Supplier<R> closeRequestSupplier, Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
-        this(name, group, tcp, address, maxconns, DEFAULT_MAX_PIPELINES, null, closeRequestSupplier, authenticate);
+        this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, closeRequestSupplier, authenticate);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxconns,
+    protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
         int maxPipelines, Supplier<R> pingRequestSupplier, Supplier<R> closeRequestSupplier, Function<CompletableFuture<ClientConnection>, CompletableFuture<ClientConnection>> authenticate) {
         if (maxPipelines < 1) {
             throw new IllegalArgumentException("maxPipelines must bigger 0");
@@ -115,7 +115,7 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
         this.group = group;
         this.tcp = tcp;
         this.address = address;
-        this.connLimit = maxconns;
+        this.connLimit = maxConns;
         this.maxPipelines = maxPipelines;
         this.pingRequestSupplier = pingRequestSupplier;
         this.closeRequestSupplier = closeRequestSupplier;

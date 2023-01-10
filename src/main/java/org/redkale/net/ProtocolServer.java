@@ -25,7 +25,7 @@ public abstract class ProtocolServer {
     protected final Context context;
 
     //最大连接数，小于1表示无限制
-    protected int maxconns;
+    protected int maxConns;
 
     @Resource
     protected Application application;
@@ -44,7 +44,7 @@ public abstract class ProtocolServer {
 
     protected ProtocolServer(Context context) {
         this.context = context;
-        this.maxconns = context.getMaxconns();
+        this.maxConns = context.getMaxConns();
     }
 
     //---------------------------------------------------------------------

@@ -68,32 +68,32 @@ public class WebSocketEngine {
     protected int liveinterval;
 
     @Comment("最大连接数, 为0表示无限制")
-    protected int wsmaxconns;
+    protected int wsMaxConns;
 
     @Comment("操作WebSocketNode对应CacheSource并发数, 为-1表示无限制，为0表示系统默认值(CPU*8)")
-    protected int wsthreads;
+    protected int wsThreads;
 
     @Comment("最大消息体长度, 小于1表示无限制")
-    protected int wsmaxbody;
+    protected int wsMaxBody;
 
     @Comment("接收客户端的分包(last=false)消息时是否自动合并包")
-    protected boolean mergemsg = true;
+    protected boolean mergeMode = true;
 
     @Comment("加密解密器")
     protected Cryptor cryptor;
 
-    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, int wsmaxconns,
-        int wsthreads, int wsmaxbody, boolean mergemsg, Cryptor cryptor, WebSocketNode node, Convert sendConvert, Logger logger) {
+    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, int wsMaxConns,
+        int wsThreads, int wsMaxBody, boolean mergeMode, Cryptor cryptor, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
         this.sendConvert = sendConvert;
         this.node = node;
         this.liveinterval = liveinterval;
-        this.wsmaxconns = wsmaxconns;
-        this.wsthreads = wsthreads;
-        this.wsmaxbody = wsmaxbody;
-        this.mergemsg = mergemsg;
+        this.wsMaxConns = wsMaxConns;
+        this.wsThreads = wsThreads;
+        this.wsMaxBody = wsMaxBody;
+        this.mergeMode = mergeMode;
         this.cryptor = cryptor;
         this.logger = logger;
         this.index = sequence.getAndIncrement();
@@ -109,13 +109,13 @@ public class WebSocketEngine {
             return;
         }
         if (props != null) {
-            this.wsmaxconns = props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsmaxconns);
+            this.wsMaxConns = props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsMaxConns);
         }
         if (props != null) {
-            this.wsthreads = props.getIntValue(WEBPARAM__WSTHREADS, this.wsthreads);
+            this.wsThreads = props.getIntValue(WEBPARAM__WSTHREADS, this.wsThreads);
         }
         if (props != null) {
-            this.wsmaxbody = props.getIntValue(WEBPARAM__WSMAXBODY, this.wsmaxbody);
+            this.wsMaxBody = props.getIntValue(WEBPARAM__WSMAXBODY, this.wsMaxBody);
         }
         if (scheduler != null) {
             return;
@@ -136,7 +136,7 @@ public class WebSocketEngine {
             }
         }, delay, liveinterval, TimeUnit.SECONDS);
         if (logger.isLoggable(Level.FINEST)) {
-            logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsmaxconns + ", delay:" + delay + "s, interval:" + liveinterval + "s) scheduler executor");
+            logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsMaxConns + ", delay:" + delay + "s, interval:" + liveinterval + "s) scheduler executor");
         }
     }
 
@@ -467,16 +467,16 @@ public class WebSocketEngine {
     }
 
     @Comment("获取最大连接数")
-    public int getLocalWsmaxconns() {
-        return this.wsmaxconns;
+    public int getLocalWsMaxConns() {
+        return this.wsMaxConns;
     }
 
     @Comment("连接数是否达到上限")
     public boolean isLocalConnLimited() {
-        if (this.wsmaxconns < 1) {
+        if (this.wsMaxConns < 1) {
             return false;
         }
-        return currconns.get() >= this.wsmaxconns;
+        return currconns.get() >= this.wsMaxConns;
     }
 
     @Comment("获取所有连接")

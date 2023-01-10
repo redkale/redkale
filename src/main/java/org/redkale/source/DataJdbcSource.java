@@ -2528,7 +2528,7 @@ public class DataJdbcSource extends DataSqlSource {
 
         protected int connectTimeoutSeconds;
 
-        protected int maxconns;
+        protected int maxConns;
 
         protected String url;
 
@@ -2538,8 +2538,8 @@ public class DataJdbcSource extends DataSqlSource {
 
         public ConnectionPool(Properties prop) {
             this.connectTimeoutSeconds = Integer.decode(prop.getProperty(DATA_SOURCE_CONNECTTIMEOUT_SECONDS, "6"));
-            this.maxconns = Math.max(1, Integer.decode(prop.getProperty(DATA_SOURCE_MAXCONNS, "" + Utility.cpus() * 4)));
-            this.queue = new ArrayBlockingQueue<>(maxconns);
+            this.maxConns = Math.max(1, Integer.decode(prop.getProperty(DATA_SOURCE_MAXCONNS, "" + Utility.cpus() * 4)));
+            this.queue = new ArrayBlockingQueue<>(maxConns);
             this.url = prop.getProperty(DATA_SOURCE_URL);
             String username = prop.getProperty(DATA_SOURCE_USER, "");
             String password = prop.getProperty(DATA_SOURCE_PASSWORD, "");
@@ -2562,7 +2562,7 @@ public class DataJdbcSource extends DataSqlSource {
         public synchronized void onResourceChange(ResourceEvent[] events) {
             String newUrl = this.url;
             int newConnectTimeoutSeconds = this.connectTimeoutSeconds;
-            int newMaxconns = this.maxconns;
+            int newMaxconns = this.maxConns;
             String newUser = this.connectAttrs.getProperty("user");
             String newPassword = this.connectAttrs.getProperty("password");
             for (ResourceEvent event : events) {
@@ -2589,11 +2589,11 @@ public class DataJdbcSource extends DataSqlSource {
             this.connectTimeoutSeconds = newConnectTimeoutSeconds;
             this.connectAttrs.put("user", newUser);
             this.connectAttrs.put("password", newPassword);
-            if (newMaxconns != this.maxconns) {
+            if (newMaxconns != this.maxConns) {
                 ArrayBlockingQueue<Connection> newQueue = new ArrayBlockingQueue<>(newMaxconns);
                 ArrayBlockingQueue<Connection> oldQueue = this.queue;
                 this.queue = newQueue;
-                this.maxconns = newMaxconns;
+                this.maxConns = newMaxconns;
                 Connection conn;
                 while ((conn = oldQueue.poll()) != null) {
                     offerConnection(conn);
@@ -2604,7 +2604,7 @@ public class DataJdbcSource extends DataSqlSource {
         public synchronized Connection pollConnection() {
             Connection conn = queue.poll();
             if (conn == null) {
-                if (usingCounter.intValue() >= maxconns) {
+                if (usingCounter.intValue() >= maxConns) {
                     try {
                         conn = queue.poll(connectTimeoutSeconds, TimeUnit.SECONDS);
                     } catch (InterruptedException t) {

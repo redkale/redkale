@@ -399,22 +399,22 @@ public final class Transport {
 
         protected final ConcurrentHashMap<String, Object> attributes = new ConcurrentHashMap<>();
 
-        public TransportNode(int poolmaxconns, InetSocketAddress address) {
+        public TransportNode(int poolMaxConns, InetSocketAddress address) {
             this.address = address;
             this.disabletime = 0;
-            this.connQueue = new ArrayBlockingQueue<>(poolmaxconns);
+            this.connQueue = new ArrayBlockingQueue<>(poolMaxConns);
             this.pollQueue = new ArrayBlockingQueue(this.connQueue.remainingCapacity() * 100);
         }
 
-        @ConstructorParameters({"poolmaxconns", "address", "disabletime"})
-        public TransportNode(int poolmaxconns, InetSocketAddress address, long disabletime) {
+        @ConstructorParameters({"poolMaxConns", "address", "disabletime"})
+        public TransportNode(int poolMaxConns, InetSocketAddress address, long disabletime) {
             this.address = address;
             this.disabletime = disabletime;
-            this.connQueue = new LinkedBlockingQueue<>(poolmaxconns);
+            this.connQueue = new LinkedBlockingQueue<>(poolMaxConns);
             this.pollQueue = new ArrayBlockingQueue(this.connQueue.remainingCapacity() * 100);
         }
 
-        public int getPoolmaxconns() {
+        public int getPoolMaxConns() {
             return this.connQueue.remainingCapacity() + this.connQueue.size();
         }
 

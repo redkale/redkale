@@ -362,7 +362,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
         if (this.readState == READ_STATE_BODY) {
             if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
-                if (this.contentLength > context.getMaxbody()) {
+                if (this.contentLength > context.getMaxBody()) {
                     return -1;
                 }
                 bytes.put(buffer, Math.min((int) this.contentLength, buffer.remaining()));

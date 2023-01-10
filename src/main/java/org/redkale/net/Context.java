@@ -5,9 +5,9 @@
  */
 package org.redkale.net;
 
-import java.net.*;
+import java.net.InetSocketAddress;
 import java.nio.charset.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.convert.bson.*;
@@ -57,10 +57,10 @@ public class Context {
     protected final ResourceFactory resourceFactory;
 
     //最大连接数, 为0表示没限制
-    protected int maxconns;
+    protected int maxConns;
 
     //请求内容的大小上限, 默认64K
-    protected int maxbody;
+    protected int maxBody;
 
     //keep alive IO读取的超时时间
     protected int aliveTimeoutSeconds;
@@ -79,12 +79,12 @@ public class Context {
 
     public Context(ContextConfig config) {
         this(config.serverStartTime, config.logger, config.workExecutor, config.sslBuilder, config.sslContext,
-            config.bufferCapacity, config.maxconns, config.maxbody, config.charset, config.serverAddress, config.resourceFactory,
+            config.bufferCapacity, config.maxConns, config.maxBody, config.charset, config.serverAddress, config.resourceFactory,
             config.prepare, config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
     }
 
     public Context(long serverStartTime, Logger logger, ExecutorService workExecutor, SSLBuilder sslBuilder, SSLContext sslContext,
-        int bufferCapacity, final int maxconns, final int maxbody, Charset charset, InetSocketAddress address,
+        int bufferCapacity, final int maxConns, final int maxBody, Charset charset, InetSocketAddress address,
         ResourceFactory resourceFactory, DispatcherServlet prepare, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
@@ -92,8 +92,8 @@ public class Context {
         this.sslBuilder = sslBuilder;
         this.sslContext = sslContext;
         this.bufferCapacity = bufferCapacity;
-        this.maxconns = maxconns;
-        this.maxbody = maxbody;
+        this.maxConns = maxConns;
+        this.maxBody = maxBody;
         this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
         this.serverAddress = address;
         this.prepare = prepare;
@@ -171,12 +171,12 @@ public class Context {
         return sslContext;
     }
 
-    public int getMaxconns() {
-        return maxconns;
+    public int getMaxConns() {
+        return maxConns;
     }
 
-    public int getMaxbody() {
-        return maxbody;
+    public int getMaxBody() {
+        return maxBody;
     }
 
     public InetSocketAddress getServerAddress() {
@@ -246,10 +246,10 @@ public class Context {
         public Charset charset;
 
         //请求内容的大小上限, 默认64K
-        public int maxbody;
+        public int maxBody;
 
         //最大连接数, 为0表示没限制
-        public int maxconns;
+        public int maxConns;
 
         //keep alive IO读取的超时时间
         public int aliveTimeoutSeconds;
