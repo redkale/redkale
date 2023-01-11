@@ -40,6 +40,9 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
 
     protected final ScheduledThreadPoolExecutor timeoutScheduler;
 
+    //结合ClientRequest.isCompleted()使用
+    //使用场景：批量request提交时，后面的request需响应上一个request返回值来构建
+    //例如： MySQL批量提交PrepareSQL场景
     protected final LongAdder reqWritedCounter = new LongAdder();
 
     protected final LongAdder respDoneCounter = new LongAdder();
@@ -174,16 +177,16 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
             return;
         }
         this.timeoutScheduler.shutdownNow();
-        final R closereq = closeRequestSupplier == null ? null : closeRequestSupplier.get();
         for (ClientConnection conn : this.connArray) {
             if (conn == null) {
                 continue;
             }
-            if (closereq == null) {
+            final R closeReq = closeRequestSupplier == null ? null : closeRequestSupplier.get();
+            if (closeReq == null) {
                 conn.dispose(null);
             } else {
                 try {
-                    conn.writeChannel(closereq).get(1, TimeUnit.SECONDS);
+                    conn.writeChannel(closeReq).get(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                 }
                 conn.dispose(null);
@@ -245,7 +248,7 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
             CompletableFuture<ClientConnection> future = address.createClient(tcp, group, readTimeoutSeconds, writeTimeoutSeconds)
                 .thenApply(c -> createClientConnection(index, c).setMaxPipelines(maxPipelines));
             return (authenticate == null ? future : authenticate.apply(future)).thenApply(c -> {
-                c.authenticated = true;
+                c.setAuthenticated(true);
                 this.connArray[index] = c;
                 CompletableFuture<ClientConnection> f;
                 if (cflag) {
@@ -306,6 +309,10 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
             s += a.longValue();
         }
         return s;
+    }
+
+    protected void incrReqWritedCounter() {
+        reqWritedCounter.increment();
     }
 
     @Override

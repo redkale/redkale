@@ -59,7 +59,7 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
         return false;
     }
 
-    //数据是否全部写入，如果只写部分，返回false
+    //数据是否全部写入，如果只写部分，返回false, 配合ClientConnection.pauseWriting使用
     protected boolean isCompleted() {
         return true;
     }

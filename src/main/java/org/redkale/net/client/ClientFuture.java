@@ -120,12 +120,6 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
             workThread = request.workThread;
             request.workThread = null;
         }
-//        if (workThread == null || workThread == Thread.currentThread() || workThread.inIO()
-//            || workThread.getState() != Thread.State.RUNNABLE) {
-//            this.completeExceptionally(ex);
-//        } else {
-//            workThread.execute(() -> completeExceptionally(ex));
-//        }
         if (workThread == null || workThread.getWorkExecutor() == null) {
             workThread = conn.getChannel().getReadIOThread();
         }
