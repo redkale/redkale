@@ -1515,9 +1515,9 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         Attribute attr = info.getAttribute(column);
         Serializable val = getSQLAttrValue(info, attr, colval);
         if (val instanceof byte[]) {
-            return new UpdateSqlInfo("UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter), (byte[]) val);
+            return new UpdateSqlInfo(true, "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter), (byte[]) val);
         } else {
-            return new UpdateSqlInfo("UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
+            return new UpdateSqlInfo(false, "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
                 + info.formatSQLValue(column, val, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter));
         }
     }
@@ -1600,13 +1600,13 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 + " SET " + info.getSQLColumn(alias, column) + "=" + prepareParamSign(1)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            return new UpdateSqlInfo(sql, tables.length == 1 ? null : tables, (byte[]) val);
+            return new UpdateSqlInfo(true, sql, tables.length == 1 ? null : tables, (byte[]) val);
         } else {
             sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1))
                 + " SET " + info.getSQLColumn(alias, column) + "=" + info.formatSQLValue(val, sqlFormatter)
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            return new UpdateSqlInfo(sql, tables.length == 1 ? null : tables);
+            return new UpdateSqlInfo(false, sql, tables.length == 1 ? null : tables);
         }
     }
 
@@ -1701,7 +1701,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             throw new SourceException("update non column-value array");
         }
         String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
-        return new UpdateSqlInfo(sql, blobs);
+        return new UpdateSqlInfo(false, sql, blobs);
     }
 
     @Override
@@ -1811,7 +1811,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 + info.createSQLOrderby(flipper)
                 + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
         }
-        return new UpdateSqlInfo(sql, tables.length == 1 ? null : tables, blobs);
+        return new UpdateSqlInfo(blobs != null, sql, tables.length == 1 ? null : tables, blobs);
     }
 
     //返回不存在的字段名,null表示字段都合法;
@@ -1999,11 +1999,11 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                 + ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
-            return new UpdateSqlInfo(sql, tables.length == 1 ? null : tables, blobs);
+            return new UpdateSqlInfo(blobs != null, sql, tables.length == 1 ? null : tables, blobs);
         } else {
             final Serializable id = (Serializable) info.getSQLValue(info.getPrimary(), entity);
             String sql = "UPDATE " + info.getTable(id) + " a SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(id, sqlFormatter);
-            return new UpdateSqlInfo(sql, blobs);
+            return new UpdateSqlInfo(blobs != null, sql, blobs);
         }
     }
 
@@ -3218,15 +3218,18 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
         public List<byte[]> blobs; //要么null，要么有内容，不能是empty-list
 
-        public UpdateSqlInfo(String sql, byte[]... blobs) {
-            this(sql, null, blobs);
+        public boolean prepare; //是否PreparedStatement SQL
+
+        public UpdateSqlInfo(boolean prepare, String sql, byte[]... blobs) {
+            this(prepare, sql, null, blobs);
         }
 
-        public UpdateSqlInfo(String sql, List<byte[]> blobs) {
-            this(sql, null, blobs);
+        public UpdateSqlInfo(boolean prepare, String sql, List<byte[]> blobs) {
+            this(prepare, sql, null, blobs);
         }
 
-        public UpdateSqlInfo(String sql, String[] tables, byte[]... blobs) {
+        public UpdateSqlInfo(boolean prepare, String sql, String[] tables, byte[]... blobs) {
+            this.prepare = prepare;
             this.sql = sql;
             this.tables = tables;
             if (blobs.length > 0) {
@@ -3237,7 +3240,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             }
         }
 
-        public UpdateSqlInfo(String sql, String[] tables, List<byte[]> blobs) {
+        public UpdateSqlInfo(boolean prepare, String sql, String[] tables, List<byte[]> blobs) {
+            this.prepare = prepare;
             this.sql = sql;
             this.tables = tables;
             this.blobs = blobs == null || blobs.isEmpty() ? null : blobs;
