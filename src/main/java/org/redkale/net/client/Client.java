@@ -315,6 +315,10 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
         reqWritedCounter.increment();
     }
 
+    protected void incrRespDoneCounter() {
+        respDoneCounter.increment();
+    }
+
     @Override
     public String resourceName() {
         return name;

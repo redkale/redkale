@@ -54,18 +54,18 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     protected final Queue<SimpleEntry<R, ClientFuture<R>>> requestQueue = new ArrayDeque<>();
 
     //responseQueue、responseMap二选一
-    final ArrayDeque<ClientFuture> responseQueue = new ArrayDeque<>();
+    final Deque<ClientFuture> responseQueue = new LinkedBlockingDeque<>();
 
     //responseQueue、responseMap二选一, key: requestid
-    final HashMap<Serializable, ClientFuture> responseMap = new LinkedHashMap<>();
+    final Map<Serializable, ClientFuture> responseMap = new ConcurrentHashMap<>();
+
+    SimpleEntry<R, ClientFuture<R>> lastHalfEntry;
 
     private int maxPipelines; //最大并行处理数
 
     private boolean closed;
 
     private boolean authenticated;
-
-    private SimpleEntry<R, ClientFuture<R>> lastHalfEntry;
 
     protected final CompletionHandler<Integer, ByteBuffer> readHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -86,7 +86,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         }
 
         private void decodeResponse(ByteBuffer buffer) {
-            if (codec.decodeMessages(buffer, readArray)) { //成功了
+            if (codec.decodeMessages(ClientConnection.this, buffer, readArray)) { //成功了
                 readArray.clear();
                 List<ClientResponse<P>> results = codec.pollMessages();
                 if (results != null) {
@@ -279,7 +279,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     //返回写入数据request的数量，返回0表示没有可写的request
-    private int sendWrite(boolean must) {
+    int sendWrite(boolean must) {
         ClientConnection conn = this;
         ByteArray rw = conn.writeArray;
         rw.clear();
@@ -383,6 +383,13 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 responseMap.remove(key);
                 thread.runWork(() -> future.completeExceptionally(e));
             });
+        }
+    }
+
+    public void wakeupWrite() {
+        AsyncIOThread thread = channel.getWriteIOThread();
+        if (thread instanceof ClientWriteIOThread) {
+            ((ClientWriteIOThread) thread).wakeupWrite();
         }
     }
 

@@ -301,6 +301,10 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         write(array.content(), array.offset(), array.length(), null, 0, 0, null, null, handler);
     }
 
+    public final <A> void write(ByteTuple array, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        write(array.content(), array.offset(), array.length(), null, 0, 0, null, null, attachment, handler);
+    }
+
     public final void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
         write(bytes, offset, length, null, 0, 0, null, null, handler);
     }
@@ -310,6 +314,10 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     }
 
     public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
+        write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, null, handler);
+    }
+
+    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Consumer bodyCallback, Object bodyAttachment, Object handlerAttachment, CompletionHandler handler) {
         final ByteBuffer buffer = sslEngine == null ? pollWriteBuffer() : pollWriteSSLBuffer();
         if (buffer.remaining() >= headerLength + bodyLength) {
             buffer.put(headerContent, headerOffset, headerLength);
@@ -320,20 +328,20 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 }
             }
             buffer.flip();
-            CompletionHandler<Integer, Void> newHandler = new CompletionHandler<Integer, Void>() {
+            CompletionHandler<Integer, Object> newHandler = new CompletionHandler<Integer, Object>() {
                 @Override
-                public void completed(Integer result, Void attachment) {
+                public void completed(Integer result, Object attachment) {
                     offerWriteBuffer(buffer);
                     handler.completed(result, attachment);
                 }
 
                 @Override
-                public void failed(Throwable exc, Void attachment) {
+                public void failed(Throwable exc, Object attachment) {
                     offerWriteBuffer(buffer);
                     handler.failed(exc, attachment);
                 }
             };
-            write(buffer, null, newHandler);
+            write(buffer, handlerAttachment, newHandler);
         } else {
             ByteBufferWriter writer = ByteBufferWriter.create(sslEngine == null ? writeBufferSupplier : () -> pollWriteSSLBuffer(), buffer);
             writer.put(headerContent, headerOffset, headerLength);
@@ -344,20 +352,20 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 }
             }
             final ByteBuffer[] buffers = writer.toBuffers();
-            CompletionHandler<Integer, Void> newHandler = new CompletionHandler<Integer, Void>() {
+            CompletionHandler<Integer, Object> newHandler = new CompletionHandler<Integer, Object>() {
                 @Override
-                public void completed(Integer result, Void attachment) {
+                public void completed(Integer result, Object attachment) {
                     offerWriteBuffer(buffers);
                     handler.completed(result, attachment);
                 }
 
                 @Override
-                public void failed(Throwable exc, Void attachment) {
+                public void failed(Throwable exc, Object attachment) {
                     offerWriteBuffer(buffers);
                     handler.failed(exc, attachment);
                 }
             };
-            write(buffers, null, newHandler);
+            write(buffers, handlerAttachment, newHandler);
         }
     }
 

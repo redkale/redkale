@@ -5,8 +5,9 @@ package org.redkale.net.client;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.nio.channels.Selector;
+import java.nio.channels.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.redkale.util.*;
 
 /**
@@ -26,6 +27,12 @@ public class ClientWriteIOThread extends ClientIOThread {
         requestQueue.offer(new ClientEntity(conn, request, respFuture));
     }
 
+    public void wakeupWrite() {
+        synchronized (writeHandler) {
+            writeHandler.notify();
+        }
+    }
+
     @Override
     public void run() {
         final ByteBuffer buffer = getBufferSupplier().get();
@@ -37,6 +44,7 @@ public class ClientWriteIOThread extends ClientIOThread {
                     ClientConnection conn = entity.conn;
                     ClientRequest request = entity.request;
                     ClientFuture respFuture = entity.respFuture;
+                    AtomicBoolean pw = conn.pauseWriting;
                     Serializable reqid = request.getRequestid();
                     if (reqid == null) {
                         conn.responseQueue.offer(respFuture);
@@ -50,15 +58,32 @@ public class ClientWriteIOThread extends ClientIOThread {
                         buffer.clear();
                         buffer.put(rw.content(), 0, rw.length());
                         buffer.flip();
-                        conn.channel.write(buffer, null, conn.writeHandler);
+                        conn.channel.write(buffer, conn, writeHandler);
                     } else {
-                        conn.channel.write(rw, conn.writeHandler);
+                        conn.channel.write(rw, conn, writeHandler);
+                    }
+                    if (pw.get()) {
+                        synchronized (writeHandler) {
+                            writeHandler.wait(30_000);
+                        }
                     }
                 }
             } catch (InterruptedException e) {
             }
         }
     }
+
+    protected final CompletionHandler<Integer, ClientConnection> writeHandler = new CompletionHandler<Integer, ClientConnection>() {
+
+        @Override
+        public void completed(Integer result, ClientConnection attachment) {
+        }
+
+        @Override
+        public void failed(Throwable exc, ClientConnection attachment) {
+            attachment.dispose(exc);
+        }
+    };
 
     protected static class ClientEntity {
 
