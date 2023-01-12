@@ -418,20 +418,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.connectPending = false;//必须放最后
 
         if (handler != null) {
-            if (!client || inCurrWriteThread()) {  //client模式下必须保证read、write在ioThread内运行
-                if (t == null) {
-                    handler.completed(null, attach);
-                } else {
-                    handler.failed(t, attach);
-                }
+            if (t == null) {
+                handler.completed(null, attach);
             } else {
-                ioWriteThread.execute(() -> {
-                    if (t == null) {
-                        handler.completed(null, attach);
-                    } else {
-                        handler.failed(t, attach);
-                    }
-                });
+                handler.failed(t, attach);
             }
         }
     }

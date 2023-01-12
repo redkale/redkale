@@ -19,9 +19,9 @@ import org.redkale.util.ObjectPool;
  *
  * @since 2.8.0
  */
-public class ClientIOThread extends AsyncIOThread {
+public class ClientReadIOThread extends AsyncIOThread {
 
-    public ClientIOThread(String name, int index, int threads, ExecutorService workExecutor, Selector selector,
+    public ClientReadIOThread(String name, int index, int threads, ExecutorService workExecutor, Selector selector,
         ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
         super(name, index, threads, workExecutor, selector, unsafeBufferPool, safeBufferPool);
     }

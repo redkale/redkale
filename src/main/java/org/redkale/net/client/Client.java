@@ -165,6 +165,11 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
 
     protected abstract ClientConnection createClientConnection(final int index, AsyncConnection channel);
 
+    //创建连接后先从服务器拉取数据构建的虚拟请求，返回null表示连上服务器后不读取数据
+    protected R createVirtualRequestAfterConnect() {
+        return null;
+    }
+
     protected int pingIntervalSeconds() {
         return 30;
     }
@@ -247,6 +252,12 @@ public abstract class Client<R extends ClientRequest, P> implements Resourcable 
         if (this.connOpenStates[index].compareAndSet(false, true)) {
             CompletableFuture<ClientConnection> future = address.createClient(tcp, group, readTimeoutSeconds, writeTimeoutSeconds)
                 .thenApply(c -> createClientConnection(index, c).setMaxPipelines(maxPipelines));
+            R virtualReq = createVirtualRequestAfterConnect();
+            if (virtualReq != null) {
+                future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
+            } else {
+                future = future.thenApply(conn -> conn.readChannel());
+            }
             return (authenticate == null ? future : authenticate.apply(future)).thenApply(c -> {
                 c.setAuthenticated(true);
                 this.connArray[index] = c;

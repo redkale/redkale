@@ -102,20 +102,11 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
             ClientRequest request = respFuture.request;
             if (!request.isCompleted()) {
                 if (rs.exc == null) {
+                    connection.sendHalfWrite(rs.exc);
                     //request没有发送完，respFuture需要再次接收
-                    Serializable reqid = request.getRequestid();
-                    if (reqid == null) {
-                        connection.responseQueue.offerFirst(respFuture);
-                    } else {
-                        connection.responseMap.put(reqid, respFuture);
-                    }
-                    connection.pauseWriting.set(false);
-                    connection.wakeupWrite();
                     return;
                 } else { //异常了需要清掉半包
-                    connection.lastHalfEntry = null;
-                    connection.pauseWriting.set(false);
-                    connection.wakeupWrite();
+                    connection.sendHalfWrite(rs.exc);
                 }
             }
             connection.respWaitingCounter.decrement();

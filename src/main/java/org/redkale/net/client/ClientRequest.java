@@ -36,6 +36,11 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
         return false;
     }
 
+    //连接上先从服务器拉取数据构建的虚拟请求一定要返回true
+    public boolean isVirtualType() {
+        return false;
+    }
+
     public long getCreateTime() {
         return createTime;
     }
