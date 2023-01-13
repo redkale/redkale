@@ -10,7 +10,7 @@ import java.nio.channels.ClosedChannelException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.Consumer;
+import java.util.function.*;
 import org.redkale.net.*;
 
 /**
@@ -68,6 +68,12 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     protected abstract ClientCodec createCodec();
 
     protected final CompletableFuture<P> writeChannel(R request) {
+        return writeChannel(request, null);
+    }
+
+    //respTransfer只会在ClientCodec的读线程里调用
+    protected final <T> CompletableFuture<T> writeChannel(R request, Function<P, T> respTransfer) {
+        request.respTransfer = respTransfer;
         ClientFuture respFuture = createClientFuture(request);
         int rts = this.channel.getReadTimeoutSeconds();
         if (rts > 0 && !request.isCloseType()) {
@@ -139,8 +145,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         return channel;
     }
 
-    public ClientCodec<R, P> getCodec() {
-        return codec;
+    public <C extends ClientCodec<R, P>> C getCodec() {
+        return (C) codec;
     }
 
     public int getMaxPipelines() {

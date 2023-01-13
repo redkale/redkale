@@ -6,6 +6,7 @@
 package org.redkale.net.client;
 
 import java.io.Serializable;
+import java.util.function.Function;
 import org.redkale.net.WorkThread;
 import org.redkale.util.*;
 
@@ -25,6 +26,9 @@ public abstract class ClientRequest {
     protected WorkThread workThread;
 
     protected String traceid;
+
+    //只会在ClientCodec的读线程里调用
+    Function respTransfer;
 
     public abstract void writeTo(ClientConnection conn, ByteArray array);
 
@@ -55,6 +59,11 @@ public abstract class ClientRequest {
         return (T) this;
     }
 
+    public <T extends ClientRequest> T currTraceid(String traceid) {
+        this.traceid = traceid;
+        return (T) this;
+    }
+
     //数据是否全部写入，如果只写部分，返回false, 配合ClientConnection.pauseWriting使用
     protected boolean isCompleted() {
         return true;
@@ -63,11 +72,13 @@ public abstract class ClientRequest {
     protected void prepare() {
         this.createTime = System.currentTimeMillis();
         this.traceid = Traces.currTraceid();
+        this.respTransfer = null;
     }
 
     protected boolean recycle() {
         this.createTime = 0;
         this.traceid = null;
+        this.respTransfer = null;
         return true;
     }
 }

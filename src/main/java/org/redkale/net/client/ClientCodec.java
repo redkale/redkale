@@ -15,7 +15,7 @@ import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
- * 每个ClientConnection绑定一个独立的ClientCodec实例
+ * 每个ClientConnection绑定一个独立的ClientCodec实例, 只会同一读线程里运行
  *
  * <p>
  * 详情见: https://redkale.org
@@ -121,9 +121,10 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                         respFuture.completeExceptionally(exc);
                     });
                 } else {
+                    final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
                     workThread.runWork(() -> {
                         Traces.currTraceid(request.traceid);
-                        respFuture.complete(message);
+                        respFuture.complete(rs);
                     });
                 }
             } catch (Throwable t) {

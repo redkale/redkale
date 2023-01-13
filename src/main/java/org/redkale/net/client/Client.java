@@ -209,6 +209,13 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return connect(null).thenCompose(conn -> writeChannel(conn, request));
     }
 
+    public final <T> CompletableFuture<T> sendAsync(R request, Function<P, T> respTransfer) {
+        if (request.workThread == null) {
+            request.workThread = WorkThread.currWorkThread();
+        }
+        return connect(null).thenCompose(conn -> writeChannel(conn, request, respTransfer));
+    }
+
     public final CompletableFuture<P> sendAsync(ChannelContext context, R request) {
         if (request.workThread == null) {
             request.workThread = WorkThread.currWorkThread();
@@ -216,8 +223,19 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return connect(context).thenCompose(conn -> writeChannel(conn, request));
     }
 
+    public final <T> CompletableFuture<T> sendAsync(ChannelContext context, R request, Function<P, T> respTransfer) {
+        if (request.workThread == null) {
+            request.workThread = WorkThread.currWorkThread();
+        }
+        return connect(context).thenCompose(conn -> writeChannel(conn, request, respTransfer));
+    }
+
     protected CompletableFuture<P> writeChannel(ClientConnection conn, R request) {
         return conn.writeChannel(request);
+    }
+
+    protected <T> CompletableFuture<T> writeChannel(ClientConnection conn, R request, Function<P, T> respTransfer) {
+        return conn.writeChannel(request, respTransfer);
     }
 
     protected CompletableFuture<C> connect() {
