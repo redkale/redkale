@@ -10,7 +10,7 @@ import org.redkale.net.AsyncIOThread;
 import org.redkale.util.ObjectPool;
 
 /**
- * 客户端版的IO线程类
+ * 客户端IO读线程
  *
  * <p>
  * 详情见: https://redkale.org

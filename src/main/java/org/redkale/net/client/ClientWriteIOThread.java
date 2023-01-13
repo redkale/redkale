@@ -13,8 +13,14 @@ import org.redkale.net.AsyncIOThread;
 import org.redkale.util.*;
 
 /**
+ * 客户端IO写线程
+ *
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.8.0
  */
 public class ClientWriteIOThread extends AsyncIOThread {
 
@@ -115,7 +121,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                         for (ClientFuture en : list) {
                             ++i;
                             ClientRequest request = en.request;
-                            request.accept(conn, writeArray);
+                            request.writeTo(conn, writeArray);
                             if (!request.isCompleted()) {
                                 conn.pauseWriting.set(true);
                                 conn.pauseRequests.addAll(list.subList(i, list.size()));

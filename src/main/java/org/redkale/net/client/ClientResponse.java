@@ -9,7 +9,13 @@ import java.io.Serializable;
 
 /**
  *
+ * <p>
+ * 详情见: https://redkale.org
+ *
  * @author zhangjx
+ * 
+ * @since 2.3.0
+ *
  * @param <P> message
  */
 public class ClientResponse<P> {
@@ -22,7 +28,7 @@ public class ClientResponse<P> {
 
     public ClientResponse() {
     }
-    
+
     public ClientResponse(ClientRequest request, P message) {
         this.request = request;
         this.message = message;

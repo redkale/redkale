@@ -12,6 +12,9 @@ import org.redkale.net.*;
 /**
  *
  * @author zhangjx
+ * 
+ * @since 2.3.0
+ * 
  * @param <T> 泛型
  */
 public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {

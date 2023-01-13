@@ -15,6 +15,7 @@ import org.redkale.net.*;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * 
  * @since 2.7.0
  */
 public class ClientAddress implements java.io.Serializable {

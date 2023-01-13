@@ -6,7 +6,6 @@
 package org.redkale.net.client;
 
 import java.io.Serializable;
-import java.util.function.BiConsumer;
 import org.redkale.net.WorkThread;
 import org.redkale.util.*;
 
@@ -19,7 +18,7 @@ import org.redkale.util.*;
  *
  * @since 2.3.0
  */
-public abstract class ClientRequest implements BiConsumer<ClientConnection, ByteArray> {
+public abstract class ClientRequest {
 
     protected long createTime = System.currentTimeMillis();
 
@@ -27,8 +26,7 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
 
     protected String traceid;
 
-    @Override
-    public abstract void accept(ClientConnection conn, ByteArray array);
+    public abstract void writeTo(ClientConnection conn, ByteArray array);
 
     public Serializable getRequestid() {
         return null;
