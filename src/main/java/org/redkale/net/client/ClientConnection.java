@@ -29,7 +29,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final int index; //从0开始， connArray的下坐标
 
-    protected final Client<R, P> client;
+    protected final Client client;
 
     protected final LongAdder respWaitingCounter;
 
@@ -56,7 +56,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     private boolean authenticated;
 
     @SuppressWarnings({"LeakingThisInConstructor", "OverridableMethodCallInConstructor"})
-    public ClientConnection(Client client, int index, AsyncConnection channel) {
+    public ClientConnection(Client<? extends ClientConnection<R, P>, R, P> client, int index, AsyncConnection channel) {
         this.client = client;
         this.codec = createCodec();
         this.index = index;
