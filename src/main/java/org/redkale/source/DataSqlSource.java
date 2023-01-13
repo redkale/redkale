@@ -95,6 +95,8 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
 
     protected AnyValue config;
 
+    private EntityInfo currEntityInfo;
+
     public DataSqlSource() {
     }
 
@@ -815,7 +817,13 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     }
 
     protected <T> EntityInfo<T> loadEntityInfo(Class<T> clazz) {
-        return loadEntityInfo(clazz, this.cacheForbidden, readConfProps, fullloader);
+        EntityInfo info = this.currEntityInfo;
+        if (info != null && info.getType() == clazz) {
+            return info;
+        }
+        info = loadEntityInfo(clazz, this.cacheForbidden, readConfProps, fullloader);
+        this.currEntityInfo = info;
+        return info;
     }
 
     public <T> EntityCache<T> loadCache(Class<T> clazz) {
