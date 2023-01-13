@@ -5,7 +5,10 @@
  */
 package org.redkale.net.sncp;
 
-import java.lang.annotation.Annotation;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -52,6 +55,29 @@ public abstract class Sncp {
             ex.printStackTrace();
         }
         md5 = d;
+    }
+
+    /**
+     * 修饰由SNCP协议动态生成的class、和method
+     * 本地模式：动态生成的_DynLocalXXXXService类会打上&#64;SncpDyn(remote = false) 的注解
+     * 远程模式：动态生成的_DynRemoteXXXService类会打上&#64;SncpDyn(remote = true) 的注解
+     *
+     * <p>
+     * 详情见: https://redkale.org
+     *
+     * @author zhangjx
+     */
+    @Inherited
+    @Documented
+    @Target({METHOD, TYPE})
+    @Retention(RUNTIME)
+    public static @interface SncpDyn {
+
+        boolean remote();
+
+        Class type();
+
+        int index() default 0;  //排列顺序， 主要用于Method
     }
 
     private Sncp() {
@@ -114,6 +140,10 @@ public abstract class Sncp {
 
     public static boolean isSncpDyn(Service service) {
         return service.getClass().getAnnotation(SncpDyn.class) != null;
+    }
+
+    public static boolean isSncpDyn(Class serviceType) {
+        return serviceType.getAnnotation(SncpDyn.class) != null;
     }
 
     public static int getVersion(Service service) {
@@ -398,6 +428,7 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visit("remote", Boolean.FALSE);
+            av0.visit("type", Type.getType(Type.getDescriptor(serviceImplClass)));
             av0.visitEnd();
         }
         { //给新类加上 原有的Annotation
@@ -719,6 +750,7 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visit("remote", Boolean.TRUE);
+            av0.visit("type", Type.getType(Type.getDescriptor(serviceTypeOrImplClass)));
             av0.visitEnd();
         }
         { //给新类加上 原有的Annotation

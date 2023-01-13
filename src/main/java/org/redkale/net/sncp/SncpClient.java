@@ -18,6 +18,7 @@ import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
 import org.redkale.net.*;
+import org.redkale.net.sncp.Sncp.SncpDyn;
 import static org.redkale.net.sncp.SncpRequest.*;
 import static org.redkale.net.sncp.SncpResponse.fillRespHeader;
 import org.redkale.service.*;

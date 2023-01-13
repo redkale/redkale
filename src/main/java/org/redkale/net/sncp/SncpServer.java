@@ -99,12 +99,15 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
      * @return SncpServlet
      */
     public SncpServlet removeSncpServlet(Service sncpService) {
+        if (!Sncp.isSncpDyn(sncpService)) {
+            throw new SncpException(sncpService + " is not sncp dynamic-gen service");
+        }
         return ((SncpDispatcherServlet) this.dispatcher).removeSncpServlet(sncpService);
     }
 
     public SncpDynServlet addSncpServlet(Service sncpService) {
         if (!Sncp.isSncpDyn(sncpService)) {
-            return null;
+            throw new SncpException(sncpService + " is not sncp dynamic-gen service");
         }
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService),
             Sncp.getResourceType(sncpService), sncpService, maxTypeLength, maxNameLength);

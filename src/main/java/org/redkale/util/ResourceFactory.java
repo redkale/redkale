@@ -927,7 +927,11 @@ public final class ResourceFactory {
                         field.set(srcObj, rs);
                     }
                     if (rs == null && !skipCheckRequired && rc1 != null && rc1.required()) {
-                        throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + srcObj.getClass().getName());
+                        String t = srcObj.getClass().getName();
+                        if (srcObj.getClass().getSimpleName().startsWith("_Dyn")) {
+                            t = srcObj.getClass().getSuperclass().getName();
+                        }
+                        throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + t);
                     }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);

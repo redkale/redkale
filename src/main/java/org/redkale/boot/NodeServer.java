@@ -451,7 +451,7 @@ public abstract class NodeServer {
             if (!Modifier.isPublic(serviceImplClass.getModifiers())) {
                 continue;
             }
-            if (serviceImplClass.getAnnotation(SncpDyn.class) != null) {
+            if (Sncp.isSncpDyn(serviceImplClass)) {
                 continue; //动态生成的跳过
             }
             if (entry.isExpect()) {
