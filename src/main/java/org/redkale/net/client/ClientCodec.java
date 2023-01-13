@@ -131,11 +131,15 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 }
             } catch (Throwable t) {
                 if (workThread == null) {
-                    Traces.currTraceid(request.traceid);
+                    if (request != null) {
+                        Traces.currTraceid(request.traceid);
+                    }
                     respFuture.completeExceptionally(t);
                 } else {
                     workThread.runWork(() -> {
-                        Traces.currTraceid(request.traceid);
+                        if (request != null) {
+                            Traces.currTraceid(request.traceid);
+                        }
                         respFuture.completeExceptionally(t);
                     });
                 }
