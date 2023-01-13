@@ -1405,7 +1405,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 判断是否存在Header值
      *
-     * @param name
+     * @param name header-name
      *
      * @return 是否存在
      */

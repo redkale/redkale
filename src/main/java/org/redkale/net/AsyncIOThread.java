@@ -74,7 +74,7 @@ public class AsyncIOThread extends WorkThread {
     /**
      * 不可重置， 防止IO操作不在IO线程中执行
      *
-     * @param command
+     * @param command 操作
      */
     @Override
     public void execute(Runnable command) {
@@ -85,7 +85,7 @@ public class AsyncIOThread extends WorkThread {
     /**
      * 不可重置， 防止IO操作不在IO线程中执行
      *
-     * @param commands
+     * @param commands 操作
      */
     @Override
     public void execute(Runnable... commands) {
@@ -98,7 +98,7 @@ public class AsyncIOThread extends WorkThread {
     /**
      * 不可重置， 防止IO操作不在IO线程中执行
      *
-     * @param commands
+     * @param commands 操作
      */
     @Override
     public void execute(Collection<Runnable> commands) {

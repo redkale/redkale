@@ -5,7 +5,7 @@
  */
 package org.redkale.net.client;
 
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.net.*;
 
@@ -16,49 +16,16 @@ import org.redkale.net.*;
  */
 public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
 
-    public static final ClientFuture EMPTY = new ClientFuture(null) {
-        @Override
-        public boolean complete(Object value) {
-            return true;
-        }
-
-        @Override
-        public boolean completeExceptionally(Throwable ex) {
-            return true;
-        }
-
-        @Override
-        void setConn(ClientConnection conn) {
-        }
-
-        @Override
-        void setTimeout(ScheduledFuture timeout) {
-        }
-
-        @Override
-        void incrMergeCount() {
-        }
-
-        @Override
-        public void run() {
-        }
-    };
-
     protected final ClientRequest request;
+
+    protected final ClientConnection conn;
 
     private ScheduledFuture timeout;
 
-    private int mergeCount; //合并的个数，不算自身
-
-    private ClientConnection conn;
-
-    public ClientFuture(ClientRequest request) {
+    public ClientFuture(ClientConnection conn, ClientRequest request) {
         super();
-        this.request = request;
-    }
-
-    void setConn(ClientConnection conn) {
         this.conn = conn;
+        this.request = request;
     }
 
     void setTimeout(ScheduledFuture timeout) {
@@ -71,20 +38,10 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
         }
     }
 
-    void incrMergeCount() {
-        mergeCount++;
-    }
-
-    public int getMergeCount() {
-        return mergeCount;
-    }
-
     @Override //JDK9+
     public <U> ClientFuture<U> newIncompleteFuture() {
-        ClientFuture future = new ClientFuture<>(request);
+        ClientFuture future = new ClientFuture<>(conn, request);
         future.timeout = timeout;
-        future.mergeCount = mergeCount;
-        future.conn = conn;
         return future;
     }
 
@@ -124,5 +81,10 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
             workThread = conn.getChannel().getReadIOThread();
         }
         workThread.runWork(() -> completeExceptionally(ex));
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{conn = " + conn + ", request = " + request + "}";
     }
 }

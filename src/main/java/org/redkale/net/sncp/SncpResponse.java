@@ -53,7 +53,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         this.addrBytes = context.getServerAddress().getAddress().getAddress();
         this.addrPort = context.getServerAddress().getPort();
         if (this.addrBytes.length != 4) {
-            throw new RuntimeException("SNCP serverAddress only support IPv4");
+            throw new SncpException("SNCP serverAddress only support IPv4");
         }
     }
 

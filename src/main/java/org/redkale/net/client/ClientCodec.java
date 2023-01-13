@@ -27,18 +27,21 @@ import org.redkale.util.*;
  */
 public abstract class ClientCodec<R extends ClientRequest, P> implements CompletionHandler<Integer, ByteBuffer> {
 
-    private final List<ClientResponse<P>> repsResults = new ArrayList<>();
+    protected final ClientConnection connection;
 
-    private final ClientConnection connection;
+    private final List<ClientResponse<P>> respResults = new ArrayList<>();
 
     private final ByteArray readArray = new ByteArray();
 
+    private final ObjectPool<ClientResponse> respPool = ObjectPool.createUnsafePool(256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
+
     public ClientCodec(ClientConnection connection) {
+        Objects.requireNonNull(connection);
         this.connection = connection;
     }
 
     //返回true: array会clear, 返回false: buffer会clear
-    public abstract boolean decodeMessages(ClientConnection connection, ByteBuffer buffer, ByteArray array);
+    public abstract boolean decodeMessages(ByteBuffer buffer, ByteArray array);
 
     @Override
     public final void completed(Integer count, ByteBuffer attachment) {
@@ -61,27 +64,17 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
         AsyncConnection channel = connection.channel;
         Deque<ClientFuture> responseQueue = connection.responseQueue;
         Map<Serializable, ClientFuture> responseMap = connection.responseMap;
-        if (decodeMessages(connection, buffer, readArray)) { //成功了
+        if (decodeMessages(buffer, readArray)) { //成功了
             readArray.clear();
-            List<ClientResponse<P>> results = pollMessages();
-            if (results != null) {
-                for (ClientResponse<P> rs : results) {
-                    Serializable reqid = rs.getRequestid();
-                    ClientFuture respFuture = reqid == null ? responseQueue.poll() : responseMap.remove(reqid);
-                    if (respFuture != null) {
-                        int mergeCount = respFuture.getMergeCount();
-                        completeResponse(rs, respFuture);
-                        if (mergeCount > 0) {
-                            for (int i = 0; i < mergeCount; i++) {
-                                respFuture = reqid == null ? responseQueue.poll() : responseMap.remove(reqid);
-                                if (respFuture != null) {
-                                    completeResponse(rs, respFuture);
-                                }
-                            }
-                        }
-                    }
+            for (ClientResponse<P> cr : respResults) {
+                Serializable reqid = cr.getRequestid();
+                ClientFuture respFuture = reqid == null ? responseQueue.poll() : responseMap.remove(reqid);
+                if (respFuture != null) {
+                    completeResponse(respFuture, cr.message, cr.exc);
                 }
+                respPool.accept(cr);
             }
+            respResults.clear();
 
             if (buffer.hasRemaining()) {
                 decodeResponse(buffer);
@@ -97,40 +90,40 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
         }
     }
 
-    private void completeResponse(ClientResponse<P> rs, ClientFuture respFuture) {
+    private void completeResponse(ClientFuture respFuture, P message, Throwable exc) {
         if (respFuture != null) {
             ClientRequest request = respFuture.request;
-            if (!request.isCompleted()) {
-                if (rs.exc == null) {
-                    connection.sendHalfWrite(rs.exc);
-                    //request没有发送完，respFuture需要再次接收
-                    return;
-                } else { //异常了需要清掉半包
-                    connection.sendHalfWrite(rs.exc);
-                }
-            }
-            connection.respWaitingCounter.decrement();
-            if (connection.isAuthenticated()) {
-                connection.client.incrRespDoneCounter();
-            }
             try {
+                if (!request.isCompleted()) {
+                    if (exc == null) {
+                        connection.sendHalfWrite(exc);
+                        //request没有发送完，respFuture需要再次接收
+                        return;
+                    } else { //异常了需要清掉半包
+                        connection.sendHalfWrite(exc);
+                    }
+                }
+                connection.respWaitingCounter.decrement();
+                if (connection.isAuthenticated()) {
+                    connection.client.incrRespDoneCounter();
+                }
                 respFuture.cancelTimeout();
                 //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", message=" + rs.message);
-                connection.preComplete(rs.message, (R) request, rs.exc);
+                connection.preComplete(message, (R) request, exc);
                 WorkThread workThread = request.workThread;
                 request.workThread = null;
                 if (workThread == null || workThread.getWorkExecutor() == null) {
                     workThread = connection.channel.getReadIOThread();
                 }
-                if (rs.exc != null) {
+                if (exc != null) {
                     workThread.runWork(() -> {
                         Traces.currTraceid(request.traceid);
-                        respFuture.completeExceptionally(rs.exc);
+                        respFuture.completeExceptionally(exc);
                     });
                 } else {
                     workThread.runWork(() -> {
                         Traces.currTraceid(request.traceid);
-                        respFuture.complete(rs.message);
+                        respFuture.complete(message);
                     });
                 }
             } catch (Throwable t) {
@@ -148,22 +141,18 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
         return connection.responseQueue.iterator();
     }
 
-    public List<ClientResponse<P>> pollMessages() {
-        List<ClientResponse<P>> rs = new ArrayList<>(repsResults);
-        this.repsResults.clear();
+    protected List<ClientResponse<P>> pollMessages() {
+        List<ClientResponse<P>> rs = new ArrayList<>(respResults);
+        this.respResults.clear();
         return rs;
     }
 
-    public ClientConnection getConnection() {
-        return connection;
+    public void addMessage(R request, P result) {
+        this.respResults.add(respPool.get().set(request, result));
     }
 
-    public void addMessage(P result) {
-        this.repsResults.add(new ClientResponse<>(result));
-    }
-
-    public void addMessage(Throwable exc) {
-        this.repsResults.add(new ClientResponse<>(exc));
+    public void addMessage(R request, Throwable exc) {
+        this.respResults.add(respPool.get().set(request, exc));
     }
 
     @Override

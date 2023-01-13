@@ -45,6 +45,9 @@ public final class EntityInfo<T> {
     //类对应的数据表名, 如果是VirtualEntity 类， 则该字段为null
     final String table;
 
+    //table的单一元素数组
+    final String[] tableOneArray;
+
     //JsonConvert
     final JsonConvert jsonConvert;
 
@@ -65,6 +68,9 @@ public final class EntityInfo<T> {
 
     //主键
     final Attribute<T, Serializable> primary;
+
+    //table的单一元素数组
+    final Attribute<T, Serializable>[] primaryOneArray;
 
     //DDL字段集合
     final EntityColumn[] ddlColumns;
@@ -294,6 +300,7 @@ public final class EntityInfo<T> {
             || type.getAnnotation(org.redkale.source.VirtualEntity.class) != null
             || (source == null || "memory".equalsIgnoreCase(source.getType()))) {
             this.table = null;
+            this.tableOneArray = null;
             BiFunction<DataSource, EntityInfo, CompletableFuture<List>> loader = null;
             try {
                 org.redkale.persistence.VirtualEntity ve = type.getAnnotation(org.redkale.persistence.VirtualEntity.class);
@@ -316,6 +323,7 @@ public final class EntityInfo<T> {
                 throw new SourceException(type + " have illegal table.name on @Table");
             }
             this.table = (tableCcatalog0 == null) ? type.getSimpleName().toLowerCase() : (tableCcatalog0.isEmpty()) ? (tableName0.isEmpty() ? type.getSimpleName().toLowerCase() : tableName0) : (tableCcatalog0 + '.' + (tableName0.isEmpty() ? type.getSimpleName().toLowerCase() : tableName0));
+            this.tableOneArray = new String[]{this.table};
         }
         DistributeTable dt = type.getAnnotation(DistributeTable.class);
         DistributeTableStrategy dts = null;
@@ -456,6 +464,7 @@ public final class EntityInfo<T> {
         this.jsonConvert = convert == null ? DEFAULT_JSON_CONVERT : convert;
 
         this.primary = idAttr0;
+        this.primaryOneArray = new Attribute[]{this.primary};
         this.aliasmap = aliasmap0;
         List<EntityColumn> ddls = new ArrayList<>();
         Collections.reverse(ddlList);  //父类的字段排在前面
@@ -1047,6 +1056,24 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 根据主键值获取Entity的表名单一元素数组
+     *
+     * @param primary Entity主键值
+     *
+     * @return String[]
+     */
+    public String[] getTableOneArray(Serializable primary) {
+        if (tableStrategy == null) {
+            return tableOneArray;
+        }
+        String t = tableStrategy.getTable(table, primary);
+        if (t == null || t.isEmpty()) {
+            throw new SourceException(table + " tableStrategy.getTable is empty, primary=" + primary);
+        }
+        return new String[]{t};
+    }
+
+    /**
      * 根据过滤条件获取Entity的表名
      *
      * @param node 过滤条件
@@ -1089,6 +1116,15 @@ public final class EntityInfo<T> {
      */
     public Attribute<T, Serializable> getPrimary() {
         return this.primary;
+    }
+
+    /**
+     * 获取主键字段的Attribute单一元素数组
+     *
+     * @return Attribute[]
+     */
+    public Attribute<T, Serializable>[] getPrimaryOneArray() {
+        return this.primaryOneArray;
     }
 
     /**

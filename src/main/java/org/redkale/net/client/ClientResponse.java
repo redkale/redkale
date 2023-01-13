@@ -14,20 +14,60 @@ import java.io.Serializable;
  */
 public class ClientResponse<P> {
 
+    protected ClientRequest request;
+
     protected P message;
 
     protected Throwable exc;
 
-    public Serializable getRequestid() {
-        return null;
+    public ClientResponse() {
+    }
+    
+    public ClientResponse(ClientRequest request, P message) {
+        this.request = request;
+        this.message = message;
     }
 
-    public ClientResponse(P result) {
-        this.message = result;
-    }
-
-    public ClientResponse(Throwable exc) {
+    public ClientResponse(ClientRequest request, Throwable exc) {
+        this.request = request;
         this.exc = exc;
+    }
+
+    public Serializable getRequestid() {
+        return request == null ? null : request.getRequestid();
+    }
+
+    public ClientResponse<P> set(ClientRequest request, P message) {
+        this.request = request;
+        this.message = message;
+        return this;
+    }
+
+    public ClientResponse<P> set(ClientRequest request, Throwable exc) {
+        this.request = request;
+        this.exc = exc;
+        return this;
+    }
+
+    protected void prepare() {
+        this.request = null;
+        this.message = null;
+        this.exc = null;
+    }
+
+    protected boolean recycle() {
+        this.request = null;
+        this.message = null;
+        this.exc = null;
+        return true;
+    }
+
+    public ClientRequest getRequest() {
+        return request;
+    }
+
+    public void setRequest(ClientRequest request) {
+        this.request = request;
     }
 
     public P getMessage() {
@@ -53,4 +93,5 @@ public class ClientResponse<P> {
         }
         return "{\"message\":" + message + "}";
     }
+
 }

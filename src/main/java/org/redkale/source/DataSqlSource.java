@@ -1867,7 +1867,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final EntityInfo<T> info = loadEntityInfo(clazz);
         String illegalColumn = checkIllegalColumn(info, selects);
         if (illegalColumn != null) {
-            return CompletableFuture.failedFuture(new RuntimeException(info.getType() + " cannot found column " + illegalColumn));
+            return CompletableFuture.failedFuture(new SourceException(info.getType() + " cannot found column " + illegalColumn));
         }
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, false, entity, null, selects));
@@ -1929,7 +1929,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         final EntityInfo<T> info = loadEntityInfo(clazz);
         String illegalColumn = checkIllegalColumn(info, selects);
         if (illegalColumn != null) {
-            return CompletableFuture.failedFuture(new RuntimeException(info.getType() + " cannot found column " + illegalColumn));
+            return CompletableFuture.failedFuture(new SourceException(info.getType() + " cannot found column " + illegalColumn));
         }
         if (isOnlyCache(info)) {
             return CompletableFuture.completedFuture(updateCache(info, -1, true, entity, node, selects));
@@ -2571,15 +2571,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return rs;
             }
         }
-        String table = info.getTable(pk);
+        String[] tables = info.getTableOneArray(pk);
         String sql = findSql(info, selects, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
         if (isAsync()) {
-            return findDBAsync(info, new String[]{table}, sql, true, selects, pk, null).join();
+            return findDBAsync(info, tables, sql, true, selects, pk, null).join();
         } else {
-            return findDB(info, new String[]{table}, sql, true, selects, pk, null);
+            return findDB(info, tables, sql, true, selects, pk, null);
         }
     }
 
@@ -2593,15 +2593,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(rs);
             }
         }
-        String table = info.getTable(pk);
+        String[] tables = info.getTableOneArray(pk);
         String sql = findSql(info, selects, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
         if (isAsync()) {
-            return findDBAsync(info, new String[]{table}, sql, true, selects, pk, null);
+            return findDBAsync(info, tables, sql, true, selects, pk, null);
         } else {
-            return supplyAsync(() -> findDB(info, new String[]{table}, sql, true, selects, pk, null));
+            return supplyAsync(() -> findDB(info, tables, sql, true, selects, pk, null));
         }
     }
 
@@ -2692,15 +2692,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return val;
             }
         }
-        String table = info.getTable(pk);
+        String[] tables = info.getTableOneArray(pk);
         String sql = findColumnSql(info, column, defValue, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
         }
         if (isAsync()) {
-            return findColumnDBAsync(info, new String[]{table}, sql, true, column, defValue, pk, null).join();
+            return findColumnDBAsync(info, tables, sql, true, column, defValue, pk, null).join();
         } else {
-            return findColumnDB(info, new String[]{table}, sql, true, column, defValue, pk, null);
+            return findColumnDB(info, tables, sql, true, column, defValue, pk, null);
         }
     }
 
@@ -2714,15 +2714,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(val);
             }
         }
-        String table = info.getTable(pk);
+        String[] tables = info.getTableOneArray(pk);
         String sql = findColumnSql(info, column, defValue, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
         }
         if (isAsync()) {
-            return findColumnDBAsync(info, new String[]{table}, sql, true, column, defValue, pk, null);
+            return findColumnDBAsync(info, tables, sql, true, column, defValue, pk, null);
         } else {
-            return supplyAsync(() -> findColumnDB(info, new String[]{table}, sql, true, column, defValue, pk, null));
+            return supplyAsync(() -> findColumnDB(info, tables, sql, true, column, defValue, pk, null));
         }
     }
 
@@ -2819,15 +2819,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return rs;
             }
         }
-        String table = info.getTable(pk);
+        String[] tables = info.getTableOneArray(pk);
         String sql = existsSql(info, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         }
         if (isAsync()) {
-            return existsDBAsync(info, new String[]{table}, sql, true, pk, null).join();
+            return existsDBAsync(info, tables, sql, true, pk, null).join();
         } else {
-            return existsDB(info, new String[]{table}, sql, true, pk, null);
+            return existsDB(info, tables, sql, true, pk, null);
         }
     }
 
@@ -2841,15 +2841,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(rs);
             }
         }
-        String table = info.getTable(pk);
+        String[] tables = info.getTableOneArray(pk);
         String sql = existsSql(info, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " exists sql=" + sql);
         }
         if (isAsync()) {
-            return existsDBAsync(info, new String[]{table}, sql, true, pk, null);
+            return existsDBAsync(info, tables, sql, true, pk, null);
         } else {
-            return supplyAsync(() -> existsDB(info, new String[]{table}, sql, true, pk, null));
+            return supplyAsync(() -> existsDB(info, tables, sql, true, pk, null));
         }
     }
 

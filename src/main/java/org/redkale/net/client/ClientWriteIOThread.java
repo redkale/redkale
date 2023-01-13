@@ -18,7 +18,7 @@ import org.redkale.util.*;
  */
 public class ClientWriteIOThread extends AsyncIOThread {
 
-    private final BlockingDeque<ClientEntity> requestQueue = new LinkedBlockingDeque<>();
+    private final BlockingDeque<ClientFuture> requestQueue = new LinkedBlockingDeque<>();
 
     public ClientWriteIOThread(String name, int index, int threads, ExecutorService workExecutor, Selector selector,
         ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
@@ -26,7 +26,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
     }
 
     public void offerRequest(ClientConnection conn, ClientRequest request, ClientFuture respFuture) {
-        requestQueue.offer(new ClientEntity(conn, request, respFuture));
+        requestQueue.offer(respFuture);
     }
 
     public void sendHalfWrite(ClientConnection conn, Throwable halfRequestExc) {
@@ -37,7 +37,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                 conn.pauseRequests.removeIf(e -> {
                     if (e != null) {
                         if (!skipFirst.compareAndSet(true, false)) {
-                            requestQueue.offer((ClientEntity) e);
+                            requestQueue.offer((ClientFuture) e);
                         }
                     }
                     return true;
@@ -57,62 +57,62 @@ public class ClientWriteIOThread extends AsyncIOThread {
         final ByteBuffer buffer = getBufferSupplier().get();
         final int capacity = buffer.capacity();
         final ByteArray writeArray = new ByteArray(1024 * 32);
-        final Map<ClientConnection, List<ClientEntity>> map = new HashMap<>();
+        final Map<ClientConnection, List<ClientFuture>> map = new HashMap<>();
         final ObjectPool<List> listPool = ObjectPool.createUnsafePool(Utility.cpus() * 2, () -> new ArrayList(), null, t -> {
             t.clear();
             return true;
         });
         while (!isClosed()) {
-            ClientEntity entity;
+            ClientFuture entry;
             try {
-                while ((entity = requestQueue.take()) != null) {
+                while ((entry = requestQueue.take()) != null) {
                     map.clear();
                     {
-                        Serializable reqid = entity.request.getRequestid();
+                        Serializable reqid = entry.request.getRequestid();
                         if (reqid == null) {
-                            entity.conn.responseQueue.offer(entity.respFuture);
+                            entry.conn.responseQueue.offer(entry);
                         } else {
-                            entity.conn.responseMap.put(reqid, entity.respFuture);
+                            entry.conn.responseMap.put(reqid, entry);
                         }
                     }
-                    if (entity.conn.pauseWriting.get()) {
-                        if (entity.conn.pauseResuming.get()) {
+                    if (entry.conn.pauseWriting.get()) {
+                        if (entry.conn.pauseResuming.get()) {
                             try {
-                                synchronized (entity.conn.pauseRequests) {
-                                    entity.conn.pauseRequests.wait(3_000);
+                                synchronized (entry.conn.pauseRequests) {
+                                    entry.conn.pauseRequests.wait(3_000);
                                 }
                             } catch (InterruptedException ie) {
                             }
                         }
-                        entity.conn.pauseRequests.add(entity);
+                        entry.conn.pauseRequests.add(entry);
                     } else {
-                        map.computeIfAbsent(entity.conn, c -> listPool.get()).add(entity);
+                        map.computeIfAbsent(entry.conn, c -> listPool.get()).add(entry);
                     }
-                    while ((entity = requestQueue.poll()) != null) {
-                        Serializable reqid = entity.request.getRequestid();
+                    while ((entry = requestQueue.poll()) != null) {
+                        Serializable reqid = entry.request.getRequestid();
                         if (reqid == null) {
-                            entity.conn.responseQueue.offer(entity.respFuture);
+                            entry.conn.responseQueue.offer(entry);
                         } else {
-                            entity.conn.responseMap.put(reqid, entity.respFuture);
+                            entry.conn.responseMap.put(reqid, entry);
                         }
-                        if (entity.conn.pauseWriting.get()) {
-                            if (entity.conn.pauseResuming.get()) {
+                        if (entry.conn.pauseWriting.get()) {
+                            if (entry.conn.pauseResuming.get()) {
                                 try {
-                                    synchronized (entity.conn.pauseRequests) {
-                                        entity.conn.pauseRequests.wait(3_000);
+                                    synchronized (entry.conn.pauseRequests) {
+                                        entry.conn.pauseRequests.wait(3_000);
                                     }
                                 } catch (InterruptedException ie) {
                                 }
                             }
-                            entity.conn.pauseRequests.add(entity);
+                            entry.conn.pauseRequests.add(entry);
                         } else {
-                            map.computeIfAbsent(entity.conn, c -> listPool.get()).add(entity);
+                            map.computeIfAbsent(entry.conn, c -> listPool.get()).add(entry);
                         }
                     }
                     map.forEach((conn, list) -> {
                         writeArray.clear();
                         int i = -1;
-                        for (ClientEntity en : list) {
+                        for (ClientFuture en : list) {
                             ++i;
                             ClientRequest request = en.request;
                             request.accept(conn, writeArray);
@@ -153,23 +153,4 @@ public class ClientWriteIOThread extends AsyncIOThread {
         }
     };
 
-    protected static class ClientEntity {
-
-        ClientConnection conn;
-
-        ClientRequest request;
-
-        ClientFuture respFuture;
-
-        public ClientEntity(ClientConnection conn, ClientRequest request, ClientFuture respFuture) {
-            this.conn = conn;
-            this.request = request;
-            this.respFuture = respFuture;
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "_" + Objects.hash(this) + "{conn = " + conn + ", request = " + request + "}";
-        }
-    }
 }

@@ -37,7 +37,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final AtomicBoolean pauseResuming = new AtomicBoolean();
 
-    protected final List<ClientWriteIOThread.ClientEntity> pauseRequests = new CopyOnWriteArrayList<ClientWriteIOThread.ClientEntity>();
+    protected final List<ClientFuture> pauseRequests = new CopyOnWriteArrayList<>();
 
     protected final AsyncConnection channel;
 
@@ -71,7 +71,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         ClientFuture respFuture = createClientFuture(request);
         int rts = this.channel.getReadTimeoutSeconds();
         if (rts > 0 && !request.isCloseType()) {
-            respFuture.setConn(this);
             respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
         }
         respWaitingCounter.increment(); //放在writeChannelUnsafe计数会延迟，导致不准确
@@ -79,11 +78,11 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         return respFuture;
     }
 
-    CompletableFuture writeVirtualRequest(ClientRequest request) {
+    CompletableFuture writeVirtualRequest(R request) {
         if (!request.isVirtualType()) {
             return CompletableFuture.failedFuture(new RuntimeException("ClientVirtualRequest must be virtualType = true"));
         }
-        ClientFuture respFuture = new ClientFuture(request);
+        ClientFuture respFuture = createClientFuture(request);
         responseQueue.offer(respFuture);
         readChannel();
         return respFuture;
@@ -93,7 +92,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     protected ClientFuture createClientFuture(R request) {
-        return new ClientFuture(request);
+        return new ClientFuture(this, request);
     }
 
     protected ClientConnection readChannel() {

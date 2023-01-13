@@ -26,7 +26,7 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
         synchronized (sncplock) {
             for (SncpServlet s : getServlets()) {
                 if (s.service == servlet.service) {
-                    throw new RuntimeException(s.service + " repeat addSncpServlet");
+                    throw new SncpException(s.service + " repeat addSncpServlet");
                 }
             }
             setServletConf(servlet, conf);

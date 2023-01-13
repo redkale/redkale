@@ -459,6 +459,7 @@ public final class ResourceFactory {
     /**
      * 将多个以指定资源名的String对象注入到资源池中
      *
+     * @param <A>             泛型
      * @param properties      资源键值对
      * @param environmentName 额外的资源名
      * @param environmentType 额外的类名

@@ -27,6 +27,9 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
 
     protected String traceid;
 
+    @Override
+    public abstract void accept(ClientConnection conn, ByteArray array);
+
     public Serializable getRequestid() {
         return null;
     }
@@ -52,16 +55,6 @@ public abstract class ClientRequest implements BiConsumer<ClientConnection, Byte
     public <T extends ClientRequest> T currThread(WorkThread thread) {
         this.workThread = thread;
         return (T) this;
-    }
-
-    //是否能合并， requestid=null的情况下值才有效
-    protected boolean canMerge(ClientConnection conn) {
-        return false;
-    }
-
-    //合并成功了返回true
-    protected boolean merge(ClientConnection conn, ClientRequest other) {
-        return false;
     }
 
     //数据是否全部写入，如果只写部分，返回false, 配合ClientConnection.pauseWriting使用
