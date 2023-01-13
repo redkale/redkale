@@ -125,15 +125,15 @@ public interface CacheSource extends Resourcable {
     public void setBytes(final String key, final byte[] value);
 
     //------------------------ setnx ------------------------
-    public <T> void setnx(final String key, final Type type, final T value);
+    public <T> boolean setnx(final String key, final Type type, final T value);
 
-    public <T> void setnx(final String key, final Convert convert, final Type type, final T value);
+    public <T> boolean setnx(final String key, final Convert convert, final Type type, final T value);
 
-    public void setnxString(final String key, final String value);
+    public boolean setnxString(final String key, final String value);
 
-    public void setnxLong(final String key, final long value);
+    public boolean setnxLong(final String key, final long value);
 
-    public void setnxBytes(final String key, final byte[] value);
+    public boolean setnxBytes(final String key, final byte[] value);
 
     //------------------------ setex ------------------------
     public <T> void setex(final String key, final int expireSeconds, final Type type, final T value);
@@ -180,13 +180,13 @@ public interface CacheSource extends Resourcable {
     public void hsetLong(final String key, final String field, final long value);
 
     //------------------------ hsetnx ------------------------
-    public <T> void hsetnx(final String key, final String field, final Type type, final T value);
+    public <T> boolean hsetnx(final String key, final String field, final Type type, final T value);
 
-    public <T> void hsetnx(final String key, final String field, final Convert convert, final Type type, final T value);
+    public <T> boolean hsetnx(final String key, final String field, final Convert convert, final Type type, final T value);
 
-    public void hsetnxString(final String key, final String field, final String value);
+    public boolean hsetnxString(final String key, final String field, final String value);
 
-    public void hsetnxLong(final String key, final String field, final long value);
+    public boolean hsetnxLong(final String key, final String field, final long value);
 
     //------------------------ hxxx ------------------------
     public int hdel(final String key, String... fields);
@@ -430,15 +430,15 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> setBytesAsync(final String key, final byte[] value);
 
     //------------------------ setnxAsync ------------------------
-    public <T> CompletableFuture<Void> setnxAsync(final String key, final Type type, final T value);
+    public <T> CompletableFuture<Boolean> setnxAsync(final String key, final Type type, final T value);
 
-    public <T> CompletableFuture<Void> setnxAsync(final String key, final Convert convert, final Type type, final T value);
+    public <T> CompletableFuture<Boolean> setnxAsync(final String key, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Void> setnxStringAsync(final String key, final String value);
+    public CompletableFuture<Boolean> setnxStringAsync(final String key, final String value);
 
-    public CompletableFuture<Void> setnxLongAsync(final String key, long value);
+    public CompletableFuture<Boolean> setnxLongAsync(final String key, long value);
 
-    public CompletableFuture<Void> setnxBytesAsync(final String key, final byte[] value);
+    public CompletableFuture<Boolean> setnxBytesAsync(final String key, final byte[] value);
 
     //------------------------ setexAsync ------------------------
     public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Type type, final T value);
@@ -485,13 +485,13 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> hsetLongAsync(final String key, final String field, final long value);
 
     //------------------------ hsetnxAsync ------------------------
-    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Type type, final T value);
+    public <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Type type, final T value);
 
-    public <T> CompletableFuture<Void> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value);
+    public <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Void> hsetnxStringAsync(final String key, final String field, final String value);
+    public CompletableFuture<Boolean> hsetnxStringAsync(final String key, final String field, final String value);
 
-    public CompletableFuture<Void> hsetnxLongAsync(final String key, final String field, final long value);
+    public CompletableFuture<Boolean> hsetnxLongAsync(final String key, final String field, final long value);
 
     //------------------------ hxxxAsync ------------------------
     public CompletableFuture<Integer> hdelAsync(final String key, String... fields);
