@@ -581,11 +581,10 @@ public final class Application {
         }
 
         ExecutorService workExecutor0 = null;
-        ExecutorService clientExecutor;
         if (executorConf == null) {
             executorConf = DefaultAnyValue.create();
         }
-        final int workThreads = executorConf.getIntValue("threads", Math.max(2, Utility.cpus()));
+        final int workThreads = executorConf.getIntValue("threads", Utility.cpus() * 4);
         boolean workHash = executorConf.getBoolValue("hash", false);
         if (workThreads > 0) {
             if (workHash) {
@@ -594,10 +593,10 @@ public final class Application {
                 workExecutor0 = WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s");
             }
         }
-        clientExecutor = workExecutor0;
+        ExecutorService clientExecutor = workExecutor0;
         if (clientExecutor == null) {
             //给所有client给一个默认的ExecutorService
-            final int clientThreads = Math.max(Math.max(2, Utility.cpus()), workThreads);
+            final int clientThreads = executorConf.getIntValue("clients", Utility.cpus());
             clientExecutor = WorkThread.createExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
         }
 
