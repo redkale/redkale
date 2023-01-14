@@ -28,8 +28,8 @@ public class WorkThread extends Thread implements Executor {
 
     private final int threads; //WorkThread个数
 
-    public WorkThread(String name, int index, int threads, ExecutorService workExecutor, Runnable target) {
-        super(target);
+    public WorkThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Runnable target) {
+        super(g, target);
         if (name != null) {
             setName(name);
         }
@@ -48,11 +48,12 @@ public class WorkThread extends Thread implements Executor {
     public static ExecutorService createHashExecutor(final int threads, final String threadNameFormat) {
         final AtomicReference<ExecutorService> ref = new AtomicReference<>();
         final AtomicInteger counter = new AtomicInteger();
+        final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
         return new ThreadHashExecutor(threads, (Runnable r) -> {
             int i = counter.get();
             int c = counter.incrementAndGet();
             String threadName = String.format(threadNameFormat, formatIndex(threads, c));
-            Thread t = new WorkThread(threadName, i, threads, ref.get(), r);
+            Thread t = new WorkThread(g, threadName, i, threads, ref.get(), r);
             return t;
         });
     }
@@ -60,11 +61,12 @@ public class WorkThread extends Thread implements Executor {
     public static ExecutorService createExecutor(final int threads, final String threadNameFormat) {
         final AtomicReference<ExecutorService> ref = new AtomicReference<>();
         final AtomicInteger counter = new AtomicInteger();
+        final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
         return Executors.newFixedThreadPool(threads, (Runnable r) -> {
             int i = counter.get();
             int c = counter.incrementAndGet();
             String threadName = String.format(threadNameFormat, formatIndex(threads, c));
-            Thread t = new WorkThread(threadName, i, threads, ref.get(), r);
+            Thread t = new WorkThread(g, threadName, i, threads, ref.get(), r);
             return t;
         });
     }

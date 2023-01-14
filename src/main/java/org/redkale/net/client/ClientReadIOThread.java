@@ -21,9 +21,9 @@ import org.redkale.util.ObjectPool;
  */
 public class ClientReadIOThread extends AsyncIOThread {
 
-    public ClientReadIOThread(String name, int index, int threads, ExecutorService workExecutor, Selector selector,
+    public ClientReadIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Selector selector,
         ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
-        super(name, index, threads, workExecutor, selector, unsafeBufferPool, safeBufferPool);
+        super(g, name, index, threads, workExecutor, selector, unsafeBufferPool, safeBufferPool);
     }
 
 }

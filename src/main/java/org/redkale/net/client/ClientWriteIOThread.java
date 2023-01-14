@@ -26,9 +26,9 @@ public class ClientWriteIOThread extends AsyncIOThread {
 
     private final BlockingDeque<ClientFuture> requestQueue = new LinkedBlockingDeque<>();
 
-    public ClientWriteIOThread(String name, int index, int threads, ExecutorService workExecutor, Selector selector,
+    public ClientWriteIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Selector selector,
         ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
-        super(name, index, threads, workExecutor, selector, unsafeBufferPool, safeBufferPool);
+        super(g, name, index, threads, workExecutor, selector, unsafeBufferPool, safeBufferPool);
     }
 
     public void offerRequest(ClientConnection conn, ClientRequest request, ClientFuture respFuture) {

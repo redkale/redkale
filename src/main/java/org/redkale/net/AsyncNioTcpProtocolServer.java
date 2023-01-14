@@ -131,8 +131,10 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             public void run() {
                 final AsyncIOThread[] ioReadThreads = ioGroup.ioReadThreads;
                 final AsyncIOThread[] ioWriteThreads = ioGroup.ioWriteThreads;
-                int threads = ioReadThreads.length;
-                int threadIndex = -1;
+                final int reads = ioReadThreads.length;
+                final int writes = ioWriteThreads.length;
+                int readIndex = -1;
+                int writeIndex = -1;
                 Set<SelectionKey> keys = null;
                 while (!closed) {
                     try {
@@ -145,10 +147,13 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                         }
                         for (SelectionKey key : keys) {
                             if (key.isAcceptable()) {
-                                if (++threadIndex >= threads) {
-                                    threadIndex = 0;
+                                if (++readIndex >= reads) {
+                                    readIndex = 0;
                                 }
-                                accept(key, ioReadThreads[threadIndex], ioWriteThreads[threadIndex]);
+                                if (++writeIndex >= writes) {
+                                    writeIndex = 0;
+                                }
+                                accept(key, ioReadThreads[readIndex], ioWriteThreads[writeIndex]);
                             }
                         }
                         keys.clear();

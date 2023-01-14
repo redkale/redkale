@@ -123,17 +123,22 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
             public void run() {
                 final AsyncIOThread[] ioReadThreads = ioGroup.ioReadThreads;
                 final AsyncIOThread[] ioWriteThreads = ioGroup.ioWriteThreads;
-                int threads = ioReadThreads.length;
-                int threadIndex = -1;
+                final int reads = ioReadThreads.length;
+                final int writes = ioWriteThreads.length;
+                int readIndex = -1;
+                int writeIndex = -1;
                 while (!closed) {
                     final ByteBuffer buffer = unsafeBufferPool.get();
                     try {
                         SocketAddress address = serverChannel.receive(buffer);
                         buffer.flip();
-                        if (++threadIndex >= threads) {
-                            threadIndex = 0;
+                        if (++readIndex >= reads) {
+                            readIndex = 0;
                         }
-                        accept(address, buffer, ioReadThreads[threadIndex], ioWriteThreads[threadIndex]);
+                        if (++writeIndex >= writes) {
+                            writeIndex = 0;
+                        }
+                        accept(address, buffer, ioReadThreads[readIndex], ioWriteThreads[writeIndex]);
                     } catch (Throwable t) {
                         unsafeBufferPool.accept(buffer);
                     }

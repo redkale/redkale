@@ -43,9 +43,9 @@ public class AsyncIOThread extends WorkThread {
 
     private boolean closed;
 
-    public AsyncIOThread(String name, int index, int threads, ExecutorService workExecutor, Selector selector,
+    public AsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Selector selector,
         ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
-        super(name, index, threads, workExecutor, null);
+        super(g, name, index, threads, workExecutor, null);
         this.selector = selector;
         this.setDaemon(true);
         this.bufferSupplier = () -> (inCurrThread() ? unsafeBufferPool : safeBufferPool).get();
@@ -201,13 +201,15 @@ public class AsyncIOThread extends WorkThread {
         }
     }
 
-    public void close() {
-        this.closed = true;
-        this.interrupt();
-        try {
-            this.selector.close();
-        } catch (Exception e) {
-            logger.log(Level.FINE, getName() + " selector close failed", e);
+    public synchronized void close() {
+        if (!this.closed) {
+            this.interrupt();
+            try {
+                this.selector.close();
+            } catch (Exception e) {
+                logger.log(Level.FINE, getName() + " selector close failed", e);
+            }
+            this.closed = true;
         }
     }
 }

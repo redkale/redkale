@@ -35,19 +35,17 @@ public class AsyncIOGroup extends AsyncGroup {
 
     private boolean skipClose;
 
-    //必须与ioWriteThreads数量相同
     final AsyncIOThread[] ioReadThreads;
 
-    //必须与ioReadThreads数量相同
     final AsyncIOThread[] ioWriteThreads;
 
     final AsyncIOThread connectThread;
 
     final int bufferCapacity;
 
-    final AtomicInteger shareCount = new AtomicInteger(1);
-
     private final AtomicInteger readIndex = new AtomicInteger();
+
+    private final AtomicInteger writeIndex = new AtomicInteger();
 
     //创建数
     final LongAdder connCreateCounter = new LongAdder();
@@ -80,26 +78,27 @@ public class AsyncIOGroup extends AsyncGroup {
         final int threads = Utility.cpus();
         this.ioReadThreads = new AsyncIOThread[threads];
         this.ioWriteThreads = new AsyncIOThread[threads];
+        final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
         try {
             for (int i = 0; i < threads; i++) {
                 String indexfix = WorkThread.formatIndex(threads, i + 1);
                 ObjectPool<ByteBuffer> unsafeReadBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
                 if (client) {
-                    this.ioReadThreads[i] = new ClientReadIOThread(String.format(threadNameFormat, "Read-" + indexfix), i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                    this.ioReadThreads[i] = new ClientReadIOThread(g, String.format(threadNameFormat, "Read-" + indexfix), i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
                     ObjectPool<ByteBuffer> unsafeWriteBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                         safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
-                    this.ioWriteThreads[i] = new ClientWriteIOThread(String.format(threadNameFormat, "Write-" + indexfix), i, threads, workExecutor, Selector.open(), unsafeWriteBufferPool, safeBufferPool);
+                    this.ioWriteThreads[i] = new ClientWriteIOThread(g, String.format(threadNameFormat, "Write-" + indexfix), i, threads, workExecutor, Selector.open(), unsafeWriteBufferPool, safeBufferPool);
                 } else {
-                    this.ioReadThreads[i] = new AsyncIOThread(String.format(threadNameFormat, indexfix), i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
+                    this.ioReadThreads[i] = new AsyncIOThread(g, String.format(threadNameFormat, indexfix), i, threads, workExecutor, Selector.open(), unsafeReadBufferPool, safeBufferPool);
                     this.ioWriteThreads[i] = this.ioReadThreads[i];
                 }
             }
             if (client) {
                 ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
-                this.connectThread = client ? new ClientReadIOThread(String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool)
-                    : new AsyncIOThread(String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
+                this.connectThread = client ? new ClientReadIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool)
+                    : new AsyncIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
             } else {
                 this.connectThread = null;
             }
@@ -148,18 +147,15 @@ public class AsyncIOGroup extends AsyncGroup {
         return this;
     }
 
-    public AsyncIOGroup dispose() {
-        if (shareCount.decrementAndGet() > 0) {
-            return this;
-        }
+    public synchronized AsyncIOGroup dispose() {
         if (closed) {
             return this;
         }
-        for (int i = 0; i < this.ioReadThreads.length; i++) {
-            this.ioReadThreads[i].close();
-            if (this.ioWriteThreads[i] != this.ioReadThreads[i]) {
-                this.ioWriteThreads[i].close();
-            }
+        for (AsyncIOThread t : this.ioReadThreads) {
+            t.close();
+        }
+        for (AsyncIOThread t : this.ioWriteThreads) {
+            t.close();
         }
         if (connectThread != null) {
             connectThread.close();
@@ -181,9 +177,14 @@ public class AsyncIOGroup extends AsyncGroup {
         return connClosedCounter;
     }
 
-    public AsyncIOThread[] nextIOThreads() {
+    public AsyncIOThread nextReadIOThread() {
         int i = Math.abs(readIndex.getAndIncrement()) % ioReadThreads.length;
-        return new AsyncIOThread[]{ioReadThreads[i], ioWriteThreads[i]};
+        return ioReadThreads[i];
+    }
+
+    public AsyncIOThread nextWriteIOThread() {
+        int i = Math.abs(writeIndex.getAndIncrement()) % ioWriteThreads.length;
+        return ioWriteThreads[i];
     }
 
     public AsyncIOThread connectThread() {
@@ -235,20 +236,34 @@ public class AsyncIOGroup extends AsyncGroup {
         channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 
-        AsyncIOThread[] ioThreads = null;
-        Thread currThread = Thread.currentThread();
-        if (currThread instanceof AsyncIOThread) {
-            for (int i = 0; i < this.ioReadThreads.length; i++) {
-                if (this.ioReadThreads[i] == currThread || this.ioWriteThreads[i] == currThread) {
-                    ioThreads = new AsyncIOThread[]{this.ioReadThreads[i], this.ioWriteThreads[i]};
-                    break;
+        AsyncIOThread readThread = null;
+        AsyncIOThread writeThread = null;
+        AsyncIOThread currThread = AsyncIOThread.currAsyncIOThread();
+        if (currThread != null) {
+            if (this.ioReadThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
+                for (int i = 0; i < this.ioReadThreads.length; i++) {
+                    if (this.ioReadThreads[i].index() == currThread.index()) {
+                        readThread = this.ioReadThreads[i];
+                        break;
+                    }
+                }
+            }
+            if (this.ioWriteThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
+                for (int i = 0; i < this.ioWriteThreads.length; i++) {
+                    if (this.ioWriteThreads[i].index() == currThread.index()) {
+                        writeThread = this.ioWriteThreads[i];
+                        break;
+                    }
                 }
             }
         }
-        if (ioThreads == null) {
-            ioThreads = nextIOThreads();
+        if (readThread == null) {
+            readThread = nextReadIOThread();
         }
-        return new AsyncNioTcpConnection(true, this, ioThreads[0], ioThreads[1], channel, null, null, address);
+        if (writeThread == null) {
+            writeThread = nextWriteIOThread();
+        }
+        return new AsyncNioTcpConnection(true, this, readThread, writeThread, channel, null, null, address);
     }
 
     @Override
@@ -304,20 +319,30 @@ public class AsyncIOGroup extends AsyncGroup {
 
     private AsyncNioUdpConnection newUDPClientConnection(final SocketAddress address) throws IOException {
         DatagramChannel channel = DatagramChannel.open();
-        AsyncIOThread[] ioThreads = null;
-        Thread currThread = Thread.currentThread();
-        if (currThread instanceof AsyncIOThread) {
+        AsyncIOThread readThread = null;
+        AsyncIOThread writeThread = null;
+        AsyncIOThread currThread = AsyncIOThread.currAsyncIOThread();
+        if (currThread != null) {
             for (int i = 0; i < this.ioReadThreads.length; i++) {
-                if (this.ioReadThreads[i] == currThread || this.ioWriteThreads[i] == currThread) {
-                    ioThreads = new AsyncIOThread[]{this.ioReadThreads[i], this.ioWriteThreads[i]};
+                if (this.ioReadThreads[i].index() == currThread.index()) {
+                    readThread = this.ioReadThreads[i];
+                    break;
+                }
+            }
+            for (int i = 0; i < this.ioWriteThreads.length; i++) {
+                if (this.ioWriteThreads[i].index() == currThread.index()) {
+                    writeThread = this.ioWriteThreads[i];
                     break;
                 }
             }
         }
-        if (ioThreads == null) {
-            ioThreads = nextIOThreads();
+        if (readThread == null) {
+            readThread = nextReadIOThread();
         }
-        return new AsyncNioUdpConnection(true, this, ioThreads[0], ioThreads[1], channel, null, null, address);
+        if (writeThread == null) {
+            writeThread = nextWriteIOThread();
+        }
+        return new AsyncNioUdpConnection(true, this, readThread, writeThread, channel, null, null, address);
     }
 
     @Override
