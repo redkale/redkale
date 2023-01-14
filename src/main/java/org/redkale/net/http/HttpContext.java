@@ -11,7 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
+import org.redkale.net.*;
 import org.redkale.net.Context;
+import org.redkale.net.Context.ContextConfig;
 import org.redkale.util.*;
 
 /**
@@ -67,6 +69,16 @@ public class HttpContext extends Context {
 //            this.uriCacheNodes = Utility.append(this.uriCacheNodes, node);
 //        }
 //    }
+    @Override
+    protected void updateReadIOThread(AsyncConnection conn, AsyncIOThread ioReadThread) {
+        super.updateReadIOThread(conn, ioReadThread);
+    }
+
+    @Override
+    protected void updateWriteIOThread(AsyncConnection conn, AsyncIOThread ioWriteThread) {
+        super.updateWriteIOThread(conn, ioWriteThread);
+    }
+
     protected String createSessionid() {
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);

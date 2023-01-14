@@ -61,6 +61,23 @@ public class AsyncIOThread extends WorkThread {
         return t instanceof AsyncIOThread ? (AsyncIOThread) t : null;
     }
 
+    public void interestOpsOr(SelectionKey key, int opt) {
+        if (key == null) {
+            return;
+        }
+        if (key.selector() != selector) {
+            throw new RuntimeException("NioThread.selector not the same to SelectionKey.selector");
+        }
+        if ((key.interestOps() & opt) != 0) {
+            return;
+        }
+        key.interestOps(key.interestOps() | opt);
+        //非IO线程中
+        if (!inCurrThread()) {
+            key.selector().wakeup();
+        }
+    }
+
     /**
      * 是否IO线程
      *

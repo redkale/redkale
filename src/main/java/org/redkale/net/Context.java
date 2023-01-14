@@ -159,6 +159,14 @@ public class Context {
 
     }
 
+    protected void updateReadIOThread(AsyncConnection conn, AsyncIOThread ioReadThread) {
+        conn.updateReadIOThread(ioReadThread);
+    }
+
+    protected void updateWriteIOThread(AsyncConnection conn, AsyncIOThread ioWriteThread) {
+        conn.updateWriteIOThread(ioWriteThread);
+    }
+
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
     }

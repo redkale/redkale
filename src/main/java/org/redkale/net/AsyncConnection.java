@@ -46,17 +46,17 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     protected final int bufferCapacity;
 
-    protected final AsyncIOThread ioReadThread;
+    protected AsyncIOThread ioReadThread;
 
-    protected final AsyncIOThread ioWriteThread;
+    protected AsyncIOThread ioWriteThread;
 
-    private final Supplier<ByteBuffer> readBufferSupplier;
+    private Supplier<ByteBuffer> readBufferSupplier;
 
-    private final Consumer<ByteBuffer> readBufferConsumer;
+    private Consumer<ByteBuffer> readBufferConsumer;
 
-    private final Supplier<ByteBuffer> writeBufferSupplier;
+    private Supplier<ByteBuffer> writeBufferSupplier;
 
-    private final Consumer<ByteBuffer> writeBufferConsumer;
+    private Consumer<ByteBuffer> writeBufferConsumer;
 
     private ByteBufferWriter pipelineWriter;
 
@@ -109,6 +109,20 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 this.sslEngine = sslBuilder.createSSLEngine(sslContext, client);
             }
         }
+    }
+
+    void updateReadIOThread(AsyncIOThread ioReadThread) {
+        Objects.requireNonNull(ioReadThread);
+        this.ioReadThread = ioReadThread;
+        this.readBufferSupplier = ioReadThread.getBufferSupplier();
+        this.readBufferConsumer = ioReadThread.getBufferConsumer();
+    }
+
+    void updateWriteIOThread(AsyncIOThread ioWriteThread) {
+        Objects.requireNonNull(ioWriteThread);
+        this.ioWriteThread = ioWriteThread;
+        this.writeBufferSupplier = ioWriteThread.getBufferSupplier();
+        this.writeBufferConsumer = ioWriteThread.getBufferConsumer();
     }
 
     public Supplier<ByteBuffer> getReadBufferSupplier() {

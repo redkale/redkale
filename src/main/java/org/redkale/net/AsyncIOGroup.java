@@ -196,30 +196,6 @@ public class AsyncIOGroup extends AsyncGroup {
         return timeoutExecutor.schedule(callable, delay, unit);
     }
 
-    public void interestOpsOr(AsyncIOThread thread, SelectionKey key, int opt) {
-        if (key == null) {
-            return;
-        }
-        if (key.selector() != thread.selector) {
-            throw new RuntimeException("NioThread.selector not the same to SelectionKey.selector");
-        }
-        if ((key.interestOps() & opt) != 0) {
-            return;
-        }
-        key.interestOps(key.interestOps() | opt);
-        if (thread.inCurrThread()) {
-//            timeoutExecutor.execute(() -> {
-//                try {
-//                    key.selector().wakeup();
-//                } catch (Throwable t) {
-//                }
-//            });
-        } else {
-            //非IO线程中
-            key.selector().wakeup();
-        }
-    }
-
     //创建一个AsyncConnection对象，只给测试代码使用
     public AsyncConnection newTCPClientConnection() {
         try {

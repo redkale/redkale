@@ -286,7 +286,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     }
                 });
             } else {
-                ioGroup.interestOpsOr(ioReadThread, readKey, SelectionKey.OP_READ);
+                ioReadThread.interestOpsOr(readKey, SelectionKey.OP_READ);
             }
         } catch (Exception e) {
             handleRead(0, e);
@@ -397,7 +397,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     }
                 });
             } else {
-                ioGroup.interestOpsOr(ioWriteThread, writeKey, SelectionKey.OP_WRITE);
+                ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
             }
         } catch (IOException e) {
             handleWrite(0, e);
