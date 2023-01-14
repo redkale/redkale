@@ -36,10 +36,10 @@ public class AsyncIOGroup extends AsyncGroup {
     private boolean skipClose;
 
     //必须与ioWriteThreads数量相同
-    private AsyncIOThread[] ioReadThreads;
+    final AsyncIOThread[] ioReadThreads;
 
     //必须与ioReadThreads数量相同
-    private AsyncIOThread[] ioWriteThreads;
+    final AsyncIOThread[] ioWriteThreads;
 
     private AsyncIOThread connectThread;
 
