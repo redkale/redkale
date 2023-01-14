@@ -33,7 +33,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     private final LongAdder executeCounter = new LongAdder(); //执行请求次数
 
-    private final LongAdder illRequestCounter = new LongAdder(); //错误请求次数
+    private final LongAdder illegalRequestCounter = new LongAdder(); //错误请求次数
 
     private final Object servletLock = new Object();
 
@@ -53,8 +53,8 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
         executeCounter.increment();
     }
 
-    protected void incrIllRequestCounter() {
-        illRequestCounter.increment();
+    protected void incrIllegalRequestCounter() {
+        illegalRequestCounter.increment();
     }
 
     protected void putServlet(S servlet) {
@@ -279,7 +279,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     public Long getIllRequestCounter() {
-        return illRequestCounter.longValue();
+        return illegalRequestCounter.longValue();
     }
 
 }

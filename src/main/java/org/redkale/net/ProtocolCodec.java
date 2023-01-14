@@ -12,7 +12,7 @@ import java.util.function.*;
 import java.util.logging.Level;
 
 /**
- * 一个AsyncConnection绑定一个ProtocolCodec实例
+ * 一个AsyncConnection绑定一个ProtocolCodec实例, 只会在读IOThread中运行
  *
  * @author zhangjx
  */
@@ -146,7 +146,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             preparer.incrExecuteCounter();
             channel.offerReadBuffer(buffer);
             if (rs != Integer.MIN_VALUE) {
-                preparer.incrIllRequestCounter();
+                preparer.incrIllegalRequestCounter();
             }
             response.finish(true);
             if (context.logger.isLoggable(Level.FINEST)) {
@@ -197,7 +197,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
-                    context.prepare.incrIllRequestCounter();
+                    context.prepare.incrIllegalRequestCounter();
                     channel.offerReadBuffer(attachment);
                     response.finish(true);
                     if (exc != null) {
