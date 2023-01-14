@@ -5,6 +5,7 @@
  */
 package org.redkale.net;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
@@ -43,13 +44,13 @@ public class AsyncIOThread extends WorkThread {
 
     private boolean closed;
 
-    public AsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Selector selector,
-        ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
+    public AsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
         super(g, name, index, threads, workExecutor, null);
-        this.selector = selector;
+        this.selector = Selector.open();
         this.setDaemon(true);
-        this.bufferSupplier = () -> (inCurrThread() ? unsafeBufferPool : safeBufferPool).get();
-        this.bufferConsumer = (v) -> (inCurrThread() ? unsafeBufferPool : safeBufferPool).accept(v);
+        ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(this, 512, safeBufferPool);
+        this.bufferSupplier = unsafeBufferPool;
+        this.bufferConsumer = unsafeBufferPool;
     }
 
     protected boolean isClosed() {

@@ -3,9 +3,9 @@
  */
 package org.redkale.net.client;
 
-import java.io.Serializable;
+import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,9 +26,9 @@ public class ClientWriteIOThread extends AsyncIOThread {
 
     private final BlockingDeque<ClientFuture> requestQueue = new LinkedBlockingDeque<>();
 
-    public ClientWriteIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Selector selector,
-        ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
-        super(g, name, index, threads, workExecutor, selector, unsafeBufferPool, safeBufferPool);
+    public ClientWriteIOThread(ThreadGroup g, String name, int index, int threads,
+        ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+        super(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
     public void offerRequest(ClientConnection conn, ClientRequest request, ClientFuture respFuture) {

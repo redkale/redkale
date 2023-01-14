@@ -41,6 +41,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private HttpResponseConfig respConfig;
 
+    private ObjectPool<ByteBuffer> safeBufferPool;
+
     public HttpServer() {
         this(null, System.currentTimeMillis(), ResourceFactory.create());
     }
@@ -541,7 +543,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     @Override
-    protected ObjectPool<ByteBuffer> createBufferSafePool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
+    protected ObjectPool<ByteBuffer> createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
         final int rcapacity = this.bufferCapacity;
         ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
@@ -551,11 +553,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 e.clear();
                 return true;
             });
+        this.safeBufferPool = bufferPool;
         return bufferPool;
     }
 
     @Override
-    protected ObjectPool<HttpResponse> createResponseSafePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
+    protected ObjectPool<HttpResponse> createSafeResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
         Creator<HttpResponse> creator = (Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context), this.respConfig);
         ObjectPool<HttpResponse> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, HttpResponse::prepare, HttpResponse::recycle);
         return pool;

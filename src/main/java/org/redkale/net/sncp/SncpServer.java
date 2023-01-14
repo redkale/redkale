@@ -127,7 +127,7 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
     }
 
     @Override
-    protected ObjectPool<ByteBuffer> createBufferSafePool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
+    protected ObjectPool<ByteBuffer> createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
         final int rcapacity = this.bufferCapacity;
         ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
@@ -141,7 +141,7 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
     }
 
     @Override
-    protected ObjectPool<SncpResponse> createResponseSafePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
+    protected ObjectPool<SncpResponse> createSafeResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
         Creator<SncpResponse> creator = (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context));
         ObjectPool<SncpResponse> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, SncpResponse::prepare, SncpResponse::recycle);
         return pool;

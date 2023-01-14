@@ -92,8 +92,8 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         LongAdder createResponseCounter = new LongAdder();
         LongAdder cycleResponseCounter = new LongAdder();
 
-        ObjectPool<ByteBuffer> safeBufferPool = server.createBufferSafePool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
-        ObjectPool<Response> safeResponsePool = server.createResponseSafePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
+        ObjectPool<ByteBuffer> safeBufferPool = server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        ObjectPool<Response> safeResponsePool = server.createSafeResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         final int respPoolMax = server.getResponsePoolSize();
         ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
             if (!(Thread.currentThread() instanceof WorkThread)) {

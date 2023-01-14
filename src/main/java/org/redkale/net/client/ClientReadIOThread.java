@@ -3,8 +3,8 @@
  */
 package org.redkale.net.client;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.Selector;
 import java.util.concurrent.ExecutorService;
 import org.redkale.net.AsyncIOThread;
 import org.redkale.util.ObjectPool;
@@ -21,9 +21,9 @@ import org.redkale.util.ObjectPool;
  */
 public class ClientReadIOThread extends AsyncIOThread {
 
-    public ClientReadIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Selector selector,
-        ObjectPool<ByteBuffer> unsafeBufferPool, ObjectPool<ByteBuffer> safeBufferPool) {
-        super(g, name, index, threads, workExecutor, selector, unsafeBufferPool, safeBufferPool);
+    public ClientReadIOThread(ThreadGroup g, String name, int index, int threads,
+        ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+        super(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
 }

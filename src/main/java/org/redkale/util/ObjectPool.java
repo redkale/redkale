@@ -45,10 +45,14 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     protected Thread unsafeThread;
 
-    protected ObjectPool(ObjectPool<T> parent, LongAdder creatCounter, LongAdder cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler, Queue<T> queue) {
+    //true表示unsafeThread不为空且当前为非线程安全版且parent为线程安全版
+    protected final boolean safeCombine;
+
+    protected ObjectPool(ObjectPool<T> parent, LongAdder creatCounter, LongAdder cycleCounter, Thread unsafeThread, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler, Queue<T> queue) {
         this.parent = parent;
         this.creatCounter = creatCounter;
         this.cycleCounter = cycleCounter;
+        this.unsafeThread = unsafeThread;
         this.creator = creator;
         this.prepare = prepare;
         this.recycler = recycler;
@@ -56,6 +60,7 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         this.debug = logger.isLoggable(Level.FINEST);
         this.queue = queue;
         this.unsafeDequeable = queue instanceof ArrayDeque;
+        this.safeCombine = unsafeThread != null && unsafeDequeable && parent != null && !parent.unsafeDequeable;
     }
 
     //非线程安全版
@@ -125,8 +130,19 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     //非线程安全版
     public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, LongAdder creatCounter, LongAdder cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        return new ObjectPool(parent, creatCounter, cycleCounter, Math.max(Utility.cpus(), max),
+        return new ObjectPool(parent, creatCounter, cycleCounter, null, Math.max(Utility.cpus(), max),
             creator, prepare, recycler, new ArrayDeque<>(Math.max(Utility.cpus(), max)));
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, LongAdder creatCounter, LongAdder cycleCounter, Thread unsafeThread, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+        return new ObjectPool(parent, creatCounter, cycleCounter, unsafeThread, Math.max(Utility.cpus(), max),
+            creator, prepare, recycler, new ArrayDeque<>(Math.max(Utility.cpus(), max)));
+    }
+
+    //非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(Thread unsafeThread, int max, ObjectPool<T> safePool) {
+        return createUnsafePool(safePool, safePool.getCreatCounter(), safePool.getCycleCounter(), unsafeThread, max, safePool.getCreator(), safePool.getPrepare(), safePool.getRecycler());
     }
 
     //线程安全版
@@ -161,7 +177,7 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     //线程安全版
     public static <T> ObjectPool<T> createSafePool(LongAdder creatCounter, LongAdder cycleCounter, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        return new ObjectPool(null, creatCounter, cycleCounter, Math.max(Utility.cpus(), max),
+        return new ObjectPool(null, creatCounter, cycleCounter, null, Math.max(Utility.cpus(), max),
             creator, prepare, recycler, new LinkedBlockingQueue<>(Math.max(Utility.cpus(), max)));
     }
 
@@ -195,7 +211,11 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     @Override
     public T get() {
-        if (unsafeDequeable) {
+        if (safeCombine) {
+            if (Thread.currentThread() != unsafeThread) {
+                return parent.get();
+            }
+        } else if (unsafeDequeable) {
             if (unsafeThread == null) {
                 unsafeThread = Thread.currentThread();
             } else if (unsafeThread != Thread.currentThread()) {
@@ -225,7 +245,12 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         if (e == null) {
             return;
         }
-        if (unsafeDequeable) {
+        if (safeCombine) {
+            if (Thread.currentThread() != unsafeThread) {
+                parent.accept(e);
+                return;
+            }
+        } else if (unsafeDequeable) {
             if (unsafeThread == null) {
                 unsafeThread = Thread.currentThread();
             } else if (unsafeThread != Thread.currentThread()) {

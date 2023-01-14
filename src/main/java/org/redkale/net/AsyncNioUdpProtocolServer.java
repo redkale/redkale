@@ -89,8 +89,8 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         LongAdder createResponseCounter = new LongAdder();
         LongAdder cycleResponseCounter = new LongAdder();
 
-        ObjectPool<ByteBuffer> safeBufferPool = server.createBufferSafePool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
-        ObjectPool<Response> safeResponsePool = server.createResponseSafePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
+        ObjectPool<ByteBuffer> safeBufferPool = server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        ObjectPool<Response> safeResponsePool = server.createSafeResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
             if (!(Thread.currentThread() instanceof WorkThread)) {
                 return null;
@@ -112,9 +112,6 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         this.serverChannel.register(this.selector, SelectionKey.OP_READ);
 
         this.acceptThread = new Thread() {
-            ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(safeBufferPool, safeBufferPool.getCreatCounter(),
-                safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
-
             {
                 setName(String.format(threadNameFormat, "Accept"));
             }
@@ -127,6 +124,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
                 final int writes = ioWriteThreads.length;
                 int readIndex = -1;
                 int writeIndex = -1;
+                ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(null, 512, safeBufferPool);
                 while (!closed) {
                     final ByteBuffer buffer = unsafeBufferPool.get();
                     try {
