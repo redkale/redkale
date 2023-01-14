@@ -10,7 +10,6 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
-import java.util.concurrent.atomic.LongAdder;
 import javax.net.ssl.SSLContext;
 import org.redkale.util.ByteBufferReader;
 
@@ -27,11 +26,11 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
 
     private final SocketChannel channel;
 
-    public AsyncNioTcpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread, AsyncIOThread connectThread,
-        SocketChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress addr0, LongAdder livingCounter, LongAdder closedCounter) {
-        super(client, ioGroup, ioReadThread, ioWriteThread, connectThread, ioGroup.bufferCapacity, sslBuilder, sslContext, livingCounter, closedCounter);
+    public AsyncNioTcpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
+        AsyncIOThread ioWriteThread, SocketChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress address) {
+        super(client, ioGroup, ioReadThread, ioWriteThread, ioGroup.bufferCapacity, sslBuilder, sslContext);
         this.channel = ch;
-        SocketAddress addr = addr0;
+        SocketAddress addr = address;
         if (addr == null) {
             try {
                 addr = ch.getRemoteAddress();

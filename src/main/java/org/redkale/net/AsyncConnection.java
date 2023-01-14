@@ -80,8 +80,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     //用于服务端的Socket, 等同于一直存在的readCompletionHandler
     ProtocolCodec protocolCodec;
 
-    protected AsyncConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread,
-        final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext, final LongAdder livingCounter, final LongAdder closedCounter) {
+    protected AsyncConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
+        AsyncIOThread ioWriteThread, int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext) {
         Objects.requireNonNull(ioGroup);
         Objects.requireNonNull(ioReadThread);
         Objects.requireNonNull(ioWriteThread);
@@ -94,8 +94,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         this.readBufferConsumer = ioReadThread.getBufferConsumer();
         this.writeBufferSupplier = ioWriteThread.getBufferSupplier();
         this.writeBufferConsumer = ioWriteThread.getBufferConsumer();
-        this.livingCounter = livingCounter;
-        this.closedCounter = closedCounter;
+        this.livingCounter = ioGroup.connLivingCounter;
+        this.closedCounter = ioGroup.connClosedCounter;
         if (client) { //client模式下无SSLBuilder
             if (sslContext != null) {
                 if (sslBuilder != null) {

@@ -41,7 +41,7 @@ public class AsyncIOGroup extends AsyncGroup {
     //必须与ioReadThreads数量相同
     final AsyncIOThread[] ioWriteThreads;
 
-    private AsyncIOThread connectThread;
+    final AsyncIOThread connectThread;
 
     final int bufferCapacity;
 
@@ -52,10 +52,10 @@ public class AsyncIOGroup extends AsyncGroup {
     //创建数
     final LongAdder connCreateCounter = new LongAdder();
 
-    //关闭数
+    //在线数
     final LongAdder connLivingCounter = new LongAdder();
 
-    //在线数
+    //关闭数
     final LongAdder connClosedCounter = new LongAdder();
 
     private ScheduledThreadPoolExecutor timeoutExecutor;
@@ -100,6 +100,8 @@ public class AsyncIOGroup extends AsyncGroup {
                     safeBufferPool.getCycleCounter(), 512, safeBufferPool.getCreator(), safeBufferPool.getPrepare(), safeBufferPool.getRecycler());
                 this.connectThread = client ? new ClientReadIOThread(String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool)
                     : new AsyncIOThread(String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, Selector.open(), unsafeBufferPool, safeBufferPool);
+            } else {
+                this.connectThread = null;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -246,7 +248,7 @@ public class AsyncIOGroup extends AsyncGroup {
         if (ioThreads == null) {
             ioThreads = nextIOThreads();
         }
-        return new AsyncNioTcpConnection(true, this, ioThreads[0], ioThreads[1], connectThread, channel, null, null, address, connLivingCounter, connClosedCounter);
+        return new AsyncNioTcpConnection(true, this, ioThreads[0], ioThreads[1], channel, null, null, address);
     }
 
     @Override
@@ -315,7 +317,7 @@ public class AsyncIOGroup extends AsyncGroup {
         if (ioThreads == null) {
             ioThreads = nextIOThreads();
         }
-        return new AsyncNioUdpConnection(true, this, ioThreads[0], ioThreads[1], connectThread, channel, null, null, address, connLivingCounter, connClosedCounter);
+        return new AsyncNioUdpConnection(true, this, ioThreads[0], ioThreads[1], channel, null, null, address);
     }
 
     @Override

@@ -121,12 +121,19 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
 
             @Override
             public void run() {
+                final AsyncIOThread[] ioReadThreads = ioGroup.ioReadThreads;
+                final AsyncIOThread[] ioWriteThreads = ioGroup.ioWriteThreads;
+                int threads = ioReadThreads.length;
+                int threadIndex = -1;
                 while (!closed) {
                     final ByteBuffer buffer = unsafeBufferPool.get();
                     try {
                         SocketAddress address = serverChannel.receive(buffer);
                         buffer.flip();
-                        accept(address, buffer);
+                        if (++threadIndex >= threads) {
+                            threadIndex = 0;
+                        }
+                        accept(address, buffer, ioReadThreads[threadIndex], ioWriteThreads[threadIndex]);
                     } catch (Throwable t) {
                         unsafeBufferPool.accept(buffer);
                     }
@@ -136,17 +143,10 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         this.acceptThread.start();
     }
 
-    private void accept(SocketAddress address, ByteBuffer buffer) throws IOException {
-        AsyncIOThread[] ioThreads = ioGroup.nextIOThreads();
-        LongAdder connCreateCounter = ioGroup.connCreateCounter;
-        if (connCreateCounter != null) {
-            connCreateCounter.increment();
-        }
-        LongAdder connLivingCounter = ioGroup.connLivingCounter;
-        if (connLivingCounter != null) {
-            connLivingCounter.increment();
-        }
-        AsyncNioUdpConnection conn = new AsyncNioUdpConnection(false, ioGroup, ioThreads[0], ioThreads[1], ioGroup.connectThread(), this.serverChannel, context.getSSLBuilder(), context.getSSLContext(), address, connLivingCounter, ioGroup.connClosedCounter);
+    private void accept(SocketAddress address, ByteBuffer buffer, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread) throws IOException {
+        ioGroup.connCreateCounter.increment();
+        ioGroup.connLivingCounter.increment();
+        AsyncNioUdpConnection conn = new AsyncNioUdpConnection(false, ioGroup, ioReadThread, ioWriteThread, this.serverChannel, context.getSSLBuilder(), context.getSSLContext(), address);
         ProtocolCodec codec = new ProtocolCodec(context, responseSupplier, responseConsumer, conn);
         conn.protocolCodec = codec;
         if (conn.sslEngine == null) {
