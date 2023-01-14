@@ -62,7 +62,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
     public void run() {
         final ByteBuffer buffer = getBufferSupplier().get();
         final int capacity = buffer.capacity();
-        final ByteArray writeArray = new ByteArray(1024 * 32);
+        final ByteArray writeArray = new ByteArray();
         final Map<ClientConnection, List<ClientFuture>> map = new HashMap<>();
         final ObjectPool<List> listPool = ObjectPool.createUnsafePool(Utility.cpus() * 2, () -> new ArrayList(), null, t -> {
             t.clear();
@@ -73,34 +73,14 @@ public class ClientWriteIOThread extends AsyncIOThread {
             try {
                 while ((entry = requestQueue.take()) != null) {
                     map.clear();
-                    {
+                    if (!entry.isDone()) {
                         Serializable reqid = entry.request.getRequestid();
                         if (reqid == null) {
                             entry.conn.responseQueue.offer(entry);
                         } else {
                             entry.conn.responseMap.put(reqid, entry);
                         }
-                    }
-                    if (entry.conn.pauseWriting.get()) {
-                        if (entry.conn.pauseResuming.get()) {
-                            try {
-                                synchronized (entry.conn.pauseRequests) {
-                                    entry.conn.pauseRequests.wait(3_000);
-                                }
-                            } catch (InterruptedException ie) {
-                            }
-                        }
-                        entry.conn.pauseRequests.add(entry);
-                    } else {
-                        map.computeIfAbsent(entry.conn, c -> listPool.get()).add(entry);
-                    }
-                    while ((entry = requestQueue.poll()) != null) {
-                        Serializable reqid = entry.request.getRequestid();
-                        if (reqid == null) {
-                            entry.conn.responseQueue.offer(entry);
-                        } else {
-                            entry.conn.responseMap.put(reqid, entry);
-                        }
+
                         if (entry.conn.pauseWriting.get()) {
                             if (entry.conn.pauseResuming.get()) {
                                 try {
@@ -113,6 +93,29 @@ public class ClientWriteIOThread extends AsyncIOThread {
                             entry.conn.pauseRequests.add(entry);
                         } else {
                             map.computeIfAbsent(entry.conn, c -> listPool.get()).add(entry);
+                        }
+                    }
+                    while ((entry = requestQueue.poll()) != null) {
+                        if (!entry.isDone()) {
+                            Serializable reqid = entry.request.getRequestid();
+                            if (reqid == null) {
+                                entry.conn.responseQueue.offer(entry);
+                            } else {
+                                entry.conn.responseMap.put(reqid, entry);
+                            }
+                            if (entry.conn.pauseWriting.get()) {
+                                if (entry.conn.pauseResuming.get()) {
+                                    try {
+                                        synchronized (entry.conn.pauseRequests) {
+                                            entry.conn.pauseRequests.wait(3_000);
+                                        }
+                                    } catch (InterruptedException ie) {
+                                    }
+                                }
+                                entry.conn.pauseRequests.add(entry);
+                            } else {
+                                map.computeIfAbsent(entry.conn, c -> listPool.get()).add(entry);
+                            }
                         }
                     }
                     map.forEach((conn, list) -> {

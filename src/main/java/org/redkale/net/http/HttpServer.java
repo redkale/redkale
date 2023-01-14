@@ -43,6 +43,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private ObjectPool<ByteBuffer> safeBufferPool;
 
+    //配置<executor threads="0"> APP_EXECUTOR资源为null
+    //RESNAME_APP_EXECUTOR
+    protected ExecutorService workExecutor;
+
     public HttpServer() {
         this(null, System.currentTimeMillis(), ResourceFactory.create());
     }
@@ -53,6 +57,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     public HttpServer(Application application, long serverStartTime, ResourceFactory resourceFactory) {
         super(application, serverStartTime, "TCP", resourceFactory, new HttpDispatcherServlet());
+        this.workExecutor = application == null ? null : application.getWorkExecutor();
     }
 
     @Override

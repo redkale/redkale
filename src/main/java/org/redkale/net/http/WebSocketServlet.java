@@ -80,17 +80,17 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     //同RestWebSocket.single
     protected boolean single = true; //是否单用户单连接
 
-    //同RestWebSocket.liveinterval
-    protected int liveinterval = DEFAILT_LIVEINTERVAL;
+    //同RestWebSocket.liveInterval
+    protected int liveInterval = DEFAILT_LIVEINTERVAL;
 
-    //同RestWebSocket.wsmaxconns
-    protected int wsmaxconns = 0;
+    //同RestWebSocket.wsMaxConns
+    protected int wsMaxConns = 0;
 
-    //同RestWebSocket.wsthreads
-    protected int wsthreads = 0;
+    //同RestWebSocket.wsThreads
+    protected int wsThreads = 0;
 
-    //同RestWebSocket.wsmaxbody
-    protected int wsmaxbody = 32 * 1024;
+    //同RestWebSocket.wsMaxBody
+    protected int wsMaxBody = 32 * 1024;
 
     //同RestWebSocket.anyuser
     protected boolean anyuser = false;
@@ -124,7 +124,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     protected ResourceFactory resourceFactory;
 
     protected WebSocketServlet() {
-        Type msgtype = String.class;
+        Type msgType = String.class;
         try {
             for (Method method : this.getClass().getDeclaredMethods()) {
                 if (!method.getName().equals("createWebSocket")) {
@@ -135,17 +135,17 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 }
                 Type rt = TypeToken.getGenericType(method.getGenericReturnType(), this.getClass());
                 if (rt instanceof ParameterizedType) {
-                    msgtype = ((ParameterizedType) rt).getActualTypeArguments()[1];
+                    msgType = ((ParameterizedType) rt).getActualTypeArguments()[1];
                 }
-                if (msgtype == Object.class) {
-                    msgtype = String.class;
+                if (msgType == Object.class) {
+                    msgType = String.class;
                 }
                 break;
             }
         } catch (Exception e) {
             logger.warning(this.getClass().getName() + " not designate text message type on createWebSocket Method");
         }
-        this.messageRestType = msgtype;
+        this.messageRestType = msgType;
     }
 
     @Override
@@ -198,7 +198,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.webSocketNode.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
-            this.single, context, liveinterval, wsmaxconns, wsthreads, wsmaxbody, mergemsg, this.cryptor, this.webSocketNode, this.sendConvert, logger);
+            this.single, context, liveInterval, wsMaxConns, wsThreads, wsMaxBody, mergemsg, this.cryptor, this.webSocketNode, this.sendConvert, logger);
         this.webSocketNode.init(conf);
         this.webSocketNode.localEngine.init(conf);
 

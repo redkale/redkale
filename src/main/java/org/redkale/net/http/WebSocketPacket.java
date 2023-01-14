@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import org.redkale.net.http.WebSocketPacket.FrameType;
+import org.redkale.util.ByteArray;
 
 /**
  *
@@ -19,8 +20,6 @@ import org.redkale.net.http.WebSocketPacket.FrameType;
 public final class WebSocketPacket {
 
     public static final Object MESSAGE_NIL = new Object();
-
-    static final WebSocketPacket NONE = new WebSocketPacket();
 
     public static final WebSocketPacket DEFAULT_PING_PACKET = new WebSocketPacket(FrameType.PING, new byte[0]);
 
@@ -84,6 +83,26 @@ public final class WebSocketPacket {
             this.payload = String.valueOf(message).getBytes(StandardCharsets.UTF_8);
         }
         this.last = last;
+    }
+
+    //消息编码
+    public void writeEncode(final ByteArray array) {
+        final byte opcode = (byte) (type.getValue() | 0x80);
+        final byte[] content = getPayload();
+        final int len = content.length;
+        if (len <= 0x7D) { //125
+            array.put(opcode);
+            array.put((byte) len);
+        } else if (len <= 0xFFFF) { // 65535
+            array.put(opcode);
+            array.put((byte) 0x7E); //126
+            array.putChar((char) len);
+        } else {
+            array.put(opcode);
+            array.put((byte) 0x7F); //127
+            array.putLong(len);
+        }
+        array.put(content);
     }
 
     public byte[] getPayload() {

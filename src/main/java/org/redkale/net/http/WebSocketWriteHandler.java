@@ -27,9 +27,9 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
 
     protected final ByteArray writeArray = new ByteArray();
 
-    protected final List<WebSocketFuture<Integer>> respList = new ArrayList();
+    protected final List<InnerWebSocketFuture<Integer>> respList = new ArrayList();
 
-    protected final ConcurrentLinkedDeque<WebSocketFuture<Integer>> requestQueue = new ConcurrentLinkedDeque();
+    protected final ConcurrentLinkedDeque<InnerWebSocketFuture<Integer>> requestQueue = new ConcurrentLinkedDeque();
 
     public WebSocketWriteHandler(HttpContext context, WebSocket webSocket) {
         this.context = context;
@@ -37,7 +37,7 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
     }
 
     public CompletableFuture<Integer> send(WebSocketPacket... packets) {
-        WebSocketFuture<Integer> future = new WebSocketFuture<>(packets);
+        InnerWebSocketFuture<Integer> future = new InnerWebSocketFuture<>(packets);
         if (writePending.compareAndSet(false, true)) {
             respList.clear();
             respList.add(future);
@@ -55,12 +55,12 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
     @Override
     public void completed(Integer result, Void attachment) {
         webSocket.lastSendTime = System.currentTimeMillis();
-        for (WebSocketFuture<Integer> future : respList) {
+        for (InnerWebSocketFuture<Integer> future : respList) {
             future.complete(0);
         }
         respList.clear();
         writeArray.clear();
-        WebSocketFuture req;
+        InnerWebSocketFuture req;
         while ((req = requestQueue.poll()) != null) {
             respList.add(req);
             for (WebSocketPacket p : req.packets) {
@@ -78,12 +78,12 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
 
     @Override
     public void failed(Throwable exc, Void attachment) {
-        WebSocketFuture req;
+        InnerWebSocketFuture req;
         try {
             while ((req = requestQueue.poll()) != null) {
                 req.completeExceptionally(exc);
             }
-            for (WebSocketFuture<Integer> future : respList) {
+            for (InnerWebSocketFuture<Integer> future : respList) {
                 future.completeExceptionally(exc);
             }
             respList.clear();
@@ -116,15 +116,15 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
         array.put(content);
     }
 
-    protected static class WebSocketFuture<T> extends CompletableFuture<T> {
+    protected static class InnerWebSocketFuture<T> extends CompletableFuture<T> {
 
         protected WebSocketPacket[] packets;
 
-        public WebSocketFuture() {
+        public InnerWebSocketFuture() {
             super();
         }
 
-        public WebSocketFuture(WebSocketPacket... packets) {
+        public InnerWebSocketFuture(WebSocketPacket... packets) {
             super();
             this.packets = packets;
         }
