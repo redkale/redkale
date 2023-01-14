@@ -43,6 +43,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private ObjectPool<ByteBuffer> safeBufferPool;
 
+    private final Object groupLock = new Object();
+
+    private WebSocketAsyncGroup asyncGroup;
+
     //配置<executor threads="0"> APP_EXECUTOR资源为null
     //RESNAME_APP_EXECUTOR
     protected ExecutorService workExecutor;
@@ -79,6 +83,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         if (this.dateScheduler != null) {
             this.dateScheduler.shutdownNow();
             this.dateScheduler = null;
+        }
+        if (asyncGroup != null) {
+            asyncGroup.close();
         }
         if (context.rpcAuthenticator != null) {
             context.rpcAuthenticator.destroy(context.rpcAuthenticatorConfig);
@@ -536,7 +543,20 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 throw new HttpException("init HttpRpcAuthenticator(" + impl + ") error", e);
             }
         }
-        return new HttpContext(contextConfig);
+        HttpContext rs = new HttpContext(contextConfig);
+        rs.webSocketWriterIOThreadFunc = ws -> {
+            if (asyncGroup == null) {
+                synchronized (groupLock) {
+                    if (asyncGroup == null) {
+                        WebSocketAsyncGroup g = new WebSocketAsyncGroup("Redkale-HTTP:" + address.getPort() + "-WebSocketWriteIOThread-%s", workExecutor, bufferCapacity, safeBufferPool);
+                        g.start();
+                        asyncGroup = g;
+                    }
+                }
+            }
+            return (WebSocketWriteIOThread) asyncGroup.nextWriteIOThread();
+        };
+        return rs;
     }
 
     @Override

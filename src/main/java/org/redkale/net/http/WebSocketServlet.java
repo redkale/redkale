@@ -80,17 +80,17 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     //同RestWebSocket.single
     protected boolean single = true; //是否单用户单连接
 
-    //同RestWebSocket.liveInterval
-    protected int liveInterval = DEFAILT_LIVEINTERVAL;
+    //同RestWebSocket.liveinterval
+    protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
     //同RestWebSocket.wsMaxConns
-    protected int wsMaxConns = 0;
+    protected int wsmaxconns = 0;
 
     //同RestWebSocket.wsThreads
-    protected int wsThreads = 0;
+    protected int wsthreads = 0;
 
     //同RestWebSocket.wsMaxBody
-    protected int wsMaxBody = 32 * 1024;
+    protected int wsmaxbody = 32 * 1024;
 
     //同RestWebSocket.anyuser
     protected boolean anyuser = false;
@@ -198,7 +198,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
         this.webSocketNode.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
-            this.single, context, liveInterval, wsMaxConns, wsThreads, wsMaxBody, mergemsg, this.cryptor, this.webSocketNode, this.sendConvert, logger);
+            this.single, context, liveinterval, wsmaxconns, wsthreads, wsmaxbody, mergemsg, this.cryptor, this.webSocketNode, this.sendConvert, logger);
         this.webSocketNode.init(conf);
         this.webSocketNode.localEngine.init(conf);
 
@@ -293,7 +293,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 @Override
                 public void completed(Integer result, Void attachment) {
                     webSocket._readHandler = new WebSocketReadHandler(response.getContext(), webSocket, restMessageConsumer);
-                    webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket);
+                    //webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket);
+                    response.getContext().updateWebSocketWriteIOThread(webSocket);
+                    
                     Runnable createUseridHandler = () -> {
                         CompletableFuture<Serializable> userFuture = webSocket.createUserid();
                         if (userFuture == null) {
@@ -355,7 +357,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                             if (webSocket.delayPackets != null) { //存在待发送的消息
                                 List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                                 webSocket.delayPackets = null;
-                                CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                                CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                                 cf.whenComplete((Integer v, Throwable t) -> {
                                     if (userid == null || t != null) {
                                         if (t != null) {
@@ -374,7 +376,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                     if (webSocket.delayPackets != null) { //存在待发送的消息
                         List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                         webSocket.delayPackets = null;
-                        CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                        CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                         cf.whenComplete((Integer v, Throwable t) -> {
                             if (sessionid == null || t != null) {
                                 if (t != null) {

@@ -3,7 +3,7 @@
  */
 package org.redkale.net.http;
 
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.net.WorkThread;
 
@@ -19,7 +19,7 @@ import org.redkale.net.WorkThread;
  */
 public class WebSocketFuture extends CompletableFuture<Integer> implements Runnable {
 
-    WebSocketPacket packet;
+    WebSocketPacket[] packets;
 
     WebSocket websocket;
 
@@ -27,12 +27,11 @@ public class WebSocketFuture extends CompletableFuture<Integer> implements Runna
 
     ScheduledFuture timeout;
 
-    WebSocketFuture(WorkThread workThread, WebSocket websocket, WebSocketPacket packet) {
+    WebSocketFuture(WorkThread workThread, WebSocket websocket, WebSocketPacket... packets) {
         super();
-        Objects.requireNonNull(workThread);
         this.workThread = workThread;
         this.websocket = websocket;
-        this.packet = packet;
+        this.packets = packets;
     }
 
     void cancelTimeout() {
@@ -43,7 +42,7 @@ public class WebSocketFuture extends CompletableFuture<Integer> implements Runna
 
     @Override //JDK9+
     public WebSocketFuture newIncompleteFuture() {
-        WebSocketFuture future = new WebSocketFuture(workThread, websocket, packet);
+        WebSocketFuture future = new WebSocketFuture(workThread, websocket, packets);
         future.timeout = timeout;
         return future;
     }
@@ -56,6 +55,6 @@ public class WebSocketFuture extends CompletableFuture<Integer> implements Runna
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{websocket = " + websocket + ", packet = " + packet + "}";
+        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{websocket = " + websocket + ", packets = " + Arrays.toString(packets) + "}";
     }
 }

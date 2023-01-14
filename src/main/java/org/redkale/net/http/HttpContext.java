@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.nio.channels.CompletionHandler;
 import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -43,6 +44,8 @@ public class HttpContext extends Context {
     //所有Servlet方法都不需要读取http-header，lazyHeaders=true
     protected boolean lazyHeaders; //存在动态改值
 
+    Function<WebSocket, WebSocketWriteIOThread> webSocketWriterIOThreadFunc;
+
 //    protected RequestURINode[] uriCacheNodes;
     public HttpContext(HttpContextConfig config) {
         super(config);
@@ -77,6 +80,12 @@ public class HttpContext extends Context {
     @Override
     protected void updateWriteIOThread(AsyncConnection conn, AsyncIOThread ioWriteThread) {
         super.updateWriteIOThread(conn, ioWriteThread);
+    }
+
+    protected void updateWebSocketWriteIOThread(WebSocket webSocket) {
+        WebSocketWriteIOThread writeIOThread = webSocketWriterIOThreadFunc.apply(webSocket);
+        updateWriteIOThread(webSocket._channel, writeIOThread);
+        webSocket._writeIOThread = writeIOThread; 
     }
 
     protected String createSessionid() {

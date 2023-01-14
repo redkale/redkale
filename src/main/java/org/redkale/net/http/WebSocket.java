@@ -83,10 +83,10 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     WebSocketEngine _engine; //不可能为空 
 
-    //WebSocketRunner _runner; //不可能为空 
     WebSocketReadHandler _readHandler;
 
-    WebSocketWriteHandler _writeHandler;
+    //WebSocketWriteHandler _writeHandler;
+    WebSocketWriteIOThread _writeIOThread;
 
     InetSocketAddress _sncpAddress; //分布式下不可为空
 
@@ -238,14 +238,14 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
-        if (this._writeHandler == null) {
+        if (this._writeIOThread == null) {
             if (delayPackets == null) {
                 delayPackets = new ArrayList<>();
             }
             delayPackets.add(packet);
             return CompletableFuture.completedFuture(RETCODE_DEAYSEND);
         }
-        CompletableFuture<Integer> rs = this._writeHandler.send(packet);
+        CompletableFuture<Integer> rs = this._writeIOThread.send(this, packet);
         if (_engine.logger.isLoggable(Level.FINER) && packet != WebSocketPacket.DEFAULT_PING_PACKET) {
             _engine.logger.finer("userid:" + getUserid() + " send websocket message(" + packet + ")" + " on " + this);
         }

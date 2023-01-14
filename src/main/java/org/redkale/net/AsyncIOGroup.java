@@ -48,15 +48,15 @@ public class AsyncIOGroup extends AsyncGroup {
     private final AtomicInteger writeIndex = new AtomicInteger();
 
     //创建数
-    final LongAdder connCreateCounter = new LongAdder();
+    protected final LongAdder connCreateCounter = new LongAdder();
 
     //在线数
-    final LongAdder connLivingCounter = new LongAdder();
+    protected final LongAdder connLivingCounter = new LongAdder();
 
     //关闭数
-    final LongAdder connClosedCounter = new LongAdder();
+    protected final LongAdder connClosedCounter = new LongAdder();
 
-    private ScheduledThreadPoolExecutor timeoutExecutor;
+    protected final ScheduledThreadPoolExecutor timeoutExecutor;
 
     public AsyncIOGroup(final int bufferCapacity, final int bufferPoolSize) {
         this(true, "Redkale-AnonymousClient-IOThread-%s", null, bufferCapacity, bufferPoolSize);
@@ -73,36 +73,50 @@ public class AsyncIOGroup extends AsyncGroup {
             }));
     }
 
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public AsyncIOGroup(boolean client, String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
         this.bufferCapacity = bufferCapacity;
         final int threads = Utility.cpus();
         this.ioReadThreads = new AsyncIOThread[threads];
         this.ioWriteThreads = new AsyncIOThread[threads];
         final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
+
+        this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
+            Thread t = new Thread(r, String.format(threadNameFormat, "Timeout"));
+            t.setDaemon(true);
+            return t;
+        });
         try {
             for (int i = 0; i < threads; i++) {
                 String indexfix = WorkThread.formatIndex(threads, i + 1);
                 if (client) {
-                    this.ioReadThreads[i] = new ClientReadIOThread(g, String.format(threadNameFormat, "Read-" + indexfix), i, threads, workExecutor, safeBufferPool);
-                    this.ioWriteThreads[i] = new ClientWriteIOThread(g, String.format(threadNameFormat, "Write-" + indexfix), i, threads, workExecutor, safeBufferPool);
+                    this.ioReadThreads[i] = createClientReadIOThread(g, String.format(threadNameFormat, "Read-" + indexfix), i, threads, workExecutor, safeBufferPool);
+                    this.ioWriteThreads[i] = createClientWriteIOThread(g, String.format(threadNameFormat, "Write-" + indexfix), i, threads, workExecutor, safeBufferPool);
                 } else {
-                    this.ioReadThreads[i] = new AsyncIOThread(g, String.format(threadNameFormat, indexfix), i, threads, workExecutor, safeBufferPool);
+                    this.ioReadThreads[i] = createAsyncIOThread(g, String.format(threadNameFormat, indexfix), i, threads, workExecutor, safeBufferPool);
                     this.ioWriteThreads[i] = this.ioReadThreads[i];
                 }
             }
             if (client) {
-                this.connectThread = new ClientReadIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
+                this.connectThread = createClientReadIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
             } else {
                 this.connectThread = null;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
-            Thread t = new Thread(r, String.format(threadNameFormat, "Timeout"));
-            t.setDaemon(true);
-            return t;
-        });
+    }
+
+    protected AsyncIOThread createAsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+        return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
+    }
+
+    protected AsyncIOThread createClientReadIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+        return new ClientReadIOThread(g, name, index, threads, workExecutor, safeBufferPool);
+    }
+
+    protected AsyncIOThread createClientWriteIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+        return new ClientWriteIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
     @Override

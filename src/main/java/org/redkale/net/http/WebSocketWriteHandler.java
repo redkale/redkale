@@ -5,18 +5,19 @@
  */
 package org.redkale.net.http;
 
+import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.logging.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.nio.channels.CompletionHandler;
-import org.redkale.util.ByteArray;
+import java.util.logging.Level;
 import static org.redkale.net.http.WebSocket.*;
+import org.redkale.util.ByteArray;
 
 /**
  *
  * @author zhangjx
  */
+@Deprecated(since = "2.8.0")
 public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
 
     protected final HttpContext context;

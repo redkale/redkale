@@ -6,6 +6,7 @@ package org.redkale.net.http;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
+import java.util.Objects;
 import java.util.concurrent.*;
 import org.redkale.net.AsyncIOThread;
 import org.redkale.util.*;
@@ -22,21 +23,24 @@ import org.redkale.util.*;
  */
 public class WebSocketWriteIOThread extends AsyncIOThread {
 
-    private final BlockingDeque<WebSocketFuture> requestQueue = new LinkedBlockingDeque<>();
-
     private final ScheduledThreadPoolExecutor timeoutExecutor;
+
+    private final BlockingDeque<WebSocketFuture> requestQueue = new LinkedBlockingDeque<>();
 
     public WebSocketWriteIOThread(ScheduledThreadPoolExecutor timeoutExecutor, ThreadGroup g, String name, int index, int threads,
         ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
         super(g, name, index, threads, workExecutor, safeBufferPool);
+        Objects.requireNonNull(timeoutExecutor);
         this.timeoutExecutor = timeoutExecutor;
     }
 
-    public CompletableFuture<Integer> offerRequest(WebSocket websocket, WebSocketPacket packet) {
-        WebSocketFuture future = new WebSocketFuture(this, websocket, packet);
-        int ts = websocket._channel.getWriteTimeoutSeconds();
-        if (ts > 0) {
-            future.timeout = timeoutExecutor.schedule(future, ts, TimeUnit.SECONDS);
+    public CompletableFuture<Integer> send(WebSocket websocket, WebSocketPacket... packets) {
+        Objects.requireNonNull(websocket);
+        Objects.requireNonNull(packets);
+        WebSocketFuture future = new WebSocketFuture(this, websocket, packets);
+        int wts = websocket._channel.getWriteTimeoutSeconds();
+        if (wts > 0) {
+            future.timeout = timeoutExecutor.schedule(future, wts, TimeUnit.SECONDS);
         }
         requestQueue.offer(future);
         return future;
@@ -53,7 +57,9 @@ public class WebSocketWriteIOThread extends AsyncIOThread {
                 while ((entry = requestQueue.take()) != null) {
                     if (!entry.isDone()) {
                         writeArray.clear();
-                        entry.packet.writeEncode(writeArray);
+                        for (WebSocketPacket packet : entry.packets) {
+                            packet.writeEncode(writeArray);
+                        }
                         if (writeArray.length() > 0) {
                             if (writeArray.length() <= capacity) {
                                 buffer.clear();
@@ -78,7 +84,7 @@ public class WebSocketWriteIOThread extends AsyncIOThread {
             attachment.cancelTimeout();
             attachment.workThread = null;
             attachment.websocket = null;
-            attachment.packet = null;
+            attachment.packets = null;
             runWork(() -> {
                 attachment.complete(0);
             });
@@ -90,7 +96,7 @@ public class WebSocketWriteIOThread extends AsyncIOThread {
             attachment.websocket.close();
             attachment.workThread = null;
             attachment.websocket = null;
-            attachment.packet = null;
+            attachment.packets = null;
             runWork(() -> {
                 attachment.completeExceptionally(exc);
             });
