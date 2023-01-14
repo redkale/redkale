@@ -89,8 +89,8 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         LongAdder createResponseCounter = new LongAdder();
         LongAdder cycleResponseCounter = new LongAdder();
 
-        ObjectPool<ByteBuffer> safeBufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
-        ObjectPool<Response> safeResponsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
+        ObjectPool<ByteBuffer> safeBufferPool = server.createBufferSafePool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        ObjectPool<Response> safeResponsePool = server.createResponseSafePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
             if (!(Thread.currentThread() instanceof WorkThread)) {
                 return null;

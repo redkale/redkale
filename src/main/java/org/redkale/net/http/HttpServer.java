@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.boot.Application;
 import org.redkale.mq.*;
-import org.redkale.net.*;
+import org.redkale.net.Server;
 import org.redkale.net.http.HttpContext.HttpContextConfig;
 import org.redkale.net.http.HttpResponse.HttpResponseConfig;
 import org.redkale.net.sncp.Sncp;
@@ -541,7 +541,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     @Override
-    protected ObjectPool<ByteBuffer> createBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
+    protected ObjectPool<ByteBuffer> createBufferSafePool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
         final int rcapacity = this.bufferCapacity;
         ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
@@ -555,9 +555,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     @Override
-    protected ObjectPool<Response> createResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
-        Creator<Response> creator = (Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context), this.respConfig);
-        ObjectPool<Response> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, (x) -> ((HttpResponse) x).prepare(), (x) -> ((HttpResponse) x).recycle());
+    protected ObjectPool<HttpResponse> createResponseSafePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
+        Creator<HttpResponse> creator = (Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context), this.respConfig);
+        ObjectPool<HttpResponse> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, HttpResponse::prepare, HttpResponse::recycle);
         return pool;
     }
 }

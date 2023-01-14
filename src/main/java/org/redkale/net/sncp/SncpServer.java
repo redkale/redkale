@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.atomic.*;
 import org.redkale.boot.Application;
 import org.redkale.convert.bson.BsonFactory;
-import org.redkale.net.*;
+import org.redkale.net.Server;
 import org.redkale.net.sncp.SncpContext.SncpContextConfig;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -127,7 +127,7 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
     }
 
     @Override
-    protected ObjectPool<ByteBuffer> createBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
+    protected ObjectPool<ByteBuffer> createBufferSafePool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
         final int rcapacity = this.bufferCapacity;
         ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
@@ -141,9 +141,9 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
     }
 
     @Override
-    protected ObjectPool<Response> createResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
-        Creator<Response> creator = (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context));
-        ObjectPool<Response> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, (x) -> ((SncpResponse) x).prepare(), (x) -> ((SncpResponse) x).recycle());
+    protected ObjectPool<SncpResponse> createResponseSafePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
+        Creator<SncpResponse> creator = (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context));
+        ObjectPool<SncpResponse> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, SncpResponse::prepare, SncpResponse::recycle);
         return pool;
     }
 

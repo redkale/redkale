@@ -92,8 +92,8 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         LongAdder createResponseCounter = new LongAdder();
         LongAdder cycleResponseCounter = new LongAdder();
 
-        ObjectPool<ByteBuffer> bufferPool = server.createBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
-        ObjectPool<Response> safeResponsePool = server.createResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
+        ObjectPool<ByteBuffer> safeBufferPool = server.createBufferSafePool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        ObjectPool<Response> safeResponsePool = server.createResponseSafePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         final int respPoolMax = server.getResponsePoolSize();
         ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
             if (!(Thread.currentThread() instanceof WorkThread)) {
@@ -119,7 +119,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             (pool == null ? safeResponsePool : pool).accept(v);
         };
         final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
-        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, server.bufferCapacity, bufferPool);
+        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, server.bufferCapacity, safeBufferPool);
         this.ioGroup.start();
 
         this.acceptThread = new Thread() {

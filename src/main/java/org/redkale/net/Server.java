@@ -423,10 +423,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     //必须在 createContext()之后调用
-    protected abstract ObjectPool<ByteBuffer> createBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize);
+    protected abstract ObjectPool<ByteBuffer> createBufferSafePool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize);
 
     //必须在 createContext()之后调用
-    protected abstract ObjectPool<Response> createResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize);
+    protected abstract ObjectPool<P> createResponseSafePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize);
 
     public void shutdown() throws IOException {
         long s = System.currentTimeMillis();
