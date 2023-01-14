@@ -827,11 +827,11 @@ public abstract class WebSocket<G extends Serializable, T> {
      * 接收到消息前的拦截方法， ping/pong不在其内 <br>
      * 注意：处理完后需要调用 messageEvent.run() 才能响应onMessage
      *
-     * @param restmapping  Rest的方法名，没有则为空字符串
+     * @param restMapping  Rest的方法名，没有则为空字符串
      * @param param        onMessage方法的参数
      * @param messageEvent onMessage事件
      */
-    public void preOnMessage(String restmapping, WebSocketParam param, Runnable messageEvent) {
+    public void preOnMessage(String restMapping, WebSocketParam param, Runnable messageEvent) {
         messageEvent.run();
     }
 

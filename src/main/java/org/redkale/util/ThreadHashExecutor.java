@@ -89,6 +89,10 @@ public class ThreadHashExecutor extends AbstractExecutorService {
         hashExecutor(hash).execute(command);
     }
 
+    public void execute(java.io.Serializable hash, Runnable command) {
+        hashExecutor(hash == null ? 0 : hash.hashCode()).execute(command);
+    }
+
     @Override
     public Future<?> submit(Runnable task) {
         return hashExecutor(0).submit(task);

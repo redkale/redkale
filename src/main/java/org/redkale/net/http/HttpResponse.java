@@ -1197,7 +1197,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 this.contentLength = buffer == null ? 0 : buffer.remaining();
             }
             createHeader();
-            if (buffer == null) {
+            if (buffer == null) { //只发header
                 super.send(headerArray, handler);
             } else {
                 ByteBuffer headbuf = channel.pollWriteBuffer();

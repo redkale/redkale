@@ -5,14 +5,11 @@
  */
 package org.redkale.test.websocket;
 
-import org.redkale.net.http.WebServlet;
-import org.redkale.net.http.WebSocketServlet;
-import org.redkale.net.http.WebSocket;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.Resource;
 import org.redkale.net.http.*;
 import org.redkale.test.rest.*;
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
 
 /**
  *
@@ -26,7 +23,7 @@ public class ChatWebSocketServlet extends WebSocketServlet {
 
     @Override
     public void init(HttpContext context, AnyValue conf) {
-        System.out.println("本实例的WebSocketNode: " + super.node);
+        System.out.println("本实例的WebSocketNode: " + super.webSocketNode);
     }
 
     @Override

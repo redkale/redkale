@@ -47,7 +47,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected Servlet<C, R, ? extends Response<C, R>> servlet;
 
-    protected final ByteBuffer writeBuffer;
+    private final ByteBuffer writeBuffer;
 
     private final CompletionHandler finishBytesHandler = new CompletionHandler<Integer, Void>() {
 
@@ -377,23 +377,29 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     protected <A> void send(final ByteTuple array, final CompletionHandler<Integer, Void> handler) {
-        this.channel.write(array, new CompletionHandler<Integer, Void>() {
+        ByteBuffer buffer = this.writeBuffer;
+        if (buffer != null && buffer.capacity() >= array.length()) {
+            buffer.clear();
+            buffer.put(array.content(), array.offset(), array.length());
+            buffer.flip();
+            this.channel.write(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
 
-            @Override
-            public void completed(Integer result, Void attachment) {
-                if (handler != null) {
-                    handler.completed(result, attachment);
+                @Override
+                public void completed(Integer result, ByteBuffer attachment) {
+                    attachment.clear();
+                    handler.completed(result, null);
                 }
-            }
 
-            @Override
-            public void failed(Throwable exc, Void attachment) {
-                if (handler != null) {
-                    handler.failed(exc, attachment);
+                @Override
+                public void failed(Throwable exc, ByteBuffer attachment) {
+                    attachment.clear();
+                    handler.failed(exc, null);
                 }
-            }
 
-        });
+            });
+        } else {
+            this.channel.write(array, handler);
+        }
     }
 
     protected <A> void send(final ByteBuffer buffer, final A attachment, final CompletionHandler<Integer, A> handler) {

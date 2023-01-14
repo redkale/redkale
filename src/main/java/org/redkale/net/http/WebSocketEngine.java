@@ -56,7 +56,7 @@ public class WebSocketEngine {
     private final Map<Serializable, List<WebSocket>> websockets2 = new ConcurrentHashMap<>();
 
     @Comment("当前连接数")
-    protected final AtomicInteger currconns = new AtomicInteger();
+    protected final AtomicInteger currConns = new AtomicInteger();
 
     @Comment("用于PING的定时器")
     private ScheduledThreadPoolExecutor scheduler;
@@ -65,7 +65,7 @@ public class WebSocketEngine {
     protected final Logger logger;
 
     @Comment("PING的间隔秒数")
-    protected int liveinterval;
+    protected int liveInterval;
 
     @Comment("最大连接数, 为0表示无限制")
     protected int wsMaxConns;
@@ -82,14 +82,14 @@ public class WebSocketEngine {
     @Comment("加密解密器")
     protected Cryptor cryptor;
 
-    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveinterval, int wsMaxConns,
+    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveInterval, int wsMaxConns,
         int wsThreads, int wsMaxBody, boolean mergeMode, Cryptor cryptor, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
         this.sendConvert = sendConvert;
         this.node = node;
-        this.liveinterval = liveinterval;
+        this.liveInterval = liveInterval;
         this.wsMaxConns = wsMaxConns;
         this.wsThreads = wsThreads;
         this.wsMaxBody = wsMaxBody;
@@ -104,8 +104,8 @@ public class WebSocketEngine {
         if (conf != null && conf.getAnyValue("properties") != null) {
             props = conf.getAnyValue("properties");
         }
-        this.liveinterval = props == null ? (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval) : props.getIntValue(WEBPARAM__LIVEINTERVAL, (liveinterval < 0 ? DEFAILT_LIVEINTERVAL : liveinterval));
-        if (liveinterval <= 0) {
+        this.liveInterval = props == null ? (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval) : props.getIntValue(WEBPARAM__LIVEINTERVAL, (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval));
+        if (liveInterval <= 0) {
             return;
         }
         if (props != null) {
@@ -125,18 +125,18 @@ public class WebSocketEngine {
             t.setDaemon(true);
             return t;
         });
-        long delay = (liveinterval - System.currentTimeMillis() / 1000 % liveinterval) + index * 5;
-        final int intervalms = liveinterval * 1000;
+        long delay = (liveInterval - System.currentTimeMillis() / 1000 % liveInterval) + index * 5;
+        final int intervalms = liveInterval * 1000;
         scheduler.scheduleWithFixedDelay(() -> {
             try {
                 long now = System.currentTimeMillis();
                 getLocalWebSockets().stream().filter(x -> ((now - x.getLastReadTime()) > intervalms && (now - x.getLastSendTime()) > intervalms)).forEach(x -> x.sendPing());
             } catch (Throwable t) {
-                logger.log(Level.SEVERE, "WebSocketEngine schedule(interval=" + liveinterval + "s) ping error", t);
+                logger.log(Level.SEVERE, "WebSocketEngine schedule(interval=" + liveInterval + "s) ping error", t);
             }
-        }, delay, liveinterval, TimeUnit.SECONDS);
+        }, delay, liveInterval, TimeUnit.SECONDS);
         if (logger.isLoggable(Level.FINEST)) {
-            logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsMaxConns + ", delay:" + delay + "s, interval:" + liveinterval + "s) scheduler executor");
+            logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsMaxConns + ", delay:" + delay + "s, interval:" + liveInterval + "s) scheduler executor");
         }
     }
 
@@ -149,7 +149,7 @@ public class WebSocketEngine {
     @Comment("添加WebSocket")
     CompletableFuture<Void> addLocal(WebSocket socket) {
         if (single) {
-            currconns.incrementAndGet();
+            currConns.incrementAndGet();
             websockets.put(socket._userid, socket);
         } else { //非线程安全， 在常规场景中无需锁
             List<WebSocket> list = websockets2.get(socket._userid);
@@ -157,7 +157,7 @@ public class WebSocketEngine {
                 list = new CopyOnWriteArrayList<>();
                 websockets2.put(socket._userid, list);
             }
-            currconns.incrementAndGet();
+            currConns.incrementAndGet();
             list.add(socket);
         }
         if (node != null) {
@@ -173,7 +173,7 @@ public class WebSocketEngine {
             return null; //尚未登录成功
         }
         if (single) {
-            currconns.decrementAndGet();
+            currConns.decrementAndGet();
             websockets.remove(userid);
             if (node != null) {
                 return node.disconnect(userid);
@@ -181,7 +181,7 @@ public class WebSocketEngine {
         } else { //非线程安全， 在常规场景中无需锁
             List<WebSocket> list = websockets2.get(userid);
             if (list != null) {
-                currconns.decrementAndGet();
+                currConns.decrementAndGet();
                 list.remove(socket);
                 if (list.isEmpty()) {
                     websockets2.remove(userid);
@@ -476,7 +476,7 @@ public class WebSocketEngine {
         if (this.wsMaxConns < 1) {
             return false;
         }
-        return currconns.get() >= this.wsMaxConns;
+        return currConns.get() >= this.wsMaxConns;
     }
 
     @Comment("获取所有连接")

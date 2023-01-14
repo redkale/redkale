@@ -118,7 +118,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     protected Convert sendConvert;
 
     @Resource(name = "$")
-    protected WebSocketNode node;
+    protected WebSocketNode webSocketNode;
 
     @Resource(name = RESNAME_SERVER_RESFACTORY)
     protected ResourceFactory resourceFactory;
@@ -127,13 +127,19 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         Type msgtype = String.class;
         try {
             for (Method method : this.getClass().getDeclaredMethods()) {
-                if (!method.getName().equals("createWebSocket")) continue;
-                if (method.getParameterCount() > 0) continue;
+                if (!method.getName().equals("createWebSocket")) {
+                    continue;
+                }
+                if (method.getParameterCount() > 0) {
+                    continue;
+                }
                 Type rt = TypeToken.getGenericType(method.getGenericReturnType(), this.getClass());
                 if (rt instanceof ParameterizedType) {
                     msgtype = ((ParameterizedType) rt).getActualTypeArguments()[1];
                 }
-                if (msgtype == Object.class) msgtype = String.class;
+                if (msgtype == Object.class) {
+                    msgtype = String.class;
+                }
                 break;
             }
         } catch (Exception e) {
@@ -144,19 +150,33 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     @Override
     final void preInit(Application application, HttpContext context, AnyValue conf) {
-        if (this.textConvert == null) this.textConvert = jsonConvert;
-        if (this.sendConvert == null) this.sendConvert = jsonConvert;
-        InetSocketAddress addr = context.getServerAddress();
-        if (this.node == null) this.node = createWebSocketNode();
-        if (this.node == null) {  //没有部署SNCP，即不是分布式
-            this.node = new WebSocketNodeService();
-            if (logger.isLoggable(Level.WARNING)) logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
+        if (this.textConvert == null) {
+            this.textConvert = jsonConvert;
         }
-        if (this.node.sendConvert == null) this.node.sendConvert = this.sendConvert;
-        if (this.messageAgent != null) this.node.messageAgent = this.messageAgent;
+        if (this.sendConvert == null) {
+            this.sendConvert = jsonConvert;
+        }
+        InetSocketAddress addr = context.getServerAddress();
+        if (this.webSocketNode == null) {
+            this.webSocketNode = createWebSocketNode();
+        }
+        if (this.webSocketNode == null) {  //没有部署SNCP，即不是分布式
+            this.webSocketNode = new WebSocketNodeService();
+            if (logger.isLoggable(Level.WARNING)) {
+                logger.warning("Not found WebSocketNode, create a default value for " + getClass().getName());
+            }
+        }
+        if (this.webSocketNode.sendConvert == null) {
+            this.webSocketNode.sendConvert = this.sendConvert;
+        }
+        if (this.messageAgent != null) {
+            this.webSocketNode.messageAgent = this.messageAgent;
+        }
         {
             AnyValue props = conf;
-            if (conf != null && conf.getAnyValue("properties") != null) props = conf.getAnyValue("properties");
+            if (conf != null && conf.getAnyValue("properties") != null) {
+                props = conf.getAnyValue("properties");
+            }
             if (props != null) {
                 String cryptorClass = props.getValue(WEBPARAM__CRYPTOR);
                 if (cryptorClass != null && !cryptorClass.isEmpty()) {
@@ -164,28 +184,34 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         Class clazz = Thread.currentThread().getContextClassLoader().loadClass(cryptorClass);
                         this.cryptor = (Cryptor) clazz.getDeclaredConstructor().newInstance();
                         RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, cryptorClass);
-                        if (resourceFactory != null && this.cryptor != null) resourceFactory.inject(this.cryptor);
+                        if (resourceFactory != null && this.cryptor != null) {
+                            resourceFactory.inject(this.cryptor);
+                        }
                     } catch (Exception e) {
                         throw new HttpException(e);
                     }
                 }
             }
         }
-        if (application != null && application.isCompileMode()) return;
+        if (application != null && application.isCompileMode()) {
+            return;
+        }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
-        this.node.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
-            this.single, context, liveinterval, wsmaxconns, wsthreads, wsmaxbody, mergemsg, this.cryptor, this.node, this.sendConvert, logger);
-        this.node.init(conf);
-        this.node.localEngine.init(conf);
+        this.webSocketNode.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
+            this.single, context, liveinterval, wsmaxconns, wsthreads, wsmaxbody, mergemsg, this.cryptor, this.webSocketNode, this.sendConvert, logger);
+        this.webSocketNode.init(conf);
+        this.webSocketNode.localEngine.init(conf);
 
     }
 
     @Override
     final void postDestroy(Application application, HttpContext context, AnyValue conf) {
-        this.node.postDestroy(conf);
+        this.webSocketNode.postDestroy(conf);
         super.destroy(context, conf);
-        if (application != null && application.isCompileMode()) return;
-        this.node.localEngine.destroy(conf);
+        if (application != null && application.isCompileMode()) {
+            return;
+        }
+        this.webSocketNode.localEngine.destroy(conf);
     }
 
     @Override
@@ -193,27 +219,31 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         return this.getClass().getSimpleName().replace("_Dyn", "").toLowerCase().replaceAll("websocket.*$", "").replaceAll("servlet.*$", "");
     }
 
-    @Override
+    @Override //在IOThread中执行
     public final void execute(final HttpRequest request, final HttpResponse response) throws IOException {
         final boolean debug = logger.isLoggable(Level.FINEST);
         if (!request.isWebSocket()) {
-            if (debug) logger.finest("WebSocket connect abort, (Not GET Method) or (Connection != Upgrade) or (Upgrade != websocket). request=" + request);
+            if (debug) {
+                logger.log(Level.FINEST, "WebSocket connect abort, (Not GET Method) or (Connection != Upgrade) or (Upgrade != websocket). request=" + request);
+            }
             response.finish(true);
             return;
         }
         final String key = request.getHeader("Sec-WebSocket-Key");
         if (key == null) {
-            if (debug) logger.finest("WebSocket connect abort, Not found Sec-WebSocket-Key header. request=" + request);
+            if (debug) {
+                logger.log(Level.FINEST, "WebSocket connect abort, Not found Sec-WebSocket-Key header. request=" + request);
+            }
             response.finish(true);
             return;
         }
-        if (this.node.localEngine.isLocalConnLimited()) {
-            if (debug) logger.finest("WebSocket connections limit, wsmaxconns=" + this.node.localEngine.getLocalWsMaxConns());
+        if (this.webSocketNode.localEngine.isLocalConnLimited()) {
+            logger.log(Level.WARNING, "WebSocket connections limit, wsmaxconns=" + this.webSocketNode.localEngine.getLocalWsMaxConns());
             response.finish(true);
             return;
         }
         final WebSocket webSocket = this.createWebSocket();
-        webSocket._engine = this.node.localEngine;
+        webSocket._engine = this.webSocketNode.localEngine;
         webSocket._channel = response.getChannel();
         webSocket._messageRestType = this.messageRestType;
         webSocket._textConvert = textConvert;
@@ -221,7 +251,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         webSocket._sendConvert = sendConvert;
         webSocket._remoteAddress = request.getRemoteAddress();
         webSocket._remoteAddr = request.getRemoteAddr();
-        webSocket._sncpAddress = this.node.localSncpAddress;
+        webSocket._sncpAddress = this.webSocketNode.localSncpAddress;
         if (this.permessageDeflate && request.getHeader("Sec-WebSocket-Extensions", "").contains("permessage-deflate")) {
             webSocket.deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
             webSocket.inflater = new Inflater(true);
@@ -229,13 +259,17 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         initRestWebSocket(webSocket);
         CompletableFuture<String> sessionFuture = webSocket.onOpen(request);
         if (sessionFuture == null) {
-            if (debug) logger.finest("WebSocket connect abort, Not found sessionid. request=" + request);
+            if (debug) {
+                logger.log(Level.FINEST, "WebSocket connect abort, Not found sessionid. request=" + request);
+            }
             response.finish(true);
             return;
         }
         BiConsumer<String, Throwable> sessionConsumer = (sessionid, ex) -> {
             if ((sessionid == null && webSocket.delayPackets == null) || ex != null) {
-                if (debug || ex != null) logger.log(ex == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Not found sessionid or occur error. request=" + request, ex);
+                if (debug || ex != null) {
+                    logger.log(ex == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Not found sessionid or occur error. request=" + request, ex);
+                }
                 response.finish(true);
                 return;
             }
@@ -250,7 +284,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             response.setHeader("Connection", "Upgrade");
             response.addHeader("Upgrade", "websocket");
             response.addHeader("Sec-WebSocket-Accept", Base64.getEncoder().encodeToString(bytes));
-            if (webSocket.deflater != null) response.addHeader("Sec-WebSocket-Extensions", "permessage-deflate");
+            if (webSocket.deflater != null) {
+                response.addHeader("Sec-WebSocket-Extensions", "permessage-deflate");
+            }
 
             response.sendBody((ByteBuffer) null, new CompletionHandler<Integer, Void>() {
 
@@ -261,30 +297,31 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                     Runnable createUseridHandler = () -> {
                         CompletableFuture<Serializable> userFuture = webSocket.createUserid();
                         if (userFuture == null) {
-                            if (debug) logger.finest("WebSocket connect abort, Create userid abort. request = " + request);
+                            if (debug) {
+                                logger.log(Level.FINEST, "WebSocket connect abort, Create userid abort. request = " + request);
+                            }
                             response.finish(true);
                             return;
                         }
                         userFuture.whenComplete((userid, ex2) -> {
                             if ((userid == null && webSocket.delayPackets == null) || ex2 != null) {
-                                if (debug || ex2 != null) logger.log(ex2 == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create userid abort. request = " + request, ex2);
+                                if (debug || ex2 != null) {
+                                    logger.log(ex2 == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create userid abort. request = " + request, ex2);
+                                }
                                 response.finish(true);
                                 return;
                             }
                             Runnable runHandler = () -> {
                                 webSocket._userid = userid;
                                 if (single && !anyuser) {
-                                    WebSocketServlet.this.node.existsWebSocket(userid).whenComplete((rs, nex) -> {
+                                    webSocketNode.existsWebSocket(userid).whenComplete((rs, nex) -> {
                                         if (rs) {
                                             CompletableFuture<Boolean> rcFuture = webSocket.onSingleRepeatConnect();
                                             Consumer<Boolean> task = (oldkilled) -> {
                                                 if (oldkilled) {
-                                                    WebSocketServlet.this.node.localEngine.addLocal(webSocket);
+                                                    webSocketNode.localEngine.addLocal(webSocket);
                                                     response.removeChannel();
                                                     webSocket._readHandler.startRead();
-//                                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
-//                                                    webSocket._runner = runner;
-//                                                    runner.run(); //context.runAsync(runner);
                                                     response.finish(true);
                                                 } else { //关闭新连接
                                                     response.finish(true);
@@ -302,22 +339,16 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                                 });
                                             }
                                         } else {
-                                            WebSocketServlet.this.node.localEngine.addLocal(webSocket);
+                                            webSocketNode.localEngine.addLocal(webSocket);
                                             response.removeChannel();
                                             webSocket._readHandler.startRead();
-//                                            WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
-//                                            webSocket._runner = runner;
-//                                            runner.run(); //context.runAsync(runner);
                                             response.finish(true);
                                         }
                                     });
                                 } else {
-                                    WebSocketServlet.this.node.localEngine.addLocal(webSocket);
+                                    webSocketNode.localEngine.addLocal(webSocket);
                                     response.removeChannel();
                                     webSocket._readHandler.startRead();
-//                                    WebSocketRunner runner = new WebSocketRunner(context, webSocket, restMessageConsumer);
-//                                    webSocket._runner = runner;
-//                                    runner.run(); //context.runAsync(runner);
                                     response.finish(true);
                                 }
                             };
@@ -327,7 +358,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                                 cf.whenComplete((Integer v, Throwable t) -> {
                                     if (userid == null || t != null) {
-                                        if (t != null) logger.log(Level.FINEST, "WebSocket connect abort, Response send delayPackets abort. request = " + request, t);
+                                        if (t != null) {
+                                            logger.log(Level.FINEST, "WebSocket connect abort, Response send delayPackets abort. request = " + request, t);
+                                        }
                                         response.finish(true);
                                     } else {
                                         runHandler.run();
@@ -344,7 +377,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                         cf.whenComplete((Integer v, Throwable t) -> {
                             if (sessionid == null || t != null) {
-                                if (t != null) logger.log(Level.FINEST, "WebSocket connect abort, Response send delayPackets abort. request = " + request, t);
+                                if (t != null) {
+                                    logger.log(Level.FINEST, "WebSocket connect abort, Response send delayPackets abort. request = " + request, t);
+                                }
                                 response.finish(true);
                             } else {
                                 createUseridHandler.run();
@@ -367,7 +402,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             if (workThread == null || workThread == Thread.currentThread()) {
                 sessionConsumer.accept(sessionid, ex);
             } else {
-                workThread.execute(() -> sessionConsumer.accept(sessionid, ex));
+                workThread.runWork(() -> sessionConsumer.accept(sessionid, ex));
             }
         });
     }

@@ -129,6 +129,30 @@ public class WorkThread extends Thread implements Executor {
         }
     }
 
+    public void runWork(int hash, Runnable command) {
+        if (hashExecutor == null) {
+            if (workExecutor == null) {
+                command.run();
+            } else {
+                workExecutor.execute(command);
+            }
+        } else {
+            hashExecutor.execute(hash, command);
+        }
+    }
+
+    public void runWork(java.io.Serializable hash, Runnable command) {
+        if (hashExecutor == null) {
+            if (workExecutor == null) {
+                command.run();
+            } else {
+                workExecutor.execute(command);
+            }
+        } else {
+            hashExecutor.execute(hash, command);
+        }
+    }
+
     public void runAsync(Runnable command) {
         if (workExecutor == null) {
             ForkJoinPool.commonPool().execute(command);
