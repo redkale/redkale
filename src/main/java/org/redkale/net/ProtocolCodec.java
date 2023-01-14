@@ -18,13 +18,13 @@ import java.util.logging.Level;
  */
 class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
 
-    private final AsyncConnection channel;
-
     private final Context context;
 
     private final Supplier<Response> responseSupplier;
 
     private final Consumer<Response> responseConsumer;
+
+    private AsyncConnection channel;
 
     private Response resp;
 
@@ -34,6 +34,15 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         this.channel = channel;
         this.responseSupplier = responseSupplier;
         this.responseConsumer = responseConsumer;
+    }
+
+    public void prepare() {
+    }
+
+    protected boolean recycle() {
+        this.channel = null;
+        this.resp = null;
+        return true;
     }
 
     public ProtocolCodec response(Response resp) {

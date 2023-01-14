@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.*;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import java.util.logging.Level;
@@ -133,17 +133,17 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                 final AsyncIOThread[] ioWriteThreads = ioGroup.ioWriteThreads;
                 int threads = ioReadThreads.length;
                 int threadIndex = -1;
+                Set<SelectionKey> keys = null;
                 while (!closed) {
                     try {
                         int count = selector.select();
                         if (count == 0) {
                             continue;
                         }
-                        Set<SelectionKey> keys = selector.selectedKeys();
-                        Iterator<SelectionKey> it = keys.iterator();
-                        while (it.hasNext()) {
-                            SelectionKey key = it.next();
-                            it.remove();
+                        if (keys == null) {
+                            keys = selector.selectedKeys();
+                        }
+                        for (SelectionKey key : keys) {
                             if (key.isAcceptable()) {
                                 if (++threadIndex >= threads) {
                                     threadIndex = 0;
@@ -151,6 +151,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                                 accept(key, ioReadThreads[threadIndex], ioWriteThreads[threadIndex]);
                             }
                         }
+                        keys.clear();
                     } catch (Throwable t) {
                         server.logger.log(Level.SEVERE, "server accept error", t);
                     }
