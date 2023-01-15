@@ -135,6 +135,17 @@ public interface CacheSource extends Resourcable {
 
     public boolean setnxBytes(final String key, final byte[] value);
 
+    //------------------------ setnxex ------------------------
+    public <T> boolean setnxex(final String key, final int expireSeconds, final Type type, final T value);
+
+    public <T> boolean setnxex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
+
+    public boolean setnxexString(final String key, final int expireSeconds, final String value);
+
+    public boolean setnxexLong(final String key, final int expireSeconds, final long value);
+
+    public boolean setnxexBytes(final String key, final int expireSeconds, final byte[] value);
+
     //------------------------ setex ------------------------
     public <T> void setex(final String key, final int expireSeconds, final Type type, final T value);
 
@@ -439,6 +450,17 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Boolean> setnxLongAsync(final String key, long value);
 
     public CompletableFuture<Boolean> setnxBytesAsync(final String key, final byte[] value);
+
+    //------------------------ setnxexAsync ------------------------
+    public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Type type, final T value);
+
+    public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
+
+    public CompletableFuture<Boolean> setnxexStringAsync(final String key, final int expireSeconds, final String value);
+
+    public CompletableFuture<Boolean> setnxexLongAsync(final String key, final int expireSeconds, final long value);
+
+    public CompletableFuture<Boolean> setnxexBytesAsync(final String key, final int expireSeconds, final byte[] value);
 
     //------------------------ setexAsync ------------------------
     public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Type type, final T value);

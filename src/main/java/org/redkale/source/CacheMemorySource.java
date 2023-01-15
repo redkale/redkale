@@ -802,6 +802,31 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> boolean setnxex(String key, int expireSeconds, Type type, T value) {
+        return setnxex(CacheEntryType.OBJECT, expireSeconds, key, value);
+    }
+
+    @Override
+    public <T> boolean setnxex(String key, int expireSeconds, Convert convert, Type type, T value) {
+        return setnxex(CacheEntryType.OBJECT, expireSeconds, key, value);
+    }
+
+    @Override
+    public boolean setnxexBytes(final String key, final int expireSeconds, final byte[] value) {
+        return setnxex(CacheEntryType.BYTES, expireSeconds, key, value);
+    }
+
+    @Override
+    public boolean setnxexString(String key, int expireSeconds, String value) {
+        return setnxex(CacheEntryType.STRING, expireSeconds, key, value);
+    }
+
+    @Override
+    public boolean setnxexLong(String key, int expireSeconds, long value) {
+        return setnxex(CacheEntryType.LONG, expireSeconds, key, value);
+    }
+
+    @Override
     public <T> T getSet(String key, Type type, T value) {
         T old = get(key, type);
         set(CacheEntryType.OBJECT, key, value);
@@ -917,6 +942,24 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     }
 
+    protected boolean setnxex(CacheEntryType cacheType, int expireSeconds, String key, Object value) {
+        if (key == null) {
+            return false;
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null) {
+            entry = new CacheEntry(cacheType, expireSeconds, key, value, null, null, null);
+            container.putIfAbsent(key, entry);
+            return true;
+        } else {
+            if (expireSeconds > 0) {
+                entry.expireSeconds = expireSeconds;
+            }
+            entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
+            return false;
+        }
+    }
+
     @Override
     public <T> void setex(String key, int expireSeconds, Type type, T value) {
         set(CacheEntryType.OBJECT, expireSeconds, key, value);
@@ -955,6 +998,31 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public CompletableFuture<Void> setexLongAsync(String key, int expireSeconds, long value) {
         return CompletableFuture.runAsync(() -> setexLong(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> setnxexStringAsync(String key, int expireSeconds, String value) {
+        return CompletableFuture.supplyAsync(() -> setnxexString(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> setnxexLongAsync(String key, int expireSeconds, long value) {
+        return CompletableFuture.supplyAsync(() -> setnxexLong(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> setnxexBytesAsync(String key, int expireSeconds, byte[] value) {
+        return CompletableFuture.supplyAsync(() -> setnxexBytes(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Type type, final T value) {
+        return CompletableFuture.supplyAsync(() -> setnxex(key, expireSeconds, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
+        return CompletableFuture.supplyAsync(() -> setnxex(key, expireSeconds, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
