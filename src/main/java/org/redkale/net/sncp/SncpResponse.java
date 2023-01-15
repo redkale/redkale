@@ -68,8 +68,8 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     @Override
-    protected void finish(boolean kill, ByteBuffer buffer) {
-        super.finish(kill, buffer);
+    protected void finishBuffer(boolean kill, ByteBuffer buffer) {
+        super.finishBuffer(kill, buffer);
     }
 
     public void finish(final int retcode, final BsonWriter out) {

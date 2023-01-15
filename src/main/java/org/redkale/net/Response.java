@@ -49,21 +49,21 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     private final ByteBuffer writeBuffer;
 
-    private final CompletionHandler finishBytesHandler = new CompletionHandler<Integer, Void>() {
+    protected final CompletionHandler finishBytesHandler = new CompletionHandler<Integer, Void>() {
 
         @Override
         public void completed(Integer result, Void attachment) {
-            finish();
+            finishInIOThread();
         }
 
         @Override
         public void failed(Throwable exc, Void attachment) {
-            finish(true);
+            finishInIOThread(true);
         }
 
     };
 
-    private final CompletionHandler finishBufferHandler = new CompletionHandler<Integer, ByteBuffer>() {
+    protected final CompletionHandler finishBufferHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
         @Override
         public void completed(Integer result, ByteBuffer attachment) {
@@ -72,7 +72,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             } else {
                 attachment.clear();
             }
-            finish();
+            finishInIOThread();
         }
 
         @Override
@@ -82,7 +82,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             } else {
                 attachment.clear();
             }
-            finish(true);
+            finishInIOThread(true);
         }
 
     };
@@ -96,7 +96,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     channel.offerWriteBuffer(attachment);
                 }
             }
-            finish();
+            finishInIOThread();
         }
 
         @Override
@@ -106,7 +106,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     channel.offerWriteBuffer(attachment);
                 }
             }
-            finish(true);
+            finishInIOThread(true);
         }
 
     };
@@ -201,15 +201,15 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         return !this.inited;
     }
 
-    public void finish() {
-        this.finish(false);
+    private void finishInIOThread() {
+        this.finishInIOThread(false);
     }
 
-    protected void error() {
-        finish(true);
+    protected void error(Throwable t) {
+        finishInIOThread(true);
     }
 
-    public void finish(boolean kill) {
+    private void finishInIOThread(boolean kill) {
         if (!this.inited) {
             return; //避免重复关闭
         }        //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
@@ -318,15 +318,15 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    protected final void finish(ByteBuffer buffer) {
-        finish(false, buffer);
+    protected final void finishBuffer(ByteBuffer buffer) {
+        finishBuffers(false, buffer);
     }
 
-    protected final void finish(ByteBuffer... buffers) {
-        finish(false, buffers);
+    protected final void finishBuffers(ByteBuffer... buffers) {
+        finishBuffers(false, buffers);
     }
 
-    protected void finish(boolean kill, ByteBuffer buffer) {
+    protected void finishBuffer(boolean kill, ByteBuffer buffer) {
         if (!this.inited) {
             return; //避免重复关闭
         }
@@ -351,7 +351,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    protected void finish(boolean kill, ByteBuffer... buffers) {
+    protected void finishBuffers(boolean kill, ByteBuffer... buffers) {
         if (!this.inited) {
             return; //避免重复关闭
         }

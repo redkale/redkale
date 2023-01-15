@@ -323,7 +323,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
 
         @Override
-        public void finish(boolean kill, ByteBuffer buffer) {
+        public void finishBuffer(boolean kill, ByteBuffer buffer) {
             if (future == null) {
                 return;
             }
@@ -333,7 +333,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
 
         @Override
-        public void finish(boolean kill, ByteBuffer... buffers) {
+        public void finishBuffers(boolean kill, ByteBuffer... buffers) {
             if (future == null) {
                 return;
             }

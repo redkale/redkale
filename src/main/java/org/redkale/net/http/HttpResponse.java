@@ -177,19 +177,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final JsonBytesWriter jsonWriter = new JsonBytesWriter();
 
-    protected final CompletionHandler<Integer, Void> pipelineWriteHandler = new CompletionHandler<Integer, Void>() {
-
-        @Override
-        public void completed(Integer result, Void attachment) {
-            finish();
-        }
-
-        @Override
-        public void failed(Throwable exc, Void attachment) {
-            finish(true);
-        }
-    };
-
     @SuppressWarnings("Convert2Lambda")
     protected final ConvertBytesHandler convertHandler = new ConvertBytesHandler() {
         @Override
@@ -964,7 +951,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             boolean over = this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data);
             if (over) {
                 request.setPipelineCompleted(true);
-                this.channel.flushPipelineData(this.pipelineWriteHandler);
+                this.channel.flushPipelineData(this.finishBytesHandler);
             } else {
                 removeChannel();
                 this.responseConsumer.accept(this);
@@ -972,7 +959,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         } else {
             if (this.channel.hasPipelineData()) {
                 this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data);
-                this.channel.flushPipelineData(this.pipelineWriteHandler);
+                this.channel.flushPipelineData(this.finishBytesHandler);
             } else {
                 //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finish
                 super.finish(false, data.content(), 0, data.length());
@@ -981,7 +968,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     @Override
-    protected void error() {
+    protected void error(Throwable t) {
         finish500();
     }
 
@@ -1337,7 +1324,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                             fileChannel.close();
                         } catch (IOException ie) {
                         }
-                        finish();
+                        finishBytesHandler.completed(result, attachment);
                         return;
                     }
                     if (fileChannel == null) {

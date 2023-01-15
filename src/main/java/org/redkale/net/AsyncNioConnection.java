@@ -26,8 +26,6 @@ import org.redkale.util.ByteBufferWriter;
  */
 abstract class AsyncNioConnection extends AsyncConnection {
 
-    protected static final int MAX_INVOKER_ONSTACK = Integer.getInteger("redkale.net.invoker.max.onstack", 16);
-
     final AsyncIOThread connectThread;
 
     protected SocketAddress remoteAddress;
@@ -45,8 +43,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected final AsyncNioCompletionHandler<ByteBuffer> readTimeoutCompletionHandler = new AsyncNioCompletionHandler<>(true, this);
 
     protected int readTimeoutSeconds;
-
-    int currReadInvoker;
 
     protected ByteBuffer readByteBuffer;
 
@@ -134,7 +130,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     @Override
     protected void startRead(CompletionHandler<Integer, ByteBuffer> handler) {
-        currReadInvoker = MAX_INVOKER_ONSTACK;
         read(handler);
     }
 
@@ -159,11 +154,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
             this.readCompletionHandler = handler;
         }
         doRead(this.ioReadThread.inCurrThread());
-//        if (client) {
-//            doRead(this.ioReadThread.inCurrThread());
-//        } else {
-//            doRead(this.ioReadThread.inCurrThread() || currReadInvoker < MAX_INVOKER_ONSTACK); //同一线程中Selector.wakeup无效
-//        }
     }
 
     @Override
@@ -264,7 +254,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
             this.readtime = System.currentTimeMillis();
             int readCount = 0;
             if (direct) {
-                currReadInvoker++;
                 if (this.readByteBuffer == null) {
                     this.readByteBuffer = sslEngine == null ? pollReadBuffer() : pollReadSSLBuffer();
                     if (this.readTimeoutSeconds > 0) {

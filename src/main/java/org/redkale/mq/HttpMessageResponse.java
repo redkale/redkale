@@ -293,7 +293,7 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finish(boolean kill, ByteBuffer buffer) {
+    public void finishBuffer(boolean kill, ByteBuffer buffer) {
         if (message.isEmptyRespTopic()) {
             if (callback != null) {
                 callback.run();
@@ -306,7 +306,7 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finish(boolean kill, ByteBuffer... buffers) {
+    public void finishBuffers(boolean kill, ByteBuffer... buffers) {
         if (message.isEmptyRespTopic()) {
             if (callback != null) {
                 callback.run();

@@ -70,7 +70,7 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         if (request.isPing()) {
-            response.finish(false, Sncp.PONG_BUFFER.duplicate());
+            response.finishBuffer(false, Sncp.PONG_BUFFER.duplicate());
             return;
         }
         SncpServlet servlet = (SncpServlet) mappingServlet(request.getServiceid());
