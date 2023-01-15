@@ -1131,11 +1131,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> Collection<T> getCollection(final String key, final Type componentType) {
-        return (Collection<T>) get(key, componentType);
-    }
-
-    @Override
     public <T> Set<T> smembers(final String key, final Type componentType) {
         return (Set<T>) get(key, componentType);
     }
@@ -1167,66 +1162,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
         }
         return map;
-    }
-
-    @Override
-    public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys) {
-        Map<String, Collection<T>> map = new HashMap<>();
-        for (String key : keys) {
-            Collection<T> s = (Collection<T>) get(key, componentType);
-            if (s != null) {
-                map.put(key, s);
-            }
-        }
-        return map;
-    }
-
-    @Override
-    public Collection<String> getStringCollection(final String key) {
-        return (Collection<String>) get(key, String.class);
-    }
-
-    @Override
-    public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys) {
-        Map<String, Collection<String>> map = new HashMap<>();
-        for (String key : keys) {
-            Collection<String> s = (Collection<String>) get(key, String.class);
-            if (s != null) {
-                map.put(key, s);
-            }
-        }
-        return map;
-    }
-
-    @Override
-    public Map<String, Long> getLongMap(final String... keys) {
-        Map<String, Long> map = new LinkedHashMap<>();
-        for (String key : keys) {
-            Number n = (Number) get(key, long.class);
-            map.put(key, n == null ? null : n.longValue());
-        }
-        return map;
-    }
-
-    @Override
-    public Long[] getLongArray(final String... keys) {
-        Long[] rs = new Long[keys.length];
-        int index = -1;
-        for (String key : keys) {
-            Number n = (Number) get(key, long.class);
-            rs[++index] = n == null ? null : n.longValue();
-        }
-        return rs;
-    }
-
-    @Override
-    public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getLongMap(keys), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Long[]> getLongArrayAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getLongArray(keys), getExecutor());
     }
 
     @Override
@@ -1289,68 +1224,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public Map<String, String> getStringMap(final String... keys) {
-        Map<String, String> map = new LinkedHashMap<>();
-        for (String key : keys) {
-            Object n = get(key, String.class);
-            map.put(key, n == null ? null : n.toString());
-        }
-        return map;
-    }
-
-    @Override
-    public String[] getStringArray(final String... keys) {
-        String[] rs = new String[keys.length];
-        int index = -1;
-        for (String key : keys) {
-            Object n = get(key, String.class);
-            rs[++index] = n == null ? null : n.toString();
-        }
-        return rs;
-    }
-
-    @Override
-    public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getStringMap(keys), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<String[]> getStringArrayAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getStringArray(keys), getExecutor());
-    }
-
-    @Override
-    public <T> Map<String, T> getMap(final Type componentType, final String... keys) {
-        Map<String, T> map = new LinkedHashMap<>();
-        for (String key : keys) {
-            map.put(key, (T) get(key, componentType));
-        }
-        return map;
-    }
-
-    @Override
-    public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getMap(componentType, keys), getExecutor());
-    }
-
-    @Override
-    public Collection<Long> getLongCollection(final String key) {
-        return (Collection<Long>) get(key, long.class);
-    }
-
-    @Override
-    public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys) {
-        Map<String, Collection<Long>> map = new HashMap<>();
-        for (String key : keys) {
-            Collection<Long> s = (Collection<Long>) get(key, long.class);
-            if (s != null) {
-                map.put(key, s);
-            }
-        }
-        return map;
-    }
-
-    @Override
     public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(Type componentType, String... keys) {
         return CompletableFuture.supplyAsync(() -> lrange(componentType, keys), getExecutor());
     }
@@ -1361,36 +1234,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(boolean set, Type componentType, String... keys) {
-        return CompletableFuture.supplyAsync(() -> getCollectionMap(set, componentType, keys), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getStringCollection(key), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getStringCollectionMap(set, keys), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getLongCollection(key), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getLongCollectionMap(set, keys), getExecutor());
-    }
-
-    @Override
-    public <T> CompletableFuture<Collection<T>> getCollectionAsync(String key, Type componentType) {
-        return CompletableFuture.supplyAsync(() -> getCollection(key, componentType), getExecutor());
-    }
-
-    @Override
     public <T> CompletableFuture<Set<T>> smembersAsync(String key, Type componentType) {
         return CompletableFuture.supplyAsync(() -> smembers(key, componentType), getExecutor());
     }
@@ -1398,12 +1241,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> CompletableFuture<List<T>> lrangeAsync(String key, Type componentType) {
         return CompletableFuture.supplyAsync(() -> lrange(key, componentType), getExecutor());
-    }
-
-    @Override
-    public int getCollectionSize(final String key) {
-        Collection collection = (Collection) get(key, Object.class);
-        return collection == null ? 0 : collection.size();
     }
 
     @Override
@@ -1429,23 +1266,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Integer> getCollectionSizeAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getCollectionSize(key), getExecutor());
-    }
-
-    @Override
-    public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType) {
-        return (Collection<T>) getex(key, expireSeconds, componentType);
-    }
-
-    @Override
-    public Collection<String> getexStringCollection(final String key, final int expireSeconds) {
-        return (Collection<String>) getex(key, expireSeconds, String.class);
-    }
-
-    @Override
     public <T> boolean sismember(final String key, final Type type, final T value) {
-        Collection list = getCollection(key, type);
+        Collection list = get(key, type);
         return list != null && list.contains(value);
     }
 
@@ -1456,7 +1278,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public boolean sismemberString(final String key, final String value) {
-        Collection<String> list = getStringCollection(key);
+        Collection<String> list = (Collection<String>) get(key, String.class);
         return list != null && list.contains(value);
     }
 
@@ -1467,33 +1289,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public boolean sismemberLong(final String key, final long value) {
-        Collection<Long> list = getLongCollection(key);
+        Collection<Long> list = (Collection<Long>) get(key, long.class);
         return list != null && list.contains(value);
     }
 
     @Override
     public CompletableFuture<Boolean> sismemberLongAsync(final String key, final long value) {
         return CompletableFuture.supplyAsync(() -> sismemberLong(key, value), getExecutor());
-    }
-
-    @Override
-    public Collection<Long> getexLongCollection(String key, int expireSeconds) {
-        return (Collection<Long>) getex(key, expireSeconds, long.class);
-    }
-
-    @Override
-    public <T> CompletableFuture<Collection<T>> getexCollectionAsync(final String key, final int expireSeconds, final Type componentType) {
-        return CompletableFuture.supplyAsync(() -> getexCollection(key, expireSeconds, componentType), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Collection<String>> getexStringCollectionAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getexStringCollection(key, expireSeconds), getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getexLongCollection(key, expireSeconds), getExecutor());
     }
 
     protected void appendListItem(CacheEntryType cacheType, String key, Object value) {
@@ -2023,4 +1825,203 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return mapValue;
         }
     }
+
+    @Override
+    public Collection<Long> getexLongCollection(String key, int expireSeconds) {
+        return (Collection<Long>) getex(key, expireSeconds, long.class);
+    }
+
+    @Override
+    public <T> CompletableFuture<Collection<T>> getexCollectionAsync(final String key, final int expireSeconds, final Type componentType) {
+        return CompletableFuture.supplyAsync(() -> getexCollection(key, expireSeconds, componentType), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Collection<String>> getexStringCollectionAsync(final String key, final int expireSeconds) {
+        return CompletableFuture.supplyAsync(() -> getexStringCollection(key, expireSeconds), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds) {
+        return CompletableFuture.supplyAsync(() -> getexLongCollection(key, expireSeconds), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(boolean set, Type componentType, String... keys) {
+        return CompletableFuture.supplyAsync(() -> getCollectionMap(set, componentType, keys), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> getStringCollection(key), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getStringCollectionMap(set, keys), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> getLongCollection(key), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getLongCollectionMap(set, keys), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Collection<T>> getCollectionAsync(String key, Type componentType) {
+        return CompletableFuture.supplyAsync(() -> getCollection(key, componentType), getExecutor());
+    }
+
+    @Override
+    public <T> Collection<T> getCollection(final String key, final Type componentType) {
+        return (Collection<T>) get(key, componentType);
+    }
+
+    @Override
+    public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys) {
+        Map<String, Collection<T>> map = new HashMap<>();
+        for (String key : keys) {
+            Collection<T> s = (Collection<T>) get(key, componentType);
+            if (s != null) {
+                map.put(key, s);
+            }
+        }
+        return map;
+    }
+
+    @Override
+    public Collection<String> getStringCollection(final String key) {
+        return (Collection<String>) get(key, String.class);
+    }
+
+    @Override
+    public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys) {
+        Map<String, Collection<String>> map = new HashMap<>();
+        for (String key : keys) {
+            Collection<String> s = (Collection<String>) get(key, String.class);
+            if (s != null) {
+                map.put(key, s);
+            }
+        }
+        return map;
+    }
+
+    @Override
+    public Map<String, Long> getLongMap(final String... keys) {
+        Map<String, Long> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            Number n = (Number) get(key, long.class);
+            map.put(key, n == null ? null : n.longValue());
+        }
+        return map;
+    }
+
+    @Override
+    public Long[] getLongArray(final String... keys) {
+        Long[] rs = new Long[keys.length];
+        int index = -1;
+        for (String key : keys) {
+            Number n = (Number) get(key, long.class);
+            rs[++index] = n == null ? null : n.longValue();
+        }
+        return rs;
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getLongMap(keys), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Long[]> getLongArrayAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getLongArray(keys), getExecutor());
+    }
+
+    @Override
+    public Map<String, String> getStringMap(final String... keys) {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            Object n = get(key, String.class);
+            map.put(key, n == null ? null : n.toString());
+        }
+        return map;
+    }
+
+    @Override
+    public String[] getStringArray(final String... keys) {
+        String[] rs = new String[keys.length];
+        int index = -1;
+        for (String key : keys) {
+            Object n = get(key, String.class);
+            rs[++index] = n == null ? null : n.toString();
+        }
+        return rs;
+    }
+
+    @Override
+    public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getStringMap(keys), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<String[]> getStringArrayAsync(final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getStringArray(keys), getExecutor());
+    }
+
+    @Override
+    public <T> Map<String, T> getMap(final Type componentType, final String... keys) {
+        Map<String, T> map = new LinkedHashMap<>();
+        for (String key : keys) {
+            map.put(key, (T) get(key, componentType));
+        }
+        return map;
+    }
+
+    @Override
+    public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys) {
+        return CompletableFuture.supplyAsync(() -> getMap(componentType, keys), getExecutor());
+    }
+
+    @Override
+    public Collection<Long> getLongCollection(final String key) {
+        return (Collection<Long>) get(key, long.class);
+    }
+
+    @Override
+    public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys) {
+        Map<String, Collection<Long>> map = new HashMap<>();
+        for (String key : keys) {
+            Collection<Long> s = (Collection<Long>) get(key, long.class);
+            if (s != null) {
+                map.put(key, s);
+            }
+        }
+        return map;
+    }
+
+    @Override
+    public int getCollectionSize(final String key) {
+        Collection collection = (Collection) get(key, Object.class);
+        return collection == null ? 0 : collection.size();
+    }
+
+    @Override
+    public CompletableFuture<Integer> getCollectionSizeAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> getCollectionSize(key), getExecutor());
+    }
+
+    @Override
+    public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType) {
+        return (Collection<T>) getex(key, expireSeconds, componentType);
+    }
+
+    @Override
+    public Collection<String> getexStringCollection(final String key, final int expireSeconds) {
+        return (Collection<String>) getex(key, expireSeconds, String.class);
+    }
+
 }

@@ -310,37 +310,6 @@ public interface CacheSource extends Resourcable {
 
     public long dbsize();
 
-    //------------------------ collection ------------------------
-    @Deprecated(since = "2.8.0")
-    public <T> Collection<T> getCollection(final String key, final Type componentType);
-
-    @Deprecated(since = "2.8.0")
-    public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys);
-
-    @Deprecated(since = "2.8.0")
-    public int getCollectionSize(final String key);
-
-    @Deprecated(since = "2.8.0")
-    public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType);
-
-    @Deprecated(since = "2.8.0")
-    public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys);
-
-    @Deprecated(since = "2.8.0")
-    public Collection<String> getStringCollection(final String key);
-
-    @Deprecated(since = "2.8.0")
-    public Collection<String> getexStringCollection(final String key, final int expireSeconds);
-
-    @Deprecated(since = "2.8.0")
-    public Collection<Long> getLongCollection(final String key);
-
-    @Deprecated(since = "2.8.0")
-    public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys);
-
-    @Deprecated(since = "2.8.0")
-    public Collection<Long> getexLongCollection(final String key, final int expireSeconds);
-
     //---------------------- CompletableFuture 异步版 ---------------------------------
     default CompletableFuture<Boolean> isOpenAsync() {
         return CompletableFuture.completedFuture(isOpen());
@@ -622,7 +591,37 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Long> dbsizeAsync();
 
-    //------------------------ collectionAsync ------------------------
+    //-------------------------- 过期方法 ----------------------------------
+    @Deprecated(since = "2.8.0")
+    public <T> Collection<T> getCollection(final String key, final Type componentType);
+
+    @Deprecated(since = "2.8.0")
+    public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys);
+
+    @Deprecated(since = "2.8.0")
+    public int getCollectionSize(final String key);
+
+    @Deprecated(since = "2.8.0")
+    public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType);
+
+    @Deprecated(since = "2.8.0")
+    public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys);
+
+    @Deprecated(since = "2.8.0")
+    public Collection<String> getStringCollection(final String key);
+
+    @Deprecated(since = "2.8.0")
+    public Collection<String> getexStringCollection(final String key, final int expireSeconds);
+
+    @Deprecated(since = "2.8.0")
+    public Collection<Long> getLongCollection(final String key);
+
+    @Deprecated(since = "2.8.0")
+    public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys);
+
+    @Deprecated(since = "2.8.0")
+    public Collection<Long> getexLongCollection(final String key, final int expireSeconds);
+
     @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(final String key, final Type componentType);
 
@@ -653,7 +652,6 @@ public interface CacheSource extends Resourcable {
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds);
 
-    //-------------------------- 过期方法 ----------------------------------
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Void> refreshAsync(final String key, final int expireSeconds) {
         return expireAsync(key, expireSeconds);
