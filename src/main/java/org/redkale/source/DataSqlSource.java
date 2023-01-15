@@ -2535,10 +2535,10 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
                 return CompletableFuture.completedFuture(rs);
             }
         }
-        return findsComposeAsync(info, selects, pks);
+        return findsDBAsync(info, selects, pks);
     }
 
-    protected <T> CompletableFuture<T[]> findsComposeAsync(final EntityInfo<T> info, final SelectColumn selects, Serializable... pks) {
+    protected <T> CompletableFuture<T[]> findsDBAsync(final EntityInfo<T> info, final SelectColumn selects, Serializable... pks) {
         final Attribute<T, Serializable> primary = info.getPrimary();
         return queryListAsync(info.getType(), selects, null, FilterNode.create(info.getPrimarySQLColumn(), FilterExpress.IN, pks)).thenApply(list -> {
             T[] rs = info.getArrayer().apply(pks.length);
