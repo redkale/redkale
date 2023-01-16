@@ -80,7 +80,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     protected Supplier<R> closeRequestSupplier;
 
     //创建连接后进行的登录鉴权操作
-    protected Function<CompletableFuture<C>, CompletableFuture<C>> authenticate;
+    protected Function<C, CompletableFuture<C>> authenticate;
 
     protected Client(String name, AsyncGroup group, ClientAddress address) {
         this(name, group, true, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
@@ -99,18 +99,18 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
-        Function<CompletableFuture<C>, CompletableFuture<C>> authenticate) {
+        Function<C, CompletableFuture<C>> authenticate) {
         this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, null, authenticate);
     }
 
     protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
-        Supplier<R> closeRequestSupplier, Function<CompletableFuture<C>, CompletableFuture<C>> authenticate) {
+        Supplier<R> closeRequestSupplier, Function<C, CompletableFuture<C>> authenticate) {
         this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, closeRequestSupplier, authenticate);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
-        int maxPipelines, Supplier<R> pingRequestSupplier, Supplier<R> closeRequestSupplier, Function<CompletableFuture<C>, CompletableFuture<C>> authenticate) {
+        int maxPipelines, Supplier<R> pingRequestSupplier, Supplier<R> closeRequestSupplier, Function<C, CompletableFuture<C>> authenticate) {
         if (maxPipelines < 1) {
             throw new IllegalArgumentException("maxPipelines must bigger 0");
         }
@@ -277,7 +277,10 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             } else {
                 future = future.thenApply(conn -> (C) conn.readChannel());
             }
-            return (authenticate == null ? future : authenticate.apply(future)).thenApply(c -> {
+            if (authenticate != null) {
+                future = future.thenCompose(authenticate);
+            }
+            return future.thenApply(c -> {
                 c.setAuthenticated(true);
                 this.connArray[index] = c;
                 CompletableFuture<C> f;
