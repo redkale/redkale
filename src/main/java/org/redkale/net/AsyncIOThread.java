@@ -219,13 +219,13 @@ public class AsyncIOThread extends WorkThread {
 
     public synchronized void close() {
         if (!this.closed) {
-            this.interrupt();
+            this.closed = true;
             try {
                 this.selector.close();
             } catch (Exception e) {
                 logger.log(Level.FINE, getName() + " selector close failed", e);
             }
-            this.closed = true;
+            this.interrupt();
         }
     }
 }
