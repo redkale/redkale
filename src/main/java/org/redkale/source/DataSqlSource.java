@@ -1148,7 +1148,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
         if ("postgresql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) {
             List<String> sqls = new ArrayList<>();
             for (String table : tables) {
-                String sql = "DELETE FROM " + table + " a" + (join1 == null ? "" : (", " + join1)) + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryColumn() + " FROM " + table
+                String sql = "DELETE FROM " + table + " a" + (join1 == null ? "" : (", " + join1)) + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryField() + " FROM " + table
                     + join2AndWhere + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
                 sqls.add(sql);
             }
@@ -1809,7 +1809,7 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
             String wherestr = ((where == null || where.length() == 0) ? (join2 == null ? "" : (" WHERE " + join2))
                 : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))));
             sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
-                + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryColumn() + " FROM " + tables[0]
+                + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryField() + " FROM " + tables[0]
                 + wherestr + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
 
         } else {
@@ -2616,9 +2616,6 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     protected <T> String findSql(final EntityInfo<T> info, final SelectColumn selects, Serializable pk) {
         String column = info.getPrimarySQLColumn();
         final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) + " WHERE " + column + "=" + info.formatSQLValue(column, pk, sqlFormatter);
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
-        }
         return sql;
     }
 

@@ -72,6 +72,12 @@ public final class EntityInfo<T> {
     //table的单一元素数组
     final Attribute<T, Serializable>[] primaryOneArray;
 
+    //DDL字段
+    final EntityColumn primaryColumn;
+
+    //DDL字段
+    final EntityColumn[] primaryColumnOneArray;
+
     //DDL字段集合
     final EntityColumn[] ddlColumns;
 
@@ -126,6 +132,9 @@ public final class EntityInfo<T> {
     //数据库中所有字段, 顺序必须与querySqlColumns、querySqlColumnSequence一致
     private final Attribute<T, Serializable>[] queryAttributes;
 
+    //数据库中所有字段, 顺序必须与querySqlColumns、querySqlColumnSequence一致
+    private final EntityColumn[] queryColumns;
+
     //新增SQL， 含 ？，即排除了自增长主键和标记为&#064;Column(insertable=false)的字段
     private final String insertQuestionPrepareSQL;
 
@@ -137,6 +146,9 @@ public final class EntityInfo<T> {
 
     //数据库中所有可新增字段
     final Attribute<T, Serializable>[] insertAttributes;
+
+    //数据库中所有可新增字段
+    final EntityColumn[] insertColumns;
 
     //根据主键更新所有可更新字段的SQL，含 ？
     private final String updateQuestionPrepareSQL;
@@ -155,6 +167,15 @@ public final class EntityInfo<T> {
 
     //数据库中所有可更新字段
     final Attribute<T, Serializable>[] updateAttributes;
+
+    //数据库中所有可更新字段+主键字段
+    final Attribute<T, Serializable>[] updateEntityAttributes;
+
+    //数据库中所有可更新字段
+    final EntityColumn[] updateColumns;
+
+    //数据库中所有可更新字段+主键字段
+    final EntityColumn[] updateEntityColumns;
 
     //根据主键删除记录的SQL，含 ？
     private final String deleteQuestionPrepareSQL;
@@ -361,12 +382,12 @@ public final class EntityInfo<T> {
         Map<String, String> aliasmap0 = null;
         Class cltmp = type;
         Set<String> fields = new HashSet<>();
-        List<String> querycols = new ArrayList<>();
-        List<Attribute<T, Serializable>> queryattrs = new ArrayList<>();
-        List<String> insertcols = new ArrayList<>();
-        List<Attribute<T, Serializable>> insertattrs = new ArrayList<>();
-        List<String> updatecols = new ArrayList<>();
-        List<Attribute<T, Serializable>> updateattrs = new ArrayList<>();
+        List<String> queryCols = new ArrayList<>();
+        List<Attribute<T, Serializable>> queryAttrs = new ArrayList<>();
+        List<String> insertCols = new ArrayList<>();
+        List<Attribute<T, Serializable>> insertAttrs = new ArrayList<>();
+        List<String> updateCols = new ArrayList<>();
+        List<Attribute<T, Serializable>> updateAttrs = new ArrayList<>();
         List<List<EntityColumn>> ddlList = new ArrayList<>();
         do {
             List<EntityColumn> ddl = new ArrayList<>();
@@ -388,14 +409,14 @@ public final class EntityInfo<T> {
                 if (fields.contains(field.getName())) {
                     continue;
                 }
-                final String fieldname = field.getName();
+                final String fieldName = field.getName();
                 final Column col = field.getAnnotation(Column.class);
-                final String sqlfield = col == null || col.name().isEmpty() ? fieldname : col.name();
-                if (!fieldname.equals(sqlfield)) {
+                final String sqlField = col == null || col.name().isEmpty() ? fieldName : col.name();
+                if (!fieldName.equals(sqlField)) {
                     if (aliasmap0 == null) {
                         aliasmap0 = new HashMap<>();
                     }
-                    aliasmap0.put(fieldname, sqlfield);
+                    aliasmap0.put(fieldName, sqlField);
                 }
                 Attribute attr;
                 try {
@@ -407,28 +428,28 @@ public final class EntityInfo<T> {
                 boolean idFlag = field.getAnnotation(Id.class) != null || field.getAnnotation(javax.persistence.Id.class) != null;
                 if (idFlag && idAttr0 == null) {
                     idAttr0 = attr;
-                    insertcols.add(sqlfield);
-                    insertattrs.add(attr);
+                    insertCols.add(sqlField);
+                    insertAttrs.add(attr);
                     RedkaleClassLoader.putReflectionField(cltmp.getName(), field);
                 } else {
                     if (col == null || col.insertable()) {
-                        insertcols.add(sqlfield);
-                        insertattrs.add(attr);
+                        insertCols.add(sqlField);
+                        insertAttrs.add(attr);
                     }
                     if (col == null || col.updatable()) {
-                        updatecols.add(sqlfield);
-                        updateattrs.add(attr);
-                        updateAttributeMap.put(fieldname, attr);
+                        updateCols.add(sqlField);
+                        updateAttrs.add(attr);
+                        updateAttributeMap.put(fieldName, attr);
                     }
                     if (col != null && !col.nullable()) {
-                        notNullColumns.add(fieldname);
+                        notNullColumns.add(fieldName);
                     }
                 }
                 ddl.add(new EntityColumn(idFlag, col, attr.field(), attr.type(), field.getAnnotation(Comment.class)));
-                querycols.add(sqlfield);
-                queryattrs.add(attr);
-                fields.add(fieldname);
-                attributeMap.put(fieldname, attr);
+                queryCols.add(sqlField);
+                queryAttrs.add(attr);
+                fields.add(fieldName);
+                attributeMap.put(fieldName, attr);
             }
         } while ((cltmp = cltmp.getSuperclass()) != Object.class);
         if (idAttr0 == null) {
@@ -473,8 +494,23 @@ public final class EntityInfo<T> {
         }
         this.ddlColumns = ddls.toArray(new EntityColumn[ddls.size()]);
         this.attributes = attributeMap.values().toArray(new Attribute[attributeMap.size()]);
-        this.insertAttributes = insertattrs.toArray(new Attribute[insertattrs.size()]);
-        this.updateAttributes = updateattrs.toArray(new Attribute[updateattrs.size()]);
+        this.primaryColumn = Utility.find(this.ddlColumns, c -> c.field.equals(primary.field()));
+        this.primaryColumnOneArray = new EntityColumn[]{this.primaryColumn};
+        this.insertAttributes = insertAttrs.toArray(new Attribute[insertAttrs.size()]);
+        this.insertColumns = new EntityColumn[this.insertAttributes.length];
+        for (int i = 0; i < this.insertAttributes.length; i++) {
+            String field = this.insertAttributes[i].field();
+            this.insertColumns[i] = Utility.find(this.ddlColumns, c -> c.field.equals(field));
+        }
+        this.updateAttributes = updateAttrs.toArray(new Attribute[updateAttrs.size()]);
+        this.updateColumns = new EntityColumn[this.updateAttributes.length];
+        for (int i = 0; i < this.updateAttributes.length; i++) {
+            String field = this.updateAttributes[i].field();
+            this.updateColumns[i] = Utility.find(this.ddlColumns, c -> c.field.equals(field));
+        }
+        this.updateEntityAttributes = Utility.append(this.updateAttributes, this.primary);
+        this.updateEntityColumns = Utility.append(this.updateColumns, this.primaryColumn);
+
         if (this.constructorParameters == null) {
             this.constructorAttributes = null;
             this.unconstructorAttributes = null;
@@ -483,7 +519,7 @@ public final class EntityInfo<T> {
             List<Attribute<T, Serializable>> unconstructorAttrs = new ArrayList<>();
             List<String> newquerycols1 = new ArrayList<>();
             List<String> newquerycols2 = new ArrayList<>();
-            for (Attribute<T, Serializable> attr : new ArrayList<>(queryattrs)) {
+            for (Attribute<T, Serializable> attr : new ArrayList<>(queryAttrs)) {
                 int pos = -1;
                 for (int i = 0; i < this.constructorParameters.length; i++) {
                     if (attr.field().equals(this.constructorParameters[i])) {
@@ -493,28 +529,33 @@ public final class EntityInfo<T> {
                 }
                 if (pos >= 0) {
                     this.constructorAttributes[pos] = attr;
-                    newquerycols1.add(querycols.get(queryattrs.indexOf(attr)));
+                    newquerycols1.add(queryCols.get(queryAttrs.indexOf(attr)));
                 } else {
                     unconstructorAttrs.add(attr);
-                    newquerycols2.add(querycols.get(queryattrs.indexOf(attr)));
+                    newquerycols2.add(queryCols.get(queryAttrs.indexOf(attr)));
                 }
             }
             this.unconstructorAttributes = unconstructorAttrs.toArray(new Attribute[unconstructorAttrs.size()]);
             newquerycols1.addAll(newquerycols2);
-            querycols = newquerycols1;
+            queryCols = newquerycols1;
             List<Attribute<T, Serializable>> newqueryattrs = new ArrayList<>();
             newqueryattrs.addAll(List.of(constructorAttributes));
             newqueryattrs.addAll(unconstructorAttrs);
-            queryattrs = newqueryattrs;
+            queryAttrs = newqueryattrs;
         }
-        this.querySqlColumns = querycols.toArray(new String[querycols.size()]);
+        this.querySqlColumns = queryCols.toArray(new String[queryCols.size()]);
         this.querySqlColumnSequence = Utility.joining(querySqlColumns, ',');
         this.querySqlColumnSequenceA = "a." + Utility.joining(querySqlColumns, ",a.");
-        this.queryAttributes = queryattrs.toArray(new Attribute[queryattrs.size()]);
+        this.queryAttributes = queryAttrs.toArray(new Attribute[queryAttrs.size()]);
+        this.queryColumns = new EntityColumn[this.queryAttributes.length];
+        for (int i = 0; i < this.queryAttributes.length; i++) {
+            String field = this.queryAttributes[i].field();
+            this.queryColumns[i] = Utility.find(this.ddlColumns, c -> c.field.equals(field));
+        }
         if (table != null) {
             StringBuilder querydb = new StringBuilder();
             int index = 0;
-            for (String col : querycols) {
+            for (String col : queryCols) {
                 if (index > 0) {
                     querydb.append(',');
                 }
@@ -526,7 +567,7 @@ public final class EntityInfo<T> {
             StringBuilder insertsbdollar = new StringBuilder();
             StringBuilder insertsbnames = new StringBuilder();
             index = 0;
-            for (String col : insertcols) {
+            for (String col : insertCols) {
                 if (index > 0) {
                     insertsb.append(',');
                 }
@@ -547,7 +588,7 @@ public final class EntityInfo<T> {
             StringBuilder updatesbdollar = new StringBuilder();
             StringBuilder updatesbnames = new StringBuilder();
             index = 0;
-            for (String col : updatecols) {
+            for (String col : updateCols) {
                 if (index > 0) {
                     updatesbquestion.append(", ");
                     updatesbdollar.append(", ");
@@ -571,19 +612,19 @@ public final class EntityInfo<T> {
             if (this.tableStrategy == null && this.updateAttributes.length == 1) { //不分表且只有两个字段的表才使用Case方式
                 String[] dollarPrepareCaseSQLs = new String[51]; //上限50个
                 String[] questionPrepareCaseSQLs = new String[dollarPrepareCaseSQLs.length];
-                String idsqlfield = getPrimarySQLColumn();
-                String otherfield = getSQLColumn(null, this.updateAttributes[0].field());
+                String idSqlField = getPrimarySQLColumn();
+                String otherField = getSQLColumn(null, this.updateAttributes[0].field());
                 for (int i = 2; i < dollarPrepareCaseSQLs.length; i++) {
                     StringBuilder ds = new StringBuilder();
                     StringBuilder qs = new StringBuilder();
-                    ds.append("UPDATE ").append(table).append(" SET ").append(otherfield).append(" = CASE ").append(idsqlfield);
-                    qs.append("UPDATE ").append(table).append(" SET ").append(otherfield).append(" = ( CASE");
+                    ds.append("UPDATE ").append(table).append(" SET ").append(otherField).append(" = CASE ").append(idSqlField);
+                    qs.append("UPDATE ").append(table).append(" SET ").append(otherField).append(" = ( CASE");
                     for (int j = 1; j <= i; j++) {
                         ds.append(" WHEN $").append(j).append(" THEN $").append(j + i);
-                        qs.append(" WHEN ").append(idsqlfield).append(" = ? THEN ?");
+                        qs.append(" WHEN ").append(idSqlField).append(" = ? THEN ?");
                     }
-                    ds.append(" ELSE ").append(otherfield).append(" END WHERE ").append(idsqlfield).append(" IN ($1");
-                    qs.append(" END ) WHERE ").append(idsqlfield).append(" IN (?");
+                    ds.append(" ELSE ").append(otherField).append(" END WHERE ").append(idSqlField).append(" IN ($1");
+                    qs.append(" END ) WHERE ").append(idSqlField).append(" IN (?");
                     for (int j = 2; j <= i; j++) {
                         ds.append(",$").append(j);
                         qs.append(",?");
@@ -735,12 +776,32 @@ public final class EntityInfo<T> {
         return ddlColumns;
     }
 
+    public EntityColumn[] getInsertColumns() {
+        return insertColumns;
+    }
+
+    public EntityColumn[] getUpdateColumns() {
+        return updateColumns;
+    }
+
+    public EntityColumn[] getUpdateEntityColumns() {
+        return updateEntityColumns;
+    }
+
+    public EntityColumn[] getQueryColumns() {
+        return queryColumns;
+    }
+
     public Attribute<T, Serializable>[] getInsertAttributes() {
         return insertAttributes;
     }
 
     public Attribute<T, Serializable>[] getUpdateAttributes() {
         return updateAttributes;
+    }
+
+    public Attribute<T, Serializable>[] getUpdateEntityAttributes() {
+        return updateEntityAttributes;
     }
 
     public Attribute<T, Serializable>[] getQueryAttributes() {
@@ -1110,6 +1171,24 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取主键字段的EntityColumn
+     *
+     * @return Attribute
+     */
+    public EntityColumn getPrimaryColumn() {
+        return this.primaryColumn;
+    }
+
+    /**
+     * 获取主键字段的EntityColumn单一元素数组
+     *
+     * @return Attribute[]
+     */
+    public EntityColumn[] getPrimaryColumnOneArray() {
+        return this.primaryColumnOneArray;
+    }
+
+    /**
      * 获取主键字段的Attribute
      *
      * @return Attribute
@@ -1317,7 +1396,7 @@ public final class EntityInfo<T> {
      *
      * @return String
      */
-    public String getPrimaryColumn() {
+    public String getPrimaryField() {
         return this.primary.field();
     }
 
