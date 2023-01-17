@@ -1642,6 +1642,10 @@ public final class EntityInfo<T> {
         return getEntityValue(constructorAttributes, constructorAttributes == null ? queryAttributes : unconstructorAttributes, row);
     }
 
+    public T getFullEntityValue(final Serializable... values) {
+        return getEntityValue(constructorAttributes, constructorAttributes == null ? queryAttributes : unconstructorAttributes, values);
+    }
+
     /**
      * 将一行的ResultSet组装成一个Entity对象
      *
@@ -1676,6 +1680,45 @@ public final class EntityInfo<T> {
                     continue;
                 }
                 attr.set(obj, getFieldValue(attr, row, ++index));
+            }
+        }
+        return obj;
+    }
+
+    /**
+     * 将一行的ResultSet组装成一个Entity对象
+     *
+     * @param constructorAttrs   构建函数的Attribute数组, 大小必须与this.constructorAttributes相同
+     * @param unconstructorAttrs 非构建函数的Attribute数组
+     * @param values             字段值集合
+     *
+     * @return Entity对象
+     */
+    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final Serializable... values) {
+        if (values == null) {
+            return null;
+        }
+        T obj;
+        int index = -1;
+        if (this.constructorParameters == null) {
+            obj = creator.create();
+        } else {
+            Object[] cps = new Object[this.constructorParameters.length];
+            for (int i = 0; i < constructorAttrs.length; i++) {
+                Attribute<T, Serializable> attr = constructorAttrs[i];
+                if (attr == null) {
+                    continue;
+                }
+                cps[i] = values[++index];
+            }
+            obj = creator.create(cps);
+        }
+        if (unconstructorAttrs != null) {
+            for (Attribute<T, Serializable> attr : unconstructorAttrs) {
+                if (attr == null) {
+                    continue;
+                }
+                attr.set(obj, values[++index]);
             }
         }
         return obj;
