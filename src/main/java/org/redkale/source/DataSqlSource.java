@@ -624,6 +624,15 @@ public abstract class DataSqlSource extends AbstractDataSource implements Functi
     @Local
     protected <T> Serializable getEntityAttrValue(EntityInfo info, Attribute attr, T entity) {
         Serializable val = info.getSQLValue(attr, entity);
+        Class clazz = attr.type();
+        if (clazz == String.class 
+            || clazz == int.class || clazz == long.class
+            || clazz == Integer.class || clazz == Long.class
+            || clazz == short.class || clazz == Short.class
+            || clazz == float.class || clazz == Float.class
+            || clazz == double.class || clazz == Double.class) {
+            return val;
+        }
         return getSQLAttrValue(info, attr, val);
     }
 

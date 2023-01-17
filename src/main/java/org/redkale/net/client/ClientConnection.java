@@ -7,7 +7,7 @@ package org.redkale.net.client;
 
 import java.io.Serializable;
 import java.nio.channels.ClosedChannelException;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
@@ -46,10 +46,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     private final ClientWriteIOThread writeThread;
 
     //responseQueue、responseMap二选一
-    final Deque<ClientFuture> responseQueue = new LinkedBlockingDeque<>();
+    final ConcurrentLinkedQueue<ClientFuture> responseQueue = new ConcurrentLinkedQueue<>();
 
     //responseQueue、responseMap二选一, key: requestid
-    final Map<Serializable, ClientFuture> responseMap = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<Serializable, ClientFuture> responseMap = new ConcurrentHashMap<>();
 
     private int maxPipelines; //最大并行处理数
 

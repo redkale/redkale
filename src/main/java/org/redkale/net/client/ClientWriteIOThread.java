@@ -24,7 +24,7 @@ import org.redkale.util.*;
  */
 public class ClientWriteIOThread extends AsyncIOThread {
 
-    private final BlockingDeque<ClientFuture> requestQueue = new LinkedBlockingDeque<>();
+    private final BlockingQueue<ClientFuture> requestQueue = new LinkedBlockingQueue<>();
 
     public ClientWriteIOThread(ThreadGroup g, String name, int index, int threads,
         ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {

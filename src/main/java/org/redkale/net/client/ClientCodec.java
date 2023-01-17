@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
@@ -62,7 +63,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
 
     private void decodeResponse(ByteBuffer buffer) {
         AsyncConnection channel = connection.channel;
-        Deque<ClientFuture> responseQueue = connection.responseQueue;
+        ConcurrentLinkedQueue<ClientFuture> responseQueue = connection.responseQueue;
         Map<Serializable, ClientFuture> responseMap = connection.responseMap;
         if (decodeMessages(buffer, readArray)) { //成功了
             readArray.clear();
@@ -155,6 +156,10 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
 
     protected Iterator<ClientFuture> responseIterator() {
         return connection.responseQueue.iterator();
+    }
+
+    protected ClientFuture responseByRequestid(Serializable requestid) {
+        return (ClientFuture) connection.responseMap.get(requestid);
     }
 
     protected List<ClientResponse<P>> pollMessages() {
