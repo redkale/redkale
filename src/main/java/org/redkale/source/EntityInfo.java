@@ -122,6 +122,15 @@ public final class EntityInfo<T> {
     //根据主键查找单个对象的SQL， 含 :name
     private final String findNamesPrepareSQL;
 
+    //根据主键查找单个对象的SQL， 含 ？; findQuestionPrepareSQL + ' ' 为了不覆盖find SQL的缓存
+    private final String findsQuestionPrepareSQL;
+
+    //根据主键查找单个对象的SQL， 含 $; findsDollarPrepareSQL + ' ' 为了不覆盖find SQL的缓存
+    private final String findsDollarPrepareSQL;
+
+    //根据主键查找单个对象的SQL， 含 :name; findNamesPrepareSQL + ' ' 为了不覆盖find SQL的缓存
+    private final String findsNamesPrepareSQL;
+
     //数据库中所有字段
     private final String[] querySqlColumns;
 
@@ -608,6 +617,9 @@ public final class EntityInfo<T> {
             this.findQuestionPrepareSQL = "SELECT " + querydb + " FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
             this.findDollarPrepareSQL = "SELECT " + querydb + " FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = $1";
             this.findNamesPrepareSQL = "SELECT " + querydb + " FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
+            this.findsQuestionPrepareSQL = this.findQuestionPrepareSQL + " ";
+            this.findsDollarPrepareSQL = this.findDollarPrepareSQL + " ";
+            this.findsNamesPrepareSQL = this.findNamesPrepareSQL + " ";
 
             if (this.tableStrategy == null && this.updateAttributes.length == 1) { //不分表且只有两个字段的表才使用Case方式
                 String[] dollarPrepareCaseSQLs = new String[51]; //上限50个
@@ -648,16 +660,19 @@ public final class EntityInfo<T> {
             this.updateQuestionPrepareSQL = null;
             this.deleteQuestionPrepareSQL = null;
             this.findQuestionPrepareSQL = null;
+            this.findsQuestionPrepareSQL = null;
 
             this.insertDollarPrepareSQL = null;
             this.updateDollarPrepareSQL = null;
             this.deleteDollarPrepareSQL = null;
             this.findDollarPrepareSQL = null;
+            this.findsDollarPrepareSQL = null;
 
             this.insertNamesPrepareSQL = null;
             this.updateNamesPrepareSQL = null;
             this.deleteNamesPrepareSQL = null;
             this.findNamesPrepareSQL = null;
+            this.findsNamesPrepareSQL = null;
 
             this.updateDollarPrepareCaseSQLs = null;
             this.updateQuestionPrepareCaseSQLs = null;
@@ -823,6 +838,20 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取Entity的QUERY FINDS SQL
+     *
+     * @param pk 主键值
+     *
+     * @return String
+     */
+    public String getFindsQuestionPrepareSQL(Serializable pk) {
+        if (this.tableStrategy == null) {
+            return findsQuestionPrepareSQL;
+        }
+        return findsQuestionPrepareSQL.replace("${newtable}", getTable(pk));
+    }
+
+    /**
      * 获取Entity的QUERY SQL
      *
      *
@@ -847,6 +876,20 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取Entity的QUERY FINDS SQL
+     *
+     * @param pk 主键值
+     *
+     * @return String
+     */
+    public String getFindsDollarPrepareSQL(Serializable pk) {
+        if (this.tableStrategy == null) {
+            return findsDollarPrepareSQL;
+        }
+        return findsDollarPrepareSQL.replace("${newtable}", getTable(pk));
+    }
+
+    /**
      * 获取Entity的QUERY SQL
      *
      * @param pk 主键值
@@ -858,6 +901,20 @@ public final class EntityInfo<T> {
             return findNamesPrepareSQL;
         }
         return findNamesPrepareSQL.replace("${newtable}", getTable(pk));
+    }
+
+    /**
+     * 获取Entity的QUERY FINDS SQL
+     *
+     * @param pk 主键值
+     *
+     * @return String
+     */
+    public String getFindsNamesPrepareSQL(Serializable pk) {
+        if (this.tableStrategy == null) {
+            return findsNamesPrepareSQL;
+        }
+        return findsNamesPrepareSQL.replace("${newtable}", getTable(pk));
     }
 
     /**
