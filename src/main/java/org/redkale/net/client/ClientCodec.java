@@ -27,7 +27,7 @@ import org.redkale.util.*;
  */
 public abstract class ClientCodec<R extends ClientRequest, P> implements CompletionHandler<Integer, ByteBuffer> {
 
-    protected final ClientConnection connection;
+    protected final ClientConnection<R, P> connection;
 
     private final List<ClientResponse<R, P>> respResults = new ArrayList<>();
 
@@ -35,7 +35,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
 
     private final ObjectPool<ClientResponse<R, P>> respPool = ObjectPool.createUnsafePool(256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
 
-    public ClientCodec(ClientConnection connection) {
+    public ClientCodec(ClientConnection<R, P> connection) {
         Objects.requireNonNull(connection);
         this.connection = connection;
     }
@@ -153,8 +153,12 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
         connection.dispose(t);
     }
 
+    protected R nextRequest() {
+        return connection.findRequest(null);
+    }
+
     protected R findRequest(Serializable requestid) {
-        return (R) connection.findRequest(requestid);
+        return connection.findRequest(requestid);
     }
 
     public void addMessage(R request, P result) {
