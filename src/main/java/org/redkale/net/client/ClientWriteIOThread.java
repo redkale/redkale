@@ -3,7 +3,7 @@
  */
 package org.redkale.net.client;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
@@ -74,13 +74,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                 while ((entry = requestQueue.take()) != null) {
                     map.clear();
                     if (!entry.isDone()) {
-                        Serializable reqid = entry.request.getRequestid();
-                        if (reqid == null) {
-                            entry.conn.responseQueue.offer(entry);
-                        } else {
-                            entry.conn.responseMap.put(reqid, entry);
-                        }
-
+                        entry.conn.offerRespFuture(entry);
                         if (entry.conn.pauseWriting.get()) {
                             if (entry.conn.pauseResuming.get()) {
                                 try {
@@ -97,12 +91,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                     }
                     while ((entry = requestQueue.poll()) != null) {
                         if (!entry.isDone()) {
-                            Serializable reqid = entry.request.getRequestid();
-                            if (reqid == null) {
-                                entry.conn.responseQueue.offer(entry);
-                            } else {
-                                entry.conn.responseMap.put(reqid, entry);
-                            }
+                            entry.conn.offerRespFuture(entry);
                             if (entry.conn.pauseWriting.get()) {
                                 if (entry.conn.pauseResuming.get()) {
                                     try {

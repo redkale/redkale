@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
@@ -30,11 +29,11 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
 
     protected final ClientConnection connection;
 
-    private final List<ClientResponse<P>> respResults = new ArrayList<>();
+    private final List<ClientResponse<R, P>> respResults = new ArrayList<>();
 
     private final ByteArray readArray = new ByteArray();
 
-    private final ObjectPool<ClientResponse> respPool = ObjectPool.createUnsafePool(256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
+    private final ObjectPool<ClientResponse<R, P>> respPool = ObjectPool.createUnsafePool(256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
 
     public ClientCodec(ClientConnection connection) {
         Objects.requireNonNull(connection);
@@ -63,13 +62,12 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
 
     private void decodeResponse(ByteBuffer buffer) {
         AsyncConnection channel = connection.channel;
-        ConcurrentLinkedQueue<ClientFuture> responseQueue = connection.responseQueue;
-        Map<Serializable, ClientFuture> responseMap = connection.responseMap;
+        connection.currRespIterator = null;
         if (decodeMessages(buffer, readArray)) { //成功了
+            connection.currRespIterator = null;
             readArray.clear();
-            for (ClientResponse<P> cr : respResults) {
-                Serializable reqid = cr.getRequestid();
-                ClientFuture respFuture = reqid == null ? responseQueue.poll() : responseMap.remove(reqid);
+            for (ClientResponse<R, P> cr : respResults) {
+                ClientFuture<R, P> respFuture = connection.pollRespFuture(cr.getRequestid());
                 if (respFuture != null) {
                     responseComplete(respFuture, cr.message, cr.exc);
                 }
@@ -85,15 +83,16 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 channel.read(this);
             }
         } else { //数据不全， 继续读
+            connection.currRespIterator = null;
             buffer.clear();
             channel.setReadBuffer(buffer);
             channel.read(this);
         }
     }
 
-    private void responseComplete(ClientFuture respFuture, P message, Throwable exc) {
+    private void responseComplete(ClientFuture<R, P> respFuture, P message, Throwable exc) {
         if (respFuture != null) {
-            ClientRequest request = respFuture.request;
+            R request = respFuture.request;
             WorkThread workThread = null;
             try {
                 if (!request.isCompleted()) {
@@ -127,7 +126,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                     final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
                     workThread.runWork(() -> {
                         Traces.currTraceid(request.traceid);
-                        respFuture.complete(rs);
+                        ((ClientFuture) respFuture).complete(rs);
                     });
                 }
             } catch (Throwable t) {
@@ -154,18 +153,8 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
         connection.dispose(t);
     }
 
-    protected Iterator<ClientFuture> responseIterator() {
-        return connection.responseQueue.iterator();
-    }
-
-    protected ClientFuture responseByRequestid(Serializable requestid) {
-        return (ClientFuture) connection.responseMap.get(requestid);
-    }
-
-    protected List<ClientResponse<P>> pollMessages() {
-        List<ClientResponse<P>> rs = new ArrayList<>(respResults);
-        this.respResults.clear();
-        return rs;
+    protected R findRequest(Serializable requestid) {
+        return (R) connection.findRequest(requestid);
     }
 
     public void addMessage(R request, P result) {

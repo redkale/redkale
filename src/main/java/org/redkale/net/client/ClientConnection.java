@@ -7,7 +7,7 @@ package org.redkale.net.client;
 
 import java.io.Serializable;
 import java.nio.channels.ClosedChannelException;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
@@ -45,11 +45,13 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     private final ClientWriteIOThread writeThread;
 
-    //responseQueue、responseMap二选一
-    final ConcurrentLinkedQueue<ClientFuture> responseQueue = new ConcurrentLinkedQueue<>();
+    //respFutureQueue、respFutureMap二选一， SPSC队列模式
+    private final Queue<ClientFuture<R, P>> respFutureQueue = new ConcurrentLinkedQueue<>(); //Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 16) : new ConcurrentLinkedQueue<>();
 
-    //responseQueue、responseMap二选一, key: requestid
-    final ConcurrentHashMap<Serializable, ClientFuture> responseMap = new ConcurrentHashMap<>();
+    //respFutureQueue、respFutureMap二选一, key: requestid， SPSC模式
+    private final Map<Serializable, ClientFuture<R, P>> respFutureMap = new ConcurrentHashMap<>();
+
+    Iterator<ClientFuture<R, P>> currRespIterator; //必须在调用decodeMessages之前重置为null
 
     private int maxPipelines; //最大并行处理数
 
@@ -84,12 +86,12 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         return respFuture;
     }
 
-    CompletableFuture writeVirtualRequest(R request) {
+    CompletableFuture<P> writeVirtualRequest(R request) {
         if (!request.isVirtualType()) {
             return CompletableFuture.failedFuture(new RuntimeException("ClientVirtualRequest must be virtualType = true"));
         }
-        ClientFuture respFuture = createClientFuture(request);
-        responseQueue.offer(respFuture);
+        ClientFuture<R, P> respFuture = createClientFuture(request);
+        respFutureQueue.offer(respFuture);
         readChannel();
         return respFuture;
     }
@@ -97,7 +99,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     protected void preComplete(P resp, R req, Throwable exc) {
     }
 
-    protected ClientFuture createClientFuture(R request) {
+    protected ClientFuture<R, P> createClientFuture(R request) {
         return new ClientFuture(this, request);
     }
 
@@ -119,15 +121,15 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         CompletableFuture f;
         respWaitingCounter.reset();
         WorkThread thread = channel.getReadIOThread();
-        if (!responseQueue.isEmpty()) {
-            while ((f = responseQueue.poll()) != null) {
+        if (!respFutureQueue.isEmpty()) {
+            while ((f = respFutureQueue.poll()) != null) {
                 CompletableFuture future = f;
                 thread.runWork(() -> future.completeExceptionally(e));
             }
         }
-        if (!responseMap.isEmpty()) {
-            responseMap.forEach((key, future) -> {
-                responseMap.remove(key);
+        if (!respFutureMap.isEmpty()) {
+            respFutureMap.forEach((key, future) -> {
+                respFutureMap.remove(key);
                 thread.runWork(() -> future.completeExceptionally(e));
             });
         }
@@ -135,6 +137,48 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     void sendHalfWrite(Throwable halfRequestExc) {
         writeThread.sendHalfWrite(this, halfRequestExc);
+    }
+
+    //只会在WriteIOThread中调用
+    void offerRespFuture(ClientFuture<R, P> respFuture) {
+        Serializable requestid = respFuture.request.getRequestid();
+        if (requestid == null) {
+            respFutureQueue.offer(respFuture);
+        } else {
+            respFutureMap.put(requestid, respFuture);
+        }
+    }
+
+    //只会被Timeout在ReadIOThread中调用
+    void removeRespFuture(Serializable requestid, ClientFuture<R, P> respFuture) {
+        if (requestid == null) {
+            respFutureQueue.remove(respFuture);
+        } else {
+            respFutureMap.remove(requestid);
+        }
+    }
+
+    //只会被ClientCodec在ReadIOThread中调用
+    ClientFuture<R, P> pollRespFuture(Serializable requestid) {
+        if (requestid == null) {
+            return respFutureQueue.poll();
+        } else {
+            return respFutureMap.remove(requestid);
+        }
+    }
+
+    //只会被ClientCodec在ReadIOThread中调用
+    R findRequest(Serializable requestid) {
+        if (requestid == null) {
+            if (currRespIterator == null) {
+                currRespIterator = respFutureQueue.iterator();
+            }
+            ClientFuture<R, P> future = currRespIterator.hasNext() ? currRespIterator.next() : null;
+            return future == null ? null : future.request;
+        } else {
+            ClientFuture<R, P> future = respFutureMap.get(requestid);
+            return future == null ? null : future.request;
+        }
     }
 
     public boolean isAuthenticated() {

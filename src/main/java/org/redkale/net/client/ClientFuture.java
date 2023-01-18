@@ -5,28 +5,31 @@
  */
 package org.redkale.net.client;
 
-import java.util.*;
+import java.util.Objects;
 import java.util.concurrent.*;
 import org.redkale.net.*;
 
 /**
  *
  * @author zhangjx
- * 
+ *
  * @since 2.3.0
- * 
+ *
+ * @param <R> 泛型
  * @param <T> 泛型
  */
-public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
+public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<T> implements Runnable {
 
-    protected final ClientRequest request;
+    protected final R request;
 
     protected final ClientConnection conn;
 
     private ScheduledFuture timeout;
 
-    public ClientFuture(ClientConnection conn, ClientRequest request) {
+    ClientFuture(ClientConnection conn, R request) {
         super();
+        Objects.requireNonNull(conn);
+        Objects.requireNonNull(request);
         this.conn = conn;
         this.request = request;
     }
@@ -42,14 +45,14 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
     }
 
     @Override //JDK9+
-    public <U> ClientFuture<U> newIncompleteFuture() {
+    public <U> ClientFuture<R, U> newIncompleteFuture() {
         ClientFuture future = new ClientFuture<>(conn, request);
         future.timeout = timeout;
         return future;
     }
 
-    public <R extends ClientRequest> R getRequest() {
-        return (R) request;
+    public R getRequest() {
+        return request;
     }
 
     @Override
@@ -66,14 +69,7 @@ public class ClientFuture<T> extends CompletableFuture<T> implements Runnable {
     }
 
     private void runTimeout() {
-        Queue<ClientFuture> responseQueue = conn.responseQueue;
-        if (responseQueue != null) {
-            responseQueue.remove(this);
-        }
-        if (request.getRequestid() != null) {
-            conn.responseMap.remove(request.getRequestid());
-        }
-
+        conn.removeRespFuture(request.getRequestid(), this);
         TimeoutException ex = new TimeoutException();
         WorkThread workThread = null;
         if (request != null) {

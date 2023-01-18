@@ -13,14 +13,15 @@ import java.io.Serializable;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * 
+ *
  * @since 2.3.0
  *
+ * @param <R> 请求对象
  * @param <P> message
  */
-public class ClientResponse<P> {
+public class ClientResponse<R extends ClientRequest, P> {
 
-    protected ClientRequest request;
+    protected R request;
 
     protected P message;
 
@@ -29,12 +30,12 @@ public class ClientResponse<P> {
     public ClientResponse() {
     }
 
-    public ClientResponse(ClientRequest request, P message) {
+    public ClientResponse(R request, P message) {
         this.request = request;
         this.message = message;
     }
 
-    public ClientResponse(ClientRequest request, Throwable exc) {
+    public ClientResponse(R request, Throwable exc) {
         this.request = request;
         this.exc = exc;
     }
@@ -43,13 +44,13 @@ public class ClientResponse<P> {
         return request == null ? null : request.getRequestid();
     }
 
-    public ClientResponse<P> set(ClientRequest request, P message) {
+    public ClientResponse<R, P> set(R request, P message) {
         this.request = request;
         this.message = message;
         return this;
     }
 
-    public ClientResponse<P> set(ClientRequest request, Throwable exc) {
+    public ClientResponse<R, P> set(R request, Throwable exc) {
         this.request = request;
         this.exc = exc;
         return this;
@@ -68,11 +69,11 @@ public class ClientResponse<P> {
         return true;
     }
 
-    public ClientRequest getRequest() {
+    public R getRequest() {
         return request;
     }
 
-    public void setRequest(ClientRequest request) {
+    public void setRequest(R request) {
         this.request = request;
     }
 
