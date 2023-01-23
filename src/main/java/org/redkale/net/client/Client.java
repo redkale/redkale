@@ -48,6 +48,8 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected final LongAdder respDoneCounter = new LongAdder();
 
+    protected final AtomicLong connIndexSeq = new AtomicLong();
+
     private final AtomicInteger connSeqno = new AtomicInteger();
 
     private boolean closed;
@@ -250,14 +252,14 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                 return CompletableFuture.completedFuture(cc);
             }
         }
-        int connIndex;
         final int size = this.connArray.length;
-        WorkThread workThread = WorkThread.currWorkThread();
-        if (workThread != null && workThread.threads() == size) {
-            connIndex = workThread.index();
-        } else {
-            connIndex = (int) Math.abs(Thread.currentThread().getId() % size);
-        }
+        int connIndex = (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
+//        WorkThread workThread = WorkThread.currWorkThread();
+//        if (workThread != null && workThread.threads() == size) {
+//            connIndex = workThread.index();
+//        } else {
+//            connIndex = (int) Math.abs(Thread.currentThread().getId() % size);
+//        }
 //        if (connIndex >= 0) {
         C cc = (C) this.connArray[connIndex];
         if (cc != null && cc.isOpen()) {
