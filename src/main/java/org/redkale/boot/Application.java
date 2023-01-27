@@ -2437,7 +2437,7 @@ public final class Application {
             try {
                 if (source instanceof Service) {
                     long s = System.currentTimeMillis();
-                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getConf((Service) source) : null);
+                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
                     logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
 //                } else {
 //                    source.getClass().getMethod("close").invoke(source);
@@ -2454,7 +2454,7 @@ public final class Application {
             try {
                 if (source instanceof Service) {
                     long s = System.currentTimeMillis();
-                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getConf((Service) source) : null);
+                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
                     logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
 //                } else {
 //                    source.getClass().getMethod("close").invoke(source);

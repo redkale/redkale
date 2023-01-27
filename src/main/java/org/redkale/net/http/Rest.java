@@ -299,7 +299,7 @@ public final class Rest {
         if (controller != null && !controller.name().isEmpty()) {
             return controller.name();
         }
-        final Class serviceType = Sncp.getServiceType(service);
+        final Class serviceType = Sncp.getResourceType(service);
         return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 

@@ -111,7 +111,7 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
         }
         SncpDynServlet sds = new SncpDynServlet(BsonFactory.root().getConvert(), Sncp.getResourceName(sncpService),
             Sncp.getResourceType(sncpService), sncpService, maxTypeLength, maxNameLength);
-        this.dispatcher.addServlet(sds, null, Sncp.getConf(sncpService));
+        this.dispatcher.addServlet(sds, null, Sncp.getResourceConf(sncpService));
         return sds;
     }
 

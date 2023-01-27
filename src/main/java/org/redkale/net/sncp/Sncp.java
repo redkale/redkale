@@ -13,7 +13,6 @@ import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
-import java.security.*;
 import java.util.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceType;
@@ -44,18 +43,6 @@ public abstract class Sncp {
     public static final ByteBuffer PONG_BUFFER = ByteBuffer.wrap("PONG".getBytes()).asReadOnlyBuffer();
 
     static final String FIELDPREFIX = "_redkale";
-
-    private static final MessageDigest md5;
-
-    static {  //64进制
-        MessageDigest d = null;
-        try {
-            d = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException ex) {
-            ex.printStackTrace();
-        }
-        md5 = d;
-    }
 
     /**
      * 修饰由SNCP协议动态生成的class、和method
@@ -126,11 +113,7 @@ public abstract class Sncp {
         if (name == null || name.isEmpty()) {
             return Uint128.ZERO;
         }
-        byte[] bytes = name.trim().getBytes();
-        synchronized (md5) {
-            bytes = md5.digest(bytes);
-        }
-        return Uint128.create(bytes);
+        return Uint128.create(Utility.md5(name.trim().getBytes()));
     }
 
     public static boolean isRemote(Service service) {
@@ -147,16 +130,10 @@ public abstract class Sncp {
     }
 
     public static int getVersion(Service service) {
-        if (service == null) {
-            return -1;
-        }
         return -1; //暂不实现Version
     }
 
     public static String getResourceName(Service service) {
-        if (service == null) {
-            return null;
-        }
         Resource res = service.getClass().getAnnotation(Resource.class);
         if (res != null) {
             return res.name();
@@ -165,28 +142,16 @@ public abstract class Sncp {
         return res2 == null ? null : res2.name();
     }
 
-    public static Class getServiceType(Service service) {
-        ResourceType rt = service.getClass().getAnnotation(ResourceType.class);
-        if (rt != null) {
-            return rt.value();
-        }
-        org.redkale.util.ResourceType rt2 = service.getClass().getAnnotation(org.redkale.util.ResourceType.class);
-        return rt2 == null ? service.getClass() : rt2.value();
-    }
-
     public static Class getResourceType(Service service) {
-        if (service == null) {
-            return null;
-        }
         ResourceType type = service.getClass().getAnnotation(ResourceType.class);
         if (type != null) {
             return type.value();
         }
         org.redkale.util.ResourceType rt2 = service.getClass().getAnnotation(org.redkale.util.ResourceType.class);
-        return rt2 == null ? getServiceType(service) : rt2.value();
+        return rt2 == null ? service.getClass() : rt2.value();
     }
 
-    public static AnyValue getConf(Service service) {
+    public static AnyValue getResourceConf(Service service) {
         if (service == null || !isSncpDyn(service)) {
             return null;
         }

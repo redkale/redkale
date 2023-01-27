@@ -28,7 +28,7 @@ public abstract class AbstractService implements Service {
      * @return Class
      */
     protected Class serviceType() {
-        return Sncp.getServiceType(this);
+        return Sncp.getResourceType(this);
     }
 
     /**

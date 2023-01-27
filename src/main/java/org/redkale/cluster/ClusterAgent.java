@@ -14,8 +14,8 @@ import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
-import static org.redkale.boot.Application.*;
 import org.redkale.boot.*;
+import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.MessageMultiConsumer;
@@ -403,7 +403,7 @@ public abstract class ClusterAgent {
             this.serviceName = generateServiceName(ns, protocol, service);
             this.checkid = generateCheckId(ns, protocol, service);
             this.checkName = generateCheckName(ns, protocol, service);
-            this.serviceType = Sncp.getServiceType(service).getName();
+            this.serviceType = Sncp.getResourceType(service).getName();
             this.protocol = protocol;
             InetSocketAddress addr = ns.getSocketAddress();
             String host = addr.getHostString();

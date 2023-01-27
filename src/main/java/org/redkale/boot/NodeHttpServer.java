@@ -388,7 +388,7 @@ public class NodeHttpServer extends NodeServer {
             }
             stream.forEach((service) -> {
                 try {
-                    final Class stype = Sncp.getServiceType(service);
+                    final Class stype = Sncp.getResourceType(service);
                     final String name = Sncp.getResourceName(service);
                     RestService rs = (RestService) stype.getAnnotation(RestService.class);
                     if (rs == null || rs.ignore()) {
@@ -430,7 +430,7 @@ public class NodeHttpServer extends NodeServer {
                             mappings[i] = prefix2 + mappings[i];
                         }
                         synchronized (rests) {
-                            rests.add(new AbstractMap.SimpleEntry<>(Sncp.getServiceType(service).getName() + "#" + name, mappings));
+                            rests.add(new AbstractMap.SimpleEntry<>(Sncp.getResourceType(service).getName() + "#" + name, mappings));
                         }
                     }
                 } finally {

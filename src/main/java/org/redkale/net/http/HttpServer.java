@@ -282,7 +282,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         T servlet = null;
         final boolean sncp = Sncp.isSncpDyn(service);
         final String resname = name == null ? (sncp ? Sncp.getResourceName(service) : "") : name;
-        final Class<S> serviceType = Sncp.getServiceType(service);
+        final Class<S> serviceType = Sncp.getResourceType(service);
         if (name != null) {
             for (final HttpServlet item : ((HttpDispatcherServlet) this.dispatcher).getServlets()) {
                 if (!(item instanceof HttpServlet)) {
@@ -343,7 +343,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             throw new HttpException(serviceType + " generate rest servlet error", e);
         }
         if (first) {
-            this.dispatcher.addServlet(servlet, prefix, sncp ? Sncp.getConf(service) : null);
+            this.dispatcher.addServlet(servlet, prefix, sncp ? Sncp.getResourceConf(service) : null);
         }
         return servlet;
     }

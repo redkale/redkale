@@ -616,7 +616,7 @@ public abstract class NodeServer {
         } else {
             localServices.stream().forEach(y -> {
                 long s = System.currentTimeMillis();
-                y.init(Sncp.getConf(y));
+                y.init(Sncp.getResourceConf(y));
                 long e = System.currentTimeMillis() - s;
                 String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
                 if (slist != null) {
@@ -847,7 +847,7 @@ public abstract class NodeServer {
             if (finest) {
                 logger.finest(y + " is destroying");
             }
-            y.destroy(Sncp.getConf(y));
+            y.destroy(Sncp.getResourceConf(y));
             if (finest) {
                 logger.finest(y + " was destroyed");
             }
