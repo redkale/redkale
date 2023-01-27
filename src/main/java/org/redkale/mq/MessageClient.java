@@ -7,7 +7,7 @@ package org.redkale.mq;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
@@ -53,7 +53,7 @@ public abstract class MessageClient {
         return this.respConsumer.shutdown();
     }
 
-    protected CompletableFuture<MessageRecord> sendMessage(final MessageRecord message, boolean needresp, AtomicLong counter) {
+    protected CompletableFuture<MessageRecord> sendMessage(final MessageRecord message, boolean needresp, LongAdder counter) {
         CompletableFuture<MessageRecord> future = new CompletableFuture<>();
         boolean finest = messageAgent != null && messageAgent.logger.isLoggable(Level.FINEST);
         try {
@@ -73,9 +73,9 @@ public abstract class MessageClient {
                             if (node.scheduledFuture != null) {
                                 node.scheduledFuture.cancel(true);
                             }
-                            AtomicLong ncer = node.getCounter();
+                            LongAdder ncer = node.getCounter();
                             if (ncer != null) {
-                                ncer.decrementAndGet();
+                                ncer.decrement();
                             }
                             final long cha = now - msg.createTime;
                             if (finest) {
@@ -106,7 +106,7 @@ public abstract class MessageClient {
                 message.setRespTopic(respTopic);
             }
             if (counter != null) {
-                counter.incrementAndGet();
+                counter.increment();
             }
             getProducer().apply(message);
             if (needresp) {

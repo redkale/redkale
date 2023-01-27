@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Logger;
 import org.redkale.convert.json.JsonConvert;
 import static org.redkale.mq.MessageRecord.CTYPE_HTTP_REQUEST;
@@ -62,7 +62,7 @@ public class HttpMessageClient extends MessageClient {
         produceMessage(generateHttpReqTopic(request, null), 0, null, request, null);
     }
 
-    public final void produceMessage(HttpSimpleRequest request, AtomicLong counter) {
+    public final void produceMessage(HttpSimpleRequest request, LongAdder counter) {
         produceMessage(generateHttpReqTopic(request, null), 0, null, request, counter);
     }
 
@@ -74,7 +74,7 @@ public class HttpMessageClient extends MessageClient {
         produceMessage(generateHttpReqTopic(request, null), userid, groupid, request, null);
     }
 
-    public final void produceMessage(Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public final void produceMessage(Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         produceMessage(generateHttpReqTopic(request, null), userid, groupid, request, counter);
     }
 
@@ -82,7 +82,7 @@ public class HttpMessageClient extends MessageClient {
         produceMessage(topic, 0, null, request, null);
     }
 
-    public final void produceMessage(String topic, HttpSimpleRequest request, AtomicLong counter) {
+    public final void produceMessage(String topic, HttpSimpleRequest request, LongAdder counter) {
         produceMessage(topic, 0, null, request, counter);
     }
 
@@ -94,7 +94,7 @@ public class HttpMessageClient extends MessageClient {
         broadcastMessage(generateHttpReqTopic(request, null), 0, null, request, null);
     }
 
-    public final void broadcastMessage(HttpSimpleRequest request, AtomicLong counter) {
+    public final void broadcastMessage(HttpSimpleRequest request, LongAdder counter) {
         broadcastMessage(generateHttpReqTopic(request, null), 0, null, request, counter);
     }
 
@@ -106,7 +106,7 @@ public class HttpMessageClient extends MessageClient {
         broadcastMessage(generateHttpReqTopic(request, null), userid, groupid, request, null);
     }
 
-    public final void broadcastMessage(Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public final void broadcastMessage(Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         broadcastMessage(generateHttpReqTopic(request, null), userid, groupid, request, counter);
     }
 
@@ -114,7 +114,7 @@ public class HttpMessageClient extends MessageClient {
         broadcastMessage(topic, 0, null, request, null);
     }
 
-    public final void broadcastMessage(String topic, HttpSimpleRequest request, AtomicLong counter) {
+    public final void broadcastMessage(String topic, HttpSimpleRequest request, LongAdder counter) {
         broadcastMessage(topic, 0, null, request, counter);
     }
 
@@ -153,7 +153,7 @@ public class HttpMessageClient extends MessageClient {
         return sendMessage(generateHttpReqTopic(request, null), 0, null, request, null);
     }
 
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, AtomicLong counter) {
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request, LongAdder counter) {
         return sendMessage(generateHttpReqTopic(request, null), 0, null, request, counter);
     }
 
@@ -165,7 +165,7 @@ public class HttpMessageClient extends MessageClient {
         return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request, null);
     }
 
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request, counter);
     }
 
@@ -173,28 +173,28 @@ public class HttpMessageClient extends MessageClient {
         return sendMessage(topic, 0, null, request, null);
     }
 
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request, AtomicLong counter) {
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request, LongAdder counter) {
         return sendMessage(topic, 0, null, request, counter);
     }
 
     public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
-        return sendMessage(topic, userid, null, request, (AtomicLong) null);
+        return sendMessage(topic, userid, null, request, (LongAdder) null);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         MessageRecord message = createMessageRecord(CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         //if (finest) logger.log(Level.FINEST, "HttpMessageClient.sendMessage: " + message);
         return sendMessage(message, true, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
     }
 
-    public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         MessageRecord message = createMessageRecord(CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         sendMessage(message, false, counter);
     }
 
-    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         MessageRecord message = createMessageRecord(CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), HttpSimpleRequestCoder.getInstance().encode(request));
         message.userid(userid).groupid(groupid);
         sendMessage(message, false, counter);

@@ -94,9 +94,9 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     protected Pattern denyregx;
 
-    private final AtomicLong loglength = new AtomicLong();
+    private final AtomicLong logLength = new AtomicLong();
 
-    private final AtomicLong logunusuallength = new AtomicLong();
+    private final AtomicLong logUnusualLength = new AtomicLong();
 
     private File logfile;
 
@@ -139,7 +139,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 while (true) {
                     try {
                         LogRecord log = logqueue.take();
-                        final boolean bigger = (limit > 0 && limit <= loglength.get());
+                        final boolean bigger = (limit > 0 && limit <= logLength.get());
                         final boolean changeday = tomorrow <= log.getMillis();
                         if (bigger || changeday) {
                             updateTomorrow();
@@ -163,7 +163,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                         }
                         if (unusual != null && changeday && logunusualstream != null) {
                             logunusualstream.close();
-                            if (limit > 0 && limit <= logunusuallength.get()) {
+                            if (limit > 0 && limit <= logUnusualLength.get()) {
                                 for (int i = Math.min(count - 2, logunusualindex.get() - 1); i > 0; i--) {
                                     File greater = new File(logunusualfile.getPath() + "." + i);
                                     if (greater.exists()) {
@@ -182,14 +182,14 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                             logindex.incrementAndGet();
                             logfile = new File(patternDateFormat == null ? pattern : Utility.formatTime(patternDateFormat, -1, System.currentTimeMillis()));
                             logfile.getParentFile().mkdirs();
-                            loglength.set(logfile.length());
+                            logLength.set(logfile.length());
                             logstream = new FileOutputStream(logfile, append);
                         }
                         if (unusual != null && logunusualstream == null) {
                             logunusualindex.incrementAndGet();
                             logunusualfile = new File(unusualDateFormat == null ? unusual : Utility.formatTime(unusualDateFormat, -1, System.currentTimeMillis()));
                             logunusualfile.getParentFile().mkdirs();
-                            logunusuallength.set(logunusualfile.length());
+                            logUnusualLength.set(logunusualfile.length());
                             logunusualstream = new FileOutputStream(logunusualfile, append);
                         }
                         //----------------------写日志-------------------------
@@ -197,10 +197,10 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                         String encoding = getEncoding();
                         byte[] bytes = encoding == null ? message.getBytes() : message.getBytes(encoding);
                         logstream.write(bytes);
-                        loglength.addAndGet(bytes.length);
+                        logLength.addAndGet(bytes.length);
                         if (unusual != null && (log.getLevel() == Level.WARNING || log.getLevel() == Level.SEVERE)) {
                             logunusualstream.write(bytes);
-                            logunusuallength.addAndGet(bytes.length);
+                            logUnusualLength.addAndGet(bytes.length);
                         }
                     } catch (Exception e) {
                         ErrorManager err = getErrorManager();

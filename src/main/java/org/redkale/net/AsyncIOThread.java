@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.util.*;
@@ -32,7 +32,7 @@ public class AsyncIOThread extends WorkThread {
     final Selector selector;
 
     //如果有read/write两IOThread，只记readThread
-    final AtomicInteger connCounter = new AtomicInteger();
+    final LongAdder connCounter = new LongAdder();
 
     private final Supplier<ByteBuffer> bufferSupplier;
 
@@ -142,7 +142,7 @@ public class AsyncIOThread extends WorkThread {
     }
 
     public int currConnections() {
-        return connCounter.get();
+        return connCounter.intValue();
     }
 
     @Override

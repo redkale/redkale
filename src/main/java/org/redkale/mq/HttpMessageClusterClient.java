@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
@@ -55,7 +55,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     }
 
     @Override
-    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
             return localClient.sendMessage(topic, userid, groupid, request, counter);
         } else {
@@ -64,7 +64,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     }
 
     @Override
-    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
             localClient.produceMessage(topic, userid, groupid, request, counter);
         } else {
@@ -73,7 +73,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     }
 
     @Override
-    public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         mqtpAsync(userid, request);
     }
 

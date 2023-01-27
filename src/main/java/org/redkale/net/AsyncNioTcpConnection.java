@@ -39,7 +39,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
             }
         }
         this.remoteAddress = addr;
-        ioReadThread.connCounter.incrementAndGet();
+        ioReadThread.connCounter.increment();
     }
 
     @Override
@@ -269,9 +269,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
     @Override
     public final void close() throws IOException {
         super.close();
-        ioReadThread.connCounter.decrementAndGet();
-        channel.shutdownInput();
-        channel.shutdownOutput();
+        ioReadThread.connCounter.decrement();
         channel.close();
         if (this.connectKey != null) {
             this.connectKey.cancel();

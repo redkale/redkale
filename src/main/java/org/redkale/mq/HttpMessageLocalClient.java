@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import org.redkale.boot.*;
 import org.redkale.convert.Convert;
@@ -113,7 +113,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     }
 
     @Override
-    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         HttpServlet servlet = findHttpServlet(topic);
         if (servlet == null) {
             if (logger.isLoggable(Level.FINE)) {
@@ -145,7 +145,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     }
 
     @Override
-    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);
         if (servlet == null) {
@@ -164,7 +164,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     }
 
     @Override
-    public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, AtomicLong counter) {
+    public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);

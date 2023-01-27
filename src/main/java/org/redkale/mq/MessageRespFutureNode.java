@@ -6,7 +6,7 @@
 package org.redkale.mq;
 
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
 
 /**
@@ -25,7 +25,7 @@ public class MessageRespFutureNode implements Runnable {
 
     protected final long createTime;
 
-    protected final AtomicLong counter;
+    protected final LongAdder counter;
 
     protected final CompletableFuture<MessageRecord> future;
 
@@ -37,7 +37,7 @@ public class MessageRespFutureNode implements Runnable {
 
     protected ScheduledFuture<?> scheduledFuture;
 
-    public MessageRespFutureNode(Logger logger, MessageRecord message, ConcurrentHashMap<Long, MessageRespFutureNode> respNodes, AtomicLong counter, CompletableFuture<MessageRecord> future) {
+    public MessageRespFutureNode(Logger logger, MessageRecord message, ConcurrentHashMap<Long, MessageRespFutureNode> respNodes, LongAdder counter, CompletableFuture<MessageRecord> future) {
         this.logger = logger;
         this.message = message;
         this.seqid = message.getSeqid();
@@ -63,7 +63,7 @@ public class MessageRespFutureNode implements Runnable {
         return createTime;
     }
 
-    public AtomicLong getCounter() {
+    public LongAdder getCounter() {
         return counter;
     }
 

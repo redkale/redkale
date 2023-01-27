@@ -6,7 +6,7 @@
 package org.redkale.mq;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
@@ -39,7 +39,7 @@ public class SncpMessageClient extends MessageClient {
     }
 
     //只发送消息，不需要响应
-    public final void produceMessage(MessageRecord message, AtomicLong counter) {
+    public final void produceMessage(MessageRecord message, LongAdder counter) {
         sendMessage(message, false, counter);
     }
 
@@ -49,7 +49,7 @@ public class SncpMessageClient extends MessageClient {
     }
 
     //发送消息，需要响应
-    public final CompletableFuture<MessageRecord> sendMessage(MessageRecord message, AtomicLong counter) {
+    public final CompletableFuture<MessageRecord> sendMessage(MessageRecord message, LongAdder counter) {
         return sendMessage(message, true, counter);
     }
 
