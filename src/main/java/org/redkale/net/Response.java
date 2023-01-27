@@ -437,7 +437,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
             @Override
             public void completed(Integer result, A attachment) {
-                channel.offerWriteBuffer(buffers);
+                channel.offerWriteBuffers(buffers);
                 if (handler != null) {
                     handler.completed(result, attachment);
                 }

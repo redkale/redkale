@@ -369,13 +369,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             CompletionHandler<Integer, Object> newHandler = new CompletionHandler<Integer, Object>() {
                 @Override
                 public void completed(Integer result, Object attachment) {
-                    offerWriteBuffer(buffers);
+                    offerWriteBuffers(buffers);
                     handler.completed(result, attachment);
                 }
 
                 @Override
                 public void failed(Throwable exc, Object attachment) {
-                    offerWriteBuffer(buffers);
+                    offerWriteBuffers(buffers);
                     handler.failed(exc, attachment);
                 }
             };
@@ -476,13 +476,13 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
             CompletionHandler<Integer, ? super A> newHandler = new CompletionHandler<Integer, A>() {
                 @Override
                 public void completed(Integer result, A attachment) {
-                    offerWriteBuffer(srcs);
+                    offerWriteBuffers(srcs);
                     handler.completed(result, attachment);
                 }
 
                 @Override
                 public void failed(Throwable exc, A attachment) {
-                    offerWriteBuffer(srcs);
+                    offerWriteBuffers(srcs);
                     handler.failed(exc, attachment);
                 }
             };
@@ -689,7 +689,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         readBufferConsumer.accept(buffer);
     }
 
-    public void offerReadBuffer(ByteBuffer... buffers) {
+    public void offerReadBuffers(ByteBuffer... buffers) {
         if (buffers == null) {
             return;
         }
@@ -706,7 +706,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         writeBufferConsumer.accept(buffer);
     }
 
-    public void offerWriteBuffer(ByteBuffer... buffers) {
+    public void offerWriteBuffers(ByteBuffer... buffers) {
         if (buffers == null) {
             return;
         }
@@ -1009,20 +1009,20 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 writeImpl(netBuffers, 0, netBuffers.length, null, new CompletionHandler<Integer, Void>() {
                     @Override
                     public void completed(Integer count, Void attachment) {
-                        offerWriteBuffer(netBuffers);
+                        offerWriteBuffers(netBuffers);
                         callback.accept(null);
                     }
 
                     @Override
                     public void failed(Throwable t, Void attachment) {
-                        offerWriteBuffer(netBuffers);
+                        offerWriteBuffers(netBuffers);
                         callback.accept(t);
                     }
                 });
             }
             return true;
         } else {
-            offerWriteBuffer(netBuffers);
+            offerWriteBuffers(netBuffers);
             return false;
         }
     }
@@ -1048,20 +1048,20 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 writeImpl(netBuffers, 0, netBuffers.length, null, new CompletionHandler<Integer, Void>() {
                     @Override
                     public void completed(Integer count, Void attachment) {
-                        offerWriteBuffer(netBuffers);
+                        offerWriteBuffers(netBuffers);
                         callback.accept(null);
                     }
 
                     @Override
                     public void failed(Throwable t, Void attachment) {
-                        offerWriteBuffer(netBuffers);
+                        offerWriteBuffers(netBuffers);
                         callback.accept(t);
                     }
                 });
             }
             return true;
         } else {
-            offerWriteBuffer(netBuffers);
+            offerWriteBuffers(netBuffers);
             return false;
         }
     }

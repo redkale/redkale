@@ -74,9 +74,9 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
         if (conn != null) {
             if (buffers != null) {
                 if (readMode) {
-                    conn.offerReadBuffer(buffers);
+                    conn.offerReadBuffers(buffers);
                 } else {
-                    conn.offerWriteBuffer(buffers);
+                    conn.offerWriteBuffers(buffers);
                 }
             } else if (buffer != null) {
                 if (readMode) {
@@ -102,9 +102,9 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
         if (conn != null) {
             if (buffers != null) {
                 if (readMode) {
-                    conn.offerReadBuffer(buffers);
+                    conn.offerReadBuffers(buffers);
                 } else {
-                    conn.offerWriteBuffer(buffers);
+                    conn.offerWriteBuffers(buffers);
                 }
             } else if (buffer != null) {
                 if (readMode) {
@@ -125,9 +125,9 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
         if (conn != null) {
             if (buffers != null) {
                 if (readMode) {
-                    conn.offerReadBuffer(buffers);
+                    conn.offerReadBuffers(buffers);
                 } else {
-                    conn.offerWriteBuffer(buffers);
+                    conn.offerWriteBuffers(buffers);
                 }
             } else if (buffer != null) {
                 if (readMode) {
