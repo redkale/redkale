@@ -77,6 +77,7 @@ public abstract class Request<C extends Context> {
         return null;
     }
 
+    //重载此方法，不设置pipelineIndex值可以将协议改成无pipeline模式
     protected Request pipeline(int pipelineIndex, int pipelineCount) {
         this.pipelineIndex = pipelineIndex;
         this.pipelineCount = pipelineCount;

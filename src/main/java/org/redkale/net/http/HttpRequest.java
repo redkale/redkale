@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.*;
+import org.redkale.net.Request;
 import org.redkale.util.*;
 
 /**
@@ -258,28 +258,12 @@ public class HttpRequest extends Request<HttpContext> {
         return maybews && "Upgrade".equalsIgnoreCase(getHeader("Connection")) && "GET".equalsIgnoreCase(method);
     }
 
-    protected void setPipelineCompleted(boolean pipelineCompleted) {
-        this.pipelineCompleted = pipelineCompleted;
-    }
-
     protected void setKeepAlive(boolean keepAlive) {
         this.keepAlive = keepAlive;
     }
 
     protected boolean isKeepAlive() {
         return this.keepAlive;
-    }
-
-    protected AsyncConnection getChannel() {
-        return this.channel;
-    }
-
-    protected int getPipelineIndex() {
-        return this.pipelineIndex;
-    }
-
-    protected int getPipelineCount() {
-        return this.pipelineCount;
     }
 
     protected ConvertType getRespConvertType() {

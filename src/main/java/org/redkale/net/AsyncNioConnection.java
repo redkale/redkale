@@ -192,7 +192,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             newHandler.handler(handler, null);   // new AsyncNioCompletionHandler(handler, null);
             this.writeCompletionHandler = newHandler;
         }
-        doWrite(true); //如果不是true，则bodyCallback的执行可能会切换线程
+        doWrite(this.ioWriteThread.inCurrThread()); //如果不是true，则bodyCallback的执行可能会切换线程
     }
 
     @Override
@@ -218,7 +218,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         } else {
             this.writeCompletionHandler = (CompletionHandler) handler;
         }
-        doWrite(true);
+        doWrite(this.ioWriteThread.inCurrThread());
     }
 
     @Override
@@ -246,7 +246,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         } else {
             this.writeCompletionHandler = (CompletionHandler) handler;
         }
-        doWrite(true);
+        doWrite(this.ioWriteThread.inCurrThread());
     }
 
     public void doRead(boolean direct) {

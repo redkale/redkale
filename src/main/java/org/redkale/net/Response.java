@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.function.*;
 import java.util.logging.Level;
-import org.redkale.util.ByteTuple;
+import org.redkale.util.*;
 
 /**
  * 协议响应对象
@@ -53,12 +53,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
         @Override
         public void completed(Integer result, Void attachment) {
-            finishInIOThread();
+            completeInIOThread();
         }
 
         @Override
         public void failed(Throwable exc, Void attachment) {
-            finishInIOThread(true);
+            completeInIOThread(true);
         }
 
     };
@@ -72,7 +72,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             } else {
                 attachment.clear();
             }
-            finishInIOThread();
+            completeInIOThread();
         }
 
         @Override
@@ -82,7 +82,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             } else {
                 attachment.clear();
             }
-            finishInIOThread(true);
+            completeInIOThread(true);
         }
 
     };
@@ -96,7 +96,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     channel.offerWriteBuffer(attachment);
                 }
             }
-            finishInIOThread();
+            completeInIOThread();
         }
 
         @Override
@@ -106,7 +106,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     channel.offerWriteBuffer(attachment);
                 }
             }
-            finishInIOThread(true);
+            completeInIOThread(true);
         }
 
     };
@@ -137,10 +137,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.output = null;
         this.filter = null;
         this.servlet = null;
-        boolean notpipeline = request.pipelineIndex == 0 || request.pipelineCompleted;
+        boolean noPipeline = request.pipelineIndex == 0 || request.pipelineCompleted;
         request.recycle();
         if (channel != null) {
-            if (notpipeline) {
+            if (noPipeline) {
                 channel.dispose();
             }
             channel = null;
@@ -201,15 +201,15 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         return !this.inited;
     }
 
-    private void finishInIOThread() {
-        this.finishInIOThread(false);
+    private void completeInIOThread() {
+        this.completeInIOThread(false);
     }
 
     protected void error(Throwable t) {
-        finishInIOThread(true);
+        completeInIOThread(true);
     }
 
-    private void finishInIOThread(boolean kill) {
+    private void completeInIOThread(boolean kill) {
         if (!this.inited) {
             return; //避免重复关闭
         }        //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
@@ -261,25 +261,21 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     public void finish(boolean kill, final byte[] bs, int offset, int length) {
-        if (!this.inited) {
-            return; //避免重复关闭
-        }
         if (kill) {
             refuseAlive();
         }
-        if (this.channel.hasPipelineData()) {
-            this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
-
-                @Override
-                public void completed(Integer result, Void attachment) {
-                    channel.write(bs, offset, length, finishBytesHandler);
-                }
-
-                @Override
-                public void failed(Throwable exc, Void attachment) {
-                    finishBytesHandler.failed(exc, attachment);
-                }
-            });
+        if (request.pipelineIndex > 0) {
+            boolean allCompleted = this.channel.writePipelineData(request.pipelineIndex, request.pipelineCount, bs, offset, length);
+            if (allCompleted) {
+                request.pipelineCompleted = true;
+                this.channel.flushPipelineData(this.finishBytesHandler);
+            } else {
+                removeChannel();
+                this.responseConsumer.accept(this);
+            }
+        } else if (this.channel.hasPipelineData()) {
+            this.channel.writePipelineData(request.pipelineIndex, request.pipelineCount, bs, offset, length);
+            this.channel.flushPipelineData(this.finishBytesHandler);
         } else {
             ByteBuffer buffer = this.writeBuffer;
             if (buffer != null && buffer.capacity() >= length) {
@@ -293,72 +289,49 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    public <A> void finish(boolean kill, final byte[] bs, int offset, int length, final byte[] bs2, int offset2, int length2, Consumer<A> callback, A attachment) {
-        if (!this.inited) {
-            return; //避免重复关闭
-        }
+    public <A> void finish(boolean kill, final byte[] bs1, int offset1, int length1, final byte[] bs2, int offset2, int length2, Consumer<A> callback, A attachment) {
         if (kill) {
             refuseAlive();
         }
-        if (this.channel.hasPipelineData()) {
-            this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
-
-                @Override
-                public void completed(Integer result, Void attachment) {
-                    channel.write(bs, offset, length, bs2, offset2, length2, callback, attachment, finishBytesHandler);
-                }
-
-                @Override
-                public void failed(Throwable exc, Void attachment) {
-                    finishBytesHandler.failed(exc, attachment);
-                }
-            });
+        if (request.pipelineIndex > 0) {
+            boolean allCompleted = this.channel.writePipelineData(request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
+            if (allCompleted) {
+                request.pipelineCompleted = true;
+                this.channel.flushPipelineData(this.finishBytesHandler);
+            } else {
+                removeChannel();
+                this.responseConsumer.accept(this);
+            }
+        } else if (this.channel.hasPipelineData()) {
+            this.channel.writePipelineData(request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
+            this.channel.flushPipelineData(this.finishBytesHandler);
         } else {
-            this.channel.write(bs, offset, length, bs2, offset2, length2, callback, attachment, finishBytesHandler);
-        }
-    }
-
-    protected final void finishBuffer(ByteBuffer buffer) {
-        finishBuffers(false, buffer);
-    }
-
-    protected final void finishBuffers(ByteBuffer... buffers) {
-        finishBuffers(false, buffers);
-    }
-
-    protected void finishBuffer(boolean kill, ByteBuffer buffer) {
-        if (!this.inited) {
-            return; //避免重复关闭
-        }
-        if (kill) {
-            refuseAlive();
-        }
-        if (this.channel.hasPipelineData()) {
-            this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
-
-                @Override
-                public void completed(Integer result, Void attachment) {
-                    channel.write(buffer, buffer, finishBufferHandler);
-                }
-
-                @Override
-                public void failed(Throwable exc, Void attachment) {
-                    finishBufferHandler.failed(exc, buffer);
-                }
-            });
-        } else {
-            this.channel.write(buffer, buffer, finishBufferHandler);
+            this.channel.write(bs1, offset1, length1, bs2, offset2, length2, callback, attachment, finishBytesHandler);
         }
     }
 
     protected void finishBuffers(boolean kill, ByteBuffer... buffers) {
-        if (!this.inited) {
-            return; //避免重复关闭
-        }
         if (kill) {
             refuseAlive();
         }
-        if (this.channel.hasPipelineData()) {
+        if (request.pipelineIndex > 0) {
+            ByteArray array = new ByteArray();
+            for (ByteBuffer buffer : buffers) {
+                array.put(buffer);
+            }
+            boolean allCompleted = this.channel.writePipelineData(request.pipelineIndex, request.pipelineCount, array);
+            if (allCompleted) {
+                request.pipelineCompleted = true;
+                this.channel.flushPipelineData(buffers, this.finishBuffersHandler);
+            } else {
+                AsyncConnection conn = removeChannel();
+                if (conn != null) {
+                    conn.offerWriteBuffers(buffers);
+                }
+                this.responseConsumer.accept(this);
+            }
+        } else if (this.channel.hasPipelineData()) {
+            //先将pipeline数据写入完再写入buffers
             this.channel.flushPipelineData(null, new CompletionHandler<Integer, Void>() {
 
                 @Override
@@ -374,6 +347,18 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         } else {
             this.channel.write(buffers, buffers, finishBuffersHandler);
         }
+    }
+
+    protected final void finishBuffer(ByteBuffer buffer) {
+        finishBuffers(false, buffer);
+    }
+
+    protected final void finishBuffers(ByteBuffer... buffers) {
+        finishBuffers(false, buffers);
+    }
+
+    protected void finishBuffer(boolean kill, ByteBuffer buffer) {
+        finishBuffers(kill, buffer);
     }
 
     protected <A> void send(final ByteTuple array, final CompletionHandler<Integer, Void> handler) {

@@ -945,26 +945,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (cacheHandler != null) {
             cacheHandler.accept(this, data.getBytes());
         }
-
-        int pipelineIndex = request.getPipelineIndex();
-        if (pipelineIndex > 0) {
-            boolean over = this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data);
-            if (over) {
-                request.setPipelineCompleted(true);
-                this.channel.flushPipelineData(this.finishBytesHandler);
-            } else {
-                removeChannel();
-                this.responseConsumer.accept(this);
-            }
-        } else {
-            if (this.channel.hasPipelineData()) {
-                this.channel.writePipelineData(pipelineIndex, request.getPipelineCount(), data);
-                this.channel.flushPipelineData(this.finishBytesHandler);
-            } else {
-                //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finish
-                super.finish(false, data.content(), 0, data.length());
-            }
-        }
+        //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finish
+        super.finish(false, data.content(), 0, data.length());
     }
 
     @Override

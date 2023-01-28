@@ -58,6 +58,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     private Consumer<ByteBuffer> writeBufferConsumer;
 
+    private final Object pipelineLock = new Object();
+
     private ByteBufferWriter pipelineWriter;
 
     private PipelineDataNode pipelineDataNode;
@@ -494,14 +496,14 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         }
     }
 
-    //返回 是否over
+    //返回pipelineCount个数数据是否全部写入完毕
     public final boolean writePipelineData(int pipelineIndex, int pipelineCount, ByteTuple array) {
         return writePipelineData(pipelineIndex, pipelineCount, array.content(), array.offset(), array.length());
     }
 
-    //返回 是否over
+    //返回pipelineCount个数数据是否全部写入完毕
     public boolean writePipelineData(int pipelineIndex, int pipelineCount, byte[] bs, int offset, int length) {
-        synchronized (this) {
+        synchronized (pipelineLock) {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
                 writer = ByteBufferWriter.create(getWriteBufferSupplier());
@@ -532,14 +534,14 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         }
     }
 
-    //返回 是否over
+    //返回pipelineCount个数数据是否全部写入完毕
     public final boolean writePipelineData(int pipelineIndex, int pipelineCount, ByteTuple header, ByteTuple body) {
         return writePipelineData(pipelineIndex, pipelineCount, header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length());
     }
 
-    //返回 是否over
+    //返回pipelineCount个数数据是否全部写入完毕
     public boolean writePipelineData(int pipelineIndex, int pipelineCount, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
-        synchronized (this) {
+        synchronized (pipelineLock) {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
                 writer = ByteBufferWriter.create(getWriteBufferSupplier());
