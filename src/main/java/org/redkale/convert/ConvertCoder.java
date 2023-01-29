@@ -31,13 +31,6 @@ public @interface ConvertCoder {
     Class column() default Object.class;
 
     /**
-     * 解析/序列化定制化的SimpledCoder
-     *
-     * @return SimpledCoder类
-     */
-    Class<? extends SimpledCoder> coder() default SimpledCoder.class;
-
-    /**
      * 序列化定制化的 Encodeable
      *
      * @return Encodeable 类

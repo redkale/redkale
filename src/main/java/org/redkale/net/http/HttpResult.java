@@ -6,12 +6,14 @@
 package org.redkale.net.http;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.net.HttpCookie;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.*;
-import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.json.*;
+import org.redkale.util.Creator;
 
 /**
  *
@@ -38,6 +40,7 @@ public class HttpResult<T> {
     protected List<HttpCookie> cookies;
 
     @ConvertColumn(index = 5)
+    @ConvertCoder(encoder = ResultJsonCoder.class)
     protected T result;
 
     protected Convert convert;
@@ -167,15 +170,45 @@ public class HttpResult<T> {
 
     @Override
     public String toString() {
-        if (this.result instanceof byte[]) {
-            HttpResult tmp = new HttpResult();
-            tmp.contentType = this.contentType;
-            tmp.cookies = this.cookies;
-            tmp.headers = this.headers;
-            tmp.status = this.status;
-            tmp.result = new String((byte[]) this.result, StandardCharsets.UTF_8);
-            return JsonConvert.root().convertTo(tmp);
-        }
         return JsonConvert.root().convertTo(this);
+    }
+
+    private static class ResultJsonCoder implements Encodeable<JsonWriter, Object> {
+
+        private final ConvertFactory factory;
+
+        public static Creator<ResultJsonCoder> createCreator() {
+
+            return new Creator<ResultJsonCoder>() {
+                @Override
+                public ResultJsonCoder create(Object... params) {
+                    return new ResultJsonCoder((ConvertFactory) params[0]);
+                }
+
+                @Override
+                public Class[] paramTypes() {
+                    return new Class[]{ConvertFactory.class};
+                }
+            };
+        }
+
+        public ResultJsonCoder(ConvertFactory factory) {
+            this.factory = factory;
+        }
+
+        @Override
+        public void convertTo(JsonWriter out, Object value) {
+            if (value instanceof byte[]) {
+                out.writeString(new String((byte[]) value, StandardCharsets.UTF_8));
+            } else {
+                factory.getAnyEncoder().convertTo(out, value);
+            }
+        }
+
+        @Override
+        public Type getType() {
+            return Object.class;
+        }
+
     }
 }

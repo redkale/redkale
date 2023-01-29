@@ -43,18 +43,24 @@ public class ConvertCoderTest {
 
         System.out.println(convert.convertTo(msg));
         String json = "{\"big\":\"0xff\",\"big2\":\"0xff\",\"big3\":\"255\",\"map\":{\"haha\":\"0xfe\"},\"num1\":0}";
-        if (!main) Assertions.assertEquals(convert.convertTo(msg), json);
+        if (!main) {
+            Assertions.assertEquals(convert.convertTo(msg), json);
+        }
         BigMessage msg12 = convert.convertFrom(BigMessage.class, json);
-        if (!main) Assertions.assertEquals(convert.convertTo(msg12), json);
+        if (!main) {
+            Assertions.assertEquals(convert.convertTo(msg12), json);
+        }
 
         byte[] bs1 = BsonConvert.root().convertTo(msg);
         byte[] bs2 = BsonConvert.root().convertTo(msg2);
-        if (!main) Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(bs2));
+        if (!main) {
+            Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(bs2));
+        }
     }
 
     public static class BigMessage {
 
-        @ConvertCoder(coder = BigIntegerHexJsonSimpledCoder.class)
+        @ConvertCoder(encoder = BigIntegerHexJsonSimpledCoder.class, decoder = BigIntegerHexJsonSimpledCoder.class)
         public BigInteger big;
 
         @ConvertCoder(encoder = BigIntegerHexJsonSimpledCoder.class, decoder = BigIntegerHexJsonSimpledCoder.class)
@@ -64,7 +70,7 @@ public class ConvertCoderTest {
 
         public int num1;
 
-        @ConvertCoder(coder = BigIntegerHexJsonSimpledCoder.class)
+        @ConvertCoder(encoder = BigIntegerHexJsonSimpledCoder.class, decoder = BigIntegerHexJsonSimpledCoder.class)
         public Map<String, BigInteger> map;
     }
 
