@@ -7,17 +7,16 @@ package org.redkale.util;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
-
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
-import org.redkale.asm.Type;
 import static org.redkale.asm.Opcodes.*;
+import org.redkale.asm.Type;
 
 /**
  * <p>
@@ -97,12 +96,22 @@ public interface Creator<T> {
                 public Map.Entry create(Object... params) {
                     return new AbstractMap.SimpleEntry(params[0], params[1]);
                 }
+
+                @Override
+                public Class[] paramTypes() {
+                    return new Class[]{Object.class, Object.class};
+                }
             });
             creatorCacheMap.put(AbstractMap.SimpleEntry.class, new Creator<AbstractMap.SimpleEntry>() {
                 @Override
                 @ConstructorParameters({"key", "value"})
                 public AbstractMap.SimpleEntry create(Object... params) {
                     return new AbstractMap.SimpleEntry(params[0], params[1]);
+                }
+
+                @Override
+                public Class[] paramTypes() {
+                    return new Class[]{Object.class, Object.class};
                 }
             });
             creatorCacheMap.put(AnyValue.DefaultAnyValue.class, p -> new AnyValue.DefaultAnyValue());
@@ -136,15 +145,23 @@ public interface Creator<T> {
 
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-                if (java.lang.reflect.Modifier.isStatic(access) || !"<init>".equals(name)) return null;
-                if (constructorDesc != null && !constructorDesc.equals(desc)) return null;
-                if (this.started) return null;
+                if (java.lang.reflect.Modifier.isStatic(access) || !"<init>".equals(name)) {
+                    return null;
+                }
+                if (constructorDesc != null && !constructorDesc.equals(desc)) {
+                    return null;
+                }
+                if (this.started) {
+                    return null;
+                }
                 this.started = true;
                 //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
                 return new MethodVisitor(Opcodes.ASM6) {
                     @Override
                     public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
-                        if (index < 1) return;
+                        if (index < 1) {
+                            return;
+                        }
                         int size = fieldnames.size();
                         //index不会按顺序执行的
                         if (index > size) {
@@ -162,7 +179,9 @@ public interface Creator<T> {
         public static SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramcount, String constructorDesc) {
             String n = clazz.getName();
             InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
-            if (in == null) return null;
+            if (in == null) {
+                return null;
+            }
             ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
             byte[] bytes = new byte[1024];
             int pos;
@@ -177,7 +196,9 @@ public interface Creator<T> {
             final List<String> fieldnames = new ArrayList<>();
             new ClassReader(out.toByteArray()).accept(new SimpleClassVisitor(Opcodes.ASM6, fieldnames, constructorDesc), 0);
             while (fieldnames.remove(" ")); //删掉空元素
-            if (fieldnames.isEmpty()) return null;
+            if (fieldnames.isEmpty()) {
+                return null;
+            }
             if (paramcount == fieldnames.size()) {
                 return getConstructorField(clazz, paramcount, fieldnames.toArray(new String[fieldnames.size()]));
             } else {
@@ -205,10 +226,14 @@ public interface Creator<T> {
                         } catch (NoSuchFieldException nsfe) {
                         }
                     }
-                    if (field == null) return null;
+                    if (field == null) {
+                        return null;
+                    }
                     se[i] = new SimpleEntry<>(field.getName(), field.getType());
                 } catch (Exception e) {
-                    if (logger.isLoggable(Level.FINE)) logger.log(Level.FINE, clazz + " getConstructorField error", e);
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, clazz + " getConstructorField error", e);
+                    }
                     return null;
                 }
             }
@@ -296,9 +321,9 @@ public interface Creator<T> {
                 RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
                 return (IntFunction<T[]>) resultClazz.getDeclaredConstructor().newInstance();
             } catch (Exception ex) {
-                ex.printStackTrace();  //一般不会发生
-                return t -> (T[]) Array.newInstance(clazz, t);
-                //throw new RuntimeException(ex);
+                //ex.printStackTrace();  //一般不会发生
+                //return t -> (T[]) Array.newInstance(clazz, t);
+                throw new RuntimeException(ex);
             }
         }
     }
@@ -311,6 +336,15 @@ public interface Creator<T> {
      * @return 构建的对象
      */
     public T create(Object... params);
+
+    /**
+     * 参数类型数组
+     *
+     * @return 参数类型数组
+     */
+    default Class[] paramTypes() {
+        return new Class[0];
+    }
 
     /**
      * 创建指定类型对象数组的IntFunction
@@ -334,16 +368,36 @@ public interface Creator<T> {
      * @return 数组
      */
     public static <T> T[] newArray(final Class<T> type, final int size) {
-        if (type == int.class) return (T[]) (Object) new int[size];
-        if (type == byte.class) return (T[]) (Object) new byte[size];
-        if (type == long.class) return (T[]) (Object) new long[size];
-        if (type == String.class) return (T[]) new String[size];
-        if (type == Object.class) return (T[]) new Object[size];
-        if (type == boolean.class) return (T[]) (Object) new boolean[size];
-        if (type == short.class) return (T[]) (Object) new short[size];
-        if (type == char.class) return (T[]) (Object) new char[size];
-        if (type == float.class) return (T[]) (Object) new float[size];
-        if (type == double.class) return (T[]) (Object) new double[size];
+        if (type == int.class) {
+            return (T[]) (Object) new int[size];
+        }
+        if (type == byte.class) {
+            return (T[]) (Object) new byte[size];
+        }
+        if (type == long.class) {
+            return (T[]) (Object) new long[size];
+        }
+        if (type == String.class) {
+            return (T[]) new String[size];
+        }
+        if (type == Object.class) {
+            return (T[]) new Object[size];
+        }
+        if (type == boolean.class) {
+            return (T[]) (Object) new boolean[size];
+        }
+        if (type == short.class) {
+            return (T[]) (Object) new short[size];
+        }
+        if (type == char.class) {
+            return (T[]) (Object) new char[size];
+        }
+        if (type == float.class) {
+            return (T[]) (Object) new float[size];
+        }
+        if (type == double.class) {
+            return (T[]) (Object) new double[size];
+        }
         //return (T[]) Array.newInstance(type, size);
         return arrayFunction(type).apply(size);
     }
@@ -402,14 +456,22 @@ public interface Creator<T> {
             clazz = (Class<T>) ArrayList.class;
         }
         Creator creator = CreatorInner.creatorCacheMap.get(clazz);
-        if (creator != null) return creator;
+        if (creator != null) {
+            return creator;
+        }
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             throw new RuntimeException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
         }
         for (final Method method : clazz.getDeclaredMethods()) { //查找类中是否存在提供创建Creator实例的静态方法
-            if (!Modifier.isStatic(method.getModifiers())) continue;
-            if (method.getParameterTypes().length != 0) continue;
-            if (method.getReturnType() != Creator.class) continue;
+            if (!Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (method.getParameterTypes().length != 0) {
+                continue;
+            }
+            if (method.getReturnType() != Creator.class) {
+                continue;
+            }
             try {
                 method.setAccessible(true);
                 Creator<T> c = (Creator) method.invoke(null);
@@ -451,7 +513,9 @@ public interface Creator<T> {
         if (constructor0 == null) {  // 2、查找public带ConstructorParameters注解的构造函数
             for (Constructor c : clazz.getConstructors()) {
                 ConstructorParameters cp = (ConstructorParameters) c.getAnnotation(ConstructorParameters.class);
-                if (cp == null) continue;
+                if (cp == null) {
+                    continue;
+                }
                 SimpleEntry<String, Class>[] fields = CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
                 if (fields != null) {
                     constructor0 = c;
@@ -463,8 +527,12 @@ public interface Creator<T> {
         if (constructor0 == null) {  // 3、查找public且不带ConstructorParameters注解的构造函数
             List<Constructor> cs = new ArrayList<>();
             for (Constructor c : clazz.getConstructors()) {
-                if (c.getAnnotation(ConstructorParameters.class) != null) continue;
-                if (c.getParameterCount() < 1) continue;
+                if (c.getAnnotation(ConstructorParameters.class) != null) {
+                    continue;
+                }
+                if (c.getParameterCount() < 1) {
+                    continue;
+                }
                 cs.add(c);
             }
             //优先参数最多的构造函数
@@ -480,9 +548,13 @@ public interface Creator<T> {
         }
         if (constructor0 == null) {  // 4、查找非private带ConstructorParameters的构造函数
             for (Constructor c : clazz.getDeclaredConstructors()) {
-                if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) continue;
+                if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) {
+                    continue;
+                }
                 ConstructorParameters cp = (ConstructorParameters) c.getAnnotation(ConstructorParameters.class);
-                if (cp == null) continue;
+                if (cp == null) {
+                    continue;
+                }
                 SimpleEntry<String, Class>[] fields = CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
                 if (fields != null) {
                     constructor0 = c;
@@ -494,9 +566,15 @@ public interface Creator<T> {
         if (constructor0 == null) {  // 5、查找非private且不带ConstructorParameters的构造函数
             List<Constructor> cs = new ArrayList<>();
             for (Constructor c : clazz.getDeclaredConstructors()) {
-                if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) continue;
-                if (c.getAnnotation(ConstructorParameters.class) != null) continue;
-                if (c.getParameterCount() < 1) continue;
+                if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) {
+                    continue;
+                }
+                if (c.getAnnotation(ConstructorParameters.class) != null) {
+                    continue;
+                }
+                if (c.getParameterCount() < 1) {
+                    continue;
+                }
                 cs.add(c);
             }
             //优先参数最多的构造函数
@@ -515,6 +593,7 @@ public interface Creator<T> {
         if (constructor == null || constructorParameters == null) {
             throw new RuntimeException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
         }
+        final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
         //-------------------------------------------------------------
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -530,6 +609,57 @@ public interface Creator<T> {
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
+        {//paramTypes 方法
+            mv = cw.visitMethod(ACC_PUBLIC, "paramTypes", "()[Ljava/lang/Class;", null, null);
+            int paramLen = constructorParameters.length;
+            if (paramLen < 6) {
+                mv.visitInsn(ICONST_0 + paramLen);
+            } else if (paramLen <= Byte.MAX_VALUE) {
+                mv.visitIntInsn(BIPUSH, paramLen);
+            } else if (paramLen <= Short.MAX_VALUE) {
+                mv.visitIntInsn(SIPUSH, paramLen);
+            } else {
+                mv.visitLdcInsn(paramLen);
+            }
+            mv.visitTypeInsn(ANEWARRAY, "java/lang/Class");
+
+            for (int i = 0; i < constructorParameters.length; i++) {
+                final Class pt = constructorParameters[i].getValue();
+                mv.visitInsn(DUP);
+                if (i < 6) {
+                    mv.visitInsn(iconsts[i]);
+                } else if (i <= Byte.MAX_VALUE) {
+                    mv.visitIntInsn(BIPUSH, i);
+                } else if (i <= Short.MAX_VALUE) {
+                    mv.visitIntInsn(SIPUSH, i);
+                } else {
+                    mv.visitLdcInsn(i);
+                }
+                if (pt == boolean.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TYPE", "Ljava/lang/Class;");
+                } else if (pt == byte.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Byte", "TYPE", "Ljava/lang/Class;");
+                } else if (pt == char.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Character", "TYPE", "Ljava/lang/Class;");
+                } else if (pt == short.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Short", "TYPE", "Ljava/lang/Class;");
+                } else if (pt == int.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
+                } else if (pt == float.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Float", "TYPE", "Ljava/lang/Class;");
+                } else if (pt == long.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
+                } else if (pt == double.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Double", "TYPE", "Ljava/lang/Class;");
+                } else {
+                    mv.visitLdcInsn(Type.getType(Type.getDescriptor(pt)));
+                }
+                mv.visitInsn(AASTORE);
+            }
+            mv.visitInsn(ARETURN);
+            mv.visitMaxs(4, 1);
+            mv.visitEnd();
+        }
         {//create 方法
             mv = cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
             if (constructorParameters.length > 0) {
@@ -541,11 +671,12 @@ public interface Creator<T> {
                 av1.visitEnd();
                 av0.visitEnd();
             }
-            final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
             {  //有Primitive数据类型且值为null的参数需要赋默认值
                 for (int i = 0; i < constructorParameters.length; i++) {
                     final Class pt = constructorParameters[i].getValue();
-                    if (!pt.isPrimitive()) continue;
+                    if (!pt.isPrimitive()) {
+                        continue;
+                    }
                     mv.visitVarInsn(ALOAD, 1);
                     if (i < 6) {
                         mv.visitInsn(iconsts[i]);
@@ -673,13 +804,17 @@ public interface Creator<T> {
                 t.printStackTrace();
             }
         }
-        if (!ispub && resultClazz == null) throw new RuntimeException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
+        if (!ispub && resultClazz == null) {
+            throw new RuntimeException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
+        }
         try {
-            if (resultClazz == null) resultClazz = new ClassLoader(loader) {
+            if (resultClazz == null) {
+                resultClazz = new ClassLoader(loader) {
                     public final Class<?> loadClass(String name, byte[] b) {
                         return defineClass(name, b, 0, b.length);
                     }
                 }.loadClass(newDynName.replace('/', '.'), bytes);
+            }
             RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
             return (Creator) resultClazz.getDeclaredConstructor().newInstance();

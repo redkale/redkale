@@ -5,9 +5,11 @@
  */
 package org.redkale.test.util;
 
+import java.util.Arrays;
+import org.junit.jupiter.api.*;
 import org.redkale.annotation.ConstructorParameters;
-import org.redkale.convert.json.*;
-import org.redkale.util.*;
+import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.Creator;
 
 /**
  *
@@ -34,7 +36,7 @@ public class CreatorRecord {
     private double dval;
 
     @ConstructorParameters({"id", "name", "lval", "tval", "bval", "sval", "cval", "fval", "dval"})
-    CreatorRecord(int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
+    public CreatorRecord(int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
         this.id = id;
         this.name = name;
         this.lval = lval;
@@ -46,11 +48,16 @@ public class CreatorRecord {
         this.dval = dval;
     }
 
-    public static void main(String[] args) throws Exception {
-        CreatorRecord record = Creator.create(CreatorRecord.class).create(new Object[]{null, "ss", null, true, null, (short) 45, null, 4.3f, null});
+    @Test
+    public void run1() {
+        Creator<CreatorRecord> creator = Creator.create(CreatorRecord.class);
+        System.out.println(Arrays.toString(creator.paramTypes()));
+        CreatorRecord record = creator.create(new Object[]{null, "ss", null, true, null, (short) 45, null, 4.3f, null});
         String json = record.toString();
         System.out.println(json);
-        System.out.println(JsonConvert.root().convertFrom(CreatorRecord.class, json).toString());
+        String json2 = JsonConvert.root().convertFrom(CreatorRecord.class, json).toString();
+        System.out.println(json2);
+        Assertions.assertEquals(json, json2);
     }
 
     @Override
