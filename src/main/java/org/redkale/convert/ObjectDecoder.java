@@ -149,9 +149,10 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     if (!method.getName().startsWith("set")) {
                         continue;
                     }
-                    if (method.getReturnType() != void.class && method.getReturnType() != clazz) {
-                        continue;
-                    }
+                    //setter不再限制要求void返回类型
+//                    if (method.getReturnType() != void.class && method.getReturnType() != clazz) {
+//                        continue;
+//                    }
                     if (factory.isConvertDisabled(method)) {
                         continue;
                     }

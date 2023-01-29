@@ -11,7 +11,6 @@ import java.util.function.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.util.Attribute;
 
 /**
@@ -430,9 +429,9 @@ public interface Attribute<T, F> {
             if (!setter.getName().startsWith("set")) {
                 continue;
             }
-            if (setter.getReturnType() != void.class) {
-                continue;
-            }
+//            if (setter.getReturnType() != void.class) {
+//                continue;
+//            }
             if (setter.getParameterCount() != 1) {
                 continue;
             }
