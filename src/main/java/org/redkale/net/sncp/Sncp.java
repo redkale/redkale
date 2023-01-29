@@ -151,6 +151,10 @@ public abstract class Sncp {
         return rt2 == null ? service.getClass() : rt2.value();
     }
 
+    public static Class getServiceType(Service service) {
+        return isSncpDyn(service) && service.getClass().getSimpleName().startsWith("_Dyn") ? service.getClass().getSuperclass() : service.getClass();
+    }
+
     public static AnyValue getResourceConf(Service service) {
         if (service == null || !isSncpDyn(service)) {
             return null;
