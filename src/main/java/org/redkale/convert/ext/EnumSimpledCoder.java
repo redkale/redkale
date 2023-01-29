@@ -44,7 +44,13 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
                 char[] chs = fieldName.toCharArray();
                 chs[0] = Character.toUpperCase(chs[0]);
                 String methodName = "get" + new String(chs);
-                Method method = type.getMethod(methodName);
+                Method method = null;
+                try {
+                    method = type.getMethod(methodName);
+                } catch (NoSuchMethodException | SecurityException me) {
+                    method = type.getMethod(fieldName);
+                    methodName = fieldName;
+                }
                 RedkaleClassLoader.putReflectionMethod(methodName, method);
                 Map<E, Object> map1 = new HashMap<>();
                 Map<String, E> map2 = new HashMap<>();
