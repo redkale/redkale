@@ -305,6 +305,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         }
         this.serverChannel.open(config);
         serverChannel.bind(address, backlog);
+        SocketAddress localAddress = serverChannel.getLocalAddress();
+        if (localAddress instanceof InetSocketAddress) {
+            this.address = (InetSocketAddress) localAddress;
+        }
         serverChannel.accept(application, this);
         postStart();
         logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())

@@ -153,7 +153,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                                 if (++writeIndex >= writes) {
                                     writeIndex = 0;
                                 }
-                                accept(key, ioReadThreads[readIndex], ioWriteThreads[writeIndex]);
+                                accept(ioReadThreads[readIndex], ioWriteThreads[writeIndex]);
                             }
                         }
                         keys.clear();
@@ -166,7 +166,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         this.acceptThread.start();
     }
 
-    private void accept(SelectionKey key, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread) throws IOException {
+    private void accept(AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread) throws IOException {
         SocketChannel channel = this.serverChannel.accept();
         channel.configureBlocking(false);
         channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
@@ -192,6 +192,11 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                 }
             });
         }
+    }
+
+    @Override
+    public SocketAddress getLocalAddress() throws IOException {
+        return this.serverChannel.getLocalAddress();
     }
 
     @Override

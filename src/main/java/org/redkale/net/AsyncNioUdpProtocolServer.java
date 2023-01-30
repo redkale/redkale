@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
+import java.util.logging.Level;
 import org.redkale.boot.Application;
 import org.redkale.util.*;
 
@@ -110,7 +111,6 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, server.bufferCapacity, safeBufferPool);
         this.ioGroup.start();
         this.serverChannel.register(this.selector, SelectionKey.OP_READ);
-
         this.acceptThread = new Thread() {
             {
                 setName(String.format(threadNameFormat, "Accept"));
@@ -124,21 +124,41 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
                 final int writes = ioWriteThreads.length;
                 int readIndex = -1;
                 int writeIndex = -1;
+                Set<SelectionKey> keys = null;
+                final Selector sel = selector;
                 ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(null, 512, safeBufferPool);
                 while (!closed) {
-                    final ByteBuffer buffer = unsafeBufferPool.get();
                     try {
-                        SocketAddress address = serverChannel.receive(buffer);
-                        buffer.flip();
-                        if (++readIndex >= reads) {
-                            readIndex = 0;
+                        int count = sel.select();
+                        if (count == 0) {
+                            continue;
                         }
-                        if (++writeIndex >= writes) {
-                            writeIndex = 0;
+                        if (keys == null) {
+                            keys = selector.selectedKeys();
                         }
-                        accept(address, buffer, ioReadThreads[readIndex], ioWriteThreads[writeIndex]);
-                    } catch (Throwable t) {
-                        unsafeBufferPool.accept(buffer);
+                        for (SelectionKey key : keys) {
+                            if (key.isReadable()) {
+                                final ByteBuffer buffer = unsafeBufferPool.get();
+                                try {
+                                    SocketAddress address = serverChannel.receive(buffer);
+                                    buffer.flip();
+                                    if (++readIndex >= reads) {
+                                        readIndex = 0;
+                                    }
+                                    if (++writeIndex >= writes) {
+                                        writeIndex = 0;
+                                    }
+                                    accept(address, buffer, ioReadThreads[readIndex], ioWriteThreads[writeIndex]);
+                                } catch (Throwable t) {
+                                    unsafeBufferPool.accept(buffer);
+                                }
+                            }
+                        }
+                        keys.clear();
+                    } catch (Throwable ex) {
+                        if (!closed) {
+                            server.logger.log(Level.FINE, getName() + " selector run failed", ex);
+                        }
                     }
                 }
             }
@@ -165,6 +185,11 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
                 }
             });
         }
+    }
+
+    @Override
+    public SocketAddress getLocalAddress() throws IOException {
+        return this.serverChannel.getLocalAddress();
     }
 
     @Override

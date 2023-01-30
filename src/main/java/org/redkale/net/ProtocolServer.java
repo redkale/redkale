@@ -7,7 +7,7 @@ package org.redkale.net;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.*;
+import java.util.Set;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.util.AnyValue;
@@ -39,6 +39,8 @@ public abstract class ProtocolServer {
     public abstract <T> void setOption(SocketOption<T> name, T value) throws IOException;
 
     public abstract void accept(Application application, Server server) throws IOException;
+
+    public abstract SocketAddress getLocalAddress() throws IOException;
 
     public abstract void close() throws IOException;
 

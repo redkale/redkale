@@ -113,7 +113,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         } catch (Exception te) {
             channel.dispose();// response.init(channel); 在调用之前异常
             if (context.logger.isLoggable(Level.FINEST)) {
-                context.logger.log(Level.FINEST, "Servlet read channel erroneous, force to close channel ", te);
+                context.logger.log(Level.FINEST, "Servlet start read channel erroneous, force to close channel ", te);
             }
         }
     }
@@ -134,7 +134,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         } catch (Exception te) {
             channel.dispose();// response.init(channel); 在调用之前异常
             if (context.logger.isLoggable(Level.FINEST)) {
-                context.logger.log(Level.FINEST, "Servlet read channel erroneous, force to close channel ", te);
+                context.logger.log(Level.FINEST, "Servlet run read channel erroneous, force to close channel ", te);
             }
         }
     }
@@ -227,7 +227,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             channel.offerReadBuffer(attachment);
             response.error(exc);
             if (exc != null) {
-                request.context.logger.log(Level.FINER, "Servlet read channel erroneous, force to close channel ", exc);
+                request.context.logger.log(Level.FINER, "Servlet continue read channel erroneous, force to close channel ", exc);
             }
         }
     }

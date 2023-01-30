@@ -100,10 +100,11 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     @Override
     public boolean isConnected() {
-        if (!clientMode) {
+        if (clientMode) {
+            return this.channel.isConnected();
+        } else {
             return true;
         }
-        return this.channel.isConnected();
     }
 
     @Override
@@ -113,7 +114,11 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     @Override
     protected int implRead(ByteBuffer dst) throws IOException {
-        return this.channel.read(dst);
+        if (clientMode) {
+            return this.channel.read(dst);
+        } else {
+            return 0;
+        }
     }
 
     @Override

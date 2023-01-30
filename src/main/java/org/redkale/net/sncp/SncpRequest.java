@@ -65,7 +65,7 @@ public class SncpRequest extends Request<SncpContext> {
         //---------------------head----------------------------------
         if (this.readState == READ_STATE_ROUTE) {
             if (buffer.remaining() < HEADER_SIZE) {
-                return 1; //小于60
+                return HEADER_SIZE - buffer.remaining(); //小于60
             }
             this.seqid = buffer.getLong(); //8
             if (buffer.getChar() != HEADER_SIZE) { //2

@@ -302,6 +302,7 @@ public class AsyncIOGroup extends AsyncGroup {
 
     private AsyncNioUdpConnection newUDPClientConnection(final SocketAddress address) throws IOException {
         DatagramChannel channel = DatagramChannel.open();
+        channel.configureBlocking(false);
         AsyncIOThread readThread = null;
         AsyncIOThread writeThread = null;
         AsyncIOThread currThread = AsyncIOThread.currAsyncIOThread();

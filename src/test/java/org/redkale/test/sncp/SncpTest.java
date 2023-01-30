@@ -25,13 +25,11 @@ import org.redkale.util.*;
  */
 public class SncpTest {
 
-    private static final String serviceName = "";
-
     private static final String myhost = Utility.localInetAddress().getHostAddress();
 
-    private static final int port = 4040;
+    private static int port = 0;
 
-    private static final int port2 = 4240;
+    private static int port2 = 4240;
 
     private static final String protocol = "SNCP.TCP";
 
@@ -182,6 +180,7 @@ public class SncpTest {
                     System.out.println(service);
                     server.init(conf);
                     server.start();
+                    port = server.getSocketAddress().getPort();
                     cdl.countDown();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -206,7 +205,7 @@ public class SncpTest {
                 try {
                     AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
                     conf.addValue("host", "0.0.0.0");
-                    conf.addValue("port", "" + port2);
+                    conf.addValue("port", "" + (port2 < 10 ? 0 : port2));
                     conf.addValue("protocol", protocol);
                     SncpServer server = new SncpServer(null, System.currentTimeMillis(), conf, factory);
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
@@ -218,6 +217,7 @@ public class SncpTest {
                     server.addSncpServlet(service);
                     server.init(conf);
                     server.start();
+                    port2 = server.getSocketAddress().getPort();
                     cdl.countDown();
                 } catch (Exception e) {
                     e.printStackTrace();
