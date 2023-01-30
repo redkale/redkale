@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Stream;
+import org.redkale.annotation.Async;
 import org.redkale.boot.Application;
 import org.redkale.util.*;
 
@@ -42,6 +43,8 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     private final Object mappingLock = new Object();
 
     private Map<K, S> mappings = new HashMap<>();
+
+    private volatile boolean allFilterAsync = true;
 
     private final List<Filter<C, R, P>> filters = new ArrayList<>();
 
@@ -176,8 +179,14 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
         filter._conf = conf;
         synchronized (filters) {
             this.filters.add(filter);
+            this.allFilterAsync = this.allFilterAsync && isAsync(filter);
             Collections.sort(this.filters);
         }
+    }
+
+    private boolean isAsync(Filter filter) {
+        Async a = filter.getClass().getAnnotation(Async.class);
+        return a != null && a.value();
     }
 
     public <T extends Filter<C, R, P>> T removeFilter(Class<T> filterClass) {
@@ -232,6 +241,14 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
                 }
                 filter._next = null;
                 this.filters.remove(filter);
+                boolean async = true;
+                for (Filter f : filters) {
+                    async = async && isAsync(filter);
+                    if (!async) {
+                        break;
+                    }
+                }
+                this.allFilterAsync = async;
             }
             return (T) filter;
         }
@@ -245,7 +262,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     @SuppressWarnings("unchecked")
     public abstract void addServlet(S servlet, Object attachment, AnyValue conf, K... mappings);
 
-    public final void prepare(final R request, final P response) {
+    public final void dispatch(final R request, final P response) {
         try {
             Traces.computeCurrTraceid(request.getTraceid());
             request.prepare();

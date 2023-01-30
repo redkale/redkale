@@ -417,7 +417,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         contextConfig.maxBody = this.maxBody;
         contextConfig.charset = this.charset;
         contextConfig.serverAddress = this.address;
-        contextConfig.prepare = this.dispatcher;
+        contextConfig.dispatcher = this.dispatcher;
         contextConfig.resourceFactory = this.resourceFactory;
         contextConfig.aliveTimeoutSeconds = this.aliveTimeoutSeconds;
         contextConfig.readTimeoutSeconds = this.readTimeoutSeconds;

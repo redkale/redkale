@@ -42,7 +42,7 @@ public class Context {
     protected final int bufferCapacity;
 
     //服务的根Servlet
-    protected final DispatcherServlet prepare;
+    protected final DispatcherServlet dispatcher;
 
     //日志Logger
     protected final Logger logger;
@@ -80,12 +80,12 @@ public class Context {
     public Context(ContextConfig config) {
         this(config.serverStartTime, config.logger, config.workExecutor, config.sslBuilder, config.sslContext,
             config.bufferCapacity, config.maxConns, config.maxBody, config.charset, config.serverAddress, config.resourceFactory,
-            config.prepare, config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
+            config.dispatcher, config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
     }
 
     public Context(long serverStartTime, Logger logger, ExecutorService workExecutor, SSLBuilder sslBuilder, SSLContext sslContext,
         int bufferCapacity, final int maxConns, final int maxBody, Charset charset, InetSocketAddress address,
-        ResourceFactory resourceFactory, DispatcherServlet prepare, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
+        ResourceFactory resourceFactory, DispatcherServlet dispatcher, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
         this.logger = logger;
         this.workExecutor = workExecutor;
@@ -96,7 +96,7 @@ public class Context {
         this.maxBody = maxBody;
         this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
         this.serverAddress = address;
-        this.prepare = prepare;
+        this.dispatcher = dispatcher;
         this.resourceFactory = resourceFactory;
         this.aliveTimeoutSeconds = aliveTimeoutSeconds;
         this.readTimeoutSeconds = readTimeoutSeconds;
@@ -112,11 +112,11 @@ public class Context {
 
     protected void executeDispatch(Request request, Response response) {
         if (workHashExecutor != null) {
-            workHashExecutor.execute(request.getHashid(), () -> prepare.prepare(request, response));
+            workHashExecutor.execute(request.getHashid(), () -> dispatcher.dispatch(request, response));
         } else if (workExecutor != null) {
-            workExecutor.execute(() -> prepare.prepare(request, response));
+            workExecutor.execute(() -> dispatcher.dispatch(request, response));
         } else {
-            prepare.prepare(request, response);
+            dispatcher.dispatch(request, response);
         }
     }
 
@@ -245,7 +245,7 @@ public class Context {
         public int bufferCapacity;
 
         //服务的根Servlet
-        public DispatcherServlet prepare;
+        public DispatcherServlet dispatcher;
 
         //服务的监听地址
         public InetSocketAddress serverAddress;

@@ -3542,7 +3542,7 @@ public final class Rest {
                 if (ch >= '0' && ch <= '9') {
                     continue;
                 }
-                if (ch >= 'a' && ch <= 'a') {
+                if (ch >= 'a' && ch <= 'z') {
                     continue;
                 }
                 if (ch >= 'A' && ch <= 'Z') {
@@ -3586,7 +3586,7 @@ public final class Rest {
                 }
             }
             this.existsPound = pound;
-            this.newMethodName = formatMappingName(this.name.replace('/', '$').replace('.', '_'));
+            this.newMethodName = formatMappingName(this.name.replace('/', '$').replace('.', '_').replace('-', '_'));
             this.newActionClassName = "_Dyn_" + this.newMethodName + "_ActionHttpServlet";
         }
 
