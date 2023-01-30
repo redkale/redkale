@@ -30,12 +30,12 @@ public abstract class AsyncGroup {
         return new AsyncIOGroup(true, threadNameFormat, workExecutor, bufferCapacity, safeBufferPool);
     }
 
-    public static AsyncGroup create(boolean client, String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
-        return new AsyncIOGroup(client, threadNameFormat, workExecutor, bufferCapacity, bufferPoolSize);
+    public static AsyncGroup create(boolean clientMode, String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
+        return new AsyncIOGroup(clientMode, threadNameFormat, workExecutor, bufferCapacity, bufferPoolSize);
     }
 
-    public static AsyncGroup create(boolean client, String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
-        return new AsyncIOGroup(client, threadNameFormat, workExecutor, bufferCapacity, safeBufferPool);
+    public static AsyncGroup create(boolean clientMode, String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
+        return new AsyncIOGroup(clientMode, threadNameFormat, workExecutor, bufferCapacity, safeBufferPool);
     }
 
     public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address) {

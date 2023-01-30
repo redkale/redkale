@@ -62,8 +62,8 @@ public class AsyncIOGroup extends AsyncGroup {
         this(true, "Redkale-AnonymousClient-IOThread-%s", null, bufferCapacity, bufferPoolSize);
     }
 
-    public AsyncIOGroup(boolean client, String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
-        this(client, threadNameFormat, workExecutor, bufferCapacity, ObjectPool.createSafePool(null, null, bufferPoolSize,
+    public AsyncIOGroup(boolean clientMode, String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
+        this(clientMode, threadNameFormat, workExecutor, bufferCapacity, ObjectPool.createSafePool(null, null, bufferPoolSize,
             (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
                 if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) {
                     return false;
@@ -74,7 +74,7 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public AsyncIOGroup(boolean client, String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
+    public AsyncIOGroup(boolean clientMode, String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
         this.bufferCapacity = bufferCapacity;
         final int threads = Utility.cpus();
         this.ioReadThreads = new AsyncIOThread[threads];
@@ -89,7 +89,7 @@ public class AsyncIOGroup extends AsyncGroup {
         try {
             for (int i = 0; i < threads; i++) {
                 String indexfix = WorkThread.formatIndex(threads, i + 1);
-                if (client) {
+                if (clientMode) {
                     this.ioReadThreads[i] = createClientReadIOThread(g, String.format(threadNameFormat, "Read-" + indexfix), i, threads, workExecutor, safeBufferPool);
                     this.ioWriteThreads[i] = createClientWriteIOThread(g, String.format(threadNameFormat, "Write-" + indexfix), i, threads, workExecutor, safeBufferPool);
                 } else {
@@ -97,7 +97,7 @@ public class AsyncIOGroup extends AsyncGroup {
                     this.ioWriteThreads[i] = this.ioReadThreads[i];
                 }
             }
-            if (client) {
+            if (clientMode) {
                 this.connectThread = createClientReadIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
             } else {
                 this.connectThread = null;

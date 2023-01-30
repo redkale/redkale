@@ -860,6 +860,11 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     @Override
+    protected Serializable getRequestid() {
+        return null;
+    }
+
+    @Override
     protected void prepare() {
         this.keepAlive = true; //默认HTTP/1.1
     }

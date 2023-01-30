@@ -5,7 +5,7 @@
  */
 package org.redkale.net;
 
-import java.io.InputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import org.redkale.convert.ConvertDisabled;
@@ -77,7 +77,6 @@ public abstract class Request<C extends Context> {
         return null;
     }
 
-    //重载此方法，不设置pipelineIndex值可以将协议改成无pipeline模式
     protected Request pipeline(int pipelineIndex, int pipelineCount) {
         this.pipelineIndex = pipelineIndex;
         this.pipelineCount = pipelineCount;
@@ -93,6 +92,8 @@ public abstract class Request<C extends Context> {
      * @return 缺少的字节数
      */
     protected abstract int readHeader(ByteBuffer buffer, Request last);
+
+    protected abstract Serializable getRequestid();
 
     protected abstract void prepare();
 

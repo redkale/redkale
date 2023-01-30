@@ -92,9 +92,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SelectionKey writeKey;
 
-    public AsyncNioConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
+    public AsyncNioConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
         AsyncIOThread ioWriteThread, final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext) {
-        super(client, ioGroup, ioReadThread, ioWriteThread, bufferCapacity, sslBuilder, sslContext);
+        super(clientMode, ioGroup, ioReadThread, ioWriteThread, bufferCapacity, sslBuilder, sslContext);
         this.connectThread = ioGroup.connectThread;
     }
 

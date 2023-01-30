@@ -23,9 +23,9 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     private final DatagramChannel channel;
 
-    public AsyncNioUdpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
+    public AsyncNioUdpConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
         AsyncIOThread ioWriteThread, DatagramChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress address) {
-        super(client, ioGroup, ioReadThread, ioWriteThread, ioGroup.bufferCapacity, sslBuilder, sslContext);
+        super(clientMode, ioGroup, ioReadThread, ioWriteThread, ioGroup.bufferCapacity, sslBuilder, sslContext);
         this.channel = ch;
         SocketAddress addr = address;
         if (addr == null) {
@@ -100,7 +100,7 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     @Override
     public boolean isConnected() {
-        if (!client) {
+        if (!clientMode) {
             return true;
         }
         return this.channel.isConnected();
@@ -153,7 +153,7 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
     @Override
     public final void close() throws IOException {
         super.close();
-        if (client) {
+        if (clientMode) {
             channel.close(); //不能关闭channel
         }
         if (this.connectKey != null) {

@@ -177,7 +177,7 @@ public class AsyncIOThread extends WorkThread {
                         continue;
                     }
                     AsyncNioConnection conn = (AsyncNioConnection) key.attachment();
-                    if (conn.client) {
+                    if (conn.clientMode) {
                         if (key.isConnectable()) {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_CONNECT);
                             conn.doConnect();

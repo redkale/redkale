@@ -26,9 +26,9 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
 
     private final SocketChannel channel;
 
-    public AsyncNioTcpConnection(boolean client, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
+    public AsyncNioTcpConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
         AsyncIOThread ioWriteThread, SocketChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress address) {
-        super(client, ioGroup, ioReadThread, ioWriteThread, ioGroup.bufferCapacity, sslBuilder, sslContext);
+        super(clientMode, ioGroup, ioReadThread, ioWriteThread, ioGroup.bufferCapacity, sslBuilder, sslContext);
         this.channel = ch;
         SocketAddress addr = address;
         if (addr == null) {

@@ -5,7 +5,7 @@
  */
 package org.redkale.net;
 
-import java.io.*;
+import java.io.FileInputStream;
 import java.security.*;
 import java.security.cert.*;
 import java.util.*;
@@ -151,7 +151,7 @@ public class SSLBuilder {
         return sslContext;
     }
 
-    public SSLEngine createSSLEngine(SSLContext sslContext, boolean client) {
+    public SSLEngine createSSLEngine(SSLContext sslContext, boolean clientMode) {
         SSLEngine engine = sslContext.createSSLEngine();
         if (protocols != null) {
             engine.setEnabledProtocols(protocols);
@@ -159,7 +159,7 @@ public class SSLBuilder {
         if (ciphers != null) {
             engine.setEnabledCipherSuites(ciphers);
         }
-        engine.setUseClientMode(client);
+        engine.setUseClientMode(clientMode);
         if (wantClientAuth) {
             engine.setWantClientAuth(true);
         } else if (needClientAuth) {

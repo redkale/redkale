@@ -34,9 +34,9 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
 
     private ByteBuffer buffer;
 
-    public AsyncNioCompletionHandler(boolean readFlag, AsyncNioConnection conn) {
+    public AsyncNioCompletionHandler(boolean readMode, AsyncNioConnection conn) {
         this.conn = conn;
-        this.readMode = readFlag;
+        this.readMode = readMode;
     }
 
     public void handler(CompletionHandler<Integer, A> handler, A attachment) {

@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.logging.*;
@@ -109,6 +110,11 @@ public class SncpRequest extends Request<SncpContext> {
             return rs;
         }
         return 0;
+    }
+
+    @Override
+    protected Serializable getRequestid() {
+        return seqid;
     }
 
     @Override

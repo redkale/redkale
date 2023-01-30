@@ -162,12 +162,16 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 if (pindex == 0) {
                     pindex++;
                 }
-                request.pipeline(pindex, pindex + 1);
+                if (request.getRequestid() == null) { //存在requestid则无视pipeline模式
+                    request.pipeline(pindex, pindex + 1);
+                }
                 if (hreq == null) {
                     hreq = request.copyHeader();
                 }
             } else {
-                request.pipeline(pindex, pindex);
+                if (request.getRequestid() == null) { //存在requestid则无视pipeline模式
+                    request.pipeline(pindex, pindex);
+                }
                 channel.setReadBuffer(buffer.clear());
             }
             context.executeDispatch(request, response);
