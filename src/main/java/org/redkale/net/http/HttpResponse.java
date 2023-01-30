@@ -1338,7 +1338,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                             fileChannel.close();
                         } catch (IOException ie) {
                         }
-                        finishBytesHandler.completed(result, attachment);
+                        finishBytesIOThreadHandler.completed(result, attachment);
                         return;
                     }
                     if (fileChannel == null) {

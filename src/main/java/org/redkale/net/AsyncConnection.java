@@ -464,11 +464,11 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         return writer != null && writer.position() > 0;
     }
 
-    public final void flushPipelineData(CompletionHandler<Integer, Void> handler) {
-        flushPipelineData(null, handler);
+    public final void writePipeline(CompletionHandler<Integer, Void> handler) {
+        writePipeline(null, handler);
     }
 
-    public <A> void flushPipelineData(A attachment, CompletionHandler<Integer, ? super A> handler) {
+    public <A> void writePipeline(A attachment, CompletionHandler<Integer, ? super A> handler) {
         ByteBufferWriter writer = this.pipelineWriter;
         this.pipelineWriter = null;
         if (writer == null) {
@@ -496,13 +496,29 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         }
     }
 
-    //返回pipelineCount个数数据是否全部写入完毕
-    public final boolean writePipelineData(int pipelineIndex, int pipelineCount, ByteTuple array) {
-        return writePipelineData(pipelineIndex, pipelineCount, array.content(), array.offset(), array.length());
+    public final void writePipelineInIOThread(CompletionHandler<Integer, Void> handler) {
+        if (inCurrWriteThread()) {
+            writePipeline(handler);
+        } else {
+            executeWrite(() -> writePipeline(handler));
+        }
+    }
+
+    public final <A> void writePipelineInIOThread(A attachment, CompletionHandler<Integer, ? super A> handler) {
+        if (inCurrWriteThread()) {
+            writePipeline(attachment, handler);
+        } else {
+            executeWrite(() -> writePipeline(attachment, handler));
+        }
     }
 
     //返回pipelineCount个数数据是否全部写入完毕
-    public boolean writePipelineData(int pipelineIndex, int pipelineCount, byte[] bs, int offset, int length) {
+    public final boolean appendPipeline(int pipelineIndex, int pipelineCount, ByteTuple array) {
+        return appendPipeline(pipelineIndex, pipelineCount, array.content(), array.offset(), array.length());
+    }
+
+    //返回pipelineCount个数数据是否全部写入完毕
+    public boolean appendPipeline(int pipelineIndex, int pipelineCount, byte[] bs, int offset, int length) {
         synchronized (pipelineLock) {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
@@ -535,12 +551,12 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
     }
 
     //返回pipelineCount个数数据是否全部写入完毕
-    public final boolean writePipelineData(int pipelineIndex, int pipelineCount, ByteTuple header, ByteTuple body) {
-        return writePipelineData(pipelineIndex, pipelineCount, header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length());
+    public final boolean appendPipeline(int pipelineIndex, int pipelineCount, ByteTuple header, ByteTuple body) {
+        return appendPipeline(pipelineIndex, pipelineCount, header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length());
     }
 
     //返回pipelineCount个数数据是否全部写入完毕
-    public boolean writePipelineData(int pipelineIndex, int pipelineCount, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+    public boolean appendPipeline(int pipelineIndex, int pipelineCount, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
         synchronized (pipelineLock) {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
