@@ -25,7 +25,7 @@ import org.redkale.util.*;
 public abstract class AbstractCacheSource extends AbstractService implements CacheSource, AutoCloseable, Resourcable {
 
     //@since 2.8.0  复用另一source资源
-    public static final String CACHE_SOURCE_SOURCE = "source";
+    public static final String CACHE_SOURCE_RESOURCE = "resource";
 
     //@since 2.7.0
     public static final String CACHE_SOURCE_URL = "url";
