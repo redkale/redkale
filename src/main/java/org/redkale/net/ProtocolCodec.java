@@ -24,6 +24,8 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
 
     private final Consumer<Response> responseConsumer;
 
+    private final ReadCompletionHandler readHandler = new ReadCompletionHandler();
+
     private AsyncConnection channel;
 
     private Response resp;
@@ -186,30 +188,47 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             }
         } else {
             channel.setReadBuffer(buffer);
-            channel.read(new CompletionHandler<Integer, ByteBuffer>() {
-
-                @Override
-                public void completed(Integer count, ByteBuffer attachment) {
-                    if (count < 1) {
-                        channel.offerReadBuffer(attachment);
-                        channel.dispose();
-                        return;
-                    }
-                    attachment.flip();
-                    decode(attachment, response, pipelineIndex, lastReq);
-                }
-
-                @Override
-                public void failed(Throwable exc, ByteBuffer attachment) {
-                    context.prepare.incrIllegalRequestCounter();
-                    channel.offerReadBuffer(attachment);
-                    response.error(exc);
-                    if (exc != null) {
-                        request.context.logger.log(Level.FINER, "Servlet read channel erroneous, force to close channel ", exc);
-                    }
-                }
-            });
+            channel.read(readHandler.prepare(request, response, pipelineIndex, lastReq));
         }
     }
 
+    private class ReadCompletionHandler implements CompletionHandler<Integer, ByteBuffer> {
+
+        private Request request;
+
+        private Response response;
+
+        private int pipelineIndex;
+
+        private Request lastReq;
+
+        public ReadCompletionHandler prepare(Request request, Response response, int pipelineIndex, Request lastReq) {
+            this.request = request;
+            this.response = response;
+            this.pipelineIndex = pipelineIndex;
+            this.lastReq = lastReq;
+            return this;
+        }
+
+        @Override
+        public void completed(Integer count, ByteBuffer attachment) {
+            if (count < 1) {
+                channel.offerReadBuffer(attachment);
+                channel.dispose();
+                return;
+            }
+            attachment.flip();
+            decode(attachment, response, pipelineIndex, lastReq);
+        }
+
+        @Override
+        public void failed(Throwable exc, ByteBuffer attachment) {
+            context.prepare.incrIllegalRequestCounter();
+            channel.offerReadBuffer(attachment);
+            response.error(exc);
+            if (exc != null) {
+                request.context.logger.log(Level.FINER, "Servlet read channel erroneous, force to close channel ", exc);
+            }
+        }
+    }
 }
