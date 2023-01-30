@@ -30,7 +30,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             public void run() {
                 try {
                     Thread.sleep(1000);
-                    System.out.println(Thread.currentThread().getName() + " 运行了异步方法-----------queryResultAsync方法");
+                    System.out.println(Thread.currentThread().getName() + " sleep 1秒后运行了异步方法-----------queryResultAsync方法");
                     future.complete("异步result: " + bean);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -83,10 +83,9 @@ public class SncpTestServiceImpl implements SncpTestIService {
     }
 
     @Override
-    public void insert(SncpTestBean... beans) {
-        for (SncpTestBean bean : beans) {
-            bean.setId(System.currentTimeMillis());
-        }
+    public SncpTestBean insert(SncpTestBean bean) {
+        bean.setId(System.currentTimeMillis());
+        return bean;
     }
 
     @Override

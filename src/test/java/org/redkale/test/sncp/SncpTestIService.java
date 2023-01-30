@@ -22,7 +22,7 @@ public interface SncpTestIService extends Service {
 
     public CompletableFuture<String> queryResultAsync(SncpTestBean bean);
 
-    public void insert(SncpTestBean... beans);
+    public SncpTestBean insert(SncpTestBean bean);
 
     public String updateBean(SncpTestBean bean);
 }

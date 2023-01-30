@@ -612,7 +612,7 @@ public final class Application {
         DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("redkale.net.transport.pool.maxconns", "100"))
             .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("redkale.net.transport.ping.interval", "30"))
             .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("redkale.net.transport.check.interval", "30"));
-        this.sncpTransportFactory.init(tarnsportConf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
+        this.sncpTransportFactory.init(tarnsportConf, ByteBuffer.wrap(Sncp.getPingBytes()).asReadOnlyBuffer(), Sncp.getPongBytes().length);
         this.clusterAgent = cluster;
         this.messageAgents = mqs;
         if (compileMode || this.classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {

@@ -251,6 +251,22 @@ public final class ByteArray implements ByteTuple {
     }
 
     /**
+     * 获取指定位置的Uint128值,须确保0 &lt;= offset+16 &lt; length
+     *
+     * @param offset 位置
+     *
+     * @return Uint128值
+     */
+    public Uint128 getUint128(int offset) {
+        return Uint128.create(new byte[]{
+            content[offset], content[offset + 1], content[offset + 2], content[offset + 3],
+            content[offset + 4], content[offset + 5], content[offset + 6], content[offset + 7],
+            content[offset + 8], content[offset + 9], content[offset + 10], content[offset + 11],
+            content[offset + 12], content[offset + 13], content[offset + 14], content[offset + 15]
+        });
+    }
+
+    /**
      * 获取最后一个字节值,调用前须保证count大于0
      *
      * @return byte值
@@ -749,6 +765,29 @@ public final class ByteArray implements ByteTuple {
      */
     public ByteArray putDouble(int offset, double value) {
         return this.putLong(offset, Double.doubleToLongBits(value));
+    }
+
+    /**
+     * 写入一个Uint128值
+     *
+     * @param value Uint128值
+     *
+     * @return ByteArray
+     */
+    public ByteArray putUint128(Uint128 value) {
+        return this.put(value.directBytes());
+    }
+
+    /**
+     * 指定位置写入一个Uint128值， content.length 必须不能小于offset+16
+     *
+     * @param offset 偏移量
+     * @param value  Uint128值
+     *
+     * @return ByteArray
+     */
+    public ByteArray putUint128(int offset, Uint128 value) {
+        return this.put(offset, value.directBytes());
     }
 
     public ByteArray putByte(short value) {

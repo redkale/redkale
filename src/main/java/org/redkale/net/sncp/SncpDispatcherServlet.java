@@ -21,6 +21,8 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
 
     private final Object sncplock = new Object();
 
+    private final byte[] pongBytes = Sncp.getPongBytes();
+
     @Override
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, Uint128... mappings) {
         synchronized (sncplock) {
@@ -70,7 +72,7 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         if (request.isPing()) {
-            response.finishBuffer(false, Sncp.PONG_BUFFER.duplicate());
+            response.finish(pongBytes);
             return;
         }
         SncpServlet servlet = (SncpServlet) mappingServlet(request.getServiceid());

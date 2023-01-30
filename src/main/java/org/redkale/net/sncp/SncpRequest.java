@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.util.logging.*;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.net.Request;
+import static org.redkale.net.sncp.Sncp.HEADER_SIZE;
 import org.redkale.util.Uint128;
 
 /**
@@ -21,8 +22,6 @@ import org.redkale.util.Uint128;
  * @author zhangjx
  */
 public class SncpRequest extends Request<SncpContext> {
-
-    public static final int HEADER_SIZE = 60;
 
     public static final byte[] DEFAULT_HEADER = new byte[HEADER_SIZE];
 
@@ -63,14 +62,6 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override  //request.header与response.header数据格式保持一致
     protected int readHeader(ByteBuffer buffer, Request last) {
-        if (buffer.remaining() == Sncp.PING_BUFFER.remaining()) {
-            if (buffer.hasRemaining()) {
-                buffer.get(new byte[buffer.remaining()]);
-            }
-            this.ping = true;  //Sncp.PING_BUFFER
-            this.readState = READ_STATE_END;
-            return 0;
-        }
         //---------------------head----------------------------------
         if (this.readState == READ_STATE_ROUTE) {
             if (buffer.remaining() < HEADER_SIZE) {
@@ -89,7 +80,7 @@ public class SncpRequest extends Request<SncpContext> {
             buffer.get(addrBytes); //ipaddr   //6
             this.bodyLength = buffer.getInt(); //4
 
-            if (buffer.getInt() != 0) { //4
+            if (buffer.getInt() != 0) { //4  retcode
                 if (context.getLogger().isLoggable(Level.FINEST)) {
                     context.getLogger().finest("sncp buffer header.retcode not 0");
                 }
@@ -100,6 +91,13 @@ public class SncpRequest extends Request<SncpContext> {
         }
         //---------------------body----------------------------------
         if (this.readState == READ_STATE_BODY) {
+            if (this.bodyLength == 0) {
+                this.readState = READ_STATE_END;
+                if (this.seqid == 0 && this.serviceid == Uint128.ZERO && this.actionid == Uint128.ZERO) {
+                    this.ping = true;
+                }
+                return 0;
+            }
             int len = Math.min(this.bodyLength, buffer.remaining());
             buffer.get(body, 0, len);
             this.bodyOffset = len;

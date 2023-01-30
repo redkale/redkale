@@ -18,6 +18,7 @@ import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
 import org.redkale.net.*;
+import static org.redkale.net.sncp.Sncp.HEADER_SIZE;
 import org.redkale.net.sncp.Sncp.SncpDyn;
 import static org.redkale.net.sncp.SncpRequest.*;
 import static org.redkale.net.sncp.SncpResponse.fillRespHeader;
@@ -61,9 +62,6 @@ public final class SncpClient {
     protected final SncpMessageClient messageClient;
 
     protected final String topic;
-
-    @Resource
-    protected JsonConvert jsonConvert;
 
     @Resource
     protected BsonConvert bsonConvert;

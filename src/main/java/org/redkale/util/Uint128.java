@@ -29,7 +29,7 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
             (byte) (v2 >> 24), (byte) (v2 >> 16), (byte) (v2 >> 8), (byte) v2};
     }
 
-    protected Uint128(byte[] bytes) {
+    private Uint128(byte[] bytes) {
         if (bytes == null || bytes.length != 16) {
             throw new NumberFormatException("Not 16 length bytes");
         }
@@ -44,29 +44,31 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
         return value;
     }
 
-    public static Uint128 create(byte[] bytes) {
-        return new Uint128(bytes);
+    public static Uint128 create(byte[] bs) {
+        if (bs[15] == 0 && bs[14] == 0 && bs[13] == 0 && bs[12] == 0
+            && bs[11] == 0 && bs[10] == 0 && bs[9] == 0 && bs[8] == 0
+            && bs[7] == 0 && bs[6] == 0 && bs[5] == 0 && bs[4] == 0
+            && bs[3] == 0 && bs[2] == 0 && bs[1] == 0 && bs[0] == 0) {
+            return ZERO;
+        }
+        return new Uint128(bs);
     }
 
     public static Uint128 read(ByteBuffer buffer) {
         byte[] bs = new byte[16];
         buffer.get(bs);
+        if (bs[15] == 0 && bs[14] == 0 && bs[13] == 0 && bs[12] == 0
+            && bs[11] == 0 && bs[10] == 0 && bs[9] == 0 && bs[8] == 0
+            && bs[7] == 0 && bs[6] == 0 && bs[5] == 0 && bs[4] == 0
+            && bs[3] == 0 && bs[2] == 0 && bs[1] == 0 && bs[0] == 0) {
+            return ZERO;
+        }
         return new Uint128(bs);
     }
 
     public static ByteBuffer write(ByteBuffer buffer, Uint128 dlong) {
         buffer.put(dlong.value);
         return buffer;
-    }
-
-    public static ByteArray write(ByteArray array, Uint128 dlong) {
-        array.put(dlong.value);
-        return array;
-    }
-
-    public static ByteArray write(ByteArray array, int offset, Uint128 dlong) {
-        array.put(offset, dlong.value);
-        return array;
     }
 
     public boolean equals(byte[] bytes) {

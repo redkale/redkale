@@ -6,10 +6,10 @@
 package org.redkale.test.sncp;
 
 import org.redkale.convert.bson.BsonFactory;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.Id;
-import org.redkale.util.Utility;
 import org.redkale.source.FilterBean;
-import org.redkale.convert.json.*;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -23,13 +23,14 @@ public class SncpTestBean implements FilterBean {
     private String content;
 
     public static void main(String[] args) throws Exception {
-        SncpTestBean bean = JsonConvert.root().convertFrom(SncpTestBean.class, "{\"content\":\"数据: 01\",\"id\":1}");
+        String json = "{\"content\":\"数据: 01\",\"id\":1}";
+        SncpTestBean bean = JsonConvert.root().convertFrom(SncpTestBean.class, json);
         System.out.println(bean);
         byte[] bs = BsonFactory.root().getConvert().convertTo(bean);
-        Utility.println("---------", bs); 
+        Utility.println("---------", bs);
         System.out.println(BsonFactory.root().getConvert().convertFrom(SncpTestBean.class, bs).toString());
     }
-    
+
     @Override
     public String toString() {
         return JsonConvert.root().convertTo(this);

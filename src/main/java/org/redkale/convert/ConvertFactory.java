@@ -1102,6 +1102,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             decoder = createStreamDecoder(type);
         } else if (Map.class.isAssignableFrom(clazz)) {
             decoder = createMapDecoder(type);
+        } else if (CompletionHandler.class.isAssignableFrom(clazz)) {
+            decoder = CompletionHandlerSimpledCoder.instance;
         } else if (Optional.class == clazz) {
             decoder = new OptionalCoder(this, type);
         } else if (clazz == Object.class) {

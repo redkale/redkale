@@ -11,7 +11,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import org.redkale.annotation.*;
@@ -38,9 +37,20 @@ import org.redkale.util.*;
  */
 public abstract class Sncp {
 
-    public static final ByteBuffer PING_BUFFER = ByteBuffer.wrap("PING".getBytes()).asReadOnlyBuffer();
+    public static final int HEADER_SIZE = 60;
 
-    public static final ByteBuffer PONG_BUFFER = ByteBuffer.wrap("PONG".getBytes()).asReadOnlyBuffer();
+    private static final byte[] PING_BYTES = new ByteArray(HEADER_SIZE)
+        .putLong(0L) //8 seqid
+        .putChar((char) HEADER_SIZE) //2 headerSize
+        .putUint128(Uint128.ZERO) //16 serviceid
+        .putInt(0) //4 serviceVersion
+        .putUint128(Uint128.ZERO) //16 actionid
+        .put(new byte[6]) //6 addr 
+        .putInt(0) //4 bodyLength
+        .putInt(0) //4 retcode
+        .getBytes();
+
+    private static final byte[] PONG_BYTES = Arrays.copyOf(PING_BYTES, PING_BYTES.length);
 
     static final String FIELDPREFIX = "_redkale";
 
@@ -68,6 +78,14 @@ public abstract class Sncp {
     }
 
     private Sncp() {
+    }
+
+    public static byte[] getPingBytes() {
+        return Arrays.copyOf(PING_BYTES, PING_BYTES.length);
+    }
+
+    public static byte[] getPongBytes() {
+        return Arrays.copyOf(PONG_BYTES, PONG_BYTES.length);
     }
 
     public static Uint128 actionid(final RpcAction action) {

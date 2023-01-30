@@ -6,6 +6,7 @@
 package org.redkale.test.net;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import org.redkale.net.*;
@@ -41,7 +42,7 @@ public class TransportTest {
         Thread.sleep(1000);
         TransportFactory factory = TransportFactory.create(asyncGroup, 0, 0);
         DefaultAnyValue conf = DefaultAnyValue.create(TransportFactory.NAME_PINGINTERVAL, 5);
-        factory.init(conf, Sncp.PING_BUFFER, Sncp.PONG_BUFFER.remaining());
+        factory.init(conf, ByteBuffer.wrap(Sncp.getPingBytes()).asReadOnlyBuffer(), Sncp.getPingBytes().length);
         Transport transport = factory.createTransportTCP("", null, addrs);
         System.out.println(String.format(format, System.currentTimeMillis()));
         try {

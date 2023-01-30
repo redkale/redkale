@@ -5,10 +5,9 @@
  */
 package org.redkale.net.sncp;
 
-import java.nio.ByteBuffer;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
-import static org.redkale.net.sncp.SncpRequest.HEADER_SIZE;
+import static org.redkale.net.sncp.Sncp.HEADER_SIZE;
 import org.redkale.util.*;
 
 /**
@@ -67,14 +66,9 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         return super.recycle();
     }
 
-    @Override
-    protected void finishBuffer(boolean kill, ByteBuffer buffer) {
-        super.finishBuffer(kill, buffer);
-    }
-
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
-            final ByteArray buffer = new ByteArray(SncpRequest.HEADER_SIZE);
+            final ByteArray buffer = new ByteArray(HEADER_SIZE);
             fillHeader(buffer, 0, retcode);
             finish(buffer);
             return;
@@ -96,13 +90,13 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         int offset = 0;
         buffer.putLong(offset, seqid);
         offset += 8;
-        buffer.putChar(offset, (char) SncpRequest.HEADER_SIZE);
+        buffer.putChar(offset, (char) HEADER_SIZE);
         offset += 2;
-        Uint128.write(buffer, offset, serviceid);
+        buffer.putUint128(offset, serviceid);
         offset += 16;
         buffer.putInt(offset, serviceVersion);
         offset += 4;
-        Uint128.write(buffer, offset, actionid);
+        buffer.putUint128(offset, actionid);
         offset += 16;
         buffer.put(offset, addrBytes);
         offset += addrBytes.length; //4
