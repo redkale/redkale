@@ -3563,7 +3563,7 @@ public final class Rest {
             }
             this.methodIdx = methodIndex;
             this.ignore = mapping.ignore();
-            String n = formatMappingName(mapping.name());
+            String n = mapping.name();
             if (n.isEmpty()) {
                 n = method.getName();
             }
@@ -3586,7 +3586,7 @@ public final class Rest {
                 }
             }
             this.existsPound = pound;
-            this.newMethodName = this.name.replace('/', '$').replace('.', '_');
+            this.newMethodName = formatMappingName(this.name.replace('/', '$').replace('.', '_'));
             this.newActionClassName = "_Dyn_" + this.newMethodName + "_ActionHttpServlet";
         }
 

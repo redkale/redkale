@@ -1246,6 +1246,13 @@ public final class Application {
                 logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
+            if (!sourceConf.getValue(AbstractCacheSource.CACHE_SOURCE_SOURCE, "").isEmpty()) {
+                CacheSource source = loadCacheSource(sourceConf.getValue(AbstractCacheSource.CACHE_SOURCE_SOURCE), autoMemory);
+                if (source != null) {
+                    resourceFactory.register(sourceName, CacheSource.class, source);
+                }
+                return source;
+            }
             try {
                 CacheSource source = AbstractCacheSource.createCacheSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
                 cacheSources.add(source);
@@ -1280,6 +1287,17 @@ public final class Application {
                 dataSources.add(source);
                 resourceFactory.register(sourceName, DataSource.class, source);
                 logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
+                return source;
+            }
+            if (!sourceConf.getValue(AbstractDataSource.DATA_SOURCE_SOURCE, "").isEmpty()) {
+                DataSource source = loadDataSource(sourceConf.getValue(AbstractDataSource.DATA_SOURCE_SOURCE), autoMemory);
+                if (source != null) {
+                    if (source instanceof DataMemorySource && DataMemorySource.isSearchType(sourceConf)) {
+                        resourceFactory.register(sourceName, SearchSource.class, source);
+                    } else {
+                        resourceFactory.register(sourceName, DataSource.class, source);
+                    }
+                }
                 return source;
             }
             try {

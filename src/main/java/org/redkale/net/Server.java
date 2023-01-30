@@ -300,9 +300,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.dispatcher.init(this.context, config); //不能在init方法内执行，因Server.init执行后会调用loadService,loadServlet, 再执行Server.start
         this.postPrepareInit();
         this.serverChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
-        if (application != null) { //main函数调试时可能为null
-            application.getResourceFactory().inject(this.serverChannel);
-        }
+        this.resourceFactory.inject(this.serverChannel);
         this.serverChannel.open(config);
         serverChannel.bind(address, backlog);
         SocketAddress localAddress = serverChannel.getLocalAddress();
