@@ -35,7 +35,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected CompletionHandler<Void, Object> connectCompletionHandler;
 
-    protected boolean connectPending;
+    protected volatile boolean connectPending;
 
     protected SelectionKey connectKey;
 
@@ -48,7 +48,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected CompletionHandler<Integer, ByteBuffer> readCompletionHandler;
 
-    protected boolean readPending;
+    protected volatile boolean readPending;
 
     protected SelectionKey readKey;
 
@@ -88,7 +88,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected CompletionHandler<Integer, Object> writeCompletionHandler;
 
-    protected boolean writePending;
+    protected volatile boolean writePending;
 
     protected SelectionKey writeKey;
 
@@ -285,92 +285,93 @@ abstract class AsyncNioConnection extends AsyncConnection {
     public void doWrite(boolean direct) {
         try {
             this.writetime = System.currentTimeMillis();
-            final boolean invokeDirect = direct;
             int totalCount = 0;
             boolean hasRemain = true;
             boolean writeCompleted = true;
-            while (invokeDirect && hasRemain) { //必须要将buffer写完为止
-                if (writeByteTuple1Array != null) {
-                    final ByteBuffer buffer = pollWriteBuffer();
-                    if (buffer.remaining() >= writeByteTuple1Length + writeByteTuple2Length) {
-                        buffer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
-                        if (writeByteTuple2Length > 0) {
-                            buffer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
-                            if (writeByteTuple2Callback != null) {
-                                writeByteTuple2Callback.accept(writeByteTuple2Attachment);
+            if (direct) {
+                while (hasRemain) { //必须要将buffer写完为止
+                    if (writeByteTuple1Array != null) {
+                        final ByteBuffer buffer = pollWriteBuffer();
+                        if (buffer.remaining() >= writeByteTuple1Length + writeByteTuple2Length) {
+                            buffer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
+                            if (writeByteTuple2Length > 0) {
+                                buffer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
+                                if (writeByteTuple2Callback != null) {
+                                    writeByteTuple2Callback.accept(writeByteTuple2Attachment);
+                                }
                             }
-                        }
-                        buffer.flip();
-                        writeByteBuffer = buffer;
-                        writeByteTuple1Array = null;
-                        writeByteTuple1Offset = 0;
-                        writeByteTuple1Length = 0;
-                        writeByteTuple2Array = null;
-                        writeByteTuple2Offset = 0;
-                        writeByteTuple2Length = 0;
-                        writeByteTuple2Callback = null;
-                        writeByteTuple2Attachment = null;
-                    } else {
-                        ByteBufferWriter writer = ByteBufferWriter.create(getWriteBufferSupplier(), buffer);
-                        writer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
-                        if (writeByteTuple2Length > 0) {
-                            writer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
-                            if (writeByteTuple2Callback != null) {
-                                writeByteTuple2Callback.accept(writeByteTuple2Attachment);
-                            }
-                        }
-                        final ByteBuffer[] buffers = writer.toBuffers();
-                        writeByteBuffers = buffers;
-                        writeOffset = 0;
-                        writeLength = buffers.length;
-                        writeByteTuple1Array = null;
-                        writeByteTuple1Offset = 0;
-                        writeByteTuple1Length = 0;
-                        writeByteTuple2Array = null;
-                        writeByteTuple2Offset = 0;
-                        writeByteTuple2Length = 0;
-                        writeByteTuple2Callback = null;
-                        writeByteTuple2Attachment = null;
-                    }
-                    if (this.writeCompletionHandler == this.writeTimeoutCompletionHandler) {
-                        if (writeByteBuffer == null) {
-                            this.writeTimeoutCompletionHandler.buffers(writeByteBuffers);
+                            buffer.flip();
+                            writeByteBuffer = buffer;
+                            writeByteTuple1Array = null;
+                            writeByteTuple1Offset = 0;
+                            writeByteTuple1Length = 0;
+                            writeByteTuple2Array = null;
+                            writeByteTuple2Offset = 0;
+                            writeByteTuple2Length = 0;
+                            writeByteTuple2Callback = null;
+                            writeByteTuple2Attachment = null;
                         } else {
-                            this.writeTimeoutCompletionHandler.buffer(writeByteBuffer);
+                            ByteBufferWriter writer = ByteBufferWriter.create(getWriteBufferSupplier(), buffer);
+                            writer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
+                            if (writeByteTuple2Length > 0) {
+                                writer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
+                                if (writeByteTuple2Callback != null) {
+                                    writeByteTuple2Callback.accept(writeByteTuple2Attachment);
+                                }
+                            }
+                            final ByteBuffer[] buffers = writer.toBuffers();
+                            writeByteBuffers = buffers;
+                            writeOffset = 0;
+                            writeLength = buffers.length;
+                            writeByteTuple1Array = null;
+                            writeByteTuple1Offset = 0;
+                            writeByteTuple1Length = 0;
+                            writeByteTuple2Array = null;
+                            writeByteTuple2Offset = 0;
+                            writeByteTuple2Length = 0;
+                            writeByteTuple2Callback = null;
+                            writeByteTuple2Attachment = null;
+                        }
+                        if (this.writeCompletionHandler == this.writeTimeoutCompletionHandler) {
+                            if (writeByteBuffer == null) {
+                                this.writeTimeoutCompletionHandler.buffers(writeByteBuffers);
+                            } else {
+                                this.writeTimeoutCompletionHandler.buffer(writeByteBuffer);
+                            }
                         }
                     }
-                }
-                int writeCount;
-                if (writeByteBuffer != null) {
-                    writeCount = implWrite(writeByteBuffer);
-                    hasRemain = writeByteBuffer.hasRemaining();
-                } else {
-                    writeCount = implWrite(writeByteBuffers, writeOffset, writeLength);
-                    boolean remain = false;
-                    for (int i = writeByteBuffers.length - 1; i >= writeOffset; i--) {
-                        if (writeByteBuffers[i].hasRemaining()) {
-                            remain = true;
-                            break;
+                    int writeCount;
+                    if (writeByteBuffer != null) {
+                        writeCount = implWrite(writeByteBuffer);
+                        hasRemain = writeByteBuffer.hasRemaining();
+                    } else {
+                        writeCount = implWrite(writeByteBuffers, writeOffset, writeLength);
+                        boolean remain = false;
+                        for (int i = writeByteBuffers.length - 1; i >= writeOffset; i--) {
+                            if (writeByteBuffers[i].hasRemaining()) {
+                                remain = true;
+                                break;
+                            }
                         }
+                        hasRemain = remain;
                     }
-                    hasRemain = remain;
-                }
-                if (writeCount == 0) {
-                    if (hasRemain) {
-                        writeCompleted = false;
-                        writeTotal = totalCount;
+                    if (writeCount == 0) {
+                        if (hasRemain) {
+                            writeCompleted = false;
+                            writeTotal = totalCount;
+                        }
+                        break;
+                    } else if (writeCount < 0) {
+                        if (totalCount == 0) {
+                            totalCount = writeCount;
+                        }
+                        break;
+                    } else {
+                        totalCount += writeCount;
                     }
-                    break;
-                } else if (writeCount < 0) {
-                    if (totalCount == 0) {
-                        totalCount = writeCount;
+                    if (!hasRemain) {
+                        break;
                     }
-                    break;
-                } else {
-                    totalCount += writeCount;
-                }
-                if (!hasRemain) {
-                    break;
                 }
             }
 
@@ -468,8 +469,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
         return new InputStream() {
 
             ByteBuffer bb;
-
-            int count;
 
             @Override
             public synchronized int read() throws IOException {
