@@ -181,7 +181,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     protected final ConvertBytesHandler convertHandler = new ConvertBytesHandler() {
         @Override
         public <A> void completed(byte[] bs, int offset, int length, Consumer<A> callback, A attachment) {
-            finish(bs, offset, length, callback, attachment);
+            HttpResponse.this.finish(bs, offset, length, callback, attachment);
         }
     };
 
@@ -356,7 +356,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param convert 指定的JsonConvert
      * @param obj     输出对象
      */
-    public void finishJson(final JsonConvert convert, final Object obj) {
+    public void finishJson(final Convert convert, final Object obj) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) {
             this.output = obj;
@@ -394,11 +394,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 将对象以JSON格式输出
      *
-     * @param convert 指定的JsonConvert
+     * @param convert 指定的Convert
      * @param type    指定的类型
      * @param obj     输出对象
      */
-    public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
+    public void finishJson(final Convert convert, final Type type, final Object obj) {
         this.contentType = this.jsonContentType;
         if (this.recycleListener != null) {
             this.output = obj;
@@ -445,7 +445,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 //        if (convert == jsonRootConvert) {
 //            JsonBytesWriter writer = jsonWriter;
 //            convert.convertTo(writer.clear(), type, ret);
-//            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
+//            finishFuture(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
 //        } else {
 //            convert.convertToBytes(type, ret, convertHandler);
 //        }
@@ -453,12 +453,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 将RetResult对象以JSON格式输出
      *
-     * @param convert 指定的JsonConvert
+     * @param convert 指定的Convert
      * @param type    指定的RetResult泛型类型
      * @param ret     RetResult输出对象
      */
 //    @Deprecated //@since 2.5.0
-//    public void finishJson(final JsonConvert convert, Type type, org.redkale.service.RetResult ret) {
+//    public void finishJson(final Convert convert, Type type, org.redkale.service.RetResult ret) {
 //        this.contentType = this.jsonContentType;
 //        if (this.retResultHandler != null) {
 //            ret = this.retResultHandler.apply(this.request, ret);
@@ -471,7 +471,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 //        if (convert == jsonRootConvert) {
 //            JsonBytesWriter writer = jsonWriter;
 //            convert.convertTo(writer.clear(), type, ret);
-//            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
+//            finishFuture(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
 //        } else {
 //            convert.convertToBytes(type, ret, convertHandler);
 //        }
@@ -479,14 +479,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 将CompletableFuture的结果对象以JSON格式输出
      *
-     * @param convert   指定的JsonConvert
+     * @param convert   指定的Convert
      * @param valueType 指定CompletableFuture.value的泛型类型
      * @param future    输出对象的句柄
      */
 //    @Deprecated //@since 2.5.0
 //    @SuppressWarnings("unchecked")
-//    public void finishJson(final JsonConvert convert, final Type valueType, final CompletableFuture future) {
-//        finish(convert, valueType, future);
+//    public void finishJson(final Convert convert, final Type valueType, final CompletableFuture future) {
+//        finishFuture(convert, valueType, future);
 //    }
     /**
      * 将RetResult对象输出
@@ -606,8 +606,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType CompletionFuture.value的泛型类型
      * @param future    CompletionStage输出对象
      */
-    public void finish(Type valueType, CompletionStage future) {
-        finish(request.getRespConvert(), valueType, future);
+    public void finishFuture(Type valueType, CompletionStage future) {
+        finishFuture(request.getRespConvert(), valueType, future);
     }
 
     /**
@@ -617,7 +617,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType CompletionFuture.value的泛型类型
      * @param future    CompletionStage输出对象
      */
-    public void finish(final Convert convert, Type valueType, CompletionStage future) {
+    public void finishFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
             if (e != null) {
                 context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletionStage", (Throwable) e);
@@ -629,6 +629,38 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 return;
             }
             finish(convert, valueType, v);
+        });
+    }
+
+    /**
+     * 将CompletionStage对象输出
+     *
+     * @param valueType CompletionFuture.value的泛型类型
+     * @param future    CompletionStage输出对象
+     */
+    public void finishJsonFuture(Type valueType, CompletionStage future) {
+        finishJsonFuture(request.getRespConvert(), valueType, future);
+    }
+
+    /**
+     * 将CompletionStage对象输出
+     *
+     * @param convert   指定的Convert
+     * @param valueType CompletionFuture.value的泛型类型
+     * @param future    CompletionStage输出对象
+     */
+    public void finishJsonFuture(final Convert convert, Type valueType, CompletionStage future) {
+        future.whenComplete((v, e) -> {
+            if (e != null) {
+                context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletionStage", (Throwable) e);
+                if (e instanceof TimeoutException) {
+                    finish504();
+                } else {
+                    finish500();
+                }
+                return;
+            }
+            finishJson(convert, valueType, v);
         });
     }
 
@@ -652,7 +684,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param publisher Publisher输出对象
      */
     public <T> void finishPublisher(final Convert convert, Type valueType, Flow.Publisher<T> publisher) {
-        finish(convert, valueType, (CompletionStage) Flows.createMonoFuture(publisher));
+        finishFuture(convert, valueType, (CompletionStage) Flows.createMonoFuture(publisher));
     }
 
     /**
@@ -673,7 +705,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param publisher Publisher输出对象
      */
     public void finishPublisher(final Convert convert, Type valueType, Object publisher) {
-        finish(convert, valueType, (CompletionStage) Flows.maybePublisherToFuture(publisher));
+        finishFuture(convert, valueType, (CompletionStage) Flows.maybePublisherToFuture(publisher));
     }
 
     /**
@@ -681,8 +713,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param future HttpScope输出异步对象
      */
-    public void finishScope(CompletionStage<HttpScope> future) {
-        finish(request.getRespConvert(), future);
+    public void finishScopeFuture(CompletionStage<HttpScope> future) {
+        finishScopeFuture(request.getRespConvert(), future);
     }
 
     /**
@@ -691,7 +723,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param convert 指定的Convert
      * @param future  HttpScope输出异步对象
      */
-    public void finishScope(final Convert convert, CompletionStage<HttpScope> future) {
+    public void finishScopeFuture(final Convert convert, CompletionStage<HttpScope> future) {
         future.whenComplete((v, e) -> {
             if (e != null) {
                 context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletionStage", (Throwable) e);
@@ -795,7 +827,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             }
             finish("null");
         } else if (val instanceof CompletionStage) {
-            finish(convert, val == obj ? type : null, (CompletionStage) val);
+            finishFuture(convert, val == obj ? type : null, (CompletionStage) val);
         } else if (val instanceof CharSequence) {
             finish((String) val.toString());
         } else if (val instanceof byte[]) {
@@ -945,7 +977,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (cacheHandler != null) {
             cacheHandler.accept(this, data.getBytes());
         }
-        //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finish
+        //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finishFuture
         super.finish(false, data.content(), 0, data.length());
     }
 
@@ -1193,13 +1225,13 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 将文件按指定文件名输出
      *
-     * @param filename 输出文件名
+     * @param fileName 输出文件名
      * @param file     输出文件
      *
      * @throws IOException IO异常
      */
-    public void finish(final String filename, File file) throws IOException {
-        finishFile(filename, file, null);
+    public void finish(final String fileName, File file) throws IOException {
+        finishFile(fileName, file, null);
     }
 
     /**
@@ -1610,7 +1642,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 //
 //        @Override
 //        public void failed(Throwable exc, Void attachment) {
-//            finish(true);
+//            finishFuture(true);
 //            try {
 //                filechannel.close();
 //            } catch (IOException e) {

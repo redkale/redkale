@@ -202,7 +202,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
 
         @Override
-        public void finishJson(final JsonConvert convert, final Object obj) {
+        public void finishJson(final Convert convert, final Object obj) {
             finish(convert, (Type) null, obj);
         }
 
@@ -212,7 +212,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
 
         @Override
-        public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
+        public void finishJson(final Convert convert, final Type type, final Object obj) {
             if (future == null) {
                 return;
             }

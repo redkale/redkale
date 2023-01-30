@@ -3061,10 +3061,32 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScope", "(" + convertDesc + stageDesc + ")V", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScopeFuture", "(" + convertDesc + stageDesc + ")V", false);
                     } else {
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScope", "(" + stageDesc + ")V", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScopeFuture", "(" + stageDesc + ")V", false);
+                    }
+                } else if (returnGenericNoFutureType != byte[].class
+                    && returnGenericNoFutureType != RetResult.class
+                    && returnGenericNoFutureType != HttpResult.class
+                    && returnGenericNoFutureType != File.class
+                    && !((returnGenericNoFutureType instanceof Class) && (((Class) returnGenericNoFutureType).isPrimitive() || CharSequence.class.isAssignableFrom((Class) returnGenericNoFutureType)))) {
+                    if (rcs != null && rcs.length > 0) {
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
+                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        mv.visitInsn(AALOAD);
+                        mv.visitVarInsn(ALOAD, maxLocals);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsonFuture", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
+                    } else {
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
+                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        mv.visitInsn(AALOAD);
+                        mv.visitVarInsn(ALOAD, maxLocals);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsonFuture", "(" + typeDesc + stageDesc + ")V", false);
                     }
                 } else {
                     if (rcs != null && rcs.length > 0) {
@@ -3075,14 +3097,14 @@ public final class Rest {
                         MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishFuture", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
                     } else {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
                         MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + stageDesc + ")V", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishFuture", "(" + typeDesc + stageDesc + ")V", false);
                     }
                 }
                 mv.visitInsn(RETURN);
@@ -3120,7 +3142,7 @@ public final class Rest {
                     MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + Type.getDescriptor(JsonConvert.class) + typeDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");

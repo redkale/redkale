@@ -125,7 +125,7 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finishJson(final JsonConvert convert, final Object obj) {
+    public void finishJson(final Convert convert, final Object obj) {
         if (message.isEmptyRespTopic()) {
             if (callback != null) {
                 callback.run();
@@ -148,7 +148,7 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finishJson(final JsonConvert convert, final Type type, final Object obj) {
+    public void finishJson(final Convert convert, final Type type, final Object obj) {
         if (message.isEmptyRespTopic()) {
             if (callback != null) {
                 callback.run();
@@ -166,7 +166,7 @@ public class HttpMessageResponse extends HttpResponse {
             }
             return;
         }
-        finishHttpResult(type, new HttpResult(ret));
+        finish(type, new HttpResult(ret));
 
     }
 

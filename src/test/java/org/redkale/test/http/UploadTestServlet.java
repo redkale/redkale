@@ -5,11 +5,8 @@
  */
 package org.redkale.test.http;
 
-import org.redkale.net.http.HttpServlet;
-import org.redkale.net.http.MultiPart;
-import org.redkale.net.http.HttpRequest;
-import org.redkale.net.http.HttpResponse;
-import java.io.*;
+import java.io.IOException;
+import org.redkale.net.http.*;
 
 /**
  *
