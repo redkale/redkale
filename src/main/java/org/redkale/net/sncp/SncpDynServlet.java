@@ -60,14 +60,14 @@ public final class SncpDynServlet extends SncpServlet {
             actions.put(en.getKey(), action);
         }
         maxNameLength.set(Math.max(maxNameLength.get(), serviceResourceName.length() + 1));
-        maxTypeLength.set(Math.max(maxTypeLength.get(), type.getName().length()));
+        maxTypeLength.set(Math.max(maxTypeLength.get(), serviceType.getName().length()));
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.getClass().getSimpleName()).append(" (type=").append(type.getName());
-        int len = this.maxTypeLength.get() - type.getName().length();
+        sb.append(this.getClass().getSimpleName()).append(" (type=").append(serviceType.getName());
+        int len = this.maxTypeLength.get() - serviceType.getName().length();
         for (int i = 0; i < len; i++) {
             sb.append(' ');
         }
@@ -90,7 +90,7 @@ public final class SncpDynServlet extends SncpServlet {
             return 1;
         }
         SncpDynServlet o = (SncpDynServlet) o0;
-        int rs = this.type.getName().compareTo(o.type.getName());
+        int rs = this.serviceType.getName().compareTo(o.serviceType.getName());
         if (rs == 0) {
             rs = this.serviceName.compareTo(o.serviceName);
         }

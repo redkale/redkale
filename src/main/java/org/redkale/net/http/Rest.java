@@ -1040,7 +1040,7 @@ public final class Rest {
         if (controller != null && controller.ignore()) {
             throw new RestException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
         }
-        final boolean serrpconly = controller != null && controller.rpconly();
+        final boolean serRpcOnly = controller != null && controller.rpconly();
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         String stname = serviceType.getSimpleName();
         if (stname.startsWith("Service")) { //类似ServiceWatchService这样的类保留第一个Service字样
@@ -1058,8 +1058,8 @@ public final class Rest {
             }
             T obj = (T) newClazz.getDeclaredConstructor().newInstance();
 
-            final String defmodulename = getWebModuleNameLowerCase(serviceType);
-            final String bigmodulename = getWebModuleName(serviceType);
+            final String defModuleName = getWebModuleNameLowerCase(serviceType);
+            final String bigModuleName = getWebModuleName(serviceType);
             final Map<String, Object> classMap = new LinkedHashMap<>();
 
             final List<MappingEntry> entrys = new ArrayList<>();
@@ -1068,7 +1068,7 @@ public final class Rest {
 
             final List<Object[]> restConverts = new ArrayList<>();
             final Map<java.lang.reflect.Type, String> typeRefs = new LinkedHashMap<>();
-            final Map<String, Method> mappingurlToMethod = new HashMap<>();
+            final Map<String, Method> mappingUrlToMethod = new HashMap<>();
             final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
             final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
 
@@ -1082,7 +1082,7 @@ public final class Rest {
                     s = Arrays.toString(m1.getParameterTypes()).compareTo(Arrays.toString(m2.getParameterTypes()));
                     return s;
                 });
-                int methodidex = 0;
+                int methodIdex = 0;
                 for (final Method method : allMethods) {
                     if (Modifier.isStatic(method.getModifiers())) {
                         continue;
@@ -1125,22 +1125,22 @@ public final class Rest {
                     paramTypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
                     retvalTypes.add(formatRestReturnType(method, serviceType));
                     if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                        MappingEntry entry = new MappingEntry(serrpconly, methodidex, null, bigmodulename, method);
+                        MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, null, bigModuleName, method);
                         entrys.add(entry);
                     } else {
                         for (RestMapping mapping : mappings) {
-                            MappingEntry entry = new MappingEntry(serrpconly, methodidex, mapping, defmodulename, method);
+                            MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, mapping, defModuleName, method);
                             entrys.add(entry);
                         }
                     }
-                    methodidex++;
+                    methodIdex++;
                 }
                 Collections.sort(entrys);
             }
-            { //restConverts、typeRefs、mappingurlToMethod、restAttributes、bodyTypes赋值
+            { //restConverts、typeRefs、mappingUrlToMethod、restAttributes、bodyTypes赋值
                 final int headIndex = 10;
                 for (final MappingEntry entry : entrys) {
-                    mappingurlToMethod.put(entry.mappingurl, entry.mappingMethod);
+                    mappingUrlToMethod.put(entry.mappingurl, entry.mappingMethod);
                     final Method method = entry.mappingMethod;
                     final Class returnType = method.getReturnType();
                     final Parameter[] params = method.getParameters();
@@ -1469,7 +1469,7 @@ public final class Rest {
             tmpentrysfield.setAccessible(true);
             HashMap<String, HttpServlet.ActionEntry> innerEntryMap = (HashMap) restactMethod.invoke(obj);
             for (Map.Entry<String, HttpServlet.ActionEntry> en : innerEntryMap.entrySet()) {
-                Method m = mappingurlToMethod.get(en.getKey());
+                Method m = mappingUrlToMethod.get(en.getKey());
                 if (m != null) {
                     en.getValue().annotations = HttpServlet.ActionEntry.annotations(m);
                 }
@@ -1587,14 +1587,14 @@ public final class Rest {
             paramTypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
             retvalTypes.add(formatRestReturnType(method, serviceType));
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                MappingEntry entry = new MappingEntry(serrpconly, methodidex, null, bigmodulename, method);
+                MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, null, bigmodulename, method);
                 if (entrys.contains(entry)) {
                     throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                 }
                 entrys.add(entry);
             } else {
                 for (RestMapping mapping : mappings) {
-                    MappingEntry entry = new MappingEntry(serrpconly, methodidex, mapping, defmodulename, method);
+                    MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, mapping, defmodulename, method);
                     if (entrys.contains(entry)) {
                         throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                     }
@@ -2687,7 +2687,7 @@ public final class Rest {
                     } else {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;");
-                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                         mv.visitInsn(AALOAD);
                         int paramidx = -1;
                         for (int i = 0; i < params.length; i++) {
@@ -2897,7 +2897,7 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                 mv.visitInsn(AALOAD);
                 mv.visitMethodInsn(INVOKESTATIC, retInternalName, "success", "()" + retDesc, false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + typeDesc + "Ljava/lang/Object;)V", false);
@@ -3003,14 +3003,14 @@ public final class Rest {
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + retDesc + ")V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + retDesc + ")V", false);
@@ -3025,14 +3025,14 @@ public final class Rest {
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + httpResultDesc + ")V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + httpResultDesc + ")V", false);
@@ -3076,14 +3076,14 @@ public final class Rest {
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsonFuture", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
                     } else {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsonFuture", "(" + typeDesc + stageDesc + ")V", false);
@@ -3094,14 +3094,14 @@ public final class Rest {
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishFuture", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
                     } else {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                        MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishFuture", "(" + typeDesc + stageDesc + ")V", false);
@@ -3117,14 +3117,14 @@ public final class Rest {
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishPublisher", "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishPublisher", "(" + typeDesc + "Ljava/lang/Object;)V", false);
@@ -3139,14 +3139,14 @@ public final class Rest {
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + typeDesc + "Ljava/lang/Object;)V", false);
@@ -3161,14 +3161,14 @@ public final class Rest {
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    MethodDebugVisitor.pushInt(mv, entry.methodidx);//方法下标
+                    MethodDebugVisitor.pushInt(mv, entry.methodIdx);//方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + "Ljava/lang/Object;)V", false);
@@ -3497,7 +3497,7 @@ public final class Rest {
 
     private static class RestClassLoader extends ClassLoader {
 
-        private Map<String, byte[]> classes = new HashMap<>();
+        private final Map<String, byte[]> classes = new HashMap<>();
 
         public RestClassLoader(ClassLoader parent) {
             super(parent);
@@ -3533,13 +3533,37 @@ public final class Rest {
             }
         }
 
-        public MappingEntry(final boolean serrpconly, int methodidx, RestMapping mapping, final String defmodulename, Method method) {
+        private static String formatMappingName(String name) {
+            if (name.isEmpty()) {
+                return name;
+            }
+            boolean normal = true; //是否包含特殊字符
+            for (char ch : name.toCharArray()) {
+                if (ch >= '0' && ch <= '9') {
+                    continue;
+                }
+                if (ch >= 'a' && ch <= 'a') {
+                    continue;
+                }
+                if (ch >= 'A' && ch <= 'Z') {
+                    continue;
+                }
+                if (ch == '_' || ch == '$') {
+                    continue;
+                }
+                normal = false;
+                break;
+            }
+            return normal ? name : Utility.md5Hex(name);
+        }
+
+        public MappingEntry(final boolean serRpcOnly, int methodIndex, RestMapping mapping, final String defModuleName, Method method) {
             if (mapping == null) {
                 mapping = DEFAULT__MAPPING;
             }
-            this.methodidx = methodidx;
+            this.methodIdx = methodIndex;
             this.ignore = mapping.ignore();
-            String n = mapping.name();
+            String n = formatMappingName(mapping.name());
             if (n.isEmpty()) {
                 n = method.getName();
             }
@@ -3548,7 +3572,7 @@ public final class Rest {
             this.mappingMethod = method;
             this.methods = mapping.methods();
             this.auth = mapping.auth();
-            this.rpconly = serrpconly || mapping.rpconly();
+            this.rpconly = serRpcOnly || mapping.rpconly();
             this.actionid = mapping.actionid();
             this.cacheSeconds = mapping.cacheSeconds();
             this.comment = mapping.comment();
@@ -3566,7 +3590,7 @@ public final class Rest {
             this.newActionClassName = "_Dyn_" + this.newMethodName + "_ActionHttpServlet";
         }
 
-        public final int methodidx; // _paramtypes 的下标，从0开始
+        public final int methodIdx; // _paramtypes 的下标，从0开始
 
         public final Method mappingMethod;
 

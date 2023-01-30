@@ -20,7 +20,7 @@ import org.redkale.util.Uint128;
  */
 public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse> implements Comparable<SncpServlet> {
 
-    protected final Class type;
+    protected final Class serviceType;
 
     protected final String serviceName;
 
@@ -28,7 +28,7 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
 
     protected SncpServlet(String serviceResourceName, Class serviceResourceType, Service service) {
         this.serviceName = serviceResourceName;
-        this.type = serviceResourceType;
+        this.serviceType = serviceResourceType;
         this.service = service;
     }
 
@@ -41,7 +41,7 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
     }
 
     public Class getServiceType() {
-        return type;
+        return serviceType;
     }
 
     public abstract Uint128 getServiceid();
