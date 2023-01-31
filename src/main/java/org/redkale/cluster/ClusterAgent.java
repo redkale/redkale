@@ -253,15 +253,15 @@ public abstract class ClusterAgent {
     }
 
     protected String generateApplicationServiceName() {
-        return "application" + (appName == null || appName.isEmpty() ? "" : ("." + appName)) + ".node." + this.nodeid;
+        return "application.node" + (appName == null || appName.isEmpty() ? "" : ("." + appName));
     }
 
     protected String generateApplicationServiceType() {
         return "application.nodes";
     }
 
-    protected String generateApplicationServiceId() { //与serviceName相同
-        return generateApplicationServiceName();
+    protected String generateApplicationServiceId() {
+        return generateApplicationServiceName() + "." + this.nodeid;
     }
 
     protected String generateApplicationCheckName() {
@@ -377,7 +377,7 @@ public abstract class ClusterAgent {
         //以协议+Rest资源名为主  服务类名
         public String serviceName;
 
-        public String resourceType;
+        public String serviceType;
 
         public String resourceName;
 
@@ -405,7 +405,7 @@ public abstract class ClusterAgent {
             this.serviceName = generateServiceName(ns, protocol, service);
             this.checkid = generateCheckId(ns, protocol, service);
             this.checkName = generateCheckName(ns, protocol, service);
-            this.resourceType = Sncp.getResourceType(service).getName();
+            this.serviceType = Sncp.getResourceType(service).getName();
             this.resourceName = Sncp.getResourceName(service);
             this.protocol = protocol;
             InetSocketAddress addr = ns.getSocketAddress();
