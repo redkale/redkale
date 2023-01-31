@@ -846,7 +846,8 @@ public final class ResourceFactory {
                             if (classType.isPrimitive() || classType == Integer.class
                                 || classType == Long.class || classType == Short.class
                                 || classType == Boolean.class || classType == Byte.class
-                                || classType == Float.class || classType == Double.class || classType == BigInteger.class) {
+                                || classType == Float.class || classType == Double.class
+                                || classType == BigInteger.class || classType == BigDecimal.class) {
                                 re = findEntry(rcname, String.class);
                                 if (re == null && rcname.startsWith("property.")) { //兼容2.8.0之前版本自动追加property.开头的配置项
                                     re = findEntry(rcname.substring("property.".length()), String.class);
@@ -874,7 +875,7 @@ public final class ResourceFactory {
                                     || classType == Long.class || classType == Short.class
                                     || classType == Boolean.class || classType == Byte.class
                                     || classType == Float.class || classType == Double.class
-                                    || classType == BigInteger.class) {
+                                    || classType == BigInteger.class || classType == BigDecimal.class) {
                                     re = findEntry(rcname, String.class);
                                 } else {
                                     re = findEntry(rcname, classType);
@@ -901,10 +902,11 @@ public final class ResourceFactory {
                         }
                     }
                     if (rs != null && !rs.getClass().isPrimitive() && (classType.isPrimitive()
-                        || classType == Integer.class || classType == Long.class
-                        || classType == Short.class || classType == Boolean.class
-                        || classType == Byte.class || classType == Float.class
-                        || classType == Double.class || classType == BigInteger.class)) {
+                        || classType == Integer.class
+                        || classType == Long.class || classType == Short.class
+                        || classType == Boolean.class || classType == Byte.class
+                        || classType == Float.class || classType == Double.class
+                        || classType == BigInteger.class || classType == BigDecimal.class)) {
                         if (classType == int.class || classType == Integer.class) {
                             rs = Integer.decode(rs.toString());
                         } else if (classType == long.class || classType == Long.class) {
@@ -921,6 +923,8 @@ public final class ResourceFactory {
                             rs = Double.parseDouble(rs.toString());
                         } else if (classType == BigInteger.class) {
                             rs = new BigInteger(rs.toString());
+                        } else if (classType == BigDecimal.class) {
+                            rs = new BigDecimal(rs.toString());
                         }
                     }
                     if (rs != null) {

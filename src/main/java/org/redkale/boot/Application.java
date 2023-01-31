@@ -1758,7 +1758,7 @@ public final class Application {
             throw new IllegalArgumentException("serviceClass is null");
         }
         final Application application = Application.create(true);
-        System.setProperty("red" + "kale.singleton.serviceclass", serviceClass.getName());
+        System.setProperty("redkale.singleton.serviceclass", serviceClass.getName());
         if (extServiceClasses != null && extServiceClasses.length > 0) {
             StringBuilder sb = new StringBuilder();
             for (Class clazz : extServiceClasses) {
@@ -1767,7 +1767,7 @@ public final class Application {
                 }
                 sb.append(clazz.getName());
             }
-            System.setProperty("red" + "kale.singleton.extserviceclasses", sb.toString());
+            System.setProperty("redkale.singleton.extserviceclasses", sb.toString());
         }
         application.init();
         application.start();

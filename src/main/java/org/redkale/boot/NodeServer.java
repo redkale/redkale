@@ -176,8 +176,8 @@ public abstract class NodeServer {
 
         ClassFilter<Service> serviceFilter = createServiceClassFilter();
         if (application.isSingletonMode()) { //singleton模式下只加载指定的Service
-            final String ssc = System.getProperty("red" + "kale.singleton.serviceclass");
-            final String extssc = System.getProperty("red" + "kale.singleton.extserviceclasses");
+            final String ssc = System.getProperty("redkale.singleton.serviceclass");
+            final String extssc = System.getProperty("redkale.singleton.extserviceclasses");
             if (ssc != null) {
                 final List<String> sscList = new ArrayList<>();
                 sscList.add(ssc);

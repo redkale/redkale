@@ -51,7 +51,7 @@ public class OneOrList<T> implements java.io.Serializable {
     }
 
     //序列化
-    protected static Encodeable<JsonWriter, OneOrList> createEncoder(final org.redkale.convert.json.JsonFactory factory, final Type type) {
+    protected static Encodeable<JsonWriter, OneOrList> createEncoder(final JsonFactory factory, final Type type) {
         Type itemType = parseItemType(type);
         if (itemType == null) {
             return null;
@@ -79,7 +79,7 @@ public class OneOrList<T> implements java.io.Serializable {
     }
 
     //反序列化
-    protected static Decodeable<JsonReader, OneOrList> createDecoder(final org.redkale.convert.json.JsonFactory factory, final Type type) {
+    protected static Decodeable<JsonReader, OneOrList> createDecoder(final JsonFactory factory, final Type type) {
         Type itemType = parseItemType(type);
         if (itemType == null) {
             return null;
