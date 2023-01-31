@@ -118,8 +118,9 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
     @Override
     @SuppressWarnings("unchecked")
     protected SncpContext createContext() {
-        this.bufferCapacity = Math.max(this.bufferCapacity, 8 * 1024);
-
+        if (!"UDP".equalsIgnoreCase(netprotocol)) {
+            this.bufferCapacity = Math.max(this.bufferCapacity, 8 * 1024);
+        }
         final SncpContextConfig contextConfig = new SncpContextConfig();
         initContextConfig(contextConfig);
 

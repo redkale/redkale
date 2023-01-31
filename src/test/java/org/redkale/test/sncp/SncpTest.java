@@ -12,7 +12,7 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import org.redkale.boot.LoggingBaseHandler;
+import org.redkale.boot.*;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
@@ -31,13 +31,14 @@ public class SncpTest {
 
     private static int port2 = 4240;
 
-    private static final String protocol = "SNCP.TCP";
+    private static final String protocol = "SNCP.UDP";
 
     private static final ResourceFactory factory = ResourceFactory.create();
 
     public static void main(String[] args) throws Exception {
         LoggingBaseHandler.initDebugLogConfig();
         factory.register("", BsonConvert.class, BsonFactory.root().getConvert());
+        factory.register("", Application.class, Application.create(true));
         if (System.getProperty("client") == null) {
             runServer();
             if (port2 > 0) {

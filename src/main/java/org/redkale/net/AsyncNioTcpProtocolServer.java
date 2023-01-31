@@ -61,10 +61,10 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             this.serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
         }
         if (options.contains(StandardSocketOptions.SO_RCVBUF)) {
-            this.serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+            this.serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 32 * 1024);
         }
         if (options.contains(StandardSocketOptions.SO_SNDBUF)) {
-            this.serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
+            this.serverChannel.setOption(StandardSocketOptions.SO_SNDBUF, 32 * 1024);
         }
     }
 
