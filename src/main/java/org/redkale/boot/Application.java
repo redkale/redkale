@@ -310,9 +310,6 @@ public final class Application {
             if (System.getProperty("redkale.net.transport.checkinterval") == null) {
                 System.setProperty("redkale.net.transport.checkinterval", "30");
             }
-            if (System.getProperty("redkale.convert.tiny") == null) {
-                System.setProperty("redkale.convert.tiny", "true");
-            }
             if (System.getProperty("redkale.convert.pool.size") == null) {
                 System.setProperty("redkale.convert.pool.size", "128");
             }
