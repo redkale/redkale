@@ -377,7 +377,9 @@ public abstract class ClusterAgent {
         //以协议+Rest资源名为主  服务类名
         public String serviceName;
 
-        public String serviceType;
+        public String resourceType;
+
+        public String resourceName;
 
         public String checkid;
 
@@ -403,7 +405,8 @@ public abstract class ClusterAgent {
             this.serviceName = generateServiceName(ns, protocol, service);
             this.checkid = generateCheckId(ns, protocol, service);
             this.checkName = generateCheckName(ns, protocol, service);
-            this.serviceType = Sncp.getResourceType(service).getName();
+            this.resourceType = Sncp.getResourceType(service).getName();
+            this.resourceName = Sncp.getResourceName(service);
             this.protocol = protocol;
             InetSocketAddress addr = ns.getSocketAddress();
             String host = addr.getHostString();

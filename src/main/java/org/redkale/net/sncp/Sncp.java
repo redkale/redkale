@@ -153,20 +153,12 @@ public abstract class Sncp {
 
     public static String getResourceName(Service service) {
         Resource res = service.getClass().getAnnotation(Resource.class);
-        if (res != null) {
-            return res.name();
-        }
-        javax.annotation.Resource res2 = service.getClass().getAnnotation(javax.annotation.Resource.class);
-        return res2 == null ? null : res2.name();
+        return res != null ? res.name() : null;
     }
 
     public static Class getResourceType(Service service) {
         ResourceType type = service.getClass().getAnnotation(ResourceType.class);
-        if (type != null) {
-            return type.value();
-        }
-        org.redkale.util.ResourceType rt2 = service.getClass().getAnnotation(org.redkale.util.ResourceType.class);
-        return rt2 == null ? service.getClass() : rt2.value();
+        return type != null ? type.value() : service.getClass();
     }
 
     public static Class getServiceType(Service service) {

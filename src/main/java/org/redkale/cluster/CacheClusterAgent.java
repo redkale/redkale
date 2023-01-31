@@ -175,6 +175,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     protected void checkLocalHealth(final ClusterEntry entry) {
         AddressEntry newaddr = new AddressEntry();
         newaddr.addr = entry.address;
+        newaddr.resname = entry.resourceName;
         newaddr.nodeid = this.nodeid;
         newaddr.time = System.currentTimeMillis();
         source.hset(entry.checkName, entry.checkid, AddressEntry.class, newaddr);
@@ -266,6 +267,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         ClusterEntry clusterEntry = new ClusterEntry(ns, protocol, service);
         AddressEntry entry = new AddressEntry();
         entry.addr = clusterEntry.address;
+        entry.resname = clusterEntry.resourceName;
         entry.nodeid = this.nodeid;
         entry.time = System.currentTimeMillis();
         source.hset(clusterEntry.serviceName, clusterEntry.serviceid, AddressEntry.class, entry);
@@ -346,6 +348,8 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         public int nodeid;
 
         public long time;
+
+        public String resname;
 
         public AddressEntry() {
         }
