@@ -665,30 +665,40 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                             continue;
                         }
                         Encodeable encoder = null;
-                        Creator<? extends Encodeable> creator = Creator.create(enClazz);
-                        Class[] paramTypes = creator.paramTypes();
-                        if (paramTypes.length == 0) {
-                            encoder = creator.create();
-                        } else if (paramTypes.length == 1) {
-                            if (Type.class.isAssignableFrom(paramTypes[0])) {
-                                encoder = creator.create((Object) colType);
-                            } else if (ConvertFactory.class.isAssignableFrom(paramTypes[0])) {
-                                encoder = creator.create(this);
-                            } else {
-                                throw new ConvertException(enClazz + " not found public empty-parameter Constructor");
+                        try {
+                            Field instanceField = enClazz.getField("instance");
+                            if (instanceField.getType() == enClazz && Modifier.isStatic(instanceField.getModifiers())) {
+                                RedkaleClassLoader.putReflectionField("instance", instanceField);
+                                encoder = (Encodeable) instanceField.get(null);
                             }
-                        } else if (paramTypes.length == 2) {
-                            if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Type.class.isAssignableFrom(paramTypes[1])) {
-                                encoder = creator.create(this, colType);
-                            } else if (Type.class.isAssignableFrom(paramTypes[0]) && ConvertFactory.class.isAssignableFrom(paramTypes[1])) {
-                                encoder = creator.create(colType, this);
-                            } else {
-                                throw new ConvertException(enClazz + " not found public empty-parameter Constructor");
-                            }
-                        } else {
-                            throw new ConvertException(enClazz + " not found public empty-parameter Constructor");
+                        } catch (Exception e) {
                         }
-                        RedkaleClassLoader.putReflectionPublicConstructors(enClazz, enClazz.getName());
+                        if (encoder == null) {
+                            Creator<? extends Encodeable> creator = Creator.create(enClazz);
+                            Class[] paramTypes = creator.paramTypes();
+                            if (paramTypes.length == 0) {
+                                encoder = creator.create();
+                            } else if (paramTypes.length == 1) {
+                                if (Type.class.isAssignableFrom(paramTypes[0])) {
+                                    encoder = creator.create((Object) colType);
+                                } else if (ConvertFactory.class.isAssignableFrom(paramTypes[0])) {
+                                    encoder = creator.create(this);
+                                } else {
+                                    throw new ConvertException(enClazz + " not found public empty-parameter Constructor");
+                                }
+                            } else if (paramTypes.length == 2) {
+                                if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Type.class.isAssignableFrom(paramTypes[1])) {
+                                    encoder = creator.create(this, colType);
+                                } else if (Type.class.isAssignableFrom(paramTypes[0]) && ConvertFactory.class.isAssignableFrom(paramTypes[1])) {
+                                    encoder = creator.create(colType, this);
+                                } else {
+                                    throw new ConvertException(enClazz + " not found public empty-parameter Constructor");
+                                }
+                            } else {
+                                throw new ConvertException(enClazz + " not found public empty-parameter Constructor");
+                            }
+                            RedkaleClassLoader.putReflectionPublicConstructors(enClazz, enClazz.getName());
+                        }
                         if (encoderList == null) {
                             encoderList = new ArrayList<>();
                         }
@@ -716,30 +726,40 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                             continue;
                         }
                         Decodeable decoder = null;
-                        Creator<? extends Decodeable> creator = Creator.create(deClazz);
-                        Class[] paramTypes = creator.paramTypes();
-                        if (paramTypes.length == 0) {
-                            decoder = creator.create();
-                        } else if (paramTypes.length == 1) {
-                            if (Type.class.isAssignableFrom(paramTypes[0])) {
-                                decoder = creator.create((Object) colType);
-                            } else if (ConvertFactory.class.isAssignableFrom(paramTypes[0])) {
-                                decoder = creator.create(this);
-                            } else {
-                                throw new ConvertException(deClazz + " not found public empty-parameter Constructor");
+                        try {
+                            Field instanceField = deClazz.getField("instance");
+                            if (instanceField.getType() == deClazz && Modifier.isStatic(instanceField.getModifiers())) {
+                                RedkaleClassLoader.putReflectionField("instance", instanceField);
+                                decoder = (Decodeable) instanceField.get(null);
                             }
-                        } else if (paramTypes.length == 2) {
-                            if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Type.class.isAssignableFrom(paramTypes[1])) {
-                                decoder = creator.create(this, colType);
-                            } else if (Type.class.isAssignableFrom(paramTypes[0]) && ConvertFactory.class.isAssignableFrom(paramTypes[1])) {
-                                decoder = creator.create(colType, this);
-                            } else {
-                                throw new ConvertException(deClazz + " not found public empty-parameter Constructor");
-                            }
-                        } else {
-                            throw new ConvertException(deClazz + " not found public empty-parameter Constructor");
+                        } catch (Exception e) {
                         }
-                        RedkaleClassLoader.putReflectionPublicConstructors(deClazz, deClazz.getName());
+                        if (decoder == null) {
+                            Creator<? extends Decodeable> creator = Creator.create(deClazz);
+                            Class[] paramTypes = creator.paramTypes();
+                            if (paramTypes.length == 0) {
+                                decoder = creator.create();
+                            } else if (paramTypes.length == 1) {
+                                if (Type.class.isAssignableFrom(paramTypes[0])) {
+                                    decoder = creator.create((Object) colType);
+                                } else if (ConvertFactory.class.isAssignableFrom(paramTypes[0])) {
+                                    decoder = creator.create(this);
+                                } else {
+                                    throw new ConvertException(deClazz + " not found public empty-parameter Constructor");
+                                }
+                            } else if (paramTypes.length == 2) {
+                                if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Type.class.isAssignableFrom(paramTypes[1])) {
+                                    decoder = creator.create(this, colType);
+                                } else if (Type.class.isAssignableFrom(paramTypes[0]) && ConvertFactory.class.isAssignableFrom(paramTypes[1])) {
+                                    decoder = creator.create(colType, this);
+                                } else {
+                                    throw new ConvertException(deClazz + " not found public empty-parameter Constructor");
+                                }
+                            } else {
+                                throw new ConvertException(deClazz + " not found public empty-parameter Constructor");
+                            }
+                            RedkaleClassLoader.putReflectionPublicConstructors(deClazz, deClazz.getName());
+                        }
                         if (decoderList == null) {
                             decoderList = new ArrayList<>();
                         }
