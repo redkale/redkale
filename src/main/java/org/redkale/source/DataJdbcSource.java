@@ -1344,22 +1344,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             map.clear();
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String[] tableSqls = createTableSqls(info);
-                    if (tableSqls != null) {
-                        try {
-                            Statement st = conn.createStatement();
-                            if (tableSqls.length == 1) {
-                                st.execute(tableSqls[0]);
-                            } else {
-                                for (String tableSql : tableSqls) {
-                                    st.addBatch(tableSql);
-                                }
-                                st.executeBatch();
-                            }
-                            st.close();
-                        } catch (SQLException e2) {
-                        }
-                    }
+                    //读操作不自动创建表，可能存在读写分离
                     return map;
                 } else if (tables != null && tables.length == 1) {
                     //只查一个不存在的分表
@@ -1455,22 +1440,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String[] tableSqls = createTableSqls(info);
-                    if (tableSqls != null) {
-                        try {
-                            Statement st = conn.createStatement();
-                            if (tableSqls.length == 1) {
-                                st.execute(tableSqls[0]);
-                            } else {
-                                for (String tableSql : tableSqls) {
-                                    st.addBatch(tableSql);
-                                }
-                                st.executeBatch();
-                            }
-                            st.close();
-                        } catch (SQLException e2) {
-                        }
-                    }
+                    //读操作不自动创建表，可能存在读写分离
                     return defVal;
                 } else if (tables != null && tables.length == 1) {
                     //只查一个不存在的分表
@@ -1560,22 +1530,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             rs.clear();
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String[] tableSqls = createTableSqls(info);
-                    if (tableSqls != null) {
-                        try {
-                            Statement st = conn.createStatement();
-                            if (tableSqls.length == 1) {
-                                st.execute(tableSqls[0]);
-                            } else {
-                                for (String tableSql : tableSqls) {
-                                    st.addBatch(tableSql);
-                                }
-                                st.executeBatch();
-                            }
-                            st.close();
-                        } catch (SQLException e2) {
-                        }
-                    }
+                    //读操作不自动创建表，可能存在读写分离
                     return rs;
                 } else if (tables != null && tables.length == 1) {
                     //只查一个不存在的分表
@@ -1678,22 +1633,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             rs.clear();
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String[] tableSqls = createTableSqls(info);
-                    if (tableSqls != null) {
-                        try {
-                            Statement st = conn.createStatement();
-                            if (tableSqls.length == 1) {
-                                st.execute(tableSqls[0]);
-                            } else {
-                                for (String tableSql : tableSqls) {
-                                    st.addBatch(tableSql);
-                                }
-                                st.executeBatch();
-                            }
-                            st.close();
-                        } catch (SQLException e2) {
-                        }
-                    }
+                    //读操作不自动创建表，可能存在读写分离
                     return rs;
                 } else if (tables != null && tables.length == 1) {
                     //只查一个不存在的分表
@@ -1776,22 +1716,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String[] tableSqls = createTableSqls(info);
-                    if (tableSqls != null) {
-                        try {
-                            Statement st = conn.createStatement();
-                            if (tableSqls.length == 1) {
-                                st.execute(tableSqls[0]);
-                            } else {
-                                for (String tableSql : tableSqls) {
-                                    st.addBatch(tableSql);
-                                }
-                                st.executeBatch();
-                            }
-                            st.close();
-                        } catch (SQLException e2) {
-                        }
-                    }
+                    //读操作不自动创建表，可能存在读写分离
                     return null;
                 } else if (tables != null && tables.length == 1) {
                     //只查一个不存在的分表
@@ -1875,22 +1800,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String[] tableSqls = createTableSqls(info);
-                    if (tableSqls != null) {
-                        try {
-                            Statement st = conn.createStatement();
-                            if (tableSqls.length == 1) {
-                                st.execute(tableSqls[0]);
-                            } else {
-                                for (String tableSql : tableSqls) {
-                                    st.addBatch(tableSql);
-                                }
-                                st.executeBatch();
-                            }
-                            st.close();
-                        } catch (SQLException e2) {
-                        }
-                    }
+                    //读操作不自动创建表，可能存在读写分离
                     return defValue;
                 } else if (tables != null && tables.length == 1) {
                     //只查一个不存在的分表
@@ -1975,22 +1885,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         } catch (SQLException e) {
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
-                    String[] tableSqls = createTableSqls(info);
-                    if (tableSqls != null) {
-                        try {
-                            Statement st = conn.createStatement();
-                            if (tableSqls.length == 1) {
-                                st.execute(tableSqls[0]);
-                            } else {
-                                for (String tableSql : tableSqls) {
-                                    st.addBatch(tableSql);
-                                }
-                                st.executeBatch();
-                            }
-                            st.close();
-                        } catch (SQLException e2) {
-                        }
-                    }
+                    //读操作不自动创建表，可能存在读写分离
                     return false;
                 } else if (tables != null && tables.length == 1) {
                     //只查一个不存在的分表
@@ -2074,22 +1969,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             } catch (SQLException se) {
                 if (isTableNotExist(info, se.getSQLState())) {
                     if (info.getTableStrategy() == null) {
-                        String[] tableSqls = createTableSqls(info);
-                        if (tableSqls != null) {
-                            try {
-                                Statement st = conn.createStatement();
-                                if (tableSqls.length == 1) {
-                                    st.execute(tableSqls[0]);
-                                } else {
-                                    for (String tableSql : tableSqls) {
-                                        st.addBatch(tableSql);
-                                    }
-                                    st.executeBatch();
-                                }
-                                st.close();
-                            } catch (SQLException e2) {
-                            }
-                        }
+                        //读操作不自动创建表，可能存在读写分离
                         return new Sheet<>(0, new ArrayList());
                     } else if (tables != null && tables.length == 1) {
                         //只查一个不存在的分表
@@ -2261,7 +2141,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     protected List<String> checkNotExistTables(Connection conn, String[] tables) throws SQLException { //, String firstNotExistTable
-//        数据库不一定要按批量提交的SQL顺序执行， 所以第一个不存在的表不一定再tables的第一位, 
+//        数据库不一定要按批量提交的SQL顺序执行， 所以第一个不存在的表不一定在tables的第一位, 
 //        比如 DELETE FROM  table1; DELETE FROM  table2;  如果table1、table2都不存在，SQL可能会抛出table2不存在的异常
 //        List<String> maybeNoTables = new ArrayList<>();
 //        String minTableName = (firstNotExistTable.indexOf('.') > 0) ? firstNotExistTable.substring(firstNotExistTable.indexOf('.') + 1) : null;
