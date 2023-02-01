@@ -59,11 +59,6 @@ public class DataMemorySource extends AbstractDataSqlSource implements SearchSou
         return config.getValue(DATA_SOURCE_URL).startsWith("memory:search");
     }
 
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "{type=memory, name='" + resourceName() + "'}";
-    }
-
     @Local
     @Override
     public <T> void compile(Class<T> clazz) {
@@ -74,41 +69,33 @@ public class DataMemorySource extends AbstractDataSqlSource implements SearchSou
     }
 
     @Override
-    public <T> int updateMapping(final Class<T> clazz, String table) {
-        return 0;
-    }
-
-    @Override
-    public <T> CompletableFuture<Integer> updateMappingAsync(final Class<T> clazz, String table) {
-        return CompletableFuture.completedFuture(0);
-    }
-
-    @Override
-    protected boolean isOnlyCache(EntityInfo info) {
+    protected final boolean isOnlyCache(EntityInfo info) {
         return true;
     }
 
-    @Local
+    @Override
+    protected final boolean isAsync() {
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{type=memory, name='" + resourceName() + "'}";
+    }
+
     @Override
     public int directExecute(String sql) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Local
     @Override
     public int[] directExecute(String... sqls) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Local
     @Override
     public <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
         throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    protected boolean isAsync() {
-        return false;
     }
 
     @Override
@@ -117,148 +104,88 @@ public class DataMemorySource extends AbstractDataSqlSource implements SearchSou
     }
 
     @Override
-    protected <T> int insertDB(EntityInfo<T> info, T... entitys) {
-        return 0;
-    }
-
-    @Override
-    protected <T> int deleteDB(EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) {
-        return 0;
-    }
-
-    @Override
-    protected <T> int clearTableDB(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
-        return 0;
-    }
-
-    @Override
-    protected <T> int dropTableDB(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
-        return 0;
-    }
-
-    @Override
-    protected <T> int updateEntityDB(EntityInfo<T> info, T... entitys) {
-        return 0;
-    }
-
-    @Override
-    protected <T> int updateColumnDB(EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) {
-        return 0;
-    }
-
-    @Override
-    protected <T, N extends Number> Map<String, N> getNumberMapDB(EntityInfo<T> info, String[] tables, String sql, FilterNode node, FilterFuncColumn... columns) {
-        return null;
-    }
-
-    @Override
-    protected <T> Number getNumberResultDB(EntityInfo<T> info, String[] tables, String sql, FilterFunc func, Number defVal, String column, final FilterNode node) {
-        return defVal;
-    }
-
-    @Override
-    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(EntityInfo<T> info, String[] tables, String sql, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
-        return null;
-    }
-
-    @Override
-    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, FilterNode node) {
-        return null;
-    }
-
-    @Override
-    protected <T> T findDB(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects, Serializable pk, FilterNode node) {
-        return null;
-    }
-
-    @Override
-    protected <T> Serializable findColumnDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue, Serializable pk, FilterNode node) {
-        return null;
-    }
-
-    @Override
-    protected <T> boolean existsDB(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, Serializable pk, FilterNode node) {
-        return false;
-    }
-
-    @Override
-    protected <T> Sheet<T> querySheetDB(EntityInfo<T> info, final boolean readCache, boolean needTotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
-        return new Sheet<>(0, new ArrayList());
-    }
-
-    @Override
     protected <T> CompletableFuture<Integer> insertDBAsync(EntityInfo<T> info, T... entitys) {
-        return CompletableFuture.completedFuture(0);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T> CompletableFuture<Integer> deleteDBAsync(EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) {
-        return CompletableFuture.completedFuture(0);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T> CompletableFuture<Integer> clearTableDBAsync(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
-        return CompletableFuture.completedFuture(0);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T> CompletableFuture<Integer> createTableDBAsync(EntityInfo<T> info, String copyTableSql, Serializable pk, String... sqls) {
-        return CompletableFuture.completedFuture(0);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T> CompletableFuture<Integer> dropTableDBAsync(EntityInfo<T> info, String[] tables, FilterNode node, String... sqls) {
-        return CompletableFuture.completedFuture(0);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T> CompletableFuture<Integer> updateEntityDBAsync(EntityInfo<T> info, T... entitys) {
-        return CompletableFuture.completedFuture(0);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T> CompletableFuture<Integer> updateColumnDBAsync(EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) {
-        return CompletableFuture.completedFuture(0);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterNode node, FilterFuncColumn... columns) {
-        return CompletableFuture.completedFuture(null);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T> CompletableFuture<Number> getNumberResultDBAsync(EntityInfo<T> info, String[] tables, String sql, FilterFunc func, Number defVal, String column, FilterNode node) {
-        return CompletableFuture.completedFuture(defVal);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
-        return CompletableFuture.completedFuture(null);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, FilterNode node) {
-        return CompletableFuture.completedFuture(null);
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(EntityInfo<T> info, String[] tables, String sql, ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected <T> CompletableFuture<T> findDBAsync(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, SelectColumn selects, Serializable pk, FilterNode node) {
-        return CompletableFuture.completedFuture(null);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, String column, Serializable defValue, Serializable pk, FilterNode node) {
-        return CompletableFuture.completedFuture(null);
+    protected <T> CompletableFuture<Serializable> findColumnDBAsync(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, String column, Serializable defValue, Serializable pk, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, final String[] tables, String sql, boolean onlypk, Serializable pk, FilterNode node) {
-        return CompletableFuture.completedFuture(false);
+    protected <T> CompletableFuture<Boolean> existsDBAsync(EntityInfo<T> info, String[] tables, String sql, boolean onlypk, Serializable pk, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    protected <T> CompletableFuture<Sheet<T>> querySheetDBAsync(EntityInfo<T> info, final boolean readCache, boolean needTotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
-        return CompletableFuture.completedFuture(new Sheet<>(0, new ArrayList()));
+    protected <T> CompletableFuture<Sheet<T>> querySheetDBAsync(EntityInfo<T> info, boolean readcache, boolean needtotal, boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public <T> int updateMapping(Class<T> clazz, String table) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public <T> CompletableFuture<Integer> updateMappingAsync(Class<T> clazz, String table) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }
