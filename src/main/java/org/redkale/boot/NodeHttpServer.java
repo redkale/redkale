@@ -9,7 +9,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -250,8 +250,8 @@ public class NodeHttpServer extends NodeServer {
                 ss.add(new AbstractMap.SimpleEntry<>("HttpServlet    (type=" + clazz.getName() + ")", mappings));
             }
         }
-        final List<AbstractMap.SimpleEntry<String, String[]>> rests = sb == null ? null : new ArrayList<>();
-        final List<AbstractMap.SimpleEntry<String, String[]>> webss = sb == null ? null : new ArrayList<>();
+        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> rests = sb == null ? null : new CopyOnWriteArrayList<>();
+        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> webss = sb == null ? null : new CopyOnWriteArrayList<>();
         if (rest && serverConf != null) {
             final List<Object> restedObjects = new ArrayList<>();
             final ReentrantLock restedLock = new ReentrantLock();
@@ -343,8 +343,8 @@ public class NodeHttpServer extends NodeServer {
     protected void loadRestServlet(final ClassFilter<? extends WebSocket> webSocketFilter,
         final AnyValue restConf, final List<Object> restedObjects,
         final ReentrantLock restedLock, final StringBuilder sb,
-        final List<AbstractMap.SimpleEntry<String, String[]>> rests,
-        final List<AbstractMap.SimpleEntry<String, String[]>> webss) throws Exception {
+        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> rests,
+        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> webss) throws Exception {
         if (!rest) {
             return;
         }
@@ -440,9 +440,7 @@ public class NodeHttpServer extends NodeServer {
                         for (int i = 0; i < mappings.length; i++) {
                             mappings[i] = prefix2 + mappings[i];
                         }
-                        synchronized (rests) {
-                            rests.add(new AbstractMap.SimpleEntry<>(Sncp.getResourceType(service).getName() + "#" + name, mappings));
-                        }
+                        rests.add(new AbstractMap.SimpleEntry<>(Sncp.getResourceType(service).getName() + "#" + name, mappings));
                     }
                 } finally {
                     scdl.countDown();
@@ -512,9 +510,7 @@ public class NodeHttpServer extends NodeServer {
                     for (int i = 0; i < mappings.length; i++) {
                         mappings[i] = prefix2 + mappings[i];
                     }
-                    synchronized (webss) {
-                        webss.add(new AbstractMap.SimpleEntry<>(stype.getName() + "#" + rs.name(), mappings));
-                    }
+                    webss.add(new AbstractMap.SimpleEntry<>(stype.getName() + "#" + rs.name(), mappings));
                 }
             }
         }

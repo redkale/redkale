@@ -28,16 +28,10 @@ public class MessageProducers {
     }
 
     public MessageProducer getProducer(MessageRecord message) {
-        if (this.producers.length == 1) return this.producers[0];
-        int hash = index.incrementAndGet();
-        if (index.get() > 1000 * producers.length) {
-            synchronized (index) {
-                if (index.get() > 1000 * producers.length) {
-                    index.addAndGet(-1000 * producers.length);
-                }
-            }
+        if (this.producers.length == 1) {
+            return this.producers[0];
         }
-        return producers[hash % producers.length];
+        return producers[Math.abs(index.incrementAndGet()) % producers.length];
     }
 
     public CompletableFuture<Void> apply(MessageRecord message) {

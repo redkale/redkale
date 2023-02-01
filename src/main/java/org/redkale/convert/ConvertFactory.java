@@ -12,7 +12,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -835,25 +835,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
      * @param excludeColumns 需要排除的字段名
      */
     public final void registerIgnoreAll(final Class type, String... excludeColumns) {
-        Set<String> set = ignoreAlls.get(type);
-        if (set == null) {
-            ignoreAlls.put(type, new HashSet<>(Arrays.asList(excludeColumns)));
-        } else {
-            synchronized (set) {
-                set.addAll(Arrays.asList(excludeColumns));
-            }
-        }
+        ignoreAlls.computeIfAbsent(type, t -> new CopyOnWriteArraySet<>()).addAll(Arrays.asList(excludeColumns));
     }
 
     public final void registerIgnoreAll(final Class type, Collection<String> excludeColumns) {
-        Set<String> set = ignoreAlls.get(type);
-        if (set == null) {
-            ignoreAlls.put(type, new HashSet<>(excludeColumns));
-        } else {
-            synchronized (set) {
-                set.addAll(new ArrayList(excludeColumns));
-            }
-        }
+        ignoreAlls.computeIfAbsent(type, t -> new CopyOnWriteArraySet<>()).addAll(excludeColumns);
     }
 
     public final void register(final Class type, boolean ignore, String... columns) {

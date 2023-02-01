@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.redkale.annotation.Comment;
+import java.util.concurrent.locks.ReentrantLock;
 import org.redkale.annotation.*;
 import org.redkale.boot.Application;
 import org.redkale.net.*;
@@ -35,6 +35,8 @@ public class TransportWatchService extends AbstractWatchService {
 
     @Comment("Node节点IP地址已存在")
     public static final int RET_TRANSPORT_ADDR_EXISTS = 1606_0003;
+
+    protected final ReentrantLock lock = new ReentrantLock();
 
     @Resource
     protected Application application;
@@ -63,7 +65,8 @@ public class TransportWatchService extends AbstractWatchService {
         if (transportFactory.findGroupName(address) != null) {
             return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") is exists");
         }
-        synchronized (this) {
+        lock.lock();
+        try {
             if (transportFactory.findGroupInfo(group) == null) {
                 return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
             }
@@ -87,6 +90,8 @@ public class TransportWatchService extends AbstractWatchService {
                 }
             }
             //application.restoreConfig();
+        } finally {
+            lock.unlock();
         }
         return RetResult.success();
     }
@@ -102,7 +107,8 @@ public class TransportWatchService extends AbstractWatchService {
         if (!group.equals(transportFactory.findGroupName(address))) {
             return new RetResult(RET_TRANSPORT_ADDR_ILLEGAL, "InetSocketAddress(addr=" + addr + ", port=" + port + ") not belong to group(" + group + ")");
         }
-        synchronized (this) {
+        lock.lock();
+        try {
             if (transportFactory.findGroupInfo(group) == null) {
                 return new RetResult(RET_TRANSPORT_GROUP_NOT_EXISTS, "not found group (" + group + ")");
             }
@@ -125,6 +131,8 @@ public class TransportWatchService extends AbstractWatchService {
                 }
             }
             //application.restoreConfig();
+        } finally {
+            lock.unlock();
         }
         return RetResult.success();
     }

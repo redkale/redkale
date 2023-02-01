@@ -8,6 +8,7 @@ package org.redkale.mq;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
@@ -27,6 +28,8 @@ import org.redkale.util.Traces;
 public abstract class MessageClient {
 
     protected final ConcurrentHashMap<Long, MessageRespFutureNode> respNodes = new ConcurrentHashMap<>();
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     protected final MessageAgent messageAgent;
 
@@ -58,7 +61,8 @@ public abstract class MessageClient {
         boolean finest = messageAgent != null && messageAgent.logger.isLoggable(Level.FINEST);
         try {
             if (this.respConsumer == null) {
-                synchronized (this) {
+                lock.lock();
+                try {
                     if (this.respConsumerid == null) {
                         this.respConsumerid = "consumer-" + this.respTopic;
                     }
@@ -100,6 +104,8 @@ public abstract class MessageClient {
                         }
                         this.respConsumer = one;
                     }
+                } finally {
+                    lock.unlock();
                 }
             }
             if (needresp && (message.getRespTopic() == null || message.getRespTopic().isEmpty())) {

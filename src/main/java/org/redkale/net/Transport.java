@@ -13,6 +13,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import javax.net.ssl.SSLContext;
@@ -34,6 +35,8 @@ public final class Transport {
     public static final String DEFAULT_NETPROTOCOL = "TCP";
 
     protected final AtomicInteger seq = new AtomicInteger(-1);
+
+    protected final ReentrantLock lock = new ReentrantLock();
 
     protected final TransportFactory factory;
 
@@ -88,7 +91,8 @@ public final class Transport {
 
     public final InetSocketAddress[] updateRemoteAddresses(final Collection<InetSocketAddress> addresses) {
         final TransportNode[] oldNodes = this.transportNodes;
-        synchronized (this) {
+        lock.lock();
+        try {
             boolean same = false;
             if (this.transportNodes != null && addresses != null && this.transportNodes.length == addresses.size()) {
                 same = true;
@@ -122,6 +126,8 @@ public final class Transport {
                 }
                 this.transportNodes = list.toArray(new TransportNode[list.size()]);
             }
+        } finally {
+            lock.unlock();
         }
         InetSocketAddress[] rs = new InetSocketAddress[oldNodes.length];
         for (int i = 0; i < rs.length; i++) {
@@ -137,7 +143,8 @@ public final class Transport {
         if (clientAddress != null && clientAddress.equals(addr)) {
             return false;
         }
-        synchronized (this) {
+        lock.lock();
+        try {
             if (this.transportNodes.length == 0) {
                 this.transportNodes = new TransportNode[]{new TransportNode(factory.poolMaxConns, addr)};
             } else {
@@ -149,6 +156,8 @@ public final class Transport {
                 this.transportNodes = Utility.append(transportNodes, new TransportNode(factory.poolMaxConns, addr));
             }
             return true;
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -156,8 +165,11 @@ public final class Transport {
         if (addr == null) {
             return false;
         }
-        synchronized (this) {
+        lock.lock();
+        try {
             this.transportNodes = Utility.remove(transportNodes, new TransportNode(factory.poolMaxConns, addr));
+        } finally {
+            lock.unlock();
         }
         return true;
     }

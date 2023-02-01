@@ -15,7 +15,7 @@ import org.redkale.net.*;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * 
+ *
  * @since 2.7.0
  */
 public class ClientAddress implements java.io.Serializable {
@@ -66,12 +66,8 @@ public class ClientAddress implements java.io.Serializable {
         if (addr == null) {
             SocketAddress[] addrs = this.addresses;
             if (addrs == null) {
-                synchronized (this) {
-                    if (this.addresses == null) {
-                        this.addresses = createAddressArray(this.weights);
-                        addrs = this.addresses;
-                    }
-                }
+                this.addresses = createAddressArray(this.weights);
+                addrs = this.addresses;
             }
             addr = addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
         }

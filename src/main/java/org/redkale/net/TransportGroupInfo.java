@@ -7,6 +7,7 @@ package org.redkale.net;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Utility;
 
@@ -19,6 +20,8 @@ import org.redkale.util.Utility;
  * @author zhangjx
  */
 public class TransportGroupInfo {
+
+    protected final ReentrantLock lock = new ReentrantLock();
 
     protected String name;  //地址
 
@@ -78,11 +81,14 @@ public class TransportGroupInfo {
     }
 
     public boolean containsAddress(InetSocketAddress addr) {
-        synchronized (this) {
+        lock.lock();
+        try {
             if (this.addresses == null) {
                 return false;
             }
             return this.addresses.contains(addr);
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -90,11 +96,14 @@ public class TransportGroupInfo {
         if (addr == null) {
             return;
         }
-        synchronized (this) {
+        lock.lock();
+        try {
             if (this.addresses == null) {
                 return;
             }
             this.addresses.remove(addr);
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -102,11 +111,14 @@ public class TransportGroupInfo {
         if (addr == null) {
             return;
         }
-        synchronized (this) {
+        lock.lock();
+        try {
             if (this.addresses == null) {
                 this.addresses = new HashSet<>();
             }
             this.addresses.add(addr);
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -114,11 +126,14 @@ public class TransportGroupInfo {
         if (addrs == null) {
             return;
         }
-        synchronized (this) {
+        lock.lock();
+        try {
             if (this.addresses == null) {
                 this.addresses = new HashSet<>();
             }
             this.addresses.addAll(addrs);
+        } finally {
+            lock.unlock();
         }
     }
 
