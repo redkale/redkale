@@ -6,8 +6,8 @@
 package org.redkale.net.http;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.util.Arrays;
+import org.redkale.util.Creator;
 
 /**
  *
@@ -27,22 +27,28 @@ public interface WebSocketParam {
 
     default <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         for (Annotation ann : getAnnotations()) {
-            if (ann.getClass() == annotationClass) return (T) ann;
+            if (ann.getClass() == annotationClass) {
+                return (T) ann;
+            }
         }
         return null;
     }
 
     default <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
         Annotation[] annotations = getAnnotations();
-        if (annotations == null) return (T[]) Array.newInstance(annotationClass, 0);
-        T[] news = (T[]) Array.newInstance(annotationClass, annotations.length);
+        if (annotations == null) {
+            return Creator.arrayFunction(annotationClass).apply(0);
+        }
+        T[] news = Creator.arrayFunction(annotationClass).apply(annotations.length);
         int index = 0;
         for (Annotation ann : annotations) {
             if (ann.getClass() == annotationClass) {
                 news[index++] = (T) ann;
             }
         }
-        if (index < 1) return (T[]) Array.newInstance(annotationClass, 0);
+        if (index < 1) {
+            return Creator.arrayFunction(annotationClass).apply(0);
+        }
         return Arrays.copyOf(news, index);
     }
 }

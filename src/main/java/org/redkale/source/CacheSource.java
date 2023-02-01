@@ -6,7 +6,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
-import java.lang.reflect.*;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.Convert;
@@ -53,7 +53,7 @@ public interface CacheSource extends Resourcable {
     public Map<String, byte[]> mgetBytes(final String... keys);
 
     default <T> T[] mgets(final Type componentType, final String... keys) {
-        T[] rs = (T[]) Array.newInstance(TypeToken.typeToClass(componentType), keys.length);
+        T[] rs = (T[]) Creator.arrayFunction(TypeToken.typeToClass(componentType)).apply(keys.length);
         Map<String, T> map = mget(componentType, keys);
         for (int i = 0; i < keys.length; i++) {
             rs[i] = map.get(keys[i]);
@@ -335,7 +335,7 @@ public interface CacheSource extends Resourcable {
 
     default <T> CompletableFuture<T[]> mgetsAsync(final Type componentType, final String... keys) {
         return mgetAsync(componentType, keys).thenApply(map -> {
-            T[] rs = (T[]) Array.newInstance(TypeToken.typeToClass(componentType), keys.length);
+            T[] rs = (T[]) Creator.arrayFunction(TypeToken.typeToClass(componentType)).apply(keys.length);
             for (int i = 0; i < keys.length; i++) {
                 rs[i] = (T) map.get(keys[i]);
             }

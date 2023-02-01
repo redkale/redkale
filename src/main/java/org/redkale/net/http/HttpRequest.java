@@ -7,7 +7,6 @@ package org.redkale.net.http;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
@@ -1248,9 +1247,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
         if (this.annotations == null) {
-            return (T[]) Array.newInstance(annotationClass, 0);
+            return Creator.arrayFunction(annotationClass).apply(0);
         }
-        T[] news = (T[]) Array.newInstance(annotationClass, this.annotations.length);
+        T[] news = Creator.arrayFunction(annotationClass).apply(this.annotations.length);
         int index = 0;
         for (Annotation ann : this.annotations) {
             if (ann.getClass() == annotationClass) {
@@ -1258,7 +1257,7 @@ public class HttpRequest extends Request<HttpContext> {
             }
         }
         if (index < 1) {
-            return (T[]) Array.newInstance(annotationClass, 0);
+            return Creator.arrayFunction(annotationClass).apply(0);
         }
         return Arrays.copyOf(news, index);
     }

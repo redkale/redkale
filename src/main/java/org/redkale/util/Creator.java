@@ -802,9 +802,8 @@ public interface Creator<T> {
                 RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
                 return (IntFunction<T[]>) resultClazz.getDeclaredConstructor().newInstance();
             } catch (Exception ex) {
-                //ex.printStackTrace();  //一般不会发生
-                //return t -> (T[]) Array.newInstance(clazz, t);
-                throw new RuntimeException(ex);
+                //ex.printStackTrace();  //一般不会发生, native-image在没有预编译情况下会报错
+                return t -> (T[]) Array.newInstance(clazz, t);
             }
         }
     }
