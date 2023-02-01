@@ -33,7 +33,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(DataSource.class)
-public class DataMemorySource extends DataSqlSource implements SearchSource {
+public class DataMemorySource extends AbstractDataSqlSource implements SearchSource {
 
     public DataMemorySource(String name) {
         this.name = name;

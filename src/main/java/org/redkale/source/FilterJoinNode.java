@@ -126,7 +126,7 @@ public class FilterJoinNode extends FilterNode {
     }
 
     @Override
-    protected <T> CharSequence createSQLExpress(DataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+    protected <T> CharSequence createSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
         return super.createSQLExpress(source, this.joinEntity == null ? info : this.joinEntity, joinTabalis);
     }
 

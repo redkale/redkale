@@ -71,9 +71,9 @@ public class FilterNodeTest {
         }
     }
 
-    private static <T> CharSequence createSQLExpress(FilterNode node, DataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+    private static <T> CharSequence createSQLExpress(FilterNode node, AbstractDataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
         try {
-            Method method = FilterNode.class.getDeclaredMethod("createSQLExpress", DataSqlSource.class, EntityInfo.class, Map.class);
+            Method method = FilterNode.class.getDeclaredMethod("createSQLExpress", AbstractDataSqlSource.class, EntityInfo.class, Map.class);
             method.setAccessible(true);
             return (CharSequence) method.invoke(node, source, info, joinTabalis);
         } catch (Exception e) {

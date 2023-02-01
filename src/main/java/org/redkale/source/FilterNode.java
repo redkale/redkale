@@ -297,14 +297,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     /**
      * 该方法需要重载
      *
-     * @param source      DataSqlSource
+     * @param source      AbstractDataSqlSource
      * @param <T>         Entity类的泛型
      * @param joinTabalis 关联表的集合
      * @param info        EntityInfo
      *
      * @return JOIN的SQL语句
      */
-    protected <T> CharSequence createSQLExpress(DataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+    protected <T> CharSequence createSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
         CharSequence sb0 = this.column == null || this.column.isEmpty() || this.column.charAt(0) == '#' || info == null
             ? null : createElementSQLExpress(source, info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
         if (this.nodes == null) {
@@ -396,7 +396,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return items;
     }
 
-    protected final <T> CharSequence createElementSQLExpress(DataSqlSource source, final EntityInfo<T> info, String talis) {
+    protected final <T> CharSequence createElementSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, String talis) {
         final Object val0 = getValue();
         if (needSplit(val0)) {
             if (val0 instanceof Collection) {
@@ -452,7 +452,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     }
 
-    private <T> CharSequence createElementSQLExpress(DataSqlSource source, final EntityInfo<T> info, String talis, Object val0) {
+    private <T> CharSequence createElementSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, String talis, Object val0) {
         if (column == null || this.column.isEmpty() || this.column.charAt(0) == '#') {
             return null;
         }
