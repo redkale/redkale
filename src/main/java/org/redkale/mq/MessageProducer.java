@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
@@ -23,7 +24,7 @@ public abstract class MessageProducer {
 
     protected final String name;
 
-    protected volatile boolean closed;
+    protected final AtomicBoolean closed = new AtomicBoolean();
 
     protected MessageProducer(String name, Logger logger) {
         this.name = name;
@@ -35,7 +36,7 @@ public abstract class MessageProducer {
     public abstract CompletableFuture<Void> startup();
 
     public boolean isClosed() {
-        return closed;
+        return closed.get();
     }
 
     public abstract CompletableFuture<Void> shutdown();
