@@ -471,7 +471,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             ByteBuffer bb;
 
             @Override
-            public synchronized int read() throws IOException {
+            public int read() throws IOException {
                 if (bb == null || !bb.hasRemaining()) {
                     int r = readBuffer();
                     if (r < 1) {
@@ -482,7 +482,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             }
 
             @Override
-            public synchronized int read(byte b[], int off, int len) throws IOException {
+            public int read(byte b[], int off, int len) throws IOException {
                 if (b == null) {
                     throw new NullPointerException();
                 } else if (off < 0 || len < 0 || len > b.length - off) {

@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
@@ -41,7 +42,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     //@since 2.8.0  复用另一source资源
     public static final String DATA_SOURCE_RESOURCE = "resource";
-    
+
     //@since 2.7.0 格式: x.x.x.x:yyyy
     public static final String DATA_SOURCE_PROXY_ADDRESS = "proxy-address";
 
@@ -111,7 +112,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     //@since 2.7.0
     public static final String DATA_SOURCE_TABLECOPY_SQLTEMPLATE = "tablecopy-sqltemplate";
 
-    private final Object executorLock = new Object();
+    private final ReentrantLock executorLock = new ReentrantLock();
 
     private int sourceThreads = Utility.cpus();
 
@@ -285,10 +286,13 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     protected ExecutorService getExecutor() {
         ExecutorService executor = this.sourceExecutor;
         if (executor == null) {
-            synchronized (executorLock) {
+            executorLock.lock();
+            try {
                 if (this.sourceExecutor == null) {
                     this.sourceExecutor = WorkThread.createExecutor(sourceThreads, "Redkale-DataSource-WorkThread-" + resourceName() + "-%s");
                 }
+            } finally {
+                executorLock.unlock();
             }
             executor = this.sourceExecutor;
         }

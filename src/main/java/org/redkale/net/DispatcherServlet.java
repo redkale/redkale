@@ -8,6 +8,7 @@ package org.redkale.net;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -36,17 +37,19 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     private final LongAdder illegalRequestCounter = new LongAdder(); //错误请求次数
 
-    private final Object servletLock = new Object();
+    private final ReentrantLock servletLock = new ReentrantLock();
 
     private Set<S> servlets = new HashSet<>();
 
-    private final Object mappingLock = new Object();
+    private final ReentrantLock mappingLock = new ReentrantLock();
 
     private Map<K, S> mappings = new HashMap<>();
 
     private volatile boolean allFilterAsync = true;
 
     private final List<Filter<C, R, P>> filters = new ArrayList<>();
+
+    protected final ReentrantLock filtersLock = new ReentrantLock();
 
     protected Application application;
 
@@ -61,65 +64,84 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     protected void putServlet(S servlet) {
-        synchronized (servletLock) {
+        servletLock.lock();
+        try {
             Set<S> newservlets = new HashSet<>(servlets);
             newservlets.add(servlet);
             this.servlets = newservlets;
+        } finally {
+            servletLock.unlock();
         }
     }
 
     protected void removeServlet(S servlet) {
-        synchronized (servletLock) {
+        servletLock.lock();
+        try {
             Set<S> newservlets = new HashSet<>(servlets);
             newservlets.remove(servlet);
             this.servlets = newservlets;
             doAfterRemove(servlet);
+        } finally {
+            servletLock.unlock();
         }
     }
 
     public boolean containsServlet(Class<? extends S> servletClass) {
-        synchronized (servletLock) {
+        servletLock.lock();
+        try {
             for (S servlet : new HashSet<>(servlets)) {
                 if (servlet.getClass().equals(servletClass)) {
                     return true;
                 }
             }
             return false;
+        } finally {
+            servletLock.unlock();
         }
     }
 
     public boolean containsServlet(String servletClassName) {
-        synchronized (servletLock) {
+        servletLock.lock();
+        try {
             for (S servlet : new HashSet<>(servlets)) {
                 if (servlet.getClass().getName().equals(servletClassName)) {
                     return true;
                 }
             }
             return false;
+        } finally {
+            servletLock.unlock();
         }
     }
 
     protected void putMapping(K key, S servlet) {
-        synchronized (mappingLock) {
+        mappingLock.lock();
+        try {
             Map<K, S> newmappings = new HashMap<>(mappings);
             newmappings.put(key, servlet);
             this.mappings = newmappings;
+        } finally {
+            mappingLock.unlock();
         }
     }
 
     protected void removeMapping(K key) {
-        synchronized (mappingLock) {
+        mappingLock.lock();
+        try {
             if (mappings.containsKey(key)) {
                 Map<K, S> newmappings = new HashMap<>(mappings);
                 S s = newmappings.remove(key);
                 this.mappings = newmappings;
                 doAfterRemove(s);
             }
+        } finally {
+            mappingLock.unlock();
         }
     }
 
     protected void removeMapping(S servlet) {
-        synchronized (mappingLock) {
+        mappingLock.lock();
+        try {
             List<K> keys = new ArrayList<>();
             Map<K, S> newmappings = new HashMap<>(mappings);
             for (Map.Entry<K, S> en : newmappings.entrySet()) {
@@ -130,6 +152,8 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
             for (K key : keys) newmappings.remove(key);
             this.mappings = newmappings;
             doAfterRemove(servlet);
+        } finally {
+            mappingLock.unlock();
         }
     }
 
@@ -146,7 +170,8 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
         if (application != null && application.isCompileMode()) {
             return;
         }
-        synchronized (filters) {
+        filtersLock.lock();
+        try {
             if (!filters.isEmpty()) {
                 Collections.sort(filters);
                 for (Filter<C, R, P> filter : filters) {
@@ -159,28 +184,36 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
                     filter = filter._next;
                 }
             }
+        } finally {
+            filtersLock.unlock();
         }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void destroy(C context, AnyValue config) {
-        synchronized (filters) {
+        filtersLock.lock();
+        try {
             if (!filters.isEmpty()) {
                 for (Filter filter : filters) {
                     filter.destroy(context, config);
                 }
             }
+        } finally {
+            filtersLock.unlock();
         }
     }
 
     @SuppressWarnings("unchecked")
     public void addFilter(Filter<C, R, P> filter, AnyValue conf) {
         filter._conf = conf;
-        synchronized (filters) {
+        filtersLock.lock();
+        try {
             this.filters.add(filter);
             this.allFilterAsync = this.allFilterAsync && isAsync(filter);
             Collections.sort(this.filters);
+        } finally {
+            filtersLock.unlock();
         }
     }
 
@@ -224,7 +257,8 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
         if (this.headFilter == null || predicate == null) {
             return null;
         }
-        synchronized (filters) {
+        filtersLock.lock();
+        try {
             Filter filter = this.headFilter;
             Filter prev = null;
             do {
@@ -251,6 +285,8 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
                 this.allFilterAsync = async;
             }
             return (T) filter;
+        } finally {
+            filtersLock.unlock();
         }
     }
 

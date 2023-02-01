@@ -10,6 +10,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
@@ -130,7 +131,8 @@ public class NodeHttpServer extends NodeServer {
                 if (loader != null) {
                     nodeService = (Service) loader.load(sncpResFactory, srcResourceName, srcObj, resourceName, field, attachment);
                 }
-                synchronized (regFactory) {
+                regFactory.lock();
+                try {
                     if (nodeService == null) {
                         nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     }
@@ -156,6 +158,8 @@ public class NodeHttpServer extends NodeServer {
                     field.set(srcObj, nodeService);
                     logger.fine("Load Service " + nodeService);
                     return nodeService;
+                } finally {
+                    regFactory.unlock();
                 }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "WebSocketNode inject error", e);
@@ -250,8 +254,9 @@ public class NodeHttpServer extends NodeServer {
         final List<AbstractMap.SimpleEntry<String, String[]>> webss = sb == null ? null : new ArrayList<>();
         if (rest && serverConf != null) {
             final List<Object> restedObjects = new ArrayList<>();
+            final ReentrantLock restedLock = new ReentrantLock();
             for (AnyValue restConf : serverConf.getAnyValues("rest")) {
-                loadRestServlet(webSocketFilter, restConf, restedObjects, sb, rests, webss);
+                loadRestServlet(webSocketFilter, restConf, restedObjects, restedLock, sb, rests, webss);
             }
         }
         int max = 0;
@@ -335,8 +340,11 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadRestServlet(final ClassFilter<? extends WebSocket> webSocketFilter, final AnyValue restConf, final List<Object> restedObjects, final StringBuilder sb,
-        final List<AbstractMap.SimpleEntry<String, String[]>> rests, final List<AbstractMap.SimpleEntry<String, String[]>> webss) throws Exception {
+    protected void loadRestServlet(final ClassFilter<? extends WebSocket> webSocketFilter,
+        final AnyValue restConf, final List<Object> restedObjects,
+        final ReentrantLock restedLock, final StringBuilder sb,
+        final List<AbstractMap.SimpleEntry<String, String[]>> rests,
+        final List<AbstractMap.SimpleEntry<String, String[]>> webss) throws Exception {
         if (!rest) {
             return;
         }
@@ -402,12 +410,15 @@ public class NodeHttpServer extends NodeServer {
                     if (!restFilter.accept(stypename)) {
                         return;
                     }
-                    synchronized (restedObjects) {
+                    restedLock.lock();
+                    try {
                         if (restedObjects.contains(service)) {
                             logger.log(Level.WARNING, stype.getName() + " repeat create rest servlet, so ignore");
                             return;
                         }
                         restedObjects.add(service); //避免重复创建Rest对象
+                    } finally {
+                        restedLock.unlock();
                     }
                     HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
                     if (servlet == null) {

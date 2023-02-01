@@ -11,8 +11,8 @@ import java.net.*;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.*;
 
 /**
  * Redkale内部ClassLoader
@@ -65,6 +65,8 @@ public class RedkaleClassLoader extends URLClassLoader {
 
     private static final ConcurrentHashMap<String, Map<String, Object>> reflectionMap = new ConcurrentHashMap<>();
 
+    private static final ReentrantLock reflectionLock = new ReentrantLock();
+
     public RedkaleClassLoader(ClassLoader parent) {
         super(new URL[0], parent);
     }
@@ -74,7 +76,9 @@ public class RedkaleClassLoader extends URLClassLoader {
     }
 
     public static URI getConfResourceAsURI(String confURI, String file) {
-        if (file.startsWith("http:") || file.startsWith("https:") || file.startsWith("ftp:")) return URI.create(file);
+        if (file.startsWith("http:") || file.startsWith("https:") || file.startsWith("ftp:")) {
+            return URI.create(file);
+        }
         if (confURI != null && !confURI.contains("!")) { //带!的是 /usr/xxx.jar!/META-INF/conf/xxx
             File f = new File(URI.create(confURI).getPath(), file);
             if (f.isFile() && f.canRead()) {
@@ -146,13 +150,16 @@ public class RedkaleClassLoader extends URLClassLoader {
     }
 
     public static void putReflectionClass(String name) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap<>();
                 map.put("name", name);
                 reflectionMap.put(name, map);
             }
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
@@ -166,7 +173,8 @@ public class RedkaleClassLoader extends URLClassLoader {
     }
 
     public static void putReflectionField(String name, Field field) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -186,13 +194,18 @@ public class RedkaleClassLoader extends URLClassLoader {
                         break;
                     }
                 }
-                if (!contains) list.add((Map) Utility.ofMap("name", field.getName()));
+                if (!contains) {
+                    list.add((Map) Utility.ofMap("name", field.getName()));
+                }
             }
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionMethod(String name, Method method) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -218,13 +231,18 @@ public class RedkaleClassLoader extends URLClassLoader {
                         break;
                     }
                 }
-                if (!contains) list.add(createMap(method.getName(), method.getParameterTypes()));
+                if (!contains) {
+                    list.add(createMap(method.getName(), method.getParameterTypes()));
+                }
             }
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionDeclaredConstructors(Class clazz, String name, Class... cts) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -234,8 +252,12 @@ public class RedkaleClassLoader extends URLClassLoader {
             map.put("allDeclaredConstructors", true);
 
             if (clazz != null) {
-                if (clazz.isInterface()) return;
-                if (Modifier.isAbstract(clazz.getModifiers())) return;
+                if (clazz.isInterface()) {
+                    return;
+                }
+                if (Modifier.isAbstract(clazz.getModifiers())) {
+                    return;
+                }
                 try {
                     clazz.getDeclaredConstructor(cts);
                 } catch (Throwable t) {
@@ -259,13 +281,18 @@ public class RedkaleClassLoader extends URLClassLoader {
                         break;
                     }
                 }
-                if (!contains) list.add((Map) Utility.ofMap("name", "<init>", "parameterTypes", types));
+                if (!contains) {
+                    list.add((Map) Utility.ofMap("name", "<init>", "parameterTypes", types));
+                }
             }
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionPublicConstructors(Class clazz, String name) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -275,8 +302,12 @@ public class RedkaleClassLoader extends URLClassLoader {
             map.put("allPublicConstructors", true);
 
             if (clazz != null) {
-                if (clazz.isInterface()) return;
-                if (Modifier.isAbstract(clazz.getModifiers())) return;
+                if (clazz.isInterface()) {
+                    return;
+                }
+                if (Modifier.isAbstract(clazz.getModifiers())) {
+                    return;
+                }
                 try {
                     clazz.getConstructor();
                 } catch (Throwable t) {
@@ -296,13 +327,18 @@ public class RedkaleClassLoader extends URLClassLoader {
                         break;
                     }
                 }
-                if (!contains) list.add((Map) Utility.ofMap("name", "<init>", "parameterTypes", new String[0]));
+                if (!contains) {
+                    list.add((Map) Utility.ofMap("name", "<init>", "parameterTypes", new String[0]));
+                }
             }
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionDeclaredMethods(String name) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -310,11 +346,14 @@ public class RedkaleClassLoader extends URLClassLoader {
                 reflectionMap.put(name, map);
             }
             map.put("allDeclaredMethods", true);
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionPublicMethods(String name) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -322,11 +361,14 @@ public class RedkaleClassLoader extends URLClassLoader {
                 reflectionMap.put(name, map);
             }
             map.put("allPublicMethods", true);
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionDeclaredFields(String name) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -334,11 +376,14 @@ public class RedkaleClassLoader extends URLClassLoader {
                 reflectionMap.put(name, map);
             }
             map.put("allDeclaredFields", true);
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionPublicFields(String name) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -346,11 +391,14 @@ public class RedkaleClassLoader extends URLClassLoader {
                 reflectionMap.put(name, map);
             }
             map.put("allPublicFields", true);
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionDeclaredClasses(String name) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -358,11 +406,14 @@ public class RedkaleClassLoader extends URLClassLoader {
                 reflectionMap.put(name, map);
             }
             map.put("allDeclaredClasses", true);
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
     public static void putReflectionPublicClasses(String name) {
-        synchronized (reflectionMap) {
+        reflectionLock.lock();
+        try {
             Map<String, Object> map = reflectionMap.get(name);
             if (map == null) {
                 map = new LinkedHashMap();
@@ -370,6 +421,8 @@ public class RedkaleClassLoader extends URLClassLoader {
                 reflectionMap.put(name, map);
             }
             map.put("allPublicClasses", true);
+        } finally {
+            reflectionLock.unlock();
         }
     }
 
@@ -423,7 +476,9 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
         do {
             String loaderName = loader.getClass().getName();
-            if (loaderName.startsWith("sun.") && loaderName.contains("ExtClassLoader")) continue;
+            if (loaderName.startsWith("sun.") && loaderName.contains("ExtClassLoader")) {
+                continue;
+            }
             if (loader instanceof URLClassLoader) {
                 for (URL url : ((URLClassLoader) loader).getURLs()) {
                     set.add(url);

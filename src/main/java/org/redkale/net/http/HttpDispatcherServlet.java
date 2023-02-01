@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.Pattern;
@@ -40,7 +41,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     protected final Map<String, Class> allMapStrings = new HashMap<>();
 
-    private final Object excludeLock = new Object();
+    private final ReentrantLock allMapLock = new ReentrantLock();
+
+    private final ReentrantLock excludeLock = new ReentrantLock();
 
     protected HttpContext context;
 
@@ -54,7 +57,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     private List<HttpServlet> removeHttpServlet(final Predicate<MappingEntry> predicateEntry, final Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter) {
         List<HttpServlet> servlets = new ArrayList<>();
-        synchronized (allMapStrings) {
+        allMapLock.lock();
+        try {
             List<String> keys = new ArrayList<>();
             if (regxArray != null) {
                 for (MappingEntry me : regxArray) {
@@ -96,6 +100,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 }
             }
             this.lastRunServlet = null;
+        } finally {
+            allMapLock.unlock();
         }
         return servlets;
     }
@@ -174,7 +180,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         if (urlRegx == null || urlRegx.isEmpty()) {
             return false;
         }
-        synchronized (excludeLock) {
+        excludeLock.lock();
+        try {
             if (forbidURIMaps != null && forbidURIMaps.containsKey(urlRegx)) {
                 return false;
             }
@@ -198,6 +205,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
             forbidURIMaps.put(urlRegx, predicate);
             forbidURIPredicates = Utility.append(forbidURIPredicates, predicate);
             return true;
+        } finally {
+            excludeLock.unlock();
         }
     }
 
@@ -206,7 +215,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         if (urlreg == null || urlreg.isEmpty()) {
             return false;
         }
-        synchronized (excludeLock) {
+        excludeLock.lock();
+        try {
             if (forbidURIMaps == null || forbidURIPredicates == null || !forbidURIMaps.containsKey(urlreg)) {
                 return false;
             }
@@ -231,6 +241,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 }
             }
             return true;
+        } finally {
+            excludeLock.unlock();
         }
     }
 
@@ -375,7 +387,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 context.lazyHeaders = false; //启动后运行过程中执行addServlet
             }
         }
-        synchronized (allMapStrings) {  //需要整段锁住
+        allMapLock.lock();
+        try {  //需要整段锁住
             for (String mappingPath : mappingPaths) {
                 if (mappingPath == null) {
                     continue;
@@ -433,6 +446,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
             setServletConf(servlet, conf);
             servlet._prefix = prefix.toString();
             putServlet(servlet);
+        } finally {
+            allMapLock.unlock();
         }
     }
 
@@ -458,12 +473,15 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     public void postStart(HttpContext context, AnyValue config) {
         List filters = getFilters();
-        synchronized (filters) {
+        filtersLock.lock();
+        try {
             if (!filters.isEmpty()) {
                 for (Object filter : filters) {
                     ((HttpFilter) filter).postStart(context, config);
                 }
             }
+        } finally {
+            filtersLock.unlock();
         }
         this.resourceHttpServlet.postStart(context, config);
         getServlets().forEach(s -> {

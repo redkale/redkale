@@ -16,6 +16,7 @@ import java.security.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -83,7 +84,7 @@ public final class Utility {
 
     private static final ToLongFunction<Object> bufferAddrFunction;
 
-    private static final Object clientLock = new Object();
+    private static final ReentrantLock clientLock = new ReentrantLock();
 
     private static HttpClient httpClient;
 
@@ -4500,10 +4501,13 @@ public final class Utility {
         }
         java.net.http.HttpClient c = client == null ? httpClient : client;
         if (c == null) {
-            synchronized (clientLock) {
+            clientLock.lock();
+            try {
                 if (httpClient == null) {
                     httpClient = java.net.http.HttpClient.newHttpClient();
                 }
+            } finally {
+                clientLock.unlock();
             }
             c = httpClient;
         }

@@ -5,10 +5,9 @@
  */
 package org.redkale.convert;
 
-import org.redkale.util.Creator;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.locks.*;
 import java.util.stream.Stream;
 
 /**
@@ -32,7 +31,9 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
 
     protected volatile boolean inited = false;
 
-    protected final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
 
     public StreamDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
@@ -47,8 +48,11 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
             }
         } finally {
             inited = true;
-            synchronized (lock) {
-                lock.notifyAll();
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -69,12 +73,12 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         }
         if (this.componentDecoder == null) {
             if (!this.inited) {
-                synchronized (lock) {
-                    try {
-                        lock.wait();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                } finally {
+                    lock.unlock();
                 }
             }
         }

@@ -284,7 +284,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     }
                     st.close();
                 } else { //分库分表
-                    synchronized (info.disTableLock()) {
+                    info.disTableLock().lock();
+                    try {
                         final Set<String> newCatalogs = new LinkedHashSet<>();
                         final List<String> tableCopys = new ArrayList<>();
                         prepareInfos.forEach((t, p) -> {
@@ -375,6 +376,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 }
                             }
                         }
+                    } finally {
+                        info.disTableLock().unlock();
                     }
                 }
                 if (info.getTableStrategy() == null) {
@@ -2439,7 +2442,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
 
         @ResourceListener
-        public synchronized void onResourceChange(ResourceEvent[] events) {
+        public void onResourceChange(ResourceEvent[] events) {
             String newUrl = this.url;
             int newConnectTimeoutSeconds = this.connectTimeoutSeconds;
             int newMaxconns = this.maxConns;
@@ -2481,7 +2484,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
         }
 
-        public synchronized Connection pollConnection() {
+        public Connection pollConnection() {
             Connection conn = queue.poll();
             if (conn == null) {
                 if (usingCounter.intValue() >= maxConns) {

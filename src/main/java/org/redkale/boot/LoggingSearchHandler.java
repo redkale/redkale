@@ -79,14 +79,18 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                             int size = batchSize;
                             while (--size > 0) {
                                 log = logqueue.poll();
-                                if (log == null) break;
+                                if (log == null) {
+                                    break;
+                                }
                                 logList.add(log);
                             }
                             source.insert(logList);
                         }
                     } catch (Exception e) {
                         ErrorManager err = getErrorManager();
-                        if (err != null) err.error(null, e, ErrorManager.WRITE_FAILURE);
+                        if (err != null) {
+                            err.error(null, e, ErrorManager.WRITE_FAILURE);
+                        }
                     } finally {
                         logList.clear();
                     }
@@ -96,31 +100,49 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         }.start();
     }
 
-    private synchronized void initSource() {
-        if (retryCount.get() < 1) return;
+    private void initSource() {
+        if (retryCount.get() < 1) {
+            return;
+        }
         try {
             Utility.sleep(3000); //如果SearchSource自身在打印日志，需要停顿一点时间让SearchSource初始化完成
             if (application == null) {
                 Utility.sleep(3000);
             }
-            if (application == null) return;
+            if (application == null) {
+                return;
+            }
             this.source = (SearchSource) application.loadDataSource(sourceResourceName, false);
-            if (retryCount.get() == 1 && this.source == null) System.err.println("ERROR: not load logging.source(" + sourceResourceName + ")");
+            if (retryCount.get() == 1 && this.source == null) {
+                System.err.println("ERROR: not load logging.source(" + sourceResourceName + ")");
+            }
         } catch (Exception t) {
             ErrorManager err = getErrorManager();
-            if (err != null) err.error(null, t, ErrorManager.WRITE_FAILURE);
+            if (err != null) {
+                err.error(null, t, ErrorManager.WRITE_FAILURE);
+            }
         } finally {
             retryCount.decrementAndGet();
         }
     }
 
     private static boolean checkTagName(String name) {  //只能是字母、数字、短横、点、%、$和下划线
-        if (name.isEmpty()) return false;
+        if (name.isEmpty()) {
+            return false;
+        }
         for (char ch : name.toCharArray()) {
-            if (ch >= '0' && ch <= '9') continue;
-            if (ch >= 'a' && ch <= 'z') continue;
-            if (ch >= 'A' && ch <= 'Z') continue;
-            if (ch == '_' || ch == '-' || ch == '%' || ch == '$' || ch == '.') continue;
+            if (ch >= '0' && ch <= '9') {
+                continue;
+            }
+            if (ch >= 'a' && ch <= 'z') {
+                continue;
+            }
+            if (ch >= 'A' && ch <= 'Z') {
+                continue;
+            }
+            if (ch == '_' || ch == '-' || ch == '%' || ch == '$' || ch == '.') {
+                continue;
+            }
             return false;
         }
         return true;
@@ -135,7 +157,9 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         }
         String tagstr = manager.getProperty(cname + ".tag");
         if (tagstr != null && !tagstr.isEmpty()) {
-            if (!checkTagName(tagstr.replaceAll("\\$\\{.+\\}", ""))) throw new RuntimeException("found illegal logging.property " + cname + ".tag = " + tagstr);
+            if (!checkTagName(tagstr.replaceAll("\\$\\{.+\\}", ""))) {
+                throw new RuntimeException("found illegal logging.property " + cname + ".tag = " + tagstr);
+            }
             this.tag = tagstr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty(RESNAME_APP_NAME, ""));
             if (this.tag.contains("%")) {
                 this.tagDateFormat = this.tag;
@@ -169,11 +193,15 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             }
         } catch (Exception e) {
         }
-        if (getFormatter() == null) setFormatter(new SimpleFormatter());
+        if (getFormatter() == null) {
+            setFormatter(new SimpleFormatter());
+        }
 
         String encodingstr = manager.getProperty(cname + ".encoding");
         try {
-            if (encodingstr != null) setEncoding(encodingstr);
+            if (encodingstr != null) {
+                setEncoding(encodingstr);
+            }
         } catch (Exception e) {
         }
 
@@ -188,12 +216,18 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     @Override
     public void publish(LogRecord log) {
-        if (!isLoggable(log)) return;
-        if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) return;
+        if (!isLoggable(log)) {
+            return;
+        }
+        if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) {
+            return;
+        }
         if (log.getSourceClassName() != null) {
             StackTraceElement[] ses = new Throwable().getStackTrace();
             for (int i = 2; i < ses.length; i++) {
-                if (ses[i].getClassName().startsWith("java.util.logging")) continue;
+                if (ses[i].getClassName().startsWith("java.util.logging")) {
+                    continue;
+                }
                 log.setSourceClassName(ses[i].getClassName());
                 log.setSourceMethodName(ses[i].getMethodName());
                 break;

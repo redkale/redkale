@@ -31,9 +31,9 @@ public class AsyncIOGroup extends AsyncGroup {
 
     private boolean started;
 
-    private boolean closed;
-
     private boolean skipClose;
+
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     final AsyncIOThread[] ioReadThreads;
 
@@ -132,7 +132,7 @@ public class AsyncIOGroup extends AsyncGroup {
         if (started) {
             return this;
         }
-        if (closed) {
+        if (closed.get()) {
             throw new RuntimeException("group is closed");
         }
         for (int i = 0; i < this.ioReadThreads.length; i++) {
@@ -162,21 +162,19 @@ public class AsyncIOGroup extends AsyncGroup {
         return this;
     }
 
-    public synchronized AsyncIOGroup dispose() {
-        if (closed) {
-            return this;
+    public AsyncIOGroup dispose() {
+        if (closed.compareAndSet(false, true)) {
+            for (AsyncIOThread t : this.ioReadThreads) {
+                t.close();
+            }
+            for (AsyncIOThread t : this.ioWriteThreads) {
+                t.close();
+            }
+            if (connectThread != null) {
+                connectThread.close();
+            }
+            this.timeoutExecutor.shutdownNow();
         }
-        for (AsyncIOThread t : this.ioReadThreads) {
-            t.close();
-        }
-        for (AsyncIOThread t : this.ioWriteThreads) {
-            t.close();
-        }
-        if (connectThread != null) {
-            connectThread.close();
-        }
-        this.timeoutExecutor.shutdownNow();
-        closed = true;
         return this;
     }
 

@@ -14,6 +14,7 @@ import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.boot.Application;
@@ -43,7 +44,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private ObjectPool<ByteBuffer> safeBufferPool;
 
-    private final Object groupLock = new Object();
+    private final ReentrantLock groupLock = new ReentrantLock();
 
     private WebSocketAsyncGroup asyncGroup;
 
@@ -546,12 +547,15 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         HttpContext rs = new HttpContext(contextConfig);
         rs.webSocketWriterIOThreadFunc = ws -> {
             if (asyncGroup == null) {
-                synchronized (groupLock) {
+                groupLock.lock();
+                try {
                     if (asyncGroup == null) {
                         WebSocketAsyncGroup g = new WebSocketAsyncGroup("Redkale-HTTP:" + address.getPort() + "-WebSocketWriteIOThread-%s", workExecutor, bufferCapacity, safeBufferPool);
                         g.start();
                         asyncGroup = g;
                     }
+                } finally {
+                    groupLock.unlock();
                 }
             }
             return (WebSocketWriteIOThread) asyncGroup.nextWriteIOThread();

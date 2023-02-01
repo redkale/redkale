@@ -7,6 +7,7 @@ package org.redkale.util;
 import java.lang.reflect.Type;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -23,6 +24,8 @@ import static org.redkale.asm.Opcodes.*;
  */
 @SuppressWarnings("unchecked")
 public abstract class TypeToken<T> {
+
+    private static final ReentrantLock syncLock = new ReentrantLock();
 
     private final Type type;
 
@@ -487,7 +490,12 @@ public abstract class TypeToken<T> {
                 }
             }
             if (count == actualTypeArguments0.length) {
-                return createParameterizedType0((Class) rawType0, actualTypeArguments0);
+                syncLock.lock();
+                try {
+                    return createParameterizedType0((Class) rawType0, actualTypeArguments0);
+                } finally {
+                    syncLock.unlock();
+                }
             }
         }
         return new ParameterizedType() {
@@ -557,7 +565,7 @@ public abstract class TypeToken<T> {
     }
 
     // 注意:  RetResult<Map<String, Long>[]> 这种泛型带[]的尚未实现支持
-    private static synchronized Type createParameterizedType0(final Class rawType, final Type... actualTypeArguments) {
+    private static Type createParameterizedType0(final Class rawType, final Type... actualTypeArguments) {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         StringBuilder tmpps = new StringBuilder(getClassTypeDescriptor(rawType));
         for (Type cz : actualTypeArguments) {

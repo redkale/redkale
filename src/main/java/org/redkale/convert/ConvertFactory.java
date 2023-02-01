@@ -14,6 +14,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import java.util.stream.*;
 import org.redkale.annotation.ConstructorParameters;
@@ -63,6 +64,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     private final Set<Class> skipIgnores = new HashSet();
 
     final Set<String> ignoreMapColumns = new HashSet();
+
+    final ReentrantLock ignoreMapColumnLock = new ReentrantLock();
 
     //key:需要屏蔽的字段；value：排除的字段名
     private final ConcurrentHashMap<Class, Set<String>> ignoreAlls = new ConcurrentHashMap();
@@ -222,18 +225,15 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 return defProtobufConvert;
             }
         }
-        synchronized (loaderInited) {
-            if (!loaderInited.get()) {
-                Iterator<ConvertProvider> it = ServiceLoader.load(ConvertProvider.class).iterator();
-                RedkaleClassLoader.putServiceLoader(ConvertProvider.class);
-                while (it.hasNext()) {
-                    ConvertProvider cl = it.next();
-                    RedkaleClassLoader.putReflectionPublicConstructors(cl.getClass(), cl.getClass().getName());
-                    if (cl.type() == ConvertType.PROTOBUF) {
-                        defProtobufConvert = cl.convert();
-                    }
+        if (loaderInited.compareAndSet(false, true)) {
+            Iterator<ConvertProvider> it = ServiceLoader.load(ConvertProvider.class).iterator();
+            RedkaleClassLoader.putServiceLoader(ConvertProvider.class);
+            while (it.hasNext()) {
+                ConvertProvider cl = it.next();
+                RedkaleClassLoader.putReflectionPublicConstructors(cl.getClass(), cl.getClass().getName());
+                if (cl.type() == ConvertType.PROTOBUF) {
+                    defProtobufConvert = cl.convert();
                 }
-                loaderInited.set(true);
             }
         }
         return type == ConvertType.PROTOBUF ? defProtobufConvert : null;
@@ -858,7 +858,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public final void register(final Class type, boolean ignore, String... columns) {
         if (type == Map.class) {
-            synchronized (ignoreMapColumns) {
+            ignoreMapColumnLock.lock();
+            try {
                 if (ignore) {
                     for (String column : columns) {
                         ignoreMapColumns.add(column);
@@ -868,6 +869,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                         ignoreMapColumns.remove(column);
                     }
                 }
+            } finally {
+                ignoreMapColumnLock.unlock();
             }
             return;
         }
@@ -878,7 +881,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public final void register(final Class type, boolean ignore, Collection<String> columns) {
         if (type == Map.class) {
-            synchronized (ignoreMapColumns) {
+            ignoreMapColumnLock.lock();
+            try {
                 if (ignore) {
                     for (String column : columns) {
                         ignoreMapColumns.add(column);
@@ -888,6 +892,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                         ignoreMapColumns.remove(column);
                     }
                 }
+            } finally {
+                ignoreMapColumnLock.unlock();
             }
             return;
         }

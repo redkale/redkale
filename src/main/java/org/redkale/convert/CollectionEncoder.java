@@ -7,6 +7,7 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.Collection;
+import java.util.concurrent.locks.*;
 
 /**
  * Collection的序列化操作类  <br>
@@ -27,7 +28,9 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
 
     protected volatile boolean inited = false;
 
-    protected final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
 
     public CollectionEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
@@ -44,8 +47,11 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
             }
         } finally {
             inited = true;
-            synchronized (lock) {
-                lock.notifyAll();
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -67,12 +73,12 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
         }
         if (this.componentEncoder == null) {
             if (!this.inited) {
-                synchronized (lock) {
-                    try {
-                        lock.wait();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                } finally {
+                    lock.unlock();
                 }
             }
         }

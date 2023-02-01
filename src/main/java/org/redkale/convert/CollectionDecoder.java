@@ -7,6 +7,7 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.locks.*;
 import org.redkale.util.Creator;
 
 /**
@@ -32,7 +33,9 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
 
     protected volatile boolean inited = false;
 
-    protected final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
 
     public CollectionDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
@@ -53,8 +56,11 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
             }
         } finally {
             inited = true;
-            synchronized (lock) {
-                lock.notifyAll();
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -88,12 +94,12 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         }
         if (this.componentDecoder == null) {
             if (!this.inited) {
-                synchronized (lock) {
-                    try {
-                        lock.wait();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                } finally {
+                    lock.unlock();
                 }
             }
         }

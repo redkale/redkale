@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.Comment;
@@ -35,6 +36,8 @@ public final class EntityInfo<T> {
 
     //全局静态资源
     private static final ConcurrentHashMap<Class, EntityInfo> entityInfos = new ConcurrentHashMap<>();
+
+    private static final ReentrantLock infosLock = new ReentrantLock();
 
     //日志
     private static final Logger logger = Logger.getLogger(EntityInfo.class.getSimpleName());
@@ -103,6 +106,8 @@ public final class EntityInfo<T> {
 
     //用于存在database.table_20160202类似这种分布式表, 服务分布式部署时不存在的表名不一定真实不存在
     private final Set<String> disTables = new CopyOnWriteArraySet<>();
+
+    private final ReentrantLock disTableLock = new ReentrantLock();
 
     //不能为null的字段名
     private final Set<String> notNullColumns = new CopyOnWriteArraySet<>();
@@ -226,7 +231,8 @@ public final class EntityInfo<T> {
         if (rs != null && (rs.cache == null || rs.cache.isFullLoaded())) {
             return rs;
         }
-        synchronized (entityInfos) {
+        infosLock.lock();
+        try {
             rs = entityInfos.get(clazz);
             if (rs == null) {
                 rs = new EntityInfo(clazz, cacheForbidden, conf, source, fullloader);
@@ -239,6 +245,8 @@ public final class EntityInfo<T> {
                 rs.cache.fullLoadAsync();
             }
             return rs;
+        } finally {
+            infosLock.unlock();
         }
     }
 
@@ -771,8 +779,8 @@ public final class EntityInfo<T> {
         return tableStrategy;
     }
 
-    public Object disTableLock() {
-        return disTables;
+    public ReentrantLock disTableLock() {
+        return disTableLock;
     }
 
     public boolean containsDisTable(String tableKey) {

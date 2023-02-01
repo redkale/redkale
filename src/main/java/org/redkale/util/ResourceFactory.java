@@ -12,6 +12,7 @@ import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
@@ -43,6 +44,8 @@ public final class ResourceFactory {
     private static final boolean skipCheckRequired = Boolean.getBoolean("redkale.resource.skip.check");
 
     private static final Logger logger = Logger.getLogger(ResourceFactory.class.getSimpleName());
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     private final ResourceFactory parent;
 
@@ -110,6 +113,14 @@ public final class ResourceFactory {
      */
     public void release() {
         this.store.clear();
+    }
+
+    public void lock() {
+        lock.lock();
+    }
+
+    public void unlock() {
+        lock.unlock();
     }
 
     /**
@@ -1116,6 +1127,8 @@ public final class ResourceFactory {
 
     private static class ResourceElement<T> {
 
+        private static final ReentrantLock syncLock = new ReentrantLock();
+
         private static final HashMap<String, Method> listenerMethods = new HashMap<>(); //不使用ConcurrentHashMap是因为value不能存null
 
         public final WeakReference<T> dest;
@@ -1140,7 +1153,8 @@ public final class ResourceFactory {
         }
 
         private static Method findListener(Class clazz, Class fieldType, AtomicBoolean diff) {
-            synchronized (listenerMethods) {
+            syncLock.lock();
+            try {
                 Class loop = clazz;
                 Method m = listenerMethods.get(clazz.getName() + "-" + fieldType.getName());
                 if (m != null) {
@@ -1167,6 +1181,8 @@ public final class ResourceFactory {
                 } while ((loop = loop.getSuperclass()) != Object.class);
                 listenerMethods.put(clazz.getName() + "-" + fieldType.getName(), m);
                 return m;
+            } finally {
+                syncLock.unlock();
             }
         }
     }

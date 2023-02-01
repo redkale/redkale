@@ -7,6 +7,7 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.locks.*;
 import java.util.function.BiFunction;
 
 /**
@@ -30,7 +31,9 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
     protected volatile boolean inited = false;
 
-    protected final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
 
     protected final Set<String> ignoreMapColumns;
 
@@ -45,13 +48,19 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
                 this.keyEncoder = factory.getAnyEncoder();
                 this.valueEncoder = factory.getAnyEncoder();
             }
-            synchronized (factory.ignoreMapColumns) {
+            factory.ignoreMapColumnLock.lock();
+            try {
                 this.ignoreMapColumns = factory.ignoreMapColumns.isEmpty() ? null : new HashSet<>(factory.ignoreMapColumns);
+            } finally {
+                factory.ignoreMapColumnLock.unlock();
             }
         } finally {
             inited = true;
-            synchronized (lock) {
-                lock.notifyAll();
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -70,12 +79,12 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
 
         if (this.keyEncoder == null || this.valueEncoder == null) {
             if (!this.inited) {
-                synchronized (lock) {
-                    try {
-                        lock.wait();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                } finally {
+                    lock.unlock();
                 }
             }
         }

@@ -6,6 +6,7 @@
 package org.redkale.net.sncp;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 import org.redkale.net.DispatcherServlet;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -19,13 +20,14 @@ import org.redkale.util.*;
  */
 public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
-    private final Object sncplock = new Object();
+    private final ReentrantLock sncplock = new ReentrantLock();
 
     private final byte[] pongBytes = Sncp.getPongBytes();
 
     @Override
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, Uint128... mappings) {
-        synchronized (sncplock) {
+        sncplock.lock();
+        try {
             for (SncpServlet s : getServlets()) {
                 if (s.service == servlet.service) {
                     throw new SncpException(s.service + " repeat addSncpServlet");
@@ -34,12 +36,15 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
             setServletConf(servlet, conf);
             putMapping(servlet.getServiceid(), servlet);
             putServlet(servlet);
+        } finally {
+            sncplock.unlock();
         }
     }
 
     public <T> SncpServlet removeSncpServlet(Service service) {
         SncpServlet rs = null;
-        synchronized (sncplock) {
+        sncplock.lock();
+        try {
             for (SncpServlet servlet : getServlets()) {
                 if (servlet.service == service) {
                     rs = servlet;
@@ -50,6 +55,8 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
                 removeMapping(rs);
                 removeServlet(rs);
             }
+        } finally {
+            sncplock.unlock();
         }
         return rs;
     }

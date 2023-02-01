@@ -8,6 +8,7 @@ package org.redkale.mq;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.*;
 import java.util.stream.Collectors;
 import org.redkale.annotation.AutoLoad;
@@ -46,9 +47,13 @@ public abstract class MessageAgent implements Resourcable {
 
     protected MessageProducers sncpProducer;
 
-    protected final Object httpProducerLock = new Object();
+    protected final ReentrantLock httpProducerLock = new ReentrantLock();
 
-    protected final Object sncpProducerLock = new Object();
+    protected final ReentrantLock sncpProducerLock = new ReentrantLock();
+
+    protected final ReentrantLock httpNodesLock = new ReentrantLock();
+
+    protected final ReentrantLock sncpNodesLock = new ReentrantLock();
 
     protected final AtomicLong msgSeqno = new AtomicLong(System.nanoTime());
 
@@ -222,7 +227,8 @@ public abstract class MessageAgent implements Resourcable {
     //获取指定topic的生产处理器
     public MessageProducers getSncpProducer() {
         if (this.sncpProducer == null) {
-            synchronized (sncpProducerLock) {
+            sncpProducerLock.lock();
+            try {
                 if (this.sncpProducer == null) {
                     long s = System.currentTimeMillis();
                     MessageProducer[] producers = new MessageProducer[producerCount];
@@ -237,6 +243,8 @@ public abstract class MessageAgent implements Resourcable {
                     }
                     this.sncpProducer = new MessageProducers(producers);
                 }
+            } finally {
+                sncpProducerLock.unlock();
             }
         }
         return this.sncpProducer;
@@ -244,7 +252,8 @@ public abstract class MessageAgent implements Resourcable {
 
     public MessageProducers getHttpProducer() {
         if (this.httpProducer == null) {
-            synchronized (httpProducerLock) {
+            httpProducerLock.lock();
+            try {
                 if (this.httpProducer == null) {
                     long s = System.currentTimeMillis();
                     MessageProducer[] producers = new MessageProducer[producerCount];
@@ -259,6 +268,8 @@ public abstract class MessageAgent implements Resourcable {
                     }
                     this.httpProducer = new MessageProducers(producers);
                 }
+            } finally {
+                httpProducerLock.unlock();
             }
         }
         return this.httpProducer;
@@ -282,7 +293,7 @@ public abstract class MessageAgent implements Resourcable {
     //创建指定topic的消费处理器
     public abstract MessageConsumer createConsumer(String[] topics, String group, MessageProcessor processor);
 
-    public final synchronized void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
+    public final void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) {
             return;
@@ -299,14 +310,19 @@ public abstract class MessageAgent implements Resourcable {
         }
         String[] topics = generateHttpReqTopics(service);
         String consumerid = generateHttpConsumerid(topics, service);
-        if (messageNodes.containsKey(consumerid)) {
-            throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+        httpNodesLock.lock();
+        try {
+            if (messageNodes.containsKey(consumerid)) {
+                throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+            }
+            HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, httpMessageClient, getHttpProducer(), ns, service, servlet);
+            this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topics, consumerid, processor)));
+        } finally {
+            httpNodesLock.unlock();
         }
-        HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, httpMessageClient, getHttpProducer(), ns, service, servlet);
-        this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topics, consumerid, processor)));
     }
 
-    public final synchronized void putService(NodeSncpServer ns, Service service, SncpServlet servlet) {
+    public final void putService(NodeSncpServer ns, Service service, SncpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) {
             return;
@@ -317,11 +333,16 @@ public abstract class MessageAgent implements Resourcable {
         }
         String topic = generateSncpReqTopic(service);
         String consumerid = generateSncpConsumerid(topic, service);
-        if (messageNodes.containsKey(consumerid)) {
-            throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+        sncpNodesLock.lock();
+        try {
+            if (messageNodes.containsKey(consumerid)) {
+                throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+            }
+            SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, sncpMessageClient, getSncpProducer(), ns, service, servlet);
+            this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(new String[]{topic}, consumerid, processor)));
+        } finally {
+            sncpNodesLock.unlock();
         }
-        SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, sncpMessageClient, getSncpProducer(), ns, service, servlet);
-        this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(new String[]{topic}, consumerid, processor)));
     }
 
     //格式: sncp.req.user

@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
@@ -148,8 +149,12 @@ public final class Application {
     //CacheSource 资源
     final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
 
+    private final ReentrantLock cacheSourceLock = new ReentrantLock();
+
     //DataSource 资源
     final List<DataSource> dataSources = new CopyOnWriteArrayList<>();
+
+    private final ReentrantLock dataSourceLock = new ReentrantLock();
 
     //NodeServer 资源, 顺序必须是sncps, others, watchs
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
@@ -166,6 +171,8 @@ public final class Application {
 
     //只存放不以system.property.、mimetype.property.、redkale.开头的配置项
     private final Properties envProperties = new Properties();
+
+    private final ReentrantLock envPropertiesLock = new ReentrantLock();
 
     //配置信息，只读版Properties
     private final Environment environment;
@@ -1223,7 +1230,8 @@ public final class Application {
     }
 
     CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
-        synchronized (cacheSources) {
+        cacheSourceLock.lock();
+        try {
             long st = System.currentTimeMillis();
             CacheSource old = resourceFactory.find(sourceName, CacheSource.class);
             if (old != null) {
@@ -1262,11 +1270,14 @@ public final class Application {
                 logger.log(Level.SEVERE, "load application CaheSource error: " + sourceConf, e);
             }
             return null;
+        } finally {
+            cacheSourceLock.unlock();
         }
     }
 
     DataSource loadDataSource(final String sourceName, boolean autoMemory) {
-        synchronized (dataSources) {
+        dataSourceLock.lock();
+        try {
             DataSource old = resourceFactory.find(sourceName, DataSource.class);
             if (old != null) {
                 return old;
@@ -1313,6 +1324,8 @@ public final class Application {
                 logger.log(Level.SEVERE, "load application DataSource error: " + sourceConf, e);
             }
             return null;
+        } finally {
+            dataSourceLock.unlock();
         }
     }
 
@@ -1647,6 +1660,7 @@ public final class Application {
         this.servicecdl = new CountDownLatch(serconfs.size());
         CountDownLatch sercdl = new CountDownLatch(serconfs.size());
         final AtomicBoolean inited = new AtomicBoolean(false);
+        final ReentrantLock nodeLock = new ReentrantLock();
         final Map<String, Class<? extends NodeServer>> nodeClasses = new HashMap<>();
         for (final AnyValue serconf : serconfs) {
             Thread thread = new Thread() {
@@ -1677,7 +1691,8 @@ public final class Application {
                             server = new NodeHttpServer(Application.this, serconf);
                         } else {
                             if (!inited.get()) {
-                                synchronized (nodeClasses) {
+                                nodeLock.lock();
+                                try {
                                     if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
                                         ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
                                         ClassFilter.Loader.load(home, classLoader, ((excludelibs != null ? (excludelibs + ";") : "") + serconf.getValue("excludelibs", "")).split(";"), profilter);
@@ -1696,6 +1711,8 @@ public final class Application {
                                             nodeClasses.put(p, type);
                                         }
                                     }
+                                } finally {
+                                    nodeLock.unlock();
                                 }
                             }
                             Class<? extends NodeServer> nodeClass = nodeClasses.get(protocol);
@@ -1955,7 +1972,8 @@ public final class Application {
         if (events == null || events.isEmpty()) {
             return;
         }
-        synchronized (envProperties) {
+        envPropertiesLock.lock();
+        try {
             Properties envRegisterProps = new Properties();
             Set<String> envRemovedKeys = new HashSet<>();
             Properties envChangedProps = new Properties();
@@ -2349,6 +2367,8 @@ public final class Application {
                 clusterRemovedKeys.forEach(k -> this.clusterProperties.remove(k));
                 this.clusterProperties.putAll(clusterChangedProps);
             }
+        } finally {
+            envPropertiesLock.unlock();
         }
     }
 

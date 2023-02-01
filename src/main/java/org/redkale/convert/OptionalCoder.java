@@ -6,7 +6,8 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.Optional;
+import java.util.concurrent.locks.*;
 
 /**
  * Optional 的SimpledCoder实现
@@ -30,7 +31,9 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
 
     protected volatile boolean inited = false;
 
-    private final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
 
     @SuppressWarnings("unchecked")
     public OptionalCoder(final ConvertFactory factory, final Type type) {
@@ -61,8 +64,11 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
             }
         } finally {
             inited = true;
-            synchronized (lock) {
-                lock.notifyAll();
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -75,12 +81,12 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
         }
         if (this.encoder == null) {
             if (!this.inited) {
-                synchronized (lock) {
-                    try {
-                        lock.wait();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                } finally {
+                    lock.unlock();
                 }
             }
         }
@@ -91,12 +97,12 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
     public Optional<T> convertFrom(R in) {
         if (this.decoder == null) {
             if (!this.inited) {
-                synchronized (lock) {
-                    try {
-                        lock.wait();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                } finally {
+                    lock.unlock();
                 }
             }
         }

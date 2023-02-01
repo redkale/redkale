@@ -7,6 +7,7 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.locks.*;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
@@ -41,7 +42,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected volatile boolean inited = false;
 
-    protected final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
 
     protected ObjectDecoder(Type type) {
         this.type = ((type instanceof Class) && ((Class) type).isInterface()) ? Object.class : type;
@@ -295,8 +298,11 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             }
         } finally {
             inited = true;
-            synchronized (lock) {
-                lock.notifyAll();
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -319,12 +325,12 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(objin);
         }
         if (!this.inited) {
-            synchronized (lock) {
-                try {
-                    lock.wait();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            lock.lock();
+            try {
+                condition.await();
+            } catch (Exception e) {
+            } finally {
+                lock.unlock();
             }
         }
         if (this.creator == null) {

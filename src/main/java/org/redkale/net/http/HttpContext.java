@@ -63,14 +63,12 @@ public class HttpContext extends Context {
 //
 //    protected void addRequestURINode(String path) {
 //        RequestURINode node = new RequestURINode(path);
-//        synchronized (this) {
 //            if (this.uriCacheNodes != null) {
 //                for (int i = 0; i < uriCacheNodes.length; i++) {
 //                    if (uriCacheNodes[i].path.equals(path)) return;
 //                }
 //            }
 //            this.uriCacheNodes = Utility.append(this.uriCacheNodes, node);
-//        }
 //    }
     @Override
     protected void updateReadIOThread(AsyncConnection conn, AsyncIOThread ioReadThread) {
@@ -85,7 +83,7 @@ public class HttpContext extends Context {
     protected void updateWebSocketWriteIOThread(WebSocket webSocket) {
         WebSocketWriteIOThread writeIOThread = webSocketWriterIOThreadFunc.apply(webSocket);
         updateWriteIOThread(webSocket._channel, writeIOThread);
-        webSocket._writeIOThread = writeIOThread; 
+        webSocket._writeIOThread = writeIOThread;
     }
 
     protected String createSessionid() {
@@ -96,16 +94,11 @@ public class HttpContext extends Context {
 
     @SuppressWarnings("unchecked")
     protected <H extends CompletionHandler> Creator<H> loadAsyncHandlerCreator(Class<H> handlerClass) {
-        Creator<H> creator = asyncHandlerCreators.get(handlerClass);
-        if (creator == null) {
-            creator = createAsyncHandlerCreator(handlerClass);
-            asyncHandlerCreators.put(handlerClass, creator);
-        }
-        return creator;
+        return asyncHandlerCreators.computeIfAbsent(handlerClass, c -> createAsyncHandlerCreator(c));
     }
 
     @SuppressWarnings("unchecked")
-    private static synchronized <H extends CompletionHandler> Creator<H> createAsyncHandlerCreator(Class<H> handlerClass) {
+    private static <H extends CompletionHandler> Creator<H> createAsyncHandlerCreator(Class<H> handlerClass) {
         //生成规则与SncpAsyncHandler.Factory 很类似
         //------------------------------------------------------------- 
         final boolean handlerinterface = handlerClass.isInterface();

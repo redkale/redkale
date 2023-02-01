@@ -1042,7 +1042,6 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
                     return newkvs;         // Use the new table already
                 // TODO - use a wait with timeout, so we'll wakeup as soon as the new table
                 // is ready, or after the timeout in any case.
-                //synchronized( this ) { wait(8*megs); }         // Timeout - we always wakeup
                 // For now, sleep a tad and see if the 2 guys already trying to make
                 // the table actually get around to making it happen.
                 try {
@@ -1875,10 +1874,8 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
                 //  // We could use a wait with timeout, so we'll wakeup as soon as the new
                 //  // table is ready, or after the timeout in any case.  Annoyingly, this
                 //  // breaks the non-blocking property - so for now we just briefly sleep.
-                //  //synchronized( this ) { wait(8*megs); }         // Timeout - we always wakeup
                 //  try { Thread.sleep(r>>17); } catch( InterruptedException e ) { }
                 //  if( master._cat != this ) return old;
-                //}
 
                 CAT newcat = new CAT(this, t.length * 2, 0);
                 // Take 1 stab at updating the CAT with the new larger size.  If this

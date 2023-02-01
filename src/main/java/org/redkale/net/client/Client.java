@@ -52,7 +52,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     private final AtomicInteger connSeqno = new AtomicInteger();
 
-    private boolean closed;
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     protected ScheduledFuture timeoutFuture;
 
@@ -180,28 +180,26 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     protected void handlePingResult(C conn, P result) {
     }
 
-    public synchronized void close() {
-        if (this.closed) {
-            return;
-        }
-        this.timeoutScheduler.shutdownNow();
-        for (ClientConnection conn : this.connArray) {
-            if (conn == null) {
-                continue;
-            }
-            final R closeReq = closeRequestSupplier == null ? null : closeRequestSupplier.get();
-            if (closeReq == null) {
-                conn.dispose(null);
-            } else {
-                try {
-                    conn.writeChannel(closeReq).get(1, TimeUnit.SECONDS);
-                } catch (Exception e) {
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
+            this.timeoutScheduler.shutdownNow();
+            for (ClientConnection conn : this.connArray) {
+                if (conn == null) {
+                    continue;
                 }
-                conn.dispose(null);
+                final R closeReq = closeRequestSupplier == null ? null : closeRequestSupplier.get();
+                if (closeReq == null) {
+                    conn.dispose(null);
+                } else {
+                    try {
+                        conn.writeChannel(closeReq).get(1, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                    }
+                    conn.dispose(null);
+                }
             }
+            group.close();
         }
-        group.close();
-        this.closed = true;
     }
 
     public final CompletableFuture<P> sendAsync(R request) {

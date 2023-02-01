@@ -71,8 +71,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    private final MessageDigest digest = getMessageDigest();
-
     private final BiConsumer<WebSocket, Object> restMessageConsumer = createRestOnMessageConsumer();
 
     protected Type messageRestType;  //RestWebSocket时会被修改
@@ -276,10 +274,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             //onOpen成功或者存在delayPackets
             webSocket._sessionid = sessionid;
             request.setKeepAlive(true);
-            byte[] bytes = (key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes();
-            synchronized (digest) {
-                bytes = digest.digest(bytes);
-            }
+            byte[] bytes = sha1(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+
             response.setStatus(101);
             response.setHeader("Connection", "Upgrade");
             response.addHeader("Upgrade", "websocket");
@@ -295,7 +291,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                     webSocket._readHandler = new WebSocketReadHandler(response.getContext(), webSocket, restMessageConsumer);
                     //webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket);
                     response.getContext().updateWebSocketWriteIOThread(webSocket);
-                    
+
                     Runnable createUseridHandler = () -> {
                         CompletableFuture<Serializable> userFuture = webSocket.createUserid();
                         if (userFuture == null) {
@@ -422,9 +418,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         return null;
     }
 
-    private static MessageDigest getMessageDigest() {
+    private static byte[] sha1(String str) {
         try {
-            return MessageDigest.getInstance("SHA-1");
+            return MessageDigest.getInstance("SHA-1").digest(str.getBytes());
         } catch (Exception e) {
             throw new HttpException(e);
         }

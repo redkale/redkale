@@ -6,6 +6,7 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
+import java.util.concurrent.locks.*;
 
 /**
  * 数组的序列化操作类  <br>
@@ -33,7 +34,9 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     protected volatile boolean inited = false;
 
-    protected final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
 
     public ArrayEncoder(final ConvertFactory factory, final Type type) {
         this.type = type;
@@ -55,8 +58,11 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             this.subTypeFinal = (this.componentType instanceof Class) && Modifier.isFinal(((Class) this.componentType).getModifiers());
         } finally {
             inited = true;
-            synchronized (lock) {
-                lock.notifyAll();
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -80,12 +86,12 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
         Encodeable<Writer, Object> itemEncoder = this.componentEncoder;
         if (itemEncoder == null) {
             if (!this.inited) {
-                synchronized (lock) {
-                    try {
-                        lock.wait();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                } finally {
+                    lock.unlock();
                 }
                 itemEncoder = this.componentEncoder;
             }

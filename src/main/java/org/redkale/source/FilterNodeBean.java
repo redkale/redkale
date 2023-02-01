@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import org.redkale.persistence.Transient;
 import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.*;
@@ -23,7 +24,9 @@ import org.redkale.util.*;
  */
 public final class FilterNodeBean<T extends FilterBean> implements Comparable<FilterNodeBean<T>> {
 
-    private static final ConcurrentHashMap<Class, FilterNodeBean> beanodes = new ConcurrentHashMap<>();
+    private static final ReentrantLock beanLock = new ReentrantLock();
+
+    private static final ConcurrentHashMap<Class, FilterNodeBean> beanNodes = new ConcurrentHashMap<>();
 
     private Attribute<T, Serializable> beanAttr;
 
@@ -147,17 +150,20 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
     }
 
     public static FilterNodeBean load(Class<? extends FilterBean> clazz) {
-        FilterNodeBean rs = beanodes.get(clazz);
+        FilterNodeBean rs = beanNodes.get(clazz);
         if (rs != null) {
             return rs;
         }
-        synchronized (beanodes) {
-            rs = beanodes.get(clazz);
+        beanLock.lock();
+        try {
+            rs = beanNodes.get(clazz);
             if (rs == null) {
                 rs = createFilterNodeBean(clazz);
-                beanodes.put(clazz, rs);
+                beanNodes.put(clazz, rs);
             }
             return rs;
+        } finally {
+            beanLock.unlock();
         }
     }
 

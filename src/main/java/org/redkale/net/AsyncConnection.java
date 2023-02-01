@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.*;
@@ -58,7 +59,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     private Consumer<ByteBuffer> writeBufferConsumer;
 
-    private final Object pipelineLock = new Object();
+    private final ReentrantLock pipelineLock = new ReentrantLock();
 
     private ByteBufferWriter pipelineWriter;
 
@@ -519,7 +520,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     //返回pipelineCount个数数据是否全部写入完毕
     public boolean appendPipeline(int pipelineIndex, int pipelineCount, byte[] bs, int offset, int length) {
-        synchronized (pipelineLock) {
+        pipelineLock.lock();
+        try {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
                 writer = ByteBufferWriter.create(getWriteBufferSupplier());
@@ -547,6 +549,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 }
                 return false;
             }
+        } finally {
+            pipelineLock.unlock();
         }
     }
 
@@ -557,7 +561,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     //返回pipelineCount个数数据是否全部写入完毕
     public boolean appendPipeline(int pipelineIndex, int pipelineCount, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
-        synchronized (pipelineLock) {
+        pipelineLock.lock();
+        try {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
                 writer = ByteBufferWriter.create(getWriteBufferSupplier());
@@ -585,6 +590,8 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
                 }
                 return false;
             }
+        } finally {
+            pipelineLock.unlock();
         }
     }
 

@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
@@ -126,7 +127,7 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     boolean initiateClosed; //收到客户端发送的CLOSE消息
 
-    private boolean closed = false;
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     protected WebSocket() {
     }
@@ -956,14 +957,7 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     //closeRunner
     CompletableFuture<Void> kill(int code, String reason) {
-        if (closed) {
-            return null;
-        }
-        synchronized (this) {
-            if (closed) {
-                return null;
-            }
-            closed = true;
+        if (closed.compareAndSet(false, true)) {
             if (_channel == null) {
                 return null;
             }
@@ -974,6 +968,8 @@ public abstract class WebSocket<G extends Serializable, T> {
                 return future;
             }
             return CompletableFuture.allOf(future, closeFuture);
+        } else {
+            return null;
         }
     }
 
@@ -983,7 +979,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return boolean
      */
     public final boolean isClosed() {
-        return this.closed;
+        return this.closed.get();
     }
 
     @Override

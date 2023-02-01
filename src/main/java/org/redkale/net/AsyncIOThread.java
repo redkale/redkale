@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.util.*;
@@ -38,7 +39,7 @@ public class AsyncIOThread extends WorkThread {
 
     private final Queue<Consumer<Selector>> registerQueue = Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 16) : new ConcurrentLinkedQueue<>();
 
-    private boolean closed;
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     public AsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
         super(g, name, index, threads, workExecutor, null);
@@ -50,7 +51,7 @@ public class AsyncIOThread extends WorkThread {
     }
 
     protected boolean isClosed() {
-        return closed;
+        return closed.get();
     }
 
     public static AsyncIOThread currAsyncIOThread() {
@@ -148,7 +149,7 @@ public class AsyncIOThread extends WorkThread {
                     try {
                         register.accept(selector);
                     } catch (Throwable t) {
-                        if (!this.closed) {
+                        if (!this.closed.get()) {
                             logger.log(Level.INFO, getName() + " register run failed", t);
                         }
                     }
@@ -158,7 +159,7 @@ public class AsyncIOThread extends WorkThread {
                     try {
                         command.run();
                     } catch (Throwable t) {
-                        if (!this.closed) {
+                        if (!this.closed.get()) {
                             logger.log(Level.INFO, getName() + " command run failed", t);
                         }
                     }
@@ -202,16 +203,15 @@ public class AsyncIOThread extends WorkThread {
                     }
                 }
             } catch (Throwable ex) {
-                if (!this.closed) {
+                if (!this.closed.get()) {
                     logger.log(Level.FINE, getName() + " selector run failed", ex);
                 }
             }
         }
     }
 
-    public synchronized void close() {
-        if (!this.closed) {
-            this.closed = true;
+    public void close() {
+        if (this.closed.compareAndSet(false, true)) {
             try {
                 this.selector.close();
             } catch (Exception e) {

@@ -51,9 +51,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
             } finally {
                 conn.pauseResuming.set(false);
                 conn.pauseWriting.set(false);
-                synchronized (conn.pauseRequests) {
-                    conn.pauseRequests.notify();
-                }
+                conn.signalPauseRequest();
             }
         }
     }
@@ -77,12 +75,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                         entry.conn.offerRespFuture(entry);
                         if (entry.conn.pauseWriting.get()) {
                             if (entry.conn.pauseResuming.get()) {
-                                try {
-                                    synchronized (entry.conn.pauseRequests) {
-                                        entry.conn.pauseRequests.wait(3_000);
-                                    }
-                                } catch (InterruptedException ie) {
-                                }
+                                entry.conn.awaitPauseRequest();
                             }
                             entry.conn.pauseRequests.add(entry);
                         } else {
@@ -94,12 +87,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                             entry.conn.offerRespFuture(entry);
                             if (entry.conn.pauseWriting.get()) {
                                 if (entry.conn.pauseResuming.get()) {
-                                    try {
-                                        synchronized (entry.conn.pauseRequests) {
-                                            entry.conn.pauseRequests.wait(3_000);
-                                        }
-                                    } catch (InterruptedException ie) {
-                                    }
+                                    entry.conn.awaitPauseRequest();
                                 }
                                 entry.conn.pauseRequests.add(entry);
                             } else {

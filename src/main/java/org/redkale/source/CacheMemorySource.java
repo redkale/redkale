@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.Pattern;
@@ -53,6 +54,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected final ConcurrentHashMap<String, CacheEntry<Object>> container = new ConcurrentHashMap<>();
+
+    protected final ReentrantLock containerLock = new ReentrantLock();
 
     protected final BiConsumer futureCompleteConsumer = (r, t) -> {
         if (t != null) {
@@ -196,7 +199,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public long hincrby(final String key, String field, long num) {
         CacheEntry entry = container.get(key);
         if (entry == null) {
-            synchronized (container) {
+            containerLock.lock();
+            try {
                 entry = container.get(key);
                 if (entry == null) {
                     ConcurrentHashMap<String, Serializable> map = new ConcurrentHashMap();
@@ -204,11 +208,14 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     entry = new CacheEntry(CacheEntryType.MAP, key, new AtomicLong(), null, null, map);
                     container.put(key, entry);
                 }
+            } finally {
+                containerLock.unlock();
             }
         }
         Serializable val = (Serializable) entry.mapValue.computeIfAbsent(field, f -> new AtomicLong());
         if (!(val instanceof AtomicLong)) {
-            synchronized (entry.mapValue) {
+            entry.mapLock.lock();
+            try {
                 if (!(val instanceof AtomicLong)) {
                     if (val == null) {
                         val = new AtomicLong();
@@ -217,6 +224,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     }
                     entry.mapValue.put(field, val);
                 }
+            } finally {
+                entry.mapLock.unlock();
             }
         }
         return ((AtomicLong) entry.mapValue.get(field)).addAndGet(num);
@@ -226,7 +235,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public double hincrbyFloat(final String key, String field, double num) {
         CacheEntry entry = container.get(key);
         if (entry == null) {
-            synchronized (container) {
+            containerLock.lock();
+            try {
                 entry = container.get(key);
                 if (entry == null) {
                     ConcurrentHashMap<String, Serializable> map = new ConcurrentHashMap();
@@ -234,11 +244,14 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     entry = new CacheEntry(CacheEntryType.MAP, key, new AtomicLong(), null, null, map);
                     container.put(key, entry);
                 }
+            } finally {
+                containerLock.unlock();
             }
         }
         Serializable val = (Serializable) entry.mapValue.computeIfAbsent(field, f -> new AtomicLong());
         if (!(val instanceof AtomicLong)) {
-            synchronized (entry.mapValue) {
+            entry.mapLock.lock();
+            try {
                 if (!(val instanceof AtomicLong)) {
                     if (val == null) {
                         val = new AtomicLong();
@@ -247,6 +260,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     }
                     entry.mapValue.put(field, val);
                 }
+            } finally {
+                entry.mapLock.unlock();
             }
         }
         return Double.longBitsToDouble(((AtomicLong) entry.mapValue.get(field)).addAndGet(Double.doubleToLongBits(num)));
@@ -1068,12 +1083,15 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public long incrby(final String key, long num) {
         CacheEntry entry = container.get(key);
         if (entry == null) {
-            synchronized (container) {
+            containerLock.lock();
+            try {
                 entry = container.get(key);
                 if (entry == null) {
                     entry = new CacheEntry(CacheEntryType.ATOMIC, key, new AtomicLong(), null, null, null);
                     container.put(key, entry);
                 }
+            } finally {
+                containerLock.unlock();
             }
         }
         return ((AtomicLong) entry.objectValue).addAndGet(num);
@@ -1083,12 +1101,15 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public double incrbyFloat(final String key, double num) {
         CacheEntry entry = container.get(key);
         if (entry == null) {
-            synchronized (container) {
+            containerLock.lock();
+            try {
                 entry = container.get(key);
                 if (entry == null) {
                     entry = new CacheEntry(CacheEntryType.DOUBLE, key, new AtomicLong(), null, null, null);
                     container.put(key, entry);
                 }
+            } finally {
+                containerLock.unlock();
             }
         }
         Long v = ((AtomicLong) entry.objectValue).addAndGet(Double.doubleToLongBits(num));
@@ -1743,6 +1764,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
         T objectValue;
 
         ConcurrentHashMap<String, Serializable> mapValue;
+
+        final ReentrantLock mapLock = new ReentrantLock();
 
         CopyOnWriteArraySet<T> csetValue;
 

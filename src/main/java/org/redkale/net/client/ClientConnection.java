@@ -10,6 +10,7 @@ import java.nio.channels.ClosedChannelException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 import java.util.function.*;
 import org.redkale.net.*;
 
@@ -38,6 +39,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     protected final AtomicBoolean pauseResuming = new AtomicBoolean();
 
     protected final List<ClientFuture> pauseRequests = new CopyOnWriteArrayList<>();
+
+    private final ReentrantLock pauseLock = new ReentrantLock();
+
+    private final Condition pauseCondition = pauseLock.newCondition();
 
     protected final AsyncConnection channel;
 
@@ -178,6 +183,25 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         } else {
             ClientFuture<R, P> future = respFutureMap.get(requestid);
             return future == null ? null : future.request;
+        }
+    }
+
+    void signalPauseRequest() {
+        pauseLock.lock();
+        try {
+            pauseCondition.signalAll();
+        } finally {
+            pauseLock.unlock();
+        }
+    }
+
+    void awaitPauseRequest() {
+        pauseLock.lock();
+        try {
+            pauseCondition.await(3_000, TimeUnit.SECONDS);
+        } catch (Exception e) {
+        } finally {
+            pauseLock.unlock();
         }
     }
 

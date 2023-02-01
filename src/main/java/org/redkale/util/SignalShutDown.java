@@ -43,7 +43,7 @@
 //    }
 //
 //    @Override
-//    public synchronized void handle(sun.misc.Signal sig) {
+//    public void handle(sun.misc.Signal sig) {
 //        String sigstr = sig + "," + sig.getName() + "," + sig.getNumber();
 //        shutdownConsumer.accept(sigstr);
 //    }

@@ -7,6 +7,7 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.locks.*;
 import org.redkale.util.Creator;
 
 /**
@@ -36,7 +37,9 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
     protected volatile boolean inited = false;
 
-    protected final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition condition = lock.newCondition();
 
     public MapDecoder(final ConvertFactory factory, final Type type) {
         this.type = type;
@@ -67,8 +70,11 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
             }
         } finally {
             inited = true;
-            synchronized (lock) {
-                lock.notifyAll();
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -95,12 +101,12 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
     public Map<K, V> convertFrom(Reader in, DeMember member) {
         if (this.keyDecoder == null || this.valueDecoder == null) {
             if (!this.inited) {
-                synchronized (lock) {
-                    try {
-                        lock.wait();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                } finally {
+                    lock.unlock();
                 }
             }
         }
