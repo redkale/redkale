@@ -10,6 +10,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
@@ -41,11 +42,13 @@ public final class EntityCache<T> {
     //Flipper.sort转换成Comparator的缓存
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
+    private final ReentrantLock tableLock = new ReentrantLock();
+
     //Entity类
     private final Class<T> type;
 
     //接口返回的对象是否需要复制一份
-    private final boolean needcopy;
+    private final boolean needCopy;
 
     //Entity构建器
     private final Creator<T> creator;
@@ -100,7 +103,7 @@ public final class EntityCache<T> {
                 direct = ve2.direct();
             }
         }
-        this.needcopy = !direct;
+        this.needCopy = !direct;
         this.newReproduce = Reproduce.create(type, type, (m) -> {
             try {
                 java.lang.reflect.Field field = type.getDeclaredField(m);
@@ -216,7 +219,7 @@ public final class EntityCache<T> {
             return null;
         }
         T rs = map.get(pk);
-        return rs == null ? null : (needcopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+        return rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
     }
 
     public T[] finds(Serializable... pks) {
@@ -230,7 +233,7 @@ public final class EntityCache<T> {
                 T[] array = arrayer.apply(ids.length);
                 for (int i = 0; i < array.length; i++) {
                     T rs = map.get(ids[i]);
-                    array[i] = rs == null ? null : (needcopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+                    array[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
                 }
                 return array;
             } else if (t == long[].class) {
@@ -238,7 +241,7 @@ public final class EntityCache<T> {
                 T[] array = arrayer.apply(ids.length);
                 for (int i = 0; i < array.length; i++) {
                     T rs = map.get(ids[i]);
-                    array[i] = rs == null ? null : (needcopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+                    array[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
                 }
                 return array;
             }
@@ -246,7 +249,7 @@ public final class EntityCache<T> {
         T[] array = arrayer.apply(pks.length);
         for (int i = 0; i < array.length; i++) {
             T rs = map.get(pks[i]);
-            array[i] = rs == null ? null : (needcopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+            array[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
         }
         return array;
     }
@@ -260,7 +263,7 @@ public final class EntityCache<T> {
             return null;
         }
         if (selects == null) {
-            return (needcopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+            return (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
         }
         T t = this.creator.create();
         for (Attribute attr : this.info.attributes) {
@@ -295,7 +298,7 @@ public final class EntityCache<T> {
                 continue;
             }
             if (selects == null) {
-                if (needcopy) {
+                if (needCopy) {
                     rs = newReproduce.apply(ctr.create(), rs);
                 }
             } else {
@@ -323,7 +326,7 @@ public final class EntityCache<T> {
             return null;
         }
         if (selects == null) {
-            return (needcopy ? newReproduce.apply(this.creator.create(), opt.get()) : opt.get());
+            return (needCopy ? newReproduce.apply(this.creator.create(), opt.get()) : opt.get());
         }
         T rs = opt.get();
         T t = this.creator.create();
@@ -703,7 +706,7 @@ public final class EntityCache<T> {
         }
         final List<T> rs = new ArrayList<>();
         if (selects == null) {
-            Consumer<? super T> action = x -> rs.add(needcopy ? newReproduce.apply(creator.create(), x) : x);
+            Consumer<? super T> action = x -> rs.add(needCopy ? newReproduce.apply(creator.create(), x) : x);
             if (comparator != null) {
                 stream.forEachOrdered(action);
             } else {
@@ -801,8 +804,11 @@ public final class EntityCache<T> {
         if (rs == null) {
             return 0;
         }
-        synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
             this.chgReproduce.apply(rs, entity);
+        } finally {
+            tableLock.unlock();
         }
         return 1;
     }
@@ -815,10 +821,13 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
             for (Attribute attr : attrs) {
                 attr.set(rs, attr.get(entity));
             }
+        } finally {
+            tableLock.unlock();
         }
         return rs;
     }
@@ -828,12 +837,15 @@ public final class EntityCache<T> {
             return (T[]) Array.newInstance(type, 0);
         }
         T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
-        for (T rs : rms) {
-            synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
+            for (T rs : rms) {
                 for (Attribute attr : attrs) {
                     attr.set(rs, attr.get(entity));
                 }
             }
+        } finally {
+            tableLock.unlock();
         }
         return rms;
     }
@@ -868,11 +880,14 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
             for (int i = 0; i < attrs.size(); i++) {
                 ColumnValue cv = values.get(i);
                 updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue());
             }
+        } finally {
+            tableLock.unlock();
         }
         return rs;
     }
@@ -890,13 +905,16 @@ public final class EntityCache<T> {
             stream = stream.limit(flipper.getLimit());
         }
         T[] rms = stream.filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
-        for (T rs : rms) {
-            synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
+            for (T rs : rms) {
                 for (int i = 0; i < attrs.size(); i++) {
                     ColumnValue cv = values.get(i);
                     updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue());
                 }
             }
+        } finally {
+            tableLock.unlock();
         }
         return rms;
     }
@@ -909,8 +927,11 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
             return updateColumn(attr, rs, ColumnExpress.ORR, orvalue);
+        } finally {
+            tableLock.unlock();
         }
     }
 
@@ -922,8 +943,11 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
             return updateColumn(attr, rs, ColumnExpress.AND, andvalue);
+        } finally {
+            tableLock.unlock();
         }
     }
 
@@ -935,8 +959,11 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
             return updateColumn(attr, rs, ColumnExpress.INC, incvalue);
+        } finally {
+            tableLock.unlock();
         }
     }
 
@@ -948,8 +975,11 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        synchronized (rs) {
+        tableLock.lock(); //表锁, 可优化成行锁
+        try {
             return updateColumn(attr, rs, ColumnExpress.DEC, incvalue);
+        } finally {
+            tableLock.unlock();
         }
     }
 
