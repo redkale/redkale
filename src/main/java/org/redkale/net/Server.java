@@ -307,8 +307,9 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.serverChannel.open(config);
         serverChannel.bind(address, backlog);
         SocketAddress localAddress = serverChannel.getLocalAddress();
-        if (localAddress instanceof InetSocketAddress) {
+        if (localAddress instanceof InetSocketAddress && !Objects.equals(localAddress, this.address)) {
             this.address = (InetSocketAddress) localAddress;
+            this.context.updateServerAddress(this.address);
         }
         serverChannel.accept(application, this);
         postStart();
@@ -327,19 +328,23 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     public void changeAddress(Application application, final InetSocketAddress addr) throws IOException {
         long s = System.currentTimeMillis();
         Objects.requireNonNull(addr);
-        final InetSocketAddress oldAddress = context.serverAddress;
         final ProtocolServer oldServerChannel = this.serverChannel;
-        context.updateServerAddress(addr);
         ProtocolServer newServerChannel = null;
+        InetSocketAddress addr0 = addr;
         try {
             newServerChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
+            this.resourceFactory.inject(newServerChannel);
             newServerChannel.open(config);
             newServerChannel.bind(addr, backlog);
+            SocketAddress localAddress = newServerChannel.getLocalAddress();
+            if (localAddress instanceof InetSocketAddress) {
+                addr0 = (InetSocketAddress) localAddress;
+            }
             newServerChannel.accept(application, this);
         } catch (IOException e) {
-            context.updateServerAddress(oldAddress);
             throw e;
         }
+        context.updateServerAddress(addr0);
         this.address = context.serverAddress;
         this.serverChannel = newServerChannel;
         logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol))
