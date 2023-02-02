@@ -329,7 +329,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         Objects.requireNonNull(addr);
         final InetSocketAddress oldAddress = context.serverAddress;
         final ProtocolServer oldServerChannel = this.serverChannel;
-        context.serverAddress = addr;
+        context.updateServerAddress(addr);
         ProtocolServer newServerChannel = null;
         try {
             newServerChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
@@ -337,7 +337,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
             newServerChannel.bind(addr, backlog);
             newServerChannel.accept(application, this);
         } catch (IOException e) {
-            context.serverAddress = oldAddress;
+            context.updateServerAddress(oldAddress);
             throw e;
         }
         this.address = context.serverAddress;

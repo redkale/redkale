@@ -167,6 +167,10 @@ public class Context {
         conn.updateWriteIOThread(ioWriteThread);
     }
 
+    protected void updateServerAddress(InetSocketAddress addr) {
+        this.serverAddress = addr;
+    }
+
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
     }
