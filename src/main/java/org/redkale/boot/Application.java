@@ -107,7 +107,7 @@ public final class Application {
     /**
      * 当前Service所属的SNCP Server的地址 类型: SocketAddress、InetSocketAddress、String <br>
      */
-    public static final String RESNAME_SNCP_ADDR = "SNCP_ADDR";
+    public static final String RESNAME_SNCP_ADDRESS = "SNCP_ADDRESS";
 
     /**
      * 当前Service所属的SNCP Server所属的组 类型: String<br>
@@ -942,7 +942,7 @@ public final class Application {
                 });
             }
             if (!compileMode) {
-                properties.put(SncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
+                properties.put(SncpOldClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
             }
         }
         if (compileMode) {

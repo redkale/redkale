@@ -135,9 +135,10 @@ public abstract class NodeServer {
         }
         //单点服务不会有 sncpAddress、sncpGroup
         if (this.sncpAddress != null) {
-            this.resourceFactory.register(RESNAME_SNCP_ADDR, this.sncpAddress);
-            this.resourceFactory.register(RESNAME_SNCP_ADDR, SocketAddress.class, this.sncpAddress);
-            this.resourceFactory.register(RESNAME_SNCP_ADDR, String.class, this.sncpAddress.getHostString() + ":" + this.sncpAddress.getPort());
+            this.resourceFactory.register(RESNAME_SNCP_ADDRESS, this.sncpAddress);
+            this.resourceFactory.register(RESNAME_SNCP_ADDRESS, SocketAddress.class, this.sncpAddress);
+            this.resourceFactory.register(RESNAME_SNCP_ADDRESS, InetSocketAddress.class, this.sncpAddress);
+            this.resourceFactory.register(RESNAME_SNCP_ADDRESS, String.class, this.sncpAddress.getHostString() + ":" + this.sncpAddress.getPort());
         }
         if (this.sncpGroup != null) {
             this.resourceFactory.register(RESNAME_SNCP_GROUP, this.sncpGroup);
@@ -290,7 +291,7 @@ public abstract class NodeServer {
                 }
 
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
-                SncpClient client = srcObj instanceof Service ? Sncp.getSncpClient((Service) srcObj) : null;
+                SncpOldClient client = srcObj instanceof Service ? Sncp.getSncpOldClient((Service) srcObj) : null;
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 final Set<String> groups = new HashSet<>();
                 Service service = Modifier.isFinal(resServiceType.getModifiers()) ? (Service) resServiceType.getConstructor().newInstance() : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, null, appResFactory, appSncpTranFactory, sncpAddr, groups, null);
@@ -342,7 +343,7 @@ public abstract class NodeServer {
                         throw new RuntimeException("CacheSource must be inject in Service, cannot in " + srcObj);
                     }
                     final Service srcService = (Service) srcObj;
-                    SncpClient client = Sncp.getSncpClient(srcService);
+                    SncpOldClient client = Sncp.getSncpOldClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                     //final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService) && sncpAddr != null; //不配置SNCP服务会导致ws=false时没有注入CacheMemorySource
                     final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
@@ -489,7 +490,7 @@ public abstract class NodeServer {
             }
             final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
                 try {
-                    if (SncpClient.parseMethodActions(serviceImplClass).isEmpty()
+                    if (SncpOldClient.parseMethodActions(serviceImplClass).isEmpty()
                         && (serviceImplClass.getAnnotation(Priority.class) == null && serviceImplClass.getAnnotation(javax.annotation.Priority.class) == null)) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
                         if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
                             logger.log(Level.FINE, serviceImplClass + " cannot load because not found less one public non-final method");

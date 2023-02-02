@@ -7,8 +7,8 @@ package org.redkale.net.sncp;
 
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
-import static org.redkale.net.sncp.Sncp.HEADER_SIZE;
-import org.redkale.util.*;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
+import org.redkale.util.ByteArray;
 
 /**
  *
@@ -80,32 +80,8 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     protected void fillHeader(ByteArray buffer, int bodyLength, int retcode) {
-        fillRespHeader(buffer, request.getSeqid(), request.getServiceid(), request.getServiceVersion(),
-            request.getActionid(), request.getTraceid(), this.addrBytes, this.addrPort, bodyLength, retcode);
-    }
-
-    protected static void fillRespHeader(ByteArray buffer, long seqid, Uint128 serviceid, int serviceVersion,
-        Uint128 actionid, String traceid, byte[] addrBytes, int addrPort, int bodyLength, int retcode) {
-        //---------------------head----------------------------------
-        int offset = 0;
-        buffer.putLong(offset, seqid);
-        offset += 8;
-        buffer.putChar(offset, (char) HEADER_SIZE);
-        offset += 2;
-        buffer.putUint128(offset, serviceid);
-        offset += 16;
-        buffer.putInt(offset, serviceVersion);
-        offset += 4;
-        buffer.putUint128(offset, actionid);
-        offset += 16;
-        buffer.put(offset, addrBytes);
-        offset += addrBytes.length; //4
-        buffer.putChar(offset, (char) addrPort);
-        offset += 2;
-        buffer.putInt(offset, bodyLength);
-        offset += 4;
-        buffer.putInt(offset, retcode);
-        offset += 4;
+        SncpHeader header = request.getHeader();
+        header.write(buffer, this.addrBytes, this.addrPort, header.getSeqid(), bodyLength, retcode);
     }
 
 }

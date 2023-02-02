@@ -14,7 +14,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
-import static org.redkale.boot.Application.RESNAME_SNCP_ADDR;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
 import org.redkale.mq.MessageAgent;
@@ -25,6 +24,7 @@ import org.redkale.service.Service;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 import org.redkale.watch.*;
+import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 
 /**
  * HTTP Server节点的配置Server
@@ -136,10 +136,10 @@ public class NodeHttpServer extends NodeServer {
                     if (nodeService == null) {
                         nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                     }
-                    if (sncpResFactory != null && resourceFactory.find(RESNAME_SNCP_ADDR, String.class) == null) {
-                        resourceFactory.register(RESNAME_SNCP_ADDR, InetSocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDR, InetSocketAddress.class));
-                        resourceFactory.register(RESNAME_SNCP_ADDR, SocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDR, SocketAddress.class));
-                        resourceFactory.register(RESNAME_SNCP_ADDR, String.class, sncpResFactory.find(RESNAME_SNCP_ADDR, String.class));
+                    if (sncpResFactory != null && resourceFactory.find(RESNAME_SNCP_ADDRESS, String.class) == null) {
+                        resourceFactory.register(RESNAME_SNCP_ADDRESS, InetSocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDRESS, InetSocketAddress.class));
+                        resourceFactory.register(RESNAME_SNCP_ADDRESS, SocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDRESS, SocketAddress.class));
+                        resourceFactory.register(RESNAME_SNCP_ADDRESS, String.class, sncpResFactory.find(RESNAME_SNCP_ADDRESS, String.class));
                     }
                     if (nodeService == null) {
                         MessageAgent messageAgent = null;

@@ -50,14 +50,14 @@ public class SncpMessageResponse extends SncpResponse {
             callback.run();
         }
         if (out == null) {
-            final ByteArray result = new ByteArray(Sncp.HEADER_SIZE);
+            final ByteArray result = new ByteArray(SncpHeader.HEADER_SIZE);
             fillHeader(result, 0, retcode);
             producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getRespTopic(), null, (byte[]) null));
             return;
         }
         final int respBodyLength = out.count(); //body总长度
         final ByteArray result = out.toByteArray();
-        fillHeader(result, respBodyLength - Sncp.HEADER_SIZE, retcode);
+        fillHeader(result, respBodyLength - SncpHeader.HEADER_SIZE, retcode);
         producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getRespTopic(), null, result.getBytes()));
     }
 }

@@ -941,11 +941,12 @@ public final class ByteArray implements ByteTuple {
      * 写入ByteBuffer指定长度的数据
      *
      * @param buffer 数据
-     * @param len    指定长度
+     * @param length 指定长度
      *
      * @return ByteArray
      */
-    public ByteArray put(ByteBuffer buffer, int len) {
+    public ByteArray put(ByteBuffer buffer, int length) {
+        int len = Math.min(buffer.remaining(), length);
         if (len < 1) {
             return this;
         }

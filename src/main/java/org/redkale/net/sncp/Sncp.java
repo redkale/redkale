@@ -22,7 +22,7 @@ import org.redkale.asm.Type;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.http.WebSocketNode;
-import org.redkale.net.sncp.SncpClient.SncpAction;
+import org.redkale.net.sncp.SncpOldClient.SncpAction;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -37,18 +37,7 @@ import org.redkale.util.*;
  */
 public abstract class Sncp {
 
-    public static final int HEADER_SIZE = 60;
-
-    private static final byte[] PING_BYTES = new ByteArray(HEADER_SIZE)
-        .putLong(0L) //8 seqid
-        .putChar((char) HEADER_SIZE) //2 headerSize
-        .putUint128(Uint128.ZERO) //16 serviceid
-        .putInt(0) //4 serviceVersion
-        .putUint128(Uint128.ZERO) //16 actionid
-        .put(new byte[6]) //6 addr 
-        .putInt(0) //4 bodyLength
-        .putInt(0) //4 retcode
-        .getBytes();
+    private static final byte[] PING_BYTES = new SncpHeader(null, Uint128.ZERO, Uint128.ZERO).write(new ByteArray(SncpHeader.HEADER_SIZE), null, 0, 0, 0).getBytes();
 
     private static final byte[] PONG_BYTES = Arrays.copyOf(PING_BYTES, PING_BYTES.length);
 
@@ -178,14 +167,14 @@ public abstract class Sncp {
         }
     }
 
-    public static SncpClient getSncpClient(Service service) {
+    public static SncpOldClient getSncpOldClient(Service service) {
         if (service == null || !isSncpDyn(service)) {
             return null;
         }
         try {
             Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_client");
             ts.setAccessible(true);
-            return (SncpClient) ts.get(service);
+            return (SncpOldClient) ts.get(service);
         } catch (Exception e) {
             throw new SncpException(service + " not found " + FIELDPREFIX + "_client");
         }
@@ -228,7 +217,7 @@ public abstract class Sncp {
         if (!isSncpDyn(service)) {
             return false;
         }
-        SncpClient client = getSncpClient(service);
+        SncpOldClient client = getSncpOldClient(service);
         client.setRemoteGroups(groups);
         if (client.getRemoteGroupTransport() != null) {
             client.getRemoteGroupTransport().updateRemoteAddresses(addresses);
@@ -330,11 +319,11 @@ public abstract class Sncp {
      * &#64;ResourceType(TestService.class)
      * public final class _DynLocalTestService extends TestService{
      *
-     *      private AnyValue _redkale_conf;
+     * private AnyValue _redkale_conf;
      *
-     *      private SncpClient _redkale_client;
+     * private SncpOldClient _redkale_client;
      *
-     *      &#64;Override
+     * &#64;Override
      *      public String toString() {
      *          return _redkale_selfstring == null ? super.toString() : _redkale_selfstring;
      *      }
@@ -365,9 +354,9 @@ public abstract class Sncp {
             throw new SncpException(serviceImplClass + " is abstract");
         }
         final String supDynName = serviceImplClass.getName().replace('.', '/');
-        final String clientName = SncpClient.class.getName().replace('.', '/');
+        final String clientName = SncpOldClient.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
-        final String clientDesc = Type.getDescriptor(SncpClient.class);
+        final String clientDesc = Type.getDescriptor(SncpOldClient.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
@@ -552,12 +541,12 @@ public abstract class Sncp {
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
             }
-            SncpClient client = null;
+            SncpOldClient client = null;
             {
                 try {
                     Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     c.setAccessible(true);
-                    client = new SncpClient(name, serviceImplClass, service, messageAgent, transportFactory, false, newClazz, clientSncpAddress);
+                    client = new SncpOldClient(name, serviceImplClass, service, messageAgent, transportFactory, false, newClazz, clientSncpAddress);
                     c.set(service, client);
                     if (transportFactory != null) {
                         transportFactory.addSncpService(service);
@@ -604,11 +593,11 @@ public abstract class Sncp {
      * &#64;ResourceType(TestService.class)
      * public final class _DynRemoteTestService extends TestService{
      *
-     *      private AnyValue _redkale_conf;
+     * private AnyValue _redkale_conf;
      *
-     *      private SncpClient _redkale_client;
+     * private SncpOldClient _redkale_client;
      *
-     *      &#64;Override
+     * &#64;Override
      *      public void createSomeThing(TestBean bean){
      *          _redkale_client.remote(0, bean);
      *      }
@@ -664,9 +653,9 @@ public abstract class Sncp {
             return null;
         }
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
-        final String clientName = SncpClient.class.getName().replace('.', '/');
+        final String clientName = SncpOldClient.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
-        final String clientDesc = Type.getDescriptor(SncpClient.class);
+        final String clientDesc = Type.getDescriptor(SncpOldClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
@@ -676,7 +665,7 @@ public abstract class Sncp {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpOldClient client = new SncpOldClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             if (transportFactory != null) {
                 client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
@@ -800,7 +789,8 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         int i = -1;
-        for (final SncpAction entry : SncpClient.getSncpActions(realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass)) {
+        Uint128 serviceid = serviceid(name, serviceTypeOrImplClass);
+        for (final SncpAction entry : SncpOldClient.getSncpActions(realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, serviceid)) {
             final int index = ++i;
             final java.lang.reflect.Method method = entry.method;
             {
@@ -895,7 +885,7 @@ public abstract class Sncp {
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpClient client = new SncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            SncpOldClient client = new SncpOldClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             if (transportFactory != null) {
                 client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));

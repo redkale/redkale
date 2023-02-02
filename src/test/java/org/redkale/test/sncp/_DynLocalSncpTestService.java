@@ -15,6 +15,6 @@ import org.redkale.annotation.ResourceType;
 @ResourceType(SncpTestIService.class)
 public class _DynLocalSncpTestService extends SncpTestServiceImpl {
 
-    private SncpClient _redkale_client;
+    private SncpOldClient _redkale_client;
 
 }

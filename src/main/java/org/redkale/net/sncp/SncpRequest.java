@@ -6,12 +6,11 @@
 package org.redkale.net.sncp;
 
 import java.io.Serializable;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.logging.*;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.net.Request;
-import static org.redkale.net.sncp.Sncp.HEADER_SIZE;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.util.Uint128;
 
 /**
@@ -35,25 +34,15 @@ public class SncpRequest extends Request<SncpContext> {
 
     protected final BsonConvert convert;
 
-    private long seqid;
-
     protected int readState = READ_STATE_ROUTE;
 
-    private int serviceVersion;
-
-    private Uint128 serviceid;
-
-    private Uint128 actionid;
-
-    private int bodyLength;
+    private SncpHeader header;
 
     private int bodyOffset;
 
     private boolean ping;
 
     private byte[] body;
-
-    private final byte[] addrBytes = new byte[6];
 
     protected SncpRequest(SncpContext context) {
         super(context);
@@ -67,38 +56,33 @@ public class SncpRequest extends Request<SncpContext> {
             if (buffer.remaining() < HEADER_SIZE) {
                 return HEADER_SIZE - buffer.remaining(); //小于60
             }
-            this.seqid = buffer.getLong(); //8
-            if (buffer.getChar() != HEADER_SIZE) { //2
+            this.header = new SncpHeader();
+            if (!this.header.read(buffer)) {
                 if (context.getLogger().isLoggable(Level.FINEST)) {
                     context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
                 }
                 return -1;
             }
-            this.serviceid = Uint128.read(buffer); //16
-            this.serviceVersion = buffer.getInt(); //4
-            this.actionid = Uint128.read(buffer); //16
-            buffer.get(addrBytes); //ipaddr   //6
-            this.bodyLength = buffer.getInt(); //4
-
-            if (buffer.getInt() != 0) { //4  retcode
+            if (this.header.getRetcode() != 0) { // retcode
                 if (context.getLogger().isLoggable(Level.FINEST)) {
                     context.getLogger().finest("sncp buffer header.retcode not 0");
                 }
                 return -1;
             }
-            this.body = new byte[this.bodyLength];
+            this.body = new byte[this.header.getBodyLength()];
             this.readState = READ_STATE_BODY;
         }
         //---------------------body----------------------------------
         if (this.readState == READ_STATE_BODY) {
-            if (this.bodyLength == 0) {
+            int bodyLength = this.header.getBodyLength();
+            if (bodyLength == 0) {
                 this.readState = READ_STATE_END;
-                if (this.seqid == 0 && this.serviceid == Uint128.ZERO && this.actionid == Uint128.ZERO) {
+                if (this.header.getSeqid() == 0 && this.header.getServiceid() == Uint128.ZERO && this.header.getActionid() == Uint128.ZERO) {
                     this.ping = true;
                 }
                 return 0;
             }
-            int len = Math.min(this.bodyLength, buffer.remaining());
+            int len = Math.min(bodyLength, buffer.remaining());
             buffer.get(body, 0, len);
             this.bodyOffset = len;
             int rs = bodyLength - len;
@@ -112,7 +96,7 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override
     protected Serializable getRequestid() {
-        return seqid;
+        return header.getSeqid();
     }
 
     @Override
@@ -126,24 +110,16 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override
     public String toString() {
-        return SncpRequest.class.getSimpleName() + "{seqid=" + this.seqid
-            + ",serviceVersion=" + this.serviceVersion + ",serviceid=" + this.serviceid
-            + ",actionid=" + this.actionid + ",bodyLength=" + this.bodyLength
-            + ",bodyOffset=" + this.bodyOffset + ",remoteAddress=" + getRemoteAddress() + "}";
+        return SncpRequest.class.getSimpleName() + "{header=" + this.header + ",bodyOffset=" + this.bodyOffset + "}";
     }
 
     @Override
     protected void recycle() {
-        this.seqid = 0;
         this.readState = READ_STATE_ROUTE;
-        this.serviceid = null;
-        this.serviceVersion = 0;
-        this.actionid = null;
-        this.bodyLength = 0;
+        this.header = null;
         this.bodyOffset = 0;
         this.body = null;
         this.ping = false;
-        this.addrBytes[0] = 0;
         super.recycle();
     }
 
@@ -155,28 +131,8 @@ public class SncpRequest extends Request<SncpContext> {
         return body;
     }
 
-    public long getSeqid() {
-        return seqid;
-    }
-
-    public int getServiceVersion() {
-        return serviceVersion;
-    }
-
-    public Uint128 getServiceid() {
-        return serviceid;
-    }
-
-    public Uint128 getActionid() {
-        return actionid;
-    }
-
-    public InetSocketAddress getRemoteAddress() {
-        if (addrBytes[0] == 0) {
-            return null;
-        }
-        return new InetSocketAddress((0xff & addrBytes[0]) + "." + (0xff & addrBytes[1]) + "." + (0xff & addrBytes[2]) + "." + (0xff & addrBytes[3]),
-            ((0xff00 & (addrBytes[4] << 8)) | (0xff & addrBytes[5])));
+    public SncpHeader getHeader() {
+        return header;
     }
 
 }

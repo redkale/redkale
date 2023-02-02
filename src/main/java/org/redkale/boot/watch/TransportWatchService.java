@@ -75,7 +75,7 @@ public class TransportWatchService extends AbstractWatchService {
                 if (!Sncp.isSncpDyn(service)) {
                     continue;
                 }
-                SncpClient client = Sncp.getSncpClient(service);
+                SncpOldClient client = Sncp.getSncpOldClient(service);
                 if (Sncp.isRemote(service)) {
                     if (client.getRemoteGroups() != null && client.getRemoteGroups().contains(group)) {
                         client.getRemoteGroupTransport().addRemoteAddresses(address);
@@ -117,7 +117,7 @@ public class TransportWatchService extends AbstractWatchService {
                 if (!Sncp.isSncpDyn(service)) {
                     continue;
                 }
-                SncpClient client = Sncp.getSncpClient(service);
+                SncpOldClient client = Sncp.getSncpOldClient(service);
                 if (Sncp.isRemote(service)) {
                     if (client.getRemoteGroups() != null && client.getRemoteGroups().contains(group)) {
                         client.getRemoteGroupTransport().removeRemoteAddresses(address);

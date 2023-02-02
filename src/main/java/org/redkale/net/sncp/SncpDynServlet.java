@@ -49,7 +49,7 @@ public final class SncpDynServlet extends SncpServlet {
         this.maxNameLength = maxNameLength;
         this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
         RedkaleClassLoader.putReflectionPublicMethods(service.getClass().getName());
-        for (Map.Entry<Uint128, Method> en : SncpClient.parseMethodActions(service.getClass()).entrySet()) {
+        for (Map.Entry<Uint128, Method> en : SncpOldClient.parseMethodActions(service.getClass()).entrySet()) {
             SncpServletAction action;
             try {
                 action = SncpServletAction.create(service, en.getKey(), en.getValue());
@@ -100,7 +100,7 @@ public final class SncpDynServlet extends SncpServlet {
     @Override
     @SuppressWarnings("unchecked")
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
-        final SncpServletAction action = actions.get(request.getActionid());
+        final SncpServletAction action = actions.get(request.getHeader().getActionid());
         //logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
