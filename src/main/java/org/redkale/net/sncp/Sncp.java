@@ -830,7 +830,7 @@ public abstract class Sncp {
                             } else {
                                 mv.visitVarInsn(ILOAD, insn);
                             }
-                            Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance((Class) pt, 1), 0).getClass();
+                            Class bigclaz = TypeToken.primitiveToWrapper((Class) pt);
                             mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor((Class) pt) + ")" + Type.getDescriptor(bigclaz), false);
                         } else {
                             mv.visitVarInsn(ALOAD, insn);
@@ -846,7 +846,7 @@ public abstract class Sncp {
                     mv.visitInsn(RETURN);
                 } else {
                     Class returnclz = method.getReturnType();
-                    Class bigPrimitiveClass = returnclz.isPrimitive() ? java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(returnclz, 1), 0).getClass() : returnclz;
+                    Class bigPrimitiveClass = returnclz.isPrimitive() ? TypeToken.primitiveToWrapper(returnclz) : returnclz;
                     mv.visitTypeInsn(CHECKCAST, (returnclz.isPrimitive() ? bigPrimitiveClass : returnclz).getName().replace('.', '/'));
                     if (returnclz.isPrimitive()) {
                         String bigPrimitiveName = bigPrimitiveClass.getName().replace('.', '/');

@@ -601,7 +601,7 @@ public final class Utility {
         if (array == null || array.length == 0) {
             return objs;
         }
-        final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.length);
+        final T[] news = (T[]) Creator.newArray(array.getClass().getComponentType(), array.length + objs.length);
         System.arraycopy(objs, 0, news, 0, objs.length);
         System.arraycopy(array, 0, news, objs.length, array.length);
         return news;
@@ -631,10 +631,10 @@ public final class Utility {
             if (one == null) {
                 return array;
             }
-            T[] news = (T[]) Array.newInstance(one.getClass(), objs.size());
+            T[] news = (T[]) Creator.newArray(one.getClass(), objs.size());
             return objs.toArray(news);
         }
-        T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.size());
+        T[] news = (T[]) Creator.newArray(array.getClass().getComponentType(), array.length + objs.size());
         int index = -1;
         for (T t : objs) {
             news[(++index)] = t;
@@ -1124,7 +1124,7 @@ public final class Utility {
         if (objs == null || objs.length == 0) {
             return array;
         }
-        final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.length);
+        final T[] news = (T[]) Creator.newArray(array.getClass().getComponentType(), array.length + objs.length);
         System.arraycopy(array, 0, news, 0, array.length);
         System.arraycopy(objs, 0, news, array.length, objs.length);
         return news;
@@ -1176,10 +1176,10 @@ public final class Utility {
             if (one == null) {
                 return array;
             }
-            T[] news = (T[]) Array.newInstance(one.getClass(), objs.size());
+            T[] news = (T[]) Creator.newArray(one.getClass(), objs.size());
             return objs.toArray(news);
         }
-        T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length + objs.size());
+        T[] news = (T[]) Creator.newArray(array.getClass().getComponentType(), array.length + objs.size());
         System.arraycopy(array, 0, news, 0, array.length);
         int index = -1;
         for (T t : objs) {
@@ -1242,7 +1242,7 @@ public final class Utility {
         if (array == null || array.length == 0 || filter == null) {
             return array;
         }
-        final T[] news = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length);
+        final T[] news = (T[]) Creator.newArray(array.getClass().getComponentType(), array.length);
         int index = 0;
         for (int i = 0; i < news.length; i++) {
             if (!filter.test(array[i])) {
@@ -1252,7 +1252,7 @@ public final class Utility {
         if (index == array.length) {
             return array;
         }
-        final T[] rs = (T[]) Array.newInstance(array.getClass().getComponentType(), index);
+        final T[] rs = (T[]) Creator.newArray(array.getClass().getComponentType(), index);
         System.arraycopy(news, 0, rs, 0, index);
         return rs;
     }

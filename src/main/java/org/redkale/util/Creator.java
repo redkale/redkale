@@ -143,7 +143,6 @@ public interface Creator<T> {
         if (type == double.class) {
             return (T[]) (Object) new double[size];
         }
-        //return (T[]) Array.newInstance(type, size);
         return arrayFunction(type).apply(size);
     }
 
@@ -491,7 +490,7 @@ public interface Creator<T> {
                     mv.visitInsn(AALOAD);
                     final Class ct = constructorParameters[i].getValue();
                     if (ct.isPrimitive()) {
-                        final Class bigct = Array.get(Array.newInstance(ct, 1), 0).getClass();
+                        final Class bigct = TypeToken.primitiveToWrapper(ct);
                         mv.visitTypeInsn(CHECKCAST, bigct.getName().replace('.', '/'));
                         try {
                             Method pm = bigct.getMethod(ct.getSimpleName() + "Value");

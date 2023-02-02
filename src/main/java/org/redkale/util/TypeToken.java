@@ -124,7 +124,7 @@ public abstract class TypeToken<T> {
             return null;
         }
         if (type instanceof GenericArrayType) {
-            return Array.newInstance(typeToClass(((GenericArrayType) type).getGenericComponentType()), 0).getClass();
+            return Creator.newArray(typeToClass(((GenericArrayType) type).getGenericComponentType()), 0).getClass();
         }
         if (!(type instanceof ParameterizedType)) {
             return null; //只能是null了
@@ -146,6 +146,30 @@ public abstract class TypeToken<T> {
             newTypes[i] = getGenericType(types[i], declaringClass);
         }
         return newTypes;
+    }
+
+    public static Class primitiveToWrapper(Class clazz) {
+        if (clazz == boolean.class) {
+            return Boolean.class;
+        } else if (clazz == byte.class) {
+            return Byte.class;
+        } else if (clazz == char.class) {
+            return Character.class;
+        } else if (clazz == short.class) {
+            return Short.class;
+        } else if (clazz == int.class) {
+            return Integer.class;
+        } else if (clazz == float.class) {
+            return Float.class;
+        } else if (clazz == long.class) {
+            return Long.class;
+        } else if (clazz == double.class) {
+            return Double.class;
+        } else if (clazz == void.class) {
+            return Void.class;
+        } else {
+            return clazz;
+        }
     }
 //
 //    public static void main(String[] args) throws Throwable {

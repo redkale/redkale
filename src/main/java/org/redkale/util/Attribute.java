@@ -9,8 +9,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.*;
 import java.util.function.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.util.Attribute;
 
 /**
@@ -802,7 +802,7 @@ public interface Attribute<T, F> {
         }
         final Class pcolumn = column;
         if (column.isPrimitive()) {
-            column = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(column, 1), 0).getClass();
+            column = TypeToken.primitiveToWrapper(column);
         }
         final String supDynName = Attribute.class.getName().replace('.', '/');
         final String interName = TypeToken.typeToClass(subclass).getName().replace('.', '/');

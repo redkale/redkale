@@ -713,7 +713,7 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynSuperMessageFullName, en.getKey(), Type.getDescriptor(paramType));
                     if (paramType.isPrimitive()) {
-                        Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(paramType, 1), 0).getClass();
+                        Class bigclaz = TypeToken.primitiveToWrapper(paramType);
                         mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(paramType) + ")" + Type.getDescriptor(bigclaz), false);
                     }
                     mv.visitInsn(ARETURN);

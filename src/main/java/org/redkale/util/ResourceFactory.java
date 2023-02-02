@@ -1091,7 +1091,7 @@ public final class ResourceFactory {
                         }
                     }
                     if (newVal == null && classType.isPrimitive()) {
-                        newVal = Array.get(Array.newInstance(classType, 1), 0);
+                        newVal = Array.get(Creator.newArray(classType, 1), 0);
                     }
                     Object oldVal = null;
                     if (element.listener != null) {

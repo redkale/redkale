@@ -37,9 +37,9 @@ public interface WebSocketParam {
     default <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
         Annotation[] annotations = getAnnotations();
         if (annotations == null) {
-            return Creator.arrayFunction(annotationClass).apply(0);
+            return Creator.newArray(annotationClass, 0);
         }
-        T[] news = Creator.arrayFunction(annotationClass).apply(annotations.length);
+        T[] news = Creator.newArray(annotationClass, annotations.length);
         int index = 0;
         for (Annotation ann : annotations) {
             if (ann.getClass() == annotationClass) {
@@ -47,7 +47,7 @@ public interface WebSocketParam {
             }
         }
         if (index < 1) {
-            return Creator.arrayFunction(annotationClass).apply(0);
+            return Creator.newArray(annotationClass, 0);
         }
         return Arrays.copyOf(news, index);
     }

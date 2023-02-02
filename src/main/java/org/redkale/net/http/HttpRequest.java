@@ -1247,9 +1247,9 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
         if (this.annotations == null) {
-            return Creator.arrayFunction(annotationClass).apply(0);
+            return Creator.newArray(annotationClass, 0);
         }
-        T[] news = Creator.arrayFunction(annotationClass).apply(this.annotations.length);
+        T[] news = Creator.newArray(annotationClass, this.annotations.length);
         int index = 0;
         for (Annotation ann : this.annotations) {
             if (ann.getClass() == annotationClass) {
@@ -1257,7 +1257,7 @@ public class HttpRequest extends Request<HttpContext> {
             }
         }
         if (index < 1) {
-            return Creator.arrayFunction(annotationClass).apply(0);
+            return Creator.newArray(annotationClass, 0);
         }
         return Arrays.copyOf(news, index);
     }

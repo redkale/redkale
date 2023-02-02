@@ -52,7 +52,7 @@ public final class SncpDynServlet extends SncpServlet {
         for (Map.Entry<Uint128, Method> en : SncpOldClient.parseMethodActions(service.getClass()).entrySet()) {
             SncpServletAction action;
             try {
-                action = SncpServletAction.create(service, en.getKey(), en.getValue());
+                action = SncpServletAction.create(service, serviceid, en.getKey(), en.getValue());
             } catch (RuntimeException e) {
                 throw new SncpException(en.getValue() + " create " + SncpServletAction.class.getSimpleName() + " error", e);
             }
@@ -111,12 +111,12 @@ public final class SncpDynServlet extends SncpServlet {
             SncpAsyncHandler handler = null;
             try {
                 if (action.handlerFuncParamIndex >= 0) {
-                    if (action.handlerFuncParamClass == CompletionHandler.class) {
+                    if (action.handlerFuncParamType == CompletionHandler.class) {
                         handler = new DefaultSncpAsyncHandler(logger, action, in, out, request, response);
                     } else {
                         Creator<SncpAsyncHandler> creator = action.handlerCreator;
                         if (creator == null) {
-                            creator = SncpAsyncHandler.Factory.createCreator(action.handlerFuncParamClass);
+                            creator = SncpAsyncHandler.Factory.createCreator(action.handlerFuncParamType);
                             action.handlerCreator = creator;
                         }
                         handler = creator.create(new DefaultSncpAsyncHandler(logger, action, in, out, request, response));
@@ -173,9 +173,9 @@ public final class SncpDynServlet extends SncpServlet {
 
         protected int handlerFuncParamIndex = -1;  //handlerFuncParamIndex>=0表示存在CompletionHandler参数
 
-        protected boolean boolReturnTypeFuture = false; // 返回结果类型是否为 CompletableFuture
+        protected Class handlerFuncParamType; //CompletionHandler参数的类型
 
-        protected Class handlerFuncParamClass; //CompletionHandler参数的类型
+        protected boolean boolReturnTypeFuture = false; // 返回结果类型是否为 CompletableFuture
 
         public abstract void action(final BsonReader in, final BsonWriter out, final SncpAsyncHandler handler) throws Throwable;
 
@@ -285,14 +285,15 @@ public final class SncpDynServlet extends SncpServlet {
          *
          * </pre></blockquote>
          *
-         * @param service  Service
-         * @param actionid 操作ID
-         * @param method   方法
+         * @param service   Service
+         * @param serviceid 类ID
+         * @param actionid  操作ID
+         * @param method    方法
          *
          * @return SncpServletAction
          */
         @SuppressWarnings("unchecked")
-        public static SncpServletAction create(final Service service, final Uint128 actionid, final Method method) {
+        public static SncpServletAction create(final Service service, final Uint128 serviceid, final Uint128 actionid, final Method method) {
             final Class serviceClass = service.getClass();
             final String supDynName = SncpServletAction.class.getName().replace('.', '/');
             final String serviceName = serviceClass.getName().replace('.', '/');
@@ -306,7 +307,7 @@ public final class SncpDynServlet extends SncpServlet {
             final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__" + serviceClass.getName().replace('.', '_').replace('$', '_') + "__" + method.getName() + "__" + actionid;
 
             int handlerFuncIndex = -1;
-            Class handlerFuncClass = null;
+            Class handlerFuncType = null;
             Class<?> newClazz = null;
             try {
                 Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
@@ -315,7 +316,7 @@ public final class SncpDynServlet extends SncpServlet {
                 for (int i = 0; i < paramClasses.length; i++) { //反序列化方法的每个参数
                     if (CompletionHandler.class.isAssignableFrom(paramClasses[i])) {
                         handlerFuncIndex = i;
-                        handlerFuncClass = paramClasses[i];
+                        handlerFuncType = paramClasses[i];
                         break;
                     }
                 }
@@ -370,7 +371,7 @@ public final class SncpDynServlet extends SncpServlet {
                             }
                             Sncp.checkAsyncModifier(paramClasses[i], method);
                             handlerFuncIndex = i;
-                            handlerFuncClass = paramClasses[i];
+                            handlerFuncType = paramClasses[i];
                             mv.visitVarInsn(ALOAD, 3);
                             mv.visitTypeInsn(CHECKCAST, paramClasses[i].getName().replace('.', '/'));
                             mv.visitVarInsn(ASTORE, store);
@@ -422,7 +423,7 @@ public final class SncpDynServlet extends SncpServlet {
                                 load = DLOAD;
                                 v = 1;
                             }
-                            Class bigPrimitiveClass = Array.get(Array.newInstance(paramClasses[i], 1), 0).getClass();
+                            Class bigPrimitiveClass = TypeToken.primitiveToWrapper(paramClasses[i]);
                             String bigPrimitiveName = bigPrimitiveClass.getName().replace('.', '/');
                             try {
                                 Method pm = bigPrimitiveClass.getMethod(paramClasses[i].getSimpleName() + "Value");
@@ -479,7 +480,7 @@ public final class SncpDynServlet extends SncpServlet {
                                 } else {
                                     mv.visitVarInsn(ILOAD, insn);
                                 }
-                                Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(pt, 1), 0).getClass();
+                                Class bigclaz = TypeToken.primitiveToWrapper(pt);
                                 mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(pt) + ")" + Type.getDescriptor(bigclaz), false);
                             } else {
                                 mv.visitVarInsn(ALOAD, insn);
@@ -500,7 +501,7 @@ public final class SncpDynServlet extends SncpServlet {
                     final Class returnClass = method.getReturnType();
                     if (returnClass != void.class) {
                         if (returnClass.isPrimitive()) {
-                            Class bigClass = Array.get(Array.newInstance(returnClass, 1), 0).getClass();
+                            Class bigClass = TypeToken.primitiveToWrapper(returnClass);
                             try {
                                 Method vo = bigClass.getMethod("valueOf", returnClass);
                                 mv.visitMethodInsn(INVOKESTATIC, bigClass.getName().replace('.', '/'), vo.getName(), Type.getMethodDescriptor(vo), false);
@@ -553,7 +554,7 @@ public final class SncpDynServlet extends SncpServlet {
                                 } else {
                                     mv.visitVarInsn(ILOAD, insn);
                                 }
-                                Class bigclaz = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(pt, 1), 0).getClass();
+                                Class bigclaz = TypeToken.primitiveToWrapper(pt);
                                 mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(pt) + ")" + Type.getDescriptor(bigclaz), false);
                             } else {
                                 mv.visitVarInsn(ALOAD, insn);
@@ -626,7 +627,7 @@ public final class SncpDynServlet extends SncpServlet {
                 System.arraycopy(originalParamTypes, 0, types, 1, originalParamTypes.length);
                 instance.paramTypes = types;
                 instance.handlerFuncParamIndex = handlerFuncIndex;
-                instance.handlerFuncParamClass = handlerFuncClass;
+                instance.handlerFuncParamType = handlerFuncType;
                 instance.boolReturnTypeFuture = boolReturnTypeFuture;
                 newClazz.getField("service").set(instance, service);
                 return instance;

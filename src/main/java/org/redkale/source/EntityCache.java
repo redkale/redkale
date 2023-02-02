@@ -6,7 +6,6 @@
 package org.redkale.source;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -834,9 +833,9 @@ public final class EntityCache<T> {
 
     public T[] update(final T entity, final Collection<Attribute<T, Serializable>> attrs, final FilterNode node) {
         if (entity == null || node == null) {
-            return (T[]) Array.newInstance(type, 0);
+            return (T[]) Creator.newArray(type, 0);
         }
-        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
+        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(Creator.arrayFunction(type));
         tableLock.lock(); //表锁, 可优化成行锁
         try {
             for (T rs : rms) {
@@ -863,9 +862,9 @@ public final class EntityCache<T> {
 
     public <V> T[] update(Attribute<T, V> attr, final V fieldValue, final FilterNode node) {
         if (attr == null || node == null) {
-            return (T[]) Array.newInstance(type, 0);
+            return (T[]) Creator.newArray(type, 0);
         }
-        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
+        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(Creator.arrayFunction(type));
         for (T rs : rms) {
             attr.set(rs, fieldValue);
         }
@@ -894,7 +893,7 @@ public final class EntityCache<T> {
 
     public <V> T[] updateColumn(final FilterNode node, final Flipper flipper, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
         if (attrs == null || attrs.isEmpty() || node == null) {
-            return (T[]) Array.newInstance(type, 0);
+            return (T[]) Creator.newArray(type, 0);
         }
         Stream<T> stream = this.list.stream();
         final Comparator<T> comparator = createComparator(flipper);
@@ -904,7 +903,7 @@ public final class EntityCache<T> {
         if (flipper != null && flipper.getLimit() > 0) {
             stream = stream.limit(flipper.getLimit());
         }
-        T[] rms = stream.filter(node.createPredicate(this)).toArray(len -> (T[]) Array.newInstance(type, len));
+        T[] rms = stream.filter(node.createPredicate(this)).toArray(Creator.arrayFunction(type));
         tableLock.lock(); //表锁, 可优化成行锁
         try {
             for (T rs : rms) {
