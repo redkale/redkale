@@ -57,16 +57,13 @@ public class SncpRequest extends Request<SncpContext> {
                 return HEADER_SIZE - buffer.remaining(); //小于60
             }
             this.header = new SncpHeader();
-            if (!this.header.read(buffer)) {
-                if (context.getLogger().isLoggable(Level.FINEST)) {
-                    context.getLogger().finest("sncp buffer header.length not " + HEADER_SIZE);
-                }
+            int headerSize = this.header.read(buffer);
+            if (headerSize != HEADER_SIZE) {
+                context.getLogger().log(Level.WARNING, "sncp buffer header.length not " + HEADER_SIZE);
                 return -1;
             }
             if (this.header.getRetcode() != 0) { // retcode
-                if (context.getLogger().isLoggable(Level.FINEST)) {
-                    context.getLogger().finest("sncp buffer header.retcode not 0");
-                }
+                context.getLogger().log(Level.WARNING, "sncp buffer header.retcode not 0");
                 return -1;
             }
             this.body = new byte[this.header.getBodyLength()];

@@ -29,8 +29,8 @@ public class SncpTestServiceImpl implements SncpTestIService {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(1000);
-                    System.out.println(Thread.currentThread().getName() + " sleep 1秒后运行了异步方法-----------queryResultAsync方法");
+                    Thread.sleep(200);
+                    System.out.println(Thread.currentThread().getName() + " sleep 200ms后运行了异步方法-----------queryResultAsync方法");
                     future.complete("异步result: " + bean);
                 } catch (Exception e) {
                     e.printStackTrace();

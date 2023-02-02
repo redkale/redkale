@@ -48,6 +48,10 @@ public class SncpClientRequest extends ClientRequest {
     }
 
     @Override
+    protected void prepare() {
+    }
+
+    @Override
     protected boolean recycle() {
         boolean rs = super.recycle();
         this.seqid = 0;
@@ -60,7 +64,7 @@ public class SncpClientRequest extends ClientRequest {
 
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
-        
+
     }
 
     @Override

@@ -6,7 +6,8 @@ package org.redkale.net.sncp;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 import org.redkale.net.client.ClientCodec;
-import org.redkale.util.ByteArray;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
+import org.redkale.util.*;
 
 /**
  *
@@ -15,6 +16,8 @@ import org.redkale.util.ByteArray;
 public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientResult> {
 
     protected static final Logger logger = Logger.getLogger(SncpClientCodec.class.getSimpleName());
+
+    private final ObjectPool<SncpClientResult> resultPool = ObjectPool.createUnsafePool(256, t -> new SncpClientResult(), SncpClientResult::prepare, SncpClientResult::recycle);
 
     private ByteArray recyclableArray;
 
@@ -26,6 +29,15 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
 
     public SncpClientCodec(SncpClientConnection connection) {
         super(connection);
+    }
+
+    protected SncpClientResult pollResult(SncpClientRequest request) {
+        SncpClientResult rs = resultPool.get();
+        return rs;
+    }
+
+    protected void offerResult(SncpClientResult rs) {
+        resultPool.accept(rs);
     }
 
     protected ByteArray pollArray() {
@@ -49,8 +61,9 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                 halfHeaderBytes.put(buffer, SncpHeader.HEADER_SIZE - halfHeaderBytes.length());
                 //读取完整header
                 SncpClientResult result = new SncpClientResult();
-                if (!result.readHeader(halfHeaderBytes)) {
-                    occurError(null, null); //request不一定存在
+                int headerSize = result.readHeader(halfHeaderBytes);
+                if (headerSize != HEADER_SIZE) {
+                    occurError(null, new SncpException("sncp header length must be " + HEADER_SIZE + ", but " + headerSize)); //request不一定存在
                     return;
                 }
                 halfHeaderBytes = null;
@@ -93,8 +106,9 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                 return;
             }
             SncpClientResult result = new SncpClientResult();
-            if (!result.readHeader(buffer)) {
-                occurError(null, null); //request不一定存在
+            int headerSize = result.readHeader(buffer);
+            if (headerSize != HEADER_SIZE) {
+                occurError(null, new SncpException("sncp header length must be " + HEADER_SIZE + ", but " + headerSize)); //request不一定存在
                 return;
             }
             if (result.getBodyLength() < 1) {

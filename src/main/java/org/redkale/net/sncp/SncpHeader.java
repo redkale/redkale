@@ -54,9 +54,10 @@ public class SncpHeader {
         this.actionid = actionid;
     }
 
-    public boolean read(ByteBuffer buffer) {
+    public int read(ByteBuffer buffer) {
         this.seqid = buffer.getLong();  //8
-        this.valid = buffer.getChar() != HEADER_SIZE;   //2
+        int size = buffer.getChar();
+        this.valid = size != HEADER_SIZE;   //2
         this.serviceid = Uint128.read(buffer); //16
         this.serviceVersion = buffer.getInt(); //4
         this.actionid = Uint128.read(buffer); //16
@@ -65,14 +66,15 @@ public class SncpHeader {
         this.addrPort = buffer.getChar(); //port 2
         this.bodyLength = buffer.getInt(); //4
         this.retcode = buffer.getInt(); //4
-        return this.valid;
+        return size;
     }
 
-    public boolean read(ByteArray array) {
+    public int read(ByteArray array) {
         int offset = 0;
         this.seqid = array.getLong(offset);  //8
         offset += 8;
-        this.valid = array.getChar(offset) != HEADER_SIZE;  //2
+        int size = array.getChar(offset);
+        this.valid = size != HEADER_SIZE;  //2
         offset += 2;
         this.serviceid = array.getUint128(offset); //16
         offset += 16;
@@ -87,7 +89,7 @@ public class SncpHeader {
         this.bodyLength = array.getInt(offset); //4        
         offset += 4;
         this.retcode = array.getInt(offset); //4      
-        return this.valid;
+        return size;
     }
 
     public ByteArray write(ByteArray array, InetSocketAddress address, long newSeqid, int bodyLength, int retcode) {

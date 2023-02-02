@@ -17,18 +17,23 @@ public class SncpClientResult {
 
     private byte[] bodyContent;
 
-    protected boolean readHeader(ByteBuffer buffer) {
-        SncpHeader h = new SncpHeader();
-        boolean rs = h.read(buffer);
-        this.header = h;
-        return rs;
+    protected void prepare() {
     }
 
-    protected boolean readHeader(ByteArray array) {
-        SncpHeader h = new SncpHeader();
-        boolean rs = h.read(array);
-        this.header = h;
-        return rs;
+    protected boolean recycle() {
+        this.header = null;
+        this.bodyContent = null;
+        return true;
+    }
+
+    protected int readHeader(ByteBuffer buffer) {
+        this.header = new SncpHeader();
+        return this.header.read(buffer);
+    }
+
+    protected int readHeader(ByteArray array) {
+        this.header = new SncpHeader();
+        return this.header.read(array);
     }
 
     protected boolean readBody(ByteBuffer buffer) {
