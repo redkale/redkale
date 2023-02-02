@@ -21,7 +21,7 @@ import java.io.Serializable;
  */
 public class ClientResponse<R extends ClientRequest, P> {
 
-    protected R request;
+    protected R request; //服务端返回一个不存在的requestid，可能为null
 
     protected P message;
 
@@ -101,4 +101,19 @@ public class ClientResponse<R extends ClientRequest, P> {
         return "{\"message\":" + message + "}";
     }
 
+    boolean isError() {
+        return false;
+    }
+
+    static class ClientErrorResponse<R extends ClientRequest, P> extends ClientResponse<R, P> {
+
+        public ClientErrorResponse(R request, Throwable exc) {
+            super(request, exc);
+        }
+
+        @Override
+        boolean isError() {
+            return true;
+        }
+    }
 }

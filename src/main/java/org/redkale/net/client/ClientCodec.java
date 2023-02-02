@@ -40,8 +40,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
         this.connection = connection;
     }
 
-    //返回true: array会clear, 返回false: buffer会clear
-    public abstract boolean decodeMessages(ByteBuffer buffer, ByteArray array);
+    public abstract void decodeMessages(ByteBuffer buffer, ByteArray array);
 
     @Override
     public final void completed(Integer count, ByteBuffer attachment) {
@@ -63,15 +62,20 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
     private void decodeResponse(ByteBuffer buffer) {
         AsyncConnection channel = connection.channel;
         connection.currRespIterator = null;
-        if (decodeMessages(buffer, readArray)) { //成功了
+        decodeMessages(buffer, readArray);
+        if (!respResults.isEmpty()) { //存在解析结果
             connection.currRespIterator = null;
             readArray.clear();
             for (ClientResponse<R, P> cr : respResults) {
-                ClientFuture<R, P> respFuture = connection.pollRespFuture(cr.getRequestid());
-                if (respFuture != null) {
-                    responseComplete(respFuture, cr.message, cr.exc);
+                if (cr.isError()) {
+                    connection.dispose(null);
+                } else {
+                    ClientFuture<R, P> respFuture = connection.pollRespFuture(cr.getRequestid());
+                    if (respFuture != null) {
+                        responseComplete(respFuture, cr.message, cr.exc);
+                    }
+                    respPool.accept(cr);
                 }
-                respPool.accept(cr);
             }
             respResults.clear();
 
@@ -95,7 +99,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
             R request = respFuture.request;
             WorkThread workThread = null;
             try {
-                if (!request.isCompleted()) {
+                if (request != null && !request.isCompleted()) {
                     if (exc == null) {
                         connection.sendHalfWrite(exc);
                         //request没有发送完，respFuture需要再次接收
@@ -104,8 +108,10 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                         connection.sendHalfWrite(exc);
                     }
                 }
-                workThread = request.workThread;
-                request.workThread = null;
+                if (request != null) {
+                    workThread = request.workThread;
+                    request.workThread = null;
+                }
                 connection.respWaitingCounter.decrement();
                 if (connection.isAuthenticated()) {
                     connection.client.incrRespDoneCounter();
@@ -119,13 +125,17 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 }
                 if (exc != null) {
                     workThread.runWork(() -> {
-                        Traces.currTraceid(request.traceid);
+                        if (request != null) {
+                            Traces.currTraceid(request.traceid);
+                        }
                         respFuture.completeExceptionally(exc);
                     });
                 } else {
-                    final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
+                    final Object rs = request == null || request.respTransfer == null ? message : request.respTransfer.apply(message);
                     workThread.runWork(() -> {
-                        Traces.currTraceid(request.traceid);
+                        if (request != null) {
+                            Traces.currTraceid(request.traceid);
+                        }
                         ((ClientFuture) respFuture).complete(rs);
                     });
                 }
@@ -167,6 +177,10 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
 
     public void addMessage(R request, Throwable exc) {
         this.respResults.add(respPool.get().set(request, exc));
+    }
+
+    public void occurError(R request, Throwable exc) {
+        this.respResults.add(new ClientResponse.ClientErrorResponse<>(request, exc));
     }
 
     @Override

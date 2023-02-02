@@ -5,6 +5,7 @@ package org.redkale.net.sncp;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import org.redkale.util.*;
 
 /**
@@ -34,6 +35,10 @@ public class SncpHeader {
 
     private int retcode;
 
+    private long timestamp; //待加入 + 8
+
+    private boolean valid;
+
     public SncpHeader() {
     }
 
@@ -51,9 +56,7 @@ public class SncpHeader {
 
     public boolean read(ByteBuffer buffer) {
         this.seqid = buffer.getLong();  //8
-        if (buffer.getChar() != HEADER_SIZE) {  //HEADER_SIZE   2
-            return false;
-        }
+        this.valid = buffer.getChar() != HEADER_SIZE;   //2
         this.serviceid = Uint128.read(buffer); //16
         this.serviceVersion = buffer.getInt(); //4
         this.actionid = Uint128.read(buffer); //16
@@ -62,16 +65,14 @@ public class SncpHeader {
         this.addrPort = buffer.getChar(); //port 2
         this.bodyLength = buffer.getInt(); //4
         this.retcode = buffer.getInt(); //4
-        return true;
+        return this.valid;
     }
 
-    public boolean readHeader(ByteArray array) {
+    public boolean read(ByteArray array) {
         int offset = 0;
         this.seqid = array.getLong(offset);  //8
         offset += 8;
-        if (array.getChar(offset) != HEADER_SIZE) {  //HEADER_SIZE   2
-            return false;
-        }
+        this.valid = array.getChar(offset) != HEADER_SIZE;  //2
         offset += 2;
         this.serviceid = array.getUint128(offset); //16
         offset += 16;
@@ -86,7 +87,7 @@ public class SncpHeader {
         this.bodyLength = array.getInt(offset); //4        
         offset += 4;
         this.retcode = array.getInt(offset); //4      
-        return true;
+        return this.valid;
     }
 
     public ByteArray write(ByteArray array, InetSocketAddress address, long newSeqid, int bodyLength, int retcode) {
@@ -135,6 +136,15 @@ public class SncpHeader {
             return null;
         }
         return new InetSocketAddress((0xff & addrBytes[0]) + "." + (0xff & addrBytes[1]) + "." + (0xff & addrBytes[2]) + "." + (0xff & addrBytes[3]), addrPort);
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    //供client端request和response的header判断
+    public boolean checkValid(SncpHeader other) {
+        return this.seqid == other.seqid && Objects.equals(this.serviceid, other.serviceid) && Objects.equals(this.actionid, other.actionid);
     }
 
     public long getSeqid() {

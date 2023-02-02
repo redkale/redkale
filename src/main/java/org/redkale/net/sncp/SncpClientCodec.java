@@ -38,21 +38,21 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
     }
 
     @Override
-    public boolean decodeMessages(ByteBuffer realBuf, ByteArray array) {
-        SncpClientConnection conn = (SncpClientConnection) connection;
-
+    public void decodeMessages(ByteBuffer realBuf, ByteArray array) {
         ByteBuffer buffer = realBuf;
-        boolean hadResult = false;
         while (buffer.hasRemaining()) {
             if (halfHeaderBytes != null) {
                 if (buffer.remaining() + halfHeaderBytes.length() < SncpHeader.HEADER_SIZE) { //buffer不足以读取完整header
                     halfHeaderBytes.put(buffer);
-                    return hadResult;
+                    return;
                 }
                 halfHeaderBytes.put(buffer, SncpHeader.HEADER_SIZE - halfHeaderBytes.length());
                 //读取完整header
                 SncpClientResult result = new SncpClientResult();
-                result.readHeader(halfHeaderBytes);
+                if (!result.readHeader(halfHeaderBytes)) {
+                    occurError(null, null); //request不一定存在
+                    return;
+                }
                 halfHeaderBytes = null;
                 if (result.getBodyLength() < 1) {
                     addMessage(findRequest(result.getRequestid()), result);
@@ -62,11 +62,11 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                 //还需要读body
                 lastResult = result;
             }
-            if (lastResult != null) { //buffer不够
+            if (lastResult != null) { //lastResult的body没有读完
                 if (halfBodyBytes != null) {
                     if (buffer.remaining() + halfBodyBytes.length() < lastResult.getBodyLength()) { //buffer不足以读取完整body
                         halfBodyBytes.put(buffer);
-                        return hadResult;
+                        return;
                     }
                     halfBodyBytes.put(buffer, lastResult.getBodyLength() - halfHeaderBytes.length());
                     //读取完整body
@@ -76,18 +76,42 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                     lastResult = null;
                     continue;
                 }
-                
+                if (buffer.remaining() < lastResult.getBodyLength()) {  //buffer不足以读取完整body
+                    halfBodyBytes = pollArray();
+                    halfBodyBytes.put(buffer);
+                    return;
+                }
+                lastResult.readBody(buffer);
+                halfBodyBytes = null;
+                addMessage(findRequest(lastResult.getRequestid()), lastResult);
+                lastResult = null;
+                continue;
             }
-            if (buffer.remaining() < SncpHeader.HEADER_SIZE) { //内容不足以读取完整header
+            if (buffer.remaining() < SncpHeader.HEADER_SIZE) { //buffer不足以读取完整header
                 halfHeaderBytes = pollArray();
                 halfHeaderBytes.put(buffer);
-                return hadResult;
+                return;
             }
-
-            SncpClientRequest request = null;
-            buffer = realBuf;
+            SncpClientResult result = new SncpClientResult();
+            if (!result.readHeader(buffer)) {
+                occurError(null, null); //request不一定存在
+                return;
+            }
+            if (result.getBodyLength() < 1) {
+                addMessage(findRequest(result.getRequestid()), result);
+                lastResult = null;
+                continue;
+            }
+            if (buffer.remaining() < result.getBodyLength()) {  //buffer不足以读取完整body
+                lastResult = result;
+                halfBodyBytes = pollArray();
+                halfBodyBytes.put(buffer);
+                return;
+            }
+            result.readBody(buffer);
+            addMessage(findRequest(result.getRequestid()), result);
+            lastResult = null;
         }
-        return hadResult;
     }
 
 }
