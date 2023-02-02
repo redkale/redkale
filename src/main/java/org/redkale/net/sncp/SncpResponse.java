@@ -81,7 +81,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     protected void fillHeader(ByteArray buffer, int bodyLength, int retcode) {
         SncpHeader header = request.getHeader();
-        header.write(buffer, this.addrBytes, this.addrPort, header.getSeqid(), bodyLength, retcode);
+        header.writeTo(buffer, this.addrBytes, this.addrPort, header.getSeqid(), bodyLength, retcode);
     }
 
 }

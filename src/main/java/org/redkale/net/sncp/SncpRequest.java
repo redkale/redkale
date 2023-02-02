@@ -107,7 +107,7 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override
     public String toString() {
-        return SncpRequest.class.getSimpleName() + "{header=" + this.header + ",bodyOffset=" + this.bodyOffset + "}";
+        return SncpRequest.class.getSimpleName() + "{header=" + this.header + ",bodyOffset=" + this.bodyOffset + ",body=[" + (this.body == null ? -1 : this.body.length) + "]}";
     }
 
     @Override

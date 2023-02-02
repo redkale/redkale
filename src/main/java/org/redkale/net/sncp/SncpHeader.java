@@ -18,7 +18,7 @@ public class SncpHeader {
 
     private static final byte[] EMPTY_ADDR = new byte[4];
 
-    private long seqid;
+    private Long seqid;
 
     private Uint128 serviceid;
 
@@ -92,39 +92,29 @@ public class SncpHeader {
         return size;
     }
 
-    public ByteArray write(ByteArray array, InetSocketAddress address, long newSeqid, int bodyLength, int retcode) {
+    public ByteArray writeTo(ByteArray array, InetSocketAddress address, long newSeqid, int bodyLength, int retcode) {
         byte[] newAddrBytes = address == null ? EMPTY_ADDR : address.getAddress().getAddress();
         int newAddrPort = address == null ? 0 : address.getPort();
-        return write(array, newAddrBytes, newAddrPort, newSeqid, bodyLength, retcode);
+        return writeTo(array, newAddrBytes, newAddrPort, newSeqid, bodyLength, retcode);
     }
 
-    public ByteArray write(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, int bodyLength, int retcode) {
-        int offset = 0;
-        array.putLong(offset, newSeqid);
-        offset += 8;
-        array.putChar(offset, (char) HEADER_SIZE);
-        offset += 2;
-        array.putUint128(offset, serviceid);
-        offset += 16;
-        array.putInt(offset, serviceVersion);
-        offset += 4;
-        array.putUint128(offset, actionid);
-        offset += 16;
-        array.put(offset, newAddrBytes);
-        offset += newAddrBytes.length; //4
-        array.putChar(offset, (char) newAddrPort);
-        offset += 2;
-        array.putInt(offset, bodyLength);
-        offset += 4;
-        array.putInt(offset, retcode); //4
+    public ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, int bodyLength, int retcode) {
+        array.putLong(newSeqid); //8
+        array.putChar((char) HEADER_SIZE); //2
+        array.putUint128(serviceid); //16
+        array.putInt(serviceVersion); //4
+        array.putUint128(actionid); //16
+        array.put(newAddrBytes); //4
+        array.putChar((char) newAddrPort); //2
+        array.putInt(bodyLength); //4
+        array.putInt(retcode); //4
         return array;
     }
 
     @Override
     public String toString() {
         return getClass().getSimpleName()
-            + "{seqid=" + this.seqid
-            + ",serviceid=" + this.serviceid
+            + (this.seqid == null ? ("{serviceid=" + this.serviceid) : ("{seqid=" + this.seqid + ",serviceid=" + this.serviceid))
             + ",serviceVersion=" + this.serviceVersion
             + ",actionid=" + this.actionid
             + ",address=" + getAddress()
@@ -146,14 +136,16 @@ public class SncpHeader {
 
     //供client端request和response的header判断
     public boolean checkValid(SncpHeader other) {
-        return this.seqid == other.seqid && Objects.equals(this.serviceid, other.serviceid) && Objects.equals(this.actionid, other.actionid);
+        return Objects.equals(this.seqid, other.seqid)
+            && Objects.equals(this.serviceid, other.serviceid)
+            && Objects.equals(this.actionid, other.actionid);
     }
 
-    public long getSeqid() {
+    public Long getSeqid() {
         return seqid;
     }
 
-    public void setSeqid(long seqid) {
+    public void setSeqid(Long seqid) {
         this.seqid = seqid;
     }
 

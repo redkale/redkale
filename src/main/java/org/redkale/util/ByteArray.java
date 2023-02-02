@@ -775,7 +775,7 @@ public final class ByteArray implements ByteTuple {
      * @return ByteArray
      */
     public ByteArray putUint128(Uint128 value) {
-        return this.put(value.directBytes());
+        return this.put(value.value);
     }
 
     /**
@@ -787,7 +787,7 @@ public final class ByteArray implements ByteTuple {
      * @return ByteArray
      */
     public ByteArray putUint128(int offset, Uint128 value) {
-        return this.put(offset, value.directBytes());
+        return this.put(offset, value.value);
     }
 
     public ByteArray putByte(short value) {

@@ -522,7 +522,7 @@ public final class SncpOldClient {
     }
 
     private void fillHeader(ByteArray buffer, SncpAction action, long seqid, String traceid, int bodyLength) {
-        action.header.write(buffer, addrBytes, addrPort, seqid, bodyLength, 0); //结果码， 请求方固定传0  
+        action.header.writeTo(buffer, addrBytes, addrPort, seqid, bodyLength, 0); //结果码， 请求方固定传0  
     }
 
     protected static final class SncpAction {

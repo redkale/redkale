@@ -21,14 +21,13 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
 
     public static final Uint128 ZERO = new Uint128(new byte[16]);
 
-    protected final byte[] value;
+    final byte[] value;
 
 //    private Uint128(long v1, long v2) {  //暂时不用
 //        this.value = new byte[]{(byte) (v1 >> 56), (byte) (v1 >> 48), (byte) (v1 >> 40), (byte) (v1 >> 32),
 //            (byte) (v1 >> 24), (byte) (v1 >> 16), (byte) (v1 >> 8), (byte) v1, (byte) (v2 >> 56), (byte) (v2 >> 48), (byte) (v2 >> 40), (byte) (v2 >> 32),
 //            (byte) (v2 >> 24), (byte) (v2 >> 16), (byte) (v2 >> 8), (byte) v2};
 //    }
-
     private Uint128(byte[] bytes) {
         if (bytes == null || bytes.length != 16) {
             throw new NumberFormatException("Not 16 length bytes");
@@ -38,10 +37,6 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
 
     public byte[] getBytes() {
         return Arrays.copyOf(value, value.length);
-    }
-
-    public byte[] directBytes() {
-        return value;
     }
 
     public static Uint128 create(byte[] bs) {

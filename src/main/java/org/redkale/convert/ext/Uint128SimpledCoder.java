@@ -31,7 +31,7 @@ public final class Uint128SimpledCoder<R extends Reader, W extends Writer> exten
         if (value == null) {
             out.writeNull();
         } else {
-            bsSimpledCoder.convertTo(out, value.directBytes());
+            bsSimpledCoder.convertTo(out, value.getBytes());
         }
     }
 

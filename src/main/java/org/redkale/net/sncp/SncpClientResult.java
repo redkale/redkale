@@ -5,6 +5,7 @@ package org.redkale.net.sncp;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import org.redkale.util.ByteArray;
 
 /**
@@ -45,6 +46,14 @@ public class SncpClientResult {
 
     public Serializable getRequestid() {
         return header == null ? null : header.getSeqid();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "_" + Objects.hashCode(this) + "{"
+            + "header=" + header
+            + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
+            + "}";
     }
 
     public int getBodyLength() {
