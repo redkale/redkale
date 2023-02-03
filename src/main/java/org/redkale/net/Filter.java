@@ -7,7 +7,7 @@ package org.redkale.net;
 
 import java.io.IOException;
 import org.redkale.annotation.Priority;
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
 
 /**
  * 协议拦截器类, 类似JavaEE中的javax.servlet.Filter <br>
@@ -33,12 +33,16 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
 
     public abstract void doFilter(R request, P response) throws IOException;
 
+    public abstract boolean isNonBlocking();
+
     public void destroy(C context, AnyValue config) {
     }
 
     @Override
     public int compareTo(Object o) {
-        if (!(o instanceof Filter)) return 1;
+        if (!(o instanceof Filter)) {
+            return 1;
+        }
         Priority p1 = this.getClass().getAnnotation(Priority.class);
         Priority p2 = o.getClass().getAnnotation(Priority.class);
         return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());

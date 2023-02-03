@@ -39,6 +39,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     private volatile boolean inited = true;
 
+    protected boolean inNonBlocking = true;
+
     protected Object output; //输出的结果对象
 
     protected BiConsumer<R, Response<C, R>> recycleListener;
@@ -127,6 +129,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected void prepare() {
         inited = true;
+        inNonBlocking = true;
         request.prepare();
     }
 
@@ -149,6 +152,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.responseConsumer = null;
         this.inited = false;
         return true;
+    }
+
+    protected boolean inNonBlocking() {
+        return inNonBlocking;
     }
 
     protected void refuseAlive() {

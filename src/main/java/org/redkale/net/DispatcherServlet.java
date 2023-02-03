@@ -12,7 +12,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-import org.redkale.annotation.NonBlocking;
 import org.redkale.boot.Application;
 import org.redkale.util.*;
 
@@ -44,8 +43,6 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     private final ReentrantLock mappingLock = new ReentrantLock();
 
     private Map<K, S> mappings = new HashMap<>();
-
-    private volatile boolean allFilterAsync = true;
 
     private final List<Filter<C, R, P>> filters = new ArrayList<>();
 
@@ -210,16 +207,10 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
         filtersLock.lock();
         try {
             this.filters.add(filter);
-            this.allFilterAsync = this.allFilterAsync && isNonBlocking(filter);
             Collections.sort(this.filters);
         } finally {
             filtersLock.unlock();
         }
-    }
-
-    private boolean isNonBlocking(Filter filter) {
-        NonBlocking a = filter.getClass().getAnnotation(NonBlocking.class);
-        return a != null && a.value();
     }
 
     public <T extends Filter<C, R, P>> T removeFilter(Class<T> filterClass) {
@@ -275,14 +266,6 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
                 }
                 filter._next = null;
                 this.filters.remove(filter);
-                boolean async = true;
-                for (Filter f : filters) {
-                    async = async && isNonBlocking(filter);
-                    if (!async) {
-                        break;
-                    }
-                }
-                this.allFilterAsync = async;
             }
             return (T) filter;
         } finally {
@@ -304,6 +287,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
             request.prepare();
             response.filter = this.headFilter;
             response.servlet = this;
+            response.inNonBlocking = true;
             response.nextEvent();
         } catch (Throwable t) {
             response.context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
