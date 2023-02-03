@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-import org.redkale.annotation.Async;
+import org.redkale.annotation.NonBlocking;
 import org.redkale.boot.Application;
 import org.redkale.util.*;
 
@@ -210,15 +210,15 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
         filtersLock.lock();
         try {
             this.filters.add(filter);
-            this.allFilterAsync = this.allFilterAsync && isAsync(filter);
+            this.allFilterAsync = this.allFilterAsync && isNonBlocking(filter);
             Collections.sort(this.filters);
         } finally {
             filtersLock.unlock();
         }
     }
 
-    private boolean isAsync(Filter filter) {
-        Async a = filter.getClass().getAnnotation(Async.class);
+    private boolean isNonBlocking(Filter filter) {
+        NonBlocking a = filter.getClass().getAnnotation(NonBlocking.class);
         return a != null && a.value();
     }
 
@@ -277,7 +277,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
                 this.filters.remove(filter);
                 boolean async = true;
                 for (Filter f : filters) {
-                    async = async && isAsync(filter);
+                    async = async && isNonBlocking(filter);
                     if (!async) {
                         break;
                     }

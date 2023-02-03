@@ -13,7 +13,7 @@ import org.redkale.annotation.ResourceType;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
-import org.redkale.util.*;
+import org.redkale.util.ResourceFactory;
 
 /**
  *
@@ -49,37 +49,6 @@ public class SncpTestServiceImpl implements SncpTestIService {
     @Override
     public double queryDoubleResult(String a, int b, double value) {
         return value + 1;
-    }
-
-    public static class CallAttribute implements Attribute<SncpTestBean, Long> {
-
-        @Override
-        public Class<? extends Long> type() {
-            return long.class;
-        }
-
-        @Override
-        public Class<SncpTestBean> declaringClass() {
-            return SncpTestBean.class;
-        }
-
-        @Override
-        public String field() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public Long get(SncpTestBean obj) {
-            System.out.println("返回ID: " + obj.getId());
-            return obj.getId();
-        }
-
-        @Override
-        public void set(SncpTestBean obj, Long value) {
-            System.out.println("设置ID: " + value);
-            obj.setId(value);
-        }
-
     }
 
     @Override
