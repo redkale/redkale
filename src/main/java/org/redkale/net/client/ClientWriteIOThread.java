@@ -8,7 +8,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.redkale.net.AsyncIOThread;
 import org.redkale.util.*;
 
@@ -35,25 +34,13 @@ public class ClientWriteIOThread extends AsyncIOThread {
         requestQueue.offer(respFuture);
     }
 
-    public void sendHalfWrite(ClientConnection conn, Throwable halfRequestExc) {
-        if (conn.pauseWriting.get()) {
-            conn.pauseResuming.set(true);
-            try {
-                AtomicBoolean skipFirst = new AtomicBoolean(halfRequestExc != null);
-                conn.pauseRequests.removeIf(e -> {
-                    if (e != null) {
-                        if (!skipFirst.compareAndSet(true, false)) {
-                            requestQueue.offer((ClientFuture) e);
-                        }
-                    }
-                    return true;
-                });
-            } finally {
-                conn.pauseResuming.set(false);
-                conn.pauseWriting.set(false);
-                conn.signalPauseRequest();
-            }
+    public void sendHalfWrite(ClientConnection conn, ClientRequest request, Throwable halfRequestExc) {
+        ClientFuture respFuture = conn.createClientFuture(request);
+        respFuture.resumeHalfRequestFlag = true;
+        if (halfRequestExc != null) {  //halfRequestExc不为null时需要把当前halfRequest移除
+            conn.pauseRequests.poll();
         }
+        requestQueue.offer(respFuture);
     }
 
     @Override
@@ -71,24 +58,38 @@ public class ClientWriteIOThread extends AsyncIOThread {
             try {
                 while ((entry = requestQueue.take()) != null) {
                     map.clear();
-                    if (!entry.isDone()) {
+                    if (entry.resumeHalfRequestFlag != null) { //将暂停的pauseRequests写入list
+                        List<ClientFuture> cl = map.computeIfAbsent(entry.conn, c -> listPool.get());
+                        for (ClientFuture f : (List<ClientFuture>) entry.conn.pauseRequests) {
+                            if (!f.isDone()) {
+                                entry.conn.offerRespFuture(f);
+                                cl.add(f);
+                            }
+                        }
+                        entry.conn.pauseRequests.clear();
+                        entry.conn.pauseWriting.set(false);
+                    } else if (!entry.isDone()) {
                         entry.conn.offerRespFuture(entry);
                         if (entry.conn.pauseWriting.get()) {
-                            if (entry.conn.pauseResuming.get()) {
-                                entry.conn.awaitPauseRequest();
-                            }
                             entry.conn.pauseRequests.add(entry);
                         } else {
                             map.computeIfAbsent(entry.conn, c -> listPool.get()).add(entry);
                         }
                     }
                     while ((entry = requestQueue.poll()) != null) {
-                        if (!entry.isDone()) {
+                        if (entry.resumeHalfRequestFlag != null) { //将暂停的pauseRequests写入list
+                            List<ClientFuture> cl = map.computeIfAbsent(entry.conn, c -> listPool.get());
+                            for (ClientFuture f : (List<ClientFuture>) entry.conn.pauseRequests) {
+                                if (!f.isDone()) {
+                                    entry.conn.offerRespFuture(f);
+                                    cl.add(f);
+                                }
+                            }
+                            entry.conn.pauseRequests.clear();
+                            entry.conn.pauseWriting.set(false);
+                        } else if (!entry.isDone()) {
                             entry.conn.offerRespFuture(entry);
                             if (entry.conn.pauseWriting.get()) {
-                                if (entry.conn.pauseResuming.get()) {
-                                    entry.conn.awaitPauseRequest();
-                                }
                                 entry.conn.pauseRequests.add(entry);
                             } else {
                                 map.computeIfAbsent(entry.conn, c -> listPool.get()).add(entry);

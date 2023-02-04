@@ -102,11 +102,11 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
             try {
                 if (request != null && !request.isCompleted()) {
                     if (exc == null) {
-                        connection.sendHalfWrite(exc);
+                        connection.sendHalfWrite(request, exc);
                         //request没有发送完，respFuture需要再次接收
                         return;
                     } else { //异常了需要清掉半包
-                        connection.sendHalfWrite(exc);
+                        connection.sendHalfWrite(request, exc);
                     }
                 }
                 if (request != null) {
