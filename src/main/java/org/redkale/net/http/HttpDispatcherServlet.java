@@ -55,6 +55,10 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     private HttpServlet lastRunServlet;
 
+    protected HttpDispatcherServlet() {
+        super();
+    }
+
     private List<HttpServlet> removeHttpServlet(final Predicate<MappingEntry> predicateEntry, final Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter) {
         List<HttpServlet> servlets = new ArrayList<>();
         allMapLock.lock();
@@ -354,8 +358,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
             }
             servlet.execute(request, response);
         } catch (Exception e) {
-            request.getContext().getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request, e);
-            response.finish(500, null);
+            request.getContext().getLogger().log(Level.WARNING, "Dispatch servlet occur exception. request = " + request, e);
+            response.finishError(e);
         }
     }
 

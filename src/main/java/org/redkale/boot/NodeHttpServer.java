@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
+import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
 import org.redkale.mq.MessageAgent;
@@ -24,7 +25,6 @@ import org.redkale.service.Service;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 import org.redkale.watch.*;
-import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 
 /**
  * HTTP Server节点的配置Server

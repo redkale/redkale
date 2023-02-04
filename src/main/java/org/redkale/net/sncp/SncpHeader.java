@@ -42,11 +42,6 @@ public class SncpHeader {
     public SncpHeader() {
     }
 
-    public SncpHeader(InetSocketAddress clientSncpAddress) {
-        this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
-        this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
-    }
-
     public SncpHeader(InetSocketAddress clientSncpAddress, Uint128 serviceid, Uint128 actionid) {
         this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
         this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
@@ -145,64 +140,32 @@ public class SncpHeader {
         return seqid;
     }
 
-    public void setSeqid(Long seqid) {
-        this.seqid = seqid;
-    }
-
     public Uint128 getServiceid() {
         return serviceid;
-    }
-
-    public void setServiceid(Uint128 serviceid) {
-        this.serviceid = serviceid;
     }
 
     public int getServiceVersion() {
         return serviceVersion;
     }
 
-    public void setServiceVersion(int serviceVersion) {
-        this.serviceVersion = serviceVersion;
-    }
-
     public Uint128 getActionid() {
         return actionid;
-    }
-
-    public void setActionid(Uint128 actionid) {
-        this.actionid = actionid;
     }
 
     public byte[] getAddrBytes() {
         return addrBytes;
     }
 
-    public void setAddrBytes(byte[] addrBytes) {
-        this.addrBytes = addrBytes;
-    }
-
     public int getAddrPort() {
         return addrPort;
-    }
-
-    public void setAddrPort(int addrPort) {
-        this.addrPort = addrPort;
     }
 
     public int getBodyLength() {
         return bodyLength;
     }
 
-    public void setBodyLength(int bodyLength) {
-        this.bodyLength = bodyLength;
-    }
-
     public int getRetcode() {
         return retcode;
-    }
-
-    public void setRetcode(int retcode) {
-        this.retcode = retcode;
     }
 
 }

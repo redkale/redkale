@@ -111,13 +111,7 @@ public class Context {
     }
 
     protected void executeDispatch(Request request, Response response) {
-        if (workHashExecutor != null) {
-            workHashExecutor.execute(request.getHashid(), () -> dispatcher.dispatch(request, response));
-        } else if (workExecutor != null) {
-            workExecutor.execute(() -> dispatcher.dispatch(request, response));
-        } else {
-            dispatcher.dispatch(request, response);
-        }
+        dispatcher.dispatch(request, response);
     }
 
     public void execute(Servlet servlet, Request request, Response response) {

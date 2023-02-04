@@ -52,6 +52,10 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     protected Filter<C, R, P> headFilter;
 
+    protected DispatcherServlet() {
+        this._nonBlocking = true;
+    }
+
     protected void incrExecuteCounter() {
         executeCounter.increment();
     }
@@ -290,8 +294,8 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
             response.inNonBlocking = true;
             response.nextEvent();
         } catch (Throwable t) {
-            response.context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
-            response.error(t);
+            response.context.logger.log(Level.WARNING, "Dispatch servlet occur exception", t);
+            response.finishError(t);
         }
     }
 

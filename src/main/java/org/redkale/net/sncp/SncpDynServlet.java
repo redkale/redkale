@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
-import org.redkale.annotation.Resource;
+import org.redkale.annotation.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -163,6 +163,8 @@ public final class SncpDynServlet extends SncpServlet {
         public Method method;
 
         public Creator<SncpAsyncHandler> handlerCreator;
+
+        protected boolean nonBlocking;
 
         @Resource
         protected BsonConvert convert;
@@ -619,9 +621,14 @@ public final class SncpDynServlet extends SncpServlet {
                     }
                 }
             }
+            NonBlocking non = method.getAnnotation(NonBlocking.class);
+            if (non == null) {
+                non = service.getClass().getAnnotation(NonBlocking.class);
+            }
             try {
                 SncpServletAction instance = (SncpServletAction) newClazz.getDeclaredConstructor().newInstance();
                 instance.method = method;
+                instance.nonBlocking = non == null ? false : non.value();
                 java.lang.reflect.Type[] types = new java.lang.reflect.Type[originalParamTypes.length + 1];
                 types[0] = originalReturnType;
                 System.arraycopy(originalParamTypes, 0, types, 1, originalParamTypes.length);

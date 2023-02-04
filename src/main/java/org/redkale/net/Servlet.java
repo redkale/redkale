@@ -5,8 +5,8 @@
  */
 package org.redkale.net;
 
-import org.redkale.util.AnyValue;
 import java.io.IOException;
+import org.redkale.util.AnyValue;
 
 /**
  * 协议请求处理类
@@ -23,6 +23,8 @@ public abstract class Servlet<C extends Context, R extends Request<C>, P extends
 
     AnyValue _conf; //当前Servlet的配置
 
+    protected boolean _nonBlocking; //当前Servlet.execute方法是否为非阻塞模式
+
     //Server执行start时运行此方法
     public void init(C context, AnyValue config) {
     }
@@ -33,4 +35,7 @@ public abstract class Servlet<C extends Context, R extends Request<C>, P extends
     public void destroy(C context, AnyValue config) {
     }
 
+    protected boolean isNonBlocking() {
+        return _nonBlocking;
+    }
 }

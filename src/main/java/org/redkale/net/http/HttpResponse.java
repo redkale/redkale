@@ -236,6 +236,21 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return super.recycle();
     }
 
+    @Override
+    protected ExecutorService getWorkExecutor() {
+        return super.getWorkExecutor();
+    }
+
+    @Override
+    protected void updateNonBlocking(boolean nonBlocking) {
+        super.updateNonBlocking(nonBlocking);
+    }
+
+    @Override
+    protected boolean inNonBlocking() {
+        return super.inNonBlocking();
+    }
+
 //    protected Supplier<ByteBuffer> getBodyBufferSupplier() {
 //        return bodyBufferSupplier;
 //    }
@@ -308,8 +323,13 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             finish(v);
         }, (t, a) -> {
             context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletionHandler", (Throwable) t);
-            finish(500, null);
+            finishError(t);
         });
+    }
+
+    @Override
+    protected void finishError(Throwable t) {
+        finish(500, null);
     }
 
     /**
@@ -620,7 +640,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
             if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletionStage", (Throwable) e);
+                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", (Throwable) e);
                 if (e instanceof TimeoutException) {
                     finish504();
                 } else {
@@ -652,7 +672,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJsonFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
             if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur, force to close channel. request = " + request + ", result is CompletionStage", (Throwable) e);
+                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", (Throwable) e);
                 if (e instanceof TimeoutException) {
                     finish504();
                 } else {

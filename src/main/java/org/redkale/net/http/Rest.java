@@ -984,17 +984,61 @@ public final class Rest {
         if (!HttpServlet.class.isAssignableFrom(baseServletType)) {
             throw new RestException(baseServletType + " is not HttpServlet Class on createRestServlet");
         }
-        int mod = baseServletType.getModifiers();
-        if (!java.lang.reflect.Modifier.isPublic(mod)) {
+        int parentMod = baseServletType.getModifiers();
+        if (!java.lang.reflect.Modifier.isPublic(parentMod)) {
             throw new RestException(baseServletType + " is not Public Class on createRestServlet");
         }
-        if (java.lang.reflect.Modifier.isAbstract(mod)) {
-            for (Method m : baseServletType.getDeclaredMethods()) {
-                if (java.lang.reflect.Modifier.isAbstract(m.getModifiers())) { //@since 2.4.0
-                    throw new RestException(baseServletType + " cannot contains a abstract Method on " + baseServletType);
+        Boolean parentNon0 = null;
+        {
+            NonBlocking snon = serviceType.getAnnotation(NonBlocking.class);
+            parentNon0 = snon == null ? null : snon.value();
+            if (HttpServlet.class != baseServletType) {
+                Boolean preNonBlocking = null;
+                Boolean authNonBlocking = null;
+                RedkaleClassLoader.putReflectionDeclaredMethods(baseServletType.getName());
+                for (Method m : baseServletType.getDeclaredMethods()) {
+                    if (java.lang.reflect.Modifier.isAbstract(parentMod) && java.lang.reflect.Modifier.isAbstract(m.getModifiers())) { //@since 2.4.0
+                        throw new RestException(baseServletType + " cannot contains a abstract Method on " + baseServletType);
+                    }
+                    Class[] paramTypes = m.getParameterTypes();
+                    if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class || paramTypes[1] != HttpResponse.class) {
+                        continue;
+                    }
+                    //-----------------------------------------------
+                    Class[] exps = m.getExceptionTypes();
+                    if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) {
+                        continue;
+                    }
+                    //-----------------------------------------------
+                    String methodName = m.getName();
+                    if ("preExecute".equals(methodName)) {
+                        if (preNonBlocking == null) {
+                            NonBlocking non = m.getAnnotation(NonBlocking.class);
+                            preNonBlocking = non != null && non.value();
+                        }
+                        continue;
+                    }
+                    if ("authenticate".equals(methodName)) {
+                        if (authNonBlocking == null) {
+                            NonBlocking non = m.getAnnotation(NonBlocking.class);
+                            authNonBlocking = non != null && non.value();
+                        }
+                        continue;
+                    }
+                }
+                if (preNonBlocking != null && !preNonBlocking) {
+                    parentNon0 = false;
+                } else if (authNonBlocking != null && !authNonBlocking) {
+                    parentNon0 = false;
+                } else {
+                    NonBlocking bnon = baseServletType.getAnnotation(NonBlocking.class);
+                    if (bnon != null && !bnon.value()) {
+                        parentNon0 = false;
+                    }
                 }
             }
         }
+
         final String restInternalName = Type.getInternalName(Rest.class);
         final String serviceDesc = Type.getDescriptor(serviceType);
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
@@ -1002,6 +1046,7 @@ public final class Rest {
         final String reqDesc = Type.getDescriptor(HttpRequest.class);
         final String respDesc = Type.getDescriptor(HttpResponse.class);
         final String convertDesc = Type.getDescriptor(Convert.class);
+        final String nonblockDesc = Type.getDescriptor(NonBlocking.class);
         final String typeDesc = Type.getDescriptor(java.lang.reflect.Type.class);
         final String retDesc = Type.getDescriptor(RetResult.class);
         final String httpResultDesc = Type.getDescriptor(HttpResult.class);
@@ -1041,6 +1086,8 @@ public final class Rest {
             throw new RestException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
         }
         final boolean serRpcOnly = controller != null && controller.rpconly();
+        final Boolean parentNonBlocking = parentNon0;
+
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         String stname = serviceType.getSimpleName();
         if (stname.startsWith("Service")) { //类似ServiceWatchService这样的类保留第一个Service字样
@@ -1125,11 +1172,11 @@ public final class Rest {
                     paramTypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
                     retvalTypes.add(formatRestReturnType(method, serviceType));
                     if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                        MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, null, bigModuleName, method);
+                        MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, parentNonBlocking, null, bigModuleName, method);
                         entrys.add(entry);
                     } else {
                         for (RestMapping mapping : mappings) {
-                            MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, mapping, defModuleName, method);
+                            MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, parentNonBlocking, mapping, defModuleName, method);
                             entrys.add(entry);
                         }
                     }
@@ -1465,8 +1512,8 @@ public final class Rest {
 
             Method restactMethod = newClazz.getDeclaredMethod("_createRestActionEntry");
             restactMethod.setAccessible(true);
-            Field tmpentrysfield = HttpServlet.class.getDeclaredField("_actionmap");
-            tmpentrysfield.setAccessible(true);
+            Field tmpEntrysField = HttpServlet.class.getDeclaredField("_actionmap");
+            tmpEntrysField.setAccessible(true);
             HashMap<String, HttpServlet.ActionEntry> innerEntryMap = (HashMap) restactMethod.invoke(obj);
             for (Map.Entry<String, HttpServlet.ActionEntry> en : innerEntryMap.entrySet()) {
                 Method m = mappingUrlToMethod.get(en.getKey());
@@ -1474,7 +1521,10 @@ public final class Rest {
                     en.getValue().annotations = HttpServlet.ActionEntry.annotations(m);
                 }
             }
-            tmpentrysfield.set(obj, innerEntryMap);
+            tmpEntrysField.set(obj, innerEntryMap);
+            Field nonblockField = Servlet.class.getDeclaredField("_nonBlocking");
+            nonblockField.setAccessible(true);
+            nonblockField.set(obj, parentNonBlocking == null ? true : parentNonBlocking);
             return obj;
         } catch (ClassNotFoundException e) {
         } catch (Throwable e) {
@@ -1587,14 +1637,14 @@ public final class Rest {
             paramTypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
             retvalTypes.add(formatRestReturnType(method, serviceType));
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, null, bigmodulename, method);
+                MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, null, bigmodulename, method);
                 if (entrys.contains(entry)) {
                     throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                 }
                 entrys.add(entry);
             } else {
                 for (RestMapping mapping : mappings) {
-                    MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, mapping, defmodulename, method);
+                    MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, mapping, defmodulename, method);
                     if (entrys.contains(entry)) {
                         throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                     }
@@ -1666,6 +1716,11 @@ public final class Rest {
             classMap.put("moduleid", moduleid);
             classMap.put("repair", repair);
             //classMap.put("comment", comment); //不显示太多信息
+        }
+        { //NonBlocking            
+            av0 = cw.visitAnnotation(nonblockDesc, true);
+            av0.visit("value", true);
+            av0.visitEnd();
         }
         { //内部类
             cw.visitInnerClass(actionEntryName, httpServletName, HttpServlet.ActionEntry.class.getSimpleName(), ACC_PROTECTED + ACC_FINAL + ACC_STATIC);
@@ -2102,8 +2157,7 @@ public final class Rest {
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
             java.lang.reflect.Type returnGenericNoFutureType = TypeToken.getGenericType(method.getGenericReturnType(), serviceType);
-            { // 设置 Annotation
-                //设置 HttpMapping
+            { //设置 Annotation HttpMapping
                 boolean reqpath = false;
                 for (Object[] ps : paramlist) {
                     if ("#".equals((String) ps[1])) {
@@ -2168,7 +2222,12 @@ public final class Rest {
                 mappingMap.put("result", returnGenericNoFutureType == returnType ? returnType.getName() : String.valueOf(returnGenericNoFutureType));
                 entry.mappingurl = url;
             }
-            if (rcs != null && rcs.length > 0) { // 设置 Annotation
+            {  //设置 Annotation NonBlocking   
+                av0 = mv.visitAnnotation(nonblockDesc, true);
+                av0.visit("value", entry.nonBlocking);
+                av0.visitEnd();
+            }
+            if (rcs != null && rcs.length > 0) { // 设置 Annotation RestConvert
                 av0 = mv.visitAnnotation(restConvertsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 //设置 RestConvert
@@ -2197,7 +2256,7 @@ public final class Rest {
                 av1.visitEnd();
                 av0.visitEnd();
             }
-            if (rcc != null && rcc.length > 0) { // 设置 Annotation
+            if (rcc != null && rcc.length > 0) { // 设置 Annotation RestConvertCoder
                 av0 = mv.visitAnnotation(restConvertCodersDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 //设置 RestConvertCoder
@@ -3184,8 +3243,13 @@ public final class Rest {
                 cw2.visit(V11, ACC_SUPER, newDynName + "$" + entry.newActionClassName, null, httpServletName, null);
 
                 cw2.visitInnerClass(newDynName + "$" + entry.newActionClassName, newDynName, entry.newActionClassName, ACC_PRIVATE + ACC_STATIC);
+                {  //设置 Annotation NonBlocking   
+                    av0 = cw2.visitAnnotation(nonblockDesc, true);
+                    av0.visit("value", entry.nonBlocking);
+                    av0.visitEnd();
+                }
                 {
-                    fv = cw2.visitField(0, "servlet", "L" + newDynName + ";", null, null);
+                    fv = cw2.visitField(0, "_parentServlet", "L" + newDynName + ";", null, null);
                     fv.visitEnd();
                 }
                 {
@@ -3194,7 +3258,10 @@ public final class Rest {
                     mv.visitMethodInsn(INVOKESPECIAL, httpServletName, "<init>", "()V", false);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitFieldInsn(PUTFIELD, newDynName + "$" + entry.newActionClassName, "servlet", "L" + newDynName + ";");
+                    mv.visitFieldInsn(PUTFIELD, newDynName + "$" + entry.newActionClassName, "_parentServlet", "L" + newDynName + ";");
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitInsn(entry.nonBlocking ? ICONST_1 : ICONST_0);
+                    mv.visitFieldInsn(PUTFIELD, newDynName + "$" + entry.newActionClassName, "_nonBlocking", "Z");
                     mv.visitInsn(RETURN);
                     mv.visitMaxs(2, 2);
                     mv.visitEnd();
@@ -3211,7 +3278,7 @@ public final class Rest {
                 {
                     mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName + "$" + entry.newActionClassName, "servlet", "L" + newDynName + ";");
+                    mv.visitFieldInsn(GETFIELD, newDynName + "$" + entry.newActionClassName, "_parentServlet", "L" + newDynName + ";");
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, entry.newMethodName, "(" + reqDesc + respDesc + ")V", false);
@@ -3416,8 +3483,8 @@ public final class Rest {
             Method restactMethod = newClazz.getDeclaredMethod("_createRestActionEntry");
             restactMethod.setAccessible(true);
             RedkaleClassLoader.putReflectionMethod(newDynName.replace('/', '.'), restactMethod);
-            Field tmpentrysfield = HttpServlet.class.getDeclaredField("_actionmap");
-            tmpentrysfield.setAccessible(true);
+            Field tmpEntrysField = HttpServlet.class.getDeclaredField("_actionmap");
+            tmpEntrysField.setAccessible(true);
             HashMap<String, HttpServlet.ActionEntry> innerEntryMap = (HashMap) restactMethod.invoke(obj);
             for (Map.Entry<String, HttpServlet.ActionEntry> en : innerEntryMap.entrySet()) {
                 Method m = mappingurlToMethod.get(en.getKey());
@@ -3425,8 +3492,13 @@ public final class Rest {
                     en.getValue().annotations = HttpServlet.ActionEntry.annotations(m);
                 }
             }
-            tmpentrysfield.set(obj, innerEntryMap);
-            RedkaleClassLoader.putReflectionField(HttpServlet.class.getName(), tmpentrysfield);
+            tmpEntrysField.set(obj, innerEntryMap);
+            RedkaleClassLoader.putReflectionField(HttpServlet.class.getName(), tmpEntrysField);
+
+            Field nonblockField = Servlet.class.getDeclaredField("_nonBlocking");
+            nonblockField.setAccessible(true);
+            nonblockField.set(obj, parentNonBlocking == null ? true : parentNonBlocking);
+            RedkaleClassLoader.putReflectionField(Servlet.class.getName(), nonblockField);
             return obj;
         } catch (Throwable e) {
             throw new RestException(e);
@@ -3557,7 +3629,7 @@ public final class Rest {
             return normal ? name : Utility.md5Hex(name);
         }
 
-        public MappingEntry(final boolean serRpcOnly, int methodIndex, RestMapping mapping, final String defModuleName, Method method) {
+        public MappingEntry(final boolean serRpcOnly, int methodIndex, Boolean typeNonBlocking, RestMapping mapping, final String defModuleName, Method method) {
             if (mapping == null) {
                 mapping = DEFAULT__MAPPING;
             }
@@ -3588,6 +3660,22 @@ public final class Rest {
             this.existsPound = pound;
             this.newMethodName = formatMappingName(this.name.replace('/', '$').replace('.', '_').replace('-', '_'));
             this.newActionClassName = "_Dyn_" + this.newMethodName + "_ActionHttpServlet";
+
+            NonBlocking non = method.getAnnotation(NonBlocking.class);
+            Boolean nonFlag = non == null ? typeNonBlocking : (Boolean) non.value(); //显注在方法优先级大于类
+            if (nonFlag == null) {
+                if (CompletionStage.class.isAssignableFrom(method.getReturnType())) {
+                    nonFlag = true;
+                } else {
+                    for (Parameter mp : method.getParameters()) {
+                        if (CompletionHandler.class.isAssignableFrom(mp.getType())) {
+                            nonFlag = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            this.nonBlocking = nonFlag == null ? false : nonFlag;
         }
 
         public final int methodIdx; // _paramtypes 的下标，从0开始
@@ -3607,6 +3695,8 @@ public final class Rest {
         public final String comment;
 
         public final String[] methods;
+
+        public final boolean nonBlocking;
 
         public final boolean rpconly;
 

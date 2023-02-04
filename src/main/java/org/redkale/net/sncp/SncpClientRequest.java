@@ -57,8 +57,7 @@ public class SncpClientRequest extends ClientRequest {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "_" + Objects.hashCode(this) + "{"
-            + "header=" + header
-            + ", seqid =" + seqid
+            + "header=" + header + ", seqid =" + seqid
             + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
             + "}";
     }

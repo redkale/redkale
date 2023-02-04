@@ -30,6 +30,7 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
         this.serviceName = serviceResourceName;
         this.serviceType = serviceResourceType;
         this.service = service;
+        this._nonBlocking = true;
     }
 
     public Service getService() {

@@ -24,6 +24,10 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
 
     private final byte[] pongBytes = Sncp.getPongBytes();
 
+    protected SncpDispatcherServlet() {
+        super();
+    }
+
     @Override
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, Uint128... mappings) {
         sncplock.lock();

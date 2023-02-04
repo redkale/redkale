@@ -6,13 +6,14 @@
 package org.redkale.net;
 
 import java.io.IOException;
-import org.redkale.annotation.Priority;
+import org.redkale.annotation.*;
 import org.redkale.util.AnyValue;
 
 /**
  * 协议拦截器类, 类似JavaEE中的javax.servlet.Filter <br>
  * javax.servlet.Filter方法doFilter是同步操作，此Filter.doFilter则是异步操作，方法return前需要调用Response.nextEvent()方可执行下一个Filter <br>
- * 通过给Filter标记注解&#064;Priority来确定执行的顺序, Priority.value值越大越先执行
+ * 通过给Filter标记注解&#064;Priority来确定执行的顺序, Priority.value值越大越先执行 <br>
+ * 如果doFilter方法是非阻塞的，需要在Filter类上标记&#064;NonBlocking
  *
  * <p>
  * 详情见: https://redkale.org
@@ -26,14 +27,19 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
 
     AnyValue _conf; //当前Filter的配置
 
+    final boolean _nonBlocking; //当前Filter.doFilter方法是否为阻塞模式
+
     Filter<C, R, P> _next; //下一个Filter
+
+    protected Filter() {
+        NonBlocking a = getClass().getAnnotation(NonBlocking.class);
+        this._nonBlocking = a != null && a.value();
+    }
 
     public void init(C context, AnyValue config) {
     }
 
     public abstract void doFilter(R request, P response) throws IOException;
-
-    public abstract boolean isNonBlocking();
 
     public void destroy(C context, AnyValue config) {
     }
@@ -46,5 +52,9 @@ public abstract class Filter<C extends Context, R extends Request<C>, P extends 
         Priority p1 = this.getClass().getAnnotation(Priority.class);
         Priority p2 = o.getClass().getAnnotation(Priority.class);
         return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
+    }
+
+    protected boolean isNonBlocking() {
+        return _nonBlocking;
     }
 }

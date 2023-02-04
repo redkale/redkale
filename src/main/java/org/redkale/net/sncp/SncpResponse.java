@@ -5,6 +5,7 @@
  */
 package org.redkale.net.sncp;
 
+import java.util.concurrent.ExecutorService;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
@@ -64,6 +65,26 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     @Override
     protected boolean recycle() {
         return super.recycle();
+    }
+
+    @Override
+    protected ExecutorService getWorkExecutor() {
+        return super.getWorkExecutor();
+    }
+
+    @Override
+    protected void updateNonBlocking(boolean nonBlocking) {
+        super.updateNonBlocking(nonBlocking);
+    }
+
+    @Override
+    protected boolean inNonBlocking() {
+        return super.inNonBlocking();
+    }
+
+    @Override
+    protected void finishError(Throwable t) {
+        finish(RETCODE_THROWEXCEPTION, null);
     }
 
     public void finish(final int retcode, final BsonWriter out) {

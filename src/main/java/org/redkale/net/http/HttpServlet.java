@@ -7,10 +7,12 @@ package org.redkale.net.http;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
+import org.redkale.annotation.NonBlocking;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -48,6 +50,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     //这里不能直接使用HttpServlet，会造成死循环初始化HttpServlet
     private final Servlet<HttpContext, HttpRequest, HttpResponse> authSuccessServlet = new Servlet<HttpContext, HttpRequest, HttpResponse>() {
+        {
+            this._nonBlocking = true;
+        }
+
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
             ActionEntry entry = request.actionEntry;
@@ -72,12 +78,32 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 }
                 response.setCacheHandler(entry.cacheHandler);
             }
-            entry.servlet.execute(request, response);
+            if (response.inNonBlocking()) {
+                if (entry.nonBlocking) {
+                    entry.servlet.execute(request, response);
+                } else {
+                    response.updateNonBlocking(false);
+                    response.getWorkExecutor().execute(() -> {
+                        try {
+                            entry.servlet.execute(request, response);
+                        } catch (Throwable t) {
+                            response.getContext().getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request, t);
+                            response.finishError(t);
+                        }
+                    });
+                }
+            } else {
+                entry.servlet.execute(request, response);
+            }
         }
     };
 
     //preExecute运行完后执行的Servlet
     private final Servlet<HttpContext, HttpRequest, HttpResponse> preSuccessServlet = new Servlet<HttpContext, HttpRequest, HttpResponse>() {
+        {
+            this._nonBlocking = true;
+        }
+
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
             if (request.actionEntry != null) {
@@ -134,7 +160,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         if (ws != null && !ws.repair()) {
             path = "";
         }
-        HashMap<String, ActionEntry> map = this._actionmap != null ? this._actionmap : loadActionEntry();
+        //设置整个HttpServlet是否非阻塞式
+        this._nonBlocking = isNonBlocking(getClass());
+        //RestServlet会填充_actionmap
+        HashMap<String, ActionEntry> map = this._actionmap != null ? this._actionmap : loadActionEntry(this._nonBlocking);
         this.mappings = new Map.Entry[map.size()];
         int i = -1;
         for (Map.Entry<String, ActionEntry> en : map.entrySet()) {
@@ -201,6 +230,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
      *
      * @throws IOException IOException
      */
+    @NonBlocking
     protected void preExecute(HttpRequest request, HttpResponse response) throws IOException {
         response.nextEvent();
     }
@@ -227,17 +257,74 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
      *
      * @throws IOException IOException
      */
+    @NonBlocking
     protected void authenticate(HttpRequest request, HttpResponse response) throws IOException {
         response.nextEvent();
     }
 
     @Override
+    @NonBlocking
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         response.thenEvent(preSuccessServlet);
         preExecute(request, response);
     }
 
-    private HashMap<String, ActionEntry> loadActionEntry() {
+    static Boolean isNonBlocking(Class<?> servletClass) {
+        Class clz = servletClass;
+        Boolean preNonBlocking = null;
+        Boolean authNonBlocking = null;
+        Boolean exeNonBlocking = null;
+        do {
+            if (java.lang.reflect.Modifier.isAbstract(clz.getModifiers())) {
+                break;
+            }
+            RedkaleClassLoader.putReflectionDeclaredMethods(clz.getName());
+            for (final Method method : clz.getDeclaredMethods()) {
+                String methodName = method.getName();
+                //-----------------------------------------------
+                Class[] paramTypes = method.getParameterTypes();
+                if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class || paramTypes[1] != HttpResponse.class) {
+                    continue;
+                }
+                //-----------------------------------------------
+                Class[] exps = method.getExceptionTypes();
+                if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) {
+                    continue;
+                }
+                //-----------------------------------------------
+                if ("preExecute".equals(methodName)) {
+                    if (preNonBlocking == null) {
+                        NonBlocking non = method.getAnnotation(NonBlocking.class);
+                        preNonBlocking = non != null && non.value();
+                    }
+                    continue;
+                }
+                if ("authenticate".equals(methodName)) {
+                    if (authNonBlocking == null) {
+                        NonBlocking non = method.getAnnotation(NonBlocking.class);
+                        authNonBlocking = non != null && non.value();
+                    }
+                    continue;
+                }
+                if ("execute".equals(methodName)) {
+                    if (exeNonBlocking == null) {
+                        NonBlocking non = method.getAnnotation(NonBlocking.class);
+                        exeNonBlocking = non != null && non.value();
+                    }
+                    continue;
+                }
+            }
+        } while ((clz = clz.getSuperclass()) != HttpServlet.class);
+        //设置整个HttpServlet是否非阻塞式
+        NonBlocking non = servletClass.getAnnotation(NonBlocking.class);
+        if (non == null) {
+            return (preNonBlocking != null && preNonBlocking) && (authNonBlocking != null && authNonBlocking) && (exeNonBlocking != null && exeNonBlocking);
+        } else {
+            return non.value();
+        }
+    }
+
+    private HashMap<String, ActionEntry> loadActionEntry(boolean typeNonBlocking) {
         WebServlet module = this.getClass().getAnnotation(WebServlet.class);
         final int serviceid = module == null ? 0 : module.moduleid();
         final HashMap<String, ActionEntry> map = new HashMap<>();
@@ -248,13 +335,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             if (java.lang.reflect.Modifier.isAbstract(clz.getModifiers())) {
                 break;
             }
-            RedkaleClassLoader.putReflectionPublicMethods(clz.getName());
-            for (final Method method : clz.getMethods()) {
-                //-----------------------------------------------
-                String methodname = method.getName();
-                if ("service".equals(methodname) || "preExecute".equals(methodname) || "execute".equals(methodname) || "authenticate".equals(methodname)) {
-                    continue;
-                }
+            RedkaleClassLoader.putReflectionDeclaredMethods(clz.getName());
+            for (final Method method : clz.getDeclaredMethods()) {
+                String methodName = method.getName();
                 //-----------------------------------------------
                 Class[] paramTypes = method.getParameterTypes();
                 if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class || paramTypes[1] != HttpResponse.class) {
@@ -263,6 +346,14 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 //-----------------------------------------------
                 Class[] exps = method.getExceptionTypes();
                 if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) {
+                    continue;
+                }
+                //-----------------------------------------------
+                if ("preExecute".equals(methodName) || "authenticate".equals(methodName)
+                    || "execute".equals(methodName) || "service".equals(methodName)) {
+                    continue;
+                }
+                if (!Modifier.isPublic(method.getModifiers())) {
                     continue;
                 }
                 //-----------------------------------------------
@@ -285,7 +376,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     throw new HttpException(this.getClass().getSimpleName() + " have two same " + HttpMapping.class.getSimpleName() + "(" + name + ")");
                 }
                 nameset.put(name, clz);
-                map.put(name, new ActionEntry(serviceid, actionid, name, methods, method, createActionServlet(method)));
+                map.put(name, new ActionEntry(serviceid, actionid, name, methods, method, createActionServlet(typeNonBlocking, method)));
             }
         } while ((clz = clz.getSuperclass()) != HttpServlet.class);
         return map;
@@ -331,6 +422,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     oneCache = new CacheEntry(response.getStatus(), response.getContentType(), content);
                 } : null;
             }
+            this.nonBlocking = servlet._nonBlocking;
         }
 
         protected static boolean auth(Method method) {
@@ -351,10 +443,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         //Rest.class会用到此方法
         protected static Annotation[] annotations(Method method) {
             return method.getAnnotations();
-        }
-
-        boolean isNeedCheck() {
-            return this.moduleid != 0 || this.actionid != 0;
         }
 
         boolean checkMethod(final String reqMethod) {
@@ -379,6 +467,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
         final boolean rpconly;
 
+        final boolean nonBlocking;
+
         final boolean auth;
 
         final int moduleid;
@@ -398,7 +488,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         Annotation[] annotations;
     }
 
-    private HttpServlet createActionServlet(final Method method) {
+    private HttpServlet createActionServlet(final boolean typeNonBlocking, final Method method) {
         //------------------------------------------------------------------------------
         final String supDynName = HttpServlet.class.getName().replace('.', '/');
         final String interName = this.getClass().getName().replace('.', '/');
@@ -478,6 +568,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             java.lang.reflect.Field field = instance.getClass().getField(factfield);
             field.set(instance, this);
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), field);
+            NonBlocking non = method.getAnnotation(NonBlocking.class);
+            instance._nonBlocking = typeNonBlocking ? (non == null ? typeNonBlocking : non.value()) : false;
             return instance;
         } catch (Exception ex) {
             throw new HttpException(ex);
@@ -517,6 +609,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             if (actionSimpleMappingUrl != null && !Utility.contains(actionSimpleMappingUrl, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) {
                 this._actionSimpleMappingUrl = actionSimpleMappingUrl;
             }
+            this._nonBlocking = actionEntry.nonBlocking;
         }
 
         @Override

@@ -8,6 +8,7 @@ package org.redkale.net;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.util.*;
@@ -30,6 +31,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     protected Supplier<Response> responseSupplier; //虚拟构建的Response可能不存在responseSupplier
 
     protected Consumer<Response> responseConsumer; //虚拟构建的Response可能不存在responseConsumer
+
+    protected final ExecutorService workExecutor;
 
     protected final R request;
 
@@ -118,6 +121,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.request = request;
         this.thread = WorkThread.currWorkThread();
         this.writeBuffer = context != null ? ByteBuffer.allocateDirect(context.getBufferCapacity()) : null;
+        this.workExecutor = context == null || context.workExecutor == null ? ForkJoinPool.commonPool() : context.workExecutor;
     }
 
     protected AsyncConnection removeChannel() {
@@ -154,6 +158,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         return true;
     }
 
+    protected ExecutorService getWorkExecutor() {
+        return workExecutor;
+    }
+
+    protected void updateNonBlocking(boolean nonBlocking) {
+        this.inNonBlocking = nonBlocking;
+    }
+
     protected boolean inNonBlocking() {
         return inNonBlocking;
     }
@@ -181,13 +193,45 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         if (this.filter != null) {
             Filter runner = this.filter;
             this.filter = this.filter._next;
-            runner.doFilter(request, this);
+            if (inNonBlocking) {
+                if (runner.isNonBlocking()) {
+                    runner.doFilter(request, this);
+                } else {
+                    inNonBlocking = false;
+                    workExecutor.execute(() -> {
+                        try {
+                            runner.doFilter(request, Response.this);
+                        } catch (Throwable t) {
+                            context.getLogger().log(Level.WARNING, "Filter occur exception. request = " + request, t);
+                            finishError(t);
+                        }
+                    });
+                }
+            } else {
+                runner.doFilter(request, this);
+            }
             return;
         }
         if (this.servlet != null) {
             Servlet s = this.servlet;
             this.servlet = null;
-            s.execute(request, this);
+            if (inNonBlocking) {
+                if (s.isNonBlocking()) {
+                    s.execute(request, this);
+                } else {
+                    inNonBlocking = false;
+                    workExecutor.execute(() -> {
+                        try {
+                            s.execute(request, Response.this);
+                        } catch (Throwable t) {
+                            context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request, t);
+                            finishError(t);
+                        }
+                    });
+                }
+            } else {
+                s.execute(request, this);
+            }
         }
     }
 
@@ -212,6 +256,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.completeInIOThread(false);
     }
 
+    //被重载后kill不一定为true
+    protected void finishError(Throwable t) {
+        error(t);
+    }
+
+    //kill=true
     protected void error(Throwable t) {
         completeInIOThread(true);
     }

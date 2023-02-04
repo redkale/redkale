@@ -148,6 +148,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     @Override
     final void preInit(Application application, HttpContext context, AnyValue conf) {
+        this._nonBlocking = true;
         if (this.textConvert == null) {
             this.textConvert = jsonConvert;
         }
@@ -218,6 +219,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     }
 
     @Override //在IOThread中执行
+    @NonBlocking
     public final void execute(final HttpRequest request, final HttpResponse response) throws IOException {
         final boolean debug = logger.isLoggable(Level.FINEST);
         if (!request.isWebSocket()) {
