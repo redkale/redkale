@@ -67,6 +67,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
             connection.currRespIterator = null;
             readArray.clear();
             for (ClientResponse<R, P> cr : respResults) {
+                connection.doneResponseCounter.increment();
                 if (cr.isError()) {
                     connection.dispose(null);
                     return;

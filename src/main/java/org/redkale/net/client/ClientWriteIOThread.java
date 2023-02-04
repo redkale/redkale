@@ -103,6 +103,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                             ++i;
                             ClientRequest request = en.request;
                             request.writeTo(conn, writeArray);
+                            conn.doneRequestCounter.increment();
                             if (!request.isCompleted()) {
                                 conn.pauseWriting.set(true);
                                 conn.pauseRequests.addAll(list.subList(i, list.size()));

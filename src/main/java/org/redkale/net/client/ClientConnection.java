@@ -33,6 +33,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final LongAdder respWaitingCounter;
 
+    protected final LongAdder doneRequestCounter = new LongAdder();
+
+    protected final LongAdder doneResponseCounter = new LongAdder();
+
     final AtomicBoolean pauseWriting = new AtomicBoolean();
 
     final ConcurrentLinkedQueue<ClientFuture> pauseRequests = new ConcurrentLinkedQueue<>();
@@ -185,6 +189,14 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     public AsyncConnection getChannel() {
         return channel;
+    }
+
+    public long getDoneRequestCounter() {
+        return doneRequestCounter.longValue();
+    }
+
+    public long getDoneResponseCounter() {
+        return doneResponseCounter.longValue();
     }
 
     public <C extends ClientCodec<R, P>> C getCodec() {
