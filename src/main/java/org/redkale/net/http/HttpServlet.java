@@ -30,12 +30,12 @@ import org.redkale.util.*;
  */
 public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse> {
 
-    @Deprecated(since = "2.8.0")
-    public static final int RET_SERVER_ERROR = 1200_0001;
-
-    @Deprecated(since = "2.8.0")
-    public static final int RET_METHOD_ERROR = 1200_0002;
-
+    //@Deprecated(since = "2.8.0")
+    //public static final int RET_SERVER_ERROR = 1200_0001;
+    //
+    //@Deprecated(since = "2.8.0")
+    //public static final int RET_METHOD_ERROR = 1200_0002;
+    //
     String _actionSimpleMappingUrl; //只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如 /json /createRecord, 不能是 /user/** 
 
     String _prefix = ""; //当前HttpServlet的path前缀
@@ -315,12 +315,12 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 }
             }
         } while ((clz = clz.getSuperclass()) != HttpServlet.class);
-        //设置整个HttpServlet是否非阻塞式
+
         NonBlocking non = servletClass.getAnnotation(NonBlocking.class);
         if (non == null) {
             return (preNonBlocking != null && preNonBlocking) && (authNonBlocking != null && authNonBlocking) && (exeNonBlocking != null && exeNonBlocking);
         } else {
-            return non.value();
+            return non.value() && (preNonBlocking == null || preNonBlocking) && (authNonBlocking == null || authNonBlocking) && (exeNonBlocking == null || exeNonBlocking);
         }
     }
 

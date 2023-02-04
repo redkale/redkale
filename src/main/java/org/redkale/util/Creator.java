@@ -7,6 +7,7 @@ package org.redkale.util;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.concurrent.*;
@@ -622,6 +623,9 @@ public interface Creator<T> {
             arrayCacheMap.put(char.class, t -> new char[t]);
             arrayCacheMap.put(float.class, t -> new float[t]);
             arrayCacheMap.put(double.class, t -> new double[t]);
+            arrayCacheMap.put(ByteBuffer.class, t -> new ByteBuffer[t]);
+            arrayCacheMap.put(SocketAddress.class, t -> new SocketAddress[t]);
+            arrayCacheMap.put(InetSocketAddress.class, t -> new InetSocketAddress[t]);
         }
 
         static class SimpleClassVisitor extends ClassVisitor {

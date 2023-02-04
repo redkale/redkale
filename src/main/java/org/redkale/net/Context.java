@@ -116,6 +116,7 @@ public class Context {
 
     public void execute(Servlet servlet, Request request, Response response) {
         if (workHashExecutor != null) {
+            response.updateNonBlocking(false);
             workHashExecutor.execute(request.getHashid(), () -> {
                 try {
                     long cha = System.currentTimeMillis() - request.getCreateTime();
@@ -127,18 +128,19 @@ public class Context {
                         response.context.logger.log(Level.FINE, "hash execute servlet delay=" + cha + "ms, request=" + request);
                     }
                 } catch (Throwable t) {
-                    response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
-                    response.error(t);
+                    response.context.logger.log(Level.WARNING, "Execute servlet occur exception. request = " + request, t);
+                    response.finishError(t);
                 }
             });
-        } else if (workExecutor != null) {
+        } else if (workExecutor != null && response.inNonBlocking() && !servlet.isNonBlocking()) {
+            response.updateNonBlocking(false);
             workExecutor.execute(() -> {
                 try {
                     Traces.computeCurrTraceid(request.getTraceid());
                     servlet.execute(request, response);
                 } catch (Throwable t) {
-                    response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
-                    response.error(t);
+                    response.context.logger.log(Level.WARNING, "Execute servlet occur exception. request = " + request, t);
+                    response.finishError(t);
                 }
             });
         } else {
@@ -146,8 +148,8 @@ public class Context {
                 Traces.computeCurrTraceid(request.getTraceid());
                 servlet.execute(request, response);
             } catch (Throwable t) {
-                response.context.logger.log(Level.WARNING, "execute servlet abort, force to close channel ", t);
-                response.error(t);
+                response.context.logger.log(Level.WARNING, "Execute servlet occur exception. request = " + request, t);
+                response.finishError(t);
             }
         }
 
