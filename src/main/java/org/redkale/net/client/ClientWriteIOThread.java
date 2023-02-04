@@ -60,7 +60,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                     map.clear();
                     if (entry.resumeHalfRequestFlag != null) { //将暂停的pauseRequests写入list
                         List<ClientFuture> cl = map.computeIfAbsent(entry.conn, c -> listPool.get());
-                        for (ClientFuture f : (List<ClientFuture>) entry.conn.pauseRequests) {
+                        for (ClientFuture f : (Collection<ClientFuture>) entry.conn.pauseRequests) {
                             if (!f.isDone()) {
                                 entry.conn.offerRespFuture(f);
                                 cl.add(f);
@@ -79,7 +79,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
                     while ((entry = requestQueue.poll()) != null) {
                         if (entry.resumeHalfRequestFlag != null) { //将暂停的pauseRequests写入list
                             List<ClientFuture> cl = map.computeIfAbsent(entry.conn, c -> listPool.get());
-                            for (ClientFuture f : (List<ClientFuture>) entry.conn.pauseRequests) {
+                            for (ClientFuture f : (Collection<ClientFuture>) entry.conn.pauseRequests) {
                                 if (!f.isDone()) {
                                     entry.conn.offerRespFuture(f);
                                     cl.add(f);
