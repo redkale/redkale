@@ -96,7 +96,7 @@ public class RedkaleClassLoader extends URLClassLoader {
                 try {
                     return new FileInputStream(f);
                 } catch (FileNotFoundException e) { //几乎不会发生
-                    throw new RuntimeException(e);
+                    throw new RedkaleException(e);
                 }
             }
         }

@@ -134,7 +134,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.responsePoolSize = config.getIntValue("responsePoolSize", 1024);
         this.name = config.getValue("name", "Server-" + config.getValue("protocol", netprotocol).replaceFirst("\\..+", "").toUpperCase() + "-" + this.address.getPort());
         if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) {
-            throw new RuntimeException("server.name (" + this.name + ") is illegal");
+            throw new RedkaleException("server.name (" + this.name + ") is illegal");
         }
         AnyValue sslConf = config.getAnyValue("ssl");
         if (sslConf != null) {
@@ -544,7 +544,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
                     if (root.isDirectory()) {
                         File[] lfs = root.listFiles();
                         if (lfs == null) {
-                            throw new RuntimeException("File(" + root + ") cannot listFiles()");
+                            throw new RedkaleException("File(" + root + ") cannot listFiles()");
                         }
                         for (File f : lfs) {
                             set.add(f.toURI().toURL());
@@ -558,7 +558,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RedkaleException(e);
         }
         if (set.isEmpty()) {
             return new URL[0];

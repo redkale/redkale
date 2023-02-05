@@ -16,6 +16,7 @@ import org.redkale.boot.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
+import org.redkale.util.RedkaleException;
 
 /**
  * 没有配置MQ且也没有ClusterAgent的情况下实现的默认HttpMessageClient实例
@@ -159,7 +160,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         try {
             servlet.execute(req, resp);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RedkaleException(e);
         }
     }
 

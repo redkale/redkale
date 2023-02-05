@@ -649,7 +649,7 @@ public abstract class TypeToken<T> {
         try {
             return newClazz.getField("field").getGenericType();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 

@@ -205,7 +205,7 @@ public interface Creator<T> {
             return creator;
         }
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
-            throw new RuntimeException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
+            throw new RedkaleException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
         }
         for (final Method method : clazz.getDeclaredMethods()) { //查找类中是否存在提供创建Creator实例的静态方法
             if (!Modifier.isStatic(method.getModifiers())) {
@@ -226,7 +226,7 @@ public interface Creator<T> {
                     return c;
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new RedkaleException(e);
             }
         }
         final String supDynName = Creator.class.getName().replace('.', '/');
@@ -336,7 +336,7 @@ public interface Creator<T> {
         final Constructor<T> constructor = constructor0;
         final SimpleEntry<String, Class>[] constructorParameters = constructorParameters0;
         if (constructor == null || constructorParameters == null) {
-            throw new RuntimeException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
+            throw new RedkaleException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
         }
         final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
         //-------------------------------------------------------------
@@ -497,7 +497,7 @@ public interface Creator<T> {
                             Method pm = bigct.getMethod(ct.getSimpleName() + "Value");
                             mv.visitMethodInsn(INVOKEVIRTUAL, bigct.getName().replace('.', '/'), pm.getName(), Type.getMethodDescriptor(pm), false);
                         } catch (Exception ex) {
-                            throw new RuntimeException(ex); //不可能会发生
+                            throw new RedkaleException(ex); //不可能会发生
                         }
                     } else {
                         mv.visitTypeInsn(CHECKCAST, ct.getName().replace('.', '/'));
@@ -550,7 +550,7 @@ public interface Creator<T> {
             }
         }
         if (!ispub && resultClazz == null) {
-            throw new RuntimeException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
+            throw new RedkaleException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
         }
         try {
             if (resultClazz == null) {
@@ -564,7 +564,7 @@ public interface Creator<T> {
             RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
             return (Creator) resultClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -804,7 +804,7 @@ public interface Creator<T> {
                 RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
                 return (IntFunction<T[]>) resultClazz.getDeclaredConstructor().newInstance();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 //ex.printStackTrace();  //一般不会发生, native-image在没有预编译情况下会报错
                 return t -> (T[]) Array.newInstance(clazz, t);
             }

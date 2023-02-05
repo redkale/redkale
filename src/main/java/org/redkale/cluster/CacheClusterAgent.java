@@ -241,7 +241,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     @Override
     public void register(Application application) {
         if (isApplicationHealth()) {
-            throw new RuntimeException("application.nodeid=" + nodeid + " exists in cluster");
+            throw new RedkaleException("application.nodeid=" + nodeid + " exists in cluster");
         }
         deregister(application);
 

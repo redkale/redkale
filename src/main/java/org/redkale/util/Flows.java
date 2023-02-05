@@ -108,7 +108,7 @@ public abstract class Flows {
                 reactorMonoClass0 = Thread.currentThread().getContextClassLoader().loadClass("reactor.core.publisher.Mono");
                 Class<Function<Object, CompletableFuture>> monoFuncClass = null;
                 try {
-                    monoFuncClass = (Class) Thread.currentThread().getContextClassLoader().loadClass("org.re" + "dkale.util.AnonymousMonoFutureFunction");
+                    monoFuncClass = (Class) Thread.currentThread().getContextClassLoader().loadClass("org.redkale.util.AnonymousMonoFutureFunction");
                 } catch (Throwable t) {
                 }
                 if (monoFuncClass == null) {
@@ -117,7 +117,7 @@ public abstract class Flows {
                         public final Class<?> loadClass(String name, byte[] b) {
                             return defineClass(name, b, 0, b.length);
                         }
-                    }.loadClass("org.re" + "dkale.util.AnonymousMonoFutureFunction", classBytes);
+                    }.loadClass("org.redkale.util.AnonymousMonoFutureFunction", classBytes);
                     RedkaleClassLoader.putDynClass(monoFuncClass.getName(), classBytes, monoFuncClass);
                 }
                 RedkaleClassLoader.putReflectionDeclaredConstructors(monoFuncClass, monoFuncClass.getName());
@@ -126,7 +126,7 @@ public abstract class Flows {
                 reactorFluxClass0 = Thread.currentThread().getContextClassLoader().loadClass("reactor.core.publisher.Flux");
                 Class<Function<Object, CompletableFuture>> fluxFuncClass = null;
                 try {
-                    fluxFuncClass = (Class) Thread.currentThread().getContextClassLoader().loadClass("org.re" + "dkale.util.AnonymousFluxFutureFunction");
+                    fluxFuncClass = (Class) Thread.currentThread().getContextClassLoader().loadClass("org.redkale.util.AnonymousFluxFutureFunction");
                 } catch (Throwable t) {
                 }
                 if (fluxFuncClass == null) {
@@ -135,7 +135,7 @@ public abstract class Flows {
                         public final Class<?> loadClass(String name, byte[] b) {
                             return defineClass(name, b, 0, b.length);
                         }
-                    }.loadClass("org.re" + "dkale.util.AnonymousFluxFutureFunction", classBytes);
+                    }.loadClass("org.redkale.util.AnonymousFluxFutureFunction", classBytes);
                     RedkaleClassLoader.putDynClass(fluxFuncClass.getName(), classBytes, fluxFuncClass);
                 }
                 RedkaleClassLoader.putReflectionDeclaredConstructors(fluxFuncClass, fluxFuncClass.getName());

@@ -5,6 +5,8 @@
  */
 package org.redkale.service;
 
+import org.redkale.util.RedkaleException;
+
 /**
  * 供RPC协议使用
  *
@@ -13,7 +15,7 @@ package org.redkale.service;
  *
  * @author zhangjx
  */
-public class RpcRemoteException extends RuntimeException {
+public class RpcRemoteException extends RedkaleException {
 
     public RpcRemoteException() {
         super();

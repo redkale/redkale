@@ -64,7 +64,7 @@ public class AsyncIOThread extends WorkThread {
             return;
         }
         if (key.selector() != selector) {
-            throw new RuntimeException("NioThread.selector not the same to SelectionKey.selector");
+            throw new RedkaleException("NioThread.selector not the same to SelectionKey.selector");
         }
         if ((key.interestOps() & opt) != 0) {
             return;

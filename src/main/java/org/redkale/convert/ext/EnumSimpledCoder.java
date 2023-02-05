@@ -62,7 +62,7 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
                 this.enumToValues = map1;
                 this.valueToEnums = map2;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new ConvertException(e);
             }
         }
     }

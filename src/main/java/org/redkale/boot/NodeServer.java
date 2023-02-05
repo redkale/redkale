@@ -120,7 +120,7 @@ public abstract class NodeServer {
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName(), Application.class, AnyValue.class);
             return clazz.getDeclaredConstructor(Application.class, AnyValue.class).newInstance(application, serconf);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RedkaleException(e);
         }
     }
 
@@ -131,7 +131,7 @@ public abstract class NodeServer {
             this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getAddress().getHostAddress() : host, this.serverConf.getIntValue("port"));
             this.sncpGroup = application.getSncpTransportFactory().findGroupName(this.sncpAddress);
             //单向SNCP服务不需要对等group
-            //if (this.sncpGroup == null) throw new RuntimeException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
+            //if (this.sncpGroup == null) throw new RedkaleException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
         //单点服务不会有 sncpAddress、sncpGroup
         if (this.sncpAddress != null) {
@@ -340,7 +340,7 @@ public abstract class NodeServer {
                         return null; //远程模式不需要注入 CacheSource 
                     }
                     if (!(srcObj instanceof Service)) {
-                        throw new RuntimeException("CacheSource must be inject in Service, cannot in " + srcObj);
+                        throw new RedkaleException("CacheSource must be inject in Service, cannot in " + srcObj);
                     }
                     final Service srcService = (Service) srcObj;
                     SncpOldClient client = Sncp.getSncpOldClient(srcService);
@@ -467,7 +467,7 @@ public abstract class NodeServer {
                 }
             }
             if (entry.getName().contains("$")) {
-                throw new RuntimeException("<name> value cannot contains '$' in " + entry.getProperty());
+                throw new RedkaleException("<name> value cannot contains '$' in " + entry.getProperty());
             }
             Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);
             if (oldother != null) { //Server加载Service时需要判断是否已经加载过了。
@@ -523,7 +523,7 @@ public abstract class NodeServer {
                     if (rf.find(resourceName, restype) == null) {
                         regFactory.register(resourceName, restype, service);
                     } else if (isSNCP() && !entry.isAutoload()) {
-                        throw new RuntimeException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + groups + ") is repeat.");
+                        throw new RedkaleException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + groups + ") is repeat.");
                     }
                     if (Sncp.isRemote(service)) {
                         remoteServices.add(service);
@@ -545,7 +545,7 @@ public abstract class NodeServer {
                 } catch (RuntimeException ex) {
                     throw ex;
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new RedkaleException(e);
                 }
             };
             if (entry.isExpect()) {

@@ -4,6 +4,8 @@
  */
 package org.redkale.convert;
 
+import org.redkale.util.RedkaleException;
+
 /**
  * 序列化自定义异常类
  *
@@ -12,7 +14,7 @@ package org.redkale.convert;
  *
  * @author zhangjx
  */
-public class ConvertException extends RuntimeException {
+public class ConvertException extends RedkaleException {
 
     public ConvertException() {
         super();

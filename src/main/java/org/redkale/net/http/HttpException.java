@@ -3,6 +3,8 @@
  */
 package org.redkale.net.http;
 
+import org.redkale.util.RedkaleException;
+
 /**
  * Http自定义异常类
  *
@@ -13,7 +15,7 @@ package org.redkale.net.http;
  *
  * @since 2.8.0
  */
-public class HttpException extends RuntimeException {
+public class HttpException extends RedkaleException {
 
     public HttpException() {
         super();

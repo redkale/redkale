@@ -612,7 +612,7 @@ public final class ClassFilter<T> {
             } else if (root.isDirectory()) {
                 if (exclude != null && exclude.equals(root)) return;
                 File[] lfs = root.listFiles();
-                if (lfs == null) throw new RuntimeException("File(" + root + ") cannot listFiles()");
+                if (lfs == null) throw new RedkaleException("File(" + root + ") cannot listFiles()");
                 for (File f : lfs) {
                     loadClassFiles(exclude, f, files);
                 }

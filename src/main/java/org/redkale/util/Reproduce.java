@@ -3,9 +3,9 @@ package org.redkale.util;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.function.*;
-import static org.redkale.asm.Opcodes.*;
-import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
@@ -186,7 +186,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         try {
             return (Reproduce) newClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 

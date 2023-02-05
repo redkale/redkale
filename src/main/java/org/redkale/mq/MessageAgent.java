@@ -91,7 +91,7 @@ public abstract class MessageAgent implements Resourcable {
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new RedkaleException(e);
             }
         }
         // application (it doesn't execute completion handlers).
@@ -214,11 +214,11 @@ public abstract class MessageAgent implements Resourcable {
             return name;
         }
         if (name.charAt(0) >= '0' && name.charAt(0) <= '9') {
-            throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RedkaleException("name only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         for (char ch : name.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
-                throw new RuntimeException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+                throw new RedkaleException("name only 0-9 a-z A-Z _ cannot begin 0-9");
             }
         }
         return name;
@@ -313,7 +313,7 @@ public abstract class MessageAgent implements Resourcable {
         httpNodesLock.lock();
         try {
             if (messageNodes.containsKey(consumerid)) {
-                throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+                throw new RedkaleException("consumerid(" + consumerid + ") is repeat");
             }
             HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, httpMessageClient, getHttpProducer(), ns, service, servlet);
             this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topics, consumerid, processor)));
@@ -336,7 +336,7 @@ public abstract class MessageAgent implements Resourcable {
         sncpNodesLock.lock();
         try {
             if (messageNodes.containsKey(consumerid)) {
-                throw new RuntimeException("consumerid(" + consumerid + ") is repeat");
+                throw new RedkaleException("consumerid(" + consumerid + ") is repeat");
             }
             SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, sncpMessageClient, getSncpProducer(), ns, service, servlet);
             this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(new String[]{topic}, consumerid, processor)));

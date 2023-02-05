@@ -455,7 +455,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     public void setReadBuffer(ByteBuffer buffer) {
         if (this.readBuffer != null) {
-            throw new RuntimeException("repeat AsyncConnection.setReadBuffer");
+            throw new RedkaleException("repeat AsyncConnection.setReadBuffer");
         }
         this.readBuffer = buffer;
     }
@@ -684,7 +684,7 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
 
     protected void setReadSSLBuffer(ByteBuffer buffer) {
         if (this.readSSLHalfBuffer != null) {
-            throw new RuntimeException("repeat AsyncConnection.setReadSSLBuffer");
+            throw new RedkaleException("repeat AsyncConnection.setReadSSLBuffer");
         }
         this.readSSLHalfBuffer = buffer;
     }

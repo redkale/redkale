@@ -290,7 +290,7 @@ public final class Application {
                 this.confPath = confFile.toURI();
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RedkaleException(e);
         }
         { //设置系统变量
             AnyValue propertiesConf = this.config.getAnyValue("properties");
@@ -450,7 +450,7 @@ public final class Application {
         try {
             loadResourceProperties();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RedkaleException(e);
         }
         //------------------------------------ 配置 <transport> 节点 ------------------------------------
         TransportStrategy strategy = null;
@@ -533,7 +533,7 @@ public final class Application {
                 AnyValue mqConf = mqConfs[i];
                 String mqname = mqConf.getValue("name", "");
                 if (mqnames.contains(mqname)) {
-                    throw new RuntimeException("mq.name(" + mqname + ") is repeat");
+                    throw new RedkaleException("mq.name(" + mqname + ") is repeat");
                 }
                 mqnames.add(mqname);
                 String namex = mqConf.getValue("names");
@@ -543,7 +543,7 @@ public final class Application {
                             continue;
                         }
                         if (mqnames.contains(n.trim())) {
-                            throw new RuntimeException("mq.name(" + n.trim() + ") is repeat");
+                            throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
                         }
                         mqnames.add(n.trim());
                     }
@@ -1009,7 +1009,7 @@ public final class Application {
         }
         for (char ch : name.toCharArray()) {
             if (!((ch >= '0' && ch <= '9') || ch == '_' || ch == '.' || ch == '-' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
-                throw new RuntimeException("name only 0-9 a-z A-Z _ - . cannot begin 0-9");
+                throw new RedkaleException("name only 0-9 a-z A-Z _ - . cannot begin 0-9");
             }
         }
         return name;
@@ -1335,7 +1335,7 @@ public final class Application {
             final String group = conf.getValue("name", "");
             final String protocol = conf.getValue("protocol", Transport.DEFAULT_NETPROTOCOL).toUpperCase();
             if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
-                throw new RuntimeException("Not supported Transport Protocol " + conf.getValue("protocol"));
+                throw new RedkaleException("Not supported Transport Protocol " + conf.getValue("protocol"));
             }
             TransportGroupInfo ginfo = new TransportGroupInfo(group, protocol, new LinkedHashSet<>());
             for (AnyValue node : conf.getAnyValues("node")) {
@@ -1576,7 +1576,7 @@ public final class Application {
             }
         }
         if (watchs.size() > 1) {
-            throw new RuntimeException("Found one more WATCH Server");
+            throw new RedkaleException("Found one more WATCH Server");
         }
         this.watching = !watchs.isEmpty();
 
@@ -1706,7 +1706,7 @@ public final class Application {
                                             }
                                             final Class<? extends NodeServer> old = nodeClasses.get(p);
                                             if (old != null && old != type) {
-                                                throw new RuntimeException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
+                                                throw new RedkaleException("Protocol(" + p + ") had NodeServer-Class(" + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
                                             }
                                             nodeClasses.put(p, type);
                                         }

@@ -225,7 +225,7 @@ public interface Attribute<T, F> {
         try {
             return create(clazz, fieldName, (Class) null, clazz.getDeclaredField(fieldName), (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
         } catch (NoSuchFieldException | SecurityException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -244,7 +244,7 @@ public interface Attribute<T, F> {
         try {
             return create(clazz, fieldName, (Class) null, clazz.getDeclaredField(fieldName), (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
         } catch (NoSuchFieldException | SecurityException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -753,7 +753,7 @@ public interface Attribute<T, F> {
             fieldkey = (fieldAlias == null ? "" : ("0_" + fieldAlias + "_")) + "2_" + setter.getName();
         }
         if (fieldAlias == null && fieldType == null && tgetter == null && tsetter == null && tfield == null) {
-            throw new RuntimeException("[" + clazz + "]have no public field or setter or getter");
+            throw new RedkaleException("[" + clazz + "]have no public field or setter or getter");
         }
         final String fieldName = fieldAlias;
         Class column = fieldType;
@@ -768,9 +768,9 @@ public interface Attribute<T, F> {
             column = tsetter.getParameterTypes()[0];
             generictype = tsetter.getGenericParameterTypes()[0];
         } else if (fieldType == null) {
-            throw new RuntimeException("[" + clazz + "]have no public field or setter or getter");
+            throw new RedkaleException("[" + clazz + "]have no public field or setter or getter");
         } else if (column == null) {
-            throw new RuntimeException("[" + clazz + "]have no field type");
+            throw new RedkaleException("[" + clazz + "]have no field type");
         }
         boolean checkCast = false;
         if (generictype instanceof java.lang.reflect.TypeVariable) {
@@ -966,7 +966,7 @@ public interface Attribute<T, F> {
                             mv.visitMethodInsn(INVOKEVIRTUAL, columnName, pm.getName(), Type.getMethodDescriptor(pm), false);
                             m = 3;
                         } catch (Exception ex) {
-                            throw new RuntimeException(ex); //不可能会发生
+                            throw new RedkaleException(ex); //不可能会发生
                         }
                     }
                     if (!tfield.getType().isPrimitive() && tfield.getGenericType() instanceof TypeVariable) {
@@ -984,7 +984,7 @@ public interface Attribute<T, F> {
                         mv.visitMethodInsn(INVOKEVIRTUAL, columnName, pm.getName(), Type.getMethodDescriptor(pm), false);
                         m = 3;
                     } catch (Exception ex) {
-                        throw new RuntimeException(ex); //不可能会发生
+                        throw new RedkaleException(ex); //不可能会发生
                     }
                 }
                 mv.visitMethodInsn(INVOKEVIRTUAL, interName, tsetter.getName(), Type.getMethodDescriptor(tsetter), false);
@@ -1045,7 +1045,7 @@ public interface Attribute<T, F> {
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), _attach);
             return rs;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 

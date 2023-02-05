@@ -3,6 +3,8 @@
  */
 package org.redkale.net.sncp;
 
+import org.redkale.util.RedkaleException;
+
 /**
  * Sncp自定义异常类
  *
@@ -13,7 +15,7 @@ package org.redkale.net.sncp;
  *
  * @since 2.8.0
  */
-public class SncpException extends RuntimeException {
+public class SncpException extends RedkaleException {
 
     public SncpException() {
         super();

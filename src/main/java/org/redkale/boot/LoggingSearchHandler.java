@@ -153,12 +153,12 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         String cname = getClass().getName();
         this.sourceResourceName = manager.getProperty(cname + ".source");
         if (this.sourceResourceName == null || this.sourceResourceName.isEmpty()) {
-            throw new RuntimeException("not found logging.property " + cname + ".source");
+            throw new RedkaleException("not found logging.property " + cname + ".source");
         }
         String tagstr = manager.getProperty(cname + ".tag");
         if (tagstr != null && !tagstr.isEmpty()) {
             if (!checkTagName(tagstr.replaceAll("\\$\\{.+\\}", ""))) {
-                throw new RuntimeException("found illegal logging.property " + cname + ".tag = " + tagstr);
+                throw new RedkaleException("found illegal logging.property " + cname + ".tag = " + tagstr);
             }
             this.tag = tagstr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty(RESNAME_APP_NAME, ""));
             if (this.tag.contains("%")) {

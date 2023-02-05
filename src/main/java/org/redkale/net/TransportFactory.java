@@ -209,21 +209,21 @@ public class TransportFactory {
 
     public boolean addGroupInfo(TransportGroupInfo info) {
         if (info == null) {
-            throw new RuntimeException("TransportGroupInfo can not null");
+            throw new RedkaleException("TransportGroupInfo can not null");
         }
         if (info.addresses == null) {
-            throw new RuntimeException("TransportGroupInfo.addresses can not null");
+            throw new RedkaleException("TransportGroupInfo.addresses can not null");
         }
         if (!checkName(info.name)) {
-            throw new RuntimeException("Transport.group.name only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RedkaleException("Transport.group.name only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         TransportGroupInfo old = groupInfos.get(info.name);
         if (old != null && !old.protocol.equals(info.protocol)) {
-            throw new RuntimeException("Transport.group.name repeat but protocol is different");
+            throw new RedkaleException("Transport.group.name repeat but protocol is different");
         }
         for (InetSocketAddress addr : info.addresses) {
             if (!groupAddrs.getOrDefault(addr, info.name).equals(info.name)) {
-                throw new RuntimeException(addr + " repeat but different group.name");
+                throw new RedkaleException(addr + " repeat but different group.name");
             }
         }
         if (old == null) {

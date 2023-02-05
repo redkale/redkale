@@ -39,7 +39,7 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
         try {
             method = clazz.getMethod(methodName, paramTypes);
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
         return create(clazz, method);
     }
@@ -221,7 +221,7 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
             RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
             return (Invoker<C, T>) resultClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 

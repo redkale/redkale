@@ -10,7 +10,7 @@ import java.net.*;
 import java.util.Set;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
-import org.redkale.util.AnyValue;
+import org.redkale.util.*;
 
 /**
  * 协议底层Server
@@ -56,7 +56,7 @@ public abstract class ProtocolServer {
         } else if ("UDP".equalsIgnoreCase(protocol)) {
             return new AsyncNioUdpProtocolServer(context);
         } else {
-            throw new RuntimeException(ProtocolServer.class.getSimpleName() + " not support protocol " + protocol);
+            throw new RedkaleException(ProtocolServer.class.getSimpleName() + " not support protocol " + protocol);
         }
     }
 

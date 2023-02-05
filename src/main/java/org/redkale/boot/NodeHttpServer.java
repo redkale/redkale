@@ -364,7 +364,7 @@ public class NodeHttpServer extends NodeServer {
         if (mqname != null) {
             agent0 = application.getMessageAgent(mqname);
             if (agent0 == null) {
-                throw new RuntimeException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
+                throw new RedkaleException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
             }
         }
         final MessageAgent messageAgent = agent0;

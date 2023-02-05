@@ -9,9 +9,9 @@ package org.redkale.util;
  *
  * @author zhangjx
  */
-public class RetcodeException extends RuntimeException {
+public class RetcodeException extends RedkaleException {
 
-    private int retcode;
+    protected int retcode;
 
     public RetcodeException(int retcode) {
         this.retcode = retcode;

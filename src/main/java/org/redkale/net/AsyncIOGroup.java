@@ -111,7 +111,7 @@ public class AsyncIOGroup extends AsyncGroup {
                 this.connectThread = null;
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RedkaleException(e);
         }
     }
 
@@ -133,7 +133,7 @@ public class AsyncIOGroup extends AsyncGroup {
             return this;
         }
         if (closed.get()) {
-            throw new RuntimeException("group is closed");
+            throw new RedkaleException("group is closed");
         }
         for (int i = 0; i < this.ioReadThreads.length; i++) {
             this.ioReadThreads[i].start();
@@ -214,7 +214,7 @@ public class AsyncIOGroup extends AsyncGroup {
         try {
             return newTCPClientConnection(null);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RedkaleException(e);
         }
     }
 
@@ -302,7 +302,7 @@ public class AsyncIOGroup extends AsyncGroup {
         try {
             return newUDPClientConnection(null);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RedkaleException(e);
         }
     }
 

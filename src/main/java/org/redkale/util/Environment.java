@@ -59,7 +59,9 @@ public class Environment implements java.io.Serializable {
 
     public boolean getBooleanProperty(String key, boolean defaultValue) {
         String val = properties.getProperty(key);
-        if (val == null || val.isEmpty()) return defaultValue;
+        if (val == null || val.isEmpty()) {
+            return defaultValue;
+        }
         return "true".equalsIgnoreCase(val) || "1".equalsIgnoreCase(val);
     }
 
@@ -69,7 +71,9 @@ public class Environment implements java.io.Serializable {
 
     public short getShortProperty(String key, short defaultValue) {
         String val = properties.getProperty(key);
-        if (val == null || val.isEmpty()) return defaultValue;
+        if (val == null || val.isEmpty()) {
+            return defaultValue;
+        }
         try {
             return Short.parseShort(val);
         } catch (Exception e) {
@@ -83,9 +87,27 @@ public class Environment implements java.io.Serializable {
 
     public int getIntProperty(String key, int defaultValue) {
         String val = properties.getProperty(key);
-        if (val == null || val.isEmpty()) return defaultValue;
+        if (val == null || val.isEmpty()) {
+            return defaultValue;
+        }
         try {
             return Integer.parseInt(val);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    public float getFloatProperty(String key) {
+        return Float.parseFloat(properties.getProperty(key));
+    }
+
+    public float getFloatProperty(String key, float defaultValue) {
+        String val = properties.getProperty(key);
+        if (val == null || val.isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return Float.parseFloat(val);
         } catch (Exception e) {
             return defaultValue;
         }
@@ -97,9 +119,27 @@ public class Environment implements java.io.Serializable {
 
     public long getLongProperty(String key, long defaultValue) {
         String val = properties.getProperty(key);
-        if (val == null || val.isEmpty()) return defaultValue;
+        if (val == null || val.isEmpty()) {
+            return defaultValue;
+        }
         try {
             return Long.parseLong(val);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    public double getDoubleProperty(String key) {
+        return Double.parseDouble(properties.getProperty(key));
+    }
+
+    public double getDoubleProperty(String key, double defaultValue) {
+        String val = properties.getProperty(key);
+        if (val == null || val.isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return Double.parseDouble(val);
         } catch (Exception e) {
             return defaultValue;
         }

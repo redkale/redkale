@@ -100,7 +100,7 @@ public class JsonByteBufferReader extends JsonReader {
             }
             return Character.lowSurrogate(uc);
         } else {
-            throw new RuntimeException(new UnmappableCharacterException(4));
+            throw new ConvertException(new UnmappableCharacterException(4));
         }
     }
 

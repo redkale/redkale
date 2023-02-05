@@ -3,6 +3,8 @@
  */
 package org.redkale.source;
 
+import org.redkale.util.RedkaleException;
+
 /**
  * 数据源自定义异常类
  *
@@ -13,7 +15,7 @@ package org.redkale.source;
  * 
  * @since 2.8.0
  */
-public class SourceException extends RuntimeException {
+public class SourceException extends RedkaleException {
 
     public SourceException() {
         super();

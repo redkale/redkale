@@ -20,7 +20,7 @@ import javax.net.ssl.SSLContext;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.Utility;
+import org.redkale.util.*;
 
 /**
  * 传输客户端
@@ -268,7 +268,7 @@ public final class Transport {
         final SocketAddress addr = addr0;
         final boolean rand = addr == null; //是否随机取地址
         if (rand && nodes.length < 1) {
-            throw new RuntimeException("Transport (" + this.name + ") have no remoteAddress list");
+            throw new RedkaleException("Transport (" + this.name + ") have no remoteAddress list");
         }
         try {
             if (!tcp) { // UDP
@@ -315,7 +315,7 @@ public final class Transport {
             }
             return pollConnection0(nodes, null, now);
         } catch (Exception ex) {
-            throw new RuntimeException("transport address = " + addr, ex);
+            throw new RedkaleException("transport address = " + addr, ex);
         }
     }
 

@@ -188,7 +188,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                 } else if (t instanceof RuntimeException) {
                     throw (RuntimeException) t;
                 } else {
-                    throw new RuntimeException(t);
+                    throw new RedkaleException(t);
                 }
             });
         }

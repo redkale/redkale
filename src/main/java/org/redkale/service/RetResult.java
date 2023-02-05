@@ -145,9 +145,9 @@ public class RetResult<T> implements Serializable {
         try {
             return future.get(timeout, unit);
         } catch (ExecutionException ex) {
-            throw new RuntimeException(ex.getCause());
+            throw new RedkaleException(ex.getCause());
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 

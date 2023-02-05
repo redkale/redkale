@@ -189,7 +189,7 @@ public final class Utility {
 //                }
 //            }}, null);
 //        } catch (Exception e) {
-//            throw new RuntimeException(e); //不会发生
+//            throw new RedkaleException(e); //不会发生
 //        }
     }
 
@@ -2850,7 +2850,7 @@ public final class Utility {
         try {
             md5 = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException("Couldn't find a MD5 provider", ex);
+            throw new RedkaleException("Couldn't find a MD5 provider", ex);
         }
         return md5.digest(str.getBytes(StandardCharsets.UTF_8));
     }
@@ -2870,7 +2870,7 @@ public final class Utility {
         try {
             md5 = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException("Couldn't find a MD5 provider", ex);
+            throw new RedkaleException("Couldn't find a MD5 provider", ex);
         }
         return md5.digest(input);
     }
@@ -2894,7 +2894,7 @@ public final class Utility {
             md5.update(input, offset, len);
             return md5.digest();
         } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException("Couldn't find a MD5 provider", ex);
+            throw new RedkaleException("Couldn't find a MD5 provider", ex);
         }
     }
 
@@ -2972,7 +2972,7 @@ public final class Utility {
         try {
             digester = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException("Couldn't find a SHA-256 provider", ex);
+            throw new RedkaleException("Couldn't find a SHA-256 provider", ex);
         }
         return digester.digest(str.getBytes(StandardCharsets.UTF_8));
     }
@@ -2992,7 +2992,7 @@ public final class Utility {
         try {
             digester = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
         return digester.digest(input);
     }
@@ -3016,7 +3016,7 @@ public final class Utility {
             digester.update(input, offset, len);
             return digester.digest();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -3127,7 +3127,7 @@ public final class Utility {
             mac.init(new SecretKeySpec(key, "HmacSHA1"));
             return mac.doFinal(input);
         } catch (InvalidKeyException | NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -3151,7 +3151,7 @@ public final class Utility {
             mac.update(input, offset, len);
             return mac.doFinal();
         } catch (InvalidKeyException | NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -3262,7 +3262,7 @@ public final class Utility {
             mac.init(new SecretKeySpec(key, "HmacSHA256"));
             return mac.doFinal(input);
         } catch (InvalidKeyException | NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -3286,7 +3286,7 @@ public final class Utility {
             mac.update(input, offset, len);
             return mac.doFinal();
         } catch (InvalidKeyException | NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -3398,7 +3398,7 @@ public final class Utility {
             mac.init(sk);
             return mac.doFinal(input);
         } catch (InvalidKeyException | NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -3423,7 +3423,7 @@ public final class Utility {
             mac.update(input, offset, len);
             return mac.doFinal();
         } catch (InvalidKeyException | NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
+            throw new RedkaleException(ex);
         }
     }
 
@@ -3440,7 +3440,7 @@ public final class Utility {
             MessageDigest digest = MessageDigest.getInstance(algorithm.toUpperCase());
             return digest.digest(input);
         } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException("Couldn't find a " + algorithm + " provider", ex);
+            throw new RedkaleException("Couldn't find a " + algorithm + " provider", ex);
         }
     }
 
@@ -3460,7 +3460,7 @@ public final class Utility {
             digest.update(input, offset, length);
             return digest.digest();
         } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException("Couldn't find a " + algorithm + " provider", ex);
+            throw new RedkaleException("Couldn't find a " + algorithm + " provider", ex);
         }
     }
 

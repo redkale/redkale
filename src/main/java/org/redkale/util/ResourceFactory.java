@@ -542,7 +542,7 @@ public final class ResourceFactory {
         checkResourceName(name);
         Class clz = TypeToken.typeToClass(clazz);
         if (clz != null && !clz.isPrimitive() && val != null && !clz.isAssignableFrom(val.getClass())) {
-            throw new RuntimeException(clz + "not isAssignableFrom (" + val + ") class " + val.getClass());
+            throw new RedkaleException(clz + "not isAssignableFrom (" + val + ") class " + val.getClass());
         }
         ConcurrentHashMap<String, ResourceEntry> map = this.store.computeIfAbsent(clazz, k -> new ConcurrentHashMap());
         ResourceEntry re = map.get(name);
@@ -1023,7 +1023,7 @@ public final class ResourceFactory {
         return it == null ? findRegxTypeLoader(ft, field) : it;
     }
 
-    private static class ResourceInjectException extends RuntimeException {
+    private static class ResourceInjectException extends RedkaleException {
 
         public ResourceInjectException() {
             super();
@@ -1273,7 +1273,7 @@ public final class ResourceFactory {
 //            } catch (RuntimeException ex) {
 //                throw ex;
 //            } catch (Exception e) {
-//                throw new RuntimeException(e);
+//                throw new RedkaleException(e);
 //            }
 //        }
 //    }
