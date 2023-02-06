@@ -49,7 +49,7 @@ public final class SncpDynServlet extends SncpServlet {
         this.maxNameLength = maxNameLength;
         this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
         RedkaleClassLoader.putReflectionPublicMethods(service.getClass().getName());
-        for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(service.getClass()).entrySet()) {
+        for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(serviceResourceType).entrySet()) {
             SncpServletAction action;
             try {
                 action = SncpServletAction.create(service, serviceid, en.getKey(), en.getValue());

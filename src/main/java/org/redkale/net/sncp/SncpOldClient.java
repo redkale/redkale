@@ -85,7 +85,7 @@ public final class SncpOldClient {
         this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
         final List<SncpServiceAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
-        for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(serviceClass).entrySet()) {
+        for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(serviceResourceType).entrySet()) {
             methodens.add(new SncpServiceAction(serviceClass, en.getValue(), serviceid, en.getKey()));
         }
         this.actions = methodens.toArray(new SncpServiceAction[methodens.size()]);

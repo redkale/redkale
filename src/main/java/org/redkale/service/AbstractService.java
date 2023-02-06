@@ -28,7 +28,7 @@ public abstract class AbstractService implements Service {
      * @return Class
      */
     protected Class serviceType() {
-        return Sncp.getServiceType(this);
+        return Sncp.isSncpDyn(this) && getClass().getSimpleName().startsWith("_Dyn") ? getClass().getSuperclass() : getClass();
     }
 
     /**

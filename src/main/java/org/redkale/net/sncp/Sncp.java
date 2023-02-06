@@ -61,7 +61,7 @@ public abstract class Sncp {
 
         boolean remote();
 
-        Class type();
+        Class type(); //resourceServiceType
 
         int index() default 0;  //排列顺序， 主要用于Method
     }
@@ -227,9 +227,14 @@ public abstract class Sncp {
         return type != null ? type.value() : service.getClass();
     }
 
-    public static Class getServiceType(Service service) {
-        return isSncpDyn(service) && service.getClass().getSimpleName().startsWith("_Dyn") ? service.getClass().getSuperclass() : service.getClass();
+    public static <T extends Service> Class getResourceType(Class<T> serviceImplClass) {
+        ResourceType type = serviceImplClass.getAnnotation(ResourceType.class);
+        return type != null ? type.value() : serviceImplClass;
     }
+//
+//    public static Class getServiceType(Service service) {
+//        return isSncpDyn(service) && service.getClass().getSimpleName().startsWith("_Dyn") ? service.getClass().getSuperclass() : service.getClass();
+//    }
 
     public static AnyValue getResourceConf(Service service) {
         if (service == null || !isSncpDyn(service)) {
@@ -473,7 +478,7 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visit("remote", Boolean.FALSE);
-            av0.visit("type", Type.getType(Type.getDescriptor(serviceImplClass)));
+            av0.visit("type", Type.getType(Type.getDescriptor(getResourceType(serviceImplClass))));
             av0.visitEnd();
         }
         { //给新类加上 原有的Annotation
