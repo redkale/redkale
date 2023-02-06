@@ -111,7 +111,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 final Type comp = this.componentType;
                 for (int i = 0;; i++) {
                     Object v = value[i];
-                    writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specify() == comp)) ? itemEncoder : anyEncoder), v, i);
+                    writeMemberValue(out, member, ((v != null && (v.getClass() == comp || out.specificObjectType() == comp)) ? itemEncoder : anyEncoder), v, i);
                     if (i == iMax) {
                         break;
                     }

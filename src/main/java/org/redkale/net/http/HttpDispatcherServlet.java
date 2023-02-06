@@ -12,7 +12,8 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import org.redkale.net.DispatcherServlet;
+import org.redkale.net.*;
+import org.redkale.net.Filter;
 import org.redkale.net.http.Rest.RestDynSourceType;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue.DefaultAnyValue;
@@ -47,6 +48,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     protected HttpContext context;
 
+    //所有Servlet方法都不需要读取http-header且不存在HttpFilter的情况下，lazyHeaders=true
     protected boolean lazyHeaders = true;
 
     private Map<String, BiPredicate<String, String>> forbidURIMaps; //禁用的URL的正则表达式, 必须与 forbidURIPredicates 保持一致
@@ -363,6 +365,15 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         }
     }
 
+    @Override
+    public void addFilter(Filter<HttpContext, HttpRequest, HttpResponse> filter, AnyValue conf) {
+        super.addFilter(filter, conf);
+        this.lazyHeaders = false;
+        if (context != null) {
+            context.lazyHeaders = this.lazyHeaders; //启动后运行过程中执行addFilter
+        }
+    }
+
     /**
      * 添加HttpServlet
      *
@@ -385,10 +396,10 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 }
             }
         }
-        if (lazyHeaders && !Rest.isSimpleRestDyn(servlet)) {
-            lazyHeaders = false;
+        if (this.lazyHeaders && !Rest.isSimpleRestDyn(servlet)) {
+            this.lazyHeaders = false;
             if (context != null) {
-                context.lazyHeaders = false; //启动后运行过程中执行addServlet
+                context.lazyHeaders = this.lazyHeaders; //启动后运行过程中执行addServlet
             }
         }
         allMapLock.lock();

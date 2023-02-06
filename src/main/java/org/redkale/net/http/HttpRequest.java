@@ -227,10 +227,10 @@ public class HttpRequest extends Request<HttpContext> {
         req.setBody(array.length() == 0 ? null : array.getBytes());
         if (!getHeaders().isEmpty()) {
             if (headers.containsKey(Rest.REST_HEADER_RPC)
-                || headers.containsKey(Rest.REST_HEADER_CURRUSERID_NAME)) { //外部request不能包含RPC的header信息
+                || headers.containsKey(Rest.REST_HEADER_CURRUSERID)) { //外部request不能包含RPC的header信息
                 req.setHeaders(new HashMap<>(headers));
                 req.removeHeader(Rest.REST_HEADER_RPC);
-                req.removeHeader(Rest.REST_HEADER_CURRUSERID_NAME);
+                req.removeHeader(Rest.REST_HEADER_CURRUSERID);
             } else {
                 req.setHeaders(headers);
             }
@@ -745,7 +745,7 @@ public class HttpRequest extends Request<HttpContext> {
                     this.rpc = "true".equalsIgnoreCase(value);
                     headers.put(name, value);
                     break;
-                case Rest.REST_HEADER_CURRUSERID_NAME:
+                case Rest.REST_HEADER_CURRUSERID:
                     value = bytes.toString(charset);
                     this.hashid = value.hashCode();
                     this.currentUserid = value;

@@ -304,7 +304,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
             this.lastConvertEncodeable = encoder;
         }
         if (encoder.specifyable()) {
-            writer.specify(type);
+            writer.specificObjectType(type);
         }
         encoder.convertTo(writer, value);
 
@@ -336,7 +336,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
             this.lastConvertEncodeable = encoder;
         }
         if (encoder.specifyable()) {
-            writer.specify(type);
+            writer.specificObjectType(type);
         }
         encoder.convertTo(writer, value);
 
@@ -362,7 +362,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specify(type);
+                writer.specificObjectType(type);
             }
             encoder.convertTo(writer, value);
         }
@@ -386,7 +386,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specify(type);
+                writer.specificObjectType(type);
             }
             encoder.convertTo(writer, value);
         }
@@ -415,7 +415,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specify(type);
+                writer.specificObjectType(type);
             }
             encoder.convertTo(writer, value);
         }
@@ -444,7 +444,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             out.writeNull();
         } else {
-            out.specify(type);
+            out.specificObjectType(type);
             factory.loadEncoder(type).convertTo(out, value);
         }
         return out.toBuffers();
@@ -462,7 +462,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specify(type);
+                writer.specificObjectType(type);
             }
             encoder.convertTo(writer, value);
         }
@@ -482,7 +482,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specify(type);
+                writer.specificObjectType(type);
             }
             encoder.convertTo(writer, value);
         }

@@ -26,7 +26,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public abstract class AsyncConnection implements ChannelContext, Channel, AutoCloseable {
+public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     private static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
 
@@ -814,7 +814,6 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         this.subobject = value;
     }
 
-    @Override
     public void setAttribute(String name, Object value) {
         if (this.attributes == null) {
             this.attributes = new HashMap<>();
@@ -822,25 +821,21 @@ public abstract class AsyncConnection implements ChannelContext, Channel, AutoCl
         this.attributes.put(name, value);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public final <T> T getAttribute(String name) {
         return (T) (this.attributes == null ? null : this.attributes.get(name));
     }
 
-    @Override
     public final void removeAttribute(String name) {
         if (this.attributes != null) {
             this.attributes.remove(name);
         }
     }
 
-    @Override
     public final Map<String, Object> getAttributes() {
         return this.attributes;
     }
 
-    @Override
     public final void clearAttribute() {
         if (this.attributes != null) {
             this.attributes.clear();

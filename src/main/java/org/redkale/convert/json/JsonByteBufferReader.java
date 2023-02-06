@@ -42,10 +42,10 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     protected boolean recycle() {
         super.recycle();   // this.position 初始化值为-1
-        this.currentIndex = 0;
         this.currentChar = 0;
-        this.currentBuffer = null;
         this.buffers = null;
+        this.currentIndex = 0;
+        this.currentBuffer = null;
         this.mask = null;
         return false;
     }

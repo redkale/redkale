@@ -106,7 +106,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
             }
             if (userid != null) {
-                clientHeaders.put(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
+                clientHeaders.put(Rest.REST_HEADER_CURRUSERID, "" + userid);
             }
             if (headers != null) {
                 headers.forEach((n, v) -> {
@@ -186,7 +186,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
                 clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
             }
             if (userid != null) {
-                clientHeaders.put(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
+                clientHeaders.put(Rest.REST_HEADER_CURRUSERID, "" + userid);
             }
             if (headers != null) {
                 boolean ws = headers.containsKey("Sec-WebSocket-Key");
@@ -265,7 +265,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
 //            if (req.isFrombody()) builder.header(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
 //            if (req.getReqConvertType() != null) builder.header(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
 //            if (req.getRespConvertType() != null) builder.header(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
-//            if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
+//            if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID, "" + userid);
 //            if (headers != null) headers.forEach((n, v) -> {
 //                    if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) builder.header(n, v);
 //                });
@@ -313,7 +313,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
 //            if (req.isFrombody()) builder.header(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
 //            if (req.getReqConvertType() != null) builder.header(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
 //            if (req.getRespConvertType() != null) builder.header(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
-//            if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID_NAME, "" + userid);
+//            if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID, "" + userid);
 //            if (headers != null) headers.forEach((n, v) -> {
 //                    if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) builder.header(n, v);
 //                });

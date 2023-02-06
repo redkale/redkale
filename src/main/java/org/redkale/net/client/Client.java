@@ -206,28 +206,14 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         if (request.workThread == null) {
             request.workThread = WorkThread.currWorkThread();
         }
-        return connect(null).thenCompose(conn -> writeChannel(conn, request));
+        return connect().thenCompose(conn -> writeChannel(conn, request));
     }
 
     public final <T> CompletableFuture<T> sendAsync(R request, Function<P, T> respTransfer) {
         if (request.workThread == null) {
             request.workThread = WorkThread.currWorkThread();
         }
-        return connect(null).thenCompose(conn -> writeChannel(conn, request, respTransfer));
-    }
-
-    public final CompletableFuture<P> sendAsync(ChannelContext context, R request) {
-        if (request.workThread == null) {
-            request.workThread = WorkThread.currWorkThread();
-        }
-        return connect(context).thenCompose(conn -> writeChannel(conn, request));
-    }
-
-    public final <T> CompletableFuture<T> sendAsync(ChannelContext context, R request, Function<P, T> respTransfer) {
-        if (request.workThread == null) {
-            request.workThread = WorkThread.currWorkThread();
-        }
-        return connect(context).thenCompose(conn -> writeChannel(conn, request, respTransfer));
+        return connect().thenCompose(conn -> writeChannel(conn, request, respTransfer));
     }
 
     protected CompletableFuture<P> writeChannel(ClientConnection conn, R request) {
@@ -239,38 +225,16 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     protected CompletableFuture<C> connect() {
-        return connect(null);
-    }
-
-    protected CompletableFuture<C> connect(final ChannelContext context) {
-        final boolean cflag = context != null && connectionContextName != null;
-        if (cflag) {
-            C cc = context.getAttribute(connectionContextName);
-            if (cc != null && cc.isOpen()) {
-                return CompletableFuture.completedFuture(cc);
-            }
-        }
         final int size = this.connArray.length;
-        int connIndex = (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
-//        WorkThread workThread = WorkThread.currWorkThread();
-//        if (workThread != null && workThread.threads() == size) {
-//            connIndex = workThread.index();
-//        } else {
-//            connIndex = (int) Math.abs(Thread.currentThread().getId() % size);
-//        }
-//        if (connIndex >= 0) {
+        final int connIndex = (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
         C cc = (C) this.connArray[connIndex];
         if (cc != null && cc.isOpen()) {
-            if (cflag) {
-                context.setAttribute(connectionContextName, cc);
-            }
             return CompletableFuture.completedFuture(cc);
         }
-        final int index = connIndex;
-        final Queue<CompletableFuture<C>> waitQueue = this.connAcquireWaitings[index];
-        if (this.connOpenStates[index].compareAndSet(false, true)) {
+        final Queue<CompletableFuture<C>> waitQueue = this.connAcquireWaitings[connIndex];
+        if (this.connOpenStates[connIndex].compareAndSet(false, true)) {
             CompletableFuture<C> future = address.createClient(tcp, group, readTimeoutSeconds, writeTimeoutSeconds)
-                .thenApply(c -> (C) createClientConnection(index, c).setMaxPipelines(maxPipelines));
+                .thenApply(c -> (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
@@ -282,18 +246,15 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             }
             return future.thenApply(c -> {
                 c.setAuthenticated(true);
-                this.connArray[index] = c;
+                this.connArray[connIndex] = c;
                 CompletableFuture<C> f;
-                if (cflag) {
-                    context.setAttribute(connectionContextName, c);
-                }
                 while ((f = waitQueue.poll()) != null) {
                     f.complete(c);
                 }
                 return c;
             }).whenComplete((r, t) -> {
                 if (t != null) {
-                    this.connOpenStates[index].set(false);
+                    this.connOpenStates[connIndex].set(false);
                 }
             });
         } else {
@@ -327,13 +288,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 //        if (minRunningConn != null) { // && minRunningConn.runningCount() < maxPipelines
 //            return CompletableFuture.completedFuture(minRunningConn);
 //        }
-//        return waitClientConnection();
-    }
-
-    protected CompletableFuture<C> waitClientConnection() {
-        CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), 6, TimeUnit.SECONDS);
-        connAcquireWaitings[connSeqno.getAndIncrement() % this.connLimit].offer(rs);
-        return rs;
+//        CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), 6, TimeUnit.SECONDS);
+//        connAcquireWaitings[connSeqno.getAndIncrement() % this.connLimit].offer(rs);
+//        return rs;
     }
 
     protected long getRespWaitingCount() {

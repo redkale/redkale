@@ -293,7 +293,7 @@ public class JsonCharsWriter extends JsonWriter {
     protected boolean recycle() {
         super.recycle();
         this.count = 0;
-        this.specify = null;
+        this.specificObjectType = null;
         if (this.content != null && this.content.length > defaultSize) {
             this.content = new char[defaultSize];
         }

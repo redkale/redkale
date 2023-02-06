@@ -153,7 +153,7 @@ public class BsonWriter extends Writer implements ByteTuple {
     protected boolean recycle() {
         super.recycle();
         this.count = 0;
-        this.specify = null;
+        this.specificObjectType = null;
         if (this.content != null && this.content.length > defaultSize) {
             this.content = new byte[defaultSize];
         }

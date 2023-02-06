@@ -76,14 +76,11 @@ public class WebSocketEngine {
     @Comment("最大消息体长度, 小于1表示无限制")
     protected int wsMaxBody;
 
-    @Comment("接收客户端的分包(last=false)消息时是否自动合并包")
-    protected boolean mergeMode = true;
-
     @Comment("加密解密器")
     protected Cryptor cryptor;
 
-    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveInterval, int wsMaxConns,
-        int wsThreads, int wsMaxBody, boolean mergeMode, Cryptor cryptor, WebSocketNode node, Convert sendConvert, Logger logger) {
+    protected WebSocketEngine(String engineid, boolean single, HttpContext context, int liveInterval,
+        int wsMaxConns, int wsThreads, int wsMaxBody, Cryptor cryptor, WebSocketNode node, Convert sendConvert, Logger logger) {
         this.engineid = engineid;
         this.single = single;
         this.context = context;
@@ -93,7 +90,6 @@ public class WebSocketEngine {
         this.wsMaxConns = wsMaxConns;
         this.wsThreads = wsThreads;
         this.wsMaxBody = wsMaxBody;
-        this.mergeMode = mergeMode;
         this.cryptor = cryptor;
         this.logger = logger;
         this.index = sequence.getAndIncrement();

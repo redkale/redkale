@@ -151,10 +151,6 @@ public abstract class Request<C extends Context> {
         return attributes;
     }
 
-    public ChannelContext getChannelContext() {
-        return channel;
-    }
-
     public C getContext() {
         return this.context;
     }

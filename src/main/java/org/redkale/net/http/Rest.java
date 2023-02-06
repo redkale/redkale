@@ -38,16 +38,22 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class Rest {
 
+    //请求所需的RestService的资源名，值类型: 字符串
     public static final String REST_HEADER_RESOURCE_NAME = "rest-resource-name";
 
+    //请求是否为rpc协议，值类型: 布尔，取值为true、false
     public static final String REST_HEADER_RPC = "rest-rpc";
 
-    public static final String REST_HEADER_CURRUSERID_NAME = "rest-curruserid-name";
+    //当前用户ID值，值类型: 字符串
+    public static final String REST_HEADER_CURRUSERID = "rest-curruserid";
 
-    public static final String REST_HEADER_PARAM_FROM_BODY = "rest-paramfrombody";
+    //参数是否从body中获取，值类型: 布尔，取值为true、false
+    public static final String REST_HEADER_PARAM_FROM_BODY = "rest-param-from-body";
 
+    //请求参数的反序列化种类，值类型: 字符串，取值为ConvertType枚举值名
     public static final String REST_HEADER_REQ_CONVERT_TYPE = "rest-req-convert-type";
 
+    //响应结果的序列化种类，值类型: 字符串，取值为ConvertType枚举值名
     public static final String REST_HEADER_RESP_CONVERT_TYPE = "rest-resp-convert-type";
 
     static final String REST_TOSTRINGOBJ_FIELD_NAME = "_redkale_tostringsupplier";
@@ -575,10 +581,6 @@ public final class Rest {
             mv.visitFieldInsn(PUTFIELD, newDynName, "wsmaxbody", "I");
 
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitInsn(rws.mergemsg() ? ICONST_1 : ICONST_0);
-            mv.visitFieldInsn(PUTFIELD, newDynName, "mergemsg", "Z");
-
-            mv.visitVarInsn(ALOAD, 0);
             mv.visitInsn(rws.single() ? ICONST_1 : ICONST_0);
             mv.visitFieldInsn(PUTFIELD, newDynName, "single", "Z");
 
@@ -1053,7 +1055,6 @@ public final class Rest {
         final String httpScopeDesc = Type.getDescriptor(HttpScope.class);
         final String stageDesc = Type.getDescriptor(CompletionStage.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
-        final String channelDesc = Type.getDescriptor(ChannelContext.class);
         final String httpServletName = HttpServlet.class.getName().replace('.', '/');
         final String actionEntryName = HttpServlet.ActionEntry.class.getName().replace('.', '/');
         final String attrDesc = Type.getDescriptor(org.redkale.util.Attribute.class);
@@ -1330,7 +1331,6 @@ public final class Rest {
                         } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
                         } else if (ptype.isPrimitive()) {
                         } else if (ptype == String.class) {
-                        } else if (ptype == ChannelContext.class) {
                         } else if (ptype == Flipper.class) {
                         } else { //其他Json对象
                             //构建 RestHeader、RestCookie、RestAddress 等赋值操作
@@ -1561,7 +1561,7 @@ public final class Rest {
             av0.visit("value", Type.getType(Type.getDescriptor(serviceType)));
             av0.visitEnd();
         }
-        boolean dynsimple = true;
+        boolean dynsimple = baseServletType != HttpServlet.class; //有自定义的BaseServlet会存在读取header的操作
         //获取所有可以转换成HttpMapping的方法
         int methodidex = 0;
         final MessageMultiConsumer mmc = serviceType.getAnnotation(MessageMultiConsumer.class);
@@ -2727,11 +2727,6 @@ public final class Rest {
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("");
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, iscookie ? "getCookie" : (ishead ? "getHeader" : "getParameter"), "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
-                    mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (ptype == ChannelContext.class) {
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getChannelContext", "()" + channelDesc, false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (ptype == Flipper.class) {

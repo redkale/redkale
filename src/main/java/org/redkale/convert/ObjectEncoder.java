@@ -279,7 +279,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 lock.unlock();
             }
         }
-        if (value.getClass() != this.typeClass && !this.type.equals(out.specify())) {
+        if (value.getClass() != this.typeClass && !this.type.equals(out.specificObjectType())) {
             final Class clz = value.getClass();
             if (out.needWriteClassName()) {
                 out.writeClassName(factory.getEntityAlias(clz));

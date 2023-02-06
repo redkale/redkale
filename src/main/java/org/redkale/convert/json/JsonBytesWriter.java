@@ -73,6 +73,16 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
+    public boolean recycle() {
+        super.recycle();
+        this.count = 0;
+        if (this.content != null && this.content.length > defaultSize * 100) {
+            this.content = new byte[defaultSize];
+        }
+        return true;
+    }
+
+    @Override
     public byte[] content() {
         return content;
     }
@@ -331,17 +341,6 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     public JsonBytesWriter clear() {
         this.count = 0;
         return this;
-    }
-
-    @Override
-    public boolean recycle() {
-        super.recycle();
-        this.count = 0;
-        this.specify = null;
-        if (this.content != null && this.content.length > defaultSize * 100) {
-            this.content = new byte[defaultSize];
-        }
-        return true;
     }
 
     /**

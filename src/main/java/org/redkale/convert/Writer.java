@@ -23,7 +23,7 @@ public abstract class Writer {
     protected boolean comma;
 
     //convertTo时是否以指定Type的ObjectEncoder进行处理
-    protected Type specify;
+    protected Type specificObjectType;
 
     //对某个key值进行动态处理，仅供MapEncoder使用
     protected BiFunction<Object, Object, Object> mapFieldFunc;
@@ -35,32 +35,36 @@ public abstract class Writer {
     protected Function<Object, ConvertField[]> objExtFunc;
 
     /**
-     * 设置specify
+     * 设置specificObjectType
      *
      * @param value Type
      */
-    public void specify(Type value) {
+    public void specificObjectType(Type value) {
         if (value instanceof GenericArrayType) {
-            this.specify = ((GenericArrayType) value).getGenericComponentType();
+            this.specificObjectType = ((GenericArrayType) value).getGenericComponentType();
         } else if (value instanceof Class && ((Class) value).isArray()) {
-            this.specify = ((Class) value).getComponentType();
+            this.specificObjectType = ((Class) value).getComponentType();
         } else {
-            this.specify = value;
+            this.specificObjectType = value;
         }
     }
 
     protected boolean recycle() {
+        this.comma = false;
+        this.specificObjectType = null;
+        this.mapFieldFunc = null;
         this.objFieldFunc = null;
+        this.objExtFunc = null;
         return true;
     }
 
     /**
-     * 返回specify
+     * 返回specificObjectType
      *
      * @return int
      */
-    public Type specify() {
-        return this.specify;
+    public Type specificObjectType() {
+        return this.specificObjectType;
     }
 
     /**
@@ -127,12 +131,18 @@ public abstract class Writer {
         } else {
             value = objFieldFunc.apply(member.attribute, obj);
         }
-        if (value == null) return;
+        if (value == null) {
+            return;
+        }
         if (tiny()) {
             if (member.string) {
-                if (((CharSequence) value).length() == 0) return;
+                if (((CharSequence) value).length() == 0) {
+                    return;
+                }
             } else if (member.bool) {
-                if (!((Boolean) value)) return;
+                if (!((Boolean) value)) {
+                    return;
+                }
             }
         }
         Attribute attr = member.getAttribute();
@@ -153,14 +163,22 @@ public abstract class Writer {
      */
     @SuppressWarnings("unchecked")
     public void writeObjectField(final String fieldName, Type fieldType, int fieldPos, Encodeable anyEncoder, Object value) {
-        if (value == null) return;
-        if (fieldType == null) fieldType = value.getClass();
+        if (value == null) {
+            return;
+        }
+        if (fieldType == null) {
+            fieldType = value.getClass();
+        }
         if (tiny() && fieldType instanceof Class) {
             Class clazz = (Class) fieldType;
             if (CharSequence.class.isAssignableFrom(clazz)) {
-                if (((CharSequence) value).length() == 0) return;
+                if (((CharSequence) value).length() == 0) {
+                    return;
+                }
             } else if (clazz == boolean.class || clazz == Boolean.class) {
-                if (!((Boolean) value)) return;
+                if (!((Boolean) value)) {
+                    return;
+                }
             }
         }
         this.writeFieldName(null, fieldName, fieldType, fieldPos);

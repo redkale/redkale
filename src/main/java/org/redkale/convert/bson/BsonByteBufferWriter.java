@@ -139,7 +139,7 @@ public class BsonByteBufferWriter extends BsonWriter {
     protected boolean recycle() {
         super.recycle();
         this.index = 0;
-        this.specify = null;
+        this.specificObjectType = null;
         this.buffers = null;
         return false;
     }

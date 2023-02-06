@@ -121,28 +121,43 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 respFuture.cancelTimeout();
                 //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", message=" + rs.message);
                 connection.preComplete(message, (R) request, exc);
+                boolean reqInIO = workThread != null && workThread.inIO();
 
                 if (workThread == null || workThread.getWorkExecutor() == null) {
                     workThread = connection.channel.getReadIOThread();
                 }
                 if (exc != null) {
-                    workThread.runWork(() -> {
+                    if (reqInIO) { //request在IO线程中发送请求，说明request是在异步模式中
                         if (request != null) {
                             Traces.currTraceid(request.traceid);
                         }
                         respFuture.completeExceptionally(exc);
-                    });
+                    } else {
+                        workThread.runWork(() -> {
+                            if (request != null) {
+                                Traces.currTraceid(request.traceid);
+                            }
+                            respFuture.completeExceptionally(exc);
+                        });
+                    }
                 } else {
                     final Object rs = request == null || request.respTransfer == null ? message : request.respTransfer.apply(message);
-                    workThread.runWork(() -> {
+                    if (reqInIO) {  //request在IO线程中发送请求，说明request是在异步模式中
                         if (request != null) {
                             Traces.currTraceid(request.traceid);
                         }
                         ((ClientFuture) respFuture).complete(rs);
-                    });
+                    } else {
+                        workThread.runWork(() -> {
+                            if (request != null) {
+                                Traces.currTraceid(request.traceid);
+                            }
+                            ((ClientFuture) respFuture).complete(rs);
+                        });
+                    }
                 }
             } catch (Throwable t) {
-                if (workThread == null) {
+                if (workThread == null || workThread.inIO()) {
                     if (request != null) {
                         Traces.currTraceid(request.traceid);
                     }

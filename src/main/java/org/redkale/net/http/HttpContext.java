@@ -41,12 +41,11 @@ public class HttpContext extends Context {
 
     protected final AnyValue rpcAuthenticatorConfig;
 
-    //所有Servlet方法都不需要读取http-header，lazyHeaders=true
+    //所有Servlet方法都不需要读取http-header且不存在HttpFilter的情况下，lazyHeaders=true
     protected boolean lazyHeaders; //存在动态改值
 
     Function<WebSocket, WebSocketWriteIOThread> webSocketWriterIOThreadFunc;
 
-//    protected RequestURINode[] uriCacheNodes;
     public HttpContext(HttpContextConfig config) {
         super(config);
         this.remoteAddrHeader = config.remoteAddrHeader;
@@ -57,19 +56,6 @@ public class HttpContext extends Context {
         random.setSeed(Math.abs(System.nanoTime()));
     }
 
-//    protected RequestURINode[] getUriCacheNodes() {
-//        return uriCacheNodes;
-//    }
-//
-//    protected void addRequestURINode(String path) {
-//        RequestURINode node = new RequestURINode(path);
-//            if (this.uriCacheNodes != null) {
-//                for (int i = 0; i < uriCacheNodes.length; i++) {
-//                    if (uriCacheNodes[i].path.equals(path)) return;
-//                }
-//            }
-//            this.uriCacheNodes = Utility.append(this.uriCacheNodes, node);
-//    }
     @Override
     protected void updateReadIOThread(AsyncConnection conn, AsyncIOThread ioReadThread) {
         super.updateReadIOThread(conn, ioReadThread);

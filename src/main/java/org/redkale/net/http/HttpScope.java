@@ -6,15 +6,12 @@
 package org.redkale.net.http;
 
 import java.io.Serializable;
-import java.lang.reflect.Type;
 import java.net.HttpCookie;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.Transient;
-import org.redkale.util.TypeToken;
 
 /**
  * HTTP输出引擎的对象域 <br>
@@ -43,9 +40,6 @@ import org.redkale.util.TypeToken;
 public class HttpScope {
 
     public static final Object NIL = new Object();
-
-    static final Type FUTRU_TYPE = new TypeToken<CompletableFuture<HttpScope>>() {
-    }.getType();
 
     @ConvertColumn(index = 1)
     protected String referid;
