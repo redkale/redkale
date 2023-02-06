@@ -10,8 +10,14 @@ import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.util.*;
 
 /**
+ * SncpClient编解码器
+ *
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.8.0
  */
 public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientResult> {
 

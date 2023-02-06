@@ -19,10 +19,10 @@ import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
-import org.redkale.mq.MessageAgent;
+import org.redkale.mq.*;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.http.WebSocketNode;
-import org.redkale.net.sncp.SncpOldClient.SncpAction;
+import org.redkale.net.sncp.SncpServiceInfo.SncpServiceAction;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -75,6 +75,83 @@ public abstract class Sncp {
 
     public static byte[] getPongBytes() {
         return Arrays.copyOf(PONG_BYTES, PONG_BYTES.length);
+    }
+
+    //key: actionid
+    public static LinkedHashMap<Uint128, Method> loadMethodActions(final Class resourceServiceType) {
+        final List<Method> list = new ArrayList<>();
+        final List<Method> multis = new ArrayList<>();
+        final Map<Uint128, Method> actionids = new LinkedHashMap<>();
+        for (final java.lang.reflect.Method method : resourceServiceType.getMethods()) {
+            if (method.isSynthetic()) {
+                continue;
+            }
+            if (Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (Modifier.isFinal(method.getModifiers())) {
+                continue;
+            }
+            if (method.getAnnotation(Local.class) != null) {
+                continue;
+            }
+            if (method.getName().equals("getClass") || method.getName().equals("toString")) {
+                continue;
+            }
+            if (method.getName().equals("equals") || method.getName().equals("hashCode")) {
+                continue;
+            }
+            if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) {
+                continue;
+            }
+            if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == AnyValue.class) {
+                if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) {
+                    continue;
+                }
+            }
+
+            Uint128 actionid = Sncp.actionid(method);
+            Method old = actionids.get(actionid);
+            if (old != null) {
+                if (old.getDeclaringClass().equals(method.getDeclaringClass())) {
+                    throw new SncpException(resourceServiceType.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
+                }
+                continue;
+            }
+            actionids.put(actionid, method);
+            if (method.getAnnotation(Sncp.SncpDyn.class) != null) {
+                multis.add(method);
+            } else {
+                list.add(method);
+            }
+        }
+        multis.sort((m1, m2) -> m1.getAnnotation(Sncp.SncpDyn.class).index() - m2.getAnnotation(Sncp.SncpDyn.class).index());
+        list.sort((Method o1, Method o2) -> {
+            if (!o1.getName().equals(o2.getName())) {
+                return o1.getName().compareTo(o2.getName());
+            }
+            if (o1.getParameterCount() != o2.getParameterCount()) {
+                return o1.getParameterCount() - o2.getParameterCount();
+            }
+            return 0;
+        });
+        //带SncpDyn必须排在前面
+        multis.addAll(list);
+        final LinkedHashMap<Uint128, Method> rs = new LinkedHashMap<>();
+        for (Method method : multis) {
+            for (Map.Entry<Uint128, Method> en : actionids.entrySet()) {
+                if (en.getValue() == method) {
+                    rs.put(en.getKey(), en.getValue());
+                    break;
+                }
+            }
+        }
+        return rs;
+    }
+
+    public static <T extends Service> SncpServiceInfo createSncpServiceInfo(String resourceName,
+        Class<T> resourceServiceType, T service, MessageAgent messageAgent, SncpMessageClient messageClient) {
+        return new SncpServiceInfo(resourceName, resourceServiceType, service, messageAgent, messageClient);
     }
 
     public static Uint128 actionid(final RpcAction action) {
@@ -790,7 +867,12 @@ public abstract class Sncp {
         }
         int i = -1;
         Uint128 serviceid = serviceid(name, serviceTypeOrImplClass);
-        for (final SncpAction entry : SncpOldClient.getSncpActions(realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, serviceid)) {
+        final List<SncpServiceAction> serviceActions = new ArrayList<>();
+        Class serviceImpClass = realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass;
+        for (Map.Entry<Uint128, Method> en : loadMethodActions(serviceImpClass).entrySet()) {
+            serviceActions.add(new SncpServiceAction(serviceImpClass, en.getValue(), serviceid, en.getKey()));
+        }
+        for (final SncpServiceAction entry : serviceActions) {
             final int index = ++i;
             final java.lang.reflect.Method method = entry.method;
             {

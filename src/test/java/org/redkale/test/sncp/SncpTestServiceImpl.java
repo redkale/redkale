@@ -11,7 +11,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.ResourceType;
 import org.redkale.net.*;
-import org.redkale.net.sncp.*;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.util.ResourceFactory;
 
@@ -89,7 +89,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : SncpOldClient.parseMethodActions(service.getClass()).values()) {
+        for (Method method : Sncp.loadMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
@@ -98,7 +98,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : SncpOldClient.parseMethodActions(service.getClass()).values()) {
+        for (Method method : Sncp.loadMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
@@ -107,7 +107,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : SncpOldClient.parseMethodActions(service.getClass()).values()) {
+        for (Method method : Sncp.loadMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");

@@ -9,8 +9,14 @@ import java.util.Objects;
 import org.redkale.util.ByteArray;
 
 /**
+ * client版响应结果
+ *
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.8.0
  */
 public class SncpClientResult {
 

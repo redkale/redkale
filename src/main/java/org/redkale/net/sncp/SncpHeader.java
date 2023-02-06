@@ -22,6 +22,7 @@ public class SncpHeader {
 
     private Uint128 serviceid;
 
+    //【预留字段】service接口版本
     private int serviceVersion;
 
     private Uint128 actionid;
@@ -94,15 +95,24 @@ public class SncpHeader {
     }
 
     public ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, int bodyLength, int retcode) {
-        array.putLong(newSeqid); //8
-        array.putChar((char) HEADER_SIZE); //2
-        array.putUint128(serviceid); //16
-        array.putInt(serviceVersion); //4
-        array.putUint128(actionid); //16
-        array.put(newAddrBytes); //4
-        array.putChar((char) newAddrPort); //2
-        array.putInt(bodyLength); //4
-        array.putInt(retcode); //4
+        int offset = 0;
+        array.putLong(offset, newSeqid); //8
+        offset += 8;
+        array.putChar(offset, (char) HEADER_SIZE); //2
+        offset += 2;
+        array.putUint128(offset, serviceid); //16
+        offset += 16;
+        array.putInt(offset, serviceVersion); //4
+        offset += 4;
+        array.putUint128(offset, actionid); //16   
+        offset += 16;
+        array.put(offset, newAddrBytes); //4   
+        offset += 4;
+        array.putChar(offset, (char) newAddrPort); //2      
+        offset += 2;
+        array.putInt(offset, bodyLength); //4    
+        offset += 4;
+        array.putInt(offset, retcode); //4
         return array;
     }
 

@@ -25,9 +25,9 @@ import org.redkale.util.*;
  */
 public class SncpTest {
 
-    private static final String myhost = Utility.localInetAddress().getHostAddress();
+    private static final String myhost = "127.0.0.1";
 
-    private static int port = 0;
+    private static int port = 63877;
 
     private static int port2 = 4240;
 

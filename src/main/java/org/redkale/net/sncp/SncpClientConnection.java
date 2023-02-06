@@ -8,8 +8,14 @@ import org.redkale.net.client.*;
 import org.redkale.util.ObjectPool;
 
 /**
+ * client版连接
+ *
+ * <p>
+ * 详情见: https://redkale.org
  *
  * @author zhangjx
+ *
+ * @since 2.8.0
  */
 public class SncpClientConnection extends ClientConnection<SncpClientRequest, SncpClientResult> {
 

@@ -59,7 +59,7 @@ public class SncpRequest extends Request<SncpContext> {
             this.header = new SncpHeader();
             int headerSize = this.header.read(buffer);
             if (headerSize != HEADER_SIZE) {
-                context.getLogger().log(Level.WARNING, "sncp buffer header.length not " + HEADER_SIZE);
+                context.getLogger().log(Level.WARNING, "sncp buffer header.length not " + HEADER_SIZE + ", but " + headerSize);
                 return -1;
             }
             if (this.header.getRetcode() != 0) { // retcode

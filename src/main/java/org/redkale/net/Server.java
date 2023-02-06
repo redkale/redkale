@@ -309,7 +309,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         SocketAddress localAddress = serverChannel.getLocalAddress();
         if (localAddress instanceof InetSocketAddress && !Objects.equals(localAddress, this.address)) {
             this.address = (InetSocketAddress) localAddress;
-            this.context.updateServerAddress(this.address);
+            //this.context.updateServerAddress(this.address);
         }
         serverChannel.accept(application, this);
         postStart();

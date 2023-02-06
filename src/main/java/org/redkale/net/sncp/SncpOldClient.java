@@ -5,7 +5,6 @@
  */
 package org.redkale.net.sncp;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -21,6 +20,7 @@ import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp.SncpDyn;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import static org.redkale.net.sncp.SncpRequest.*;
+import org.redkale.net.sncp.SncpServiceInfo.SncpServiceAction;
 import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -54,7 +54,7 @@ public final class SncpOldClient {
 
     protected final int serviceVersion;
 
-    protected final SncpAction[] actions;
+    protected final SncpServiceAction[] actions;
 
     protected final MessageAgent messageAgent;
 
@@ -83,26 +83,17 @@ public final class SncpOldClient {
         this.name = serviceResourceName;
         Class<?> serviceResourceType = ResourceFactory.getResourceType(serviceTypeOrImplClass); //serviceResourceType
         this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
-        final List<SncpAction> methodens = new ArrayList<>();
+        final List<SncpServiceAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
-        for (Map.Entry<Uint128, Method> en : parseMethodActions(serviceClass).entrySet()) {
-            methodens.add(new SncpAction(serviceClass, en.getValue(), serviceid, en.getKey()));
+        for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(serviceClass).entrySet()) {
+            methodens.add(new SncpServiceAction(serviceClass, en.getValue(), serviceid, en.getKey()));
         }
-        this.actions = methodens.toArray(new SncpAction[methodens.size()]);
+        this.actions = methodens.toArray(new SncpServiceAction[methodens.size()]);
         this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
         this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
         if (this.addrBytes.length != 4) {
             throw new SncpException("SNCP clientAddress only support IPv4");
         }
-    }
-
-    static List<SncpAction> getSncpActions(final Class serviceClass, Uint128 serviceid) {
-        final List<SncpAction> actions = new ArrayList<>();
-        //------------------------------------------------------------------------------
-        for (Map.Entry<Uint128, Method> en : parseMethodActions(serviceClass).entrySet()) {
-            actions.add(new SncpAction(serviceClass, en.getValue(), serviceid, en.getKey()));
-        }
-        return actions;
     }
 
     public MessageAgent getMessageAgent() {
@@ -168,80 +159,9 @@ public final class SncpOldClient {
             + ", actions.size = " + actions.length + ")";
     }
 
-    public static LinkedHashMap<Uint128, Method> parseMethodActions(final Class serviceClass) {
-        final List<Method> list = new ArrayList<>();
-        final List<Method> multis = new ArrayList<>();
-        final Map<Uint128, Method> actionids = new LinkedHashMap<>();
-        for (final java.lang.reflect.Method method : serviceClass.getMethods()) {
-            if (method.isSynthetic()) {
-                continue;
-            }
-            if (Modifier.isStatic(method.getModifiers())) {
-                continue;
-            }
-            if (Modifier.isFinal(method.getModifiers())) {
-                continue;
-            }
-            if (method.getAnnotation(Local.class) != null) {
-                continue;
-            }
-            if (method.getName().equals("getClass") || method.getName().equals("toString")) {
-                continue;
-            }
-            if (method.getName().equals("equals") || method.getName().equals("hashCode")) {
-                continue;
-            }
-            if (method.getName().equals("notify") || method.getName().equals("notifyAll") || method.getName().equals("wait")) {
-                continue;
-            }
-            if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == AnyValue.class) {
-                if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) {
-                    continue;
-                }
-            }
-
-            Uint128 actionid = Sncp.actionid(method);
-            Method old = actionids.get(actionid);
-            if (old != null) {
-                if (old.getDeclaringClass().equals(method.getDeclaringClass())) {
-                    throw new SncpException(serviceClass.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
-                }
-                continue;
-            }
-            actionids.put(actionid, method);
-            if (method.getAnnotation(SncpDyn.class) != null) {
-                multis.add(method);
-            } else {
-                list.add(method);
-            }
-        }
-        multis.sort((m1, m2) -> m1.getAnnotation(SncpDyn.class).index() - m2.getAnnotation(SncpDyn.class).index());
-        list.sort((Method o1, Method o2) -> {
-            if (!o1.getName().equals(o2.getName())) {
-                return o1.getName().compareTo(o2.getName());
-            }
-            if (o1.getParameterCount() != o2.getParameterCount()) {
-                return o1.getParameterCount() - o2.getParameterCount();
-            }
-            return 0;
-        });
-        //带SncpDyn必须排在前面
-        multis.addAll(list);
-        final LinkedHashMap<Uint128, Method> rs = new LinkedHashMap<>();
-        for (Method method : multis) {
-            for (Map.Entry<Uint128, Method> en : actionids.entrySet()) {
-                if (en.getValue() == method) {
-                    rs.put(en.getKey(), en.getValue());
-                    break;
-                }
-            }
-        }
-        return rs;
-    }
-
     //只给远程模式调用的
     public <T> T remote(final int index, final Object... params) {
-        final SncpAction action = actions[index];
+        final SncpServiceAction action = actions[index];
         final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
         if (action.handlerFuncParamIndex >= 0) {
             params[action.handlerFuncParamIndex] = null;
@@ -295,7 +215,7 @@ public final class SncpOldClient {
         }
     }
 
-    private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpAction action, final Object... params) {
+    private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpServiceAction action, final Object... params) {
         final String traceid = Traces.currTraceid();
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClass;
@@ -369,7 +289,6 @@ public final class SncpOldClient {
             final AsyncConnection conn = conn0;
             final ByteArray array = writer.toByteArray();
             fillHeader(array, action, seqid, traceid, reqBodyLength);
-
             conn.write(array, new CompletionHandler<Integer, Void>() {
 
                 @Override
@@ -433,6 +352,7 @@ public final class SncpOldClient {
                                     success();
                                 }
                             } catch (Throwable e) {
+                                e.printStackTrace();
                                 future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote response error, params=" + JsonConvert.root().convertTo(params)));
                                 transport.offerConnection(true, conn);
                                 if (handler != null) {
@@ -496,7 +416,7 @@ public final class SncpOldClient {
         });
     }
 
-    private void checkResult(long seqid, final SncpAction action, ByteBuffer buffer) {
+    private void checkResult(long seqid, final SncpServiceAction action, ByteBuffer buffer) {
         long rseqid = buffer.getLong();
         if (rseqid != seqid) {
             throw new SncpException("sncp(" + action.method + ") response.seqid = " + seqid + ", but request.seqid =" + rseqid);
@@ -521,111 +441,8 @@ public final class SncpOldClient {
         buffer.getChar(); //端口
     }
 
-    private void fillHeader(ByteArray buffer, SncpAction action, long seqid, String traceid, int bodyLength) {
+    private void fillHeader(ByteArray buffer, SncpServiceAction action, long seqid, String traceid, int bodyLength) {
         action.header.writeTo(buffer, addrBytes, addrPort, seqid, bodyLength, 0); //结果码， 请求方固定传0  
     }
 
-    protected static final class SncpAction {
-
-        protected final Uint128 actionid;
-
-        protected final Method method;
-
-        protected final Type resultTypes;  //void 必须设为 null
-
-        protected final Type[] paramTypes;
-
-        protected final Class[] paramClass;
-
-        protected final Attribute[] paramAttrs; // 为null表示无RpcCall处理，index=0固定为null, 其他为参数标记的RpcCall回调方法
-
-        protected final int handlerFuncParamIndex;
-
-        protected final int handlerAttachParamIndex;
-
-        protected final int addressTargetParamIndex;
-
-        protected final int addressSourceParamIndex;
-
-        protected final int topicTargetParamIndex;
-
-        protected final boolean boolReturnTypeFuture; // 返回结果类型是否为 CompletableFuture
-
-        protected final Creator<? extends CompletableFuture> futureCreator;
-
-        protected final SncpHeader header;
-
-        @SuppressWarnings("unchecked")
-        public SncpAction(final Class clazz, Method method, Uint128 serviceid, Uint128 actionid) {
-            this.actionid = actionid == null ? Sncp.actionid(method) : actionid;
-            Type rt = TypeToken.getGenericType(method.getGenericReturnType(), clazz);
-            this.resultTypes = rt == void.class ? null : rt;
-            this.boolReturnTypeFuture = CompletableFuture.class.isAssignableFrom(method.getReturnType());
-            this.futureCreator = boolReturnTypeFuture ? Creator.create((Class<? extends CompletableFuture>) method.getReturnType()) : null;
-            this.paramTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), clazz);
-            this.paramClass = method.getParameterTypes();
-            this.method = method;
-            Annotation[][] anns = method.getParameterAnnotations();
-            int tpoicAddrIndex = -1;
-            int targetAddrIndex = -1;
-            int sourceAddrIndex = -1;
-            int handlerAttachIndex = -1;
-            int handlerFuncIndex = -1;
-            boolean hasattr = false;
-            Attribute[] atts = new Attribute[paramTypes.length + 1];
-            if (anns.length > 0) {
-                Class<?>[] params = method.getParameterTypes();
-                for (int i = 0; i < params.length; i++) {
-                    if (CompletionHandler.class.isAssignableFrom(params[i])) {
-                        if (boolReturnTypeFuture) {
-                            throw new SncpException(method + " have both CompletionHandler and CompletableFuture");
-                        }
-                        if (handlerFuncIndex >= 0) {
-                            throw new SncpException(method + " have more than one CompletionHandler type parameter");
-                        }
-                        Sncp.checkAsyncModifier(params[i], method);
-                        handlerFuncIndex = i;
-                        break;
-                    }
-                }
-                for (int i = 0; i < anns.length; i++) {
-                    if (anns[i].length > 0) {
-                        for (Annotation ann : anns[i]) {
-                            if (ann.annotationType() == RpcAttachment.class) {
-                                if (handlerAttachIndex >= 0) {
-                                    throw new SncpException(method + " have more than one @RpcAttachment parameter");
-                                }
-                                handlerAttachIndex = i;
-                            } else if (ann.annotationType() == RpcTargetAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
-                                targetAddrIndex = i;
-                            } else if (ann.annotationType() == RpcSourceAddress.class && SocketAddress.class.isAssignableFrom(params[i])) {
-                                sourceAddrIndex = i;
-                            } else if (ann.annotationType() == RpcTargetTopic.class && String.class.isAssignableFrom(params[i])) {
-                                tpoicAddrIndex = i;
-                            }
-                        }
-                    }
-                }
-            }
-            this.topicTargetParamIndex = tpoicAddrIndex;
-            this.addressTargetParamIndex = targetAddrIndex;
-            this.addressSourceParamIndex = sourceAddrIndex;
-            this.handlerFuncParamIndex = handlerFuncIndex;
-            this.handlerAttachParamIndex = handlerAttachIndex;
-            this.paramAttrs = hasattr ? atts : null;
-            this.header = new SncpHeader(null, serviceid, actionid);
-            if (this.handlerFuncParamIndex >= 0 && method.getReturnType() != void.class) {
-                throw new SncpException(method + " have CompletionHandler type parameter but return type is not void");
-            }
-        }
-
-        public String actionName() {
-            return method.getDeclaringClass().getSimpleName() + "." + method.getName();
-        }
-
-        @Override
-        public String toString() {
-            return "{" + actionid + "," + (method == null ? "null" : method.getName()) + "}";
-        }
-    }
 }
