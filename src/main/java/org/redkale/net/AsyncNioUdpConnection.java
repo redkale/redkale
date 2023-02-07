@@ -134,8 +134,10 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
     }
 
     void receiveBuffer(ByteBuffer buf) {
-        revbufferQueue.offer(buf.flip());
-        doRead(true);
+        this.ioReadThread.execute(() -> {
+            revbufferQueue.offer(buf.flip());
+            doRead(this.ioReadThread.inCurrThread());
+        });
     }
 
     @Override
