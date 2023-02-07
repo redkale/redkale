@@ -92,7 +92,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         LongAdder createResponseCounter = new LongAdder();
         LongAdder cycleResponseCounter = new LongAdder();
 
-        ObjectPool<ByteBuffer> safeBufferPool = server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        ByteBufferPool safeBufferPool = server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
         ObjectPool<Response> safeResponsePool = server.createSafeResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
             if (!(Thread.currentThread() instanceof WorkThread)) {
@@ -110,7 +110,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
             (pool == null ? safeResponsePool : pool).accept(v);
         };
         final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
-        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, server.bufferCapacity, safeBufferPool);
+        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, safeBufferPool);
         this.ioGroup.start();
         udpServerChannel.serverChannel.register(this.selector, SelectionKey.OP_READ);
         this.acceptThread = new Thread() {
@@ -120,7 +120,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
 
             @Override
             public void run() {
-                udpServerChannel.unsafeBufferPool = ObjectPool.createUnsafePool(Thread.currentThread(), 512, safeBufferPool);
+                udpServerChannel.unsafeBufferPool = ByteBufferPool.createUnsafePool(Thread.currentThread(), 512, safeBufferPool);
                 final AsyncIOThread[] ioReadThreads = ioGroup.ioReadThreads;
                 final AsyncIOThread[] ioWriteThreads = ioGroup.ioWriteThreads;
                 final int reads = ioReadThreads.length;
@@ -130,7 +130,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
                 Set<SelectionKey> keys = null;
                 final Selector sel = selector;
                 final DatagramChannel serverChannel = udpServerChannel.serverChannel;
-                final ObjectPool<ByteBuffer> unsafeBufferPool = udpServerChannel.unsafeBufferPool;
+                final ByteBufferPool unsafeBufferPool = udpServerChannel.unsafeBufferPool;
                 while (!closed) {
                     try {
                         int count = sel.select();
@@ -238,7 +238,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
 
         DatagramChannel serverChannel;
 
-        ObjectPool<ByteBuffer> unsafeBufferPool;
+        ByteBufferPool unsafeBufferPool;
 
         ConcurrentHashMap<SocketAddress, AsyncNioUdpConnection> connections = new ConcurrentHashMap<>();
 

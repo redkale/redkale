@@ -4,10 +4,9 @@
 package org.redkale.net.http;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import org.redkale.net.*;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.*;
 
 /**
  * WebSocket只写版的AsyncIOGroup <br>
@@ -23,12 +22,12 @@ import org.redkale.util.ObjectPool;
  */
 class WebSocketAsyncGroup extends AsyncIOGroup {
 
-    public WebSocketAsyncGroup(String threadNameFormat, ExecutorService workExecutor, int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
-        super(false, threadNameFormat, workExecutor, bufferCapacity, safeBufferPool);
+    public WebSocketAsyncGroup(String threadNameFormat, ExecutorService workExecutor, ByteBufferPool safeBufferPool) {
+        super(false, threadNameFormat, workExecutor, safeBufferPool);
     }
 
     @Override
-    protected AsyncIOThread createAsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+    protected AsyncIOThread createAsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         return new WebSocketWriteIOThread(this.timeoutExecutor, g, name, index, threads, workExecutor, safeBufferPool);
     }
 

@@ -7,13 +7,13 @@ package org.redkale.net;
 
 import java.io.*;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.boot.Application;
+import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
 import org.redkale.net.Filter;
 import org.redkale.util.*;
 
@@ -128,7 +128,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.writeTimeoutSeconds = config.getIntValue("writeTimeoutSeconds", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 1024);
         this.maxBody = parseLenth(config.getValue("maxbody"), "UDP".equalsIgnoreCase(netprotocol) ? 16 * 1024 : 64 * 1024);
-        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(netprotocol) ? 8 * 1024 : 32 * 1024);
+        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(netprotocol) ? UDP_BUFFER_CAPACITY : 32 * 1024);
         this.bufferCapacity = "UDP".equalsIgnoreCase(netprotocol) ? bufCapacity : (bufCapacity < 1024 ? 1024 : bufCapacity);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Utility.cpus() * 8);
         this.responsePoolSize = config.getIntValue("responsePoolSize", 1024);
@@ -433,7 +433,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     //必须在 createContext()之后调用
-    protected abstract ObjectPool<ByteBuffer> createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize);
+    protected abstract ByteBufferPool createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize);
 
     //必须在 createContext()之后调用
     protected abstract ObjectPool<P> createSafeResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize);

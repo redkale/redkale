@@ -28,7 +28,7 @@ public class WebSocketWriteIOThread extends AsyncIOThread {
     private final BlockingDeque<WebSocketFuture> requestQueue = new LinkedBlockingDeque<>();
 
     public WebSocketWriteIOThread(ScheduledThreadPoolExecutor timeoutExecutor, ThreadGroup g, String name, int index, int threads,
-        ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+        ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         super(g, name, index, threads, workExecutor, safeBufferPool);
         Objects.requireNonNull(timeoutExecutor);
         this.timeoutExecutor = timeoutExecutor;

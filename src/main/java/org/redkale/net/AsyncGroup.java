@@ -6,9 +6,8 @@
 package org.redkale.net;
 
 import java.net.SocketAddress;
-import java.nio.ByteBuffer;
 import java.util.concurrent.*;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.*;
 
 /**
  * Client模式的AsyncConnection连接构造器
@@ -22,36 +21,38 @@ import org.redkale.util.ObjectPool;
  */
 public abstract class AsyncGroup {
 
+    public static final int UDP_BUFFER_CAPACITY = Integer.getInteger("redkale.udp.buffer.apacity", 1350);
+
     public static AsyncGroup create(String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
         return new AsyncIOGroup(true, threadNameFormat, workExecutor, bufferCapacity, bufferPoolSize);
     }
 
-    public static AsyncGroup create(String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
-        return new AsyncIOGroup(true, threadNameFormat, workExecutor, bufferCapacity, safeBufferPool);
+    public static AsyncGroup create(String threadNameFormat, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
+        return new AsyncIOGroup(true, threadNameFormat, workExecutor, safeBufferPool);
     }
 
     public static AsyncGroup create(boolean clientMode, String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
         return new AsyncIOGroup(clientMode, threadNameFormat, workExecutor, bufferCapacity, bufferPoolSize);
     }
 
-    public static AsyncGroup create(boolean clientMode, String threadNameFormat, ExecutorService workExecutor, int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
-        return new AsyncIOGroup(clientMode, threadNameFormat, workExecutor, bufferCapacity, safeBufferPool);
+    public static AsyncGroup create(boolean clientMode, String threadNameFormat, ExecutorService workExecutor, ByteBufferPool safeBufferPool) {
+        return new AsyncIOGroup(clientMode, threadNameFormat, workExecutor, safeBufferPool);
     }
 
     public static AsyncGroup create(String threadNameFormat, int threads, ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
         return new AsyncIOGroup(true, threadNameFormat, threads, workExecutor, bufferCapacity, bufferPoolSize);
     }
 
-    public static AsyncGroup create(String threadNameFormat, int threads, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
-        return new AsyncIOGroup(true, threadNameFormat, threads, workExecutor, bufferCapacity, safeBufferPool);
+    public static AsyncGroup create(String threadNameFormat, int threads, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
+        return new AsyncIOGroup(true, threadNameFormat, threads, workExecutor, safeBufferPool);
     }
 
     public static AsyncGroup create(boolean clientMode, String threadNameFormat, int threads, ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
         return new AsyncIOGroup(clientMode, threadNameFormat, threads, workExecutor, bufferCapacity, bufferPoolSize);
     }
 
-    public static AsyncGroup create(boolean clientMode, String threadNameFormat, int threads, ExecutorService workExecutor, int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
-        return new AsyncIOGroup(clientMode, threadNameFormat, threads, workExecutor, bufferCapacity, safeBufferPool);
+    public static AsyncGroup create(boolean clientMode, String threadNameFormat, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) {
+        return new AsyncIOGroup(clientMode, threadNameFormat, threads, workExecutor, safeBufferPool);
     }
 
     public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address) {

@@ -7,7 +7,6 @@ package org.redkale.net;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -67,24 +66,17 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     public AsyncIOGroup(boolean clientMode, String threadNameFormat, int threads, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
-        this(clientMode, threadNameFormat, threads, workExecutor, bufferCapacity, ObjectPool.createSafePool(null, null, bufferPoolSize,
-            (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) {
-                    return false;
-                }
-                e.clear();
-                return true;
-            }));
+        this(clientMode, threadNameFormat, threads, workExecutor, ByteBufferPool.createSafePool(bufferPoolSize, bufferCapacity));
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public AsyncIOGroup(boolean clientMode, String threadNameFormat, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
-        this(clientMode, threadNameFormat, Utility.cpus(), workExecutor, bufferCapacity, safeBufferPool);
+    public AsyncIOGroup(boolean clientMode, String threadNameFormat, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
+        this(clientMode, threadNameFormat, Utility.cpus(), workExecutor, safeBufferPool);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public AsyncIOGroup(boolean clientMode, String threadNameFormat, int threads, ExecutorService workExecutor, final int bufferCapacity, ObjectPool<ByteBuffer> safeBufferPool) {
-        this.bufferCapacity = bufferCapacity;
+    public AsyncIOGroup(boolean clientMode, String threadNameFormat, int threads, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
+        this.bufferCapacity = safeBufferPool.getBufferCapacity();
         this.ioReadThreads = new AsyncIOThread[threads];
         this.ioWriteThreads = new AsyncIOThread[threads];
         final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
@@ -115,15 +107,15 @@ public class AsyncIOGroup extends AsyncGroup {
         }
     }
 
-    protected AsyncIOThread createAsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+    protected AsyncIOThread createAsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
-    protected AsyncIOThread createClientReadIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+    protected AsyncIOThread createClientReadIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         return new ClientReadIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
-    protected AsyncIOThread createClientWriteIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+    protected AsyncIOThread createClientWriteIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         return new ClientWriteIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 

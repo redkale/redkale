@@ -41,11 +41,11 @@ public class AsyncIOThread extends WorkThread {
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    public AsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+    public AsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         super(g, name, index, threads, workExecutor, null);
         this.selector = Selector.open();
         this.setDaemon(true);
-        ObjectPool<ByteBuffer> unsafeBufferPool = ObjectPool.createUnsafePool(this, 512, safeBufferPool);
+        ByteBufferPool unsafeBufferPool = ByteBufferPool.createUnsafePool(this, 512, safeBufferPool);
         this.bufferSupplier = unsafeBufferPool;
         this.bufferConsumer = unsafeBufferPool;
     }

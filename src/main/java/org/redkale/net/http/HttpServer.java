@@ -7,7 +7,6 @@ package org.redkale.net.http;
 
 import java.lang.reflect.Field;
 import java.net.HttpCookie;
-import java.nio.ByteBuffer;
 import java.text.*;
 import java.time.ZoneId;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
@@ -42,7 +41,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private HttpResponseConfig respConfig;
 
-    private ObjectPool<ByteBuffer> safeBufferPool;
+    private ByteBufferPool safeBufferPool;
 
     private final ReentrantLock groupLock = new ReentrantLock();
 
@@ -550,7 +549,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 groupLock.lock();
                 try {
                     if (asyncGroup == null) {
-                        WebSocketAsyncGroup g = new WebSocketAsyncGroup("Redkale-HTTP:" + address.getPort() + "-WebSocketWriteIOThread-%s", workExecutor, bufferCapacity, safeBufferPool);
+                        WebSocketAsyncGroup g = new WebSocketAsyncGroup("Redkale-HTTP:" + address.getPort() + "-WebSocketWriteIOThread-%s", workExecutor, safeBufferPool);
                         g.start();
                         asyncGroup = g;
                     }
@@ -572,18 +571,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     @Override
-    protected ObjectPool<ByteBuffer> createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
-        final int rcapacity = this.bufferCapacity;
-        ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
-            (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) {
-                    return false;
-                }
-                e.clear();
-                return true;
-            });
-        this.safeBufferPool = bufferPool;
-        return bufferPool;
+    protected ByteBufferPool createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
+        this.safeBufferPool = ByteBufferPool.createSafePool(createCounter, cycleCounter, bufferPoolSize, this.bufferCapacity);
+        return this.safeBufferPool;
     }
 
     @Override

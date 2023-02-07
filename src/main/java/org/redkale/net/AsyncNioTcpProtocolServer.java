@@ -7,7 +7,6 @@ package org.redkale.net;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
@@ -92,7 +91,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         LongAdder createResponseCounter = new LongAdder();
         LongAdder cycleResponseCounter = new LongAdder();
 
-        ObjectPool<ByteBuffer> safeBufferPool = server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        ByteBufferPool safeBufferPool = server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
         ObjectPool<Response> safeResponsePool = server.createSafeResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         final int respPoolMax = server.getResponsePoolSize();
         ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
@@ -119,7 +118,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             (pool == null ? safeResponsePool : pool).accept(v);
         };
         final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
-        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, server.bufferCapacity, safeBufferPool);
+        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, safeBufferPool);
         this.ioGroup.start();
 
         this.acceptThread = new Thread() {

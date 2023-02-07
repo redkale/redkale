@@ -51,18 +51,20 @@ public class SncpClientCodecTest {
             ByteArray writeArray = new ByteArray();
             request.prepare(header, 1, "", new byte[20]);
             System.out.println("request.1 = " + request);
+            writeArray.put(new byte[SncpHeader.HEADER_SIZE]);
             request.writeTo(conn, writeArray);
             request.prepare(header, 2, "", new byte[25]);
             System.out.println("request.2 = " + request);
+            writeArray.put(new byte[SncpHeader.HEADER_SIZE]);
             request.writeTo(conn, writeArray);
             System.out.println(writeArray.getBytes().length);
             realBuf = ByteBuffer.wrap(writeArray.getBytes());
         }
         System.out.println("sncp.realBuf = " + realBuf.remaining());
         codec.decodeMessages(realBuf, new ByteArray());
+        System.out.println("respResults.size = " + respResults.size());
         if (!main) {
             Assertions.assertEquals(2, respResults.size());
         }
-        System.out.println(respResults);
     }
 }

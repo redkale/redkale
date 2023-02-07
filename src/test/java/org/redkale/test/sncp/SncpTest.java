@@ -32,7 +32,7 @@ public class SncpTest {
 
     private static final String protocol = "SNCP.UDP";
 
-    private static final int clientCapacity = protocol.endsWith(".UDP") ? 1350 : 8192;
+    private static final int clientCapacity = protocol.endsWith(".UDP") ? AsyncGroup.UDP_BUFFER_CAPACITY : 8192;
 
     private static final ResourceFactory factory = ResourceFactory.create();
 
@@ -94,7 +94,8 @@ public class SncpTest {
         callbean = service.insert(callbean);
         System.out.println("bean： " + callbean);
         System.out.println("---------------------------------------------------");
-        final int count = 10;
+        Thread.sleep(200);
+        final int count = 1;
         final CountDownLatch cld = new CountDownLatch(count);
         final AtomicInteger ai = new AtomicInteger();
         long s = System.currentTimeMillis();
@@ -110,7 +111,7 @@ public class SncpTest {
                         bean.setContent("数据: " + (k < 10 ? "0" : "") + k);
                         StringBuilder sb = new StringBuilder();
                         sb.append(k).append("------");
-                        for (int i = 0; i < 120; i++) {
+                        for (int i = 0; i < 900; i++) {
                             sb.append("_").append(i).append("_").append(k).append("_0123456789");
                         }
                         bean.setContent(sb.toString());

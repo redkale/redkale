@@ -26,7 +26,7 @@ public class ClientWriteIOThread extends AsyncIOThread {
     private final BlockingQueue<ClientFuture> requestQueue = new LinkedBlockingQueue<>();
 
     public ClientWriteIOThread(ThreadGroup g, String name, int index, int threads,
-        ExecutorService workExecutor, ObjectPool<ByteBuffer> safeBufferPool) throws IOException {
+        ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         super(g, name, index, threads, workExecutor, safeBufferPool);
     }
 

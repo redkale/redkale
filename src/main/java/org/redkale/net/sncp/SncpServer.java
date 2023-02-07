@@ -5,7 +5,6 @@
  */
 package org.redkale.net.sncp;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.atomic.*;
 import org.redkale.boot.Application;
@@ -128,17 +127,8 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
     }
 
     @Override
-    protected ObjectPool<ByteBuffer> createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
-        final int rcapacity = this.bufferCapacity;
-        ObjectPool<ByteBuffer> bufferPool = ObjectPool.createSafePool(createCounter, cycleCounter, bufferPoolSize,
-            (Object... params) -> ByteBuffer.allocateDirect(rcapacity), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != rcapacity) {
-                    return false;
-                }
-                e.clear();
-                return true;
-            });
-        return bufferPool;
+    protected ByteBufferPool createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
+        return ByteBufferPool.createSafePool(createCounter, cycleCounter, bufferPoolSize, this.bufferCapacity);
     }
 
     @Override
