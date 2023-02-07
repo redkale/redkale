@@ -150,24 +150,30 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     @Override
     protected int implWrite(ByteBuffer src) throws IOException {
-        long now = System.currentTimeMillis();
-        //发送过频会丢包
+
         if (clientMode) {
+            long now = System.currentTimeMillis();
             if (this.writeTime + 1 > now) {
-                Utility.sleep(1);
+                Utility.sleep(1); //发送过频会丢包
                 this.writeTime = System.currentTimeMillis();
             } else {
                 this.writeTime = now;
             }
             return this.channel.send(src, remoteAddress);
         } else {
-            if (udpServerChannel.writeTime + 1 > now) {
-                Utility.sleep(1);
-                udpServerChannel.writeTime = System.currentTimeMillis();
-            } else {
-                udpServerChannel.writeTime = now;
+            udpServerChannel.writeLock.lock();
+            try {
+                long now = System.currentTimeMillis();
+                if (udpServerChannel.writeTime + 1 > now) {
+                    Utility.sleep(1); //发送过频会丢包
+                    udpServerChannel.writeTime = System.currentTimeMillis();
+                } else {
+                    udpServerChannel.writeTime = now;
+                }
+                return this.channel.send(src, remoteAddress);
+            } finally {
+                udpServerChannel.writeLock.unlock();
             }
-            return this.channel.send(src, remoteAddress);
         }
     }
 

@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.boot.Application;
@@ -239,6 +240,8 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         DatagramChannel serverChannel;
 
         ByteBufferPool unsafeBufferPool;
+
+        final ReentrantLock writeLock = new ReentrantLock();
 
         volatile long writeTime;
 
