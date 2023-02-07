@@ -139,6 +139,12 @@ public class BsonWriter extends Writer implements ByteTuple {
         content[count++] = ch;
     }
 
+    //类似writeTo(new byte[length])
+    public void writePlaceholderTo(final int length) {
+        expand(length);
+        count += length;
+    }
+
     public final void writeTo(final byte... chs) {
         writeTo(chs, 0, chs.length);
     }

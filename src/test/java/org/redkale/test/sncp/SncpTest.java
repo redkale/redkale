@@ -7,11 +7,10 @@ package org.redkale.test.sncp;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.boot.*;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
@@ -32,6 +31,8 @@ public class SncpTest {
     private static int port2 = 4240;
 
     private static final String protocol = "SNCP.UDP";
+
+    private static final int clientCapacity = protocol.endsWith(".UDP") ? 1350 : 8192;
 
     private static final ResourceFactory factory = ResourceFactory.create();
 
@@ -64,17 +65,6 @@ public class SncpTest {
         return AsynchronousChannelGroup.withCachedThreadPool(transportExec, 1);
     }
 
-    public static ObjectPool<ByteBuffer> newBufferPool() {
-        return ObjectPool.createSafePool(new LongAdder(), new LongAdder(), 16,
-            (Object... params) -> ByteBuffer.allocateDirect(8192), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != 8192) {
-                    return false;
-                }
-                e.clear();
-                return true;
-            });
-    }
-
     private static void runClient() throws Exception {
         InetSocketAddress addr = new InetSocketAddress(myhost, port);
         Set<InetSocketAddress> set = new LinkedHashSet<>();
@@ -82,7 +72,7 @@ public class SncpTest {
         if (port2 > 0) {
             set.add(new InetSocketAddress(myhost, port2));
         }
-        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup(clientCapacity, 16);
         asyncGroup.start();
         final TransportFactory transFactory = TransportFactory.create(asyncGroup, protocol.endsWith(".UDP") ? "UDP" : "TCP", 0, 0);
         transFactory.addGroupInfo("client", set);
@@ -120,7 +110,7 @@ public class SncpTest {
                         bean.setContent("数据: " + (k < 10 ? "0" : "") + k);
                         StringBuilder sb = new StringBuilder();
                         sb.append(k).append("------");
-                        for (int i = 0; i < 12; i++) {
+                        for (int i = 0; i < 120; i++) {
                             sb.append("_").append(i).append("_").append(k).append("_0123456789");
                         }
                         bean.setContent(sb.toString());
@@ -139,6 +129,10 @@ public class SncpTest {
         }
         cld.await();
         System.out.println("---并发" + count + "次耗时: " + (System.currentTimeMillis() - s) / 1000.0 + "s");
+        if (count == 1) {
+            System.exit(0);
+            return;
+        }
         final CountDownLatch cld2 = new CountDownLatch(1);
         long s2 = System.currentTimeMillis();
         final CompletableFuture<String> future = service.queryResultAsync(callbean);
@@ -194,7 +188,7 @@ public class SncpTest {
     private static void runServer2() throws Exception {
         InetSocketAddress addr = new InetSocketAddress(myhost, port2);
         final CountDownLatch cdl = new CountDownLatch(1);
-        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8196, 16);
         asyncGroup.start();
         new Thread() {
             {

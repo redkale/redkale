@@ -19,7 +19,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.bson.*;
 import org.redkale.net.sncp.SncpAsyncHandler.DefaultSncpAsyncHandler;
-import static org.redkale.net.sncp.SncpRequest.DEFAULT_HEADER;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -106,7 +106,7 @@ public final class SncpDynServlet extends SncpServlet {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
             BsonWriter out = action.convert.pollBsonWriter();
-            out.writeTo(DEFAULT_HEADER);
+            out.writePlaceholderTo(HEADER_SIZE);
             BsonReader in = action.convert.pollBsonReader();
             SncpAsyncHandler handler = null;
             try {

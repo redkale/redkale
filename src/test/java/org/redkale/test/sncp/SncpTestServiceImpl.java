@@ -57,16 +57,21 @@ public class SncpTestServiceImpl implements SncpTestIService {
         return bean;
     }
 
+    public SncpTestBean expand(SncpTestBean bean) {
+        bean.setId(System.currentTimeMillis());
+        return bean;
+    }
+
     @Override
     public String queryResult(SncpTestBean bean) {
         System.out.println(Thread.currentThread().getName() + " 运行了queryResult方法");
-        return "result: " + bean;
+        return "result: " + bean.getId();
     }
 
     public void queryResult(CompletionHandler<String, SncpTestBean> handler, @RpcAttachment SncpTestBean bean) {
         System.out.println(Thread.currentThread().getName() + " handler 运行了queryResult方法");
         if (handler != null) {
-            handler.completed("result: " + bean, bean);
+            handler.completed("result: " + bean.getId(), bean);
         }
     }
 

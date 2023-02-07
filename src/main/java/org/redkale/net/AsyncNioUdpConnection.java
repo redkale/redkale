@@ -10,7 +10,9 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.net.ssl.SSLContext;
+import org.redkale.net.AsyncNioUdpProtocolServer.AsyncNioUdpServerChannel;
 
 /**
  *
@@ -22,6 +24,10 @@ import javax.net.ssl.SSLContext;
 class AsyncNioUdpConnection extends AsyncNioConnection {
 
     private final DatagramChannel channel;
+
+    private final ConcurrentLinkedDeque<ByteBuffer> revbufferQueue = new ConcurrentLinkedDeque<>();
+
+    AsyncNioUdpServerChannel udpServerChannel;
 
     public AsyncNioUdpConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
         AsyncIOThread ioWriteThread, DatagramChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress address) {
@@ -117,8 +123,19 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
         if (clientMode) {
             return this.channel.read(dst);
         } else {
-            return 0;
+            ByteBuffer buf = revbufferQueue.poll();
+            if (buf == null) {
+                return 0;
+            }
+            int start = dst.position();
+            dst.put(buf);
+            return dst.position() - start;
         }
+    }
+
+    void receiveBuffer(ByteBuffer buf) {
+        revbufferQueue.offer(buf.flip());
+        doRead(true);
     }
 
     @Override

@@ -92,6 +92,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         finish(RETCODE_THROWEXCEPTION, null);
     }
 
+    //调用此方法时out已写入SncpHeader
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
             final ByteArray buffer = new ByteArray(HEADER_SIZE);
@@ -99,9 +100,8 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
             finish(buffer);
             return;
         }
-        final int respBodyLength = out.count(); //body总长度
         final ByteArray array = out.toByteArray();
-        fillHeader(array, respBodyLength - HEADER_SIZE, retcode);
+        fillHeader(array, array.length() - HEADER_SIZE, retcode);
         finish(array);
     }
 

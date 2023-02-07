@@ -7,8 +7,8 @@ package org.redkale.net.sncp;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.logging.*;
-import org.redkale.convert.bson.BsonConvert;
 import org.redkale.net.Request;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.util.Uint128;
@@ -22,8 +22,6 @@ import org.redkale.util.Uint128;
  */
 public class SncpRequest extends Request<SncpContext> {
 
-    public static final byte[] DEFAULT_HEADER = new byte[HEADER_SIZE];
-
     protected static final int READ_STATE_ROUTE = 1;
 
     protected static final int READ_STATE_HEADER = 2;
@@ -31,8 +29,6 @@ public class SncpRequest extends Request<SncpContext> {
     protected static final int READ_STATE_BODY = 3;
 
     protected static final int READ_STATE_END = 4;
-
-    protected final BsonConvert convert;
 
     protected int readState = READ_STATE_ROUTE;
 
@@ -46,7 +42,6 @@ public class SncpRequest extends Request<SncpContext> {
 
     protected SncpRequest(SncpContext context) {
         super(context);
-        this.convert = context.getBsonConvert();
     }
 
     @Override  //request.header与response.header数据格式保持一致
@@ -79,12 +74,14 @@ public class SncpRequest extends Request<SncpContext> {
                 }
                 return 0;
             }
-            int len = Math.min(bodyLength, buffer.remaining());
-            buffer.get(body, 0, len);
-            this.bodyOffset = len;
-            int rs = bodyLength - len;
+            int len = Math.min(bodyLength - this.bodyOffset, buffer.remaining());
+            buffer.get(body, this.bodyOffset, len);
+            this.bodyOffset += len;
+            int rs = bodyLength - this.bodyOffset;
             if (rs == 0) {
                 this.readState = READ_STATE_END;
+            } else {
+                buffer.clear();
             }
             return rs;
         }
@@ -107,7 +104,7 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override
     public String toString() {
-        return SncpRequest.class.getSimpleName() + "{header=" + this.header + ",bodyOffset=" + this.bodyOffset + ",body=[" + (this.body == null ? -1 : this.body.length) + "]}";
+        return SncpRequest.class.getSimpleName() + "_" + Objects.hashCode(this) + "{header=" + this.header + ",bodyOffset=" + this.bodyOffset + ",body=[" + (this.body == null ? -1 : this.body.length) + "]}";
     }
 
     @Override

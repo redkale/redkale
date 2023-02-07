@@ -19,7 +19,6 @@ import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp.SncpDyn;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
-import static org.redkale.net.sncp.SncpRequest.*;
 import org.redkale.net.sncp.SncpServiceInfo.SncpServiceAction;
 import org.redkale.service.*;
 import org.redkale.source.*;
@@ -226,7 +225,7 @@ public final class SncpOldClient {
             bsonConvert = BsonConvert.root();
         }
         final BsonWriter writer = bsonConvert.pollBsonWriter(); // 将head写入
-        writer.writeTo(DEFAULT_HEADER);
+        writer.writePlaceholderTo(HEADER_SIZE);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
             BsonConvert bcc = bsonConvert;
             if (params[i] instanceof org.redkale.service.RetResult) {
