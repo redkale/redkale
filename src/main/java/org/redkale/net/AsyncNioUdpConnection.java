@@ -25,7 +25,7 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     private final DatagramChannel channel;
 
-    private final ConcurrentLinkedDeque<ByteBuffer> revbufferQueue = new ConcurrentLinkedDeque<>();
+    private final ConcurrentLinkedDeque<ByteBuffer> revDataQueue = new ConcurrentLinkedDeque<>();
 
     AsyncNioUdpServerChannel udpServerChannel;
 
@@ -123,24 +123,26 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
         if (clientMode) {
             return this.channel.read(dst);
         } else {
-            ByteBuffer buf = revbufferQueue.poll();
-            if (buf == null) {
-                return 0;
-            }
             int start = dst.position();
-            dst.put(buf);
-            if (buf.hasRemaining()) {
-                revbufferQueue.offerFirst(buf);
-            } else {
-                udpServerChannel.unsafeBufferPool.accept(buf);
+            while (dst.hasRemaining()) {
+                ByteBuffer buf = revDataQueue.poll();
+                if (buf == null) {
+                    break;
+                }
+                dst.put(buf);
+                if (buf.hasRemaining()) {
+                    revDataQueue.offerFirst(buf);
+                } else {
+                    udpServerChannel.unsafeBufferPool.accept(buf);
+                }
             }
             return dst.position() - start;
         }
     }
 
-    void receiveBuffer(ByteBuffer buf) {
+    void receiveData(ByteBuffer buf) {
         this.ioReadThread.execute(() -> {
-            revbufferQueue.offer(buf.flip());
+            revDataQueue.offer(buf.flip());
             doRead(this.ioReadThread.inCurrThread());
         });
     }

@@ -156,7 +156,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
                                     if (conn == null) {
                                         accept(address, buffer, ioReadThreads[readIndex], ioWriteThreads[writeIndex]);
                                     } else {
-                                        conn.receiveBuffer(buffer);
+                                        conn.receiveData(buffer);
                                     }
                                 } catch (Throwable t) {
                                     unsafeBufferPool.accept(buffer);
