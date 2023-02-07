@@ -251,7 +251,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     public void doRead(boolean direct) {
         try {
-            this.readtime = System.currentTimeMillis();
+            this.readTime = System.currentTimeMillis();
             int readCount = 0;
             if (direct) {
                 if (this.readByteBuffer == null) {
@@ -284,7 +284,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     public void doWrite(boolean direct) {
         try {
-            this.writetime = System.currentTimeMillis();
+            this.writeTime = System.currentTimeMillis();
             int totalCount = 0;
             boolean hasRemain = true;
             boolean writeCompleted = true;

@@ -64,7 +64,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
 
     @Override
     public String queryResult(SncpTestBean bean) {
-        System.out.println(Thread.currentThread().getName() + " 运行了queryResult方法");
+        System.out.println(Thread.currentThread().getName() + " 运行了queryResult方法 content-length: " + bean.getContent().length());
         return "result: " + bean.getContent();
     }
 

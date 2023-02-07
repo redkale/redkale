@@ -33,9 +33,9 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     //SSL
     protected SSLEngine sslEngine;
 
-    protected volatile long readtime;
+    protected volatile long readTime;
 
-    protected volatile long writetime;
+    protected volatile long writeTime;
 
     private Map<String, Object> attributes; //用于存储绑定在Connection上的对象集合
 
@@ -145,11 +145,11 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     }
 
     public final long getLastReadTime() {
-        return readtime;
+        return readTime;
     }
 
     public final long getLastWriteTime() {
-        return writetime;
+        return writeTime;
     }
 
     public final boolean ssl() {

@@ -240,6 +240,8 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
 
         ByteBufferPool unsafeBufferPool;
 
+        volatile long writeTime;
+
         ConcurrentHashMap<SocketAddress, AsyncNioUdpConnection> connections = new ConcurrentHashMap<>();
 
         public AsyncNioUdpServerChannel(DatagramChannel serverChannel) {

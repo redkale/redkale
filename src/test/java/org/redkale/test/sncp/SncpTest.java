@@ -26,7 +26,7 @@ public class SncpTest {
 
     private static final String myhost = "127.0.0.1";
 
-    private static int port = 63877;
+    private static int port = 0;
 
     private static int port2 = 4240;
 
@@ -95,11 +95,11 @@ public class SncpTest {
         System.out.println("bean： " + callbean);
         System.out.println("---------------------------------------------------");
         Thread.sleep(200);
-        final int count = 1;
+        final int count = 10;
         final CountDownLatch cld = new CountDownLatch(count);
         final AtomicInteger ai = new AtomicInteger();
         long s = System.currentTimeMillis();
-        for (int i = 0; i < count; i++) {
+        for (int i = 10; i < count + 10; i++) {
             final int k = i + 1;
             new Thread() {
                 @Override
@@ -108,11 +108,11 @@ public class SncpTest {
                         //Thread.sleep(k);
                         SncpTestBean bean = new SncpTestBean();
                         bean.setId(k);
-                        bean.setContent("数据: " + (k < 10 ? "0" : "") + k);
+                        bean.setContent("数据: " + k);
                         StringBuilder sb = new StringBuilder();
-                        sb.append(k).append("------");
-                        for (int i = 0; i < 900; i++) {
-                            sb.append("_").append(i).append("_").append(k).append("_0123456789");
+                        sb.append(k).append("--------");
+                        for (int j = 0; j < 2000; j++) {
+                            sb.append("_").append(j).append("_").append(k).append("_0123456789");
                         }
                         bean.setContent(sb.toString());
 

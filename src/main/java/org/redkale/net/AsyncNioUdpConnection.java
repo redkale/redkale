@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.net.ssl.SSLContext;
 import org.redkale.net.AsyncNioUdpProtocolServer.AsyncNioUdpServerChannel;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -149,7 +150,25 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     @Override
     protected int implWrite(ByteBuffer src) throws IOException {
-        return this.channel.send(src, remoteAddress);
+        long now = System.currentTimeMillis();
+        //发送过频会丢包
+        if (clientMode) {
+            if (this.writeTime + 1 > now) {
+                Utility.sleep(1);
+                this.writeTime = System.currentTimeMillis();
+            } else {
+                this.writeTime = now;
+            }
+            return this.channel.send(src, remoteAddress);
+        } else {
+            if (udpServerChannel.writeTime + 1 > now) {
+                Utility.sleep(1);
+                udpServerChannel.writeTime = System.currentTimeMillis();
+            } else {
+                udpServerChannel.writeTime = now;
+            }
+            return this.channel.send(src, remoteAddress);
+        }
     }
 
     @Override
@@ -158,7 +177,7 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
         for (int i = offset; i < end; i++) {
             ByteBuffer buf = srcs[i];
             if (buf.hasRemaining()) {
-                return this.channel.send(buf, remoteAddress);
+                return implWrite(buf);
             }
         }
         return 0;
