@@ -129,6 +129,11 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
             }
             int start = dst.position();
             dst.put(buf);
+            if (buf.hasRemaining()) {
+                revbufferQueue.offerFirst(buf);
+            } else {
+                udpServerChannel.unsafeBufferPool.accept(buf);
+            }
             return dst.position() - start;
         }
     }
@@ -178,7 +183,9 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
     public final void close() throws IOException {
         super.close();
         if (clientMode) {
-            channel.close(); //不能关闭channel
+            channel.close();
+        } else if (remoteAddress != null) {
+            udpServerChannel.connections.remove(remoteAddress);
         }
         if (this.connectKey != null) {
             this.connectKey.cancel();
