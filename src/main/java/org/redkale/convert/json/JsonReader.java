@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.json;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
@@ -57,6 +58,13 @@ public class JsonReader extends Reader {
         this.text = text;
         this.position = start - 1;
         this.limit = start + len - 1;
+    }
+
+    @Override
+    public void prepare(byte[] bytes) {
+        if (bytes != null) {
+            setText(new String(bytes, StandardCharsets.UTF_8));
+        }
     }
 
     protected boolean recycle() {

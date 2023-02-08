@@ -55,6 +55,11 @@ public class BsonReader extends Reader {
         setBytes(bytes, start, len);
     }
 
+    @Override
+    public void prepare(byte[] bytes) {
+        setBytes(bytes);
+    }
+
     public final BsonReader setBytes(byte[] bytes) {
         if (bytes == null) {
             this.position = 0;

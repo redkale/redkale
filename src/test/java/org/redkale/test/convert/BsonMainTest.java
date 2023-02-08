@@ -39,7 +39,7 @@ public class BsonMainTest {
         byte[] bytes = convert.convertTo(SimpleEntity.class, entry);
         System.out.println("长度: " + bytes.length);
         Assertions.assertEquals(271, bytes.length);
-        BsonByteBufferWriter writer = convert.pollBsonWriter(() -> ByteBuffer.allocate(1));
+        BsonByteBufferWriter writer = convert.pollWriter(() -> ByteBuffer.allocate(1));
         convert.convertTo(writer, SimpleEntity.class, entry);
         ByteBuffer[] buffers = writer.toBuffers();
         int len = 0;
@@ -71,7 +71,7 @@ public class BsonMainTest {
         ComplextEntity bean = new ComplextEntity();
         byte[] bytes2 = convert.convertTo(Object.class, bean);
         final int len = bytes2.length;
-        BsonByteBufferWriter writer = convert.pollBsonWriter(() -> ByteBuffer.allocate(len / 2));
+        BsonByteBufferWriter writer = convert.pollWriter(() -> ByteBuffer.allocate(len / 2));
         convert.convertTo(writer, bean);
         bytes2 = writer.toArray();
         System.out.println(convert.convertFrom(ComplextEntity.class, bytes2).toString());

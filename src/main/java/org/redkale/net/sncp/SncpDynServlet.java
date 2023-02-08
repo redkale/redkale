@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import org.redkale.annotation.NonBlocking;
@@ -138,11 +138,11 @@ public final class SncpDynServlet extends SncpServlet {
 
         protected final java.lang.reflect.Type[] paramTypes;  //第一个元素存放返回类型return type， void的返回参数类型为null, 数组长度为:1+参数个数
 
-        protected final java.lang.reflect.Type returnObjectType; //返回结果的CompletableFuture的结果泛型类型
+        protected final java.lang.reflect.Type returnObjectType; //返回结果类型 void必须设为null
 
         protected final int paramHandlerIndex;  //>=0表示存在CompletionHandler参数
 
-        protected final Class<? extends CompletionHandler> paramHandlerType; //CompletionHandler参数的类型
+        protected final Class<? extends CompletionHandler> paramHandlerClass; //CompletionHandler参数的类型
 
         protected final java.lang.reflect.Type paramHandlerResultType; //CompletionHandler.completed第一个参数的类型
 
@@ -155,21 +155,24 @@ public final class SncpDynServlet extends SncpServlet {
             this.method = method;
 
             int handlerFuncIndex = -1;
-            Class handlerFuncType = null;
+            Class handlerFuncClass = null;
             java.lang.reflect.Type handlerResultType = null;
             try {
                 final Class[] paramClasses = method.getParameterTypes();
                 for (int i = 0; i < paramClasses.length; i++) { //反序列化方法的每个参数
                     if (CompletionHandler.class.isAssignableFrom(paramClasses[i])) {
                         handlerFuncIndex = i;
-                        handlerFuncType = paramClasses[i];
+                        handlerFuncClass = paramClasses[i];
                         java.lang.reflect.Type handlerType = TypeToken.getGenericType(method.getTypeParameters()[i], service.getClass());
                         if (handlerType instanceof Class) {
                             handlerResultType = Object.class;
                         } else if (handlerType instanceof ParameterizedType) {
                             handlerResultType = TypeToken.getGenericType(((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
                         } else {
-                            throw new SncpException(service.getClass() + " had unknown gGenericType in " + method);
+                            throw new SncpException(service.getClass() + " had unknown genericType in " + method);
+                        }
+                        if (method.getReturnType() != void.class) {
+                            throw new SncpException(method + " have CompletionHandler type parameter but return type is not void");
                         }
                         break;
                     }
@@ -183,10 +186,10 @@ public final class SncpDynServlet extends SncpServlet {
             System.arraycopy(originalParamTypes, 0, types, 1, originalParamTypes.length);
             this.paramTypes = types;
             this.paramHandlerIndex = handlerFuncIndex;
-            this.paramHandlerType = handlerFuncType;
+            this.paramHandlerClass = handlerFuncClass;
             this.paramHandlerResultType = handlerResultType;
-            this.returnObjectType = originalReturnType;
-            if (CompletionStage.class.isAssignableFrom(method.getReturnType())) {
+            this.returnObjectType = originalReturnType == void.class || originalReturnType == Void.class ? null : originalReturnType;
+            if (Future.class.isAssignableFrom(method.getReturnType())) {
                 java.lang.reflect.Type futureType = TypeToken.getGenericType(method.getGenericReturnType(), service.getClass());
                 java.lang.reflect.Type returnType = null;
                 if (futureType instanceof Class) {
@@ -204,13 +207,14 @@ public final class SncpDynServlet extends SncpServlet {
             if (non == null) {
                 non = service.getClass().getAnnotation(NonBlocking.class);
             }
+            //Future代替CompletionStage 不容易判断异步
             this.nonBlocking = non == null ? (CompletionStage.class.isAssignableFrom(method.getReturnType()) || this.paramHandlerIndex >= 0) : false;
         }
 
         @Override
         public final void execute(SncpRequest request, SncpResponse response) throws IOException {
             if (paramHandlerIndex > 0) {
-                response.paramAsyncHandler(paramHandlerType, paramHandlerResultType);
+                response.paramAsyncHandler(paramHandlerClass, paramHandlerResultType);
             }
             try {
                 action(request, response);
@@ -242,87 +246,132 @@ public final class SncpDynServlet extends SncpServlet {
 
         /**
          * <blockquote><pre>
-         *  public class TestService implements Service {
+         *      public interface TestService extends Service {
          *
-         *      public boolean change(TestBean bean, String name, int id) {
-         *          return false;
-         *      }
+         *     public boolean change(TestBean bean, String name, int id);
          *
-         *      public void insert(CompletionHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
-         *      }
+         *     public void insert(BooleanHandler handler, TestBean bean, String name, int id);
          *
-         *      public void update(long show, short v2, CompletionHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
-         *      }
+         *     public void update(long show, short v2, CompletionHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id);
          *
-         *      public CompletableFuture&#60;String&#62; changeName(TestBean bean, String name, int id) {
-         *          return null;
-         *      }
+         *    public CompletableFuture&#60;String&#62; changeName(TestBean bean, String name, int id);
+         *
          * }
          *
+         * &#064;ResourceType(TestService.class)
+         * class TestServiceImpl implements TestService {
          *
-         * class DynActionTestService_change extends SncpServletAction {
+         *     &#064;Override
+         *     public boolean change(TestBean bean, String name, int id) {
+         *         return false;
+         *     }
          *
-         *      public TestService service;
+         *     &#064;Override
+         *     public void insert(BooleanHandler handler, TestBean bean, String name, int id) {
+         *     }
          *
-         *      &#064;Override
-         * public void action(BsonReader in, BsonWriter out, OldSncpHandler handler) throws Throwable {
-         * TestBean arg1 = convert.convertFrom(paramTypes[1], in);
-         * String arg2 = convert.convertFrom(paramTypes[2], in);
-         * int arg3 = convert.convertFrom(paramTypes[3], in);
-         * Object rs = service.change(arg1, arg2, arg3);
-         * _callParameter(out, arg1, arg2, arg3);
-         * convert.convertTo(out, paramTypes[0], rs);
-         * }
-         * }
+         *     &#064;Override
+         *     public void update(long show, short v2, CompletionHandler&#60;Boolean, TestBean&#62; handler, TestBean bean, String name, int id) {
+         *     }
          *
-         * class DynActionTestService_insert extends SncpServletAction {
-         *
-         * public TestService service;
-         *
-         * &#064;Override
-         * public void action(BsonReader in, BsonWriter out, OldSncpHandler handler) throws Throwable {
-         * OldSncpHandler arg0 = handler;
-         * convert.convertFrom(CompletionHandler.class, in);
-         * TestBean arg1 = convert.convertFrom(paramTypes[2], in);
-         * String arg2 = convert.convertFrom(paramTypes[3], in);
-         * int arg3 = convert.convertFrom(paramTypes[4], in);
-         * handler.sncp_setParams(arg0, arg1, arg2, arg3);
-         * service.insert(arg0, arg1, arg2, arg3);
-         * }
+         *     &#064;Override
+         *     public CompletableFuture&#60;String&#62; changeName(TestBean bean, String name, int id) {
+         *         return null;
+         *     }
          * }
          *
-         * class DynActionTestService_update extends SncpServletAction {
+         * class BooleanHandler implements CompletionHandler&#60;Boolean, TestBean&#62; {
          *
-         * public TestService service;
+         *     &#064;Override
+         *     public void completed(Boolean result, TestBean attachment) {
+         *     }
          *
-         * &#064;Override
-         * public void action(BsonReader in, BsonWriter out, OldSncpHandler handler) throws Throwable {
-         * long a1 = convert.convertFrom(paramTypes[1], in);
-         * short a2 = convert.convertFrom(paramTypes[2], in);
-         * OldSncpHandler a3 = handler;
-         * convert.convertFrom(CompletionHandler.class, in);
-         * TestBean arg1 = convert.convertFrom(paramTypes[4], in);
-         * String arg2 = convert.convertFrom(paramTypes[5], in);
-         * int arg3 = convert.convertFrom(paramTypes[6], in);
-         * handler.sncp_setParams(a1, a2, a3, arg1, arg2, arg3);
-         * service.update(a1, a2, a3, arg1, arg2, arg3);
-         * }
+         *     &#064;Override
+         *     public void failed(Throwable exc, TestBean attachment) {
+         *     }
+         *
          * }
          *
+         * class DynActionTestService_change extends SncpActionServlet {
          *
-         * class DynActionTestService_changeName extends SncpServletAction {
+         *     public DynActionTestService_change(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+         *         super(resourceName, resourceType, service, serviceid, actionid, method);
+         *     }
          *
-         * public TestService service;
-         *
-         * &#064;Override
-         * public void action(final BsonReader in, final BsonWriter out, final OldSncpHandler handler) throws Throwable {
-         * TestBean arg1 = convert.convertFrom(paramTypes[1], in);
-         * String arg2 = convert.convertFrom(paramTypes[2], in);
-         * int arg3 = convert.convertFrom(paramTypes[3], in);
-         * handler.sncp_setParams(arg1, arg2, arg3);
-         * CompletableFuture future = service.changeName(arg1, arg2, arg3);
-         * handler.sncp_setFuture(future);
+         *     &#064;Override
+         *     public void action(SncpRequest request, SncpResponse response) throws Throwable {
+         *         Convert&#60;Reader, Writer&#62; convert = request.getConvert();
+         *         Reader in = request.getReader();
+         *         TestBean arg1 = convert.convertFrom(paramTypes[1], in);
+         *         String arg2 = convert.convertFrom(paramTypes[2], in);
+         *         int arg3 = convert.convertFrom(paramTypes[3], in);
+         *         TestService serviceObj = (TestService) service();
+         *         Object rs = serviceObj.change(arg1, arg2, arg3);
+         *         response.finish(boolean.class, rs);
+         *     }
          * }
+         *
+         * class DynActionTestService_insert extends SncpActionServlet {
+         *
+         *     public DynActionTestService_insert(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+         *         super(resourceName, resourceType, service, serviceid, actionid, method);
+         *     }
+         *
+         *     &#064;Override
+         *     public void action(SncpRequest request, SncpResponse response) throws Throwable {
+         *         Convert&#60;Reader, Writer&#62; convert = request.getConvert();
+         *         Reader in = request.getReader();
+         *         BooleanHandler arg0 = response.getParamAsyncHandler();
+         *         convert.convertFrom(CompletionHandler.class, in);
+         *         TestBean arg1 = convert.convertFrom(paramTypes[2], in);
+         *         String arg2 = convert.convertFrom(paramTypes[3], in);
+         *         int arg3 = convert.convertFrom(paramTypes[4], in);
+         *         TestService serviceObj = (TestService) service();
+         *         serviceObj.insert(arg0, arg1, arg2, arg3);
+         *         response.finishVoid();
+         *     }
+         * }
+         *
+         * class DynActionTestService_update extends SncpActionServlet {
+         *
+         *     public DynActionTestService_update(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+         *         super(resourceName, resourceType, service, serviceid, actionid, method);
+         *     }
+         *
+         *     &#064;Override
+         *     public void action(SncpRequest request, SncpResponse response) throws Throwable {
+         *         Convert&#60;Reader, Writer&#62; convert = request.getConvert();
+         *         Reader in = request.getReader();
+         *         long a1 = convert.convertFrom(paramTypes[1], in);
+         *         short a2 = convert.convertFrom(paramTypes[2], in);
+         *         CompletionHandler a3 = response.getParamAsyncHandler();
+         *         convert.convertFrom(CompletionHandler.class, in);
+         *         TestBean arg1 = convert.convertFrom(paramTypes[4], in);
+         *         String arg2 = convert.convertFrom(paramTypes[5], in);
+         *         int arg3 = convert.convertFrom(paramTypes[6], in);
+         *         TestService serviceObj = (TestService) service();
+         *         serviceObj.update(a1, a2, a3, arg1, arg2, arg3);
+         *         response.finishVoid();
+         *     }
+         * }
+         *
+         * class DynActionTestService_changeName extends SncpActionServlet {
+         *
+         *     public DynActionTestService_changeName(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+         *         super(resourceName, resourceType, service, serviceid, actionid, method);
+         *     }
+         *
+         *     &#064;Override
+         *     public void action(SncpRequest request, SncpResponse response) throws Throwable {
+         *         Convert&#60;Reader, Writer&#62; convert = request.getConvert();
+         *         Reader in = request.getReader();
+         *         TestBean arg1 = convert.convertFrom(paramTypes[1], in);
+         *         String arg2 = convert.convertFrom(paramTypes[2], in);
+         *         int arg3 = convert.convertFrom(paramTypes[3], in);
+         *         TestService serviceObj = (TestService) service();
+         *         CompletableFuture future = serviceObj.changeName(arg1, arg2, arg3);
+         *         response.finishFuture(paramHandlerResultType, future);
+         *     }
          * }
          *
          * </pre></blockquote>
@@ -334,7 +383,7 @@ public final class SncpDynServlet extends SncpServlet {
          * @param actionid     操作ID
          * @param method       方法
          *
-         * @return SncpServletAction
+         * @return SncpActionServlet
          */
         @SuppressWarnings("unchecked")
         public static SncpActionServlet create(
@@ -356,7 +405,7 @@ public final class SncpDynServlet extends SncpServlet {
             final String responseName = SncpResponse.class.getName().replace('.', '/');
             final String requestDesc = Type.getDescriptor(SncpRequest.class);
             final String responseDesc = Type.getDescriptor(SncpResponse.class);
-            final boolean boolReturnTypeFuture = CompletionStage.class.isAssignableFrom(method.getReturnType());
+            final boolean boolReturnTypeFuture = Future.class.isAssignableFrom(method.getReturnType());
             final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__" + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
 
             Class<?> newClazz = null;
@@ -520,12 +569,12 @@ public final class SncpDynServlet extends SncpServlet {
                         }
                         mv.visitVarInsn(ASTORE, store);  //11
 
-                        if (boolReturnTypeFuture) { //返回类型为CompletionStage
+                        if (boolReturnTypeFuture) { //返回类型为Future
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 0);
                             mv.visitFieldInsn(GETFIELD, newDynName, "returnFutureResultType", "Ljava/lang/reflect/Type;");
                             mv.visitVarInsn(ALOAD, store);
-                            mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishFuture", "(Ljava/lang/reflect/Type;Ljava/util/concurrent/CompletionStage;)V", false);
+                            mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishFuture", "(Ljava/lang/reflect/Type;Ljava/util/concurrent/Future;)V", false);
                         } else if (handlerFuncIndex >= 0) { //参数有CompletionHandler
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishVoid", "()V", false);

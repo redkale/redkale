@@ -161,25 +161,21 @@ public final class OldSncpClient {
     //只给远程模式调用的
     public <T> T remote(final int index, final Object... params) {
         final SncpServiceAction action = actions[index];
-        final CompletionHandler handlerFunc = action.handlerFuncParamIndex >= 0 ? (CompletionHandler) params[action.handlerFuncParamIndex] : null;
-        if (action.handlerFuncParamIndex >= 0) {
-            params[action.handlerFuncParamIndex] = null;
+        final CompletionHandler handlerFunc = action.paramHandlerIndex >= 0 ? (CompletionHandler) params[action.paramHandlerIndex] : null;
+        if (action.paramHandlerIndex >= 0) {
+            params[action.paramHandlerIndex] = null;
         }
-        final BsonReader reader = bsonConvert.pollBsonReader();
+        final BsonReader reader = bsonConvert.pollReader();
         CompletableFuture<byte[]> future = remote0(handlerFunc, remoteGroupTransport, null, action, params);
-        if (action.boolReturnTypeFuture) { //与handlerFuncIndex互斥
-            CompletableFuture result = action.futureCreator.create();
+        if (action.returnFutureResultType != null) { //与handlerFuncIndex互斥
+            CompletableFuture result = (CompletableFuture) action.returnFutureCreator.create();
             future.whenComplete((v, e) -> {
                 try {
                     if (e != null) {
                         result.completeExceptionally(e);
                     } else {
                         reader.setBytes(v);
-                        byte i;
-                        while ((i = reader.readByte()) != 0) {
-                            final Attribute attr = action.paramAttrs[i];
-                            attr.set(params[i - 1], bsonConvert.convertFrom(attr.genericType(), reader));
-                        }
+                        reader.readByte(); //读掉0
                         Object rs = bsonConvert.convertFrom(Object.class, reader);
 
                         result.complete(rs);
@@ -187,7 +183,7 @@ public final class OldSncpClient {
                 } catch (Exception exp) {
                     result.completeExceptionally(exp);
                 } finally {
-                    bsonConvert.offerBsonReader(reader);
+                    bsonConvert.offerReader(reader);
                 }
             }); //需要获取  Executor
             return (T) result;
@@ -197,12 +193,8 @@ public final class OldSncpClient {
         }
         try {
             reader.setBytes(future.get(5, TimeUnit.SECONDS));
-            byte i;
-            while ((i = reader.readByte()) != 0) {
-                final Attribute attr = action.paramAttrs[i];
-                attr.set(params[i - 1], bsonConvert.convertFrom(attr.genericType(), reader));
-            }
-            return bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.returnObjectType, reader);
+            reader.readByte(); //读掉0
+            return bsonConvert.convertFrom(action.paramHandlerIndex >= 0 ? Object.class : action.returnObjectType, reader);
         } catch (RpcRemoteException re) {
             throw re;
         } catch (TimeoutException e) {
@@ -210,21 +202,21 @@ public final class OldSncpClient {
         } catch (InterruptedException | ExecutionException e) {
             throw new RpcRemoteException(actions[index].method + " sncp remote error, params=" + JsonConvert.root().convertTo(params), e);
         } finally {
-            bsonConvert.offerBsonReader(reader);
+            bsonConvert.offerReader(reader);
         }
     }
 
     private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpServiceAction action, final Object... params) {
         final String traceid = Traces.currTraceid();
         final Type[] myparamtypes = action.paramTypes;
-        final Class[] myparamclass = action.paramClass;
-        if (action.addressSourceParamIndex >= 0) {
-            params[action.addressSourceParamIndex] = this.clientSncpAddress;
+        final Class[] myparamclass = action.paramClasses;
+        if (action.paramAddressSourceIndex >= 0) {
+            params[action.paramAddressSourceIndex] = this.clientSncpAddress;
         }
         if (bsonConvert == null) {
             bsonConvert = BsonConvert.root();
         }
-        final BsonWriter writer = bsonConvert.pollBsonWriter(); // 将head写入
+        final BsonWriter writer = bsonConvert.pollWriter(); // 将head写入
         writer.writePlaceholderTo(HEADER_SIZE);
         for (int i = 0; i < params.length; i++) {  //params 可能包含: 3 个 boolean
             BsonConvert bcc = bsonConvert;
@@ -242,7 +234,7 @@ public final class OldSncpClient {
         if (messageAgent != null) { //MQ模式
             final ByteArray reqbytes = writer.toByteArray();
             fillHeader(reqbytes, action, seqid, traceid, reqBodyLength);
-            String targetTopic = action.topicTargetParamIndex >= 0 ? (String) params[action.topicTargetParamIndex] : this.topic;
+            String targetTopic = action.paramTopicTargetIndex >= 0 ? (String) params[action.paramTopicTargetIndex] : this.topic;
             if (targetTopic == null) {
                 targetTopic = this.topic;
             }
@@ -272,7 +264,7 @@ public final class OldSncpClient {
                 return body;
             });
         }
-        final SocketAddress addr = addr0 == null ? (action.addressTargetParamIndex >= 0 ? (SocketAddress) params[action.addressTargetParamIndex] : null) : addr0;
+        final SocketAddress addr = addr0 == null ? (action.paramAddressTargetIndex >= 0 ? (SocketAddress) params[action.paramAddressTargetIndex] : null) : addr0;
         CompletableFuture<AsyncConnection> connFuture = transport.pollConnection(addr);
         return connFuture.thenCompose(conn0 -> {
             final CompletableFuture<byte[]> future = new CompletableFuture();
@@ -356,7 +348,7 @@ public final class OldSncpClient {
                                 future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote response error, params=" + JsonConvert.root().convertTo(params)));
                                 transport.offerConnection(true, conn);
                                 if (handler != null) {
-                                    final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
+                                    final Object handlerAttach = action.paramHandlerAttachIndex >= 0 ? params[action.paramHandlerAttachIndex] : null;
                                     handler.failed(e, handlerAttach);
                                 }
                                 logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error", e);
@@ -368,21 +360,17 @@ public final class OldSncpClient {
                             future.complete(this.body);
                             transport.offerConnection(false, conn);
                             if (handler != null) {
-                                final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
-                                final BsonReader reader = bsonConvert.pollBsonReader();
+                                final Object handlerAttach = action.paramHandlerAttachIndex >= 0 ? params[action.paramHandlerAttachIndex] : null;
+                                final BsonReader reader = bsonConvert.pollReader();
                                 try {
                                     reader.setBytes(this.body);
-                                    int i;
-                                    while ((i = (reader.readByte() & 0xff)) != 0) {
-                                        final Attribute attr = action.paramAttrs[i];
-                                        attr.set(params[i - 1], bsonConvert.convertFrom(attr.genericType(), reader));
-                                    }
-                                    Object rs = bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.returnObjectType, reader);
+                                    reader.readByte(); //读掉0
+                                    Object rs = bsonConvert.convertFrom(action.paramHandlerIndex >= 0 ? Object.class : action.returnObjectType, reader);
                                     handler.completed(rs, handlerAttach);
                                 } catch (Exception e) {
                                     handler.failed(e, handlerAttach);
                                 } finally {
-                                    bsonConvert.offerBsonReader(reader);
+                                    bsonConvert.offerReader(reader);
                                 }
                             }
                         }
@@ -393,7 +381,7 @@ public final class OldSncpClient {
                             conn.offerReadBuffer(attachment2);
                             transport.offerConnection(true, conn);
                             if (handler != null) {
-                                final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
+                                final Object handlerAttach = action.paramHandlerAttachIndex >= 0 ? params[action.paramHandlerAttachIndex] : null;
                                 handler.failed(exc, handlerAttach);
                             }
                             logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote read exec failed, params=" + JsonConvert.root().convertTo(params), exc);
@@ -406,7 +394,7 @@ public final class OldSncpClient {
                     future.completeExceptionally(new RpcRemoteException(action.method + " sncp remote exec failed, params=" + JsonConvert.root().convertTo(params)));
                     transport.offerConnection(true, conn);
                     if (handler != null) {
-                        final Object handlerAttach = action.handlerAttachParamIndex >= 0 ? params[action.handlerAttachParamIndex] : null;
+                        final Object handlerAttach = action.paramHandlerAttachIndex >= 0 ? params[action.paramHandlerAttachIndex] : null;
                         handler.failed(exc, handlerAttach);
                     }
                     logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") remote write exec failed, params=" + JsonConvert.root().convertTo(params), exc);

@@ -19,6 +19,7 @@ import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.convert.Convert;
 import org.redkale.mq.*;
 import org.redkale.net.TransportFactory;
 import org.redkale.net.http.WebSocketNode;
@@ -150,8 +151,8 @@ public abstract class Sncp {
     }
 
     public static <T extends Service> SncpServiceInfo createSncpServiceInfo(String resourceName,
-        Class<T> resourceServiceType, T service, MessageAgent messageAgent, SncpMessageClient messageClient) {
-        return new SncpServiceInfo(resourceName, resourceServiceType, service, messageAgent, messageClient);
+        Class<T> resourceServiceType, T service, Convert convert, MessageAgent messageAgent, SncpMessageClient messageClient) {
+        return new SncpServiceInfo(resourceName, resourceServiceType, service, convert, messageAgent, messageClient);
     }
 
     public static Uint128 actionid(final RpcAction action) {

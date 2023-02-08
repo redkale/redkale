@@ -135,17 +135,23 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         finish(0, out);
     }
 
-    public final void finishFuture(final Type futureResultType, final CompletionStage future) {
+    public final void finishFuture(final Type futureResultType, final Future future) {
         if (future == null) {
             finishVoid();
-        } else {
-            future.whenComplete((v, t) -> {
+        } else if (future instanceof CompletionStage) {
+            ((CompletionStage) future).whenComplete((v, t) -> {
                 if (t != null) {
                     finishError((Throwable) t);
                 } else {
                     finish(futureResultType, v);
                 }
             });
+        } else {
+            try {
+                finish(futureResultType, future.get());
+            } catch (Exception e) {
+                finishError(e);
+            }
         }
     }
 

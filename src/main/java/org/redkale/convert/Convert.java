@@ -55,6 +55,14 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract boolean isBinary();
 
+    public abstract R pollReader();
+
+    public abstract void offerReader(final R reader);
+
+    public abstract W pollWriter();
+
+    public abstract void offerWriter(final W write);
+
     public abstract <T> T convertFrom(final Type type, final byte[] bytes);
 
     public abstract <T> T convertFrom(final Type type, final R reader);

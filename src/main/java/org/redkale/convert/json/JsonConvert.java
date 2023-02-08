@@ -37,6 +37,8 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     private final Consumer<JsonBytesWriter> offerBytesConsumer = w -> offerJsonBytesWriter(w);
 
+    private final ThreadLocal<JsonReader> readerPool = ThreadLocal.withInitial(JsonReader::new);
+
     private final boolean tiny;
 
     private Encodeable lastConvertEncodeable;
@@ -79,6 +81,45 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
                 return fieldFunc(writer, mapFieldFunc, objFieldFunc, objExtFunc);
             }
         };
+    }
+
+    @Override
+    public JsonReader pollReader() {
+        JsonReader reader = readerPool.get();
+        if (reader == null) {
+            reader = new JsonReader();
+        } else {
+            readerPool.set(null);
+        }
+        return reader;
+    }
+
+    @Override
+    public void offerReader(final JsonReader in) {
+        if (in != null) {
+            in.recycle();
+            readerPool.set(in);
+        }
+    }
+
+    @Override
+    public JsonWriter pollWriter() {
+        JsonBytesWriter writer = bytesWriterPool.get();
+        if (writer == null) {
+            writer = new JsonBytesWriter();
+        } else {
+            bytesWriterPool.set(null);
+        }
+        return configWrite((JsonBytesWriter) writer.tiny(tiny));
+    }
+
+    @Override
+    public void offerWriter(final JsonWriter writer) {
+        if (writer instanceof JsonBytesWriter) {
+            JsonBytesWriter bw = (JsonBytesWriter) writer;
+            bw.recycle();
+            bytesWriterPool.set(bw);
+        }
     }
 
     //------------------------------ writer -----------------------------------------------------------

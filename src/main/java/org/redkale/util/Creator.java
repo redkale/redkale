@@ -199,6 +199,10 @@ public interface Creator<T> {
             clazz = (Class<T>) AbstractMap.SimpleEntry.class;
         } else if (Iterable.class == clazz) {
             clazz = (Class<T>) ArrayList.class;
+        } else if (CompletionStage.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(CompletableFuture.class)) {
+            clazz = (Class<T>) CompletableFuture.class;
+        } else if (Future.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(CompletableFuture.class)) {
+            clazz = (Class<T>) CompletableFuture.class;
         }
         Creator creator = CreatorInner.creatorCacheMap.get(clazz);
         if (creator != null) {
@@ -586,6 +590,7 @@ public interface Creator<T> {
             creatorCacheMap.put(ConcurrentHashMap.class, p -> new ConcurrentHashMap<>());
             creatorCacheMap.put(CompletableFuture.class, p -> new CompletableFuture<>());
             creatorCacheMap.put(CompletionStage.class, p -> new CompletableFuture<>());
+            creatorCacheMap.put(Future.class, p -> new CompletableFuture<>());
             creatorCacheMap.put(Map.Entry.class, new Creator<Map.Entry>() {
                 @Override
                 @ConstructorParameters({"key", "value"})
@@ -626,6 +631,7 @@ public interface Creator<T> {
             arrayCacheMap.put(ByteBuffer.class, t -> new ByteBuffer[t]);
             arrayCacheMap.put(SocketAddress.class, t -> new SocketAddress[t]);
             arrayCacheMap.put(InetSocketAddress.class, t -> new InetSocketAddress[t]);
+            arrayCacheMap.put(CompletableFuture.class, t -> new CompletableFuture[t]);
         }
 
         static class SimpleClassVisitor extends ClassVisitor {

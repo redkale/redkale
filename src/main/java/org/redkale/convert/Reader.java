@@ -31,6 +31,13 @@ public abstract class Reader {
     public static final short SIGN_NOLENBUTBYTES = -3; //目前只适合于protobuf的boolean[]...double[]类型
 
     /**
+     * 设置Reader的内容，通常结合对象池使用
+     *
+     * @param content 内容
+     */
+    public abstract void prepare(byte[] content);
+
+    /**
      * 是否还存在下个元素或字段 <br>
      * 注意: 主要用于Array、Collection、Stream或Map等集合对象
      *
