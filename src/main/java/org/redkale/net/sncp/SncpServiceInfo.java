@@ -32,8 +32,6 @@ public final class SncpServiceInfo<T extends Service> {
 
     protected final Class<T> serviceType;
 
-    protected final T service;
-
     protected final Uint128 serviceid;
 
     protected final int serviceVersion;
@@ -59,21 +57,19 @@ public final class SncpServiceInfo<T extends Service> {
     //远程模式, 可能为null
     protected Set<InetSocketAddress> remoteAddresses;
 
-    SncpServiceInfo(String resourceName, Class<T> resourceServiceType, final T service, Convert convert,
+    SncpServiceInfo(String resourceName, Class<T> resourceServiceType, final Class<T> serviceImplClass, Convert convert,
         SncpClient sncpClient, MessageAgent messageAgent, SncpMessageClient messageClient) {
         this.sncpClient = sncpClient;
         this.name = resourceName;
         this.serviceType = resourceServiceType;
         this.serviceid = Sncp.serviceid(resourceName, resourceServiceType);
-        this.service = service;
         this.convert = convert;
         this.serviceVersion = 0;
         this.messageAgent = messageAgent;
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
-        this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(service);
+        this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(resourceName, resourceServiceType);
 
         final List<SncpServiceAction> serviceActions = new ArrayList<>();
-        final Class serviceImplClass = service.getClass();
         for (Map.Entry<Uint128, Method> en : loadMethodActions(resourceServiceType).entrySet()) {
             serviceActions.add(new SncpServiceAction(serviceImplClass, en.getValue(), serviceid, en.getKey()));
         }
@@ -83,6 +79,22 @@ public final class SncpServiceInfo<T extends Service> {
     //只给远程模式调用的
     public <T> T remote(final int index, final Object... params) {
         return sncpClient.remote(this, index, params);
+    }
+
+    @Override
+    public String toString() {
+        InetSocketAddress clientSncpAddress = sncpClient == null ? null : sncpClient.getClientSncpAddress();
+        return this.getClass().getSimpleName() + "(service = " + serviceType.getSimpleName() + ", serviceid = " + serviceid + ", serviceVersion = " + serviceVersion + ", name = '" + name
+            + "', address = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
+            + ", actions.size = " + actions.length + ")";
+    }
+
+    public String toSimpleString() { //给Sncp产生的Service用
+        InetSocketAddress clientSncpAddress = sncpClient == null ? null : sncpClient.getClientSncpAddress();
+        return serviceType.getSimpleName() + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = " + serviceVersion
+            + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
+            + ((remoteGroups == null || remoteGroups.isEmpty()) ? "" : ", remoteGroups = " + remoteGroups)
+            + ", actions.size = " + actions.length + ")";
     }
 
     public void updateRemoteAddress(Set<String> remoteGroups, Set<InetSocketAddress> remoteAddresses) {
@@ -96,10 +108,6 @@ public final class SncpServiceInfo<T extends Service> {
 
     public Class getServiceClass() {
         return serviceType;
-    }
-
-    public T getService() {
-        return service;
     }
 
     public Uint128 getServiceid() {

@@ -151,8 +151,8 @@ public abstract class Sncp {
     }
 
     public static <T extends Service> SncpServiceInfo createSncpServiceInfo(String resourceName,
-        Class<T> resourceServiceType, T service, Convert convert, SncpClient sncpClient, MessageAgent messageAgent, SncpMessageClient messageClient) {
-        return new SncpServiceInfo(resourceName, resourceServiceType, service, convert, sncpClient, messageAgent, messageClient);
+        Class<T> resourceServiceType, Class<T> serviceImplClass, Convert convert, SncpClient sncpClient, MessageAgent messageAgent, SncpMessageClient messageClient) {
+        return new SncpServiceInfo(resourceName, resourceServiceType, serviceImplClass, convert, sncpClient, messageAgent, messageClient);
     }
 
     public static Uint128 actionid(final RpcAction action) {
@@ -268,11 +268,11 @@ public abstract class Sncp {
             return null;
         }
         try {
-            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageagent");
+            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageAgent");
             ts.setAccessible(true);
             return (MessageAgent) ts.get(service);
         } catch (Exception e) {
-            throw new SncpException(service + " not found " + FIELDPREFIX + "_messageagent");
+            throw new SncpException(service + " not found " + FIELDPREFIX + "_messageAgent");
         }
     }
 
@@ -281,7 +281,7 @@ public abstract class Sncp {
             return;
         }
         try {
-            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageagent");
+            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_messageAgent");
             ts.setAccessible(true);
             ts.set(service, messageAgent);
             if (service instanceof WebSocketNode) {
@@ -290,7 +290,7 @@ public abstract class Sncp {
                 c.set(service, messageAgent);
             }
         } catch (Exception e) {
-            throw new SncpException(service + " not found " + FIELDPREFIX + "_messageagent");
+            throw new SncpException(service + " not found " + FIELDPREFIX + "_messageAgent");
         }
     }
 
@@ -478,7 +478,9 @@ public abstract class Sncp {
         }
         final String supDynName = serviceImplClass.getName().replace('.', '/');
         final String clientName = OldSncpClient.class.getName().replace('.', '/');
+        final String sncpInfoName = SncpServiceInfo.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
+        final String sncpInfoDesc = Type.getDescriptor(SncpServiceInfo.class);
         final String clientDesc = Type.getDescriptor(OldSncpClient.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
@@ -546,7 +548,11 @@ public abstract class Sncp {
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_messageagent", Type.getDescriptor(MessageAgent.class), null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_sncpInfo", sncpInfoDesc, null, null);
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_messageAgent", Type.getDescriptor(MessageAgent.class), null, null);
             fv.visitEnd();
         }
         { //构造函数
@@ -561,7 +567,7 @@ public abstract class Sncp {
         { // toString()
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncpInfo", sncpInfoDesc);
             Label l1 = new Label();
             mv.visitJumpInsn(IFNONNULL, l1);
             mv.visitVarInsn(ALOAD, 0);
@@ -571,8 +577,8 @@ public abstract class Sncp {
             mv.visitJumpInsn(GOTO, l2);
             mv.visitLabel(l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
-            mv.visitMethodInsn(INVOKEVIRTUAL, clientName, "toSimpleString", "()Ljava/lang/String;", false);
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncpInfo", sncpInfoDesc);
+            mv.visitMethodInsn(INVOKEVIRTUAL, sncpInfoName, "toSimpleString", "()Ljava/lang/String;", false);
             mv.visitLabel(l2);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
@@ -593,7 +599,9 @@ public abstract class Sncp {
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
             c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
-            c = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
+            c = newClazz.getDeclaredField(FIELDPREFIX + "_sncpInfo");
+            RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+            c = newClazz.getDeclaredField(FIELDPREFIX + "_messageAgent");
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
         } catch (Exception e) {
         }
@@ -679,7 +687,7 @@ public abstract class Sncp {
                 }
             }
             if (messageAgent != null) {
-                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageAgent");
                 c.setAccessible(true);
                 c.set(service, messageAgent);
             }
@@ -777,7 +785,9 @@ public abstract class Sncp {
         }
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
         final String clientName = OldSncpClient.class.getName().replace('.', '/');
+        final String sncpInfoName = SncpServiceInfo.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
+        final String sncpInfoDesc = Type.getDescriptor(SncpServiceInfo.class);
         final String clientDesc = Type.getDescriptor(OldSncpClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
@@ -799,7 +809,7 @@ public abstract class Sncp {
                 c.set(service, client);
             }
             if (messageAgent != null) {
-                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageAgent");
                 c.setAccessible(true);
                 c.set(service, messageAgent);
                 if (service instanceof WebSocketNode) {
@@ -861,7 +871,11 @@ public abstract class Sncp {
             fv.visitEnd();
         }
         {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_messageagent", Type.getDescriptor(MessageAgent.class), null, null);
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_sncpInfo", sncpInfoDesc, null, null);
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_messageAgent", Type.getDescriptor(MessageAgent.class), null, null);
             fv.visitEnd();
         }
         { //构造函数
@@ -894,7 +908,7 @@ public abstract class Sncp {
         { // toString()
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncpInfo", sncpInfoDesc);
             Label l1 = new Label();
             mv.visitJumpInsn(IFNONNULL, l1);
             mv.visitVarInsn(ALOAD, 0);
@@ -904,8 +918,8 @@ public abstract class Sncp {
             mv.visitJumpInsn(GOTO, l2);
             mv.visitLabel(l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_client", clientDesc);
-            mv.visitMethodInsn(INVOKEVIRTUAL, clientName, "toSimpleString", "()Ljava/lang/String;", false);
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncpInfo", sncpInfoDesc);
+            mv.visitMethodInsn(INVOKEVIRTUAL, sncpInfoName, "toSimpleString", "()Ljava/lang/String;", false);
             mv.visitLabel(l2);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
@@ -1025,7 +1039,7 @@ public abstract class Sncp {
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
             }
             if (messageAgent != null) {
-                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageagent");
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_messageAgent");
                 c.setAccessible(true);
                 c.set(service, messageAgent);
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);

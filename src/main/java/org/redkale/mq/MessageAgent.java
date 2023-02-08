@@ -347,12 +347,15 @@ public abstract class MessageAgent implements Resourcable {
 
     //格式: sncp.req.user
     public final String generateSncpReqTopic(Service service) {
-        if (service instanceof WebSocketNode) {
-            String resname = Sncp.getResourceName(service);
-            return "sncp.req.ws" + (resname.isEmpty() ? "" : ("-" + resname)) + ".node" + nodeid;
+        return generateSncpReqTopic(Sncp.getResourceName(service), Sncp.getResourceType(service));
+    }
+
+    //格式: sncp.req.user
+    public final String generateSncpReqTopic(String resourceName, Class resourceType) {
+        if (WebSocketNode.class.isAssignableFrom(resourceType)) {
+            return "sncp.req.ws" + (resourceName.isEmpty() ? "" : ("-" + resourceName)) + ".node" + nodeid;
         }
-        String resname = Sncp.getResourceName(service);
-        return "sncp.req." + Sncp.getResourceType(service).getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resname.isEmpty() ? "" : ("-" + resname));
+        return "sncp.req." + resourceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resourceName.isEmpty() ? "" : ("-" + resourceName));
     }
 
     //格式: consumer-sncp.req.user  不提供外部使用
