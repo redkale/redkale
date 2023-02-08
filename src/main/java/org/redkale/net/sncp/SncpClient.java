@@ -51,7 +51,6 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
 
     //只给远程模式调用的
     public <T> T remote(final SncpServiceInfo info, final int index, final Object... params) {
-        final String traceid = Traces.currTraceid();
         final Convert convert = info.convert;
         final SncpServiceAction action = info.actions[index];
         CompletionHandler callbackHandler = null;
@@ -64,7 +63,7 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
                 params[action.paramHandlerAttachIndex] = null;
             }
         }
-        final CompletableFuture<byte[]> future = remote(info, action, traceid, params);
+        final CompletableFuture<byte[]> future = remote(info, action, convert, Traces.currTraceid(), params);
         if (action.paramHandlerIndex >= 0) { //参数中存在CompletionHandler
             final CompletionHandler handler = callbackHandler;
             final Object attach = callbackHandlerAttach;
@@ -83,15 +82,15 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
             if (action.returnFutureClass == CompletableFuture.class) {
                 return (T) future.thenApply(v -> v == null ? null : convert.convertFrom(action.paramHandlerResultType, v));
             } else {
-                final CompletableFuture stage = action.returnFutureCreator.create();
+                final CompletableFuture returnFuture = action.returnFutureCreator.create();
                 future.whenComplete((v, t) -> {
                     if (t == null) {
-                        stage.complete(v == null ? null : convert.convertFrom(action.paramHandlerResultType, v));
+                        returnFuture.complete(v == null ? null : convert.convertFrom(action.paramHandlerResultType, v));
                     } else {
-                        stage.completeExceptionally(t);
+                        returnFuture.completeExceptionally(t);
                     }
                 });
-                return (T) stage;
+                return (T) returnFuture;
             }
         } else if (action.returnObjectType != null) { //返回类型为JavaBean
             return (T) future.thenApply(v -> v == null ? null : convert.convertFrom(action.paramHandlerResultType, v)).join();
@@ -101,10 +100,10 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
         return null;
     }
 
-    protected CompletableFuture<byte[]> remote(
+    private CompletableFuture<byte[]> remote(
         final SncpServiceInfo info,
         final SncpServiceAction action,
-        final String traceid,
+        final Convert convert,
         final Object... params) {
 
         return null;

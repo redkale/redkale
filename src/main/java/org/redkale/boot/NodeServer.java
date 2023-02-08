@@ -24,6 +24,7 @@ import org.redkale.cluster.ClusterAgent;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.Filter;
 import org.redkale.net.*;
+import org.redkale.net.client.ClientAddress;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
@@ -63,6 +64,12 @@ public abstract class NodeServer {
 
     //当前Server的SNCP协议的组
     protected String sncpGroup = null;
+
+    //SNCP服务的Client
+    private SncpClient sncpClient;
+
+    //SncpClient的AsyncGroup
+    private AsyncIOGroup sncpAsyncGroup;
 
     //SNCP服务的地址， 非SNCP为null
     private InetSocketAddress sncpAddress;
@@ -161,6 +168,10 @@ public abstract class NodeServer {
         }
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
         server.init(this.serverConf);
+        if (this.sncpAddress != null) { //初始化SncpClient  
+            this.sncpAsyncGroup = new AsyncIOGroup(true, "Redkale-SncpClient-IOThread-%s", application.getWorkExecutor(), server.getBufferCapacity(), server.getBufferPoolSize()).skipClose(true);
+            this.sncpClient = new SncpClient(server.getName(), this.sncpAsyncGroup, this.sncpAddress, new ClientAddress(sncpAddress), server.getNetprotocol(), Utility.cpus(), 1000);
+        }
         //init之后才有Executor
         //废弃 @since 2.3.0 
 //        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, Executor.class, server.getWorkExecutor());
@@ -859,6 +870,16 @@ public abstract class NodeServer {
         });
         if (sb != null && sb.length() > 0) {
             logger.log(Level.INFO, sb.toString());
+        }
+        if (this.sncpAsyncGroup != null) {
+            long s = System.currentTimeMillis();
+            this.sncpAsyncGroup.dispose();
+            logger.info("SncpAsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (this.sncpClient != null) {
+            long s = System.currentTimeMillis();
+            this.sncpClient.close();
+            logger.info("SncpClient close in " + (System.currentTimeMillis() - s) + " ms");
         }
         server.shutdown();
     }

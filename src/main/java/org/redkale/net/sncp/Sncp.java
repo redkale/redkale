@@ -151,8 +151,8 @@ public abstract class Sncp {
     }
 
     public static <T extends Service> SncpServiceInfo createSncpServiceInfo(String resourceName,
-        Class<T> resourceServiceType, T service, Convert convert, MessageAgent messageAgent, SncpMessageClient messageClient) {
-        return new SncpServiceInfo(resourceName, resourceServiceType, service, convert, messageAgent, messageClient);
+        Class<T> resourceServiceType, T service, Convert convert, SncpClient sncpClient, MessageAgent messageAgent, SncpMessageClient messageClient) {
+        return new SncpServiceInfo(resourceName, resourceServiceType, service, convert, sncpClient, messageAgent, messageClient);
     }
 
     public static Uint128 actionid(final RpcAction action) {

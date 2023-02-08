@@ -44,6 +44,9 @@ public final class SncpServiceInfo<T extends Service> {
 
     protected final Convert convert;
 
+    //非MQ模式下此字段才有值
+    protected final SncpClient sncpClient;
+
     //MQ模式下此字段才有值
     protected final MessageAgent messageAgent;
 
@@ -56,7 +59,9 @@ public final class SncpServiceInfo<T extends Service> {
     //远程模式, 可能为null
     protected Set<InetSocketAddress> remoteAddresses;
 
-    SncpServiceInfo(String resourceName, Class<T> resourceServiceType, final T service, Convert convert, MessageAgent messageAgent, SncpMessageClient messageClient) {
+    SncpServiceInfo(String resourceName, Class<T> resourceServiceType, final T service, Convert convert,
+        SncpClient sncpClient, MessageAgent messageAgent, SncpMessageClient messageClient) {
+        this.sncpClient = sncpClient;
         this.name = resourceName;
         this.serviceType = resourceServiceType;
         this.serviceid = Sncp.serviceid(resourceName, resourceServiceType);
@@ -73,6 +78,11 @@ public final class SncpServiceInfo<T extends Service> {
             serviceActions.add(new SncpServiceAction(serviceImplClass, en.getValue(), serviceid, en.getKey()));
         }
         this.actions = serviceActions.toArray(new SncpServiceAction[serviceActions.size()]);
+    }
+
+    //只给远程模式调用的
+    public <T> T remote(final int index, final Object... params) {
+        return sncpClient.remote(this, index, params);
     }
 
     public void updateRemoteAddress(Set<String> remoteGroups, Set<InetSocketAddress> remoteAddresses) {

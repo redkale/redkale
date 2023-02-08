@@ -2506,7 +2506,7 @@ public final class Application {
         }
         if (this.clientAsyncGroup != null) {
             long s = System.currentTimeMillis();
-            ((AsyncIOGroup) this.clientAsyncGroup).dispose();
+            this.clientAsyncGroup.dispose();
             logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
         this.sncpTransportFactory.shutdownNow();
