@@ -182,6 +182,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return (T) decoder.convertFrom(new JsonByteBufferReader(mask, buffers));
     }
 
+    @Override
     public <T> T convertFrom(final Type type, final JsonReader reader) {
         if (type == null) {
             return null;

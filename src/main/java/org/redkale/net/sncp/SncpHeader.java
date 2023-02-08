@@ -14,7 +14,7 @@ import org.redkale.util.*;
  */
 public class SncpHeader {
 
-    public static final int HEADER_SIZE = 60;
+    public static final int HEADER_SIZE = 72;
 
     private static final byte[] EMPTY_ADDR = new byte[4];
 
@@ -30,13 +30,20 @@ public class SncpHeader {
     //SncpRequest的值是clientSncpAddress，SncpResponse的值是serverSncpAddress
     private byte[] addrBytes;
 
+    //响应方地址端口
     private int addrPort;
 
-    private int bodyLength;
+    // 预留扩展位
+    private int abilities;
 
+    //时间戳
+    private long timestamp;
+
+    //结果码，非0表示错误
     private int retcode;
 
-    private long timestamp; //待加入 + 8
+    //body长度
+    private int bodyLength;
 
     private boolean valid;
 
@@ -60,8 +67,10 @@ public class SncpHeader {
         this.addrBytes = new byte[4];
         buffer.get(this.addrBytes); //addr      4
         this.addrPort = buffer.getChar(); //port 2
-        this.bodyLength = buffer.getInt(); //4
+        this.abilities = buffer.getInt(); //4
+        this.timestamp = buffer.getLong(); //8
         this.retcode = buffer.getInt(); //4
+        this.bodyLength = buffer.getInt(); //4
         return size;
     }
 
@@ -78,13 +87,17 @@ public class SncpHeader {
         offset += 4;
         this.actionid = array.getUint128(offset); //16        
         offset += 16;
-        this.addrBytes = array.getBytes(offset, 4); //addr      4        
+        this.addrBytes = array.getBytes(offset, 4); //addr 4        
         offset += 4;
         this.addrPort = array.getChar(offset); //port 2        
         offset += 2;
-        this.bodyLength = array.getInt(offset); //4        
+        this.abilities = array.getInt(offset); //4       
         offset += 4;
-        this.retcode = array.getInt(offset); //4      
+        this.timestamp = array.getLong(offset); //8        
+        offset += 4;
+        this.retcode = array.getInt(offset); //4          
+        offset += 4;
+        this.bodyLength = array.getInt(offset); //4 
         return size;
     }
 
@@ -110,9 +123,13 @@ public class SncpHeader {
         offset += 4;
         array.putChar(offset, (char) newAddrPort); //2      
         offset += 2;
-        array.putInt(offset, bodyLength); //4    
+        array.putInt(offset, abilities); //4 
         offset += 4;
-        array.putInt(offset, retcode); //4
+        array.putLong(offset, System.currentTimeMillis()); //8 
+        offset += 8;
+        array.putInt(offset, retcode); //4 
+        offset += 4;
+        array.putInt(offset, bodyLength); //4   
         return array;
     }
 
@@ -123,8 +140,9 @@ public class SncpHeader {
             + ",serviceVersion=" + this.serviceVersion
             + ",actionid=" + this.actionid
             + ",address=" + getAddress()
-            + ",bodyLength=" + this.bodyLength
+            + ",timestamp=" + this.timestamp
             + ",retcode=" + this.retcode
+            + ",bodyLength=" + this.bodyLength
             + "}";
     }
 

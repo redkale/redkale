@@ -9,7 +9,8 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.logging.Level;
-import org.redkale.convert.bson.*;
+import org.redkale.convert.*;
+import org.redkale.convert.bson.BsonReader;
 import org.redkale.net.Request;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.util.Uint128;
@@ -125,11 +126,11 @@ public class SncpRequest extends Request<SncpContext> {
         return ping;
     }
 
-    public BsonConvert getBsonConvert() {
+    public Convert getConvert() {
         return context.getBsonConvert();
     }
 
-    public BsonReader getBsonReader() {
+    public Reader getReader() {
         return body == null ? null : reader.setBytes(body);
     }
 

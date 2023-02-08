@@ -164,6 +164,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(mask, buffers));
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final BsonReader reader) {
         if (type == null) {

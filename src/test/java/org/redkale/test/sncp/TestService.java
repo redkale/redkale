@@ -7,7 +7,7 @@ import java.lang.reflect.Method;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.ResourceType;
-import org.redkale.convert.bson.*;
+import org.redkale.convert.*;
 import org.redkale.net.sncp.SncpDynServlet.SncpActionServlet;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
@@ -70,8 +70,8 @@ public interface TestService extends Service {
 
         @Override
         public void action(SncpRequest request, SncpResponse response) throws Throwable {
-            BsonConvert convert = request.getBsonConvert();
-            BsonReader in = request.getBsonReader();
+            Convert<Reader, Writer> convert = request.getConvert();
+            Reader in = request.getReader();
             TestBean arg1 = convert.convertFrom(paramTypes[1], in);
             String arg2 = convert.convertFrom(paramTypes[2], in);
             int arg3 = convert.convertFrom(paramTypes[3], in);
@@ -89,8 +89,8 @@ public interface TestService extends Service {
 
         @Override
         public void action(SncpRequest request, SncpResponse response) throws Throwable {
-            BsonConvert convert = request.getBsonConvert();
-            BsonReader in = request.getBsonReader();
+            Convert<Reader, Writer> convert = request.getConvert();
+            Reader in = request.getReader();
             BooleanHandler arg0 = response.getParamAsyncHandler();
             convert.convertFrom(CompletionHandler.class, in);
             TestBean arg1 = convert.convertFrom(paramTypes[2], in);
@@ -110,8 +110,8 @@ public interface TestService extends Service {
 
         @Override
         public void action(SncpRequest request, SncpResponse response) throws Throwable {
-            BsonConvert convert = request.getBsonConvert();
-            BsonReader in = request.getBsonReader();
+            Convert<Reader, Writer> convert = request.getConvert();
+            Reader in = request.getReader();
             long a1 = convert.convertFrom(paramTypes[1], in);
             short a2 = convert.convertFrom(paramTypes[2], in);
             CompletionHandler a3 = response.getParamAsyncHandler();
@@ -133,8 +133,8 @@ public interface TestService extends Service {
 
         @Override
         public void action(SncpRequest request, SncpResponse response) throws Throwable {
-            BsonConvert convert = request.getBsonConvert();
-            BsonReader in = request.getBsonReader();
+            Convert<Reader, Writer> convert = request.getConvert();
+            Reader in = request.getReader();
             TestBean arg1 = convert.convertFrom(paramTypes[1], in);
             String arg2 = convert.convertFrom(paramTypes[2], in);
             int arg3 = convert.convertFrom(paramTypes[3], in);

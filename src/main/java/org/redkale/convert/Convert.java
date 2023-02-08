@@ -57,6 +57,8 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract <T> T convertFrom(final Type type, final byte[] bytes);
 
+    public abstract <T> T convertFrom(final Type type, final R reader);
+
     //@since 2.2.0
     public abstract <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int length);
 

@@ -329,9 +329,10 @@ public final class OldSncpClient {
                                     return;
                                 }
                                 checkResult(seqid, action, buffer);
-
-                                final int respBodyLength = buffer.getInt();
+                                buffer.getInt();  // abilities
+                                buffer.getLong(); // timestamp
                                 final int retcode = buffer.getInt();
+                                final int respBodyLength = buffer.getInt();
                                 if (retcode != 0) {
                                     logger.log(Level.SEVERE, action.method + " sncp (params: " + convert.convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + "), params=" + JsonConvert.root().convertTo(params));
                                     throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");

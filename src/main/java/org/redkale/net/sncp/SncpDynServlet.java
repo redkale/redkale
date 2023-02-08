@@ -17,7 +17,8 @@ import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
-import org.redkale.convert.bson.*;
+import org.redkale.convert.*;
+import org.redkale.convert.bson.BsonFactory;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -81,10 +82,10 @@ public final class SncpDynServlet extends SncpServlet {
 
     @Override
     public int compareTo(SncpServlet other) {
-        if (!(other instanceof OldSncpDynServlet)) {
+        if (!(other instanceof SncpDynServlet)) {
             return 1;
         }
-        OldSncpDynServlet o = (OldSncpDynServlet) other;
+        SncpDynServlet o = (SncpDynServlet) other;
         int rs = this.serviceType.getName().compareTo(o.serviceType.getName());
         if (rs == 0) {
             rs = this.serviceName.compareTo(o.serviceName);
@@ -347,10 +348,10 @@ public final class SncpDynServlet extends SncpServlet {
             final Class serviceClass = service.getClass();
             final String supDynName = SncpActionServlet.class.getName().replace('.', '/');
             final String resourceTypeName = resourceType.getName().replace('.', '/');
-            final String convertName = BsonConvert.class.getName().replace('.', '/');
+            final String convertName = Convert.class.getName().replace('.', '/');
             final String uint128Desc = Type.getDescriptor(Uint128.class);
-            final String convertDesc = Type.getDescriptor(BsonConvert.class);
-            final String bsonReaderDesc = Type.getDescriptor(BsonReader.class);
+            final String convertDesc = Type.getDescriptor(Convert.class);
+            final String readerDesc = Type.getDescriptor(Reader.class);
             final String requestName = SncpRequest.class.getName().replace('.', '/');
             final String responseName = SncpResponse.class.getName().replace('.', '/');
             final String requestDesc = Type.getDescriptor(SncpRequest.class);
@@ -388,23 +389,23 @@ public final class SncpDynServlet extends SncpServlet {
                     mv.visitMaxs(7, 7);
                     mv.visitEnd();
                 }
-                String convertFromDesc = "(Ljava/lang/reflect/Type;" + bsonReaderDesc + ")Ljava/lang/Object;";
+                String convertFromDesc = "(Ljava/lang/reflect/Type;" + readerDesc + ")Ljava/lang/Object;";
                 try {
-                    convertFromDesc = Type.getMethodDescriptor(BsonConvert.class.getMethod("convertFrom", java.lang.reflect.Type.class, BsonReader.class));
+                    convertFromDesc = Type.getMethodDescriptor(Convert.class.getMethod("convertFrom", java.lang.reflect.Type.class, Reader.class));
                 } catch (Exception ex) {
                     throw new SncpException(ex); //不可能会发生
                 }
                 { // action方法
                     mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + requestDesc + responseDesc + ")V", null, new String[]{"java/lang/Throwable"}));
                     //mv.setDebug(true);
-                    { //BsonConvert
+                    { //Convert
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, requestName, "getBsonConvert", "()" + convertDesc, false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, requestName, "getConvert", "()" + convertDesc, false);
                         mv.visitVarInsn(ASTORE, 3);
                     }
-                    { //BsonReader
+                    { //Reader
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, requestName, "getBsonReader", "()" + bsonReaderDesc, false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, requestName, "getReader", "()" + readerDesc, false);
                         mv.visitVarInsn(ASTORE, 4);
                     }
                     int iconst = ICONST_1;
