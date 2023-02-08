@@ -163,6 +163,7 @@ public class SncpTest {
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port);
                     conf.addValue("protocol", protocol);
+                    conf.addValue("maxbody", "" + (100 * 1024 * 1024));
                     SncpServer server = new SncpServer(null, System.currentTimeMillis(), conf, factory);
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     if (port2 > 0) {
@@ -203,6 +204,7 @@ public class SncpTest {
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + (port2 < 10 ? 0 : port2));
                     conf.addValue("protocol", protocol);
+                    conf.addValue("maxbody", "" + (100 * 1024 * 1024));
                     SncpServer server = new SncpServer(null, System.currentTimeMillis(), conf, factory);
                     Set<InetSocketAddress> set = new LinkedHashSet<>();
                     set.add(new InetSocketAddress(myhost, port));

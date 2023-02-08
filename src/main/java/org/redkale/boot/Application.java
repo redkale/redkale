@@ -942,7 +942,7 @@ public final class Application {
                 });
             }
             if (!compileMode) {
-                properties.put(SncpOldClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
+                properties.put(OldSncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
             }
         }
         if (compileMode) {

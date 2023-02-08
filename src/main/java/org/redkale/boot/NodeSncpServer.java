@@ -126,7 +126,7 @@ public class NodeSncpServer extends NodeServer {
     @Override
     protected void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception {
         RedkaleClassLoader.putReflectionPublicClasses(SncpServlet.class.getName());
-        RedkaleClassLoader.putReflectionPublicClasses(SncpDynServlet.class.getName());
+        RedkaleClassLoader.putReflectionPublicClasses(OldSncpDynServlet.class.getName());
     }
 
     @Override

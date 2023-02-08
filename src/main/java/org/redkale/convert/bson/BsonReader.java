@@ -55,15 +55,16 @@ public class BsonReader extends Reader {
         setBytes(bytes, start, len);
     }
 
-    public final void setBytes(byte[] bytes) {
+    public final BsonReader setBytes(byte[] bytes) {
         if (bytes == null) {
             this.position = 0;
         } else {
             setBytes(bytes, 0, bytes.length);
         }
+        return this;
     }
 
-    public final void setBytes(byte[] bytes, int start, int len) {
+    public final BsonReader setBytes(byte[] bytes, int start, int len) {
         if (bytes == null) {
             this.position = 0;
         } else {
@@ -71,6 +72,7 @@ public class BsonReader extends Reader {
             this.position = start - 1;
             //this.limit = start + len - 1;
         }
+        return this;
     }
 
     protected boolean recycle() {
@@ -81,8 +83,9 @@ public class BsonReader extends Reader {
         return true;
     }
 
-    public void close() {
-        this.recycle();
+    public BsonReader clear() {
+        recycle();
+        return this;
     }
 
     /**

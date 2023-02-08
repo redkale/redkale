@@ -166,6 +166,11 @@ public class BsonWriter extends Writer implements ByteTuple {
         return true;
     }
 
+    public BsonWriter clear() {
+        recycle();
+        return this;
+    }
+
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + "[count=" + this.count + "]";

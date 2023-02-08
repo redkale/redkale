@@ -6,9 +6,7 @@
 package org.redkale.mq;
 
 import java.nio.ByteBuffer;
-import java.util.logging.*;
 import org.redkale.net.sncp.*;
-import org.redkale.util.Utility;
 
 /**
  *
@@ -31,16 +29,5 @@ public class SncpMessageRequest extends SncpRequest {
         this.createTime = System.currentTimeMillis();
         readHeader(ByteBuffer.wrap(message.getContent()), null);
     }
-
-    @Override //被SncpAsyncHandler.sncp_setParams调用
-    protected void sncp_setParams(SncpDynServlet.SncpServletAction action, Logger logger, Object... params) {
-        if (message.localAttach != null) {
-            return;
-        }
-        if (logger.isLoggable(Level.FINER)) {
-            message.attach(Utility.append(new Object[]{action.actionName()}, params));
-        } else {
-            message.attach(params);
-        }
-    }
+    
 }

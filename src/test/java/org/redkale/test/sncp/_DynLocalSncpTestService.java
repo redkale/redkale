@@ -5,7 +5,6 @@
  */
 package org.redkale.test.sncp;
 
-import org.redkale.net.sncp.*;
 import org.redkale.annotation.ResourceType;
 
 /**
@@ -15,6 +14,5 @@ import org.redkale.annotation.ResourceType;
 @ResourceType(SncpTestIService.class)
 public class _DynLocalSncpTestService extends SncpTestServiceImpl {
 
-    private SncpOldClient _redkale_client;
 
 }

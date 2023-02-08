@@ -20,7 +20,7 @@ import org.redkale.util.*;
  */
 public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
-    private final ReentrantLock sncplock = new ReentrantLock();
+    private final ReentrantLock updateLock = new ReentrantLock();
 
     private final byte[] pongBytes = Sncp.getPongBytes();
 
@@ -30,7 +30,7 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
 
     @Override
     public void addServlet(SncpServlet servlet, Object attachment, AnyValue conf, Uint128... mappings) {
-        sncplock.lock();
+        updateLock.lock();
         try {
             for (SncpServlet s : getServlets()) {
                 if (s.service == servlet.service) {
@@ -41,13 +41,13 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
             putMapping(servlet.getServiceid(), servlet);
             putServlet(servlet);
         } finally {
-            sncplock.unlock();
+            updateLock.unlock();
         }
     }
 
     public <T> SncpServlet removeSncpServlet(Service service) {
         SncpServlet rs = null;
-        sncplock.lock();
+        updateLock.lock();
         try {
             for (SncpServlet servlet : getServlets()) {
                 if (servlet.service == service) {
@@ -60,7 +60,7 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
                 removeServlet(rs);
             }
         } finally {
-            sncplock.unlock();
+            updateLock.unlock();
         }
         return rs;
     }

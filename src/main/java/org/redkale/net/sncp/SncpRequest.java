@@ -8,7 +8,8 @@ package org.redkale.net.sncp;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Objects;
-import java.util.logging.*;
+import java.util.logging.Level;
+import org.redkale.convert.bson.*;
 import org.redkale.net.Request;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.util.Uint128;
@@ -29,6 +30,8 @@ public class SncpRequest extends Request<SncpContext> {
     protected static final int READ_STATE_BODY = 3;
 
     protected static final int READ_STATE_END = 4;
+
+    protected final BsonReader reader = new BsonReader();
 
     protected int readState = READ_STATE_ROUTE;
 
@@ -59,6 +62,10 @@ public class SncpRequest extends Request<SncpContext> {
             }
             if (this.header.getRetcode() != 0) { // retcode
                 context.getLogger().log(Level.WARNING, "sncp buffer header.retcode not 0");
+                return -1;
+            }
+            if (this.header.getBodyLength() > context.getMaxBody()) {
+                context.getLogger().log(Level.WARNING, "sncp buffer body.length must lower " + context.getMaxBody() + ", but " + this.header.getBodyLength());
                 return -1;
             }
             this.body = new byte[this.header.getBodyLength()];
@@ -98,10 +105,6 @@ public class SncpRequest extends Request<SncpContext> {
         this.keepAlive = true;
     }
 
-    //被SncpAsyncHandler.sncp_setParams调用
-    protected void sncp_setParams(SncpDynServlet.SncpServletAction action, Logger logger, Object... params) {
-    }
-
     @Override
     public String toString() {
         return SncpRequest.class.getSimpleName() + "_" + Objects.hashCode(this) + "{header=" + this.header + ",bodyOffset=" + this.bodyOffset + ",body=[" + (this.body == null ? -1 : this.body.length) + "]}";
@@ -109,6 +112,7 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override
     protected void recycle() {
+        this.reader.clear();
         this.readState = READ_STATE_ROUTE;
         this.header = null;
         this.bodyOffset = 0;
@@ -119,6 +123,14 @@ public class SncpRequest extends Request<SncpContext> {
 
     protected boolean isPing() {
         return ping;
+    }
+
+    public BsonConvert getBsonConvert() {
+        return context.getBsonConvert();
+    }
+
+    public BsonReader getBsonReader() {
+        return body == null ? null : reader.setBytes(body);
     }
 
     public byte[] getBody() {

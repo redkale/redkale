@@ -118,7 +118,7 @@ public final class SncpServiceInfo<T extends Service> {
 
         protected final Method method;
 
-        protected final Type resultTypes;  //void 必须设为 null
+        protected final Type returnObjectType;  //void 必须设为 null
 
         protected final Type[] paramTypes;
 
@@ -146,7 +146,7 @@ public final class SncpServiceInfo<T extends Service> {
         SncpServiceAction(final Class serviceImplClass, Method method, Uint128 serviceid, Uint128 actionid) {
             this.actionid = actionid == null ? Sncp.actionid(method) : actionid;
             Type rt = TypeToken.getGenericType(method.getGenericReturnType(), serviceImplClass);
-            this.resultTypes = rt == void.class ? null : rt;
+            this.returnObjectType = rt == void.class ? null : rt;
             this.boolReturnTypeFuture = CompletableFuture.class.isAssignableFrom(method.getReturnType());
             this.futureCreator = boolReturnTypeFuture ? Creator.create((Class<? extends CompletableFuture>) method.getReturnType()) : null;
             this.paramTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceImplClass);

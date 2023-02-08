@@ -291,7 +291,7 @@ public abstract class NodeServer {
                 }
 
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
-                SncpOldClient client = srcObj instanceof Service ? Sncp.getSncpOldClient((Service) srcObj) : null;
+                OldSncpClient client = srcObj instanceof Service ? Sncp.getSncpOldClient((Service) srcObj) : null;
                 final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                 final Set<String> groups = new HashSet<>();
                 Service service = Modifier.isFinal(resServiceType.getModifiers()) ? (Service) resServiceType.getConstructor().newInstance() : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, null, appResFactory, appSncpTranFactory, sncpAddr, groups, null);
@@ -343,7 +343,7 @@ public abstract class NodeServer {
                         throw new RedkaleException("CacheSource must be inject in Service, cannot in " + srcObj);
                     }
                     final Service srcService = (Service) srcObj;
-                    SncpOldClient client = Sncp.getSncpOldClient(srcService);
+                    OldSncpClient client = Sncp.getSncpOldClient(srcService);
                     final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
                     //final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService) && sncpAddr != null; //不配置SNCP服务会导致ws=false时没有注入CacheMemorySource
                     final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);

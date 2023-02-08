@@ -5,7 +5,9 @@
  */
 package org.redkale.net.sncp;
 
-import java.util.concurrent.ExecutorService;
+import java.lang.reflect.Type;
+import java.nio.channels.CompletionHandler;
+import java.util.concurrent.*;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
@@ -32,6 +34,24 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     private final int addrPort;
 
+    protected final BsonWriter writer = new BsonWriter();
+
+    protected final CompletionHandler realHandler = new CompletionHandler() {
+        @Override
+        public void completed(Object result, Object attachment) {
+            finish(paramHandlerResultType, result);
+        }
+
+        @Override
+        public void failed(Throwable exc, Object attachment) {
+            finishError(exc);
+        }
+    };
+
+    protected Type paramHandlerResultType;
+
+    protected CompletionHandler paramAsyncHandler;
+
     public static String getRetCodeInfo(int retcode) {
         if (retcode == RETCODE_ILLSERVICEID) {
             return "The serviceid is invalid";
@@ -57,6 +77,16 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         }
     }
 
+    public SncpResponse paramAsyncHandler(Class<? extends CompletionHandler> paramHandlerType, Type paramHandlerResultType) {
+        this.paramHandlerResultType = paramHandlerResultType;
+        this.paramAsyncHandler = paramHandlerType == CompletionHandler.class ? realHandler : SncpAsyncHandler.createHandler(paramHandlerType, realHandler);
+        return this;
+    }
+
+    public <T extends CompletionHandler> T getParamAsyncHandler() {
+        return (T) this.paramAsyncHandler;
+    }
+
     @Override
     protected void prepare() {
         super.prepare();
@@ -64,7 +94,14 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     @Override
     protected boolean recycle() {
+        writer.clear();
+        this.paramHandlerResultType = null;
+        this.paramAsyncHandler = null;
         return super.recycle();
+    }
+
+    public BsonWriter getBsonWriter() {
+        return writer;
     }
 
     @Override
@@ -92,6 +129,36 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         finish(RETCODE_THROWEXCEPTION, null);
     }
 
+    public final void finishVoid() {
+        BsonWriter out = getBsonWriter();
+        out.writePlaceholderTo(HEADER_SIZE);
+        finish(0, out);
+    }
+
+    public final void finishFuture(final Type futureResultType, final CompletionStage future) {
+        if (future == null) {
+            finishVoid();
+        } else {
+            future.whenComplete((v, t) -> {
+                if (t != null) {
+                    finishError((Throwable) t);
+                } else {
+                    finish(futureResultType, v);
+                }
+            });
+        }
+    }
+
+    public final void finish(final Type type, final Object result) {
+        BsonWriter out = getBsonWriter();
+        out.writePlaceholderTo(HEADER_SIZE);
+        if (result != null || type != Void.class) {
+            out.writeByte((byte) 0);  //body的第一个字节为0，表示返回结果对象，而不是参数回调对象
+            context.getBsonConvert().convertTo(out, type, result);
+        }
+        finish(0, out);
+    }
+
     //调用此方法时out已写入SncpHeader
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
@@ -101,7 +168,8 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
             return;
         }
         final ByteArray array = out.toByteArray();
-        fillHeader(array, array.length() - HEADER_SIZE, retcode);
+        final int bodyLength = array.length() - HEADER_SIZE;
+        fillHeader(array, bodyLength, retcode);
         finish(array);
     }
 

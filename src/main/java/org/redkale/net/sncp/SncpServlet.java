@@ -26,9 +26,9 @@ public abstract class SncpServlet extends Servlet<SncpContext, SncpRequest, Sncp
 
     protected final Service service;
 
-    protected SncpServlet(String serviceResourceName, Class serviceResourceType, Service service) {
-        this.serviceName = serviceResourceName;
-        this.serviceType = serviceResourceType;
+    protected SncpServlet(String resourceName, Class resourceType, Service service) {
+        this.serviceName = resourceName;
+        this.serviceType = resourceType;
         this.service = service;
         this._nonBlocking = true;
     }

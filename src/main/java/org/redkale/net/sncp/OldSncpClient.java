@@ -31,9 +31,9 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public final class SncpOldClient {
+public final class OldSncpClient {
 
-    protected static final Logger logger = Logger.getLogger(SncpOldClient.class.getSimpleName());
+    protected static final Logger logger = Logger.getLogger(OldSncpClient.class.getSimpleName());
 
     protected final JsonConvert convert = JsonFactory.root().getConvert();
 
@@ -70,7 +70,7 @@ public final class SncpOldClient {
     //远程模式, 可能为null
     protected Transport remoteGroupTransport;
 
-    public <T extends Service> SncpOldClient(final String serviceResourceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent messageAgent, final TransportFactory factory,
+    public <T extends Service> OldSncpClient(final String serviceResourceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent messageAgent, final TransportFactory factory,
         final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
         this.remote = remote;
         this.messageAgent = messageAgent;
@@ -202,7 +202,7 @@ public final class SncpOldClient {
                 final Attribute attr = action.paramAttrs[i];
                 attr.set(params[i - 1], bsonConvert.convertFrom(attr.genericType(), reader));
             }
-            return bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
+            return bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.returnObjectType, reader);
         } catch (RpcRemoteException re) {
             throw re;
         } catch (TimeoutException e) {
@@ -376,7 +376,7 @@ public final class SncpOldClient {
                                         final Attribute attr = action.paramAttrs[i];
                                         attr.set(params[i - 1], bsonConvert.convertFrom(attr.genericType(), reader));
                                     }
-                                    Object rs = bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.resultTypes, reader);
+                                    Object rs = bsonConvert.convertFrom(action.handlerFuncParamIndex >= 0 ? Object.class : action.returnObjectType, reader);
                                     handler.completed(rs, handlerAttach);
                                 } catch (Exception e) {
                                     handler.failed(e, handlerAttach);

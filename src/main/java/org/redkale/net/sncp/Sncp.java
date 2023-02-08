@@ -249,14 +249,14 @@ public abstract class Sncp {
         }
     }
 
-    public static SncpOldClient getSncpOldClient(Service service) {
+    public static OldSncpClient getSncpOldClient(Service service) {
         if (service == null || !isSncpDyn(service)) {
             return null;
         }
         try {
             Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_client");
             ts.setAccessible(true);
-            return (SncpOldClient) ts.get(service);
+            return (OldSncpClient) ts.get(service);
         } catch (Exception e) {
             throw new SncpException(service + " not found " + FIELDPREFIX + "_client");
         }
@@ -299,7 +299,7 @@ public abstract class Sncp {
         if (!isSncpDyn(service)) {
             return false;
         }
-        SncpOldClient client = getSncpOldClient(service);
+        OldSncpClient client = getSncpOldClient(service);
         client.setRemoteGroups(groups);
         if (client.getRemoteGroupTransport() != null) {
             client.getRemoteGroupTransport().updateRemoteAddresses(addresses);
@@ -340,18 +340,10 @@ public abstract class Sncp {
             throw new SncpException(param + " must have a empty parameter Constructor");
         }
         for (Method m : param.getMethods()) {
-            if (m.getName().equals("completed") && Modifier.isFinal(m.getModifiers())) {
+            if (m.getName().equals("completed") && m.getParameterCount() == 2 && Modifier.isFinal(m.getModifiers())) {
                 throw new SncpException(param + "'s completed method cannot final modifier");
-            } else if (m.getName().equals("failed") && Modifier.isFinal(m.getModifiers())) {
+            } else if (m.getName().equals("failed") && m.getParameterCount() == 2 && Modifier.isFinal(m.getModifiers())) {
                 throw new SncpException(param + "'s failed method cannot final modifier");
-            } else if (m.getName().equals("sncp_getParams") && Modifier.isFinal(m.getModifiers())) {
-                throw new SncpException(param + "'s sncp_getParams method cannot final modifier");
-            } else if (m.getName().equals("sncp_setParams") && Modifier.isFinal(m.getModifiers())) {
-                throw new SncpException(param + "'s sncp_setParams method cannot final modifier");
-            } else if (m.getName().equals("sncp_setFuture") && Modifier.isFinal(m.getModifiers())) {
-                throw new SncpException(param + "'s sncp_setFuture method cannot final modifier");
-            } else if (m.getName().equals("sncp_getFuture") && Modifier.isFinal(m.getModifiers())) {
-                throw new SncpException(param + "'s sncp_getFuture method cannot final modifier");
             }
         }
     }
@@ -373,6 +365,54 @@ public abstract class Sncp {
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    //获取一个clazz内所有未被实现的方法
+    public static List<Method> loadNotImplMethods(Class clazz) {
+        LinkedHashSet<Class> types = new LinkedHashSet<>();
+        loadAllSubClasses(clazz, types);
+        List<Method> methods = new ArrayList<>();
+        Set<String> ms = new HashSet<>();
+        for (Class c : types) {
+            for (Method m : c.getDeclaredMethods()) {
+                if (c.isInterface() || Modifier.isAbstract(m.getModifiers())) {
+                    StringBuilder sb = new StringBuilder(); //不能使用method.toString() 因为包含declaringClass信息导致接口与实现类的方法hash不一致
+                    sb.append(m.getName());
+                    sb.append('(');
+                    boolean first = true;
+                    for (Class pt : m.getParameterTypes()) {
+                        if (!first) {
+                            sb.append(',');
+                        }
+                        sb.append(pt.getName());
+                        first = false;
+                    }
+                    sb.append(')');
+                    String key = sb.toString();
+                    Uint128 a = actionid(m);
+                    if (!ms.contains(key)) {
+                        methods.add(m);
+                        ms.add(key);
+                    }
+                }
+            }
+        }
+        return methods;
+    }
+
+    private static void loadAllSubClasses(Class clazz, LinkedHashSet<Class> types) {
+        if (clazz == null || clazz == Object.class) {
+            return;
+        }
+        types.add(clazz);
+        if (clazz.getSuperclass() != null) {
+            loadAllSubClasses(clazz.getSuperclass(), types);
+        }
+        if (clazz.getInterfaces() != null) {
+            for (Class sub : clazz.getInterfaces()) {
+                loadAllSubClasses(sub, types);
+            }
+        }
     }
 
     /**
@@ -403,7 +443,7 @@ public abstract class Sncp {
      *
      * private AnyValue _redkale_conf;
      *
-     * private SncpOldClient _redkale_client;
+     * private OldSncpClient _redkale_client;
      *
      * &#64;Override
      *      public String toString() {
@@ -436,9 +476,9 @@ public abstract class Sncp {
             throw new SncpException(serviceImplClass + " is abstract");
         }
         final String supDynName = serviceImplClass.getName().replace('.', '/');
-        final String clientName = SncpOldClient.class.getName().replace('.', '/');
+        final String clientName = OldSncpClient.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
-        final String clientDesc = Type.getDescriptor(SncpOldClient.class);
+        final String clientDesc = Type.getDescriptor(OldSncpClient.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
@@ -481,7 +521,7 @@ public abstract class Sncp {
             av0.visit("type", Type.getType(Type.getDescriptor(getResourceType(serviceImplClass))));
             av0.visitEnd();
         }
-        { //给新类加上 原有的Annotation
+        { //给新类加上原有的Annotation
             for (Annotation ann : serviceImplClass.getAnnotations()) {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
                     continue;
@@ -623,12 +663,12 @@ public abstract class Sncp {
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
             }
-            SncpOldClient client = null;
+            OldSncpClient client = null;
             {
                 try {
                     Field c = newClazz.getDeclaredField(FIELDPREFIX + "_client");
                     c.setAccessible(true);
-                    client = new SncpOldClient(name, serviceImplClass, service, messageAgent, transportFactory, false, newClazz, clientSncpAddress);
+                    client = new OldSncpClient(name, serviceImplClass, service, messageAgent, transportFactory, false, newClazz, clientSncpAddress);
                     c.set(service, client);
                     if (transportFactory != null) {
                         transportFactory.addSncpService(service);
@@ -677,7 +717,7 @@ public abstract class Sncp {
      *
      * private AnyValue _redkale_conf;
      *
-     * private SncpOldClient _redkale_client;
+     * private OldSncpClient _redkale_client;
      *
      * &#64;Override
      *      public void createSomeThing(TestBean bean){
@@ -735,9 +775,9 @@ public abstract class Sncp {
             return null;
         }
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
-        final String clientName = SncpOldClient.class.getName().replace('.', '/');
+        final String clientName = OldSncpClient.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
-        final String clientDesc = Type.getDescriptor(SncpOldClient.class);
+        final String clientDesc = Type.getDescriptor(OldSncpClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
@@ -747,7 +787,7 @@ public abstract class Sncp {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpOldClient client = new SncpOldClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            OldSncpClient client = new OldSncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             if (transportFactory != null) {
                 client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
@@ -803,7 +843,7 @@ public abstract class Sncp {
             av0.visit("type", Type.getType(Type.getDescriptor(serviceTypeOrImplClass)));
             av0.visitEnd();
         }
-        { //给新类加上 原有的Annotation
+        { //给新类加上原有的Annotation
             for (Annotation ann : serviceTypeOrImplClass.getAnnotations()) {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
                     continue;
@@ -972,7 +1012,7 @@ public abstract class Sncp {
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
-            SncpOldClient client = new SncpOldClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
+            OldSncpClient client = new OldSncpClient(name, serviceTypeOrImplClass, service, messageAgent, transportFactory, true, realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass, clientAddress);
             client.setRemoteGroups(groups);
             if (transportFactory != null) {
                 client.setRemoteGroupTransport(transportFactory.loadTransport(clientAddress, groups));
