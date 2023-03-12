@@ -124,6 +124,7 @@ public final class Application {
      */
     public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
 
+    //UDP协议的ByteBuffer Capacity
     private static final int UDP_CAPACITY = 1024;
 
     //本进程节点ID
@@ -172,6 +173,7 @@ public final class Application {
     //只存放不以system.property.、mimetype.property.、redkale.开头的配置项
     private final Properties envProperties = new Properties();
 
+    //envProperties更新锁
     private final ReentrantLock envPropertiesLock = new ReentrantLock();
 
     //配置信息，只读版Properties
@@ -218,11 +220,10 @@ public final class Application {
     //是否用于编译模式运行
     private final boolean compileMode;
 
-    //根WatchFactory
-    //private final WatchFactory watchFactory = WatchFactory.root();
     //进程根目录
     private final File home;
 
+    //进程根目录
     private final String homePath;
 
     //配置文件目录
@@ -245,11 +246,6 @@ public final class Application {
 
     //Server根ClassLoader
     private final RedkaleClassLoader serverClassLoader;
-
-    //config: 不带redkale的配置项
-    Application(final AnyValue config) {
-        this(false, false, config);
-    }
 
     @SuppressWarnings("UseSpecificCatch") //config: 不带redkale的配置项
     Application(final boolean singletonMode, boolean compileMode, final AnyValue config) {
