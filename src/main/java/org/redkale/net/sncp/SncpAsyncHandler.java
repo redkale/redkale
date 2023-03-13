@@ -8,24 +8,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.ACC_FINAL;
-import static org.redkale.asm.Opcodes.ACC_PRIVATE;
-import static org.redkale.asm.Opcodes.ACC_PUBLIC;
-import static org.redkale.asm.Opcodes.ACC_SUPER;
-import static org.redkale.asm.Opcodes.ACONST_NULL;
-import static org.redkale.asm.Opcodes.ALOAD;
-import static org.redkale.asm.Opcodes.ARETURN;
-import static org.redkale.asm.Opcodes.DRETURN;
-import static org.redkale.asm.Opcodes.FRETURN;
-import static org.redkale.asm.Opcodes.GETFIELD;
-import static org.redkale.asm.Opcodes.ICONST_0;
-import static org.redkale.asm.Opcodes.INVOKEINTERFACE;
-import static org.redkale.asm.Opcodes.INVOKESPECIAL;
-import static org.redkale.asm.Opcodes.IRETURN;
-import static org.redkale.asm.Opcodes.LRETURN;
-import static org.redkale.asm.Opcodes.PUTFIELD;
-import static org.redkale.asm.Opcodes.RETURN;
-import static org.redkale.asm.Opcodes.V11;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.util.*;
 
@@ -43,19 +26,19 @@ import org.redkale.util.*;
  */
 public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
 
-    public static SncpAsyncHandler createHandler(Class<? extends CompletionHandler> handlerClazz, CompletionHandler realHandler) {
+    public static SncpAsyncHandler createHandler(Class<? extends CompletionHandler> handlerClazz, CompletionHandler factHandler) {
         Objects.requireNonNull(handlerClazz);
-        Objects.requireNonNull(realHandler);
+        Objects.requireNonNull(factHandler);
         if (handlerClazz == CompletionHandler.class) {
             return new SncpAsyncHandler() {
                 @Override
                 public void completed(Object result, Object attachment) {
-                    realHandler.completed(result, attachment);
+                    factHandler.completed(result, attachment);
                 }
 
                 @Override
                 public void failed(Throwable exc, Object attachment) {
-                    realHandler.failed(exc, attachment);
+                    factHandler.failed(exc, attachment);
                 }
             };
         }
@@ -84,7 +67,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
             cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, handlerInterface ? "java/lang/Object" : handlerClassName, handlerInterface && handlerClass != sncpHandlerClass ? new String[]{handlerClassName, sncpHandlerName} : new String[]{sncpHandlerName});
 
             { //handler 属性
-                fv = cw.visitField(ACC_PRIVATE, "realHandler", realHandlerDesc, null, null);
+                fv = cw.visitField(ACC_PRIVATE, "factHandler", realHandlerDesc, null, null);
                 fv.visitEnd();
             }
             {//构造方法
@@ -94,7 +77,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     av0 = mv.visitAnnotation(cpDesc, true);
                     {
                         AnnotationVisitor av1 = av0.visitArray("value");
-                        av1.visit(null, "realHandler");
+                        av1.visit(null, "factHandler");
                         av1.visitEnd();
                     }
                     av0.visitEnd();
@@ -103,7 +86,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 mv.visitMethodInsn(INVOKESPECIAL, handlerInterface ? "java/lang/Object" : handlerClassName, "<init>", "()V", false);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitFieldInsn(PUTFIELD, newDynName, "realHandler", realHandlerDesc);
+                mv.visitFieldInsn(PUTFIELD, newDynName, "factHandler", realHandlerDesc);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 2);
                 mv.visitEnd();
@@ -114,7 +97,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 if (Modifier.isPublic(mod) && "completed".equals(method.getName()) && method.getParameterCount() == 2) {
                     mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "completed", methodDesc, null, null));
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, "realHandler", realHandlerDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "factHandler", realHandlerDesc);
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitMethodInsn(INVOKEINTERFACE, realHandlerName, "completed", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
@@ -136,7 +119,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 } else if (Modifier.isPublic(mod) && "failed".equals(method.getName()) && method.getParameterCount() == 2) {
                     mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "failed", methodDesc, null, null));
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, "realHandler", realHandlerDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "factHandler", realHandlerDesc);
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitMethodInsn(INVOKEINTERFACE, realHandlerName, "failed", "(Ljava/lang/Throwable;Ljava/lang/Object;)V", true);
@@ -192,7 +175,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
             }.loadClass(newDynName.replace('/', '.'), bytes);
             RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
             return (Creator<SncpAsyncHandler>) Creator.create(newClazz);
-        }).create(realHandler);
+        }).create(factHandler);
     }
 
     static class HandlerInner {

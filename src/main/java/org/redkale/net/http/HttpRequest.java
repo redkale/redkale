@@ -67,6 +67,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final String KEY_HOST = "Host";
 
+    protected static final String KEY_EXPECT = "Expect";
+
     public static final String SESSIONID_NAME = "JSESSIONID";
 
     //---------- header 相关参数 开始 ----------
@@ -86,6 +88,8 @@ public class HttpRequest extends Request<HttpContext> {
     protected HttpCookie[] cookies;
 
     private boolean maybews = false; //是否可能是WebSocket
+
+    private boolean expect = false; //是否Expect:100-continue
 
     protected boolean rpc;
 
@@ -257,6 +261,10 @@ public class HttpRequest extends Request<HttpContext> {
         return maybews && "Upgrade".equalsIgnoreCase(getHeader("Connection")) && "GET".equalsIgnoreCase(method);
     }
 
+    protected boolean isExpect() {
+        return expect;
+    }
+
     protected void setKeepAlive(boolean keepAlive) {
         this.keepAlive = keepAlive;
     }
@@ -303,6 +311,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.cookies = httplast.cookies;
                 this.keepAlive = httplast.keepAlive;
                 this.maybews = httplast.maybews;
+                this.expect = httplast.expect;
                 this.rpc = httplast.rpc;
                 this.traceid = httplast.traceid;
                 this.hashid = httplast.hashid;
@@ -736,6 +745,12 @@ public class HttpRequest extends Request<HttpContext> {
                     this.maybews = "websocket".equalsIgnoreCase(value);
                     headers.put("Upgrade", value);
                     break;
+                case "Expect":
+                case "expect":
+                    value = bytes.toString(true, charset);
+                    this.expect = "100-continue".equalsIgnoreCase(value);
+                    headers.put("Expect", value);
+                    break;
                 case "user-agent":
                     value = bytes.toString(charset);
                     headers.put("User-Agent", value);
@@ -824,6 +839,11 @@ public class HttpRequest extends Request<HttpContext> {
                     return KEY_COOKIE;
                 }
             }
+        } else if (first == 'E' && size == 6) {  //Expect
+            if (bs[1] == 'x' && bs[2] == 'p' && bs[3] == 'e'
+                && bs[4] == 'c' && bs[5] == 't') {
+                return KEY_EXPECT;
+            }
         }
         return bytes.toString(latin1, charset);
     }
@@ -844,6 +864,7 @@ public class HttpRequest extends Request<HttpContext> {
         req.cookies = this.cookies;
         req.keepAlive = this.keepAlive;
         req.maybews = this.maybews;
+        req.expect = this.expect;
         req.rpc = this.rpc;
         req.traceid = this.traceid;
         req.hashid = this.hashid;
@@ -881,6 +902,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.cookie = null;
         this.cookies = null;
         this.maybews = false;
+        this.expect = false;
         this.rpc = false;
         this.readState = READ_STATE_ROUTE;
         this.currentUserid = CURRUSERID_NIL;

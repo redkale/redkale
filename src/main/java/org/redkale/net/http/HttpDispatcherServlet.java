@@ -315,6 +315,10 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 response.finish(200, null);
                 return;
             }
+            if (request.isExpect()) {
+                response.finish(100, response.getHttpCode(100));
+                return;
+            }
             if (request.isWebSocket()) {
                 servlet = wsmappings.get(uri);
                 if (servlet == null && this.regxWsArray != null) {

@@ -41,7 +41,7 @@ public class HttpContext extends Context {
 
     protected final AnyValue rpcAuthenticatorConfig;
 
-    //所有Servlet方法都不需要读取http-header且不存在HttpFilter的情况下，lazyHeaders=true
+    //所有Servlet方法都不需要读取http-header且RestBaseServlet不是自定义HttpServlet且不存在HttpFilter的情况下，lazyHeaders=true
     protected boolean lazyHeaders; //存在动态改值
 
     Function<WebSocket, WebSocketWriteIOThread> webSocketWriterIOThreadFunc;

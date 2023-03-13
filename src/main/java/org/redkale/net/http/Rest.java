@@ -1145,9 +1145,6 @@ public final class Rest {
                         if ("init".equals(method.getName())) {
                             continue;
                         }
-                        if ("stop".equals(method.getName())) {
-                            continue;
-                        }
                         if ("destroy".equals(method.getName())) {
                             continue;
                         }
@@ -1595,9 +1592,6 @@ public final class Rest {
             }
             if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == AnyValue.class) {
                 if ("init".equals(method.getName())) {
-                    continue;
-                }
-                if ("stop".equals(method.getName())) {
                     continue;
                 }
                 if ("destroy".equals(method.getName())) {

@@ -35,9 +35,9 @@ import org.redkale.util.*;
  *                                   WebSocketEngine
  *                                    WebSocketNode
  *                                   /             \
- *                                 /                \
- *                               /                   \
- *                     WebSocket1                 WebSocket2
+ *                                  /               \
+ *                                 /                 \
+ *                            WebSocket1          WebSocket2
  *
  * </pre></blockquote>
  *
@@ -78,13 +78,13 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     //同RestWebSocket.liveinterval
     protected int liveinterval = DEFAILT_LIVEINTERVAL;
 
-    //同RestWebSocket.wsMaxConns
+    //同RestWebSocket.wsmaxconns
     protected int wsmaxconns = 0;
 
-    //同RestWebSocket.wsThreads
+    //同RestWebSocket.wsthreads
     protected int wsthreads = 0;
 
-    //同RestWebSocket.wsMaxBody
+    //同RestWebSocket.wsmaxbody
     protected int wsmaxbody = 32 * 1024;
 
     //同RestWebSocket.anyuser

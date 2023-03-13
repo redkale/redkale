@@ -227,7 +227,7 @@ public class HttpSimpleRequest implements java.io.Serializable {
         return this;
     }
 
-    public HttpSimpleRequest header(String key, JsonConvert convert, Object value) {
+    public HttpSimpleRequest header(String key, TextConvert convert, Object value) {
         if (value == null) {
             return this;
         }
@@ -276,7 +276,7 @@ public class HttpSimpleRequest implements java.io.Serializable {
         return this;
     }
 
-    public HttpSimpleRequest param(String key, JsonConvert convert, Object value) {
+    public HttpSimpleRequest param(String key, TextConvert convert, Object value) {
         if (value == null) {
             return this;
         }

@@ -106,7 +106,7 @@ public abstract class Sncp {
                 continue;
             }
             if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == AnyValue.class) {
-                if (method.getName().equals("init") || method.getName().equals("stop") || method.getName().equals("destroy")) {
+                if (method.getName().equals("init") || method.getName().equals("destroy")) {
                     continue;
                 }
             }
@@ -889,12 +889,6 @@ public abstract class Sncp {
         }
         { //init
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "init", "(" + anyValueDesc + ")V", null, null));
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(0, 2);
-            mv.visitEnd();
-        }
-        { //stop
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "stop", "(" + anyValueDesc + ")V", null, null));
             mv.visitInsn(RETURN);
             mv.visitMaxs(0, 2);
             mv.visitEnd();
