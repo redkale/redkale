@@ -6,8 +6,8 @@
 package org.redkale.test.convert;
 
 import java.util.*;
-import org.junit.jupiter.api.Test;
-import org.redkale.convert.json.JsonConvert;
+import org.junit.jupiter.api.*;
+import org.redkale.convert.json.*;
 
 /**
  *
@@ -15,8 +15,12 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class DyncJsonTest {
 
+    private boolean main;
+
     public static void main(String[] args) throws Throwable {
-        new DyncJsonTest().run();
+        DyncJsonTest test = new DyncJsonTest();
+        test.main = true;
+        test.run();
     }
 
     @Test
@@ -24,14 +28,17 @@ public class DyncJsonTest {
         SimpleDyncBean bean = new SimpleDyncBean();
         bean.name = "haha";
         System.out.println(JsonConvert.root().convertTo(bean));
+        if (!main) Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean));
 
         SimpleDyncBean2 bean2 = new SimpleDyncBean2();
         bean2.name = "haha";
 
         System.out.println(JsonConvert.root().convertTo(bean2));
+        if (!main) Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean2));
         SimpleDyncBean3 bean3 = new SimpleDyncBean3();
         bean3.name = "haha";
         System.out.println(JsonConvert.root().convertTo(bean3));
+        if (!main) Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean3));
     }
 
     public static class SimpleDyncBean {

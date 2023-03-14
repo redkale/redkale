@@ -8,6 +8,10 @@ package org.redkale.annotation;
 import java.lang.annotation.*;
 
 /**
+ * &#64;Resource(name = "$") 表示资源name采用所属对象的name  <br>
+ * &#64;Resource(name = "@name") 表示资源对象自身的name  <br>
+ * &#64;Resource(name = "@type") 表示资源对象自身的类型  <br>
+ *
  * @since Common Annotations 1.0
  *
  * @since 2.8.0
@@ -15,7 +19,7 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
-  
+
     /**
      * 是否必须存在
      *
@@ -26,7 +30,13 @@ public @interface Resource {
     public boolean required() default true;
 
     /**
-     * 资源名称
+     * 资源名称  <br>
+     * <blockquote><pre>
+     * name规则:
+     * 1: "$"有特殊含义, 表示资源本身，"$"不能单独使用
+     * 2: "@name"、"@type"有特殊含义
+     * 3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
+     * </pre></blockquote>
      *
      * @return String
      */

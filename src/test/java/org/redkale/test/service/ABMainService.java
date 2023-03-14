@@ -5,20 +5,21 @@
  */
 package org.redkale.test.service;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
+import java.io.*;
+import java.net.*;
+import java.nio.*;
 import java.nio.channels.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
-import org.redkale.annotation.Resource;
-import org.redkale.convert.bson.BsonConvert;
-import org.redkale.convert.json.JsonConvert;
+import org.redkale.annotation.*;
+import org.redkale.boot.*;
+import org.redkale.convert.bson.*;
+import org.redkale.convert.json.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 
@@ -32,8 +33,9 @@ public class ABMainService implements Service {
     @Resource
     private BCService bcService;
 
-    public static void remotemain(String[] args) throws Throwable {
+    public static void remote(String[] args) throws Throwable {
         System.out.println("------------------- 远程模式调用 -----------------------------------");
+        final Application application = Application.create(true);
         final int abport = 8888;
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
         asyncGroup.start();
@@ -50,6 +52,7 @@ public class ABMainService implements Service {
         //------------------------ 初始化 CService ------------------------------------
         CService cservice = Sncp.createSimpleLocalService(CService.class, null, resFactory, transFactory, new InetSocketAddress("127.0.0.1", 5577), "g77");
         SncpServer cserver = new SncpServer();
+        cserver.getResourceFactory().register(application);
         cserver.getLogger().setLevel(Level.WARNING);
         cserver.addSncpServlet(cservice);
         cserver.init(DefaultAnyValue.create("port", 5577));
@@ -61,6 +64,7 @@ public class ABMainService implements Service {
         resFactory.inject(remoteCService);
         resFactory.register("", remoteCService);
         SncpServer bcserver = new SncpServer();
+        bcserver.getResourceFactory().register(application);
         bcserver.getLogger().setLevel(Level.WARNING);
         bcserver.addSncpServlet(bcservice);
         bcserver.init(DefaultAnyValue.create("port", 5588));
@@ -73,6 +77,7 @@ public class ABMainService implements Service {
         resFactory.register("", remoteBCService);
 
         HttpServer server = new HttpServer();
+        server.getResourceFactory().register(application);
         server.getLogger().setLevel(Level.WARNING);
 
         server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
@@ -84,7 +89,7 @@ public class ABMainService implements Service {
         server.init(DefaultAnyValue.create("port", abport));
         server.start();
         Thread.sleep(100);
-
+        System.out.println("开始请求");
         //同步方法
         String url = "http://127.0.0.1:" + abport + "/pipes/abmain/syncabtime/张先生";
         System.out.println(Utility.postHttpContent(url));
@@ -102,6 +107,7 @@ public class ABMainService implements Service {
 
     public static void main(String[] args) throws Throwable {
         System.out.println("------------------- 本地模式调用 -----------------------------------");
+        final Application application = Application.create(true);
         final int abport = 8888;
         ResourceFactory factory = ResourceFactory.create();
 
@@ -112,8 +118,11 @@ public class ABMainService implements Service {
         factory.register("", new CService());
         factory.inject(bcservice);
         factory.inject(service);
+        System.out.println("bcservice.name = " + bcservice.serviceName());
+        System.out.println("bcservice.type = " + bcservice.serviceType());
 
         HttpServer server = new HttpServer();
+        server.getResourceFactory().register(application);
         server.getLogger().setLevel(Level.WARNING);
 
         server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
@@ -136,7 +145,7 @@ public class ABMainService implements Service {
 
         server.shutdown();
         //远程模式
-        remotemain(args);
+        remote(args);
     }
 
     public static AsynchronousChannelGroup newChannelGroup() throws IOException {
@@ -153,7 +162,9 @@ public class ABMainService implements Service {
     public static ObjectPool<ByteBuffer> newBufferPool() {
         return ObjectPool.createSafePool(new LongAdder(), new LongAdder(), 16,
             (Object... params) -> ByteBuffer.allocateDirect(8192), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != 8192) return false;
+                if (e == null || e.isReadOnly() || e.capacity() != 8192) {
+                    return false;
+                }
                 e.clear();
                 return true;
             });
@@ -171,9 +182,13 @@ public class ABMainService implements Service {
         bcService.bcCurrentTime(Utility.createAsyncHandler((v, a) -> {
             System.out.println("执行了 ABMainService.abCurrentTime----异步方法");
             String rs = "异步abCurrentTime: " + v;
-            if (handler != null) handler.completed(rs, a);
+            if (handler != null) {
+                handler.completed(rs, a);
+            }
         }, (t, a) -> {
-            if (handler != null) handler.failed(t, a);
+            if (handler != null) {
+                handler.failed(t, a);
+            }
         }), name);
     }
 
@@ -189,7 +204,9 @@ public class ABMainService implements Service {
             public void completed(String v, Void a) {
                 System.out.println("执行了 ABMainService.abCurrentTime----异步方法2");
                 String rs = "异步abCurrentTime: " + v;
-                if (handler != null) handler.completed(rs, a);
+                if (handler != null) {
+                    handler.completed(rs, a);
+                }
             }
 
             @Override

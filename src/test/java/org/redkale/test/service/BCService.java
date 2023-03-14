@@ -5,8 +5,8 @@
  */
 package org.redkale.test.service;
 
-import java.nio.channels.CompletionHandler;
-import org.redkale.annotation.Resource;
+import java.nio.channels.*;
+import org.redkale.annotation.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -19,6 +19,20 @@ public class BCService implements Service {
     @Resource
     private CService cService;
 
+    @Resource(name = "@name")
+    private String serviceName;
+
+    @Resource(name = "@type")
+    private Class serviceType;
+
+    public String serviceName() {
+        return serviceName;
+    }
+
+    public Class serviceType() {
+        return serviceType;
+    }
+
     public String bcCurrentTime(final String name) {
         String rs = "同步bcCurrentTime: " + cService.ccCurrentTime(name).getResult();
         System.out.println("执行了 BCService.bcCurrentTime++++同步方法");
@@ -29,9 +43,13 @@ public class BCService implements Service {
         cService.ccCurrentTime(Utility.createAsyncHandler((v, a) -> {
             System.out.println("执行了 BCService.bcCurrentTime----异步方法");
             String rs = "异步bcCurrentTime: " + (v == null ? null : v.getResult());
-            if (handler != null) handler.completed(rs, null);
+            if (handler != null) {
+                handler.completed(rs, null);
+            }
         }, (t, a) -> {
-            if (handler != null) handler.failed(t, a);
+            if (handler != null) {
+                handler.failed(t, a);
+            }
         }), name);
     }
 
@@ -46,7 +64,9 @@ public class BCService implements Service {
             public void completed(RetResult<String> v, Void a) {
                 System.out.println("执行了 BCService.bcCurrentTime----异步方法2");
                 String rs = "异步bcCurrentTime: " + (v == null ? null : v.getResult());
-                if (handler != null) handler.completed(rs, null);
+                if (handler != null) {
+                    handler.completed(rs, null);
+                }
             }
 
             @Override

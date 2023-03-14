@@ -4,7 +4,7 @@ package org.redkale.test.convert;
 
 import java.util.*;
 import org.junit.jupiter.api.*;
-import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.json.*;
 
 /**
  *
@@ -30,7 +30,9 @@ public class Json5Test {
         bean.name = "haha";
         String json = "{/*多行\r\n注释**/\"decmails\":3.2,//单行注释\r\n\"id\":0x1F4,\"name\":\"haha\",\"value\":44444,}";
         Json5Bean bean2 = convert.convertFrom(Json5Bean.class, json);
-        if (!main) Assertions.assertTrue(bean.equals(bean2));
+        if (!main) {
+            Assertions.assertTrue(bean.equals(bean2));
+        }
         System.out.println(convert.convertTo(bean2));
 
         String arrayJson = "[" + json + "," + json + "," + "]";
@@ -64,21 +66,28 @@ public class Json5Test {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final Json5Bean other = (Json5Bean) obj;
-            if (this.id != other.id)
+            if (this.id != other.id) {
                 return false;
-            if (Float.floatToIntBits(this.decmails) != Float.floatToIntBits(other.decmails))
+            }
+            if (Float.floatToIntBits(this.decmails) != Float.floatToIntBits(other.decmails)) {
                 return false;
-            if (this.value != other.value)
+            }
+            if (this.value != other.value) {
                 return false;
-            if (!Objects.equals(this.name, other.name))
+            }
+            if (!Objects.equals(this.name, other.name)) {
                 return false;
+            }
             return true;
         }
 

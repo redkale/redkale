@@ -5,21 +5,22 @@
  */
 package org.redkale.net.sncp;
 
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.*;
-import java.nio.channels.CompletionHandler;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import org.redkale.annotation.NonBlocking;
+import java.util.concurrent.atomic.*;
+import java.util.logging.*;
+import org.redkale.annotation.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
-import org.redkale.convert.bson.BsonFactory;
-import org.redkale.service.Service;
+import org.redkale.convert.Reader;
+import org.redkale.convert.bson.*;
+import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
@@ -159,11 +160,12 @@ public final class SncpDynServlet extends SncpServlet {
             java.lang.reflect.Type handlerResultType = null;
             try {
                 final Class[] paramClasses = method.getParameterTypes();
+                java.lang.reflect.Type[] genericParams = method.getGenericParameterTypes();
                 for (int i = 0; i < paramClasses.length; i++) { //反序列化方法的每个参数
                     if (CompletionHandler.class.isAssignableFrom(paramClasses[i])) {
                         handlerFuncIndex = i;
                         handlerFuncClass = paramClasses[i];
-                        java.lang.reflect.Type handlerType = TypeToken.getGenericType(method.getTypeParameters()[i], service.getClass());
+                        java.lang.reflect.Type handlerType = TypeToken.getGenericType(genericParams[i], service.getClass());
                         if (handlerType instanceof Class) {
                             handlerResultType = Object.class;
                         } else if (handlerType instanceof ParameterizedType) {

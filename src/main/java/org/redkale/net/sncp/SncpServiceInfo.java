@@ -3,13 +3,13 @@
  */
 package org.redkale.net.sncp;
 
-import java.lang.annotation.Annotation;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.channels.CompletionHandler;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import org.redkale.convert.Convert;
+import org.redkale.convert.*;
 import org.redkale.mq.*;
 import static org.redkale.net.sncp.Sncp.loadMethodActions;
 import org.redkale.service.*;
@@ -185,6 +185,7 @@ public final class SncpServiceInfo<T extends Service> {
             Class handlerFuncClass = null;
             java.lang.reflect.Type handlerResultType = null;
             Class<?>[] params = method.getParameterTypes();
+            Type[] genericParams = method.getGenericParameterTypes();
             for (int i = 0; i < params.length; i++) {
                 if (CompletionHandler.class.isAssignableFrom(params[i])) {
                     if (Future.class.isAssignableFrom(method.getReturnType())) {
@@ -196,7 +197,7 @@ public final class SncpServiceInfo<T extends Service> {
                     Sncp.checkAsyncModifier(params[i], method);
                     handlerFuncIndex = i;
                     handlerFuncClass = paramClasses[i];
-                    java.lang.reflect.Type handlerType = TypeToken.getGenericType(method.getTypeParameters()[i], serviceImplClass);
+                    java.lang.reflect.Type handlerType = TypeToken.getGenericType(genericParams[i], serviceImplClass);
                     if (handlerType instanceof Class) {
                         handlerResultType = Object.class;
                     } else if (handlerType instanceof ParameterizedType) {

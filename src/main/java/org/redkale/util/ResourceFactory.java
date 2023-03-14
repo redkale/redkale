@@ -5,14 +5,14 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.Annotation;
-import java.lang.ref.WeakReference;
+import java.lang.annotation.*;
+import java.lang.ref.*;
 import java.lang.reflect.*;
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
@@ -28,8 +28,9 @@ import org.redkale.convert.*;
  * 如果没有&#64;Resource且对象实现了Resourcable, 则会取对象的resourceName()方法值
  * <blockquote><pre>
  * name规则:
- *    1: "$"有特殊含义, 不能表示"$"资源本身
- *    2: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
+ *    1: "$"有特殊含义, 表示资源本身，"$"不能单独使用
+ *    2: "@name"、"@type"有特殊含义
+ *    3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
  * </pre></blockquote>
  * <p>
  * 详情见: https://redkale.org
@@ -40,6 +41,10 @@ import org.redkale.convert.*;
 public final class ResourceFactory {
 
     public static final String RESOURCE_PARENT_NAME = "$";
+
+    public static final String RESOURCE_SELF_NAME = "@name";
+
+    public static final String RESOURCE_SELF_TYPE = "@type";
 
     private static final boolean skipCheckRequired = Boolean.getBoolean("redkale.resource.skip.check");
 
@@ -128,7 +133,8 @@ public final class ResourceFactory {
      * <blockquote><pre>
      * name规则:
      *    1: "$"有特殊含义, 表示资源本身，"$"不能单独使用
-     *    2: 只能是字母、数字、(短横)-、(下划线)_、点(.)、小括号、中括号的组合
+     *    2: "@name"、"@type"有特殊含义
+     *    3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
      * </pre></blockquote>
      *
      * @param name String
@@ -544,6 +550,58 @@ public final class ResourceFactory {
         if (clz != null && !clz.isPrimitive() && val != null && !clz.isAssignableFrom(val.getClass())) {
             throw new RedkaleException(clz + "not isAssignableFrom (" + val + ") class " + val.getClass());
         }
+        String clzname = clz != null ? clz.getName() : "java.lang.String";
+        if (val != null && !clzname.startsWith("java.") && !clzname.startsWith("javax.")
+            && !clzname.startsWith("jdk.") && !clzname.startsWith("sun.")) {
+            Class c = val.getClass();
+            do {
+                if (java.lang.Enum.class.isAssignableFrom(c)) {
+                    break;
+                }
+                final String cname = c.getName();
+                if (cname.startsWith("java.") || cname.startsWith("javax.")
+                    || cname.startsWith("jdk.") || cname.startsWith("sun.")) {
+                    break;
+                }
+                if (cname.indexOf('/') < 0) {//排除内部类， 如:JsonConvert$$Lambda$87/0x0000000100197440-
+                    RedkaleClassLoader.putReflectionDeclaredFields(cname);
+                }
+                for (Field field : c.getDeclaredFields()) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        continue;
+                    }
+                    if (Modifier.isFinal(field.getModifiers())) {
+                        continue;
+                    }
+                    Resource rc = field.getAnnotation(Resource.class);
+                    if (rc == null) {
+                        continue;
+                    }
+                    if (!rc.name().equals(RESOURCE_SELF_NAME) && !rc.name().equals(RESOURCE_SELF_TYPE)) {
+                        continue;
+                    }
+                    final Class classType = field.getType();
+                    RedkaleClassLoader.putReflectionField(cname, field);
+                    try {
+                        if (rc.name().equals(RESOURCE_SELF_NAME)) {
+                            if (classType != String.class) {
+                                throw new ResourceInjectException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be String ");
+                            }
+                            field.setAccessible(true);
+                            field.set(val, name);
+                        } else if (rc.name().equals(RESOURCE_SELF_TYPE)) {
+                            if (classType != Type.class && classType != Class.class) {
+                                throw new ResourceInjectException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be Type or Class ");
+                            }
+                            field.setAccessible(true);
+                            field.set(val, classType == Class.class ? TypeToken.typeToClass(clazz) : clazz);
+                        }
+                    } catch (IllegalArgumentException | IllegalAccessException e) {
+                        throw new ResourceInjectException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') register error ", e);
+                    }
+                }
+            } while ((c = c.getSuperclass()) != Object.class);
+        }
         ConcurrentHashMap<String, ResourceEntry> map = this.store.computeIfAbsent(clazz, k -> new ConcurrentHashMap());
         ResourceEntry re = map.get(name);
         if (re == null) {
@@ -828,6 +886,9 @@ public final class ResourceFactory {
                         consumer.accept(srcObj, field);
                     }
                     String tname = rc1 == null ? rc2.name() : rc1.name();
+                    if (tname.equals(RESOURCE_SELF_NAME) || tname.equals(RESOURCE_SELF_TYPE)) {
+                        continue;
+                    }
                     if (tname.contains(RESOURCE_PARENT_NAME)) {
                         Resource res1 = srcObj.getClass().getAnnotation(Resource.class);
                         javax.annotation.Resource res2 = srcObj.getClass().getAnnotation(javax.annotation.Resource.class);

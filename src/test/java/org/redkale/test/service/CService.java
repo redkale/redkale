@@ -5,7 +5,8 @@
  */
 package org.redkale.test.service;
 
-import java.nio.channels.CompletionHandler;
+import java.nio.channels.*;
+import org.redkale.annotation.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -14,6 +15,20 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 public class CService implements Service {
+
+    @Resource(name = "@name")
+    private String serviceName;
+
+    @Resource(name = "@type")
+    private Class serviceType;
+
+    public String serviceName() {
+        return serviceName;
+    }
+
+    public Class serviceType() {
+        return serviceType;
+    }
 
     public RetResult<String> ccCurrentTime(final String name) {
         String rs = "同步ccCurrentTime: " + name + ": " + Utility.formatTime(System.currentTimeMillis());

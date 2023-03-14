@@ -7,12 +7,12 @@ package org.redkale.net;
 
 import java.io.*;
 import java.net.*;
-import java.nio.charset.Charset;
+import java.nio.charset.*;
 import java.util.*;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
-import javax.net.ssl.SSLContext;
-import org.redkale.boot.Application;
+import javax.net.ssl.*;
+import org.redkale.boot.*;
 import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
 import org.redkale.net.Filter;
 import org.redkale.util.*;
@@ -481,6 +481,16 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
      */
     public <T extends Filter> boolean containsFilter(String filterClassName) {
         return this.dispatcher.containsFilter(filterClassName);
+    }
+
+    /**
+     * 销毁Servlet
+     *
+     * @param <T>    泛型
+     * @param filter Filter
+     */
+    public <T extends Filter> void destroyFilter(T filter) {
+        filter.destroy(context, this.dispatcher.getFilterConf(filter));
     }
 
     /**

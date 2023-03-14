@@ -9,8 +9,7 @@ import java.util.concurrent.*;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.WorkThread;
-import org.redkale.net.sncp.Sncp;
-import org.redkale.util.ThreadHashExecutor;
+import org.redkale.util.*;
 
 /**
  *
@@ -22,13 +21,23 @@ public abstract class AbstractService implements Service {
     @Resource(name = Application.RESNAME_APP_EXECUTOR, required = false)
     private ExecutorService workExecutor;
 
+    @Resource(name = ResourceFactory.RESOURCE_SELF_NAME, required = false)
+    private String serviceName;
+
+    @Resource(name = ResourceFactory.RESOURCE_SELF_TYPE, required = false)
+    private Class serviceType;
+
+    protected String serviceName() {
+        return serviceName;
+    }
+
     /**
      * 当前Service类的原始Service类型， 由于Service会动态重载，所以getClass()得到的不是原始Service类型
      *
      * @return Class
      */
     protected Class serviceType() {
-        return Sncp.isSncpDyn(this) && getClass().getSimpleName().startsWith("_Dyn") ? getClass().getSuperclass() : getClass();
+        return serviceType;
     }
 
     /**

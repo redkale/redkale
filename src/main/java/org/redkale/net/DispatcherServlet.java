@@ -67,9 +67,9 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     protected void putServlet(S servlet) {
         servletLock.lock();
         try {
-            Set<S> newservlets = new HashSet<>(servlets);
-            newservlets.add(servlet);
-            this.servlets = newservlets;
+            Set<S> newServlets = new HashSet<>(servlets);
+            newServlets.add(servlet);
+            this.servlets = newServlets;
         } finally {
             servletLock.unlock();
         }
@@ -78,9 +78,9 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     protected void removeServlet(S servlet) {
         servletLock.lock();
         try {
-            Set<S> newservlets = new HashSet<>(servlets);
-            newservlets.remove(servlet);
-            this.servlets = newservlets;
+            Set<S> newServlets = new HashSet<>(servlets);
+            newServlets.remove(servlet);
+            this.servlets = newServlets;
             doAfterRemove(servlet);
         } finally {
             servletLock.unlock();
@@ -118,9 +118,9 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     protected void putMapping(K key, S servlet) {
         mappingLock.lock();
         try {
-            Map<K, S> newmappings = new HashMap<>(mappings);
-            newmappings.put(key, servlet);
-            this.mappings = newmappings;
+            Map<K, S> newMappings = new HashMap<>(mappings);
+            newMappings.put(key, servlet);
+            this.mappings = newMappings;
         } finally {
             mappingLock.unlock();
         }
@@ -144,14 +144,14 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
         mappingLock.lock();
         try {
             List<K> keys = new ArrayList<>();
-            Map<K, S> newmappings = new HashMap<>(mappings);
-            for (Map.Entry<K, S> en : newmappings.entrySet()) {
+            Map<K, S> newMappings = new HashMap<>(mappings);
+            for (Map.Entry<K, S> en : newMappings.entrySet()) {
                 if (en.getValue().equals(servlet)) {
                     keys.add(en.getKey());
                 }
             }
-            for (K key : keys) newmappings.remove(key);
-            this.mappings = newmappings;
+            for (K key : keys) newMappings.remove(key);
+            this.mappings = newMappings;
             doAfterRemove(servlet);
         } finally {
             mappingLock.unlock();
@@ -176,7 +176,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
             if (!filters.isEmpty()) {
                 Collections.sort(filters);
                 for (Filter<C, R, P> filter : filters) {
-                    filter.init(context, config);
+                    filter.init(context, filter._conf);
                 }
                 this.headFilter = filters.get(0);
                 Filter<C, R, P> filter = this.headFilter;
@@ -191,13 +191,13 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")  //Servlet由子类来销毁
     public void destroy(C context, AnyValue config) {
         filtersLock.lock();
         try {
             if (!filters.isEmpty()) {
                 for (Filter filter : filters) {
-                    filter.destroy(context, config);
+                    filter.destroy(context, filter._conf);
                 }
             }
         } finally {
@@ -305,6 +305,14 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     protected void setServletConf(Servlet servlet, AnyValue conf) {
         servlet._conf = conf;
+    }
+
+    protected AnyValue getFilterConf(Filter filter) {
+        return filter._conf;
+    }
+
+    protected void setFilterConf(Filter filter, AnyValue conf) {
+        filter._conf = conf;
     }
 
     public List<S> getServlets() {
