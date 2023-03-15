@@ -6,11 +6,11 @@
 package org.redkale.net.http;
 
 import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.CompletionHandler;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.nio.*;
+import java.nio.channels.*;
+import java.nio.charset.*;
+import java.util.*;
+import java.util.concurrent.*;
 import org.redkale.net.*;
 import static org.redkale.net.http.HttpRequest.parseHeaderName;
 import org.redkale.util.*;
@@ -20,7 +20,7 @@ import org.redkale.util.*;
  * 1、使用HTTPS；<br>
  * 2、上传下载文件；<br>
  * 3、返回超大响应包；<br>
- * 类似JDK11的 java.net.http.HttpSimpleClient <br>
+ * 类似JDK11的 java.net.http.HttpClient <br>
  *
  * <p>
  * 详情见: https://redkale.org

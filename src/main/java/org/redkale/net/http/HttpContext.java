@@ -5,10 +5,10 @@
  */
 package org.redkale.net.http;
 
-import java.nio.channels.CompletionHandler;
-import java.security.SecureRandom;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.nio.channels.*;
+import java.security.*;
+import java.util.concurrent.*;
+import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -41,7 +41,7 @@ public class HttpContext extends Context {
 
     protected final AnyValue rpcAuthenticatorConfig;
 
-    //所有Servlet方法都不需要读取http-header且RestBaseServlet不是自定义HttpServlet且不存在HttpFilter的情况下，lazyHeaders=true
+    //所有Servlet方法都不需要读取http-header且RestBaseServlet不是自定义HttpServlet且不存在HttpFilter、WebSocket的情况下，lazyHeaders=true
     protected boolean lazyHeaders; //存在动态改值
 
     Function<WebSocket, WebSocketWriteIOThread> webSocketWriterIOThreadFunc;

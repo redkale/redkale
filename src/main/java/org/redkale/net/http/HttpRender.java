@@ -5,8 +5,8 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.convert.Convert;
-import org.redkale.util.AnyValue;
+import org.redkale.convert.*;
+import org.redkale.util.*;
 
 /**
  * HTTP输出引擎的基类 <br>
@@ -28,8 +28,11 @@ import org.redkale.util.AnyValue;
  */
 public interface HttpRender {
 
-    public void init(HttpContext context, AnyValue config);
+    default void init(HttpContext context, AnyValue config) {
+    }
 
     public void renderTo(HttpRequest request, HttpResponse response, Convert convert, HttpScope scope);
 
+    default void destroy(HttpContext context, AnyValue config) {
+    }
 }

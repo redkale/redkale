@@ -6,9 +6,9 @@
 package org.redkale.service;
 
 import java.util.concurrent.*;
-import org.redkale.annotation.Resource;
-import org.redkale.boot.Application;
-import org.redkale.net.WorkThread;
+import org.redkale.annotation.*;
+import org.redkale.boot.*;
+import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
@@ -31,11 +31,6 @@ public abstract class AbstractService implements Service {
         return serviceName;
     }
 
-    /**
-     * 当前Service类的原始Service类型， 由于Service会动态重载，所以getClass()得到的不是原始Service类型
-     *
-     * @return Class
-     */
     protected Class serviceType() {
         return serviceType;
     }

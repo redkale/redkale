@@ -5,17 +5,17 @@
  */
 package org.redkale.net.http;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.*;
 import java.util.function.*;
 import java.util.logging.*;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
+import java.util.regex.*;
+import java.util.stream.*;
 import org.redkale.net.*;
 import org.redkale.net.Filter;
 import org.redkale.net.http.Rest.RestDynSourceType;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 
@@ -400,7 +400,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 }
             }
         }
-        if (this.lazyHeaders && !Rest.isSimpleRestDyn(servlet)) {
+        if (this.lazyHeaders && (!Rest.isSimpleRestDyn(servlet) || servlet instanceof WebSocketServlet)) {
             this.lazyHeaders = false;
             if (context != null) {
                 context.lazyHeaders = this.lazyHeaders; //启动后运行过程中执行addServlet
@@ -451,9 +451,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                         putMapping(mappingPath, servlet);
                     }
                     if (servlet instanceof WebSocketServlet) {
-                        Map<String, WebSocketServlet> newmappings = new HashMap<>(wsmappings);
-                        newmappings.put(mappingPath, (WebSocketServlet) servlet);
-                        this.wsmappings = newmappings;
+                        Map<String, WebSocketServlet> newMappings = new HashMap<>(wsmappings);
+                        newMappings.put(mappingPath, (WebSocketServlet) servlet);
+                        this.wsmappings = newMappings;
                     }
                 }
                 if (this.allMapStrings.containsKey(mappingPath)) {

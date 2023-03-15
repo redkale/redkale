@@ -6,17 +6,17 @@
 package org.redkale.net.http;
 
 import java.io.*;
-import java.lang.annotation.Annotation;
+import java.lang.annotation.*;
 import java.net.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.nio.charset.*;
 import java.util.*;
-import java.util.function.Supplier;
-import java.util.logging.Level;
+import java.util.function.*;
+import java.util.logging.*;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
-import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.Request;
+import org.redkale.convert.json.*;
+import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
@@ -322,7 +322,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.respConvertType = httplast.respConvertType;
                 this.respConvert = httplast.respConvert;
                 this.headerLength = httplast.headerLength;
-                this.headerHalfLen = httplast.headerLength;
+                this.headerHalfLen = httplast.headerHalfLen;
                 this.headerBytes = httplast.headerBytes;
                 this.headerParsed = httplast.headerParsed;
                 this.headers.putAll(httplast.headers);
@@ -448,12 +448,6 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-//    @Override
-//    protected int readBody(ByteBuffer buffer, int length) {
-//        int len = buffer.remaining();
-//        array.put(buffer, len);
-//        return len;
-//    }
     //解析 GET /xxx HTTP/1.1
     private int readMethodLine(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
@@ -1438,12 +1432,18 @@ public class HttpRequest extends Request<HttpContext> {
             + (this.frombody ? (", \r\n    frombody: " + this.frombody) : "")
             + (this.reqConvertType != null ? (", \r\n    reqConvertType: " + this.reqConvertType) : "")
             + (this.respConvertType != null ? (", \r\n    respConvertType: " + this.respConvertType) : "")
-            + ", \r\n    currentUserid: " + (this.currentUserid == CURRUSERID_NIL ? null : this.currentUserid) + ", \r\n    remoteAddr: " + this.getRemoteAddr()
-            + ", \r\n    cookies: " + this.cookie + ", \r\n    contentType: " + this.contentType
-            + ", \r\n    protocol: " + this.protocol + ", \r\n    host: " + this.host
-            + ", \r\n    contentLength: " + this.contentLength + ", \r\n    bodyLength: " + this.array.length()
+            + (this.currentUserid != CURRUSERID_NIL ? (", \r\n    currentUserid: " + (this.currentUserid == CURRUSERID_NIL ? null : this.currentUserid)) : "")
+            + (this.getRemoteAddr() != null ? (", \r\n    remoteAddr: " + this.getRemoteAddr()) : "")
+            + (this.cookie != null ? (", \r\n    cookies: " + this.cookie) : "")
+            + (this.contentType != null ? (", \r\n    contentType: " + this.contentType) : "")
+            + (this.protocol != null ? (", \r\n    protocol: " + this.protocol) : "")
+            + (this.host != null ? (", \r\n    host: " + this.host) : "")
+            + (this.contentLength >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
+            + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
             + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + (this.respConvertType == null || this.respConvertType == ConvertType.JSON ? this.getBodyUTF8() : Arrays.toString(getBody()))))
-            + ", \r\n    params: " + toMapString(this.params, 4) + ", \r\n    header: " + toMapString(this.headers, 4) + "\r\n}"; //this.headers.toString(4)
+            + ", \r\n    params: " + toMapString(this.params, 4)
+            + ", \r\n    header: " + toMapString(this.headers, 4)
+            + "\r\n}"; //this.headers.toString(4)
     }
 
     private static CharSequence toMapString(Map<String, String> map, int indent) {

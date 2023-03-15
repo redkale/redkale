@@ -5,24 +5,24 @@
  */
 package org.redkale.net.http;
 
-import java.lang.reflect.Field;
-import java.net.HttpCookie;
+import java.lang.reflect.*;
+import java.net.*;
 import java.text.*;
-import java.time.ZoneId;
+import java.time.*;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import org.redkale.boot.Application;
+import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
+import java.util.function.*;
+import java.util.logging.*;
+import org.redkale.boot.*;
 import org.redkale.mq.*;
-import org.redkale.net.Server;
+import org.redkale.net.*;
 import org.redkale.net.http.HttpContext.HttpContextConfig;
 import org.redkale.net.http.HttpResponse.HttpResponseConfig;
-import org.redkale.net.sncp.Sncp;
-import org.redkale.service.Service;
+import org.redkale.net.sncp.*;
+import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
@@ -89,6 +89,11 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         }
         if (context.rpcAuthenticator != null) {
             context.rpcAuthenticator.destroy(context.rpcAuthenticatorConfig);
+        }
+        HttpResponseConfig respConf = this.respConfig;
+        HttpRender httpRender = respConf.httpRender;
+        if (httpRender != null) {
+            httpRender.destroy(context, respConf.renderConfig);
         }
     }
 

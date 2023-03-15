@@ -5,18 +5,18 @@
  */
 package org.redkale.net.http;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
+import java.io.*;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.logging.Level;
-import org.redkale.annotation.NonBlocking;
+import java.util.concurrent.*;
+import java.util.function.*;
+import java.util.logging.*;
+import org.redkale.annotation.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
-import org.redkale.boot.Application;
+import org.redkale.boot.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
 
@@ -36,7 +36,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     //@Deprecated(since = "2.8.0")
     //public static final int RET_METHOD_ERROR = 1200_0002;
     //
-    String _actionSimpleMappingUrl; //只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如 /json /createRecord, 不能是 /user/** 
+    String _actionSimpleMappingUrl; //只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如: /json、/createRecord, 不能是/user/** 
 
     String _prefix = ""; //当前HttpServlet的path前缀
 
@@ -269,7 +269,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         preExecute(request, response);
     }
 
-    static Boolean isNonBlocking(Class<?> servletClass) {
+    static Boolean isNonBlocking(Class<? extends HttpServlet> servletClass) {
         Class clz = servletClass;
         Boolean preNonBlocking = null;
         Boolean authNonBlocking = null;
