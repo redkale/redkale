@@ -5,23 +5,23 @@
  */
 package org.redkale.source;
 
-import java.io.Serializable;
+import java.io.*;
 import java.math.*;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
-import java.util.stream.Stream;
+import java.util.stream.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.*;
-import org.redkale.net.AsyncGroup;
-import org.redkale.persistence.Table;
-import org.redkale.service.Local;
+import org.redkale.net.*;
+import org.redkale.persistence.*;
+import org.redkale.service.*;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
 
@@ -2528,7 +2528,18 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     //----------------------------- find -----------------------------
     @Override
     public <T> T[] finds(Class<T> clazz, final SelectColumn selects, Serializable... pks) {
-        return findsAsync(clazz, selects, pks).join();
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        if (pks == null || pks.length == 0) {
+            return info.getArrayer().apply(0);
+        }
+        final EntityCache<T> cache = info.getCache();
+        if (cache != null) {
+            T[] rs = selects == null ? cache.finds(pks) : cache.finds(selects, pks);
+            if (cache.isFullLoaded() || rs != null) {
+                return rs;
+            }
+        }
+        return findsDBAsync(info, selects, pks).join();
     }
 
     @Override

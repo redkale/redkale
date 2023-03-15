@@ -5,9 +5,10 @@
  */
 package org.redkale.test.service;
 
-import java.nio.channels.CompletionHandler;
+import java.nio.channels.*;
+import org.redkale.boot.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
@@ -19,13 +20,14 @@ public class TestService implements Service {
 //    public boolean change(TestBean bean, String name, int id) {
 //        return false;
 //    }
-
     public void change(CompletionHandler<Boolean, TestBean> handler, TestBean bean, String name, int id) {
 
     }
-    
+
     public static void main(String[] args) throws Throwable {
+        final Application application = Application.create(true);
         SncpServer cserver = new SncpServer();
+        cserver.getResourceFactory().register(application);
         cserver.addSncpServlet(new TestService());
         cserver.init(AnyValue.DefaultAnyValue.create("port", 5577));
     }

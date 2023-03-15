@@ -5,11 +5,11 @@
  */
 package org.redkale.source;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
@@ -128,6 +128,13 @@ public final class EntityCache<T> {
         });
     }
 
+    public void fullLoad() {
+        CompletableFuture<List<T>> future = fullLoadAsync();
+        if (future != null) {
+            future.join();
+        }
+    }
+
     public CompletableFuture<List<T>> fullLoadAsync() {
         if (this.fullloaded) {
             return this.loadFuture;
@@ -211,6 +218,10 @@ public final class EntityCache<T> {
 
     public boolean isFullLoaded() {
         return fullloaded;
+    }
+
+    public int size() {
+        return map.size();
     }
 
     public T find(Serializable pk) {

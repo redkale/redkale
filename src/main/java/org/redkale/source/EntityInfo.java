@@ -5,11 +5,11 @@
  */
 package org.redkale.source;
 
-import java.io.Serializable;
+import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.*;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.Comment;
@@ -242,7 +242,7 @@ public final class EntityInfo<T> {
                 if (fullloader == null) {
                     throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
                 }
-                rs.cache.fullLoadAsync();
+                rs.cache.fullLoad();
             }
             return rs;
         } finally {

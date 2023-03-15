@@ -10,8 +10,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
-import java.net.InetSocketAddress;
-import java.nio.channels.CompletionHandler;
+import java.net.*;
+import java.nio.channels.*;
 import java.util.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceType;
@@ -19,10 +19,10 @@ import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
-import org.redkale.convert.Convert;
+import org.redkale.convert.*;
 import org.redkale.mq.*;
-import org.redkale.net.TransportFactory;
-import org.redkale.net.http.WebSocketNode;
+import org.redkale.net.*;
+import org.redkale.net.http.*;
 import org.redkale.net.sncp.SncpServiceInfo.SncpServiceAction;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -726,21 +726,23 @@ public abstract class Sncp {
      *
      * private AnyValue _redkale_conf;
      *
-     * private OldSncpClient _redkale_client;
+     * private SncpClient _redkale_client;
+     *
+     * private SncpServiceInfo _redkale_sncpInfo;
      *
      * &#64;Override
      *      public void createSomeThing(TestBean bean){
-     *          _redkale_client.remote(0, bean);
+     *          _redkale_client.remote(_redkale_sncpInfo, 0, bean);
      *      }
      *
      *      &#64;Override
      *      public String findSomeThing(){
-     *          return _redkale_client.remote(1);
+     *          return _redkale_client.remote(_redkale_sncpInfo, 1);
      *      }
      *
      *      &#64;Override
      *      public String updateSomeThing(String id){
-     *          return  _redkale_client.remote(2, id);
+     *          return  _redkale_client.remote(_redkale_sncpInfo, 2, id);
      *      }
      * }
      * </pre></blockquote>
