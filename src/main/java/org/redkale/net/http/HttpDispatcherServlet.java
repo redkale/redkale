@@ -400,7 +400,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 }
             }
         }
-        if (this.lazyHeaders && (!Rest.isSimpleRestDyn(servlet) || servlet instanceof WebSocketServlet)) {
+        if (this.lazyHeaders && !Rest.isSimpleRestDyn(servlet)) {
             this.lazyHeaders = false;
             if (context != null) {
                 context.lazyHeaders = this.lazyHeaders; //启动后运行过程中执行addServlet

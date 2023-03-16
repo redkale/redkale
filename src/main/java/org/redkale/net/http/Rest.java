@@ -10,10 +10,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
-import java.net.InetSocketAddress;
-import java.nio.channels.CompletionHandler;
+import java.net.*;
+import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.*;
 import org.redkale.annotation.Comment;
 import org.redkale.annotation.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
@@ -24,9 +24,9 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
 import org.redkale.net.*;
-import org.redkale.net.sncp.Sncp;
+import org.redkale.net.sncp.*;
 import org.redkale.service.*;
-import org.redkale.source.Flipper;
+import org.redkale.source.*;
 import org.redkale.util.*;
 
 /**
@@ -497,7 +497,7 @@ public final class Rest {
         cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
         { //RestDyn
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDyn.class), true);
-            av0.visit("simple", false);
+            av0.visit("simple", false); //WebSocketServlet必须要解析http-header
             {
                 AnnotationVisitor av1 = av0.visitArray("types");
                 av1.visit(null, Type.getType("L" + newDynConsumerFullName.replace('.', '/') + ";"));
@@ -1558,7 +1558,7 @@ public final class Rest {
             av0.visit("value", Type.getType(Type.getDescriptor(serviceType)));
             av0.visitEnd();
         }
-        boolean dynsimple = baseServletType != HttpServlet.class; //有自定义的BaseServlet会存在读取header的操作
+        boolean dynsimple = baseServletType == HttpServlet.class; //有自定义的BaseServlet会存在读取header的操作
         //获取所有可以转换成HttpMapping的方法
         int methodidex = 0;
         final MessageMultiConsumer mmc = serviceType.getAnnotation(MessageMultiConsumer.class);
