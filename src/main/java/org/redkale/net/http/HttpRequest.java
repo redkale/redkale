@@ -51,7 +51,13 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final String KEY_GET = "GET";
 
+    protected static final String KEY_PUT = "PUT";
+
     protected static final String KEY_POST = "POST";
+
+    protected static final String KEY_HEAD = "HEAD";
+
+    protected static final String KEY_OPTIONS = "OPTIONS";
 
     protected static final String KEY_HTTP_1_1 = "HTTP/1.1";
 
@@ -218,7 +224,7 @@ public class HttpRequest extends Request<HttpContext> {
             } else {
                 this.requestURI = req.getRequestURI();
             }
-            this.method = "POST";
+            this.method = KEY_POST;
             if (req.getSessionid() != null && !req.getSessionid().isEmpty()) {
                 this.cookies = new HttpCookie[]{new HttpCookie(SESSIONID_NAME, req.getSessionid())};
             }
@@ -457,43 +463,106 @@ public class HttpRequest extends Request<HttpContext> {
         ByteArray bytes = array;
         //读method
         if (this.method == null) {
-            for (;;) {
-                if (remain-- < 1) {
-                    buffer.clear();
-                    return 1;
-                }
-                byte b = buffer.get();
-                if (b == ' ') {
-                    break;
-                }
-                bytes.put(b);
-            }
-            size = bytes.length();
-            byte[] content = bytes.content();
-            if (size == 3) {
-                if (content[0] == 'G' && content[1] == 'E' && content[2] == 'T') {
-                    this.method = KEY_GET;
-                    this.getmethod = true;
-                } else if (content[0] == 'P' && content[1] == 'U' && content[2] == 'T') {
-                    this.method = "PUT";
+            boolean flag = false;
+            if (remain >= 5) {
+                byte b1 = buffer.get();
+                byte b2 = buffer.get();
+                if (b2 == ' ') {
+                    remain -= 2;
+                    this.method = Character.toString(b1);
                     this.getmethod = false;
+                } else {
+                    byte b3 = buffer.get();
+                    if (b3 == ' ') {
+                        remain -= 3;
+                        this.method = new String(new byte[]{b1, b2});
+                        this.getmethod = false;
+                    } else {
+                        byte b4 = buffer.get();
+                        if (b4 == ' ') {
+                            remain -= 4;
+                            if (b1 == 'G' && b2 == 'E' && b3 == 'T') {
+                                this.method = KEY_GET;
+                                this.getmethod = true;
+                            } else if (b1 == 'P' && b2 == 'U' && b3 == 'T') {
+                                this.method = KEY_PUT;
+                                this.getmethod = false;
+                            } else {
+                                this.method = new String(new byte[]{b1, b2, b3});
+                                this.getmethod = false;
+                            }
+                        } else {
+                            byte b5 = buffer.get();
+                            remain -= 5;
+                            if (b5 == ' ') {
+                                if (b1 == 'P' && b2 == 'O' && b3 == 'S' && b3 == 'T') {
+                                    this.method = KEY_POST;
+                                    this.getmethod = false;
+                                } else if (b1 == 'H' && b2 == 'E' && b3 == 'A' && b3 == 'D') {
+                                    this.method = KEY_HEAD;
+                                    this.getmethod = false;
+                                } else {
+                                    this.method = new String(new byte[]{b1, b2, b3, b4});
+                                    this.getmethod = false;
+                                }
+                            } else {
+                                flag = true;
+                                bytes.put(b1, b2, b3, b4, b5);
+                            }
+                        }
+                    }
+                }
+            }
+            if (flag) {
+                for (;;) {
+                    if (remain-- < 1) {
+                        buffer.clear();
+                        return 1;
+                    }
+                    byte b = buffer.get();
+                    if (b == ' ') {
+                        break;
+                    }
+                    bytes.put(b);
+                }
+                size = bytes.length();
+                byte[] content = bytes.content();
+                if (size == 3) {
+                    if (content[0] == 'G' && content[1] == 'E' && content[2] == 'T') {
+                        this.method = KEY_GET;
+                        this.getmethod = true;
+                    } else if (content[0] == 'P' && content[1] == 'U' && content[2] == 'T') {
+                        this.method = KEY_PUT;
+                        this.getmethod = false;
+                    } else {
+                        this.method = bytes.toString(true, charset);
+                        this.getmethod = false;
+                    }
+                } else if (size == 4) {
+                    this.getmethod = false;
+                    if (content[0] == 'P' && content[1] == 'O' && content[2] == 'S' && content[3] == 'T') {
+                        this.method = KEY_POST;
+                    } else if (content[0] == 'H' && content[1] == 'E' && content[2] == 'A' && content[3] == 'D') {
+                        this.method = KEY_HEAD;
+                    } else {
+                        this.method = bytes.toString(true, charset);
+                    }
+                } else if (size == 7) {
+                    this.getmethod = false;
+                    if (content[0] == 'O' && content[1] == 'P' && content[2] == 'T'
+                        && content[3] == 'I' && content[4] == 'O' && content[5] == 'N' && content[6] == 'S') {
+                        this.method = KEY_OPTIONS;
+                    } else {
+                        this.method = bytes.toString(true, charset);
+                    }
                 } else {
                     this.method = bytes.toString(true, charset);
                     this.getmethod = false;
                 }
-            } else if (size == 4) {
-                this.getmethod = false;
-                if (content[0] == 'P' && content[1] == 'O' && content[2] == 'S' && content[3] == 'T') {
-                    this.method = KEY_POST;
-                } else {
-                    this.method = bytes.toString(true, charset);
-                }
-            } else {
-                this.method = bytes.toString(true, charset);
-                this.getmethod = false;
+                bytes.clear();
             }
-            bytes.clear();
         }
+
         //读uri
         if (this.requestURI == null) {
             int qst = -1;//?的位置
@@ -518,19 +587,19 @@ public class HttpRequest extends Request<HttpContext> {
                 bytes.put(b);
             }
             size = bytes.length();
-            if (qst > 0) {
+            if (qst > 0) { //带?参数
                 this.requestURI = decodeable ? toDecodeString(bytes, 0, qst, charset) : bytes.toString(latin1, 0, qst, charset);
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
                 this.lastRequestURIString = null;
                 this.lastRequestURIBytes = null;
                 try {
-                    addParameter(bytes, qst + 1, qlen);
+                    addParameter(bytes, false, qst + 1, qlen);
                 } catch (Exception e) {
                     this.context.getLogger().log(Level.WARNING, "HttpRequest.addParameter error: " + bytes.toString(), e);
                 }
             } else {
-                if (decodeable) {
+                if (decodeable) { //需要转义
                     this.requestURI = toDecodeString(bytes, 0, bytes.length(), charset);
                     this.lastRequestURIString = null;
                     this.lastRequestURIBytes = null;
@@ -937,11 +1006,11 @@ public class HttpRequest extends Request<HttpContext> {
         }
         bodyParsed = true;
         if (this.contentType != null && this.contentType.toLowerCase().contains("x-www-form-urlencoded")) {
-            addParameter(array, 0, array.length());
+            addParameter(array, true, 0, array.length());
         }
     }
 
-    private void addParameter(final ByteArray array, final int offset, final int len) {
+    private void addParameter(final ByteArray array, final boolean body, final int offset, final int len) {
         if (len < 1) {
             return;
         }
@@ -951,25 +1020,25 @@ public class HttpRequest extends Request<HttpContext> {
         int valpos = array.find(offset, limit, '&');
         if (keypos <= 0 || (valpos >= 0 && valpos < keypos)) {
             if (valpos > 0) {
-                addParameter(array, valpos + 1, limit - valpos - 1);
+                addParameter(array, body, valpos + 1, limit - valpos - 1);
             }
             return;
         }
         String name = toDecodeString(array, offset, keypos - offset, charset);
-        if (!name.isEmpty() && name.charAt(0) == '<') {
+        if (body && !name.isEmpty() && name.charAt(0) == '<') {
             return; //内容可能是xml格式; 如: <?xml version="1.0"
         }
         ++keypos;
         String value = toDecodeString(array, keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
         this.params.put(name, value);
         if (valpos >= 0) {
-            addParameter(array, valpos + 1, limit - valpos - 1);
+            addParameter(array, body, valpos + 1, limit - valpos - 1);
         }
     }
 
     protected HttpRequest setMethod(String method) {
         this.method = method;
-        this.getmethod = "GET".equalsIgnoreCase(method);
+        this.getmethod = KEY_GET.equalsIgnoreCase(method);
         return this;
     }
 
