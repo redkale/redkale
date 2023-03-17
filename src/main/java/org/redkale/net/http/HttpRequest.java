@@ -633,7 +633,7 @@ public class HttpRequest extends Request<HttpContext> {
                 if (remain-- < 1) {
                     this.params.clear();
                     buffer.clear();
-                    buffer.put((byte) '\r');
+                    buffer.put(b);
                     return 1;
                 }
                 if (buffer.get() != '\n') {

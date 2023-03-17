@@ -1730,13 +1730,6 @@ public final class Rest {
             av0.visitEnd();
             fv.visitEnd();
         }
-        {  //注入 @Resource(name = "APP_HOME")  private File _redkale_home;
-            fv = cw.visitField(ACC_PRIVATE, "_redkale_home", Type.getDescriptor(File.class), null, null);
-            av0 = fv.visitAnnotation(resDesc, true);
-            av0.visit("name", "APP_HOME");
-            av0.visitEnd();
-            fv.visitEnd();
-        }
         { //_servicemap字段 Map<String, XXXService>
             fv = cw.visitField(ACC_PRIVATE, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;" + serviceDesc + ">;", null);
             fv.visitEnd();
@@ -1771,6 +1764,7 @@ public final class Rest {
         final Map<String, List<String>> asmParamMap = namePresent ? null : MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), serviceType);
 
         Map<String, byte[]> innerClassBytesMap = new LinkedHashMap<>();
+        boolean containsMupload = false;
         for (final MappingEntry entry : entrys) {
             RestUploadFile mupload = null;
             Class muploadType = null;
@@ -2322,6 +2316,7 @@ public final class Rest {
             }
             int uploadLocal = 0;
             if (mupload != null) { //存在文件上传
+                containsMupload = true;
                 if (muploadType == byte[].class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
@@ -3281,6 +3276,14 @@ public final class Rest {
                 innerClassBytesMap.put((newDynName + "$" + entry.newActionClassName).replace('/', '.'), bytes);
             }
         } // end  for each
+
+        if (containsMupload) {  //注入 @Resource(name = "APP_HOME")  private File _redkale_home;
+            fv = cw.visitField(ACC_PRIVATE, "_redkale_home", Type.getDescriptor(File.class), null, null);
+            av0 = fv.visitAnnotation(resDesc, true);
+            av0.visit("name", "APP_HOME");
+            av0.visitEnd();
+            fv.visitEnd();
+        }
 
 //        HashMap<String, ActionEntry> _createRestActionEntry() {
 //              HashMap<String, ActionEntry> map = new HashMap<>();

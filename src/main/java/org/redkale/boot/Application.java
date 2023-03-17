@@ -8,33 +8,33 @@ package org.redkale.boot;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.net.http.HttpClient;
-import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
+import java.net.http.*;
+import java.nio.*;
+import java.nio.channels.*;
+import java.nio.charset.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
+import java.util.concurrent.locks.*;
+import java.util.function.*;
 import java.util.logging.*;
-import javax.net.ssl.SSLContext;
-import org.redkale.annotation.Resource;
+import javax.net.ssl.*;
+import org.redkale.annotation.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.*;
-import org.redkale.convert.Convert;
-import org.redkale.convert.bson.BsonFactory;
+import org.redkale.convert.*;
+import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.Service;
+import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
-import org.redkale.watch.WatchServlet;
+import org.redkale.watch.*;
 
 /**
  *
@@ -1607,15 +1607,17 @@ public final class Application {
             }
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") start in " + (System.currentTimeMillis() - s) + " ms");
         }
+
+        for (ApplicationListener listener : this.listeners) {
+            listener.postStart(this);
+        }
+
         long intms = System.currentTimeMillis() - startTime;
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
         logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale started in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n");
         LoggingBaseHandler.traceFlag = true;
 
-        for (ApplicationListener listener : this.listeners) {
-            listener.postStart(this);
-        }
         if (!singletonMode && !compileMode) {
             this.shutdownLatch.await();
         }
@@ -2410,6 +2412,7 @@ public final class Application {
     }
 
     public void shutdown() throws Exception {
+        long f = System.currentTimeMillis();
         for (ApplicationListener listener : this.listeners) {
             try {
                 listener.preShutdown(this);
@@ -2506,6 +2509,13 @@ public final class Application {
             logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
         this.sncpTransportFactory.shutdownNow();
+
+        long intms = System.currentTimeMillis() - f;
+        String ms = String.valueOf(intms);
+        int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
+        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale shutdown in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n" + "\r\n");
+        LoggingBaseHandler.traceFlag = true;
+
     }
 
     public ExecutorService getWorkExecutor() {
