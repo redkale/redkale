@@ -6,9 +6,9 @@
 package org.redkale.util;
 
 import java.io.*;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.nio.charset.*;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * 简单的byte[]操作类。
@@ -290,31 +290,6 @@ public final class ByteArray implements ByteTuple {
      */
     public void copyTo(byte[] buf) {
         System.arraycopy(this.content, 0, buf, 0, count);
-    }
-
-    /**
-     * 将ByteBuffer的内容读取到本对象中
-     *
-     * @param buffer ByteBuffer
-     */
-    public void put(ByteBuffer buffer) {
-        if (buffer == null) {
-            return;
-        }
-        int remain = buffer.remaining();
-        if (remain == 0) {
-            return;
-        }
-        int l = this.content.length - count;
-        if (remain > l) {
-            byte[] ns = new byte[this.content.length + remain];
-            if (count > 0) {
-                System.arraycopy(content, 0, ns, 0, count);
-            }
-            this.content = ns;
-        }
-        buffer.get(content, count, remain);
-        count += remain;
     }
 
     /**
@@ -820,6 +795,16 @@ public final class ByteArray implements ByteTuple {
     }
 
     /**
+     * 写入一个byte值
+     *
+     * @param value byte值
+     *
+     */
+    public void putWithoutCheck(byte value) {
+        content[count++] = value;
+    }
+
+    /**
      * 写入一个byte值， content.length 必须不能小于offset+1
      *
      * @param offset 偏移量
@@ -915,6 +900,31 @@ public final class ByteArray implements ByteTuple {
     public ByteArray put(int poffset, byte[] values, int offset, int length) {
         System.arraycopy(values, offset, content, poffset, length);
         return this;
+    }
+
+    /**
+     * 将ByteBuffer的内容读取到本对象中
+     *
+     * @param buffer ByteBuffer
+     */
+    public void put(ByteBuffer buffer) {
+        if (buffer == null) {
+            return;
+        }
+        int remain = buffer.remaining();
+        if (remain == 0) {
+            return;
+        }
+        int l = this.content.length - count;
+        if (remain > l) {
+            byte[] ns = new byte[this.content.length + remain];
+            if (count > 0) {
+                System.arraycopy(content, 0, ns, 0, count);
+            }
+            this.content = ns;
+        }
+        buffer.get(content, count, remain);
+        count += remain;
     }
 
     /**

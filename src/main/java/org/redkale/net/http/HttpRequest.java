@@ -641,7 +641,7 @@ public class HttpRequest extends Request<HttpContext> {
                 }
                 break;
             }
-            bytes.put(b);
+            bytes.putWithoutCheck(b);
         }
         size = bytes.length();
         byte[] content = bytes.content();

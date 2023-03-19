@@ -13,11 +13,13 @@ import org.redkale.util.*;
  * HttpRender主要是给HttpResponse.finish(Object obj)提供指定数据类型的输出策略。 <br>
  * <pre>
  * HttpResponse.finish(Object obj)内置对如下数据类型进行了特殊处理:
+ *      CompletionStage
  *      CharSequence/String
  *      byte[]
  *      File
  *      RetResult
  *      HttpResult
+ *      HttpScope
  * </pre>
  * <p>
  * 如果对其他数据类型有特殊输出的需求，则需要自定义HttpRender。
