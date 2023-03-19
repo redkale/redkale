@@ -311,7 +311,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         try {
             final String uri = request.getRequestURI();
             HttpServlet servlet;
-            if (response.isAutoOptions() && "OPTIONS".equals(request.getMethod())) {
+            if (response.isAutoOptions() && HttpRequest.METHOD_OPTIONS.equals(request.getMethod())) {
                 response.finish(200, null);
                 return;
             }

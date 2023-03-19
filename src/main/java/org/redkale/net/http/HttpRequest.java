@@ -49,31 +49,31 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final byte[] EMPTY_BYTES = new byte[0];
 
-    protected static final String KEY_GET = "GET";
+    protected static final String METHOD_GET = "GET";
 
-    protected static final String KEY_PUT = "PUT";
+    protected static final String METHOD_PUT = "PUT";
 
-    protected static final String KEY_POST = "POST";
+    protected static final String METHOD_POST = "POST";
 
-    protected static final String KEY_HEAD = "HEAD";
+    protected static final String METHOD_HEAD = "HEAD";
 
-    protected static final String KEY_OPTIONS = "OPTIONS";
+    protected static final String METHOD_OPTIONS = "OPTIONS";
 
-    protected static final String KEY_HTTP_1_1 = "HTTP/1.1";
+    protected static final String HTTP_1_1 = "HTTP/1.1";
 
-    protected static final String KEY_HTTP_2_0 = "HTTP/2.0";
+    protected static final String HTTP_2_0 = "HTTP/2.0";
 
-    protected static final String KEY_COOKIE = "Cookie";
+    protected static final String HEAD_COOKIE = "Cookie";
 
-    protected static final String KEY_CONNECTION = "Connection";
+    protected static final String HEAD_CONNECTION = "Connection";
 
-    protected static final String KEY_CONTENT_TYPE = "Content-Type";
+    protected static final String HEAD_CONTENT_TYPE = "Content-Type";
 
-    protected static final String KEY_ACCEPT = "Accept";
+    protected static final String HEAD_ACCEPT = "Accept";
 
-    protected static final String KEY_HOST = "Host";
+    protected static final String HEAD_HOST = "Host";
 
-    protected static final String KEY_EXPECT = "Expect";
+    protected static final String HEAD_EXPECT = "Expect";
 
     public static final String SESSIONID_NAME = "JSESSIONID";
 
@@ -224,7 +224,7 @@ public class HttpRequest extends Request<HttpContext> {
             } else {
                 this.requestURI = req.getRequestURI();
             }
-            this.method = KEY_POST;
+            this.method = METHOD_POST;
             if (req.getSessionid() != null && !req.getSessionid().isEmpty()) {
                 this.cookies = new HttpCookie[]{new HttpCookie(SESSIONID_NAME, req.getSessionid())};
             }
@@ -482,10 +482,10 @@ public class HttpRequest extends Request<HttpContext> {
                         if (b4 == ' ') {
                             remain -= 4;
                             if (b1 == 'G' && b2 == 'E' && b3 == 'T') {
-                                this.method = KEY_GET;
+                                this.method = METHOD_GET;
                                 this.getmethod = true;
                             } else if (b1 == 'P' && b2 == 'U' && b3 == 'T') {
-                                this.method = KEY_PUT;
+                                this.method = METHOD_PUT;
                                 this.getmethod = false;
                             } else {
                                 this.method = new String(new byte[]{b1, b2, b3});
@@ -496,10 +496,10 @@ public class HttpRequest extends Request<HttpContext> {
                             remain -= 5;
                             if (b5 == ' ') {
                                 if (b1 == 'P' && b2 == 'O' && b3 == 'S' && b3 == 'T') {
-                                    this.method = KEY_POST;
+                                    this.method = METHOD_POST;
                                     this.getmethod = false;
                                 } else if (b1 == 'H' && b2 == 'E' && b3 == 'A' && b3 == 'D') {
-                                    this.method = KEY_HEAD;
+                                    this.method = METHOD_HEAD;
                                     this.getmethod = false;
                                 } else {
                                     this.method = new String(new byte[]{b1, b2, b3, b4});
@@ -529,10 +529,10 @@ public class HttpRequest extends Request<HttpContext> {
                 byte[] content = bytes.content();
                 if (size == 3) {
                     if (content[0] == 'G' && content[1] == 'E' && content[2] == 'T') {
-                        this.method = KEY_GET;
+                        this.method = METHOD_GET;
                         this.getmethod = true;
                     } else if (content[0] == 'P' && content[1] == 'U' && content[2] == 'T') {
-                        this.method = KEY_PUT;
+                        this.method = METHOD_PUT;
                         this.getmethod = false;
                     } else {
                         this.method = bytes.toString(true, charset);
@@ -541,9 +541,9 @@ public class HttpRequest extends Request<HttpContext> {
                 } else if (size == 4) {
                     this.getmethod = false;
                     if (content[0] == 'P' && content[1] == 'O' && content[2] == 'S' && content[3] == 'T') {
-                        this.method = KEY_POST;
+                        this.method = METHOD_POST;
                     } else if (content[0] == 'H' && content[1] == 'E' && content[2] == 'A' && content[3] == 'D') {
-                        this.method = KEY_HEAD;
+                        this.method = METHOD_HEAD;
                     } else {
                         this.method = bytes.toString(true, charset);
                     }
@@ -551,7 +551,7 @@ public class HttpRequest extends Request<HttpContext> {
                     this.getmethod = false;
                     if (content[0] == 'O' && content[1] == 'P' && content[2] == 'T'
                         && content[3] == 'I' && content[4] == 'O' && content[5] == 'N' && content[6] == 'S') {
-                        this.method = KEY_OPTIONS;
+                        this.method = METHOD_OPTIONS;
                     } else {
                         this.method = bytes.toString(true, charset);
                     }
@@ -646,9 +646,9 @@ public class HttpRequest extends Request<HttpContext> {
         size = bytes.length();
         byte[] content = bytes.content();
         if (size == 8 && content[0] == 'H' && content[5] == '1' && content[7] == '1') {
-            this.protocol = KEY_HTTP_1_1;
+            this.protocol = HTTP_1_1;
         } else if (size == 8 && content[0] == 'H' && content[5] == '2' && content[7] == '0') {
-            this.protocol = KEY_HTTP_2_0;
+            this.protocol = HTTP_2_0;
         } else {
             this.protocol = bytes.toString(true, charset);
         }
@@ -875,37 +875,37 @@ public class HttpRequest extends Request<HttpContext> {
         final byte first = bs[0];
         if (first == 'H' && size == 4) {  //Host
             if (bs[1] == 'o' && bs[2] == 's' && bs[3] == 't') {
-                return KEY_HOST;
+                return HEAD_HOST;
             }
         } else if (first == 'A' && size == 6) {  //Accept
             if (bs[1] == 'c' && bs[2] == 'c' && bs[3] == 'e'
                 && bs[4] == 'p' && bs[5] == 't') {
-                return KEY_ACCEPT;
+                return HEAD_ACCEPT;
             }
         } else if (first == 'C') {
             if (size == 10) { //Connection
                 if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 'n'
                     && bs[4] == 'e' && bs[5] == 'c' && bs[6] == 't'
                     && bs[7] == 'i' && bs[8] == 'o' && bs[9] == 'n') {
-                    return KEY_CONNECTION;
+                    return HEAD_CONNECTION;
                 }
             } else if (size == 12) { //Content-Type
                 if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 't'
                     && bs[4] == 'e' && bs[5] == 'n' && bs[6] == 't'
                     && bs[7] == '-' && bs[8] == 'T' && bs[9] == 'y'
                     && bs[10] == 'p' && bs[11] == 'e') {
-                    return KEY_CONTENT_TYPE;
+                    return HEAD_CONTENT_TYPE;
                 }
             } else if (size == 6) { //Cookie
                 if (bs[1] == 'o' && bs[2] == 'o' && bs[3] == 'k'
                     && bs[4] == 'i' && bs[5] == 'e') {
-                    return KEY_COOKIE;
+                    return HEAD_COOKIE;
                 }
             }
         } else if (first == 'E' && size == 6) {  //Expect
             if (bs[1] == 'x' && bs[2] == 'p' && bs[3] == 'e'
                 && bs[4] == 'c' && bs[5] == 't') {
-                return KEY_EXPECT;
+                return HEAD_EXPECT;
             }
         }
         return bytes.toString(latin1, charset);
@@ -1005,7 +1005,7 @@ public class HttpRequest extends Request<HttpContext> {
             return;
         }
         bodyParsed = true;
-        if (this.contentType != null && this.contentType.toLowerCase().contains("x-www-form-urlencoded")) {
+        if (this.getContentType() != null && this.contentType.toLowerCase().contains("x-www-form-urlencoded")) {
             addParameter(array, true, 0, array.length());
         }
     }
@@ -1038,7 +1038,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected HttpRequest setMethod(String method) {
         this.method = method;
-        this.getmethod = KEY_GET.equalsIgnoreCase(method);
+        this.getmethod = METHOD_GET.equalsIgnoreCase(method);
         return this;
     }
 
@@ -1504,10 +1504,10 @@ public class HttpRequest extends Request<HttpContext> {
             + (this.currentUserid != CURRUSERID_NIL ? (", \r\n    currentUserid: " + (this.currentUserid == CURRUSERID_NIL ? null : this.currentUserid)) : "")
             + (this.getRemoteAddr() != null ? (", \r\n    remoteAddr: " + this.getRemoteAddr()) : "")
             + (this.cookie != null ? (", \r\n    cookies: " + this.cookie) : "")
-            + (this.contentType != null ? (", \r\n    contentType: " + this.contentType) : "")
+            + (this.getContentType() != null ? (", \r\n    contentType: " + this.contentType) : "")
             + (this.protocol != null ? (", \r\n    protocol: " + this.protocol) : "")
-            + (this.host != null ? (", \r\n    host: " + this.host) : "")
-            + (this.contentLength >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
+            + (this.getHost() != null ? (", \r\n    host: " + this.host) : "")
+            + (this.getContentLength() >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
             + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
             + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + (this.respConvertType == null || this.respConvertType == ConvertType.JSON ? this.getBodyUTF8() : Arrays.toString(getBody()))))
             + ", \r\n    params: " + toMapString(this.params, 4)
@@ -1701,6 +1701,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return contentType
      */
     public String getContentType() {
+        if (contentType == null) {
+            parseHeader();
+        }
         return contentType;
     }
 
@@ -1710,6 +1713,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容长度
      */
     public long getContentLength() {
+        if (contentLength < 1) {
+            parseHeader();
+        }
         return contentLength;
     }
 
@@ -1719,6 +1725,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return Host
      */
     public String getHost() {
+        if (host == null) {
+            parseHeader();
+        }
         return host;
     }
 

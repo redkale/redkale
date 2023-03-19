@@ -37,8 +37,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private ScheduledThreadPoolExecutor dateScheduler;
 
-    private byte[] currDateBytes;
-
     private HttpResponseConfig respConfig;
 
     private ByteBufferPool safeBufferPool;
@@ -478,18 +476,19 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                     t.setDaemon(true);
                     return t;
                 });
+                final ObjectReference<byte[]> dateRef = new ObjectReference<>();
                 final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, d MMM y HH:mm:ss z", Locale.ENGLISH);
                 gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-                currDateBytes = ("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes();
+                dateRef.set(("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes());
                 final int dp = datePeriod;
                 this.dateScheduler.scheduleAtFixedRate(() -> {
                     try {
-                        currDateBytes = ("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes();
+                        dateRef.set(("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes());
                     } catch (Throwable t) {
                         logger.log(Level.SEVERE, "HttpServer schedule(interval=" + dp + "ms) date-format error", t);
                     }
                 }, 1000 - System.currentTimeMillis() % 1000, datePeriod, TimeUnit.MILLISECONDS);
-                dateSupplier = () -> currDateBytes;
+                dateSupplier = () -> dateRef.get();
             }
         }
         HttpRender httpRender = null;
