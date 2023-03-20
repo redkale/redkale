@@ -5,9 +5,9 @@
  */
 package org.redkale.convert.json;
 
-import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.util.function.Consumer;
+import java.lang.reflect.*;
+import java.nio.charset.*;
+import java.util.function.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.json.JsonWriter.*;
 import org.redkale.util.*;
@@ -311,7 +311,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             System.arraycopy(bs2, 0, src, c, len2);
             c += len2;
             src[c++] = '"';
-            content[c++] = '}';
+            src[c++] = '}';
             count = c;
         }
     }

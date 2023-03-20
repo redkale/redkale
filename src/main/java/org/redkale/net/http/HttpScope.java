@@ -5,13 +5,13 @@
  */
 package org.redkale.net.http;
 
-import java.io.Serializable;
-import java.net.HttpCookie;
+import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.convert.*;
-import org.redkale.convert.json.JsonConvert;
-import org.redkale.persistence.Transient;
+import org.redkale.convert.json.*;
+import org.redkale.persistence.*;
 
 /**
  * HTTP输出引擎的对象域 <br>
@@ -109,6 +109,16 @@ public class HttpScope {
         rs.setReferid(template);
         rs.attrFunction = attrFunction;
         return rs;
+    }
+
+    public boolean recycle() {
+        this.referid = null;
+        this.referObj = null;
+        this.attributes = null;
+        this.attrFunction = null;
+        this.headers = null;
+        this.cookies = null;
+        return true;
     }
 
     public HttpScope referObj(Object value) {
