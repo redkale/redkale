@@ -5,24 +5,24 @@
  */
 package org.redkale.net.http;
 
-import java.lang.reflect.*;
-import java.net.*;
+import java.lang.reflect.Field;
+import java.net.HttpCookie;
 import java.text.*;
-import java.time.*;
+import java.time.ZoneId;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.*;
-import java.util.function.*;
-import java.util.logging.*;
-import org.redkale.boot.*;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import org.redkale.boot.Application;
 import org.redkale.mq.*;
-import org.redkale.net.*;
+import org.redkale.net.Server;
 import org.redkale.net.http.HttpContext.HttpContextConfig;
 import org.redkale.net.http.HttpResponse.HttpResponseConfig;
-import org.redkale.net.sncp.*;
-import org.redkale.service.*;
+import org.redkale.net.sncp.Sncp;
+import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
@@ -42,6 +42,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     private ByteBufferPool safeBufferPool;
 
     private final ReentrantLock groupLock = new ReentrantLock();
+
+    private final ReentrantLock addLock = new ReentrantLock();
 
     private WebSocketAsyncGroup asyncGroup;
 
@@ -93,6 +95,11 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         if (httpRender != null) {
             httpRender.destroy(context, respConf.renderConfig);
         }
+    }
+
+    @Override
+    protected String startExtLog() {
+        return context.lazyHeaders ? ", lazyHeaders: true" : "";
     }
 
     public List<HttpServlet> getHttpServlets() {
@@ -241,7 +248,13 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @return RestServlet
      */
-    public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(final ClassLoader classLoader, final Class<S> webSocketType, MessageAgent messageAgent, final String prefix, final AnyValue conf) {
+    public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(
+        final ClassLoader classLoader,
+        final Class<S> webSocketType,
+        final MessageAgent messageAgent,
+        final String prefix,
+        final AnyValue conf) {
+
         T servlet = Rest.createRestWebSocketServlet(classLoader, webSocketType, messageAgent);
         if (servlet != null) {
             this.dispatcher.addServlet(servlet, prefix, conf);
@@ -262,7 +275,13 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @return RestServlet
      */
-    public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
+    public <S extends Service, T extends HttpServlet> T addRestServlet(
+        final ClassLoader classLoader,
+        final S service,
+        final Class userType,
+        final Class<T> baseServletType,
+        final String prefix) {
+
         return addRestServlet(classLoader, null, service, userType, baseServletType, prefix);
     }
 
@@ -281,72 +300,72 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return RestServlet
      */
     @SuppressWarnings("unchecked")
-    public <S extends Service, T extends HttpServlet> T addRestServlet(final ClassLoader classLoader, final String name, final S service, final Class userType, final Class<T> baseServletType, final String prefix) {
+    public <S extends Service, T extends HttpServlet> T addRestServlet(
+        final ClassLoader classLoader,
+        final String name,
+        final S service,
+        final Class userType,
+        final Class<T> baseServletType,
+        final String prefix) {
+
         T servlet = null;
-        final boolean sncp = Sncp.isSncpDyn(service);
-        final String resname = name == null ? (sncp ? Sncp.getResourceName(service) : "") : name;
-        final Class<S> serviceType = Sncp.getResourceType(service);
-        if (name != null) {
-            for (final HttpServlet item : ((HttpDispatcherServlet) this.dispatcher).getServlets()) {
-                if (!(item instanceof HttpServlet)) {
-                    continue;
+        addLock.lock();
+        try {
+            final boolean sncp = Sncp.isSncpDyn(service);
+            final String resname = name == null ? (sncp ? Sncp.getResourceName(service) : "") : name;
+            final Class<S> serviceType = Sncp.getResourceType(service);
+
+            for (final HttpServlet item : this.dispatcher.getServlets()) {
+                Rest.RestDynSourceType dst = item.getClass().getAnnotation(Rest.RestDynSourceType.class);
+                if (dst != null && serviceType.equals(dst.value())) {
+                    servlet = (T) item;
+                    break;
                 }
-                if (item.getClass().getAnnotation(Rest.RestDyn.class) == null) {
-                    continue;
-                }
-                try {
-                    Field field = item.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
-                    if (serviceType.equals(field.getType())) {
-                        servlet = (T) item;
-                        break;
+            }
+            final boolean first = servlet == null;
+            if (servlet == null) {
+                servlet = Rest.createRestServlet(classLoader, userType, baseServletType, serviceType);
+                if (servlet != null) {
+                    servlet._reqtopic = MessageAgent.generateHttpReqTopic(Rest.getRestModule(service));
+                    if (serviceType.getAnnotation(MessageMultiConsumer.class) != null) {
+                        MessageMultiConsumer mmc = serviceType.getAnnotation(MessageMultiConsumer.class);
+                        servlet._mmctopic = MessageAgent.generateHttpReqTopic(mmc.module(), resname);
                     }
-                } catch (NoSuchFieldException | SecurityException e) {
-                    logger.log(Level.SEVERE, "serviceType = " + serviceType + ", servletClass = " + item.getClass(), e);
                 }
             }
-        }
-        final boolean first = servlet == null;
-        if (servlet == null) {
-            servlet = Rest.createRestServlet(classLoader, userType, baseServletType, serviceType);
-            if (servlet != null) {
-                servlet._reqtopic = MessageAgent.generateHttpReqTopic(Rest.getRestModule(service));
-                if (serviceType.getAnnotation(MessageMultiConsumer.class) != null) {
-                    MessageMultiConsumer mmc = serviceType.getAnnotation(MessageMultiConsumer.class);
-                    servlet._mmctopic = MessageAgent.generateHttpReqTopic(mmc.module(), resname);
-                }
+            if (servlet == null) {
+                return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
             }
-        }
-        if (servlet == null) {
-            return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
-        }
-        try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
-            Field field = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
-            field.setAccessible(true);
+            try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
+                Field oneField = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
+                oneField.setAccessible(true);
 
-            Field mapfield = servlet.getClass().getDeclaredField(Rest.REST_SERVICEMAP_FIELD_NAME);
-            mapfield.setAccessible(true);
+                Field mapField = servlet.getClass().getDeclaredField(Rest.REST_SERVICEMAP_FIELD_NAME);
+                mapField.setAccessible(true);
 
-            Service firstService = (Service) field.get(servlet);
-            if (resname.isEmpty()) {
-                field.set(servlet, service);
-                firstService = service;
-            }
-            Map map = (Map) mapfield.get(servlet);
-            if (map == null && !resname.isEmpty()) {
-                map = new HashMap();
-            }
-            if (map != null) {
-                map.put(resname, service);
-                if (firstService != null) {
-                    map.put("", firstService);
+                Service oneService = (Service) oneField.get(servlet);
+                if (resname.isEmpty() || oneService == null) {
+                    oneField.set(servlet, service);
                 }
+                Map map = (Map) mapField.get(servlet);
+                if (!resname.isEmpty() || oneService != null || map != null) {
+                    if (map == null) {
+                        map = new HashMap();
+                    }
+                    map.put(resname, service);
+                    if (oneService != null) {
+                        map.put(Sncp.getResourceName(oneService), oneService);
+                    }
+                    mapField.set(servlet, map);
+                }
+            } catch (Exception e) {
+                throw new HttpException(serviceType + " generate rest servlet error", e);
             }
-            mapfield.set(servlet, map);
-        } catch (Exception e) {
-            throw new HttpException(serviceType + " generate rest servlet error", e);
-        }
-        if (first) {
-            this.dispatcher.addServlet(servlet, prefix, sncp ? Sncp.getResourceConf(service) : null);
+            if (first) {
+                this.dispatcher.addServlet(servlet, prefix, sncp ? Sncp.getResourceConf(service) : null);
+            }
+        } finally {
+            addLock.unlock();
         }
         return servlet;
     }

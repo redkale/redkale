@@ -3,13 +3,13 @@
  */
 package org.redkale.net.sncp;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.channels.*;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
-import org.redkale.convert.*;
+import org.redkale.convert.Convert;
 import org.redkale.mq.*;
 import static org.redkale.net.sncp.Sncp.loadMethodActions;
 import org.redkale.service.*;
@@ -26,7 +26,7 @@ import org.redkale.util.*;
  *
  * @since 2.8.0
  */
-public final class SncpServiceInfo<T extends Service> {
+public final class SncpRemoteInfo<T extends Service> {
 
     protected final String name;
 
@@ -36,11 +36,16 @@ public final class SncpServiceInfo<T extends Service> {
 
     protected final int serviceVersion;
 
-    protected final SncpServiceAction[] actions;
+    protected final SncpRemoteAction[] actions;
 
+    //MQ模式下此字段才有值
     protected final String topic;
 
+    //默认值: BsonConvert.root()
     protected final Convert convert;
+
+    //非MQ模式下此字段才有值
+    protected final SncpRpcGroups sncpRpcGroups;
 
     //非MQ模式下此字段才有值
     protected final SncpClient sncpClient;
@@ -51,34 +56,59 @@ public final class SncpServiceInfo<T extends Service> {
     //MQ模式下此字段才有值
     protected final SncpMessageClient messageClient;
 
-    //远程模式, 可能为null
-    protected Set<String> remoteGroups;
+    //MQ模式下此字段才有值, 可能为null
+    protected String remoteGroup;
 
-    //远程模式, 可能为null
+    //MQ模式下此字段才有值, 可能为null
     protected Set<InetSocketAddress> remoteAddresses;
 
-    SncpServiceInfo(String resourceName, Class<T> resourceServiceType, final Class<T> serviceImplClass, Convert convert,
-        SncpClient sncpClient, MessageAgent messageAgent, SncpMessageClient messageClient) {
-        this.sncpClient = sncpClient;
+    SncpRemoteInfo(String resourceName, Class<T> resourceServiceType, Class<T> serviceImplClass, Convert convert,
+        SncpRpcGroups sncpRpcGroups, SncpClient sncpClient, MessageAgent messageAgent, String remoteGroup) {
+        Objects.requireNonNull(sncpRpcGroups);
         this.name = resourceName;
         this.serviceType = resourceServiceType;
         this.serviceid = Sncp.serviceid(resourceName, resourceServiceType);
         this.convert = convert;
         this.serviceVersion = 0;
+        this.sncpRpcGroups = sncpRpcGroups;
+        this.sncpClient = sncpClient;
         this.messageAgent = messageAgent;
+        this.remoteGroup = remoteGroup;
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
         this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(resourceName, resourceServiceType);
 
-        final List<SncpServiceAction> serviceActions = new ArrayList<>();
+        final List<SncpRemoteAction> serviceActions = new ArrayList<>();
         for (Map.Entry<Uint128, Method> en : loadMethodActions(resourceServiceType).entrySet()) {
-            serviceActions.add(new SncpServiceAction(serviceImplClass, en.getValue(), serviceid, en.getKey()));
+            serviceActions.add(new SncpRemoteAction(serviceImplClass, en.getValue(), serviceid, en.getKey()));
         }
-        this.actions = serviceActions.toArray(new SncpServiceAction[serviceActions.size()]);
+        this.actions = serviceActions.toArray(new SncpRemoteAction[serviceActions.size()]);
     }
 
-    //只给远程模式调用的
+    public InetSocketAddress nextRemoteAddress() {
+        SncpRpcGroup srg = sncpRpcGroups.getSncpRpcGroup(remoteGroup);
+        if (srg != null) {
+            Set<InetSocketAddress> addrs = srg.getAddresses();
+            if (!addrs.isEmpty()) {
+                Iterator<InetSocketAddress> it = addrs.iterator();
+                if (it.hasNext()) {
+                    return it.next();
+                }
+            }
+        }
+        throw new SncpException("Not found SocketAddress by remoteGroup = " + remoteGroup);
+    }
+
+    //由远程模式的DyncRemoveService调用
     public <T> T remote(final int index, final Object... params) {
-        return sncpClient.remote(this, index, params);
+        if (messageAgent != null) {
+            return remoteMessage(index, params);
+        } else {
+            return sncpClient.remote(this, index, params);
+        }
+    }
+
+    private <T> T remoteMessage(final int index, final Object[] params) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -93,12 +123,12 @@ public final class SncpServiceInfo<T extends Service> {
         InetSocketAddress clientSncpAddress = sncpClient == null ? null : sncpClient.getClientSncpAddress();
         return serviceType.getSimpleName() + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = " + serviceVersion
             + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
-            + ((remoteGroups == null || remoteGroups.isEmpty()) ? "" : ", remoteGroups = " + remoteGroups)
+            + ((remoteGroup == null || remoteGroup.isEmpty()) ? "" : ", remoteGroup = " + remoteGroup)
             + ", actions.size = " + actions.length + ")";
     }
 
-    public void updateRemoteAddress(Set<String> remoteGroups, Set<InetSocketAddress> remoteAddresses) {
-        this.remoteGroups = remoteGroups;
+    public void updateRemoteAddress(String remoteGroup, Set<InetSocketAddress> remoteAddresses) {
+        this.remoteGroup = remoteGroup;
         this.remoteAddresses = remoteAddresses;
     }
 
@@ -118,7 +148,7 @@ public final class SncpServiceInfo<T extends Service> {
         return serviceVersion;
     }
 
-    public SncpServiceAction[] getActions() {
+    public SncpRemoteAction[] getActions() {
         return actions;
     }
 
@@ -126,15 +156,15 @@ public final class SncpServiceInfo<T extends Service> {
         return topic;
     }
 
-    public Set<String> getRemoteGroups() {
-        return remoteGroups;
+    public String getRemoteGroup() {
+        return remoteGroup;
     }
 
     public Set<InetSocketAddress> getRemoteAddresses() {
         return remoteAddresses;
     }
 
-    public static final class SncpServiceAction {
+    public static final class SncpRemoteAction {
 
         protected final Uint128 actionid;
 
@@ -169,7 +199,7 @@ public final class SncpServiceInfo<T extends Service> {
         protected final SncpHeader header;
 
         @SuppressWarnings("unchecked")
-        SncpServiceAction(final Class serviceImplClass, Method method, Uint128 serviceid, Uint128 actionid) {
+        SncpRemoteAction(final Class serviceImplClass, Method method, Uint128 serviceid, Uint128 actionid) {
             this.actionid = actionid == null ? Sncp.actionid(method) : actionid;
             Type rt = TypeToken.getGenericType(method.getGenericReturnType(), serviceImplClass);
             this.returnObjectType = rt == void.class || rt == Void.class ? null : rt;

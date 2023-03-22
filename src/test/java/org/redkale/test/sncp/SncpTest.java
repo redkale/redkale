@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.boot.*;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
-import org.redkale.net.sncp.*;
+import org.redkale.net.sncp.SncpServer;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
@@ -76,7 +76,7 @@ public class SncpTest {
         asyncGroup.start();
         final TransportFactory transFactory = TransportFactory.create(asyncGroup, protocol.endsWith(".UDP") ? "UDP" : "TCP", 0, 0);
         transFactory.addGroupInfo("client", set);
-        final SncpTestIService service = Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, addr, "client");
+        final SncpTestIService service = null;//Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, addr, "client");
         factory.inject(service);
 
 //        SncpTestBean bean = new SncpTestBean();
@@ -171,7 +171,7 @@ public class SncpTest {
                     }
                     final TransportFactory transFactory = TransportFactory.create(asyncGroup, protocol.endsWith(".UDP") ? "UDP" : "TCP", 0, 0);
                     transFactory.addGroupInfo("server", set);
-                    SncpTestIService service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory, transFactory, addr, "server");
+                    SncpTestIService service = null;//Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory, transFactory, addr, "server");
                     factory.inject(service);
                     server.addSncpServlet(service);
                     System.out.println(service);
@@ -211,7 +211,7 @@ public class SncpTest {
 
                     final TransportFactory transFactory = TransportFactory.create(asyncGroup, protocol.endsWith(".UDP") ? "UDP" : "TCP", 0, 0);
                     transFactory.addGroupInfo("server", set);
-                    Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory, transFactory, addr, "server");
+                    Service service = null;//Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory, transFactory, addr, "server");
                     server.addSncpServlet(service);
                     server.init(conf);
                     server.start();

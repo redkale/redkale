@@ -13,7 +13,6 @@ import org.redkale.annotation.ResourceType;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
-import org.redkale.util.ResourceFactory;
 
 /**
  *
@@ -89,7 +88,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
         final TransportFactory transFactory = TransportFactory.create(asyncGroup, 0, 0);
 
         transFactory.addGroupInfo("g70", new InetSocketAddress("127.0.0.1", 7070));
-        Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, ResourceFactory.create(), transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
+        Service service = null;// Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, ResourceFactory.create(), transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -98,7 +97,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createSimpleRemoteService(SncpTestServiceImpl.class, null, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
+        service = null;//Sncp.createSimpleRemoteService(SncpTestServiceImpl.class, null, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -107,7 +106,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
+        service = null;//Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }

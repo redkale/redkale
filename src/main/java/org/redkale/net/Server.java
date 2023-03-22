@@ -7,12 +7,12 @@ package org.redkale.net;
 
 import java.io.*;
 import java.net.*;
-import java.nio.charset.*;
+import java.nio.charset.Charset;
 import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
-import javax.net.ssl.*;
-import org.redkale.boot.*;
+import javax.net.ssl.SSLContext;
+import org.redkale.boot.Application;
 import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
 import org.redkale.net.Filter;
 import org.redkale.util.*;
@@ -315,8 +315,12 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         postStart();
         logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())
             + ", cpu: " + Utility.cpus() + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
-            + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxBody)
+            + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxBody) + startExtLog()
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms\r\n");
+    }
+
+    protected String startExtLog() {
+        return "";
     }
 
     protected void postPrepareInit() {

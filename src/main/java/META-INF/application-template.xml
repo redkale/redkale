@@ -98,9 +98,8 @@
         
     <!--
         一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
-        一个group节点对应一个 Transport 对象。
-        name:         服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
-        protocol：    值范围：UDP TCP， 默认TCP
+        name:       服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
+        protocol：  值范围：UDP TCP， 默认TCP
         注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。
     -->
     <group name="" protocol="TCP">
@@ -196,10 +195,10 @@
            mq:        所属的MQ管理器，当 protocol == SNCP 时该值才有效, 存在该属性表示Service的SNCP协议采用消息总线代理模式
            includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开           
-           groups:    所属组的节点,多个节点值用;隔开，如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性.
+           group:     所属组的节点, 不能指定多个group, 如果配置文件中存在多个SNCP协议的Server节点，需要显式指定group属性.
                          当 protocol == SNCP 时 group表示当前Server与哪些节点组关联。
-                         当 protocol != SNCP 时 group只能是空或者一个group的节点值，不能为多个节点值。
-                         特殊值"$cluster", 视为通过第三方服务注册发现管理工具来获取远程模式的ip端口信息
+                         当 protocol != SNCP 时 group只能是空或者一个group的节点值。
+                         特殊值"$remote", 视为通过第三方服务注册发现管理工具来获取远程模式的ip端口信息
         -->
         <services autoload="true" includes="" excludes="">
 
@@ -208,10 +207,10 @@
             <!-- 
                name:   显式指定name，覆盖默认的空字符串值。 注意: name不能包含$符号。
                mq:     所属的MQ管理器，当 protocol == SNCP 时该值才有效, 存在该属性表示Service的SNCP协议采用消息总线代理模式
-               groups: 显式指定groups，覆盖<services>节点的groups默认值。
+               group:  显式指定group，覆盖<services>节点的group默认值。
                ignore: 是否禁用， 默认为false。
             -->
-            <service value="com.xxx.XXX2Service" name="" groups="xxx;yyy"/>
+            <service value="com.xxx.XXX2Service" name="" group="xxx"/>
             <!--   给Service增加配置属性 -->
             <service value="com.xxx.XXX1Service"> 
                 <!-- property值在public void init(AnyValue conf)方法中可以通过AnyValue properties=conf.getAnyValue("properties")获取 -->

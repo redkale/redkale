@@ -5,10 +5,10 @@
  */
 package org.redkale.test.service;
 
-import java.nio.channels.*;
-import org.redkale.annotation.*;
+import java.nio.channels.CompletionHandler;
+import org.redkale.annotation.Resource;
 import org.redkale.service.*;
-import org.redkale.util.*;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -33,16 +33,17 @@ public class BCService implements Service {
         return serviceType;
     }
 
-    public String bcCurrentTime(final String name) {
-        String rs = "同步bcCurrentTime: " + cService.ccCurrentTime(name).getResult();
-        System.out.println("执行了 BCService.bcCurrentTime++++同步方法");
+    public String bcCurrentTime1(final String name) {
+        System.out.println("准备执行BCService.bcCurrentTime1方法");
+        String rs = "同步bcCurrentTime1: " + cService.ccCurrentTime1(name).getResult();
+        System.out.println("执行了 BCService.bcCurrentTime1++++同步方法1");
         return rs;
     }
 
-    public void bcCurrentTime(final CompletionHandler<String, Void> handler, final String name) {
-        cService.ccCurrentTime(Utility.createAsyncHandler((v, a) -> {
-            System.out.println("执行了 BCService.bcCurrentTime----异步方法");
-            String rs = "异步bcCurrentTime: " + (v == null ? null : v.getResult());
+    public void bcCurrentTime2(final CompletionHandler<String, Void> handler, final String name) {
+        cService.ccCurrentTime2(Utility.createAsyncHandler((v, a) -> {
+            System.out.println("执行了 BCService.bcCurrentTime2----异步方法2");
+            String rs = "异步bcCurrentTime2: " + (v == null ? null : v.getResult());
             if (handler != null) {
                 handler.completed(rs, null);
             }
@@ -53,8 +54,8 @@ public class BCService implements Service {
         }), name);
     }
 
-    public void bcCurrentTime(final MyAsyncHandler<String, Void> handler, final String name) {
-        cService.mcCurrentTime(new MyAsyncHandler<RetResult<String>, Void>() {
+    public void bcCurrentTime3(final MyAsyncHandler<String, Void> handler, final String name) {
+        cService.mcCurrentTime3(new MyAsyncHandler<RetResult<String>, Void>() {
             @Override
             public int id() {
                 return 1;
@@ -62,8 +63,8 @@ public class BCService implements Service {
 
             @Override
             public void completed(RetResult<String> v, Void a) {
-                System.out.println("执行了 BCService.bcCurrentTime----异步方法2");
-                String rs = "异步bcCurrentTime: " + (v == null ? null : v.getResult());
+                System.out.println("执行了 BCService.bcCurrentTime3----异步方法3");
+                String rs = "异步bcCurrentTime3: " + (v == null ? null : v.getResult());
                 if (handler != null) {
                     handler.completed(rs, null);
                 }

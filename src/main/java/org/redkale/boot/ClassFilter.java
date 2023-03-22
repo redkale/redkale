@@ -86,13 +86,17 @@ public final class ClassFilter<T> {
     }
 
     public ClassFilter<T> or(ClassFilter<T> filter) {
-        if (ors == null) ors = new ArrayList<>();
+        if (ors == null) {
+            ors = new ArrayList<>();
+        }
         ors.add(filter);
         return this;
     }
 
     public ClassFilter<T> and(ClassFilter<T> filter) {
-        if (ands == null) ands = new ArrayList<>();
+        if (ands == null) {
+            ands = new ArrayList<>();
+        }
         ands.add(filter);
         return this;
     }
@@ -105,8 +109,12 @@ public final class ClassFilter<T> {
     public final Set<FilterEntry<T>> getFilterEntrys() {
         List<FilterEntry<T>> list = new ArrayList<>();
         list.addAll(entrys);
-        if (ors != null) ors.forEach(f -> list.addAll(f.getFilterEntrys()));
-        if (ands != null) ands.forEach(f -> list.addAll(f.getFilterEntrys()));
+        if (ors != null) {
+            ors.forEach(f -> list.addAll(f.getFilterEntrys()));
+        }
+        if (ands != null) {
+            ands.forEach(f -> list.addAll(f.getFilterEntrys()));
+        }
         Collections.sort(list);
         return new LinkedHashSet<>(list);
     }
@@ -119,8 +127,12 @@ public final class ClassFilter<T> {
     public final Set<FilterEntry<T>> getFilterExpectEntrys() {
         List<FilterEntry<T>> list = new ArrayList<>();
         list.addAll(expectEntrys);
-        if (ors != null) ors.forEach(f -> list.addAll(f.getFilterExpectEntrys()));
-        if (ands != null) ands.forEach(f -> list.addAll(f.getFilterExpectEntrys()));
+        if (ors != null) {
+            ors.forEach(f -> list.addAll(f.getFilterExpectEntrys()));
+        }
+        if (ands != null) {
+            ands.forEach(f -> list.addAll(f.getFilterExpectEntrys()));
+        }
         Collections.sort(list);
         return new LinkedHashSet<>(list);
     }
@@ -173,7 +185,9 @@ public final class ClassFilter<T> {
         ClassFilter cf = r ? this : null;
         if (r && ands != null) {
             for (ClassFilter filter : ands) {
-                if (!filter.accept(property, clazzname)) return;
+                if (!filter.accept(property, clazzname)) {
+                    return;
+                }
             }
         }
         if (!r && ors != null) {
@@ -185,10 +199,14 @@ public final class ClassFilter<T> {
                 }
             }
         }
-        if (cf == null || clazzname.startsWith("sun.") || clazzname.contains("module-info")) return;
+        if (cf == null || clazzname.startsWith("sun.") || clazzname.contains("module-info")) {
+            return;
+        }
         try {
             Class clazz = classLoader.loadClass(clazzname);
-            if (!cf.accept(property, clazz, autoScan)) return;
+            if (!cf.accept(property, clazz, autoScan)) {
+                return;
+            }
             if (cf.conf != null) {
                 if (property == null) {
                     property = cf.conf;
@@ -217,7 +235,9 @@ public final class ClassFilter<T> {
                 && !clazzname.startsWith("org.redkale") && (clazzname.contains("Service") || clazzname.contains("Servlet"))) {
                 if (cfe instanceof NoClassDefFoundError) {
                     String msg = ((NoClassDefFoundError) cfe).getMessage();
-                    if (msg.startsWith("java.lang.NoClassDefFoundError: java") || msg.startsWith("javax/")) return;
+                    if (msg.startsWith("java.lang.NoClassDefFoundError: java") || msg.startsWith("javax/")) {
+                        return;
+                    }
                 }
                 //&& (!(cfe instanceof NoClassDefFoundError) || (cfe instanceof UnsupportedClassVersionError) || ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
                 logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzname + (url == null ? "" : (" in " + url)), cfe);
@@ -248,30 +268,46 @@ public final class ClassFilter<T> {
         boolean r = accept0(property, classname);
         if (r && ands != null) {
             for (ClassFilter filter : ands) {
-                if (!filter.accept(property, classname)) return false;
+                if (!filter.accept(property, classname)) {
+                    return false;
+                }
             }
         }
         if (!r && ors != null) {
             for (ClassFilter filter : ors) {
-                if (filter.accept(filter.conf, classname)) return true;
+                if (filter.accept(filter.conf, classname)) {
+                    return true;
+                }
             }
         }
         return r;
     }
 
     private boolean accept0(AnyValue property, String classname) {
-        if (this.refused) return false;
-        if (this.privilegeIncludes != null && this.privilegeIncludes.contains(classname)) return true;
-        if (this.privilegeExcludes != null && this.privilegeExcludes.contains(classname)) return false;
-        if (classname.startsWith("java.") || classname.startsWith("javax.")) return false;
+        if (this.refused) {
+            return false;
+        }
+        if (this.privilegeIncludes != null && this.privilegeIncludes.contains(classname)) {
+            return true;
+        }
+        if (this.privilegeExcludes != null && this.privilegeExcludes.contains(classname)) {
+            return false;
+        }
+        if (classname.startsWith("java.") || classname.startsWith("javax.")) {
+            return false;
+        }
         if (excludePatterns != null) {
             for (Pattern reg : excludePatterns) {
-                if (reg.matcher(classname).matches()) return false;
+                if (reg.matcher(classname).matches()) {
+                    return false;
+                }
             }
         }
         if (includePatterns != null) {
             for (Pattern reg : includePatterns) {
-                if (reg.matcher(classname).matches()) return true;
+                if (reg.matcher(classname).matches()) {
+                    return true;
+                }
             }
         }
         return includePatterns == null;
@@ -288,27 +324,41 @@ public final class ClassFilter<T> {
      */
     @SuppressWarnings("unchecked")
     public boolean accept(AnyValue property, Class clazz, boolean autoscan) {
-        if (this.refused || !Modifier.isPublic(clazz.getModifiers())) return false;
-        if (annotationClass != null && clazz.getAnnotation(annotationClass) == null) return false;
+        if (this.refused || !Modifier.isPublic(clazz.getModifiers())) {
+            return false;
+        }
+        if (annotationClass != null && clazz.getAnnotation(annotationClass) == null) {
+            return false;
+        }
         boolean rs = superClass == null || (clazz != superClass && superClass.isAssignableFrom(clazz));
         if (rs && this.excludeSuperClasses != null && this.excludeSuperClasses.length > 0) {
             for (Class c : this.excludeSuperClasses) {
-                if (c != null && (clazz == c || c.isAssignableFrom(clazz))) return false;
+                if (c != null && (clazz == c || c.isAssignableFrom(clazz))) {
+                    return false;
+                }
             }
         }
         return rs;
     }
 
     public static Pattern[] toPattern(String[] regs) {
-        if (regs == null || regs.length == 0) return null;
+        if (regs == null || regs.length == 0) {
+            return null;
+        }
         int i = 0;
         Pattern[] rs = new Pattern[regs.length];
         for (String reg : regs) {
-            if (reg == null || reg.trim().isEmpty()) continue;
+            if (reg == null || reg.trim().isEmpty()) {
+                continue;
+            }
             rs[i++] = Pattern.compile(reg.trim());
         }
-        if (i == 0) return null;
-        if (i == rs.length) return rs;
+        if (i == 0) {
+            return null;
+        }
+        if (i == rs.length) {
+            return rs;
+        }
         Pattern[] ps = new Pattern[i];
         System.arraycopy(rs, 0, ps, 0, i);
         return ps;
@@ -394,7 +444,7 @@ public final class ClassFilter<T> {
      */
     public static final class FilterEntry<T> implements Comparable<FilterEntry<T>> {
 
-        private final HashSet<String> groups = new LinkedHashSet<>();
+        private final String group; //优先级高于remote属性
 
         private final String name;
 
@@ -412,21 +462,18 @@ public final class ClassFilter<T> {
 
         public FilterEntry(Class<T> type, final boolean autoload, boolean expect, AnyValue property) {
             this.type = type;
-            String str = property == null ? null : property.getValue("groups");
-            if (str != null) {
-                str = str.trim();
-                if (str.endsWith(";")) str = str.substring(0, str.length() - 1);
-            }
-            if (str != null) this.groups.addAll(Arrays.asList(str.split(";")));
             this.property = property;
             this.autoload = autoload;
             this.expect = expect;
+            this.group = property == null ? null : property.getValue("group", "").trim();
             this.name = property == null ? "" : property.getValue("name", "");
         }
 
         @Override //@Priority值越大，优先级越高, 需要排前面
         public int compareTo(FilterEntry o) {
-            if (!(o instanceof FilterEntry)) return 1;
+            if (!(o instanceof FilterEntry)) {
+                return 1;
+            }
             Priority p1 = this.type.getAnnotation(Priority.class);
             Priority p2 = ((FilterEntry<T>) o).type.getAnnotation(Priority.class);
             return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
@@ -434,7 +481,7 @@ public final class ClassFilter<T> {
 
         @Override
         public String toString() {
-            return this.getClass().getSimpleName() + "[type=" + this.type.getSimpleName() + ", name=" + name + ", groups=" + this.groups + "]";
+            return this.getClass().getSimpleName() + "[type=" + this.type.getSimpleName() + ", name=" + name + ", group=" + this.group + "]";
         }
 
         @Override
@@ -444,9 +491,13 @@ public final class ClassFilter<T> {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == null) return false;
-            if (getClass() != obj.getClass()) return false;
-            return (this.type == ((FilterEntry<?>) obj).type && this.groups.equals(((FilterEntry<?>) obj).groups) && this.name.equals(((FilterEntry<?>) obj).name));
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            return (this.type == ((FilterEntry<?>) obj).type && this.name.equals(((FilterEntry<?>) obj).name));
         }
 
         public Class<T> getType() {
@@ -461,16 +512,16 @@ public final class ClassFilter<T> {
             return property;
         }
 
-        public boolean containsGroup(String group) {
-            return groups != null && groups.contains(group);
+        public boolean isEmptyGroup() {
+            return group == null || group.isEmpty();
         }
 
-        public boolean isEmptyGroups() {
-            return groups == null || groups.isEmpty();
+        public String getGroup() {
+            return group;
         }
 
-        public HashSet<String> getGroups() {
-            return groups;
+        public boolean isRemote() {
+            return "$remote".equalsIgnoreCase(group);
         }
 
         public boolean isAutoload() {
@@ -512,7 +563,9 @@ public final class ClassFilter<T> {
             final URL exurl = excludeFile != null ? excludeFile.toURI().toURL() : null;
             final Pattern[] excludePatterns = toPattern(excludeRegs);
             for (URL url : loader.getAllURLs()) {
-                if (exurl != null && exurl.sameFile(url)) continue;
+                if (exurl != null && exurl.sameFile(url)) {
+                    continue;
+                }
                 if (excludePatterns != null && url != RedkaleClassLoader.URL_NONE) {
                     boolean skip = false;
                     for (Pattern p : excludePatterns) {
@@ -521,7 +574,9 @@ public final class ClassFilter<T> {
                             break;
                         }
                     }
-                    if (skip) continue;
+                    if (skip) {
+                        continue;
+                    }
                 }
                 if (url.getPath().endsWith(".jar")) {
                     urljares.add(url);
@@ -542,18 +597,36 @@ public final class ClassFilter<T> {
                             String entryname = it.nextElement().getName().replace('/', '.');
                             if (entryname.endsWith(".class") && entryname.indexOf('$') < 0) {
                                 String classname = entryname.substring(0, entryname.length() - 6);
-                                if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) continue;
+                                if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) {
+                                    continue;
+                                }
                                 //常见的jar跳过
-                                if (classname.startsWith("com.redkaledyn.")) break; //redkale动态生成的类
-                                if (classname.startsWith("com.mysql.")) break;
-                                if (classname.startsWith("org.mariadb.")) break;
-                                if (classname.startsWith("oracle.jdbc.")) break;
-                                if (classname.startsWith("org.postgresql.")) break;
-                                if (classname.startsWith("com.microsoft.sqlserver.")) break;
+                                if (classname.startsWith("com.redkaledyn.")) {
+                                    break; //redkale动态生成的类
+                                }
+                                if (classname.startsWith("com.mysql.")) {
+                                    break;
+                                }
+                                if (classname.startsWith("org.mariadb.")) {
+                                    break;
+                                }
+                                if (classname.startsWith("oracle.jdbc.")) {
+                                    break;
+                                }
+                                if (classname.startsWith("org.postgresql.")) {
+                                    break;
+                                }
+                                if (classname.startsWith("com.microsoft.sqlserver.")) {
+                                    break;
+                                }
                                 classes.add(classname);
-                                if (debug) debugstr.append(classname).append("\r\n");
+                                if (debug) {
+                                    debugstr.append(classname).append("\r\n");
+                                }
                                 for (final ClassFilter filter : filters) {
-                                    if (filter != null) filter.filter(null, classname, url);
+                                    if (filter != null) {
+                                        filter.filter(null, classname, url);
+                                    }
                                 }
                             }
                         }
@@ -562,7 +635,9 @@ public final class ClassFilter<T> {
                 } else {
                     for (String classname : classes) {
                         for (final ClassFilter filter : filters) {
-                            if (filter != null) filter.filter(null, classname, url);
+                            if (filter != null) {
+                                filter.filter(null, classname, url);
+                            }
                         }
                     }
                 }
@@ -572,7 +647,9 @@ public final class ClassFilter<T> {
                 if (classes == null) {
                     classes = new LinkedHashSet<>();
                     final Set<String> cs = classes;
-                    if (url == RedkaleClassLoader.URL_NONE) loader.forEachCacheClass(v -> cs.add(v));
+                    if (url == RedkaleClassLoader.URL_NONE) {
+                        loader.forEachCacheClass(v -> cs.add(v));
+                    }
                     if (cs.isEmpty()) {
                         files.clear();
                         File root = new File(url.getFile());
@@ -580,17 +657,25 @@ public final class ClassFilter<T> {
                         loadClassFiles(excludeFile, root, files);
                         for (File f : files) {
                             String classname = f.getPath().substring(rootpath.length() + 1, f.getPath().length() - 6).replace(File.separatorChar, '.');
-                            if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) continue;
+                            if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) {
+                                continue;
+                            }
                             classes.add(classname);
-                            if (debug) debugstr.append(classname).append("\r\n");
+                            if (debug) {
+                                debugstr.append(classname).append("\r\n");
+                            }
                             for (final ClassFilter filter : filters) {
-                                if (filter != null) filter.filter(null, classname, url);
+                                if (filter != null) {
+                                    filter.filter(null, classname, url);
+                                }
                             }
                         }
                     } else {
                         for (String classname : classes) {
                             for (final ClassFilter filter : filters) {
-                                if (filter != null) filter.filter(null, classname, url);
+                                if (filter != null) {
+                                    filter.filter(null, classname, url);
+                                }
                             }
                         }
                     }
@@ -598,7 +683,9 @@ public final class ClassFilter<T> {
                 } else {
                     for (String classname : classes) {
                         for (final ClassFilter filter : filters) {
-                            if (filter != null) filter.filter(null, classname, url);
+                            if (filter != null) {
+                                filter.filter(null, classname, url);
+                            }
                         }
                     }
                 }
@@ -610,9 +697,13 @@ public final class ClassFilter<T> {
             if (root.isFile() && root.getName().endsWith(".class")) {
                 files.add(root);
             } else if (root.isDirectory()) {
-                if (exclude != null && exclude.equals(root)) return;
+                if (exclude != null && exclude.equals(root)) {
+                    return;
+                }
                 File[] lfs = root.listFiles();
-                if (lfs == null) throw new RedkaleException("File(" + root + ") cannot listFiles()");
+                if (lfs == null) {
+                    throw new RedkaleException("File(" + root + ") cannot listFiles()");
+                }
                 for (File f : lfs) {
                     loadClassFiles(exclude, f, files);
                 }

@@ -6,7 +6,7 @@
 package org.redkale.net.sncp;
 
 import java.util.List;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.LongAdder;
 import org.redkale.boot.Application;
 import org.redkale.net.Server;
 import org.redkale.net.sncp.SncpContext.SncpContextConfig;
@@ -24,10 +24,6 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
-    private final AtomicInteger maxTypeLength = new AtomicInteger();
-
-    private final AtomicInteger maxNameLength = new AtomicInteger();
- 
     public SncpServer() {
         this(null, System.currentTimeMillis(), null, ResourceFactory.create());
     }
@@ -103,12 +99,11 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
         return ((SncpDispatcherServlet) this.dispatcher).removeSncpServlet(sncpService);
     }
 
-    public SncpDynServlet addSncpServlet(Service sncpService) {
+    public SncpServlet addSncpServlet(Service sncpService) {
         if (!Sncp.isSncpDyn(sncpService)) {
             throw new SncpException(sncpService + " is not sncp dynamic-gen service");
         }
-        SncpDynServlet sds = new SncpDynServlet(Sncp.getResourceName(sncpService),
-            Sncp.getResourceType(sncpService), sncpService, maxTypeLength, maxNameLength);
+        SncpServlet sds = new SncpServlet(Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
         this.dispatcher.addServlet(sds, null, Sncp.getResourceConf(sncpService));
         return sds;
     }

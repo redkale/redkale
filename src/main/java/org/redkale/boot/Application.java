@@ -8,33 +8,33 @@ package org.redkale.boot;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.net.http.*;
-import java.nio.*;
-import java.nio.channels.*;
-import java.nio.charset.*;
-import java.nio.file.*;
+import java.net.http.HttpClient;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.*;
-import java.util.function.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.logging.*;
-import javax.net.ssl.*;
-import org.redkale.annotation.*;
+import javax.net.ssl.SSLContext;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.*;
-import org.redkale.convert.*;
-import org.redkale.convert.bson.*;
+import org.redkale.convert.Convert;
+import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.*;
+import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
-import org.redkale.watch.*;
+import org.redkale.watch.WatchServlet;
 
 /**
  *
@@ -162,6 +162,9 @@ public final class Application {
 
     //SNCP传输端的TransportFactory, 注意： 只给SNCP使用
     private final TransportFactory sncpTransportFactory;
+
+    //配置项里的group信息, 注意： 只给SNCP使用
+    private final SncpRpcGroups sncpRpcGroups = new SncpRpcGroups();
 
     //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
     private final AsyncIOGroup clientAsyncGroup;
@@ -464,8 +467,8 @@ public final class Application {
             excludelib0 = excludelibConf.getValue("value");
         }
         AnyValue transportConf = config.getAnyValue("transport");
-        int groupsize = config.getAnyValues("group").length;
-        if (groupsize > 0 && transportConf == null) {
+        int groupSize = config.getAnyValues("group").length;
+        if (groupSize > 0 && transportConf == null) {
             transportConf = new DefaultAnyValue();
         }
         if (transportConf != null) {
@@ -473,7 +476,7 @@ public final class Application {
             bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 32 * 1024);
             readTimeoutSeconds = transportConf.getIntValue("readTimeoutSeconds", readTimeoutSeconds);
             writeTimeoutSeconds = transportConf.getIntValue("writeTimeoutSeconds", writeTimeoutSeconds);
-            final int threads = parseLenth(transportConf.getValue("threads"), groupsize * Utility.cpus() * 2);
+            final int threads = parseLenth(transportConf.getValue("threads"), groupSize * Utility.cpus() * 2);
             bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), threads * 4);
         }
 
@@ -938,7 +941,7 @@ public final class Application {
                 });
             }
             if (!compileMode) {
-                properties.put(OldSncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
+                properties.put(SncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
             }
         }
         if (compileMode) {
@@ -1155,7 +1158,6 @@ public final class Application {
                 String sourceName = ((CacheClusterAgent) clusterAgent).getSourceName(); //必须在inject前调用，需要赋值Resourcable.name
                 loadCacheSource(sourceName, false);
             }
-            clusterAgent.setTransportFactory(this.sncpTransportFactory);
             this.resourceFactory.inject(clusterAgent);
             clusterAgent.init(this.resourceFactory, clusterAgent.getConfig());
             this.resourceFactory.register(ClusterAgent.class, clusterAgent);
@@ -1329,14 +1331,19 @@ public final class Application {
         //------------------------------------------------------------------------
         for (AnyValue conf : config.getAnyValues("group")) {
             final String group = conf.getValue("name", "");
+            if (group.indexOf('$') >= 0) {
+                throw new RedkaleException("<group> name cannot contains '$' in " + group);
+            }
             final String protocol = conf.getValue("protocol", Transport.DEFAULT_NETPROTOCOL).toUpperCase();
             if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                 throw new RedkaleException("Not supported Transport Protocol " + conf.getValue("protocol"));
             }
+            SncpRpcGroup rg = sncpRpcGroups.computeIfAbsent(group, protocol);
             TransportGroupInfo ginfo = new TransportGroupInfo(group, protocol, new LinkedHashSet<>());
             for (AnyValue node : conf.getAnyValues("node")) {
                 final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
                 ginfo.putAddress(addr);
+                rg.putAddress(addr);
             }
             sncpTransportFactory.addGroupInfo(ginfo);
         }
@@ -2530,7 +2537,8 @@ public final class Application {
         return resourceFactory;
     }
 
-    public TransportFactory getSncpTransportFactory() {
+    @Deprecated
+    public TransportFactory getSncpTransportFactory2() {
         return sncpTransportFactory;
     }
 
@@ -2572,6 +2580,10 @@ public final class Application {
 
     public List<CacheSource> getCacheSources() {
         return new ArrayList<>(cacheSources);
+    }
+
+    public SncpRpcGroups getSncpRpcGroups() {
+        return sncpRpcGroups;
     }
 
     public int getNodeid() {

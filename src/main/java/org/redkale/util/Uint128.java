@@ -75,6 +75,9 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
         if (obj == null) {
             return false;
         }
+        if (obj == this) {
+            return true;
+        }
         if (getClass() != obj.getClass()) {
             return false;
         }
@@ -92,7 +95,7 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
         if (this == ZERO) {
             return "0";
         }
-        return new String(Utility.binToHex(value));
+        return Utility.binToHexString(value);
     }
 
     @Override

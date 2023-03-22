@@ -10,10 +10,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
-import java.net.*;
-import java.nio.channels.*;
+import java.net.InetSocketAddress;
+import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletionStage;
 import org.redkale.annotation.Comment;
 import org.redkale.annotation.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
@@ -24,9 +24,9 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
 import org.redkale.net.*;
-import org.redkale.net.sncp.*;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
-import org.redkale.source.*;
+import org.redkale.source.Flipper;
 import org.redkale.util.*;
 
 /**
@@ -297,6 +297,19 @@ public final class Rest {
             return (Map) ts.get(servlet);
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    public static void setServiceMap(HttpServlet servlet, Map<String, Service> map) {
+        if (servlet == null) {
+            return;
+        }
+        try {
+            Field ts = servlet.getClass().getDeclaredField(REST_SERVICEMAP_FIELD_NAME);
+            ts.setAccessible(true);
+            ts.set(servlet, map);
+        } catch (Exception e) {
+            throw new RestException(e);
         }
     }
 
@@ -1504,6 +1517,56 @@ public final class Rest {
 
             Field tostringfield = newClazz.getDeclaredField(REST_TOSTRINGOBJ_FIELD_NAME);
             tostringfield.setAccessible(true);
+            { //注入 @WebServlet 注解
+                String urlpath = "";
+                final String defmodulename = getWebModuleNameLowerCase(serviceType);
+                final int moduleid = controller == null ? 0 : controller.moduleid();
+                boolean repair = controller == null ? true : controller.repair();
+                final String catalog = controller == null ? "" : controller.catalog();
+
+                boolean pound = false;
+                for (MappingEntry entry : entrys) {
+                    if (entry.existsPound) {
+                        pound = true;
+                        break;
+                    }
+                }
+                if (defmodulename.isEmpty() || (!pound && entrys.size() <= 2)) {
+                    Set<String> startWiths = new HashSet<>();
+                    for (MappingEntry entry : entrys) {
+                        String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name;
+                        if ("//".equals(suburl)) {
+                            suburl = "/";
+                        } else if (suburl.length() > 2 && suburl.endsWith("/")) {
+                            startWiths.add(suburl);
+                            suburl += "*";
+                        } else {
+                            boolean match = false;
+                            for (String s : startWiths) {
+                                if (suburl.startsWith(s)) {
+                                    match = true;
+                                    break;
+                                }
+                            }
+                            if (match) {
+                                continue;
+                            }
+                        }
+                        urlpath += "," + suburl;
+                    }
+                    if (urlpath.length() > 0) {
+                        urlpath = urlpath.substring(1);
+                    }
+                } else {
+                    urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename + "/*";
+                }
+
+                classMap.put("type", serviceType.getName());
+                classMap.put("url", urlpath);
+                classMap.put("moduleid", moduleid);
+                classMap.put("repair", repair);
+                //classMap.put("comment", comment); //不显示太多信息
+            }
             java.util.function.Supplier<String> sSupplier = () -> JsonConvert.root().convertTo(classMap);
             tostringfield.set(obj, sSupplier);
 
@@ -1778,6 +1841,9 @@ public final class Rest {
             final RestConvertCoder[] rcc = method.getAnnotationsByType(RestConvertCoder.class);
             if ((rcs != null && rcs.length > 0) || (rcc != null && rcc.length > 0)) {
                 restConverts.add(new Object[]{rcs, rcc});
+            }
+            if (dynsimple && entry.rpconly) { //需要读取http header
+                dynsimple = false;
             }
 
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, entry.newMethodName, "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));

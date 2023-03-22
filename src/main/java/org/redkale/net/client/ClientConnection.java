@@ -6,6 +6,7 @@
 package org.redkale.net.client;
 
 import java.io.Serializable;
+import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -31,7 +32,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final Client client;
 
-    protected final LongAdder respWaitingCounter;
+    protected final LongAdder respWaitingCounter; //可能为null
 
     protected final LongAdder doneRequestCounter = new LongAdder();
 
@@ -40,6 +41,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     final AtomicBoolean pauseWriting = new AtomicBoolean();
 
     final ConcurrentLinkedQueue<ClientFuture> pauseRequests = new ConcurrentLinkedQueue<>();
+
+    private final Client.AddressConnEntry connEntry;
 
     protected final AsyncConnection channel;
 
@@ -64,7 +67,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         this.client = client;
         this.codec = createCodec();
         this.index = index;
-        this.respWaitingCounter = client.connRespWaitings[index];
+        this.connEntry = index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress());
+        this.respWaitingCounter = index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting;
         this.channel = channel.beforeCloseListener(this);
         this.writeThread = (ClientWriteIOThread) channel.getWriteIOThread();
     }
@@ -113,8 +117,12 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     @Override //AsyncConnection.beforeCloseListener
     public void accept(AsyncConnection t) {
         respWaitingCounter.reset();
-        client.connOpenStates[index].set(false);
-        client.connArray[index] = null; //必须connOpenStates之后
+        if (index >= 0) {
+            client.connOpenStates[index].set(false);
+            client.connArray[index] = null; //必须connOpenStates之后
+        } else if (connEntry != null) {
+            connEntry.connOpenState.set(false);
+        }
     }
 
     public void dispose(Throwable exc) {
@@ -189,6 +197,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     public AsyncConnection getChannel() {
         return channel;
+    }
+
+    public SocketAddress getRemoteAddress() {
+        return channel.getRemoteAddress();
     }
 
     public long getDoneRequestCounter() {

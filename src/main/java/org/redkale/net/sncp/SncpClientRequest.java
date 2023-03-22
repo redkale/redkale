@@ -5,7 +5,7 @@ package org.redkale.net.sncp;
 
 import java.util.Objects;
 import org.redkale.net.client.*;
-import org.redkale.util.ByteArray;
+import org.redkale.util.*;
 
 /**
  * client版请求
@@ -23,12 +23,12 @@ public class SncpClientRequest extends ClientRequest {
 
     private long seqid;
 
-    private byte[] bodyContent;
+    private ByteTuple bodyContent;
 
     public SncpClientRequest() {
     }
 
-    public SncpClientRequest prepare(SncpHeader header, long seqid, String traceid, byte[] bodyContent) {
+    public SncpClientRequest prepare(SncpHeader header, long seqid, String traceid, ByteTuple bodyContent) {
         super.prepare();
         this.header = header;
         this.seqid = seqid;
@@ -52,10 +52,11 @@ public class SncpClientRequest extends ClientRequest {
 
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
-        if (bodyContent == null) {
+        array.putPlaceholder(SncpHeader.HEADER_SIZE);
+        if (bodyContent == null || bodyContent.length() == 0) {
             header.writeTo(array, header.getAddrBytes(), header.getAddrPort(), seqid, 0, 0);
         } else {
-            header.writeTo(array, header.getAddrBytes(), header.getAddrPort(), seqid, bodyContent.length, 0);
+            header.writeTo(array, header.getAddrBytes(), header.getAddrPort(), seqid, bodyContent.length(), 0);
             array.put(bodyContent);
         }
     }
@@ -64,7 +65,7 @@ public class SncpClientRequest extends ClientRequest {
     public String toString() {
         return getClass().getSimpleName() + "_" + Objects.hashCode(this) + "{"
             + "header=" + header + ", seqid =" + seqid
-            + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
+            + ", body=[" + (bodyContent == null ? -1 : bodyContent.length()) + "]"
             + "}";
     }
 
@@ -76,7 +77,7 @@ public class SncpClientRequest extends ClientRequest {
         return seqid;
     }
 
-    public byte[] getBodyContent() {
+    public ByteTuple getBodyContent() {
         return bodyContent;
     }
 

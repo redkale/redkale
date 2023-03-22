@@ -37,7 +37,7 @@ public class NodeSncpServer extends NodeServer {
             if (x.getClass().getAnnotation(Local.class) != null) {
                 return; //本地模式的Service不生成SncpServlet
             }
-            SncpDynServlet servlet = sncpServer.addSncpServlet(x);
+            SncpServlet servlet = sncpServer.addSncpServlet(x);
             dynServletMap.put(x, servlet);
             if (agent != null) {
                 agent.putService(this, x, servlet);
@@ -74,14 +74,39 @@ public class NodeSncpServer extends NodeServer {
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
         List<SncpServlet> servlets = sncpServer.getSncpServlets();
         Collections.sort(servlets);
+
+        int maxTypeLength = 0;
+        int maxNameLength = 0;
+        for (SncpServlet en : servlets) {
+            maxNameLength = Math.max(maxNameLength, en.getServiceName().length() + 1);
+            maxTypeLength = Math.max(maxTypeLength, en.getServiceType().getName().length());
+        }
         for (SncpServlet en : servlets) {
             if (sb != null) {
-                sb.append("Load ").append(en).append(LINE_SEPARATOR);
+                sb.append("Load ").append(toSimpleString(en, maxTypeLength, maxNameLength)).append(LINE_SEPARATOR);
             }
         }
         if (sb != null && sb.length() > 0) {
             logger.log(Level.FINE, sb.toString());
         }
+    }
+
+    private StringBuilder toSimpleString(SncpServlet servlet, int maxTypeLength, int maxNameLength) {
+        StringBuilder sb = new StringBuilder();
+        Class serviceType = servlet.getServiceType();
+        String serviceName = servlet.getServiceName();
+        int size = servlet.getActionSize();
+        sb.append(SncpServlet.class.getSimpleName()).append(" (type=").append(serviceType.getName());
+        int len = maxTypeLength - serviceType.getName().length();
+        for (int i = 0; i < len; i++) {
+            sb.append(' ');
+        }
+        sb.append(", serviceid=").append(servlet.getServiceid()).append(", name='").append(serviceName).append("'");
+        for (int i = 0; i < maxNameLength - serviceName.length(); i++) {
+            sb.append(' ');
+        }
+        sb.append(", actions.size=").append(size > 9 ? "" : " ").append(size).append(")");
+        return sb;
     }
 
     @Override
@@ -126,7 +151,6 @@ public class NodeSncpServer extends NodeServer {
     @Override
     protected void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception {
         RedkaleClassLoader.putReflectionPublicClasses(SncpServlet.class.getName());
-        RedkaleClassLoader.putReflectionPublicClasses(SncpDynServlet.class.getName());
     }
 
     @Override

@@ -59,6 +59,7 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract void offerReader(final R reader);
 
+    //返回的Writer子类必须实现ByteTuple接口
     public abstract W pollWriter();
 
     public abstract void offerWriter(final W write);

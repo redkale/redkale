@@ -86,7 +86,7 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
             response.finish(pongBytes);
             return;
         }
-        SncpServlet servlet = (SncpServlet) mappingServlet(request.getHeader().getServiceid());
+        SncpServlet servlet = mappingServlet(request.getHeader().getServiceid());
         if (servlet == null) {
             response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
         } else {

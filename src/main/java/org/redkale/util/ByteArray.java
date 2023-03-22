@@ -6,9 +6,9 @@
 package org.redkale.util;
 
 import java.io.*;
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.*;
-import java.util.*;
+import java.util.Arrays;
 
 /**
  * 简单的byte[]操作类。
@@ -440,6 +440,17 @@ public final class ByteArray implements ByteTuple {
         if (count > 0) {
             count--;
         }
+        return this;
+    }
+
+    //类似writeTo(new byte[length])
+    public ByteArray putPlaceholder(final int length) {
+        if (count >= content.length - length) {
+            byte[] ns = new byte[content.length + Math.max(16, length)];
+            System.arraycopy(content, 0, ns, 0, count);
+            this.content = ns;
+        }
+        count += length;
         return this;
     }
 
@@ -885,6 +896,17 @@ public final class ByteArray implements ByteTuple {
         System.arraycopy(values, offset, content, count, length);
         count += length;
         return this;
+    }
+
+    /**
+     * 写入一组byte值
+     *
+     * @param tuple 内容
+     *
+     * @return ByteArray
+     */
+    public ByteArray put(ByteTuple tuple) {
+        return put(tuple.content(), tuple.offset(), tuple.length());
     }
 
     /**

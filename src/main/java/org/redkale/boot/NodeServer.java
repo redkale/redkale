@@ -62,18 +62,6 @@ public abstract class NodeServer {
 
     protected final Thread serverThread;
 
-    //当前Server的SNCP协议的组
-    protected String sncpGroup = null;
-
-    //SNCP服务的Client
-    private SncpClient sncpClient;
-
-    //SncpClient的AsyncGroup
-    private AsyncIOGroup sncpAsyncGroup;
-
-    //SNCP服务的地址， 非SNCP为null
-    private InetSocketAddress sncpAddress;
-
     //加载Service时的处理函数
     protected BiConsumer<MessageAgent, Service> consumer;
 
@@ -94,6 +82,7 @@ public abstract class NodeServer {
     //远程模式的Service对象集合
     protected final Set<Service> remoteServices = new LinkedHashSet<>();
 
+    //存在SncpServlet、RestServlet
     protected final Map<Service, Servlet> dynServletMap = new LinkedHashMap<>();
 
     //MessageAgent对象集合
@@ -101,6 +90,18 @@ public abstract class NodeServer {
 
     //需要远程模式Service的MessageAgent对象集合
     protected final Map<String, MessageAgent> sncpRemoteAgents = new HashMap<>();
+
+    //当前Server的SNCP协议的组
+    protected String sncpGroup = null;
+
+    //当前Server的SNCP服务Client
+    protected SncpClient sncpClient;
+
+    //SncpClient的AsyncGroup
+    private AsyncIOGroup sncpAsyncGroup;
+
+    //SNCP服务的地址， 非SNCP为null
+    private InetSocketAddress sncpAddress;
 
     private volatile int maxTypeLength = 0;
 
@@ -136,7 +137,7 @@ public abstract class NodeServer {
         if (isSNCP()) { // SNCP协议
             String host = this.serverConf.getValue("host", isWATCH() ? "127.0.0.1" : "0.0.0.0").replace("0.0.0.0", "");
             this.sncpAddress = new InetSocketAddress(host.isEmpty() ? application.localAddress.getAddress().getHostAddress() : host, this.serverConf.getIntValue("port"));
-            this.sncpGroup = application.getSncpTransportFactory().findGroupName(this.sncpAddress);
+            this.sncpGroup = application.getSncpRpcGroups().getGroup(this.sncpAddress);
             //单向SNCP服务不需要对等group
             //if (this.sncpGroup == null) throw new RedkaleException("Server (" + String.valueOf(config).replaceAll("\\s+", " ") + ") not found <group> info");
         }
@@ -170,15 +171,10 @@ public abstract class NodeServer {
         server.init(this.serverConf);
         if (this.sncpAddress != null) { //初始化SncpClient  
             this.sncpAsyncGroup = new AsyncIOGroup(true, "Redkale-SncpClient-IOThread-%s", application.getWorkExecutor(), server.getBufferCapacity(), server.getBufferPoolSize()).skipClose(true);
-            this.sncpClient = new SncpClient(server.getName(), this.sncpAsyncGroup, this.sncpAddress, new ClientAddress(sncpAddress), server.getNetprotocol(), Utility.cpus(), 1000);
+            this.sncpClient = new SncpClient(server.getName(), this.sncpAsyncGroup, this.sncpAddress, new ClientAddress(this.sncpAddress), server.getNetprotocol(), Utility.cpus(), 1000);
         }
-        //init之后才有Executor
-        //废弃 @since 2.3.0 
-//        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, Executor.class, server.getWorkExecutor());
-//        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, ExecutorService.class, server.getWorkExecutor());
-//        resourceFactory.register(Server.RESNAME_SERVER_EXECUTOR, ThreadPoolExecutor.class, server.getWorkExecutor());
 
-        initResource(); //给 DataSource、CacheSource 注册依赖注入时的监听回调事件。
+        initResource(); //给DataSource、CacheSource注册依赖注入时的监听回调事件。
         String interceptorClass = this.serverConf.getValue("interceptor", "");
         if (!interceptorClass.isEmpty()) {
             Class clazz = serverClassLoader.loadClass(interceptorClass);
@@ -229,7 +225,6 @@ public abstract class NodeServer {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
-        final TransportFactory appSncpTranFactory = application.getSncpTransportFactory();
         final String confURI = appResFactory.find(RESNAME_APP_CONF_DIR, String.class);
         //------------------------------------- 注册 Resource --------------------------------------------------------
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
@@ -302,10 +297,7 @@ public abstract class NodeServer {
                 }
 
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
-                OldSncpClient client = srcObj instanceof Service ? Sncp.getSncpOldClient((Service) srcObj) : null;
-                final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                final Set<String> groups = new HashSet<>();
-                Service service = Modifier.isFinal(resServiceType.getModifiers()) ? (Service) resServiceType.getConstructor().newInstance() : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, null, appResFactory, appSncpTranFactory, sncpAddr, groups, null);
+                Service service = Modifier.isFinal(resServiceType.getModifiers()) ? (Service) resServiceType.getConstructor().newInstance() : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
                 appResFactory.register(resourceName, resServiceType, service);
 
                 field.set(srcObj, service);
@@ -350,23 +342,13 @@ public abstract class NodeServer {
                     if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
                         return null; //远程模式不需要注入 CacheSource 
                     }
-                    if (!(srcObj instanceof Service)) {
-                        throw new RedkaleException("CacheSource must be inject in Service, cannot in " + srcObj);
+                    if (srcObj instanceof Servlet) {
+                        throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
                     }
-                    final Service srcService = (Service) srcObj;
-                    OldSncpClient client = Sncp.getSncpOldClient(srcService);
-                    final InetSocketAddress sncpAddr = client == null ? null : client.getClientAddress();
-                    //final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService) && sncpAddr != null; //不配置SNCP服务会导致ws=false时没有注入CacheMemorySource
                     final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
                     CacheSource source = application.loadCacheSource(resourceName, ws);
                     field.set(srcObj, source);
 
-                    if (ws && sncpAddr != null) { //只有WebSocketNodeService的服务才需要给SNCP服务注入CacheMemorySource
-                        NodeSncpServer sncpServer = application.findNodeSncpServer(sncpAddr);
-                        if (sncpServer != null && source != null && source.getClass().getAnnotation(Local.class) == null) { //本地模式的Service不生成SncpServlet
-                            sncpServer.getSncpServer().addSncpServlet((Service) source);
-                        }
-                    }
                     logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
                     return source;
                 } catch (Exception e) {
@@ -392,33 +374,17 @@ public abstract class NodeServer {
                     if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
                         return null; //远程模式不需要注入 WebSocketNode 
                     }
-                    Service nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
-                    MessageAgent messageAgent = null;
-                    if (srcObj instanceof Service) {
-                        messageAgent = Sncp.getMessageAgent((Service) srcObj);
-                    } else if (srcObj instanceof WebSocketServlet) {
-                        try {
-                            Field c = WebSocketServlet.class.getDeclaredField("messageAgent");
-                            RedkaleClassLoader.putReflectionField("messageAgent", c);
-                            c.setAccessible(true);
-                            messageAgent = (MessageAgent) c.get(srcObj);
-                        } catch (Exception ex) {
-                            logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
-                        }
-                    }
+                    Service nodeService = rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) {
                             groups.add(NodeServer.this.sncpGroup);
                         }
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, messageAgent, application.getResourceFactory(), application.getSncpTransportFactory(), NodeServer.this.sncpAddress, groups, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, null, (String) null, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
                         ((org.redkale.net.http.WebSocketNodeService) nodeService).setName(resourceName);
                     }
                     resourceFactory.inject(resourceName, nodeService, self);
-                    if (messageAgent != null && Sncp.getMessageAgent(nodeService) == null) {
-                        Sncp.setMessageAgent(nodeService, messageAgent);
-                    }
                     field.set(srcObj, nodeService);
                     if (Sncp.isRemote(nodeService)) {
                         remoteServices.add(nodeService);
@@ -453,7 +419,7 @@ public abstract class NodeServer {
         final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
         final ResourceFactory appResourceFactory = application.getResourceFactory();
-        final TransportFactory appSncpTransFactory = application.getSncpTransportFactory();
+        final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
         final AtomicInteger serviceCount = new AtomicInteger();
         for (FilterEntry<? extends Service> entry : entrys) { //service实现类
             final Class<? extends Service> serviceImplClass = entry.getType();
@@ -480,6 +446,9 @@ public abstract class NodeServer {
             if (entry.getName().contains("$")) {
                 throw new RedkaleException("<name> value cannot contains '$' in " + entry.getProperty());
             }
+            if (!entry.isEmptyGroup() && !entry.isRemote() && rpcGroups.containsGroup(entry.getGroup())) {
+                throw new RedkaleException("Not found group(" + entry.getGroup() + ")");
+            }
             Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);
             if (oldother != null) { //Server加载Service时需要判断是否已经加载过了。
                 if (!Sncp.isRemote(oldother)) {
@@ -487,16 +456,9 @@ public abstract class NodeServer {
                 }
                 continue;
             }
-            final HashSet<String> groups = entry.getGroups(); //groups.isEmpty()表示<services>没有配置groups属性。
-            if (groups.isEmpty() && isSNCP() && this.sncpGroup != null) {
-                groups.add(this.sncpGroup);
-            }
-
-            final boolean localed = (this.sncpAddress == null && entry.isEmptyGroups() && !serviceImplClass.isInterface() && !Modifier.isAbstract(serviceImplClass.getModifiers())) //非SNCP的Server，通常是单点服务
-                || groups.contains(this.sncpGroup) //本地IP含在内的
-                || (this.sncpGroup == null && entry.isEmptyGroups()) //空的SNCP配置
-                || serviceImplClass.getAnnotation(Local.class) != null;//本地模式
-            if (localed && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) {
+            final String group = rpcGroups.isLocalGroup(this.sncpGroup, this.sncpAddress, entry) ? null : entry.getGroup();
+            final boolean localMode = rpcGroups.isLocalGroup(this.sncpGroup, this.sncpAddress, entry) || serviceImplClass.getAnnotation(Local.class) != null;//本地模式
+            if (localMode && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) {
                 continue; //本地模式不能实例化接口和抽象类的Service类
             }
             final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
@@ -509,32 +471,19 @@ public abstract class NodeServer {
                         return null;
                     }
                     RedkaleClassLoader.putReflectionPublicMethods(serviceImplClass.getName());
-                    MessageAgent agent = null;
-                    if (entry.getProperty() != null && entry.getProperty().getValue("mq") != null) {
-                        agent = application.getMessageAgent(entry.getProperty().getValue("mq"));
-                        if (agent != null) {
-                            messageAgents.put(agent.getName(), agent);
-                        }
-                    }
-
+                    MessageAgent agent = getMessageAgent(entry.getProperty());
                     Service service;
                     final boolean ws = srcObj instanceof WebSocketServlet;
-                    if (ws || localed) { //本地模式
-                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, agent, appResourceFactory, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
+                    if (ws || localMode) { //本地模式
+                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
                     } else {
-                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, agent, appSncpTransFactory, NodeServer.this.sncpAddress, groups, entry.getProperty());
-                    }
-                    if (service instanceof org.redkale.net.http.WebSocketNodeService) {
-                        ((org.redkale.net.http.WebSocketNodeService) service).setName(resourceName);
-                        if (agent != null) {
-                            Sncp.setMessageAgent(service, agent);
-                        }
+                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
                     }
                     final Class restype = Sncp.getResourceType(service);
                     if (rf.find(resourceName, restype) == null) {
                         regFactory.register(resourceName, restype, service);
                     } else if (isSNCP() && !entry.isAutoload()) {
-                        throw new RedkaleException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + groups + ") is repeat.");
+                        throw new RedkaleException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + group + ") is repeat.");
                     }
                     if (Sncp.isRemote(service)) {
                         remoteServices.add(service);
@@ -656,6 +605,17 @@ public abstract class NodeServer {
         maxTypeLength = Math.max(maxTypeLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
+    protected MessageAgent getMessageAgent(AnyValue serviceConf) {
+        MessageAgent agent = null;
+        if (serviceConf != null && serviceConf.getValue("mq") != null) {
+            agent = application.getMessageAgent(serviceConf.getValue("mq"));
+            if (agent != null) {
+                messageAgents.put(agent.getName(), agent);
+            }
+        }
+        return agent;
+    }
+
     //Service.init执行之前调用
     protected void preInitServices(Set<Service> localServices, Set<Service> remoteServices) {
         final ClusterAgent cluster = application.getClusterAgent();
@@ -730,13 +690,10 @@ public abstract class NodeServer {
         cf = null;
         for (AnyValue list : proplist) {
             AnyValue.DefaultAnyValue prop = null;
-            String sc = list.getValue("groups");
+            String sc = list.getValue("group");
             String mq = list.getValue("mq");
             if (sc != null) {
                 sc = sc.trim();
-                if (sc.endsWith(";")) {
-                    sc = sc.substring(0, sc.length() - 1);
-                }
             }
             if (sc == null) {
                 sc = localGroup;
@@ -744,7 +701,7 @@ public abstract class NodeServer {
             if (sc != null || mq != null) {
                 prop = new AnyValue.DefaultAnyValue();
                 if (sc != null) {
-                    prop.addValue("groups", sc);
+                    prop.addValue("group", sc);
                 }
                 if (mq != null) {
                     prop.addValue("mq", mq);

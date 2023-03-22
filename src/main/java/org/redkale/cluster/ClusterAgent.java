@@ -60,8 +60,6 @@ public abstract class ClusterAgent {
 
     protected Set<String> tags;
 
-    protected TransportFactory transportFactory;
-
     protected final ConcurrentHashMap<String, ClusterEntry> localEntrys = new ConcurrentHashMap<>();
 
     protected final ConcurrentHashMap<String, ClusterEntry> remoteEntrys = new ConcurrentHashMap<>();
@@ -245,7 +243,7 @@ public abstract class ClusterAgent {
             return;
         }
         Collection<InetSocketAddress> addrs = ClusterAgent.this.queryAddress(entry).join();
-        Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netProtocol, entry.address, null, addrs);
+        //Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netProtocol, entry.address, null, addrs);
     }
 
     protected String urlEncode(String value) {
@@ -327,14 +325,6 @@ public abstract class ClusterAgent {
 
     protected ConcurrentHashMap<String, ClusterEntry> getRemoteEntrys() {
         return remoteEntrys;
-    }
-
-    public TransportFactory getTransportFactory() {
-        return transportFactory;
-    }
-
-    public void setTransportFactory(TransportFactory transportFactory) {
-        this.transportFactory = transportFactory;
     }
 
     public String getName() {

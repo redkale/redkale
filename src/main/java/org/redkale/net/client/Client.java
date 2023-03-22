@@ -5,6 +5,7 @@
  */
 package org.redkale.net.client;
 
+import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -48,23 +49,30 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected final LongAdder respDoneCounter = new LongAdder();
 
-    protected final AtomicLong connIndexSeq = new AtomicLong();
-
-    private final AtomicInteger connSeqno = new AtomicInteger();
-
     private final AtomicBoolean closed = new AtomicBoolean();
 
     protected ScheduledFuture timeoutFuture;
 
-    protected ClientConnection<R, P>[] connArray;  //连接池
+    //连随机地址模式
+    final AtomicLong connIndexSeq = new AtomicLong();
 
-    protected LongAdder[] connRespWaitings;  //连接当前处理数
+    //连随机地址模式
+    final ClientConnection<R, P>[] connArray;  //连接池
 
-    protected AtomicBoolean[] connOpenStates; //conns的标记组，当conn不存在或closed状态，标记为false
+    //连随机地址模式
+    final LongAdder[] connRespWaitings;  //连接当前处理数
 
-    protected final Queue<CompletableFuture<C>>[] connAcquireWaitings;  //连接等待池
+    //连随机地址模式
+    final AtomicBoolean[] connOpenStates; //conns的标记组，当conn不存在或closed状态，标记为false
 
-    protected int connLimit = Utility.cpus();  //最大连接数
+    //连随机地址模式
+    final int connLimit;  //最大连接数
+
+    //连随机地址模式
+    private final Queue<CompletableFuture<C>>[] connAcquireWaitings;  //连接等待池
+
+    //连指定地址模式
+    final ConcurrentHashMap<SocketAddress, AddressConnEntry> connAddrEntrys = new ConcurrentHashMap<>();
 
     protected int maxPipelines = DEFAULT_MAX_PIPELINES; //单个连接最大并行处理数
 
@@ -133,7 +141,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         for (int i = 0; i < connOpenStates.length; i++) {
             this.connOpenStates[i] = new AtomicBoolean();
             this.connRespWaitings[i] = new LongAdder();
-            this.connAcquireWaitings[i] = Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 10) : new ConcurrentLinkedDeque();
+            this.connAcquireWaitings[i] = new ConcurrentLinkedDeque();
         }
         //timeoutScheduler 不仅仅给超时用， 还给write用
         this.timeoutScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -198,6 +206,23 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                     conn.dispose(null);
                 }
             }
+            for (AddressConnEntry<C> entry : this.connAddrEntrys.values()) {
+                ClientConnection conn = entry.connection;
+                if (conn == null) {
+                    continue;
+                }
+                final R closeReq = closeRequestSupplier == null ? null : closeRequestSupplier.get();
+                if (closeReq == null) {
+                    conn.dispose(null);
+                } else {
+                    try {
+                        conn.writeChannel(closeReq).get(1, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                    }
+                    conn.dispose(null);
+                }
+            }
+            this.connAddrEntrys.clear();
             group.close();
         }
     }
@@ -214,6 +239,20 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             request.workThread = WorkThread.currWorkThread();
         }
         return connect().thenCompose(conn -> writeChannel(conn, request, respTransfer));
+    }
+
+    public final CompletableFuture<P> sendAsync(SocketAddress addr, R request) {
+        if (request.workThread == null) {
+            request.workThread = WorkThread.currWorkThread();
+        }
+        return connect(addr).thenCompose(conn -> writeChannel(conn, request));
+    }
+
+    public final <T> CompletableFuture<T> sendAsync(SocketAddress addr, R request, Function<P, T> respTransfer) {
+        if (request.workThread == null) {
+            request.workThread = WorkThread.currWorkThread();
+        }
+        return connect(addr).thenCompose(conn -> writeChannel(conn, request, respTransfer));
     }
 
     protected CompletableFuture<P> writeChannel(ClientConnection conn, R request) {
@@ -233,7 +272,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         }
         final Queue<CompletableFuture<C>> waitQueue = this.connAcquireWaitings[connIndex];
         if (this.connOpenStates[connIndex].compareAndSet(false, true)) {
-            CompletableFuture<C> future = address.createClient(tcp, group, readTimeoutSeconds, writeTimeoutSeconds)
+            CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
                 .thenApply(c -> (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
@@ -249,7 +288,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                 this.connArray[connIndex] = c;
                 CompletableFuture<C> f;
                 while ((f = waitQueue.poll()) != null) {
-                    f.complete(c);
+                    if (!f.isDone()) {
+                        f.complete(c);
+                    }
                 }
                 return c;
             }).whenComplete((r, t) -> {
@@ -262,35 +303,51 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             waitQueue.offer(rs);
             return rs;
         }
-//        }
-//        ClientConnection minRunningConn = null;
-//        for (int i = 0; i < size; i++) {
-//            final int index = i;
-//            final ClientConnection conn = this.connArray[index];
-//            if (conn == null || !conn.isOpen()) {
-//                if (this.connOpenStates[index].compareAndSet(false, true)) {
-//                    CompletableFuture<ClientConnection> future = group.createClient(tcp, address, readTimeoutSeconds, writeTimeoutSeconds)
-//                        .thenApply(c -> createClientConnection(index, c).setMaxPipelines(maxPipelines));
-//                    return (authenticate == null ? future : authenticate.apply(future)).thenApply(c -> {
-//                        c.authenticated = true;
-//                        this.connArray[index] = c;
-//                        return c;
-//                    }).whenComplete((r, t) -> {
-//                        if (t != null) this.connOpenStates[index].set(false);
-//                    });
-//                }
-//            } else if (conn.runningCount() < 1) {
-//                return CompletableFuture.completedFuture(conn);
-//            } else if (minRunningConn == null || minRunningConn.runningCount() > conn.runningCount()) {
-//                minRunningConn = conn;
-//            }
-//        }
-//        if (minRunningConn != null) { // && minRunningConn.runningCount() < maxPipelines
-//            return CompletableFuture.completedFuture(minRunningConn);
-//        }
-//        CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), 6, TimeUnit.SECONDS);
-//        connAcquireWaitings[connSeqno.getAndIncrement() % this.connLimit].offer(rs);
-//        return rs;
+    }
+
+    //指定地址获取连接
+    protected CompletableFuture<C> connect(final SocketAddress addr) {
+        if (addr == null) {
+            return connect();
+        }
+        final AddressConnEntry<C> entry = connAddrEntrys.computeIfAbsent(addr, a -> new AddressConnEntry());
+        C ec = entry.connection;
+        if (ec != null && ec.isOpen()) {
+            return CompletableFuture.completedFuture(ec);
+        }
+        final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
+        if (entry.connOpenState.compareAndSet(false, true)) {
+            CompletableFuture<C> future = group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds)
+                .thenApply(c -> (C) createClientConnection(-1, c).setMaxPipelines(maxPipelines));
+            R virtualReq = createVirtualRequestAfterConnect();
+            if (virtualReq != null) {
+                future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
+            } else {
+                future = future.thenApply(conn -> (C) conn.readChannel());
+            }
+            if (authenticate != null) {
+                future = future.thenCompose(authenticate);
+            }
+            return future.thenApply(c -> {
+                c.setAuthenticated(true);
+                entry.connection = c;
+                CompletableFuture<C> f;
+                while ((f = waitQueue.poll()) != null) {
+                    if (!f.isDone()) {
+                        f.complete(c);
+                    }
+                }
+                return c;
+            }).whenComplete((r, t) -> {
+                if (t != null) {
+                    entry.connOpenState.set(false);
+                }
+            });
+        } else {
+            CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), 6, TimeUnit.SECONDS);
+            waitQueue.offer(rs);
+            return rs;
+        }
     }
 
     protected long getRespWaitingCount() {
@@ -334,4 +391,18 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         this.writeTimeoutSeconds = writeTimeoutSeconds;
     }
 
+    protected static class AddressConnEntry<C> {
+
+        public C connection;
+
+        public final LongAdder connRespWaiting = new LongAdder();
+
+        public final AtomicBoolean connOpenState = new AtomicBoolean();
+
+        public final Queue<CompletableFuture<C>> connAcquireWaitings = new ConcurrentLinkedDeque();
+
+        AddressConnEntry() {
+        }
+
+    }
 }

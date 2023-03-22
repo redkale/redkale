@@ -5,21 +5,23 @@
  */
 package org.redkale.test.service;
 
-import java.io.*;
-import java.net.*;
-import java.nio.*;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.logging.*;
-import org.redkale.annotation.*;
+import java.util.logging.Level;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.*;
-import org.redkale.convert.bson.*;
-import org.redkale.convert.json.*;
-import org.redkale.net.*;
+import org.redkale.convert.bson.BsonConvert;
+import org.redkale.convert.json.JsonConvert;
+import org.redkale.net.AsyncIOGroup;
+import org.redkale.net.client.ClientAddress;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.*;
+import org.redkale.service.Service;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 
@@ -30,85 +32,96 @@ import org.redkale.util.*;
 @RestService(name = "abmain")
 public class ABMainService implements Service {
 
+    private static final int abport = 8866;
+
     @Resource
     private BCService bcService;
 
     public static void remote(String[] args) throws Throwable {
         System.out.println("------------------- 远程模式调用 -----------------------------------");
         final Application application = Application.create(true);
-        final int abport = 8888;
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
         asyncGroup.start();
-        ResourceFactory resFactory = ResourceFactory.create();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        final TransportFactory transFactory = TransportFactory.create(asyncGroup, 0, 0);
-        transFactory.addGroupInfo("g77", new InetSocketAddress("127.0.0.1", 5577));
-        transFactory.addGroupInfo("g88", new InetSocketAddress("127.0.0.1", 5588));
-        transFactory.addGroupInfo("g99", new InetSocketAddress("127.0.0.1", 5599));
-
+        InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", abport);
+        final SncpClient client = new SncpClient("", asyncGroup, sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
+        final ResourceFactory resFactory = ResourceFactory.create();
         resFactory.register(JsonConvert.root());
         resFactory.register(BsonConvert.root());
+        final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
+        rpcGroups.computeIfAbsent("g77", "TCP").putAddress(new InetSocketAddress("127.0.0.1", 5577));
+        rpcGroups.computeIfAbsent("g88", "TCP").putAddress(new InetSocketAddress("127.0.0.1", 5588));
+        rpcGroups.computeIfAbsent("g99", "TCP").putAddress(new InetSocketAddress("127.0.0.1", 5599));
 
         //------------------------ 初始化 CService ------------------------------------
-        CService cservice = Sncp.createSimpleLocalService(CService.class, null, resFactory, transFactory, new InetSocketAddress("127.0.0.1", 5577), "g77");
+        CService cservice = Sncp.createSimpleLocalService(CService.class, resFactory);
         SncpServer cserver = new SncpServer();
         cserver.getResourceFactory().register(application);
-        cserver.getLogger().setLevel(Level.WARNING);
+        //cserver.getLogger().setLevel(Level.WARNING);
         cserver.addSncpServlet(cservice);
         cserver.init(DefaultAnyValue.create("port", 5577));
         cserver.start();
 
         //------------------------ 初始化 BCService ------------------------------------
-        BCService bcservice = Sncp.createSimpleLocalService(BCService.class, null, resFactory, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g88");
-        CService remoteCService = Sncp.createSimpleRemoteService(CService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5588), "g77");
-        resFactory.inject(remoteCService);
-        resFactory.register("", remoteCService);
+        BCService bcservice = Sncp.createSimpleLocalService(BCService.class, resFactory);
+        CService remoteCService = Sncp.createSimpleRemoteService(CService.class, resFactory, rpcGroups, client, "g77");
+        if (remoteCService != null) {
+            resFactory.inject(remoteCService);
+            resFactory.register("", remoteCService);
+        }
         SncpServer bcserver = new SncpServer();
         bcserver.getResourceFactory().register(application);
-        bcserver.getLogger().setLevel(Level.WARNING);
+        //bcserver.getLogger().setLevel(Level.WARNING);
         bcserver.addSncpServlet(bcservice);
         bcserver.init(DefaultAnyValue.create("port", 5588));
         bcserver.start();
 
         //------------------------ 初始化 ABMainService ------------------------------------
-        ABMainService service = Sncp.createSimpleLocalService(ABMainService.class, null, resFactory, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g99");
-        BCService remoteBCService = Sncp.createSimpleRemoteService(BCService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 5599), "g88");
-        resFactory.inject(remoteBCService);
-        resFactory.register("", remoteBCService);
-
-        HttpServer server = new HttpServer();
-        server.getResourceFactory().register(application);
-        server.getLogger().setLevel(Level.WARNING);
-
-        server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
+        ABMainService service = Sncp.createSimpleLocalService(ABMainService.class, resFactory);
+        BCService remoteBCService = Sncp.createSimpleRemoteService(BCService.class, resFactory, rpcGroups, client, "g88");
+        if (remoteBCService != null) {
+            resFactory.inject(remoteBCService);
+            resFactory.register("", remoteBCService);
+        }
 
         resFactory.inject(cservice);
         resFactory.inject(bcservice);
         resFactory.inject(service);
 
+        HttpServer server = new HttpServer();
+        server.getResourceFactory().register(application);
+        //server.getLogger().setLevel(Level.WARNING);
+
         server.init(DefaultAnyValue.create("port", abport));
+        server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
         server.start();
         Thread.sleep(100);
         System.out.println("开始请求");
+
+        //不声明一个新的HttpClient会导致Utility.postHttpContent操作
+        //同一url在Utility里的httpClient会缓存导致调用是吧，应该是httpClient的bug
+        java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
+        System.out.println("httpclient类: " + httpClient.getClass().getName());
         //同步方法
-        String url = "http://127.0.0.1:" + abport + "/pipes/abmain/syncabtime/张先生";
-        System.out.println(Utility.postHttpContent(url));
+        String url = "http://127.0.0.1:" + abport + "/pipes/abmain/sab/张先生";
+        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null).join());
 
         //异步方法
-        url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime/张先生";
-        System.out.println(Utility.postHttpContent(url));
+        url = "http://127.0.0.1:" + abport + "/pipes/abmain/abc/张先生";
+        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null).join());
 
         //异步方法
-        url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime2/张先生";
-        System.out.println(Utility.postHttpContent(url));
+        url = "http://127.0.0.1:" + abport + "/pipes/abmain/abc2/张先生";
+        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null).join());
 
         server.shutdown();
+        bcserver.shutdown();
+        cserver.shutdown();
     }
 
     public static void main(String[] args) throws Throwable {
+        LoggingBaseHandler.initDebugLogConfig();
         System.out.println("------------------- 本地模式调用 -----------------------------------");
         final Application application = Application.create(true);
-        final int abport = 8888;
         ResourceFactory factory = ResourceFactory.create();
 
         ABMainService service = new ABMainService();
@@ -131,16 +144,17 @@ public class ABMainService implements Service {
         server.start();
         Thread.sleep(100);
 
+        System.out.println("开始请求");
         //同步方法
-        String url = "http://127.0.0.1:" + abport + "/pipes/abmain/syncabtime/张先生";
+        String url = "http://127.0.0.1:" + abport + "/pipes/abmain/sab/张先生";
         System.out.println(Utility.postHttpContent(url));
 
         //异步方法
-        url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime/张先生";
+        url = "http://127.0.0.1:" + abport + "/pipes/abmain/abc/张先生";
         System.out.println(Utility.postHttpContent(url));
 
         //异步方法
-        url = "http://127.0.0.1:" + abport + "/pipes/abmain/asyncabtime2/张先生";
+        url = "http://127.0.0.1:" + abport + "/pipes/abmain/abc2/张先生";
         System.out.println(Utility.postHttpContent(url));
 
         server.shutdown();
@@ -170,16 +184,17 @@ public class ABMainService implements Service {
             });
     }
 
-    @RestMapping(name = "syncabtime")
+    @RestMapping(name = "sab")
     public String abCurrentTime(@RestParam(name = "#") final String name) {
-        String rs = "同步abCurrentTime: " + bcService.bcCurrentTime(name);
+        System.out.println("准备执行ABMainService.sab方法");
+        String rs = "同步abCurrentTime: " + bcService.bcCurrentTime1(name);
         System.out.println("执行了 ABMainService.abCurrentTime++++同步方法");
         return rs;
     }
 
-    @RestMapping(name = "asyncabtime")
+    @RestMapping(name = "abc")
     public void abCurrentTime(final CompletionHandler<String, Void> handler, @RestParam(name = "#") final String name) {
-        bcService.bcCurrentTime(Utility.createAsyncHandler((v, a) -> {
+        bcService.bcCurrentTime2(Utility.createAsyncHandler((v, a) -> {
             System.out.println("执行了 ABMainService.abCurrentTime----异步方法");
             String rs = "异步abCurrentTime: " + v;
             if (handler != null) {
@@ -192,9 +207,9 @@ public class ABMainService implements Service {
         }), name);
     }
 
-    @RestMapping(name = "asyncabtime2")
+    @RestMapping(name = "abc2")
     public void abCurrentTime(final MyAsyncHandler<String, Void> handler, @RestParam(name = "#") final String name) {
-        bcService.bcCurrentTime(new MyAsyncHandler<String, Void>() {
+        bcService.bcCurrentTime3(new MyAsyncHandler<String, Void>() {
             @Override
             public int id() {
                 return 1;

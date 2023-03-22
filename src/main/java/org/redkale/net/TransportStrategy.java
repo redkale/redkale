@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author zhangjx
  */
+@Deprecated(since = "2.8.0")
 public interface TransportStrategy {
 
     /**

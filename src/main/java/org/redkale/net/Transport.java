@@ -30,6 +30,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@Deprecated(since = "2.8.0")
 public final class Transport {
 
     public static final String DEFAULT_NETPROTOCOL = "TCP";

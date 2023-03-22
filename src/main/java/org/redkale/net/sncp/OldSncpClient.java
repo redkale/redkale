@@ -19,7 +19,7 @@ import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp.SncpDyn;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
-import org.redkale.net.sncp.SncpServiceInfo.SncpServiceAction;
+import org.redkale.net.sncp.SncpRemoteInfo.SncpRemoteAction;
 import org.redkale.service.*;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -31,6 +31,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@Deprecated(since = "2.8.0")
 public final class OldSncpClient {
 
     protected static final Logger logger = Logger.getLogger(OldSncpClient.class.getSimpleName());
@@ -53,7 +54,7 @@ public final class OldSncpClient {
 
     protected final int serviceVersion;
 
-    protected final SncpServiceAction[] actions;
+    protected final SncpRemoteAction[] actions;
 
     protected final MessageAgent messageAgent;
 
@@ -82,12 +83,12 @@ public final class OldSncpClient {
         this.name = serviceResourceName;
         Class<?> serviceResourceType = ResourceFactory.getResourceType(serviceTypeOrImplClass); //serviceResourceType
         this.serviceid = Sncp.serviceid(serviceResourceName, serviceResourceType);
-        final List<SncpServiceAction> methodens = new ArrayList<>();
+        final List<SncpRemoteAction> methodens = new ArrayList<>();
         //------------------------------------------------------------------------------
         for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(serviceResourceType).entrySet()) {
-            methodens.add(new SncpServiceAction(serviceClass, en.getValue(), serviceid, en.getKey()));
+            methodens.add(new SncpRemoteAction(serviceClass, en.getValue(), serviceid, en.getKey()));
         }
-        this.actions = methodens.toArray(new SncpServiceAction[methodens.size()]);
+        this.actions = methodens.toArray(new SncpRemoteAction[methodens.size()]);
         this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
         this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
         if (this.addrBytes.length != 4) {
@@ -160,7 +161,7 @@ public final class OldSncpClient {
 
     //只给远程模式调用的
     public <T> T remote(final int index, final Object... params) {
-        final SncpServiceAction action = actions[index];
+        final SncpRemoteAction action = actions[index];
         final CompletionHandler handlerFunc = action.paramHandlerIndex >= 0 ? (CompletionHandler) params[action.paramHandlerIndex] : null;
         if (action.paramHandlerIndex >= 0) {
             params[action.paramHandlerIndex] = null;
@@ -206,7 +207,7 @@ public final class OldSncpClient {
         }
     }
 
-    private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpServiceAction action, final Object... params) {
+    private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpRemoteAction action, final Object... params) {
         final String traceid = Traces.currTraceid();
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClasses;
@@ -404,7 +405,7 @@ public final class OldSncpClient {
         });
     }
 
-    private void checkResult(long seqid, final SncpServiceAction action, ByteBuffer buffer) {
+    private void checkResult(long seqid, final SncpRemoteAction action, ByteBuffer buffer) {
         long rseqid = buffer.getLong();
         if (rseqid != seqid) {
             throw new SncpException("sncp(" + action.method + ") response.seqid = " + seqid + ", but request.seqid =" + rseqid);
@@ -429,7 +430,7 @@ public final class OldSncpClient {
         buffer.getChar(); //端口
     }
 
-    private void fillHeader(ByteArray buffer, SncpServiceAction action, long seqid, String traceid, int bodyLength) {
+    private void fillHeader(ByteArray buffer, SncpRemoteAction action, long seqid, String traceid, int bodyLength) {
         action.header.writeTo(buffer, addrBytes, addrPort, seqid, bodyLength, 0); //结果码， 请求方固定传0  
     }
 

@@ -151,7 +151,7 @@ public class NodeHttpServer extends NodeServer {
                         } catch (Exception ex) {
                             logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
                         }
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, messageAgent, application.getResourceFactory(), application.getSncpTransportFactory(), (InetSocketAddress) null, (Set<String>) null, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, messageAgent, (String) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
                     resourceFactory.inject(resourceName, nodeService, self);
@@ -247,7 +247,7 @@ public class NodeHttpServer extends NodeServer {
                 for (int i = 0; i < mappings.length; i++) {
                     mappings[i] = pref + mappings[i];
                 }
-                ss.add(new AbstractMap.SimpleEntry<>("HttpServlet    (type=" + clazz.getName() + ")", mappings));
+                ss.add(new AbstractMap.SimpleEntry<>("HttpServlet (type=" + clazz.getName() + ")", mappings));
             }
         }
         final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> rests = sb == null ? null : new CopyOnWriteArrayList<>();
@@ -265,7 +265,7 @@ public class NodeHttpServer extends NodeServer {
             int maxNameLength = 0;
             if (rests != null) {
                 for (AbstractMap.SimpleEntry<String, String[]> en : rests) {
-                    int pos = en.getKey().indexOf('#');
+                    int pos = en.getKey().indexOf(':');
                     if (pos > maxTypeLength) {
                         maxTypeLength = pos;
                     }
@@ -277,7 +277,7 @@ public class NodeHttpServer extends NodeServer {
             }
             if (webss != null) {
                 for (AbstractMap.SimpleEntry<String, String[]> en : webss) {
-                    int pos = en.getKey().indexOf('#');
+                    int pos = en.getKey().indexOf(':');
                     if (pos > maxTypeLength) {
                         maxTypeLength = pos;
                     }
@@ -290,32 +290,34 @@ public class NodeHttpServer extends NodeServer {
             if (rests != null) {
                 for (AbstractMap.SimpleEntry<String, String[]> en : rests) {
                     StringBuilder sub = new StringBuilder();
-                    int pos = en.getKey().indexOf('#');
-                    sub.append("RestDynServlet (type=").append(en.getKey().substring(0, pos));
+                    int pos = en.getKey().indexOf(':');
+                    sub.append("RestServlet (type=").append(en.getKey().substring(0, pos));
                     for (int i = 0; i < maxTypeLength - pos; i++) {
                         sub.append(' ');
                     }
-                    sub.append(", name='").append(en.getKey().substring(pos + 1));
-                    for (int i = 0; i < maxNameLength - pos; i++) {
+                    String n = en.getKey().substring(pos + 1);
+                    sub.append(", name='").append(n).append("'");
+                    for (int i = 0; i < maxNameLength - n.length(); i++) {
                         sub.append(' ');
                     }
-                    sub.append("')");
+                    sub.append(")");
                     ss.add(new AbstractMap.SimpleEntry<>(sub.toString(), en.getValue()));
                 }
             }
             if (webss != null) {
                 for (AbstractMap.SimpleEntry<String, String[]> en : webss) {
                     StringBuilder sub = new StringBuilder();
-                    int pos = en.getKey().indexOf('#');
+                    int pos = en.getKey().indexOf(':');
                     sub.append("RestWebSocket  (type=").append(en.getKey().substring(0, pos));
                     for (int i = 0; i < maxTypeLength - pos; i++) {
                         sub.append(' ');
                     }
-                    sub.append(", name='").append(en.getKey().substring(pos + 1));
-                    for (int i = 0; i < maxNameLength - pos; i++) {
+                    String n = en.getKey().substring(pos + 1);
+                    sub.append(", name='").append(n).append("'");
+                    for (int i = 0; i < maxNameLength - n.length(); i++) {
                         sub.append(' ');
                     }
-                    sub.append("')");
+                    sub.append(")");
                     ss.add(new AbstractMap.SimpleEntry<>(sub.toString(), en.getValue()));
                 }
             }
@@ -422,7 +424,7 @@ public class NodeHttpServer extends NodeServer {
                     }
                     HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
                     if (servlet == null) {
-                        return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+                        return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null
                     }
                     String prefix2 = prefix;
                     WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
@@ -440,7 +442,7 @@ public class NodeHttpServer extends NodeServer {
                         for (int i = 0; i < mappings.length; i++) {
                             mappings[i] = prefix2 + mappings[i];
                         }
-                        rests.add(new AbstractMap.SimpleEntry<>(Sncp.getResourceType(service).getName() + "#" + name, mappings));
+                        rests.add(new AbstractMap.SimpleEntry<>(Sncp.getResourceType(service).getName() + ":" + name, mappings));
                     }
                 } finally {
                     scdl.countDown();
@@ -510,7 +512,7 @@ public class NodeHttpServer extends NodeServer {
                     for (int i = 0; i < mappings.length; i++) {
                         mappings[i] = prefix2 + mappings[i];
                     }
-                    webss.add(new AbstractMap.SimpleEntry<>(stype.getName() + "#" + rs.name(), mappings));
+                    webss.add(new AbstractMap.SimpleEntry<>(stype.getName() + ":" + rs.name(), mappings));
                 }
             }
         }

@@ -49,11 +49,11 @@ public class SncpClientCodecTest {
             SncpHeader header = new SncpHeader(sncpAddress, Uint128.ZERO, Uint128.ZERO);
             SncpClientRequest request = new SncpClientRequest();
             ByteArray writeArray = new ByteArray();
-            request.prepare(header, 1, "", new byte[20]);
+            request.prepare(header, 1, "", new ByteArray().putPlaceholder(20));
             System.out.println("request.1 = " + request);
             writeArray.put(new byte[SncpHeader.HEADER_SIZE]);
             request.writeTo(conn, writeArray);
-            request.prepare(header, 2, "", new byte[25]);
+            request.prepare(header, 2, "", new ByteArray().putPlaceholder(25));
             System.out.println("request.2 = " + request);
             writeArray.put(new byte[SncpHeader.HEADER_SIZE]);
             request.writeTo(conn, writeArray);
@@ -63,8 +63,6 @@ public class SncpClientCodecTest {
         System.out.println("sncp.realBuf = " + realBuf.remaining());
         codec.decodeMessages(realBuf, new ByteArray());
         System.out.println("respResults.size = " + respResults.size());
-        if (!main) {
-            Assertions.assertEquals(2, respResults.size());
-        }
+        Assertions.assertEquals(2, respResults.size());
     }
 }

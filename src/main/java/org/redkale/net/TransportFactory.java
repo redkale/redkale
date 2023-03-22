@@ -27,6 +27,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@Deprecated(since = "2.8.0")
 public class TransportFactory {
 
     @Comment("默认TCP读取超时秒数")

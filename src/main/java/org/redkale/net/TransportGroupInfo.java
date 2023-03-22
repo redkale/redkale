@@ -19,6 +19,7 @@ import org.redkale.util.Utility;
  *
  * @author zhangjx
  */
+@Deprecated(since = "2.8.0")
 public class TransportGroupInfo {
 
     protected final ReentrantLock lock = new ReentrantLock();

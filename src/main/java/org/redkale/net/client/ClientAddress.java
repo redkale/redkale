@@ -6,7 +6,6 @@ import java.net.SocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.*;
 
 /**
  * Client连接地址
@@ -61,7 +60,7 @@ public class ClientAddress implements java.io.Serializable {
         }
     }
 
-    public CompletableFuture<AsyncConnection> createClient(final boolean tcp, final AsyncGroup group, int readTimeoutSeconds, int writeTimeoutSeconds) {
+    public SocketAddress randomAddress() {
         SocketAddress addr = address;
         if (addr == null) {
             SocketAddress[] addrs = this.addresses;
@@ -71,7 +70,7 @@ public class ClientAddress implements java.io.Serializable {
             }
             addr = addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
         }
-        return group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds);
+        return addr;
     }
 
     private static SocketAddress[] createAddressArray(List<WeightAddress> ws) {
