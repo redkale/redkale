@@ -35,8 +35,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected CompletionHandler<Void, Object> connectCompletionHandler;
 
-    protected volatile boolean connectPending;
-
     protected SelectionKey connectKey;
 
     //-------------------------------- 读操作 --------------------------------------
@@ -47,8 +45,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected ByteBuffer readByteBuffer;
 
     protected CompletionHandler<Integer, ByteBuffer> readCompletionHandler;
-
-    protected volatile boolean readPending;
 
     protected SelectionKey readKey;
 
@@ -87,8 +83,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected Object writeAttachment;
 
     protected CompletionHandler<Integer, Object> writeCompletionHandler;
-
-    protected volatile boolean writePending;
 
     protected SelectionKey writeKey;
 
@@ -157,7 +151,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
+    public void write(byte[] headerContent, int headerOffset, int headerLength, 
+        byte[] bodyContent, int bodyOffset, int bodyLength, 
+        Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
+        
         if (sslEngine != null) {
             super.write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, handler);
             return;
@@ -289,6 +286,8 @@ abstract class AsyncNioConnection extends AsyncConnection {
             boolean hasRemain = true;
             boolean writeCompleted = true;
             if (direct) {
+                int batchOffset = writeOffset;
+                int batchLength = writeLength;
                 while (hasRemain) { //必须要将buffer写完为止
                     if (writeByteTuple1Array != null) {
                         final ByteBuffer buffer = pollWriteBuffer();
@@ -345,20 +344,24 @@ abstract class AsyncNioConnection extends AsyncConnection {
                         writeCount = implWrite(writeByteBuffer);
                         hasRemain = writeByteBuffer.hasRemaining();
                     } else {
-                        writeCount = implWrite(writeByteBuffers, writeOffset, writeLength);
+                        writeCount = implWrite(writeByteBuffers, batchOffset, batchLength);
                         boolean remain = false;
-                        for (int i = writeByteBuffers.length - 1; i >= writeOffset; i--) {
-                            if (writeByteBuffers[i].hasRemaining()) {
+                        for (int i = 0; i < batchLength; i++) {
+                            if (writeByteBuffers[batchOffset + i].hasRemaining()) {
                                 remain = true;
+                                batchOffset += i;
+                                batchLength -= i;
                                 break;
                             }
                         }
                         hasRemain = remain;
                     }
+
                     if (writeCount == 0) {
                         if (hasRemain) {
-                            writeCompleted = false;
-                            writeTotal = totalCount;
+                            //writeCompleted = false;
+                            //writeTotal = totalCount;
+                            continue;  //要全部输出完才返回
                         }
                         break;
                     } else if (writeCount < 0) {

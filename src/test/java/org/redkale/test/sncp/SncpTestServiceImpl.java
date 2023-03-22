@@ -10,9 +10,12 @@ import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.ResourceType;
-import org.redkale.net.*;
-import org.redkale.net.sncp.Sncp;
+import org.redkale.boot.Application;
+import org.redkale.net.AsyncIOGroup;
+import org.redkale.net.client.ClientAddress;
+import org.redkale.net.sncp.*;
 import org.redkale.service.*;
+import org.redkale.util.ResourceFactory;
 
 /**
  *
@@ -64,7 +67,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
     @Override
     public String queryResult(SncpTestBean bean) {
         System.out.println(Thread.currentThread().getName() + " 运行了queryResult方法 content-length: " + bean.getContent().length());
-        return "result: " + bean.getContent();
+        return "result-content:   " + bean.getContent();
     }
 
     public void queryResult(CompletionHandler<String, SncpTestBean> handler, @RpcAttachment SncpTestBean bean) {
@@ -83,12 +86,16 @@ public class SncpTestServiceImpl implements SncpTestIService {
 
     public static void main(String[] args) throws Exception {
 
+        final Application application = Application.create(true);
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
         asyncGroup.start();
-        final TransportFactory transFactory = TransportFactory.create(asyncGroup, 0, 0);
+        final ResourceFactory factory = ResourceFactory.create();
+        final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
+        InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", 7070);
+        rpcGroups.computeIfAbsent("g70", "TCP").putAddress(sncpAddress);
+        final SncpClient client = new SncpClient("", asyncGroup, sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
 
-        transFactory.addGroupInfo("g70", new InetSocketAddress("127.0.0.1", 7070));
-        Service service = null;// Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, ResourceFactory.create(), transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
+        Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, factory);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -97,7 +104,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = null;//Sncp.createSimpleRemoteService(SncpTestServiceImpl.class, null, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
+        service = Sncp.createSimpleRemoteService(SncpTestServiceImpl.class, factory, rpcGroups, client, "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -106,7 +113,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = null;//Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, new InetSocketAddress("127.0.0.1", 7070), "g70");
+        service = Sncp.createSimpleRemoteService(SncpTestIService.class, factory, rpcGroups, client, "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }

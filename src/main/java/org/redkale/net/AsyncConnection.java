@@ -37,6 +37,12 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     protected volatile long writeTime;
 
+    protected volatile boolean connectPending;
+
+    protected volatile boolean readPending;
+
+    protected volatile boolean writePending;
+
     private Map<String, Object> attributes; //用于存储绑定在Connection上的对象集合
 
     private Object subobject; //用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
@@ -262,6 +268,20 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             read(handler);
         } else {
             executeRead(() -> read(handler));
+        }
+    }
+
+    public final void readInIOThreadSafe(CompletionHandler<Integer, ByteBuffer> handler) {
+        if (inCurrReadThread()) {
+            if (!readPending) {
+                read(handler);
+            }
+        } else {
+            executeRead(() -> {
+                if (!readPending) {
+                    read(handler);
+                }
+            });
         }
     }
 

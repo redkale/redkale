@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.redkale.net.AsyncIOThread;
 import org.redkale.util.*;
 
@@ -22,6 +23,8 @@ import org.redkale.util.*;
  * @since 2.8.0
  */
 public class ClientWriteIOThread extends AsyncIOThread {
+
+    private final AtomicBoolean writingFlag = new AtomicBoolean();
 
     private final BlockingQueue<ClientFuture> requestQueue = new LinkedBlockingQueue<>();
 
@@ -108,6 +111,10 @@ public class ClientWriteIOThread extends AsyncIOThread {
                                 conn.pauseWriting.set(true);
                                 conn.pauseRequests.addAll(list.subList(i, list.size()));
                                 break;
+                            }
+                            if (writeArray.length() > capacity) { //合并的数据包不能太大
+                                conn.channel.write(writeArray, conn, writeHandler);
+                                writeArray.clear();
                             }
                         }
                         listPool.accept(list);

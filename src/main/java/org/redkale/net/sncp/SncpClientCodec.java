@@ -87,7 +87,7 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                         halfBodyBytes.put(buffer);
                         return;
                     }
-                    halfBodyBytes.put(buffer, lastResult.getBodyLength() - halfHeaderBytes.length());
+                    halfBodyBytes.put(buffer, lastResult.getBodyLength() - halfBodyBytes.length());
                     //读取完整body
                     lastResult.setBodyContent(halfBodyBytes.getBytes());
                     halfBodyBytes = null;

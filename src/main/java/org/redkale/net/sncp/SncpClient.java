@@ -80,13 +80,13 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
         } else if (action.returnFutureClass != null) { //返回类型为CompletableFuture
             if (action.returnFutureClass == CompletableFuture.class) {
                 //v,length-1为了读掉(byte)0
-                return (T) future.thenApply(v -> v == null ? null : convert.convertFrom(action.paramHandlerResultType, v, 1, v.length - 1));
+                return (T) future.thenApply(v -> v == null ? null : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
             } else {
                 final CompletableFuture returnFuture = action.returnFutureCreator.create();
                 future.whenComplete((v, t) -> {
                     if (t == null) {
                         //v,length-1为了读掉(byte)0
-                        returnFuture.complete(v == null ? null : convert.convertFrom(action.paramHandlerResultType, v, 1, v.length - 1));
+                        returnFuture.complete(v == null ? null : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
                     } else {
                         returnFuture.completeExceptionally(t);
                     }
@@ -130,6 +130,7 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
             }
         }
         requet.prepare(action.header, seqid, traceid, (ByteTuple) writer);
+        //writer没有回收，待优化
         final SocketAddress addr = action.paramAddressTargetIndex >= 0 ? (SocketAddress) params[action.paramAddressTargetIndex] : info.nextRemoteAddress();
         return super.connect(addr).thenCompose(conn -> writeChannel(conn, requet).thenApply(rs -> rs.getBodyContent()));
     }

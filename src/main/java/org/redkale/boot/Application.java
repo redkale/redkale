@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.logging.*;
-import javax.net.ssl.SSLContext;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.*;
@@ -159,9 +158,6 @@ public final class Application {
 
     //NodeServer 资源, 顺序必须是sncps, others, watchs
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
-
-    //SNCP传输端的TransportFactory, 注意： 只给SNCP使用
-    private final TransportFactory sncpTransportFactory;
 
     //配置项里的group信息, 注意： 只给SNCP使用
     private final SncpRpcGroups sncpRpcGroups = new SncpRpcGroups();
@@ -452,32 +448,18 @@ public final class Application {
             throw new RedkaleException(e);
         }
         //------------------------------------ 配置 <transport> 节点 ------------------------------------
-        TransportStrategy strategy = null;
         String excludelib0 = null;
         ClusterAgent cluster = null;
         MessageAgent[] mqs = null;
         int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Utility.cpus() * 8;
-        int readTimeoutSeconds = TransportFactory.DEFAULT_READTIMEOUTSECONDS;
-        int writeTimeoutSeconds = TransportFactory.DEFAULT_WRITETIMEOUTSECONDS;
+        int readTimeoutSeconds = 6;
+        int writeTimeoutSeconds = 6;
         AnyValue executorConf = null;
         executorConf = config.getAnyValue("executor");
         AnyValue excludelibConf = config.getAnyValue("excludelibs");
         if (excludelibConf != null) {
             excludelib0 = excludelibConf.getValue("value");
-        }
-        AnyValue transportConf = config.getAnyValue("transport");
-        int groupSize = config.getAnyValues("group").length;
-        if (groupSize > 0 && transportConf == null) {
-            transportConf = new DefaultAnyValue();
-        }
-        if (transportConf != null) {
-            //--------------transportBufferPool-----------
-            bufferCapacity = Math.max(parseLenth(transportConf.getValue("bufferCapacity"), bufferCapacity), 32 * 1024);
-            readTimeoutSeconds = transportConf.getIntValue("readTimeoutSeconds", readTimeoutSeconds);
-            writeTimeoutSeconds = transportConf.getIntValue("writeTimeoutSeconds", writeTimeoutSeconds);
-            final int threads = parseLenth(transportConf.getValue("threads"), groupSize * Utility.cpus() * 2);
-            bufferPoolSize = parseLenth(transportConf.getValue("bufferPoolSize"), threads * 4);
         }
 
         AnyValue clusterConf = config.getAnyValue("cluster");
@@ -611,11 +593,6 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);
 
         this.excludelibs = excludelib0;
-        this.sncpTransportFactory = TransportFactory.create(this.clientAsyncGroup, (SSLContext) null, Transport.DEFAULT_NETPROTOCOL, readTimeoutSeconds, writeTimeoutSeconds, strategy);
-        DefaultAnyValue tarnsportConf = DefaultAnyValue.create(TransportFactory.NAME_POOLMAXCONNS, System.getProperty("redkale.net.transport.pool.maxconns", "100"))
-            .addValue(TransportFactory.NAME_PINGINTERVAL, System.getProperty("redkale.net.transport.ping.interval", "30"))
-            .addValue(TransportFactory.NAME_CHECKINTERVAL, System.getProperty("redkale.net.transport.check.interval", "30"));
-        this.sncpTransportFactory.init(tarnsportConf, ByteBuffer.wrap(Sncp.getPingBytes()).asReadOnlyBuffer(), Sncp.getPongBytes().length);
         this.clusterAgent = cluster;
         this.messageAgents = mqs;
         if (compileMode || this.classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
@@ -1047,9 +1024,6 @@ public final class Application {
                         ResourceFactory rs = serv ? rf : (resName.isEmpty() ? application.resourceFactory : null);
                         field.set(srcObj, rs);
                         return rs;
-                    } else if (type == TransportFactory.class) {
-                        field.set(srcObj, application.sncpTransportFactory);
-                        return application.sncpTransportFactory;
                     } else if (type == NodeSncpServer.class) {
                         NodeServer server = null;
                         for (NodeServer ns : application.getNodeServers()) {
@@ -1105,7 +1079,7 @@ public final class Application {
                 return false;
             }
 
-        }, Application.class, ResourceFactory.class, TransportFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
+        }, Application.class, ResourceFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
 
         //------------------------------------ 注册 java.net.http.HttpClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
@@ -1334,18 +1308,14 @@ public final class Application {
             if (group.indexOf('$') >= 0) {
                 throw new RedkaleException("<group> name cannot contains '$' in " + group);
             }
-            final String protocol = conf.getValue("protocol", Transport.DEFAULT_NETPROTOCOL).toUpperCase();
+            final String protocol = conf.getValue("protocol", "TCP").toUpperCase();
             if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                 throw new RedkaleException("Not supported Transport Protocol " + conf.getValue("protocol"));
             }
             SncpRpcGroup rg = sncpRpcGroups.computeIfAbsent(group, protocol);
-            TransportGroupInfo ginfo = new TransportGroupInfo(group, protocol, new LinkedHashSet<>());
             for (AnyValue node : conf.getAnyValues("node")) {
-                final InetSocketAddress addr = new InetSocketAddress(node.getValue("addr"), node.getIntValue("port"));
-                ginfo.putAddress(addr);
-                rg.putAddress(addr);
+                rg.putAddress(new InetSocketAddress(node.getValue("addr"), node.getIntValue("port")));
             }
-            sncpTransportFactory.addGroupInfo(ginfo);
         }
         for (AnyValue conf : config.getAnyValues("listener")) {
             final String listenClass = conf.getValue("value", "");
@@ -2515,7 +2485,6 @@ public final class Application {
             this.clientAsyncGroup.dispose();
             logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
-        this.sncpTransportFactory.shutdownNow();
 
         long intms = System.currentTimeMillis() - f;
         String ms = String.valueOf(intms);
@@ -2535,11 +2504,6 @@ public final class Application {
 
     public ResourceFactory getResourceFactory() {
         return resourceFactory;
-    }
-
-    @Deprecated
-    public TransportFactory getSncpTransportFactory2() {
-        return sncpTransportFactory;
     }
 
     public ClusterAgent getClusterAgent() {

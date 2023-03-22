@@ -64,7 +64,9 @@ public class SncpHeader {
         this.serviceid = Uint128.read(buffer); //16
         this.serviceVersion = buffer.getInt(); //4
         this.actionid = Uint128.read(buffer); //16
-        this.addrBytes = new byte[4];
+        if (this.addrBytes == null) {
+            this.addrBytes = new byte[4];
+        }
         buffer.get(this.addrBytes); //addr      4
         this.addrPort = buffer.getChar(); //port 2
         this.abilities = buffer.getInt(); //4

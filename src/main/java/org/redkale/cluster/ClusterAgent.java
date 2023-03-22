@@ -19,7 +19,7 @@ import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.MessageMultiConsumer;
-import org.redkale.net.*;
+import org.redkale.net.Server;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
@@ -407,7 +407,7 @@ public abstract class ClusterAgent {
             this.address = addr;
             this.serviceRef = new WeakReference(service);
             Server server = ns.getServer();
-            this.netProtocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : Transport.DEFAULT_NETPROTOCOL;
+            this.netProtocol = server instanceof SncpServer ? ((SncpServer) server).getNetprotocol() : "TCP";
         }
 
         @Override

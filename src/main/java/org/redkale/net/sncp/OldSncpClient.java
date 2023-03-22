@@ -16,7 +16,7 @@ import org.redkale.annotation.Resource;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
 import org.redkale.mq.*;
-import org.redkale.net.*;
+import org.redkale.net.AsyncConnection;
 import org.redkale.net.sncp.Sncp.SncpDyn;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.net.sncp.SncpRemoteInfo.SncpRemoteAction;
@@ -69,9 +69,9 @@ public final class OldSncpClient {
     protected Set<String> remoteGroups;
 
     //远程模式, 可能为null
-    protected Transport remoteGroupTransport;
+    //protected Transport remoteGroupTransport;
 
-    public <T extends Service> OldSncpClient(final String serviceResourceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent messageAgent, final TransportFactory factory,
+    public <T extends Service> OldSncpClient(final String serviceResourceName, final Class<T> serviceTypeOrImplClass, final T service, MessageAgent messageAgent, 
         final boolean remote, final Class serviceClass, final InetSocketAddress clientSncpAddress) {
         this.remote = remote;
         this.messageAgent = messageAgent;
@@ -124,14 +124,6 @@ public final class OldSncpClient {
         this.remoteGroups = remoteGroups;
     }
 
-    public Transport getRemoteGroupTransport() {
-        return remoteGroupTransport;
-    }
-
-    public void setRemoteGroupTransport(Transport remoteGroupTransport) {
-        this.remoteGroupTransport = remoteGroupTransport;
-    }
-
     @Override
     public String toString() {
         String service = serviceClass.getName();
@@ -155,7 +147,6 @@ public final class OldSncpClient {
         return service + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = " + serviceVersion
             + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
             + ((remoteGroups == null || remoteGroups.isEmpty()) ? "" : ", remoteGroups = " + remoteGroups)
-            + (remoteGroupTransport == null ? "" : ", remoteGroupTransport = " + Arrays.toString(remoteGroupTransport.getRemoteAddresses()))
             + ", actions.size = " + actions.length + ")";
     }
 
@@ -167,7 +158,7 @@ public final class OldSncpClient {
             params[action.paramHandlerIndex] = null;
         }
         final BsonReader reader = bsonConvert.pollReader();
-        CompletableFuture<byte[]> future = remote0(handlerFunc, remoteGroupTransport, null, action, params);
+        CompletableFuture<byte[]> future = remote0(handlerFunc, null, action, params);
         if (action.returnFutureResultType != null) { //与handlerFuncIndex互斥
             CompletableFuture result = (CompletableFuture) action.returnFutureCreator.create();
             future.whenComplete((v, e) -> {
@@ -207,7 +198,7 @@ public final class OldSncpClient {
         }
     }
 
-    private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final Transport transport, final SocketAddress addr0, final SncpRemoteAction action, final Object... params) {
+    private CompletableFuture<byte[]> remote0(final CompletionHandler handler, final SocketAddress addr0, final SncpRemoteAction action, final Object... params) {
         final String traceid = Traces.currTraceid();
         final Type[] myparamtypes = action.paramTypes;
         final Class[] myparamclass = action.paramClasses;
@@ -266,7 +257,7 @@ public final class OldSncpClient {
             });
         }
         final SocketAddress addr = addr0 == null ? (action.paramAddressTargetIndex >= 0 ? (SocketAddress) params[action.paramAddressTargetIndex] : null) : addr0;
-        CompletableFuture<AsyncConnection> connFuture = transport.pollConnection(addr);
+        CompletableFuture<AsyncConnection> connFuture = null; //transport.pollConnection(addr);
         return connFuture.thenCompose(conn0 -> {
             final CompletableFuture<byte[]> future = new CompletableFuture();
             if (conn0 == null) {
@@ -298,7 +289,7 @@ public final class OldSncpClient {
                                 if (count < 1 && buffer.remaining() == buffer.limit()) {   //没有数据可读
                                     future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote no response data, params=" + JsonConvert.root().convertTo(params)));
                                     conn.offerReadBuffer(buffer);
-                                    transport.offerConnection(true, conn);
+                                    //transport.offerConnection(true, conn);
                                     return;
                                 }
                                 if (received < 1 && buffer.limit() < buffer.remaining() + HEADER_SIZE) { //header都没读全
@@ -347,7 +338,7 @@ public final class OldSncpClient {
                             } catch (Throwable e) {
                                 e.printStackTrace();
                                 future.completeExceptionally(new RpcRemoteException(action.method + " sncp[" + conn.getRemoteAddress() + "] remote response error, params=" + JsonConvert.root().convertTo(params)));
-                                transport.offerConnection(true, conn);
+                                //transport.offerConnection(true, conn);
                                 if (handler != null) {
                                     final Object handlerAttach = action.paramHandlerAttachIndex >= 0 ? params[action.paramHandlerAttachIndex] : null;
                                     handler.failed(e, handlerAttach);
@@ -359,7 +350,7 @@ public final class OldSncpClient {
                         @SuppressWarnings("unchecked")
                         public void success() {
                             future.complete(this.body);
-                            transport.offerConnection(false, conn);
+                            //transport.offerConnection(false, conn);
                             if (handler != null) {
                                 final Object handlerAttach = action.paramHandlerAttachIndex >= 0 ? params[action.paramHandlerAttachIndex] : null;
                                 final BsonReader reader = bsonConvert.pollReader();
@@ -380,7 +371,7 @@ public final class OldSncpClient {
                         public void failed(Throwable exc, ByteBuffer attachment2) {
                             future.completeExceptionally(new RpcRemoteException(action.method + " sncp remote exec failed, params=" + JsonConvert.root().convertTo(params)));
                             conn.offerReadBuffer(attachment2);
-                            transport.offerConnection(true, conn);
+                            //transport.offerConnection(true, conn);
                             if (handler != null) {
                                 final Object handlerAttach = action.paramHandlerAttachIndex >= 0 ? params[action.paramHandlerAttachIndex] : null;
                                 handler.failed(exc, handlerAttach);
@@ -393,7 +384,7 @@ public final class OldSncpClient {
                 @Override
                 public void failed(Throwable exc, Void attachment) {
                     future.completeExceptionally(new RpcRemoteException(action.method + " sncp remote exec failed, params=" + JsonConvert.root().convertTo(params)));
-                    transport.offerConnection(true, conn);
+                    //transport.offerConnection(true, conn);
                     if (handler != null) {
                         final Object handlerAttach = action.paramHandlerAttachIndex >= 0 ? params[action.paramHandlerAttachIndex] : null;
                         handler.failed(exc, handlerAttach);

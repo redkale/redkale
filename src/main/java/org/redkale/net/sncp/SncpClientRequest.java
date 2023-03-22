@@ -3,6 +3,7 @@
  */
 package org.redkale.net.sncp;
 
+import java.io.Serializable;
 import java.util.Objects;
 import org.redkale.net.client.*;
 import org.redkale.util.*;
@@ -50,6 +51,11 @@ public class SncpClientRequest extends ClientRequest {
         return rs;
     }
 
+    @Override
+    public Serializable getRequestid() {
+        return seqid;
+    }
+    
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
         array.putPlaceholder(SncpHeader.HEADER_SIZE);
