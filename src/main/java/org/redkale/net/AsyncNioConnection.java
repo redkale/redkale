@@ -151,10 +151,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public void write(byte[] headerContent, int headerOffset, int headerLength, 
-        byte[] bodyContent, int bodyOffset, int bodyLength, 
+    public void write(byte[] headerContent, int headerOffset, int headerLength,
+        byte[] bodyContent, int bodyOffset, int bodyLength,
         Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
-        
+
         if (sslEngine != null) {
             super.write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, handler);
             return;
@@ -322,6 +322,8 @@ abstract class AsyncNioConnection extends AsyncConnection {
                             writeByteBuffers = buffers;
                             writeOffset = 0;
                             writeLength = buffers.length;
+                            batchOffset = writeOffset;
+                            batchLength = writeLength;
                             writeByteTuple1Array = null;
                             writeByteTuple1Offset = 0;
                             writeByteTuple1Length = 0;
