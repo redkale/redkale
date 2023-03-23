@@ -928,9 +928,6 @@ public abstract class NodeServer {
             if ("executor".equals(key)) {
                 return AnyValue.MergeFunction.REPLACE;
             }
-            if ("transport".equals(key)) {
-                return AnyValue.MergeFunction.REPLACE;
-            }
             if ("excludelibs".equals(key)) {
                 return AnyValue.MergeFunction.REPLACE;
             }

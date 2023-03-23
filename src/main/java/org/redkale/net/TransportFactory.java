@@ -19,8 +19,7 @@ import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
- * System.getProperty("redkale.net.transport.ping.interval", "30") 心跳周期，默认30秒
- * System.getProperty("redkale.net.transport.check.interval", "30") 检查不可用地址周期，默认30秒
+ * 被net.client模块代替
  *
  * <p>
  * 详情见: https://redkale.org

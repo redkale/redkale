@@ -72,6 +72,9 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                     occurError(null, new SncpException("sncp header length must be " + HEADER_SIZE + ", but " + headerSize)); //request不一定存在
                     return;
                 }
+                //if (halfHeaderBytes.length() != HEADER_SIZE) {
+                //    logger.log(Level.SEVERE, "halfHeaderBytes.length must be " + HEADER_SIZE + ", but " + halfHeaderBytes.length());
+                //}
                 halfHeaderBytes = null;
                 if (result.getBodyLength() < 1) {
                     addMessage(findRequest(result.getRequestid()), result);
@@ -90,6 +93,9 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                     halfBodyBytes.put(buffer, lastResult.getBodyLength() - halfBodyBytes.length());
                     //读取完整body
                     lastResult.setBodyContent(halfBodyBytes.getBytes());
+                    //if (halfBodyBytes.length() != lastResult.getBodyLength()) {
+                    //    logger.log(Level.SEVERE, "halfBodyBytes.length must be " + lastResult.getBodyLength() + ", but " + halfBodyBytes.length());
+                    //}
                     halfBodyBytes = null;
                     addMessage(findRequest(lastResult.getRequestid()), lastResult);
                     lastResult = null;
@@ -100,8 +106,12 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                     halfBodyBytes.put(buffer);
                     return;
                 }
+                //有足够的数据读取完整body
                 lastResult.readBody(buffer);
                 halfBodyBytes = null;
+                //if (lastResult.getBodyContent().length != lastResult.getBodyLength()) {
+                //    logger.log(Level.SEVERE, "lastResult.length must be " + lastResult.getBodyLength() + ", but " + lastResult.getBodyContent().length);
+                //}
                 addMessage(findRequest(lastResult.getRequestid()), lastResult);
                 lastResult = null;
                 continue;

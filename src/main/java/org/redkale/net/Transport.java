@@ -23,7 +23,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
 /**
- * 传输客户端
+ * 被net.client模块代替
  *
  * <p>
  * 详情见: https://redkale.org

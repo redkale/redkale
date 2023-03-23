@@ -9,7 +9,7 @@ import java.net.SocketAddress;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * 远程请求的负载均衡策略
+ * 被net.client模块代替
  *
  * <p>
  * 详情见: https://redkale.org

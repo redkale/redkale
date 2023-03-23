@@ -276,7 +276,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     private void completeInIOThread(boolean kill) {
         if (!this.inited) {
             return; //避免重复关闭
-        }        //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
+        }
+        //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
         if (kill) {
             refuseAlive();
         }
@@ -300,7 +301,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 new ProtocolCodec(context, poolSupplier, poolConsumer, conn).response(this).run(null);
             }
         } else {
-            new Exception().printStackTrace();
             this.responseConsumer.accept(this);
         }
     }

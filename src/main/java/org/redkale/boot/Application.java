@@ -303,15 +303,6 @@ public final class Application {
                 }
             }
             //设置默认系统变量
-            if (System.getProperty("redkale.net.transport.poolmaxconns") == null) {
-                System.setProperty("redkale.net.transport.poolmaxconns", "100");
-            }
-            if (System.getProperty("redkale.net.transport.pinginterval") == null) {
-                System.setProperty("redkale.net.transport.pinginterval", "30");
-            }
-            if (System.getProperty("redkale.net.transport.checkinterval") == null) {
-                System.setProperty("redkale.net.transport.checkinterval", "30");
-            }
             if (System.getProperty("redkale.convert.pool.size") == null) {
                 System.setProperty("redkale.convert.pool.size", "128");
             }

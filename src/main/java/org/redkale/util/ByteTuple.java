@@ -5,6 +5,8 @@
  */
 package org.redkale.util;
 
+import java.util.Arrays;
+
 /**
  * 简单的byte[]数据接口。
  *
@@ -21,4 +23,9 @@ public interface ByteTuple {
     public int offset();
 
     public int length();
+
+    default byte[] toArray() {
+        int o = offset();
+        return Arrays.copyOfRange(content(), o, o + length());
+    }
 }

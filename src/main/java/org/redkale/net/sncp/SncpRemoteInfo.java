@@ -6,12 +6,16 @@ package org.redkale.net.sncp;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
-import org.redkale.convert.Convert;
+import java.util.logging.*;
+import org.redkale.convert.*;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.*;
 import static org.redkale.net.sncp.Sncp.loadMethodActions;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -26,7 +30,9 @@ import org.redkale.util.*;
  *
  * @since 2.8.0
  */
-public final class SncpRemoteInfo<T extends Service> {
+public class SncpRemoteInfo<T extends Service> {
+
+    protected static final Logger logger = Logger.getLogger(SncpRemoteInfo.class.getSimpleName());
 
     protected final String name;
 
@@ -34,15 +40,11 @@ public final class SncpRemoteInfo<T extends Service> {
 
     protected final Uint128 serviceid;
 
+    protected final String resourceid;
+
     protected final int serviceVersion;
 
     protected final SncpRemoteAction[] actions;
-
-    //MQ模式下此字段才有值
-    protected final String topic;
-
-    //默认值: BsonConvert.root()
-    protected final Convert convert;
 
     //非MQ模式下此字段才有值
     protected final SncpRpcGroups sncpRpcGroups;
@@ -50,24 +52,31 @@ public final class SncpRemoteInfo<T extends Service> {
     //非MQ模式下此字段才有值
     protected final SncpClient sncpClient;
 
+    //非MQ模式下此字段才有值, 可能为null
+    protected String remoteGroup;
+
+    //非MQ模式下此字段才有值, 可能为null
+    protected Set<InetSocketAddress> remoteAddresses;
+
+    //默认值: BsonConvert.root()
+    protected final Convert convert;
+
+    //MQ模式下此字段才有值
+    protected final String topic;
+
     //MQ模式下此字段才有值
     protected final MessageAgent messageAgent;
 
     //MQ模式下此字段才有值
     protected final SncpMessageClient messageClient;
 
-    //MQ模式下此字段才有值, 可能为null
-    protected String remoteGroup;
-
-    //MQ模式下此字段才有值, 可能为null
-    protected Set<InetSocketAddress> remoteAddresses;
-
-    SncpRemoteInfo(String resourceName, Class<T> resourceServiceType, Class<T> serviceImplClass, Convert convert,
+    SncpRemoteInfo(String resourceName, Class<T> resourceType, Class<T> serviceImplClass, Convert convert,
         SncpRpcGroups sncpRpcGroups, SncpClient sncpClient, MessageAgent messageAgent, String remoteGroup) {
         Objects.requireNonNull(sncpRpcGroups);
         this.name = resourceName;
-        this.serviceType = resourceServiceType;
-        this.serviceid = Sncp.serviceid(resourceName, resourceServiceType);
+        this.serviceType = resourceType;
+        this.resourceid = Sncp.resourceid(resourceName, resourceType);
+        this.serviceid = Sncp.serviceid(resourceName, resourceType);
         this.convert = convert;
         this.serviceVersion = 0;
         this.sncpRpcGroups = sncpRpcGroups;
@@ -75,16 +84,149 @@ public final class SncpRemoteInfo<T extends Service> {
         this.messageAgent = messageAgent;
         this.remoteGroup = remoteGroup;
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
-        this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(resourceName, resourceServiceType);
+        this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(resourceName, resourceType);
 
         final List<SncpRemoteAction> serviceActions = new ArrayList<>();
-        for (Map.Entry<Uint128, Method> en : loadMethodActions(resourceServiceType).entrySet()) {
+        for (Map.Entry<Uint128, Method> en : loadMethodActions(resourceType).entrySet()) {
             serviceActions.add(new SncpRemoteAction(serviceImplClass, en.getValue(), serviceid, en.getKey()));
         }
         this.actions = serviceActions.toArray(new SncpRemoteAction[serviceActions.size()]);
     }
 
-    public InetSocketAddress nextRemoteAddress() {
+    //由远程模式的DyncRemoveService调用
+    public <T> T remote(final int index, final Object... params) {
+        final SncpRemoteAction action = this.actions[index];
+        CompletionHandler callbackHandler = null;
+        Object callbackHandlerAttach = null;
+        if (action.paramHandlerIndex >= 0) {
+            callbackHandler = (CompletionHandler) params[action.paramHandlerIndex];
+            params[action.paramHandlerIndex] = null;
+            if (action.paramHandlerAttachIndex >= 0) {
+                callbackHandlerAttach = params[action.paramHandlerAttachIndex];
+                params[action.paramHandlerAttachIndex] = null;
+            }
+        }
+        final CompletableFuture<byte[]> future = remote(action, Traces.currTraceid(), params);
+        if (action.paramHandlerIndex >= 0) { //参数中存在CompletionHandler
+            final CompletionHandler handler = callbackHandler;
+            final Object attach = callbackHandlerAttach;
+            if (handler == null) { //传入的CompletionHandler参数为null
+                future.join();
+            } else {
+                future.whenComplete((v, t) -> {
+                    if (t == null) {
+                        //v,length-1为了读掉(byte)0
+                        handler.completed(v == null ? null : convert.convertFrom(action.paramHandlerResultType, v, 1, v.length - 1), attach);
+                    } else {
+                        handler.failed(t, attach);
+                    }
+                });
+            }
+        } else if (action.returnFutureClass != null) { //返回类型为CompletableFuture
+            if (action.returnFutureClass == CompletableFuture.class) {
+                //v,length-1为了读掉(byte)0
+                return (T) future.thenApply(v -> v == null ? null : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
+            } else {
+                final CompletableFuture returnFuture = action.returnFutureCreator.create();
+                future.whenComplete((v, t) -> {
+                    if (t == null) {
+                        //v,length-1为了读掉(byte)0
+                        returnFuture.complete(v == null ? null : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
+                    } else {
+                        returnFuture.completeExceptionally(t);
+                    }
+                });
+                return (T) returnFuture;
+            }
+        } else if (action.returnObjectType != null) { //返回类型为JavaBean
+            //v,length-1为了读掉(byte)0
+            return (T) future.thenApply(v -> v == null ? null : convert.convertFrom(action.returnObjectType, v, 1, v.length - 1)).join();
+        } else { //返回类型为void
+            future.join();
+        }
+        return null;
+    }
+
+    private CompletableFuture<byte[]> remote(final SncpRemoteAction action, final String traceid, final Object[] params) {
+        if (messageAgent != null) {
+            return remoteMessage(action, traceid, params);
+        } else {
+            return remoteClient(action, traceid, params);
+        }
+    }
+
+    //MQ模式RPC
+    protected CompletableFuture<byte[]> remoteMessage(final SncpRemoteAction action, final String traceid, final Object[] params) {
+        final SncpClientRequest request = createSncpClientRequest(action, this.sncpClient.clientSncpAddress, traceid, params);
+        String targetTopic = action.paramTopicTargetIndex >= 0 ? (String) params[action.paramTopicTargetIndex] : this.topic;
+        if (targetTopic == null) {
+            targetTopic = this.topic;
+        }
+        ByteArray array = new ByteArray();
+        request.writeTo(null, array);
+        MessageRecord message = messageClient.createMessageRecord(targetTopic, null, array.getBytes());
+        final String tt = targetTopic;
+        if (logger.isLoggable(Level.FINER)) {
+            message.attach(Utility.append(new Object[]{action.actionName()}, params));
+        } else {
+            message.attach(params);
+        }
+        return messageClient.sendMessage(message).thenApply(msg -> {
+            if (msg == null || msg.getContent() == null) {
+                logger.log(Level.SEVERE, action.method + " sncp mq(params: " + JsonConvert.root().convertTo(params) + ", message: " + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt + ", result = " + msg);
+                return null;
+            }
+            ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
+            SncpHeader header = new SncpHeader();
+            int headerSize = header.read(buffer);
+            if (headerSize != HEADER_SIZE) {
+                throw new SncpException("sncp header length must be " + HEADER_SIZE + ", but is " + headerSize);
+            }
+            if (!header.checkValid(action.header)) {
+                throw new SncpException("sncp header error, response-header:" + action.header + "+, response-header:" + header);
+            }
+            final int retcode = header.getRetcode();
+            if (retcode != 0) {
+                logger.log(Level.SEVERE, action.method + " sncp (params: " + JsonConvert.root().convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + "), params=" + JsonConvert.root().convertTo(params));
+                throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+            }
+            final int respBodyLength = header.getBodyLength();
+            byte[] body = new byte[respBodyLength];
+            buffer.get(body, 0, respBodyLength);
+            return body;
+        });
+    }
+
+    //Client模式RPC
+    protected CompletableFuture<byte[]> remoteClient(final SncpRemoteAction action, final String traceid, final Object[] params) {
+        final SncpClient client = this.sncpClient;
+        final SncpClientRequest request = createSncpClientRequest(action, client.clientSncpAddress, traceid, params);
+        final SocketAddress addr = action.paramAddressTargetIndex >= 0 ? (SocketAddress) params[action.paramAddressTargetIndex] : nextRemoteAddress();
+        return client.connect(addr).thenCompose(conn -> client.writeChannel(conn, request).thenApply(rs -> rs.getBodyContent()));
+    }
+
+    protected SncpClientRequest createSncpClientRequest(final SncpRemoteAction action, final InetSocketAddress clientSncpAddress, final String traceid, final Object[] params) {
+        final Type[] myParamTypes = action.paramTypes;
+        final Class[] myParamClass = action.paramClasses;
+        if (action.paramAddressSourceIndex >= 0) {
+            params[action.paramAddressSourceIndex] = clientSncpAddress;
+        }
+        final long seqid = System.nanoTime();
+        byte[] body = null;
+        if (myParamTypes.length > 0) {
+            Writer writer = convert.pollWriter();
+            for (int i = 0; i < params.length; i++) { //service方法的参数
+                convert.convertTo(writer, CompletionHandler.class.isAssignableFrom(myParamClass[i]) ? CompletionHandler.class : myParamTypes[i], params[i]);
+            }
+            body = ((ByteTuple) writer).toArray();
+            convert.offerWriter(writer);
+        }
+        final SncpClientRequest requet = new SncpClientRequest();
+        requet.prepare(action.header, seqid, traceid, body);
+        return requet;
+    }
+
+    protected InetSocketAddress nextRemoteAddress() {
         SncpRpcGroup srg = sncpRpcGroups.getSncpRpcGroup(remoteGroup);
         if (srg != null) {
             Set<InetSocketAddress> addrs = srg.getAddresses();
@@ -96,19 +238,6 @@ public final class SncpRemoteInfo<T extends Service> {
             }
         }
         throw new SncpException("Not found SocketAddress by remoteGroup = " + remoteGroup);
-    }
-
-    //由远程模式的DyncRemoveService调用
-    public <T> T remote(final int index, final Object... params) {
-        if (messageAgent != null) {
-            return remoteMessage(index, params);
-        } else {
-            return sncpClient.remote(this, index, params);
-        }
-    }
-
-    private <T> T remoteMessage(final int index, final Object[] params) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

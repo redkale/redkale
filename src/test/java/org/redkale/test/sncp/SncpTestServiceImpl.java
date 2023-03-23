@@ -33,7 +33,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
                 try {
                     Thread.sleep(200);
                     System.out.println(Thread.currentThread().getName() + " sleep 200ms后运行了异步方法-----------queryResultAsync方法");
-                    future.complete("异步result: " + bean);
+                    future.complete("异步 result: " + bean);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

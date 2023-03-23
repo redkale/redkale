@@ -6,7 +6,7 @@ package org.redkale.net.sncp;
 import java.io.Serializable;
 import java.util.Objects;
 import org.redkale.net.client.*;
-import org.redkale.util.*;
+import org.redkale.util.ByteArray;
 
 /**
  * client版请求
@@ -24,12 +24,12 @@ public class SncpClientRequest extends ClientRequest {
 
     private long seqid;
 
-    private ByteTuple bodyContent;
+    private byte[] bodyContent;
 
     public SncpClientRequest() {
     }
 
-    public SncpClientRequest prepare(SncpHeader header, long seqid, String traceid, ByteTuple bodyContent) {
+    public SncpClientRequest prepare(SncpHeader header, long seqid, String traceid, byte[] bodyContent) {
         super.prepare();
         this.header = header;
         this.seqid = seqid;
@@ -55,14 +55,14 @@ public class SncpClientRequest extends ClientRequest {
     public Serializable getRequestid() {
         return seqid;
     }
-    
+
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
         array.putPlaceholder(SncpHeader.HEADER_SIZE);
-        if (bodyContent == null || bodyContent.length() == 0) {
+        if (bodyContent == null) {
             header.writeTo(array, header.getAddrBytes(), header.getAddrPort(), seqid, 0, 0);
         } else {
-            header.writeTo(array, header.getAddrBytes(), header.getAddrPort(), seqid, bodyContent.length(), 0);
+            header.writeTo(array, header.getAddrBytes(), header.getAddrPort(), seqid, bodyContent.length, 0);
             array.put(bodyContent);
         }
     }
@@ -71,7 +71,7 @@ public class SncpClientRequest extends ClientRequest {
     public String toString() {
         return getClass().getSimpleName() + "_" + Objects.hashCode(this) + "{"
             + "header=" + header + ", seqid =" + seqid
-            + ", body=[" + (bodyContent == null ? -1 : bodyContent.length()) + "]"
+            + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
             + "}";
     }
 
@@ -83,7 +83,7 @@ public class SncpClientRequest extends ClientRequest {
         return seqid;
     }
 
-    public ByteTuple getBodyContent() {
+    public byte[] getBodyContent() {
         return bodyContent;
     }
 

@@ -12,7 +12,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Utility;
 
 /**
- * 协议地址组合对象, 对应application.xml 中 resources-&#62;group 节点信息
+ * 被net.client模块代替
  *
  * <p>
  * 详情见: https://redkale.org

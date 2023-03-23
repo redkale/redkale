@@ -43,18 +43,6 @@
     <executor threads="4" hash="false"/>
         
     <!--
-        【节点全局唯一】
-        transport节点只能有一个，用于配置所有Transport的池参数，没配置该节点将自动创建一个。
-        threads：            线程总数， 默认: <group>节点数*CPU核数*2
-        bufferCapacity:      ByteBuffer的初始化大小， 默认: 32K; 
-        bufferPoolSize：     ByteBuffer池的大小，默认: 线程总数*4
-        readTimeoutSeconds:  TCP读取超时秒数, 默认为6秒， 为0表示无超时限制
-        writeTimeoutSeconds: TCP写入超时秒数, 默认为6秒， 为0表示无超时限制
-        strategy:            远程请求的负载均衡策略， 必须是org.redkale.net.TransportStrategy的实现类
-    -->
-    <transport bufferCapacity="32K" bufferPoolSize="32" threads="32" readTimeoutSeconds="6" writeTimeoutSeconds="6"/>
-        
-    <!--
        【节点全局唯一】
         自动扫描时排除部分包路径
         value：    排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
@@ -127,9 +115,6 @@
         load:  加载文件，多个用;隔开。
         其他属性: 供org.redkale.boot.PropertiesAgentProvider使用判断
         默认置入的system.property.的有：
-           System.setProperty("redkale.net.transport.poolmaxconns", "100");
-           System.setProperty("redkale.net.transport.pinginterval", "30");
-           System.setProperty("redkale.net.transport.checkinterval", "30");
            System.setProperty("redkale.convert.pool.size", "128");
            System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
            System.setProperty("redkale.trace.enable", "false");

@@ -28,7 +28,7 @@ public class SncpTest {
 
     private static int port2 = 4240;
 
-    private static final String protocol = "SNCP.UDP";
+    private static final String protocol = "SNCP.TCP"; // TCP UDP
 
     private static final int clientCapacity = protocol.endsWith(".UDP") ? AsyncGroup.UDP_BUFFER_CAPACITY : 8192;
 
@@ -91,7 +91,7 @@ public class SncpTest {
         System.out.println("bean： " + callbean);
         System.out.println("\r\n\r\n\r\n\r\n---------------------------------------------------");
         Thread.sleep(200);
-        final int count = 10;
+        final int count = 40;
         final CountDownLatch cld = new CountDownLatch(count);
         final AtomicInteger ai = new AtomicInteger();
         long s = System.currentTimeMillis();

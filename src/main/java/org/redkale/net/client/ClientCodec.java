@@ -69,7 +69,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
             for (ClientResponse<R, P> cr : respResults) {
                 connection.doneResponseCounter.increment();
                 if (cr.isError()) {
-                    connection.dispose(null);
+                    connection.dispose(cr.exc);
                     return;
                 } else {
                     ClientFuture<R, P> respFuture = connection.pollRespFuture(cr.getRequestid());

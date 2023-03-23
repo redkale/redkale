@@ -55,8 +55,12 @@ public class SncpHeader {
         this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
         this.serviceid = serviceid;
         this.actionid = actionid;
+        if (addrBytes.length != 4) {
+            throw new SncpException("address bytes length must be 4, but " + addrBytes.length);
+        }
     }
 
+    //返回Header Size
     public int read(ByteBuffer buffer) {
         this.seqid = buffer.getLong();  //8
         int size = buffer.getChar();
@@ -76,6 +80,7 @@ public class SncpHeader {
         return size;
     }
 
+    //返回Header Size
     public int read(ByteArray array) {
         int offset = 0;
         this.seqid = array.getLong(offset);  //8
@@ -96,7 +101,7 @@ public class SncpHeader {
         this.abilities = array.getInt(offset); //4       
         offset += 4;
         this.timestamp = array.getLong(offset); //8        
-        offset += 4;
+        offset += 8;
         this.retcode = array.getInt(offset); //4          
         offset += 4;
         this.bodyLength = array.getInt(offset); //4 
@@ -110,6 +115,9 @@ public class SncpHeader {
     }
 
     public ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, int bodyLength, int retcode) {
+        if (newAddrBytes.length != 4) {
+            throw new SncpException("address bytes length must be 4, but " + newAddrBytes.length);
+        }
         int offset = 0;
         array.putLong(offset, newSeqid); //8
         offset += 8;
@@ -149,7 +157,7 @@ public class SncpHeader {
     }
 
     public InetSocketAddress getAddress() {
-        if (addrBytes == null || addrBytes[0] == 0) {
+        if (addrBytes == null) {
             return null;
         }
         return new InetSocketAddress((0xff & addrBytes[0]) + "." + (0xff & addrBytes[1]) + "." + (0xff & addrBytes[2]) + "." + (0xff & addrBytes[3]), addrPort);

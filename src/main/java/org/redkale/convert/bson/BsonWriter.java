@@ -74,15 +74,6 @@ public class BsonWriter extends Writer implements ByteTuple {
         return new ByteArray(this);
     }
 
-    public byte[] toArray() {
-        if (count == content.length) {
-            return content;
-        }
-        byte[] newdata = new byte[count];
-        System.arraycopy(content, 0, newdata, 0, count);
-        return newdata;
-    }
-
     public ByteBuffer[] toBuffers() {
         return new ByteBuffer[]{ByteBuffer.wrap(content, 0, count)};
     }
