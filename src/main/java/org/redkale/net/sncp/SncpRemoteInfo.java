@@ -226,6 +226,10 @@ public class SncpRemoteInfo<T extends Service> {
     }
 
     protected InetSocketAddress nextRemoteAddress() {
+        InetSocketAddress addr = sncpRpcGroups.nextRemoteAddress(resourceid);
+        if (addr == null) {
+            return addr;
+        }
         SncpRpcGroup srg = sncpRpcGroups.getSncpRpcGroup(remoteGroup);
         if (srg != null) {
             Set<InetSocketAddress> addrs = srg.getAddresses();
@@ -236,7 +240,7 @@ public class SncpRemoteInfo<T extends Service> {
                 }
             }
         }
-        throw new SncpException("Not found SocketAddress by remoteGroup = " + remoteGroup);
+        throw new SncpException("Not found SocketAddress by remoteGroup = " + remoteGroup + ", resourceid = " + resourceid);
     }
 
     @Override

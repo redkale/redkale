@@ -136,7 +136,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
             if (logger.isLoggable(Level.FINEST)) {
                 logger.log(Level.FINEST, "mqtpAsync: module=" + localModule + ", resname=" + resname + ", addrmap=" + addrmap);
             }
-            for (Map.Entry<String, Collection<InetSocketAddress>> en : addrmap.entrySet()) {
+            for (Map.Entry<String, Set<InetSocketAddress>> en : addrmap.entrySet()) {
                 String realmodule = en.getKey();
                 Collection<InetSocketAddress> addrs = en.getValue();
                 if (addrs == null || addrs.isEmpty()) {

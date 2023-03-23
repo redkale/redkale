@@ -10,7 +10,7 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.Logger;
+import java.util.logging.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
@@ -47,6 +47,9 @@ public abstract class ClusterAgent {
 
     @Resource(name = RESNAME_APP_ADDR)
     protected InetSocketAddress appAddress;
+
+    @Resource(required = false)
+    protected Application application;
 
     protected String name;
 
@@ -158,7 +161,7 @@ public abstract class ClusterAgent {
         if (ns.isSNCP()) {
             for (Service service : remoteServices) {
                 ClusterEntry entry = new ClusterEntry(ns, protocol, service);
-                updateSncpTransport(entry);
+                updateSncpAddress(entry);
                 remoteEntrys.put(entry.serviceid, entry);
             }
         }
@@ -222,13 +225,16 @@ public abstract class ClusterAgent {
     }
 
     //获取MQTP的HTTP远程服务的可用ip列表, key = serviceName的后半段
-    public abstract CompletableFuture<Map<String, Collection<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname);
+    public abstract CompletableFuture<Map<String, Set<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname);
 
     //获取HTTP远程服务的可用ip列表
-    public abstract CompletableFuture<Collection<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname);
+    public abstract CompletableFuture<Set<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname);
+
+    //获取SNCP远程服务的可用ip列表 restype: resourceType.getName()
+    public abstract CompletableFuture<Set<InetSocketAddress>> querySncpAddress(String protocol, String restype, String resname);
 
     //获取远程服务的可用ip列表
-    protected abstract CompletableFuture<Collection<InetSocketAddress>> queryAddress(ClusterEntry entry);
+    protected abstract CompletableFuture<Set<InetSocketAddress>> queryAddress(ClusterEntry entry);
 
     //注册服务
     protected abstract ClusterEntry register(NodeServer ns, String protocol, Service service);
@@ -237,13 +243,21 @@ public abstract class ClusterAgent {
     protected abstract void deregister(NodeServer ns, String protocol, Service service);
 
     //格式: protocol:classtype-resourcename
-    protected void updateSncpTransport(ClusterEntry entry) {
+    protected void updateSncpAddress(ClusterEntry entry) {
+        if (application == null) {
+            return;
+        }
         Service service = entry.serviceRef.get();
         if (service == null) {
             return;
         }
-        Collection<InetSocketAddress> addrs = ClusterAgent.this.queryAddress(entry).join();
-        //Sncp.updateTransport(service, transportFactory, Sncp.getResourceType(service).getName() + "-" + Sncp.getResourceName(service), entry.netProtocol, entry.address, null, addrs);
+        try {
+            Set<InetSocketAddress> addrs = ClusterAgent.this.queryAddress(entry).join();
+            SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
+            rpcGroups.putClusterAddress(entry.resourceid, addrs);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, entry + " updateSncpAddress error", e);
+        }
     }
 
     protected String urlEncode(String value) {
@@ -280,6 +294,10 @@ public abstract class ClusterAgent {
 
     protected String serviceSeparator() {
         return "-";
+    }
+
+    public String generateSncpServiceName(String protocol, String restype, String resname) {
+        return protocol.toLowerCase() + serviceSeparator() + restype + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //也会提供给HttpMessageClusterAgent适用
@@ -367,9 +385,11 @@ public abstract class ClusterAgent {
         //以协议+Rest资源名为主  服务类名
         public String serviceName;
 
-        public String serviceType;
+        public final String resourceType;
 
-        public String resourceName;
+        public final String resourceName;
+
+        public final String resourceid;
 
         public String checkid;
 
@@ -395,8 +415,10 @@ public abstract class ClusterAgent {
             this.serviceName = generateServiceName(ns, protocol, service);
             this.checkid = generateCheckId(ns, protocol, service);
             this.checkName = generateCheckName(ns, protocol, service);
-            this.serviceType = Sncp.getResourceType(service).getName();
+            Class restype = Sncp.getResourceType(service);
+            this.resourceType = restype.getName();
             this.resourceName = Sncp.getResourceName(service);
+            this.resourceid = Sncp.resourceid(resourceName, restype);
             this.protocol = protocol;
             InetSocketAddress addr = ns.getSocketAddress();
             String host = addr.getHostString();

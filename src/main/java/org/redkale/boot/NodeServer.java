@@ -456,8 +456,9 @@ public abstract class NodeServer {
                 }
                 continue;
             }
-            final String group = rpcGroups.isLocalGroup(this.sncpGroup, this.sncpAddress, entry) ? null : entry.getGroup();
-            final boolean localMode = rpcGroups.isLocalGroup(this.sncpGroup, this.sncpAddress, entry) || serviceImplClass.getAnnotation(Local.class) != null;//本地模式
+            boolean isLocalGroup0 = rpcGroups.isLocalGroup(this.sncpGroup, this.sncpAddress, entry);
+            final String group = isLocalGroup0 ? null : entry.getGroup();
+            final boolean localMode = serviceImplClass.getAnnotation(Local.class) != null || isLocalGroup0;//本地模式
             if (localMode && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) {
                 continue; //本地模式不能实例化接口和抽象类的Service类
             }

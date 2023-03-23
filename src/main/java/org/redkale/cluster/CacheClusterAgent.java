@@ -42,10 +42,13 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     protected ScheduledFuture taskFuture;
 
     //可能被HttpMessageClient用到的服务 key: serviceName
-    protected final ConcurrentHashMap<String, Collection<InetSocketAddress>> httpAddressMap = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, Set<InetSocketAddress>> httpAddressMap = new ConcurrentHashMap<>();
+
+    //可能被sncp用到的服务 key: serviceName
+    protected final ConcurrentHashMap<String, Set<InetSocketAddress>> sncpAddressMap = new ConcurrentHashMap<>();
 
     //可能被mqtp用到的服务 key: serviceName
-    protected final ConcurrentHashMap<String, Collection<InetSocketAddress>> mqtpAddressMap = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, Set<InetSocketAddress>> mqtpAddressMap = new ConcurrentHashMap<>();
 
     @Override
     public void init(ResourceFactory factory, AnyValue config) {
@@ -134,17 +137,29 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
             try {
                 checkApplicationHealth();
                 checkHttpAddressHealth();
+                loadSncpAddressHealth();
                 loadMqtpAddressHealth();
                 localEntrys.values().stream().filter(e -> !e.canceled).forEach(entry -> {
                     checkLocalHealth(entry);
                 });
                 remoteEntrys.values().stream().filter(entry -> "SNCP".equalsIgnoreCase(entry.protocol)).forEach(entry -> {
-                    updateSncpTransport(entry);
+                    updateSncpAddress(entry);
                 });
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "scheduleAtFixedRate check error", e instanceof CompletionException ? ((CompletionException) e).getCause() : e);
             }
         };
+    }
+
+    protected void loadSncpAddressHealth() {
+        List<String> keys = source.keysStartsWith("cluster.sncp:");
+        keys.forEach(serviceName -> {
+            try {
+                this.sncpAddressMap.put(serviceName, queryAddress(serviceName).get(3, TimeUnit.SECONDS));
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "loadSncpAddressHealth check " + serviceName + " error", e);
+            }
+        });
     }
 
     protected void loadMqtpAddressHealth() {
@@ -181,9 +196,22 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         source.hset(entry.checkName, entry.checkid, AddressEntry.class, newaddr);
     }
 
+    @Override //获取SNCP远程服务的可用ip列表
+    public CompletableFuture<Set<InetSocketAddress>> querySncpAddress(String protocol, String module, String resname) {
+        final String serviceName = generateSncpServiceName(protocol, module, resname);
+        Set<InetSocketAddress> rs = sncpAddressMap.get(serviceName);
+        if (rs != null) {
+            return CompletableFuture.completedFuture(rs);
+        }
+        return queryAddress(serviceName).thenApply(t -> {
+            sncpAddressMap.put(serviceName, t);
+            return t;
+        });
+    }
+
     @Override //获取MQTP的HTTP远程服务的可用ip列表, key = serviceName的后半段
-    public CompletableFuture<Map<String, Collection<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname) {
-        final Map<String, Collection<InetSocketAddress>> rsmap = new ConcurrentHashMap<>();
+    public CompletableFuture<Map<String, Set<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname) {
+        final Map<String, Set<InetSocketAddress>> rsmap = new ConcurrentHashMap<>();
         final String servicenamprefix = generateHttpServiceName(protocol, module, null) + ":";
         mqtpAddressMap.keySet().stream().filter(k -> k.startsWith(servicenamprefix))
             .forEach(sn -> rsmap.put(sn.substring(servicenamprefix.length()), mqtpAddressMap.get(sn)));
@@ -191,9 +219,9 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     @Override //获取HTTP远程服务的可用ip列表
-    public CompletableFuture<Collection<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname) {
+    public CompletableFuture<Set<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname) {
         final String serviceName = generateHttpServiceName(protocol, module, resname);
-        Collection<InetSocketAddress> rs = httpAddressMap.get(serviceName);
+        Set<InetSocketAddress> rs = httpAddressMap.get(serviceName);
         if (rs != null) {
             return CompletableFuture.completedFuture(rs);
         }
@@ -204,11 +232,11 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     @Override
-    protected CompletableFuture<Collection<InetSocketAddress>> queryAddress(final ClusterEntry entry) {
+    protected CompletableFuture<Set<InetSocketAddress>> queryAddress(final ClusterEntry entry) {
         return queryAddress(entry.serviceName);
     }
 
-    private CompletableFuture<Collection<InetSocketAddress>> queryAddress(final String serviceName) {
+    private CompletableFuture<Set<InetSocketAddress>> queryAddress(final String serviceName) {
         final CompletableFuture<Map<String, AddressEntry>> future = source.hmapAsync(serviceName, AddressEntry.class, 0, 10000);
         return future.thenApply(map -> {
             final Set<InetSocketAddress> set = new HashSet<>();
@@ -319,6 +347,11 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     @Override
     public String generateHttpServiceName(String protocol, String module, String resname) {
         return "cluster." + super.generateHttpServiceName(protocol, module, resname);
+    }
+
+    @Override
+    public String generateSncpServiceName(String protocol, String restype, String resname) {
+        return "cluster." + super.generateSncpServiceName(protocol, restype, resname);
     }
 
     @Override
