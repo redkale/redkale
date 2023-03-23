@@ -387,7 +387,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             boolean allCompleted = this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, array);
             if (allCompleted) {
                 request.pipelineCompleted = true;
-                this.channel.writePipeline(buffers, this.finishBuffersIOThreadHandler);
+                this.channel.writeInIOThread(buffers, buffers, this.finishBuffersIOThreadHandler);
             } else {
                 AsyncConnection conn = removeChannel();
                 if (conn != null) {
@@ -397,7 +397,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
         } else if (this.channel.hasPipelineData()) {
             //先将pipeline数据写入完再写入buffers
-            this.channel.writePipeline(null, new CompletionHandler<Integer, Void>() {
+            this.channel.writePipelineInIOThread(new CompletionHandler<Integer, Void>() {
 
                 @Override
                 public void completed(Integer result, Void attachment) {
@@ -410,7 +410,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 }
             });
         } else {
-            this.channel.write(buffers, buffers, finishBuffersIOThreadHandler);
+            this.channel.writeInIOThread(buffers, buffers, finishBuffersIOThreadHandler);
         }
     }
 
