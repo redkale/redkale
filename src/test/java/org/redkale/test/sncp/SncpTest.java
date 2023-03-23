@@ -116,7 +116,6 @@ public class SncpTest {
                         //service.updateBean(bean);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        System.exit(1); 
                     } finally {
                         long a = ai.incrementAndGet();
                         System.out.println("运行了 " + (a == 100 ? "--------------------------------------------------" : "") + a);

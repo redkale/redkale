@@ -200,9 +200,25 @@ public class SncpRemoteInfo<T extends Service> {
     //Client模式RPC
     protected CompletableFuture<byte[]> remoteClient(final SncpRemoteAction action, final String traceid, final Object[] params) {
         final SncpClient client = this.sncpClient;
-        final SncpClientRequest request = createSncpClientRequest(action, client.clientSncpAddress, traceid, params);
+        final Type[] myParamTypes = action.paramTypes;
+        final Class[] myParamClass = action.paramClasses;
+        if (action.paramAddressSourceIndex >= 0) {
+            params[action.paramAddressSourceIndex] = client.clientSncpAddress;
+        }
+        byte[] body = null;
+        if (myParamTypes.length > 0) {
+            Writer writer = convert.pollWriter();
+            for (int i = 0; i < params.length; i++) { //service方法的参数
+                convert.convertTo(writer, CompletionHandler.class.isAssignableFrom(myParamClass[i]) ? CompletionHandler.class : myParamTypes[i], params[i]);
+            }
+            body = ((ByteTuple) writer).toArray();
+            convert.offerWriter(writer);
+        }
+        final SncpClientRequest request = new SncpClientRequest();
+        request.prepare(action.header, client.nextSeqno(), traceid, body);
+
         final SocketAddress addr = action.paramAddressTargetIndex >= 0 ? (SocketAddress) params[action.paramAddressTargetIndex] : nextRemoteAddress();
-        return client.connect(addr).thenCompose(conn -> client.writeChannel(conn, request).thenApply(rs -> rs.getBodyContent()));
+        return client.connect(addr).thenCompose(conn -> client.writeChannel(conn, request).thenApply(rs -> rs.getBodyContent())); 
     }
 
     protected SncpClientRequest createSncpClientRequest(final SncpRemoteAction action, final InetSocketAddress clientSncpAddress, final String traceid, final Object[] params) {
