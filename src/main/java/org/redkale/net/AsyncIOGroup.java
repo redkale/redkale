@@ -192,10 +192,6 @@ public class AsyncIOGroup extends AsyncGroup {
         return ioWriteThreads[i];
     }
 
-    public AsyncIOThread connectThread() {
-        return connectThread;
-    }
-
     @Override
     public ScheduledFuture scheduleTimeout(Runnable callable, long delay, TimeUnit unit) {
         return timeoutExecutor.schedule(callable, delay, unit);

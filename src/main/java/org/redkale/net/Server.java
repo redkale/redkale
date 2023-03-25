@@ -463,6 +463,14 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.serverClassLoader = serverClassLoader;
     }
 
+    //必须在Server.start执行后才能调用此方法
+    public AsyncGroup getAsyncGroup() {
+        if (this.serverChannel == null) {
+            throw new RedkaleException("Server is not running");
+        }
+        return this.serverChannel.getAsyncGroup();
+    }
+
     /**
      * 判断是否存在Filter
      *

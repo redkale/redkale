@@ -444,8 +444,6 @@ public final class Application {
         MessageAgent[] mqs = null;
         int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Utility.cpus() * 8;
-        int readTimeoutSeconds = 6;
-        int writeTimeoutSeconds = 6;
         AnyValue executorConf = null;
         executorConf = config.getAnyValue("executor");
         AnyValue excludelibConf = config.getAnyValue("excludelibs");
@@ -1342,7 +1340,7 @@ public final class Application {
                 try {
                     DatagramChannel channel = DatagramChannel.open();
                     channel.configureBlocking(true);
-                    channel.socket().setSoTimeout(3000);
+                    channel.socket().setSoTimeout(6000); //单位:毫秒
                     channel.bind(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
                     if (!singletonMode) {
                         signalShutdownHandle();
@@ -1471,7 +1469,7 @@ public final class Application {
     private static void sendCommand(Logger logger, int port, String cmd, String[] params) throws Exception {
         final DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(true);
-        channel.socket().setSoTimeout(3000);
+        channel.socket().setSoTimeout(6000); //单位:毫秒
         SocketAddress dest = new InetSocketAddress("127.0.0.1", port);
         channel.connect(dest);
         //命令和参数合成一个数组

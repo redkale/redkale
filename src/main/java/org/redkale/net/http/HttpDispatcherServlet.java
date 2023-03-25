@@ -38,7 +38,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     protected MappingEntry[] regxWsArray = null;
 
-    protected Map<String, WebSocketServlet> wsmappings = new HashMap<>(); //super.mappings 包含 wsmappings
+    protected Map<String, WebSocketServlet> wsMappings = new HashMap<>(); //super.mappings 包含 wsMappings
 
     protected final Map<String, Class> allMapStrings = new HashMap<>();
 
@@ -82,17 +82,17 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                     }
                 }
             }
-            Map<String, WebSocketServlet> newwsmappings = new HashMap<>();
-            for (Map.Entry<String, WebSocketServlet> en : wsmappings.entrySet()) {
+            Map<String, WebSocketServlet> newWsMappings = new HashMap<>();
+            for (Map.Entry<String, WebSocketServlet> en : wsMappings.entrySet()) {
                 if (predicateFilter.test(en)) {
                     servlets.add(en.getValue());
                     keys.add(en.getKey());
                 } else {
-                    newwsmappings.put(en.getKey(), en.getValue());
+                    newWsMappings.put(en.getKey(), en.getValue());
                 }
             }
-            if (newwsmappings.size() != wsmappings.size()) {
-                this.wsmappings = newwsmappings;
+            if (newWsMappings.size() != wsMappings.size()) {
+                this.wsMappings = newWsMappings;
             }
             if (!keys.isEmpty()) {
                 this.regxArray = Utility.remove(this.regxArray, predicateEntry);
@@ -320,7 +320,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 return;
             }
             if (request.isWebSocket()) {
-                servlet = wsmappings.get(uri);
+                servlet = wsMappings.get(uri);
                 if (servlet == null && this.regxWsArray != null) {
                     for (MappingEntry en : regxWsArray) {
                         if (en.predicate.test(uri)) {
@@ -451,9 +451,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                         putMapping(mappingPath, servlet);
                     }
                     if (servlet instanceof WebSocketServlet) {
-                        Map<String, WebSocketServlet> newMappings = new HashMap<>(wsmappings);
+                        Map<String, WebSocketServlet> newMappings = new HashMap<>(wsMappings);
                         newMappings.put(mappingPath, (WebSocketServlet) servlet);
-                        this.wsmappings = newMappings;
+                        this.wsMappings = newMappings;
                     }
                 }
                 if (this.allMapStrings.containsKey(mappingPath)) {
@@ -545,7 +545,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
             s.postDestroy(application, context, getServletConf(s));
         });
         this.allMapStrings.clear();
-        this.wsmappings.clear();
+        this.wsMappings.clear();
         this.regxArray = null;
         this.regxWsArray = null;
     }

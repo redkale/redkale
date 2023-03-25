@@ -4554,8 +4554,8 @@ public final class Utility {
 //        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 //        boolean opening = true;
 //        try {
-//            conn.setConnectTimeout(timeoutMs > 0 ? timeoutMs : 3000);
-//            conn.setReadTimeout(timeoutMs > 0 ? timeoutMs : 3000);
+//            conn.setConnectTimeout(timeoutMs > 0 ? timeoutMs : 30000);
+//            conn.setReadTimeout(timeoutMs > 0 ? timeoutMs : 30000);
 //            if (conn instanceof HttpsURLConnection) {
 //                HttpsURLConnection httpsconn = ((HttpsURLConnection) conn);
 //                httpsconn.setSSLSocketFactory((ctx == null ? DEFAULTSSL_CONTEXT : ctx).getSocketFactory());
