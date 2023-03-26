@@ -98,7 +98,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         }
         ClientFuture<R, P> respFuture = createClientFuture(request);
         respFutureQueue.offer(respFuture);
-        readChannel();
+        readRegisterChannel();
         return respFuture;
     }
 
@@ -109,8 +109,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         return new ClientFuture(this, request);
     }
 
-    protected ClientConnection readChannel() {
-        channel.readInIOThread(codec);
+    protected ClientConnection readRegisterChannel() {
+        channel.readRegisterInIOThread(codec);
         return this;
     }
 

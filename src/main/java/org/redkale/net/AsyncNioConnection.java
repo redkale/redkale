@@ -128,6 +128,45 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
+    protected final void readRegisterImpl(CompletionHandler<Integer, ByteBuffer> handler) {
+        Objects.requireNonNull(handler);
+        if (!this.isConnected()) {
+            handler.failed(new NotYetConnectedException(), null);
+            return;
+        }
+        if (this.readPending) {
+            handler.failed(new ReadPendingException(), null);
+            return;
+        }
+        this.readPending = true;
+        if (this.readTimeoutSeconds > 0) {
+            AsyncNioCompletionHandler newHandler = this.readTimeoutCompletionHandler;
+            newHandler.handler(handler, this.readByteBuffer);   // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
+            this.readCompletionHandler = newHandler;
+            newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.readTimeoutSeconds, TimeUnit.SECONDS);
+        } else {
+            this.readCompletionHandler = handler;
+        }
+
+        try {
+            if (readKey == null) {
+                ioReadThread.register(selector -> {
+                    try {
+                        readKey = implRegister(selector, SelectionKey.OP_READ);
+                        readKey.attach(this);
+                    } catch (ClosedChannelException e) {
+                        handleRead(0, e);
+                    }
+                });
+            } else {
+                ioReadThread.interestOpsOr(readKey, SelectionKey.OP_READ);
+            }
+        } catch (Exception e) {
+            handleRead(0, e);
+        }
+    }
+
+    @Override
     public void readImpl(CompletionHandler<Integer, ByteBuffer> handler) {
         Objects.requireNonNull(handler);
         if (!this.isConnected()) {

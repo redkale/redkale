@@ -235,6 +235,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     public abstract void setWriteTimeoutSeconds(int writeTimeoutSeconds);
 
+    protected abstract void readRegisterImpl(CompletionHandler<Integer, ByteBuffer> handler);
+
     protected abstract void readImpl(CompletionHandler<Integer, ByteBuffer> handler);
 
     //src写完才会回调
@@ -252,6 +254,22 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             startRead(handler);
         } else {
             executeRead(() -> startRead(handler));
+        }
+    }
+
+    public final void readRegister(CompletionHandler<Integer, ByteBuffer> handler) {
+        if (sslEngine == null) {
+            readRegisterImpl(handler);
+        } else {
+            sslReadRegisterImpl(false, handler);
+        }
+    }
+
+    public final void readRegisterInIOThread(CompletionHandler<Integer, ByteBuffer> handler) {
+        if (inCurrReadThread()) {
+            readRegister(handler);
+        } else {
+            executeRead(() -> readRegister(handler));
         }
     }
 
@@ -908,7 +926,15 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     }
 
     protected void sslReadImpl(final boolean handshake, final CompletionHandler<Integer, ByteBuffer> handler) {
-        readImpl(new CompletionHandler<Integer, ByteBuffer>() {
+        readImpl(createSslCompletionHandler(handshake, handler));
+    }
+
+    protected void sslReadRegisterImpl(final boolean handshake, final CompletionHandler<Integer, ByteBuffer> handler) {
+        readRegisterImpl(createSslCompletionHandler(handshake, handler));
+    }
+
+    private CompletionHandler<Integer, ByteBuffer> createSslCompletionHandler(final boolean handshake, final CompletionHandler<Integer, ByteBuffer> handler) {
+        return new CompletionHandler<Integer, ByteBuffer>() {
 
             @Override
             public void completed(Integer count, ByteBuffer attachment) {
@@ -951,7 +977,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             public void failed(Throwable t, ByteBuffer attachment) {
                 handler.failed(t, attachment);
             }
-        });
+        };
     }
 
     //加密ssl内容数据 

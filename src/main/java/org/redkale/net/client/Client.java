@@ -278,7 +278,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             if (virtualReq != null) {
                 future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
             } else {
-                future = future.thenApply(conn -> (C) conn.readChannel());
+                future = future.thenApply(conn -> (C) conn.readRegisterChannel());
             }
             if (authenticate != null) {
                 future = future.thenCompose(authenticate);
@@ -323,7 +323,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             if (virtualReq != null) {
                 future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
             } else {
-                future = future.thenApply(conn -> (C) conn.readChannel());
+                future = future.thenApply(conn -> (C) conn.readRegisterChannel());
             }
             if (authenticate != null) {
                 future = future.thenCompose(authenticate);
