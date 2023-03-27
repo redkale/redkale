@@ -20,6 +20,7 @@ import org.redkale.util.ByteBufferPool;
  *
  * @since 2.8.0
  */
+@Deprecated(since = "2.8.0")
 class WebSocketAsyncGroup extends AsyncIOGroup {
 
     public WebSocketAsyncGroup(String threadNameFormat, ExecutorService workExecutor, ByteBufferPool safeBufferPool) {

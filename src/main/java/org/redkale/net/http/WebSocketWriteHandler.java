@@ -17,7 +17,6 @@ import org.redkale.util.ByteArray;
  *
  * @author zhangjx
  */
-@Deprecated(since = "2.8.0")
 public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
 
     protected final HttpContext context;

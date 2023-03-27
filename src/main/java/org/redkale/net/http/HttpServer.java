@@ -567,21 +567,23 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             }
         }
         HttpContext rs = new HttpContext(contextConfig);
-        rs.webSocketWriterIOThreadFunc = ws -> {
-            if (asyncGroup == null) {
-                groupLock.lock();
-                try {
-                    if (asyncGroup == null) {
-                        WebSocketAsyncGroup g = new WebSocketAsyncGroup("Redkale-HTTP:" + address.getPort() + "-WebSocketWriteIOThread-%s", workExecutor, safeBufferPool);
-                        g.start();
-                        asyncGroup = g;
+        if (false) {  //暂不使用WebSocketAsyncGroup模式
+            rs.webSocketWriterIOThreadFunc = ws -> {
+                if (asyncGroup == null) {
+                    groupLock.lock();
+                    try {
+                        if (asyncGroup == null) {
+                            WebSocketAsyncGroup g = new WebSocketAsyncGroup("Redkale-HTTP:" + address.getPort() + "-WebSocketWriteIOThread-%s", workExecutor, safeBufferPool);
+                            g.start();
+                            asyncGroup = g;
+                        }
+                    } finally {
+                        groupLock.unlock();
                     }
-                } finally {
-                    groupLock.unlock();
                 }
-            }
-            return (WebSocketWriteIOThread) asyncGroup.nextWriteIOThread();
-        };
+                return (WebSocketWriteIOThread) asyncGroup.nextWriteIOThread();
+            };
+        }
         return rs;
     }
 

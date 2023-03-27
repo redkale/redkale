@@ -21,6 +21,7 @@ import org.redkale.util.*;
  *
  * @since 2.8.0
  */
+@Deprecated(since = "2.8.0")
 public class WebSocketWriteIOThread extends AsyncIOThread {
 
     private final ScheduledThreadPoolExecutor timeoutExecutor;

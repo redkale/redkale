@@ -285,7 +285,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 @Override
                 public void completed(Integer result, Void attachment) {
                     webSocket._readHandler = new WebSocketReadHandler(response.getContext(), webSocket, restMessageConsumer);
-                    //webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket);
+                    webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket);
                     response.getContext().updateWebSocketWriteIOThread(webSocket);
 
                     Runnable createUseridHandler = () -> {
@@ -349,7 +349,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                             if (webSocket.delayPackets != null) { //存在待发送的消息
                                 List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                                 webSocket.delayPackets = null;
-                                CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                                //CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                                CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                                 cf.whenComplete((Integer v, Throwable t) -> {
                                     if (userid == null || t != null) {
                                         if (t != null) {
@@ -368,7 +369,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                     if (webSocket.delayPackets != null) { //存在待发送的消息
                         List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                         webSocket.delayPackets = null;
-                        CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                        //CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                        CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                         cf.whenComplete((Integer v, Throwable t) -> {
                             if (sessionid == null || t != null) {
                                 if (t != null) {
