@@ -59,7 +59,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     protected Properties writeConfProps;
 
-    @Resource(name = RESNAME_APP_CLIENT_ASYNCGROUP, required = false)
+    @Resource(name = RESNAME_APP_CLIENT_IOGROUP, required = false)
     protected AsyncGroup clientAsyncGroup;
 
     //配置<executor threads="0"> APP_EXECUTOR资源为null

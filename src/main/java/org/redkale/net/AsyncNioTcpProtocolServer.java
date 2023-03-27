@@ -12,7 +12,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import java.util.logging.Level;
+import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
+import static org.redkale.boot.Application.RESNAME_APP_GLOBAL_IOGROUP;
 import org.redkale.util.*;
 
 /**
@@ -30,6 +32,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
 
     private Selector selector;
 
+    @Resource(name = RESNAME_APP_GLOBAL_IOGROUP, required = false)
     private AsyncIOGroup ioGroup;
 
     private Thread acceptThread;
@@ -118,8 +121,10 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             (pool == null ? safeResponsePool : pool).accept(v);
         };
         final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
-        this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
-        this.ioGroup.start();
+        if (this.ioGroup == null) {
+            this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
+            this.ioGroup.start();
+        }
 
         this.acceptThread = new Thread() {
             {
