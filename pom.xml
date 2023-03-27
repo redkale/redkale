@@ -14,11 +14,11 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         
-        <junit.version>5.7.0</junit.version>
-        <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
+        <junit.version>5.9.0</junit.version>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-compiler-plugin.version>3.9.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M6</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.0.0-M6</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.0.0</maven-failsafe-plugin.version>
     </properties>
 
     <licenses>     
