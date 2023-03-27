@@ -579,7 +579,7 @@ public final class Application {
         }
         final int workThreads = executorConf.getIntValue("threads", Utility.cpus() * 4);
         boolean workHash = executorConf.getBoolValue("hash", false);
-        if (workThreads > 0) {
+        if (!Boolean.getBoolean("redkale.http.request.pipeline.sameheaders") && workThreads > 0) {
             if (workHash) {
                 workExecutor0 = WorkThread.createHashExecutor(workThreads, "Redkale-HashWorkThread-%s");
             } else {
