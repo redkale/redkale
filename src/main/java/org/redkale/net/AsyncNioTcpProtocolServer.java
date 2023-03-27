@@ -118,7 +118,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             (pool == null ? safeResponsePool : pool).accept(v);
         };
         final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
-        this.ioGroup = new AsyncIOGroup(false, threadNameFormat, null, safeBufferPool);
+        this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
         this.ioGroup.start();
 
         this.acceptThread = new Thread() {

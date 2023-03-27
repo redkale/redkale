@@ -263,6 +263,14 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return conn.writeChannel(request, respTransfer);
     }
 
+    private C createConnection(int index, AsyncConnection channel) {
+        C conn = createClientConnection(index, channel);
+        if (!channel.isReadPending()) {
+            channel.readRegister(conn.getCodec()); //不用readRegisterInIOThread，因executeRead可能会异步
+        }
+        return conn;
+    }
+
     protected CompletableFuture<C> connect() {
         final int size = this.connArray.length;
         final int connIndex = (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
@@ -273,12 +281,10 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         final Queue<CompletableFuture<C>> waitQueue = this.connAcquireWaitings[connIndex];
         if (this.connOpenStates[connIndex].compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
-                .thenApply(c -> (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines));
+                .thenApply(c -> (C) createConnection(connIndex, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
-            } else {
-                future = future.thenApply(conn -> (C) conn.readRegisterChannel());
             }
             if (authenticate != null) {
                 future = future.thenCompose(authenticate);
@@ -318,12 +324,10 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
         if (entry.connOpenState.compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds)
-                .thenApply(c -> (C) createClientConnection(-1, c).setMaxPipelines(maxPipelines));
+                .thenApply(c -> (C) createConnection(-1, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
-            } else {
-                future = future.thenApply(conn -> (C) conn.readRegisterChannel());
             }
             if (authenticate != null) {
                 future = future.thenCompose(authenticate);

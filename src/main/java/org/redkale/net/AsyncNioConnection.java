@@ -26,8 +26,6 @@ import org.redkale.util.ByteBufferWriter;
  */
 abstract class AsyncNioConnection extends AsyncConnection {
 
-    final AsyncIOThread connectThread;
-
     protected SocketAddress remoteAddress;
 
     //-------------------------------- 连操作 --------------------------------------
@@ -89,7 +87,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
     public AsyncNioConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
         AsyncIOThread ioWriteThread, final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext) {
         super(clientMode, ioGroup, ioReadThread, ioWriteThread, bufferCapacity, sslBuilder, sslContext);
-        this.connectThread = ioGroup.connectThread;
     }
 
     @Override

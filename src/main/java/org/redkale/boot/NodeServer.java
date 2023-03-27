@@ -170,7 +170,7 @@ public abstract class NodeServer {
         //必须要进行初始化， 构建Service时需要使用Context中的ExecutorService
         server.init(this.serverConf);
         if (this.sncpAddress != null) { //初始化SncpClient  
-            this.sncpAsyncGroup = new AsyncIOGroup(true, "Redkale-SncpClient-IOThread-%s", application.getWorkExecutor(), server.getBufferCapacity(), server.getBufferPoolSize()).skipClose(true);
+            this.sncpAsyncGroup = new AsyncIOGroup("Redkale-SncpClient-IOThread-%s", application.getWorkExecutor(), server.getBufferCapacity(), server.getBufferPoolSize()).skipClose(true);
             this.sncpClient = new SncpClient(server.getName(), this.sncpAsyncGroup, this.sncpAddress, new ClientAddress(this.sncpAddress), server.getNetprotocol(), Utility.cpus(), 1000);
         }
 

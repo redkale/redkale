@@ -15,7 +15,7 @@ import org.redkale.net.*;
 import org.redkale.util.*;
 
 /**
- * 每个ClientConnection绑定一个独立的ClientCodec实例, 只会同一读线程里运行
+ * 每个ClientConnection绑定一个独立的ClientCodec实例, 只会同一读线程ReadIOThread里运行
  *
  * <p>
  * 详情见: https://redkale.org
@@ -74,7 +74,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 } else {
                     ClientFuture<R, P> respFuture = connection.pollRespFuture(cr.getRequestid());
                     if (respFuture != null) {
-                        responseComplete(respFuture, cr.message, cr.exc);
+                        responseComplete(false, respFuture, cr.message, cr.exc);
                     }
                     respPool.accept(cr);
                 }
@@ -96,12 +96,12 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
         }
     }
 
-    private void responseComplete(ClientFuture<R, P> respFuture, P message, Throwable exc) {
+    void responseComplete(boolean halfCompleted, ClientFuture<R, P> respFuture, P message, Throwable exc) {
         if (respFuture != null) {
             R request = respFuture.request;
             WorkThread workThread = null;
             try {
-                if (request != null && !request.isCompleted()) {
+                if (!halfCompleted && request != null && !request.isCompleted()) {
                     if (exc == null) {
                         connection.sendHalfWrite(request, exc);
                         //request没有发送完，respFuture需要再次接收

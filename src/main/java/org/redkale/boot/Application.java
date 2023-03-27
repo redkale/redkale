@@ -578,7 +578,7 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
 
-        this.clientAsyncGroup = new AsyncIOGroup(true, "Redkale-DefaultClient-IOThread-%s", clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
+        this.clientAsyncGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
         this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);
 
         this.excludelibs = excludelib0;
@@ -1209,7 +1209,7 @@ public final class Application {
                 if (!compileMode && source instanceof Service) {
                     ((Service) source).init(sourceConf);
                 }
-                logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load CacheSource resourceName = '" + sourceName + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
             if (!sourceConf.getValue(AbstractCacheSource.CACHE_SOURCE_RESOURCE, "").isEmpty()) {
@@ -1223,7 +1223,7 @@ public final class Application {
                 CacheSource source = AbstractCacheSource.createCacheSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
                 cacheSources.add(source);
                 resourceFactory.register(sourceName, CacheSource.class, source);
-                logger.info("Load CacheSource resourceName = " + sourceName + ", source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load CacheSource resourceName = '" + sourceName + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             } catch (RuntimeException ex) {
                 throw ex;
@@ -1255,7 +1255,7 @@ public final class Application {
                 }
                 dataSources.add(source);
                 resourceFactory.register(sourceName, DataSource.class, source);
-                logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
+                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source);
                 return source;
             }
             if (!sourceConf.getValue(AbstractDataSource.DATA_SOURCE_RESOURCE, "").isEmpty()) {
@@ -1277,7 +1277,7 @@ public final class Application {
                 } else {
                     resourceFactory.register(sourceName, DataSource.class, source);
                 }
-                logger.info("Load DataSource resourceName = " + sourceName + ", source = " + source);
+                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source);
                 return source;
             } catch (RuntimeException ex) {
                 throw ex;

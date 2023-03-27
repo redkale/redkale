@@ -7,12 +7,13 @@ package org.redkale.net.client;
 
 import java.io.Serializable;
 import java.net.SocketAddress;
-import java.nio.channels.ClosedChannelException;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import org.redkale.net.*;
+import org.redkale.util.ByteArray;
 
 /**
  * 注意: 要确保AsyncConnection的读写过程都必须在channel.ioThread中运行
@@ -38,9 +39,13 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final LongAdder doneResponseCounter = new LongAdder();
 
+    protected final ByteArray writeArray = new ByteArray();
+
     final AtomicBoolean pauseWriting = new AtomicBoolean();
 
     final ConcurrentLinkedQueue<ClientFuture> pauseRequests = new ConcurrentLinkedQueue<>();
+
+    ClientFuture currHalfWriteFuture; //pauseWriting=true，此字段才会有值; pauseWriting=false，此字段值为null
 
     private final Client.AddressConnEntry connEntry;
 
@@ -48,10 +53,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     private final ClientCodec<R, P> codec;
 
-    private final ClientWriteIOThread writeThread;
-
     //respFutureQueue、respFutureMap二选一， SPSC队列模式
-    private final Queue<ClientFuture<R, P>> respFutureQueue = new ConcurrentLinkedQueue<>(); //Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 16) : new ConcurrentLinkedQueue<>();
+    private final Deque<ClientFuture<R, P>> respFutureQueue = new ConcurrentLinkedDeque<>(); //Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 16) : new ConcurrentLinkedQueue<>();
 
     //respFutureQueue、respFutureMap二选一, key: requestid， SPSC模式
     private final Map<Serializable, ClientFuture<R, P>> respFutureMap = new ConcurrentHashMap<>();
@@ -70,7 +73,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         this.connEntry = index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress());
         this.respWaitingCounter = index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting;
         this.channel = channel.beforeCloseListener(this);
-        this.writeThread = (ClientWriteIOThread) channel.getWriteIOThread();
     }
 
     protected abstract ClientCodec createCodec();
@@ -87,9 +89,63 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         if (rts > 0 && !request.isCloseType()) {
             respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
         }
-        respWaitingCounter.increment(); //放在writeChannelUnsafe计数会延迟，导致不准确
-        writeThread.offerRequest(this, request, respFuture);
+        respWaitingCounter.increment(); //放在writeChannelInWriteThread计数会延迟，导致不准确
+        if (channel.inCurrWriteThread()) {
+            writeChannelInThread(request, respFuture);
+        } else {
+            channel.executeWrite(() -> writeChannelInThread(request, respFuture));
+        }
         return respFuture;
+    }
+
+    private void writeChannelInThread(R request, ClientFuture respFuture) {
+        offerRespFuture(respFuture);
+        if (pauseWriting.get()) {
+            pauseRequests.add(respFuture);
+        } else {
+            sendRequestInThread(request, respFuture);
+        }
+    }
+
+    private void sendRequestInThread(R request, ClientFuture respFuture) {
+        //发送请求数据包
+        writeArray.clear();
+        request.writeTo(this, writeArray);
+        if (request.isCompleted()) {
+            doneRequestCounter.increment();
+        } else { //还剩半包没发送完
+            pauseWriting.set(true);
+            currHalfWriteFuture = respFuture;
+        }
+        if (writeArray.length() > 0) {
+            channel.write(writeArray, this, writeHandler);
+        }
+    }
+
+    //发送半包和积压的请求数据包
+    private void sendHalfWriteInThread(R request, Throwable halfRequestExc) {
+        pauseWriting.set(false);
+        ClientFuture respFuture = this.currHalfWriteFuture;
+        if (respFuture != null) {
+            this.currHalfWriteFuture = null;
+            if (halfRequestExc == null) {
+                offerFirstRespFuture(respFuture);
+                sendRequestInThread(request, respFuture);
+            } else {
+                codec.responseComplete(true, respFuture, null, halfRequestExc);
+            }
+        }
+        while (!pauseWriting.get() && (respFuture = pauseRequests.poll()) != null) {
+            sendRequestInThread((R) respFuture.getRequest(), respFuture);
+        }
+    }
+
+    void sendHalfWrite(R request, Throwable halfRequestExc) {
+        if (channel.inCurrWriteThread()) {
+            sendHalfWriteInThread(request, halfRequestExc);
+        } else {
+            channel.executeWrite(() -> sendHalfWriteInThread(request, halfRequestExc));
+        }
     }
 
     CompletableFuture<P> writeVirtualRequest(R request) {
@@ -97,8 +153,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             return CompletableFuture.failedFuture(new RuntimeException("ClientVirtualRequest must be virtualType = true"));
         }
         ClientFuture<R, P> respFuture = createClientFuture(request);
-        respFutureQueue.offer(respFuture);
-        readRegisterChannel();
+        offerRespFuture(respFuture);
         return respFuture;
     }
 
@@ -107,11 +162,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected ClientFuture<R, P> createClientFuture(R request) {
         return new ClientFuture(this, request);
-    }
-
-    protected ClientConnection readRegisterChannel() {
-        channel.readRegisterInIOThread(codec);
-        return this;
     }
 
     @Override //AsyncConnection.beforeCloseListener
@@ -145,8 +195,14 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         }
     }
 
-    void sendHalfWrite(R request, Throwable halfRequestExc) {
-        writeThread.sendHalfWrite(this, request, halfRequestExc);
+    //只会在WriteIOThread中调用
+    void offerFirstRespFuture(ClientFuture<R, P> respFuture) {
+        Serializable requestid = respFuture.request.getRequestid();
+        if (requestid == null) {
+            respFutureQueue.offerFirst(respFuture);
+        } else {
+            respFutureMap.put(requestid, respFuture);
+        }
     }
 
     //只会在WriteIOThread中调用
@@ -264,4 +320,16 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         for (int i = 0; i < cha; i++) s += ' ';
         return s;
     }
+
+    protected final CompletionHandler<Integer, ClientConnection> writeHandler = new CompletionHandler<Integer, ClientConnection>() {
+
+        @Override
+        public void completed(Integer result, ClientConnection attachment) {
+        }
+
+        @Override
+        public void failed(Throwable exc, ClientConnection attachment) {
+            attachment.dispose(exc);
+        }
+    };
 }

@@ -273,6 +273,20 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
+    public final void readRegisterInIOThreadSafe(CompletionHandler<Integer, ByteBuffer> handler) {
+        if (inCurrReadThread()) {
+            if (!readPending) {
+                readRegister(handler);
+            }
+        } else {
+            executeRead(() -> {
+                if (!readPending) {
+                    readRegister(handler);
+                }
+            });
+        }
+    }
+
     public final void read(CompletionHandler<Integer, ByteBuffer> handler) {
         if (sslEngine == null) {
             readImpl(handler);
@@ -785,6 +799,14 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     public ByteBuffer pollWriteBuffer() {
         return writeBufferSupplier.get();
+    }
+
+    public boolean isReadPending() {
+        return this.readPending;
+    }
+
+    public boolean isWritePending() {
+        return this.writePending;
     }
 
     public void dispose() {//同close， 只是去掉throws IOException

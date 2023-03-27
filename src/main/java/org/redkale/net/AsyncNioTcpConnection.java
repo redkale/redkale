@@ -247,7 +247,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
             if (connected) {
                 handleConnect(null);
             } else if (connectKey == null) {
-                connectThread.register(selector -> {
+                ioGroup.connectThread().register(selector -> {
                     try {
                         connectKey = channel.register(selector, SelectionKey.OP_CONNECT);
                         connectKey.attach(this);

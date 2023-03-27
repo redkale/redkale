@@ -6,7 +6,7 @@ package org.redkale.net.http;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import org.redkale.net.*;
-import org.redkale.util.*;
+import org.redkale.util.ByteBufferPool;
 
 /**
  * WebSocket只写版的AsyncIOGroup <br>
@@ -23,7 +23,7 @@ import org.redkale.util.*;
 class WebSocketAsyncGroup extends AsyncIOGroup {
 
     public WebSocketAsyncGroup(String threadNameFormat, ExecutorService workExecutor, ByteBufferPool safeBufferPool) {
-        super(false, threadNameFormat, workExecutor, safeBufferPool);
+        super(threadNameFormat, workExecutor, safeBufferPool);
     }
 
     @Override

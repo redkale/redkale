@@ -11,6 +11,7 @@ import java.nio.channels.*;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.Supplier;
 import org.redkale.annotation.ResourceType;
 import org.redkale.net.client.*;
 import org.redkale.util.*;
@@ -38,7 +39,11 @@ public class AsyncIOGroup extends AsyncGroup {
 
     final AsyncIOThread[] ioWriteThreads;
 
-    final AsyncIOThread connectThread;
+    private final AtomicBoolean connectThreadInited = new AtomicBoolean();
+
+    private final Supplier<AsyncIOThread> connectThreadSupplier;
+
+    private volatile AsyncIOThread connectThread;
 
     final int bufferCapacity;
 
@@ -58,24 +63,24 @@ public class AsyncIOGroup extends AsyncGroup {
     protected final ScheduledThreadPoolExecutor timeoutExecutor;
 
     public AsyncIOGroup(final int bufferCapacity, final int bufferPoolSize) {
-        this(true, "Redkale-AnonymousClient-IOThread-%s", Utility.cpus(), null, bufferCapacity, bufferPoolSize);
+        this("Redkale-AnonymousClient-IOThread-%s", Utility.cpus(), null, bufferCapacity, bufferPoolSize);
     }
 
-    public AsyncIOGroup(boolean clientMode, String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
-        this(clientMode, threadNameFormat, Utility.cpus(), workExecutor, bufferCapacity, bufferPoolSize);
+    public AsyncIOGroup(String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
+        this(threadNameFormat, Utility.cpus(), workExecutor, bufferCapacity, bufferPoolSize);
     }
 
-    public AsyncIOGroup(boolean clientMode, String threadNameFormat, int threads, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
-        this(clientMode, threadNameFormat, threads, workExecutor, ByteBufferPool.createSafePool(bufferPoolSize, bufferCapacity));
-    }
-
-    @SuppressWarnings("OverridableMethodCallInConstructor")
-    public AsyncIOGroup(boolean clientMode, String threadNameFormat, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
-        this(clientMode, threadNameFormat, Utility.cpus(), workExecutor, safeBufferPool);
+    public AsyncIOGroup(String threadNameFormat, int threads, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
+        this(threadNameFormat, threads, workExecutor, ByteBufferPool.createSafePool(bufferPoolSize, bufferCapacity));
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public AsyncIOGroup(boolean clientMode, String threadNameFormat, int threads, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
+    public AsyncIOGroup(String threadNameFormat, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
+        this(threadNameFormat, Utility.cpus(), workExecutor, safeBufferPool);
+    }
+
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public AsyncIOGroup(String threadNameFormat, int threads, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
         this.bufferCapacity = safeBufferPool.getBufferCapacity();
         this.ioReadThreads = new AsyncIOThread[threads];
         this.ioWriteThreads = new AsyncIOThread[threads];
@@ -89,21 +94,20 @@ public class AsyncIOGroup extends AsyncGroup {
         try {
             for (int i = 0; i < threads; i++) {
                 String indexfix = WorkThread.formatIndex(threads, i + 1);
-                if (clientMode) {
-                    this.ioReadThreads[i] = createClientReadIOThread(g, String.format(threadNameFormat, "Read-" + indexfix), i, threads, workExecutor, safeBufferPool);
-                    this.ioWriteThreads[i] = createClientWriteIOThread(g, String.format(threadNameFormat, "Write-" + indexfix), i, threads, workExecutor, safeBufferPool);
-                } else {
-                    this.ioReadThreads[i] = createAsyncIOThread(g, String.format(threadNameFormat, indexfix), i, threads, workExecutor, safeBufferPool);
-                    this.ioWriteThreads[i] = this.ioReadThreads[i];
-                }
+                this.ioReadThreads[i] = createAsyncIOThread(g, String.format(threadNameFormat, indexfix), i, threads, workExecutor, safeBufferPool);
+                this.ioWriteThreads[i] = this.ioReadThreads[i];
             }
-            if (clientMode) {
-                this.connectThread = createClientReadIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
-            } else {
-                this.connectThread = null;
-            }
+            this.connectThreadSupplier = () -> createConnectIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
         } catch (IOException e) {
             throw new RedkaleException(e);
+        }
+    }
+
+    protected AsyncIOThread createConnectIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) {
+        try {
+            return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
+        } catch (IOException e) {
+            return null;
         }
     }
 
@@ -119,6 +123,14 @@ public class AsyncIOGroup extends AsyncGroup {
         return new ClientWriteIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
+    AsyncIOThread connectThread() {
+        if (connectThreadInited.compareAndSet(false, true)) {
+            this.connectThread = connectThreadSupplier.get();
+            this.connectThread.start();
+        }
+        return this.connectThread;
+    }
+
     @Override
     public AsyncGroup start() {
         if (started) {
@@ -132,9 +144,6 @@ public class AsyncIOGroup extends AsyncGroup {
             if (this.ioWriteThreads[i] != this.ioReadThreads[i]) {
                 this.ioWriteThreads[i].start();
             }
-        }
-        if (connectThread != null) {
-            connectThread.start();
         }
         started = true;
         return this;
