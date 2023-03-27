@@ -579,20 +579,13 @@ public final class Application {
         }
         final int workThreads = executorConf.getIntValue("threads", Utility.cpus() * 4);
         boolean workHash = executorConf.getBoolValue("hash", false);
-        if (!Boolean.getBoolean("redkale.http.request.pipeline.sameheaders") && workThreads > 0) {
+        if (workThreads > 0) {
             if (workHash) {
                 workExecutor0 = WorkThread.createHashExecutor(workThreads, "Redkale-HashWorkThread-%s");
             } else {
                 workExecutor0 = WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s");
             }
         }
-        ExecutorService clientExecutor = workExecutor0;
-        if (clientExecutor == null) {
-            //给所有client给一个默认的ExecutorService
-            final int clientThreads = executorConf.getIntValue("clients", Utility.cpus());
-            clientExecutor = WorkThread.createExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
-        }
-
         this.workExecutor = workExecutor0;
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
@@ -604,6 +597,11 @@ public final class Application {
             this.clientAsyncGroup = this.globalAsyncGroup;
         } else {
             this.globalAsyncGroup = null;
+            ExecutorService clientExecutor = workExecutor0;
+            if (clientExecutor == null) {
+                //给所有client给一个默认的ExecutorService
+                clientExecutor = WorkThread.createExecutor(executorConf.getIntValue("clients", Utility.cpus()), "Redkale-DefaultClient-WorkThread-%s");
+            }
             this.clientAsyncGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
         }
         this.resourceFactory.register(RESNAME_APP_CLIENT_IOGROUP, AsyncGroup.class, this.clientAsyncGroup);
