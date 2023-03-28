@@ -273,7 +273,8 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected CompletableFuture<C> connect() {
         final int size = this.connArray.length;
-        final int connIndex = (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
+        WorkThread workThread = WorkThread.currWorkThread();
+        final int connIndex = (workThread != null && workThread.threads() == size) ? workThread.index() : (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
         C cc = (C) this.connArray[connIndex];
         if (cc != null && cc.isOpen()) {
             return CompletableFuture.completedFuture(cc);
