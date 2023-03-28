@@ -131,12 +131,7 @@ public final class EntityCache<T> {
     public void fullLoad() {
         CompletableFuture<List<T>> future = fullLoadAsync();
         if (future != null) {
-            //future.join();
-            try {
-                future.get(1, TimeUnit.SECONDS);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            future.join();
         }
     }
 

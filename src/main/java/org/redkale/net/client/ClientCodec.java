@@ -123,7 +123,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 connection.preComplete(message, (R) request, exc);
 
                 if (exc != null) {
-                    if (workThread.inIO()) {
+                    if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) {
                         workThread.execute(() -> {
                             Traces.currTraceid(request.traceid);
                             respFuture.completeExceptionally(exc);
@@ -136,7 +136,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                     }
                 } else {
                     final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
-                    if (workThread.inIO()) {
+                    if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) {
                         workThread.execute(() -> {
                             Traces.currTraceid(request.traceid);
                             ((ClientFuture) respFuture).complete(rs);
@@ -149,7 +149,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                     }
                 }
             } catch (Throwable t) {
-                if (workThread.inIO()) {
+                if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) {
                     workThread.execute(() -> {
                         Traces.currTraceid(request.traceid);
                         respFuture.completeExceptionally(t);
