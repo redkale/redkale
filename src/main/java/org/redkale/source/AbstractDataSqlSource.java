@@ -5,23 +5,23 @@
  */
 package org.redkale.source;
 
-import java.io.*;
+import java.io.Serializable;
 import java.math.*;
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
-import java.util.stream.*;
+import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.*;
-import org.redkale.net.*;
-import org.redkale.persistence.*;
-import org.redkale.service.*;
+import org.redkale.net.AsyncGroup;
+import org.redkale.persistence.Table;
+import org.redkale.service.Local;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
 
@@ -59,7 +59,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     protected Properties writeConfProps;
 
-    @Resource(name = RESNAME_APP_CLIENT_IOGROUP, required = false)
+    @Resource(name = RESNAME_APP_CLIENT_ASYNCGROUP, required = false)
     protected AsyncGroup clientAsyncGroup;
 
     //配置<executor threads="0"> APP_EXECUTOR资源为null

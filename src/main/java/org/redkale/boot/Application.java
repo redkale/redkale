@@ -97,26 +97,11 @@ public final class Application {
     public static final String RESNAME_APP_EXECUTOR = "APP_EXECUTOR";
 
     /**
-     * 当前进程的客共享AsyncGroup, 有且只有一个server节点NodeServer此字段值才有效
-     *
-     * @since 2.8.0
-     */
-    public static final String RESNAME_APP_GLOBAL_IOGROUP = "APP_GLOBAL_IOGROUP";
-
-    /**
-     * 当前进程的客户端组， 类型：AsyncGroup
-     *
-     * @since 2.8.0
-     */
-    public static final String RESNAME_APP_CLIENT_IOGROUP = "APP_CLIENT_IOGROUP";
-
-    /**
      * 使用RESNAME_APP_CLIENT_IOGROUP代替
      *
      * @since 2.3.0
      *
      */
-    @Deprecated(since = "2.8.0")
     public static final String RESNAME_APP_CLIENT_ASYNCGROUP = "APP_CLIENT_ASYNCGROUP";
 
     /**
@@ -177,9 +162,6 @@ public final class Application {
 
     //配置项里的group信息, 注意： 只给SNCP使用
     private final SncpRpcGroups sncpRpcGroups = new SncpRpcGroups();
-
-    //
-    private final AsyncIOGroup globalAsyncGroup;
 
     //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
     private final AsyncIOGroup clientAsyncGroup;
@@ -589,14 +571,7 @@ public final class Application {
         this.workExecutor = workExecutor0;
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
-
-        if (config.getAnyValues("server").length < 2) { //只存在一个server节点
-            this.globalAsyncGroup = new AsyncIOGroup("Redkale-Global-IOThread-%s", workExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
-            this.resourceFactory.register(RESNAME_APP_GLOBAL_IOGROUP, AsyncGroup.class, this.globalAsyncGroup);
-            this.resourceFactory.register(RESNAME_APP_GLOBAL_IOGROUP, AsyncIOGroup.class, this.globalAsyncGroup);
-            this.clientAsyncGroup = this.globalAsyncGroup;
-        } else {
-            this.globalAsyncGroup = null;
+        {
             ExecutorService clientExecutor = workExecutor0;
             if (clientExecutor == null) {
                 //给所有client给一个默认的ExecutorService
@@ -604,9 +579,8 @@ public final class Application {
             }
             this.clientAsyncGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
         }
-        this.resourceFactory.register(RESNAME_APP_CLIENT_IOGROUP, AsyncGroup.class, this.clientAsyncGroup);
-        this.resourceFactory.register(RESNAME_APP_CLIENT_IOGROUP, AsyncIOGroup.class, this.clientAsyncGroup);
         this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);
+        this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncIOGroup.class, this.clientAsyncGroup);
 
         this.excludelibs = excludelib0;
         this.clusterAgent = cluster;

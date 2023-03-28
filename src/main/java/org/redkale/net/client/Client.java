@@ -80,8 +80,6 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected int writeTimeoutSeconds;
 
-    protected String connectionContextName;
-
     //------------------ 可选项 ------------------
     //PING心跳的请求数据，为null且pingInterval<1表示不需要定时ping
     protected Supplier<R> pingRequestSupplier;
