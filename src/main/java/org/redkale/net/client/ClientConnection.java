@@ -90,7 +90,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
         }
         respWaitingCounter.increment(); //放在writeChannelInWriteThread计数会延迟，导致不准确
-        if (true || channel.inCurrWriteThread()) { //临时屏蔽
+        if (channel.inCurrWriteThread()) {
             writeChannelInThread(request, respFuture);
         } else {
             channel.executeWrite(() -> writeChannelInThread(request, respFuture));
