@@ -293,7 +293,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             AsyncConnection conn = removeChannel();
             if (conn != null && conn.protocolCodec != null) {
                 this.responseConsumer.accept(this);
-                conn.readInIOThreadSafe(conn.protocolCodec);
+                conn.readRegisterInIOThreadSafe(conn.protocolCodec);
             } else {
                 Supplier<Response> poolSupplier = this.responseSupplier;
                 Consumer<Response> poolConsumer = this.responseConsumer;

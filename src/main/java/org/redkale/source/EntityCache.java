@@ -5,11 +5,11 @@
  */
 package org.redkale.source;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
@@ -131,7 +131,12 @@ public final class EntityCache<T> {
     public void fullLoad() {
         CompletableFuture<List<T>> future = fullLoadAsync();
         if (future != null) {
-            future.join();
+            //future.join();
+            try {
+                future.get(1, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
