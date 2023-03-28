@@ -11,7 +11,6 @@ import java.nio.channels.*;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.Supplier;
 import org.redkale.annotation.ResourceType;
 import org.redkale.net.client.*;
 import org.redkale.util.*;
@@ -41,9 +40,7 @@ public class AsyncIOGroup extends AsyncGroup {
 
     private final AtomicBoolean connectThreadInited = new AtomicBoolean();
 
-    private final Supplier<AsyncIOThread> connectThreadSupplier;
-
-    private volatile AsyncIOThread connectThread;
+    private final AsyncIOThread connectThread;
 
     final int bufferCapacity;
 
@@ -97,18 +94,14 @@ public class AsyncIOGroup extends AsyncGroup {
                 this.ioReadThreads[i] = createAsyncIOThread(g, String.format(threadNameFormat, indexfix), i, threads, workExecutor, safeBufferPool);
                 this.ioWriteThreads[i] = this.ioReadThreads[i];
             }
-            this.connectThreadSupplier = () -> createConnectIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
+            this.connectThread = createConnectIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
     }
 
-    protected AsyncIOThread createConnectIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) {
-        try {
-            return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
-        } catch (IOException e) {
-            return null;
-        }
+    protected AsyncIOThread createConnectIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
+        return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
     protected AsyncIOThread createAsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
@@ -125,7 +118,6 @@ public class AsyncIOGroup extends AsyncGroup {
 
     AsyncIOThread connectThread() {
         if (connectThreadInited.compareAndSet(false, true)) {
-            this.connectThread = connectThreadSupplier.get();
             this.connectThread.start();
         }
         return this.connectThread;
@@ -145,6 +137,7 @@ public class AsyncIOGroup extends AsyncGroup {
                 this.ioWriteThreads[i].start();
             }
         }
+        //connectThread用时才初始化
         started = true;
         return this;
     }
