@@ -99,39 +99,37 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
     void responseComplete(boolean halfCompleted, ClientFuture<R, P> respFuture, P message, Throwable exc) {
         if (respFuture != null) {
             R request = respFuture.request;
-            WorkThread workThread = null;
+            AsyncIOThread readThread = connection.channel.getReadIOThread();
+            final WorkThread workThread = request == null ? readThread : request.removeWorkThread(readThread);
             try {
                 if (!halfCompleted && request != null && !request.isCompleted()) {
                     if (exc == null) {
                         connection.sendHalfWrite(request, exc);
                         //request没有发送完，respFuture需要再次接收
                         return;
-                    } else { //异常了需要清掉半包
+                    } else {
                         connection.sendHalfWrite(request, exc);
+                        //异常了需要清掉半包
                     }
-                }
-                if (request != null) {
-                    workThread = request.workThread;
-                    request.workThread = null;
                 }
                 connection.respWaitingCounter.decrement();
                 if (connection.isAuthenticated()) {
                     connection.client.incrRespDoneCounter();
                 }
                 respFuture.cancelTimeout();
-                //if (client.finest) client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + ClientConnection.this + ", 回调处理, req=" + request + ", message=" + rs.message);
+//                if (connection.client.debug) {
+//                    connection.client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + connection + ", 回调处理, req=" + request + ", message=" + message, exc);
+//                }
                 connection.preComplete(message, (R) request, exc);
-                boolean reqInIO = workThread != null && workThread.inIO();
 
-                if (workThread == null || workThread.getWorkExecutor() == null) {
-                    workThread = connection.channel.getReadIOThread();
-                }
                 if (exc != null) {
-                    if (reqInIO) { //request在IO线程中发送请求，说明request是在异步模式中
-                        if (request != null) {
-                            Traces.currTraceid(request.traceid);
-                        }
-                        respFuture.completeExceptionally(exc);
+                    if (workThread.inIO()) {
+                        workThread.execute(() -> {
+                            if (request != null) {
+                                Traces.currTraceid(request.traceid);
+                            }
+                            respFuture.completeExceptionally(exc);
+                        });
                     } else {
                         workThread.runWork(() -> {
                             if (request != null) {
@@ -142,11 +140,13 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                     }
                 } else {
                     final Object rs = request == null || request.respTransfer == null ? message : request.respTransfer.apply(message);
-                    if (reqInIO) {  //request在IO线程中发送请求，说明request是在异步模式中
-                        if (request != null) {
-                            Traces.currTraceid(request.traceid);
-                        }
-                        ((ClientFuture) respFuture).complete(rs);
+                    if (workThread.inIO()) {
+                        workThread.execute(() -> {
+                            if (request != null) {
+                                Traces.currTraceid(request.traceid);
+                            }
+                            ((ClientFuture) respFuture).complete(rs);
+                        });
                     } else {
                         workThread.runWork(() -> {
                             if (request != null) {
@@ -157,11 +157,13 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                     }
                 }
             } catch (Throwable t) {
-                if (workThread == null || workThread.inIO()) {
-                    if (request != null) {
-                        Traces.currTraceid(request.traceid);
-                    }
-                    respFuture.completeExceptionally(t);
+                if (workThread.inIO()) {
+                    workThread.execute(() -> {
+                        if (request != null) {
+                            Traces.currTraceid(request.traceid);
+                        }
+                        respFuture.completeExceptionally(t);
+                    });
                 } else {
                     workThread.runWork(() -> {
                         if (request != null) {

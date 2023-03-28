@@ -57,41 +57,33 @@ public class AsyncIOGroup extends AsyncGroup {
     //关闭数
     protected final LongAdder connClosedCounter = new LongAdder();
 
-    protected final ScheduledThreadPoolExecutor timeoutExecutor;
+    //超时器
+    protected final ScheduledExecutorService timeoutExecutor;
 
     public AsyncIOGroup(final int bufferCapacity, final int bufferPoolSize) {
-        this("Redkale-AnonymousClient-IOThread-%s", Utility.cpus(), null, bufferCapacity, bufferPoolSize);
+        this("Redkale-AnonymousClient-IOThread-%s", null, bufferCapacity, bufferPoolSize);
     }
 
     public AsyncIOGroup(String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
-        this(threadNameFormat, Utility.cpus(), workExecutor, bufferCapacity, bufferPoolSize);
-    }
-
-    public AsyncIOGroup(String threadNameFormat, int threads, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
-        this(threadNameFormat, threads, workExecutor, ByteBufferPool.createSafePool(bufferPoolSize, bufferCapacity));
+        this(threadNameFormat, workExecutor, ByteBufferPool.createSafePool(bufferPoolSize, bufferCapacity));
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public AsyncIOGroup(String threadNameFormat, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
-        this(threadNameFormat, Utility.cpus(), workExecutor, safeBufferPool);
-    }
-
-    @SuppressWarnings("OverridableMethodCallInConstructor")
-    public AsyncIOGroup(String threadNameFormat, int threads, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
+        final int threads = Utility.cpus(); //固定值,不可改
         this.bufferCapacity = safeBufferPool.getBufferCapacity();
         this.ioReadThreads = new AsyncIOThread[threads];
         this.ioWriteThreads = new AsyncIOThread[threads];
         final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
-
-        this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
+        this.timeoutExecutor = Executors.newScheduledThreadPool(1, (Runnable r) -> {
             Thread t = new Thread(r, String.format(threadNameFormat, "Timeout"));
             t.setDaemon(true);
             return t;
         });
         try {
             for (int i = 0; i < threads; i++) {
-                String indexfix = WorkThread.formatIndex(threads, i + 1);
-                this.ioReadThreads[i] = createAsyncIOThread(g, String.format(threadNameFormat, indexfix), i, threads, workExecutor, safeBufferPool);
+                String indexFix = WorkThread.formatIndex(threads, i + 1);
+                this.ioReadThreads[i] = createAsyncIOThread(g, String.format(threadNameFormat, indexFix), i, threads, workExecutor, safeBufferPool);
                 this.ioWriteThreads[i] = this.ioReadThreads[i];
             }
             this.connectThread = createConnectIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);

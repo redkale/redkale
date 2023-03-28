@@ -24,11 +24,11 @@ import org.redkale.util.*;
 @Deprecated(since = "2.8.0")
 public class WebSocketWriteIOThread extends AsyncIOThread {
 
-    private final ScheduledThreadPoolExecutor timeoutExecutor;
+    private final ScheduledExecutorService timeoutExecutor;
 
     private final BlockingDeque<WebSocketFuture> requestQueue = new LinkedBlockingDeque<>();
 
-    public WebSocketWriteIOThread(ScheduledThreadPoolExecutor timeoutExecutor, ThreadGroup g, String name, int index, int threads,
+    public WebSocketWriteIOThread(ScheduledExecutorService timeoutExecutor, ThreadGroup g, String name, int index, int threads,
         ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         super(g, name, index, threads, workExecutor, safeBufferPool);
         Objects.requireNonNull(timeoutExecutor);

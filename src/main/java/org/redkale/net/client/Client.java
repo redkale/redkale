@@ -30,6 +30,8 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     public static final int DEFAULT_MAX_PIPELINES = 128;
 
+    protected boolean debug;
+
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected final String name;
