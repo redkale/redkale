@@ -186,24 +186,7 @@ public final class EntityCache<T> {
                         });
                     }
                     this.list = all2 == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all2);
-                    if (continuousid && all2 != null && !all2.isEmpty()) {
-                        Collections.sort(all2, (T o1, T o2) -> {
-                            int v1 = o1 == null ? 0 : (Integer) primary.get(o1);
-                            int v2 = o2 == null ? 0 : (Integer) primary.get(o2);
-                            return v1 - v2;
-                        });
-                        if ((Integer) primary.get(all2.get(0)) != 0) {
-                            all2.add(null);
-                            Collections.sort(all2, (T o1, T o2) -> {
-                                int v1 = o1 == null ? 0 : (Integer) primary.get(o1);
-                                int v2 = o2 == null ? 0 : (Integer) primary.get(o2);
-                                return v1 - v2;
-                            });
-                        }
-                        this.array = all2.toArray(arrayer);
-                    } else {
-                        this.array = null;
-                    }
+                    this.array = transferArray(all2);
                     this.map = newmap2;
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, type + " schedule(interval=" + interval + "s) Cacheable error", t);
@@ -223,29 +206,30 @@ public final class EntityCache<T> {
                 });
             }
             this.list = new ConcurrentLinkedQueue(all);
-            if (continuousid && all != null && !all.isEmpty()) {
-                Collections.sort(all, (T o1, T o2) -> {
-                    int v1 = o1 == null ? 0 : (Integer) primary.get(o1);
-                    int v2 = o2 == null ? 0 : (Integer) primary.get(o2);
-                    return v1 - v2;
-                });
-                if ((Integer) primary.get(all.get(0)) != 0) {
-                    all.add(null);
-                    Collections.sort(all, (T o1, T o2) -> {
-                        int v1 = o1 == null ? 0 : (Integer) primary.get(o1);
-                        int v2 = o2 == null ? 0 : (Integer) primary.get(o2);
-                        return v1 - v2;
-                    });
-                }
-                this.array = all.toArray(arrayer);
-            } else {
-                this.array = null;
-            }
+            this.array = transferArray(all);
             this.map = newmap;
             this.fullloaded = true;
             loading.set(false);
         });
         return this.loadFuture;
+    }
+
+    private T[] transferArray(List<T> all) {
+        if (continuousid && all != null && !all.isEmpty()) {
+            try {
+                int maxid = all.stream().mapToInt(v -> v == null ? 0 : (Integer) primary.get(v)).max().orElse(0);
+                T[] result = arrayer.apply(maxid + 1);
+                for (T v : all) {
+                    int index = v == null ? 0 : (Integer) primary.get(v);
+                    result[index] = v;
+                }
+                return result;
+            } catch (Exception e) { //主键值可能是负数，导致数组下标异常
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
     public Class<T> getType() {
@@ -304,11 +288,8 @@ public final class EntityCache<T> {
                 return result;
             }
         }
-        if (continuousid) {
+        if (continuousid && array != null) {
             T[] array0 = array;
-            if (array0 == null) {
-                return arrayer.apply(pks.length);
-            }
             T[] result = arrayer.apply(pks.length);
             if (needCopy) {
                 for (int i = 0; i < result.length; i++) {
