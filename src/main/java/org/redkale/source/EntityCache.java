@@ -38,6 +38,11 @@ public final class EntityCache<T> {
     // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
     private Collection<T> list = new ConcurrentLinkedQueue();
 
+    //continuousid=true此字段值才有效
+    private T[] array;
+
+    private final IntFunction<T> mapFunc = c -> array[c];
+
     //Flipper.sort转换成Comparator的缓存
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
@@ -75,18 +80,22 @@ public final class EntityCache<T> {
     //&#064;Cacheable的定时更新秒数，为0表示不定时更新
     final int interval;
 
+    //&#064;Cacheable的主键字段是否同时满足: 1、类型为int；2、主键值可为数组下标；3、记录总数有限；
+    final boolean continuousid;
+
     //&#064;Cacheable的定时器
     private ScheduledThreadPoolExecutor scheduler;
 
     private CompletableFuture<List<T>> loadFuture;
 
     public EntityCache(final EntityInfo<T> info, final Cacheable c) {
-        this(info, c != null ? c.interval() : 0, c != null && c.direct());
+        this(info, c != null ? c.interval() : 0, c != null && c.direct(), c != null && c.continuousid());
     }
 
-    EntityCache(final EntityInfo<T> info, final int cacheInterval, final boolean cacheDirect) {
+    EntityCache(final EntityInfo<T> info, final int cacheInterval, final boolean cacheDirect, final boolean cacheContinuousid) {
         this.info = info;
         this.interval = cacheInterval < 0 ? 0 : cacheInterval;
+        this.continuousid = cacheContinuousid && info.getPrimary().type() == int.class;
         this.type = info.getType();
         this.arrayer = info.getArrayer();
         this.creator = info.getCreator();
@@ -144,6 +153,7 @@ public final class EntityCache<T> {
         }
         if (info.fullloader == null) {
             this.list = new ConcurrentLinkedQueue();
+            this.array = null;
             this.map = new ConcurrentHashMap();
             this.fullloaded = true;
             loading.set(false);
@@ -154,6 +164,7 @@ public final class EntityCache<T> {
         this.loadFuture = (CompletableFuture) allFuture;
         if (allFuture == null) {
             this.list = new ConcurrentLinkedQueue();
+            this.array = null;
             this.map = new ConcurrentHashMap();
             this.fullloaded = true;
             loading.set(false);
@@ -175,6 +186,24 @@ public final class EntityCache<T> {
                         });
                     }
                     this.list = all2 == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all2);
+                    if (continuousid && all2 != null && !all2.isEmpty()) {
+                        Collections.sort(all2, (T o1, T o2) -> {
+                            int v1 = o1 == null ? 0 : (Integer) primary.get(o1);
+                            int v2 = o2 == null ? 0 : (Integer) primary.get(o2);
+                            return v1 - v2;
+                        });
+                        if ((Integer) primary.get(all2.get(0)) != 0) {
+                            all2.add(null);
+                            Collections.sort(all2, (T o1, T o2) -> {
+                                int v1 = o1 == null ? 0 : (Integer) primary.get(o1);
+                                int v2 = o2 == null ? 0 : (Integer) primary.get(o2);
+                                return v1 - v2;
+                            });
+                        }
+                        this.array = all2.toArray(arrayer);
+                    } else {
+                        this.array = null;
+                    }
                     this.map = newmap2;
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, type + " schedule(interval=" + interval + "s) Cacheable error", t);
@@ -194,6 +223,24 @@ public final class EntityCache<T> {
                 });
             }
             this.list = new ConcurrentLinkedQueue(all);
+            if (continuousid && all != null && !all.isEmpty()) {
+                Collections.sort(all, (T o1, T o2) -> {
+                    int v1 = o1 == null ? 0 : (Integer) primary.get(o1);
+                    int v2 = o2 == null ? 0 : (Integer) primary.get(o2);
+                    return v1 - v2;
+                });
+                if ((Integer) primary.get(all.get(0)) != 0) {
+                    all.add(null);
+                    Collections.sort(all, (T o1, T o2) -> {
+                        int v1 = o1 == null ? 0 : (Integer) primary.get(o1);
+                        int v2 = o2 == null ? 0 : (Integer) primary.get(o2);
+                        return v1 - v2;
+                    });
+                }
+                this.array = all.toArray(arrayer);
+            } else {
+                this.array = null;
+            }
             this.map = newmap;
             this.fullloaded = true;
             loading.set(false);
@@ -208,6 +255,7 @@ public final class EntityCache<T> {
     public int clear() {
         this.fullloaded = false;
         this.list = new ConcurrentLinkedQueue();
+        this.array = null;
         this.map = new ConcurrentHashMap();
         if (this.scheduler != null) {
             this.scheduler.shutdownNow();
@@ -240,28 +288,47 @@ public final class EntityCache<T> {
             Class t = pks[0].getClass();
             if (t == int[].class) {
                 int[] ids = (int[]) pks[0];
-                T[] array = arrayer.apply(ids.length);
-                for (int i = 0; i < array.length; i++) {
+                T[] result = arrayer.apply(ids.length);
+                for (int i = 0; i < result.length; i++) {
                     T rs = map.get(ids[i]);
-                    array[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+                    result[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
                 }
-                return array;
+                return result;
             } else if (t == long[].class) {
                 long[] ids = (long[]) pks[0];
-                T[] array = arrayer.apply(ids.length);
-                for (int i = 0; i < array.length; i++) {
+                T[] result = arrayer.apply(ids.length);
+                for (int i = 0; i < result.length; i++) {
                     T rs = map.get(ids[i]);
-                    array[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+                    result[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
                 }
-                return array;
+                return result;
             }
         }
-        T[] array = arrayer.apply(pks.length);
-        for (int i = 0; i < array.length; i++) {
-            T rs = map.get(pks[i]);
-            array[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+        if (continuousid) {
+            T[] array0 = array;
+            if (array0 == null) {
+                return arrayer.apply(pks.length);
+            }
+            T[] result = arrayer.apply(pks.length);
+            if (needCopy) {
+                for (int i = 0; i < result.length; i++) {
+                    T rs = array0[(Integer) pks[i]];
+                    result[i] = rs == null ? null : newReproduce.apply(this.creator.create(), rs);
+                }
+            } else {
+                for (int i = 0; i < result.length; i++) {
+                    T rs = array0[(Integer) pks[i]];
+                    result[i] = rs == null ? null : rs;
+                }
+            }
+            return result;
         }
-        return array;
+        T[] result = arrayer.apply(pks.length);
+        for (int i = 0; i < result.length; i++) {
+            T rs = map.get(pks[i]);
+            result[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+        }
+        return result;
     }
 
     public T find(final SelectColumn selects, final Serializable pk) {
@@ -285,6 +352,9 @@ public final class EntityCache<T> {
     }
 
     public T[] finds(final SelectColumn selects, Serializable... pks) {
+        if (selects == null) {
+            return finds(pks);
+        }
         if (pks == null || pks.length == 0) {
             return arrayer.apply(0);
         }
@@ -300,8 +370,8 @@ public final class EntityCache<T> {
                 ids2 = (long[]) pks[0];
             }
         }
-        T[] array = arrayer.apply(size);
-        for (int i = 0; i < array.length; i++) {
+        T[] result = arrayer.apply(size);
+        for (int i = 0; i < result.length; i++) {
             Serializable id = ids1 == null ? (ids2 == null ? pks[i] : ids2[i]) : ids1[i];
             T rs = map.get(id);
             if (rs == null) {
@@ -320,9 +390,9 @@ public final class EntityCache<T> {
                 }
                 rs = t;
             }
-            array[i] = rs;
+            result[i] = rs;
         }
-        return array;
+        return result;
     }
 
     public T find(final SelectColumn selects, FilterNode node) {
@@ -846,7 +916,7 @@ public final class EntityCache<T> {
         if (entity == null || node == null) {
             return (T[]) Creator.newArray(type, 0);
         }
-        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(Creator.arrayFunction(type));
+        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(arrayer);
         tableLock.lock(); //表锁, 可优化成行锁
         try {
             for (T rs : rms) {
@@ -875,7 +945,7 @@ public final class EntityCache<T> {
         if (attr == null || node == null) {
             return (T[]) Creator.newArray(type, 0);
         }
-        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(Creator.arrayFunction(type));
+        T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(arrayer);
         for (T rs : rms) {
             attr.set(rs, fieldValue);
         }
@@ -914,7 +984,7 @@ public final class EntityCache<T> {
         if (flipper != null && flipper.getLimit() > 0) {
             stream = stream.limit(flipper.getLimit());
         }
-        T[] rms = stream.filter(node.createPredicate(this)).toArray(Creator.arrayFunction(type));
+        T[] rms = stream.filter(node.createPredicate(this)).toArray(arrayer);
         tableLock.lock(); //表锁, 可优化成行锁
         try {
             for (T rs : rms) {

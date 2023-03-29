@@ -5,11 +5,11 @@
  */
 package org.redkale.source;
 
-import java.io.*;
+import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.Comment;
@@ -689,7 +689,10 @@ public final class EntityInfo<T> {
         Cacheable c1 = type.getAnnotation(Cacheable.class);
         javax.persistence.Cacheable c2 = type.getAnnotation(javax.persistence.Cacheable.class);
         if (this.table == null || (!cacheForbidden && c1 != null && c1.value()) || (!cacheForbidden && c2 != null && c2.value())) {
-            this.cache = new EntityCache<>(this, c1 == null ? c2.interval() : c1.interval(), c1 == null ? c2.direct() : c1.direct());
+            this.cache = new EntityCache<>(this,
+                c1 == null ? (c2 == null ? 0 : c2.interval()) : c1.interval(),
+                c1 == null ? (c2 == null ? false : c2.direct()) : c1.direct(),
+                c1 == null ? false : c1.continuousid());
         } else {
             this.cache = null;
         }
