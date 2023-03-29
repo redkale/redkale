@@ -807,7 +807,9 @@ public final class EntityCache<T> {
         T old = this.map.putIfAbsent(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
-            this.array = transferArray(new ArrayList<>(this.list));
+            if (continuousid) {
+                this.array = transferArray(new ArrayList<>(this.list));
+            }
             return 1;
         } else {
             logger.log(Level.WARNING, this.type + " cache repeat insert data: " + entity);
@@ -824,7 +826,9 @@ public final class EntityCache<T> {
             return 0;
         }
         this.list.remove(rs);
-        this.array[(Integer) primary.get(rs)] = null;
+        if (continuousid) {
+            this.array[(Integer) primary.get(rs)] = null;
+        }
         return 1;
     }
 
@@ -851,7 +855,9 @@ public final class EntityCache<T> {
             ids[++i] = this.primary.get(t);
             this.map.remove(ids[i]);
             this.list.remove(t);
-            this.array[(Integer) primary.get(t)] = null;
+            if (continuousid) {
+                this.array[(Integer) primary.get(t)] = null;
+            }
         }
         return ids;
     }
