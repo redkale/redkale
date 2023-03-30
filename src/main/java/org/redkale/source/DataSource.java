@@ -1530,7 +1530,7 @@ public interface DataSource extends Resourcable {
      * @return Entity对象
      */
     default <D extends Serializable, T> T[] finds(final Class<T> clazz, final Stream<D> pks) {
-        return finds(clazz, (SelectColumn) null, pks.toArray(v -> new Serializable[v]));
+        return finds(clazz, (SelectColumn) null, pks.toArray(Utility.serialArrayFunc()));
     }
 
     /**
@@ -1559,7 +1559,7 @@ public interface DataSource extends Resourcable {
      * @return Entity对象 CompletableFuture
      */
     default <D extends Serializable, T> CompletableFuture<T[]> findsAsync(final Class<T> clazz, final Stream<D> pks) {
-        return findsAsync(clazz, (SelectColumn) null, pks.toArray(v -> new Serializable[v]));
+        return findsAsync(clazz, (SelectColumn) null, pks.toArray(Utility.serialArrayFunc()));
     }
 
     /**
@@ -1588,7 +1588,7 @@ public interface DataSource extends Resourcable {
      * @return Entity对象
      */
     default <D extends Serializable, T> T[] finds(final Class<T> clazz, final SelectColumn selects, final Stream<D> pks) {
-        return finds(clazz, selects, pks.toArray(v -> new Serializable[v]));
+        return finds(clazz, selects, pks.toArray(Utility.serialArrayFunc()));
     }
 
     /**
@@ -1617,7 +1617,7 @@ public interface DataSource extends Resourcable {
      * @return Entity对象
      */
     default <D extends Serializable, T> CompletableFuture<T[]> findsAsync(final Class<T> clazz, final SelectColumn selects, final Stream<D> pks) {
-        return findsAsync(clazz, selects, pks.toArray(v -> new Serializable[v]));
+        return findsAsync(clazz, selects, pks.toArray(Utility.serialArrayFunc()));
     }
 
     /**

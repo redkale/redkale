@@ -52,6 +52,8 @@ public final class Utility {
 
     private static final IntFunction<CompletableFuture[]> futureArrayFunc = c -> new CompletableFuture[c];
 
+    private static final IntFunction<Serializable[]> serialArrayFunc = v -> new Serializable[v];
+
     static {
         Class clz = null;
         try {
@@ -206,6 +208,14 @@ public final class Utility {
 
     public static Consumer<Consumer<String>> signalShutdownConsumer() {
         return signalShutdownConsumer;
+    }
+
+    public static IntFunction<Serializable[]> serialArrayFunc() {
+        return serialArrayFunc;
+    }
+
+    public static IntFunction<CompletableFuture[]> futureArrayFunc() {
+        return futureArrayFunc;
     }
 
     public static void sleep(long millis) {

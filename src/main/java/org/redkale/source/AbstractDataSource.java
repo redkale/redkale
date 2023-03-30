@@ -112,6 +112,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     //@since 2.7.0
     public static final String DATA_SOURCE_TABLECOPY_SQLTEMPLATE = "tablecopy-sqltemplate";
 
+    protected final IntFunction<Serializable[]> serialArrayFunc = Utility.serialArrayFunc();
+
     private final ReentrantLock executorLock = new ReentrantLock();
 
     private int sourceThreads = Utility.cpus();
