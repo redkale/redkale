@@ -3,7 +3,7 @@
  */
 package org.redkale.net.sncp;
 
-import java.net.*;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.net.*;
@@ -44,11 +44,6 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
     protected long nextSeqno() {
         //System.nanoTime()值并发下会出现重复，windows11 jdk17出现过
         return seqno.incrementAndGet();
-    }
-
-    @Override
-    protected CompletableFuture<SncpClientConnection> connect(SocketAddress addr) {
-        return super.connect(addr);
     }
 
     @Override

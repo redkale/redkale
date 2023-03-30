@@ -83,6 +83,8 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     protected int writeTimeoutSeconds;
     //------------------ LocalThreadMode模式 ------------------
 
+    final CopyOnWriteArrayList<C> localConnList = new CopyOnWriteArrayList<>();
+
     final ThreadLocal<C> localConnection = new ThreadLocal();
 
     //------------------ 可选项 ------------------
@@ -282,7 +284,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return conn;
     }
 
-    protected CompletableFuture<C> connect() {
+    public final CompletableFuture<C> connect() {
         if (isThreadLocalConnMode()) {
             C conn = localConnection.get();
             if (conn == null || !conn.isOpen()) {
@@ -292,6 +294,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                     return CompletableFuture.failedFuture(e);
                 }
                 localConnection.set(conn);
+                localConnList.add(conn);
             }
             return CompletableFuture.completedFuture(conn);
         } else {
@@ -299,7 +302,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         }
     }
 
-    protected C connect1() {
+    private C connect1() {
         CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
             .thenApply(c -> (C) createConnection(-2, c).setMaxPipelines(maxPipelines));
         R virtualReq = createVirtualRequestAfterConnect();
@@ -312,7 +315,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return future.thenApply(c -> (C) c.setAuthenticated(true)).join();
     }
 
-    protected CompletableFuture<C> connect0() {
+    private CompletableFuture<C> connect0() {
         final int size = this.connArray.length;
         WorkThread workThread = WorkThread.currWorkThread();
         final int connIndex = (workThread != null && workThread.threads() == size) ? workThread.index() : (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
@@ -354,9 +357,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     //指定地址获取连接
-    protected CompletableFuture<C> connect(final SocketAddress addr) {
+    public final CompletableFuture<C> connect(final SocketAddress addr) {
         if (addr == null) {
-            return connect();
+            return connect0();
         }
         final AddressConnEntry<C> entry = connAddrEntrys.computeIfAbsent(addr, a -> new AddressConnEntry());
         C ec = entry.connection;

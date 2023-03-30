@@ -30,8 +30,8 @@ import org.redkale.util.ByteArray;
  */
 public abstract class ClientConnection<R extends ClientRequest, P> implements Consumer<AsyncConnection> {
 
-    //=-1 表示连接放在connAddrEntrys存储
     //=-2 表示连接放在ThreadLocal存储
+    //=-1 表示连接放在connAddrEntrys存储
     //>=0 表示connArray的下坐标，从0开始
     protected final int index;
 
@@ -186,8 +186,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         if (index >= 0) {
             client.connOpenStates[index].set(false);
             client.connArray[index] = null; //必须connOpenStates之后
-        } else if (connEntry != null) {
+        } else if (connEntry != null) { //index=-1
             connEntry.connOpenState.set(false);
+        } else {//index=-2
+            client.localConnList.remove(this);
         }
     }
 
