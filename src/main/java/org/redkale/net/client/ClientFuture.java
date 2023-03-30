@@ -7,6 +7,7 @@ package org.redkale.net.client;
 
 import java.util.Objects;
 import java.util.concurrent.*;
+import org.redkale.annotation.Nonnull;
 import org.redkale.net.*;
 
 /**
@@ -20,8 +21,10 @@ import org.redkale.net.*;
  */
 public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<T> implements Runnable {
 
+    @Nonnull
     protected final R request;
 
+    @Nonnull
     protected final ClientConnection conn;
 
     private ScheduledFuture timeout;

@@ -6,6 +6,7 @@ package org.redkale.annotation;
 import java.lang.annotation.*;
 
 /**
+ * 标记值可以为null
  *
  * 详情见: https://redkale.org
  *

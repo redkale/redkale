@@ -8,6 +8,7 @@ package org.redkale.util;
 import java.lang.reflect.TypeVariable;
 import java.util.*;
 import java.util.function.*;
+import org.redkale.annotation.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -98,6 +99,7 @@ public interface Attribute<T, F> {
      *
      * @return 字段的数据类型
      */
+    @Nonnull
     public Class<? extends F> type();
 
     /**
@@ -105,6 +107,7 @@ public interface Attribute<T, F> {
      *
      * @return 字段的数据泛型
      */
+    @Nonnull
     default java.lang.reflect.Type genericType() {
         return type();
     }
@@ -114,6 +117,7 @@ public interface Attribute<T, F> {
      *
      * @return 依附的类名
      */
+    @Nonnull
     public Class<T> declaringClass();
 
     /**
@@ -121,6 +125,7 @@ public interface Attribute<T, F> {
      *
      * @return 字段名
      */
+    @Nonnull
     public String field();
 
     /**
@@ -147,6 +152,7 @@ public interface Attribute<T, F> {
      *
      * @return 附加对象
      */
+    @Nullable
     default <E> E attach() {
         return null;
     }
