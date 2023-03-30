@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
+import org.redkale.annotation.Nullable;
 import org.redkale.net.*;
 import org.redkale.util.ByteArray;
 
@@ -29,10 +30,14 @@ import org.redkale.util.ByteArray;
  */
 public abstract class ClientConnection<R extends ClientRequest, P> implements Consumer<AsyncConnection> {
 
-    protected final int index; //从0开始， connArray的下坐标
+    //=-1 表示连接放在connAddrEntrys存储
+    //=-2 表示连接放在ThreadLocal存储
+    //>=0 表示connArray的下坐标，从0开始
+    protected final int index;
 
     protected final Client client;
 
+    @Nullable
     protected final LongAdder respWaitingCounter; //可能为null
 
     protected final LongAdder doneRequestCounter = new LongAdder();
@@ -47,6 +52,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     ClientFuture currHalfWriteFuture; //pauseWriting=true，此字段才会有值; pauseWriting=false，此字段值为null
 
+    @Nullable
     private final Client.AddressConnEntry connEntry;
 
     protected final AsyncConnection channel;
@@ -70,8 +76,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         this.client = client;
         this.codec = createCodec();
         this.index = index;
-        this.connEntry = index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress());
-        this.respWaitingCounter = index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting;
+        this.connEntry = index == -2 ? null : (index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress()));
+        this.respWaitingCounter = index == -2 ? new LongAdder() : (index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting);
         this.channel = channel.beforeCloseListener(this);
     }
 
@@ -90,10 +96,20 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
         }
         respWaitingCounter.increment(); //放在writeChannelInWriteThread计数会延迟，导致不准确
-        if (channel.inCurrWriteThread()) {
-            writeChannelInThread(request, respFuture);
+        if (client.isThreadLocalConnMode()) {
+            offerRespFuture(respFuture);
+            writeArray.clear();
+            request.writeTo(this, writeArray);
+            doneRequestCounter.increment();
+            if (writeArray.length() > 0) {
+                channel.write(writeArray, this, writeHandler);
+            }
         } else {
-            channel.executeWrite(() -> writeChannelInThread(request, respFuture));
+            if (channel.inCurrWriteThread()) {
+                writeChannelInThread(request, respFuture);
+            } else {
+                channel.executeWrite(() -> writeChannelInThread(request, respFuture));
+            }
         }
         return respFuture;
     }

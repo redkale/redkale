@@ -81,6 +81,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     protected int readTimeoutSeconds;
 
     protected int writeTimeoutSeconds;
+    //------------------ LocalThreadMode模式 ------------------
+
+    final ThreadLocal<C> localConnection = new ThreadLocal();
 
     //------------------ 可选项 ------------------
     //PING心跳的请求数据，为null且pingInterval<1表示不需要定时ping
@@ -263,6 +266,14 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return conn.writeChannel(request, respTransfer);
     }
 
+    //是否采用ThreadLocal连接池模式
+    //支持ThreadLocal连接池模式的最基本要求: 
+    //    1) 只能调用connect()获取连接，不能调用connect(SocketAddress addr)
+    //    2) request必须一次性输出，不能出现写入request后request.isCompleted()=false的情况
+    protected boolean isThreadLocalConnMode() {
+        return false;
+    }
+
     private C createConnection(int index, AsyncConnection channel) {
         C conn = createClientConnection(index, channel);
         if (!channel.isReadPending()) {
@@ -272,6 +283,36 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     protected CompletableFuture<C> connect() {
+        if (isThreadLocalConnMode()) {
+            C conn = localConnection.get();
+            if (conn == null || !conn.isOpen()) {
+                try {
+                    conn = connect1();
+                } catch (Exception e) {
+                    return CompletableFuture.failedFuture(e);
+                }
+                localConnection.set(conn);
+            }
+            return CompletableFuture.completedFuture(conn);
+        } else {
+            return connect0();
+        }
+    }
+
+    protected C connect1() {
+        CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
+            .thenApply(c -> (C) createConnection(-2, c).setMaxPipelines(maxPipelines));
+        R virtualReq = createVirtualRequestAfterConnect();
+        if (virtualReq != null) {
+            future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
+        }
+        if (authenticate != null) {
+            future = future.thenCompose(authenticate);
+        }
+        return future.thenApply(c -> (C) c.setAuthenticated(true)).join();
+    }
+
+    protected CompletableFuture<C> connect0() {
         final int size = this.connArray.length;
         WorkThread workThread = WorkThread.currWorkThread();
         final int connIndex = (workThread != null && workThread.threads() == size) ? workThread.index() : (int) Math.abs(connIndexSeq.getAndIncrement()) % size;

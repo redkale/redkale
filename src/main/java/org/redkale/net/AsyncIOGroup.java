@@ -12,7 +12,6 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import org.redkale.annotation.ResourceType;
-import org.redkale.net.client.*;
 import org.redkale.util.*;
 
 /**
@@ -98,14 +97,6 @@ public class AsyncIOGroup extends AsyncGroup {
 
     protected AsyncIOThread createAsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
         return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
-    }
-
-    protected AsyncIOThread createClientReadIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
-        return new ClientReadIOThread(g, name, index, threads, workExecutor, safeBufferPool);
-    }
-
-    protected AsyncIOThread createClientWriteIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
-        return new ClientWriteIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
     AsyncIOThread connectThread() {
