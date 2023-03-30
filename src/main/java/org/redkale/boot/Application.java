@@ -565,7 +565,7 @@ public final class Application {
             if (workHash) {
                 workExecutor0 = WorkThread.createHashExecutor(workThreads, "Redkale-HashWorkThread-%s");
             } else {
-                workExecutor0 = WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s");
+                workExecutor0 = WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
             }
         }
         this.workExecutor = workExecutor0;
@@ -575,7 +575,7 @@ public final class Application {
             ExecutorService clientExecutor = workExecutor0;
             if (clientExecutor == null) {
                 //给所有client给一个默认的ExecutorService
-                clientExecutor = WorkThread.createExecutor(executorConf.getIntValue("clients", Utility.cpus()), "Redkale-DefaultClient-WorkThread-%s");
+                clientExecutor = WorkThread.createWorkExecutor(executorConf.getIntValue("clients", Utility.cpus()), "Redkale-DefaultClient-WorkThread-%s");
             }
             this.clientAsyncGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
         }

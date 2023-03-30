@@ -8,7 +8,8 @@ package org.redkale.net;
 import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import org.redkale.util.ThreadHashExecutor;
+import java.util.function.Function;
+import org.redkale.util.*;
 
 /**
  * 协议处理的自定义线程类
@@ -56,6 +57,11 @@ public class WorkThread extends Thread implements Executor {
             Thread t = new WorkThread(g, threadName, i, threads, ref.get(), r);
             return t;
         });
+    }
+
+    public static ExecutorService createWorkExecutor(final int threads, final String threadNameFormat) {
+        final Function<String, ExecutorService> func = Utility.virtualExecutorFunction();
+        return func == null ? createExecutor(threads, threadNameFormat) : func.apply(threadNameFormat);
     }
 
     public static ExecutorService createExecutor(final int threads, final String threadNameFormat) {

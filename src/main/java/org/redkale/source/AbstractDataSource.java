@@ -291,7 +291,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             executorLock.lock();
             try {
                 if (this.sourceExecutor == null) {
-                    this.sourceExecutor = WorkThread.createExecutor(sourceThreads, "Redkale-DataSource-WorkThread-" + resourceName() + "-%s");
+                    this.sourceExecutor = WorkThread.createWorkExecutor(sourceThreads, "Redkale-DataSource-WorkThread-" + resourceName() + "-%s");
                 }
             } finally {
                 executorLock.unlock();
