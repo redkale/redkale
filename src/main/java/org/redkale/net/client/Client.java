@@ -81,11 +81,6 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     protected int readTimeoutSeconds;
 
     protected int writeTimeoutSeconds;
-    //------------------ LocalThreadMode模式 ------------------
-
-    final CopyOnWriteArrayList<C> localConnList = new CopyOnWriteArrayList<>();
-
-    final ThreadLocal<C> localConnection = new ThreadLocal();
 
     //------------------ 可选项 ------------------
     //PING心跳的请求数据，为null且pingInterval<1表示不需要定时ping
@@ -203,10 +198,6 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                 closeConnection(entry.connection);
             }
             this.connAddrEntrys.clear();
-            for (ClientConnection conn : this.localConnList) {
-                closeConnection(conn);
-            }
-            this.localConnList.clear();
             group.close();
         }
     }
@@ -280,37 +271,6 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final CompletableFuture<C> connect() {
-        if (isThreadLocalConnMode()) {
-            C conn = localConnection.get();
-            if (conn == null || !conn.isOpen()) {
-                try {
-                    conn = connect1();
-                } catch (Exception e) {
-                    return CompletableFuture.failedFuture(e);
-                }
-                localConnection.set(conn);
-                localConnList.add(conn);
-            }
-            return CompletableFuture.completedFuture(conn);
-        } else {
-            return connect0();
-        }
-    }
-
-    private C connect1() {
-        CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
-            .thenApply(c -> (C) createConnection(-2, c).setMaxPipelines(maxPipelines));
-        R virtualReq = createVirtualRequestAfterConnect();
-        if (virtualReq != null) {
-            future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
-        }
-        if (authenticate != null) {
-            future = future.thenCompose(authenticate);
-        }
-        return future.thenApply(c -> (C) c.setAuthenticated(true)).join();
-    }
-
-    private CompletableFuture<C> connect0() {
         final int size = this.connArray.length;
         WorkThread workThread = WorkThread.currWorkThread();
         final int connIndex = (workThread != null && workThread.threads() == size) ? workThread.index() : (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
@@ -354,7 +314,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     //指定地址获取连接
     public final CompletableFuture<C> connect(final SocketAddress addr) {
         if (addr == null) {
-            return connect0();
+            return connect();
         }
         final AddressConnEntry<C> entry = connAddrEntrys.computeIfAbsent(addr, a -> new AddressConnEntry());
         C ec = entry.connection;

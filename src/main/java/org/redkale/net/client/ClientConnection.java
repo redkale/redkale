@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import org.redkale.annotation.Nullable;
 import org.redkale.net.*;
@@ -31,7 +32,6 @@ import org.redkale.util.ByteArray;
  */
 public abstract class ClientConnection<R extends ClientRequest, P> implements Consumer<AsyncConnection> {
 
-    //=-2 表示连接放在ThreadLocal存储
     //=-1 表示连接放在connAddrEntrys存储
     //>=0 表示connArray的下坐标，从0开始
     protected final int index;
@@ -44,6 +44,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     protected final LongAdder doneRequestCounter = new LongAdder();
 
     protected final LongAdder doneResponseCounter = new LongAdder();
+
+    protected final ReentrantLock writeLock = new ReentrantLock();
 
     protected final ByteArray writeArray = new ByteArray();
 
@@ -79,8 +81,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         this.client = client;
         this.codec = createCodec();
         this.index = index;
-        this.connEntry = index == -2 ? null : (index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress()));
-        this.respWaitingCounter = index == -2 ? new LongAdder() : (index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting);
+        this.connEntry = index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress());
+        this.respWaitingCounter = index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting;
         this.channel = channel.beforeCloseListener(this);
         this.writeBuffer = channel.pollWriteBuffer();
     }
@@ -100,41 +102,22 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
         }
         respWaitingCounter.increment(); //放在writeChannelInWriteThread计数会延迟，导致不准确
-        if (client.isThreadLocalConnMode()) {
+        
+        writeLock.lock();
+        try {
             offerRespFuture(respFuture);
-            writeArray.clear();
-            request.writeTo(this, writeArray);
-            doneRequestCounter.increment();
-            if (writeArray.length() > 0) {
-                if (writeBuffer.capacity() >= writeArray.length()) {
-                    writeBuffer.clear();
-                    writeBuffer.put(writeArray.content(), 0, writeArray.length());
-                    writeBuffer.flip();
-                    channel.write(writeBuffer, this, writeHandler);
-                } else {
-                    channel.write(writeArray, this, writeHandler);
-                }
-            }
-        } else {
-            if (channel.inCurrWriteThread()) {
-                writeChannelInThread(request, respFuture);
+            if (pauseWriting.get()) {
+                pauseRequests.add(respFuture);
             } else {
-                channel.executeWrite(() -> writeChannelInThread(request, respFuture));
+                sendRequestInLocking(request, respFuture);
             }
+        } finally {
+            writeLock.unlock();
         }
         return respFuture;
     }
 
-    private void writeChannelInThread(R request, ClientFuture respFuture) {
-        offerRespFuture(respFuture);
-        if (pauseWriting.get()) {
-            pauseRequests.add(respFuture);
-        } else {
-            sendRequestInThread(request, respFuture);
-        }
-    }
-
-    private void sendRequestInThread(R request, ClientFuture respFuture) {
+    private void sendRequestInLocking(R request, ClientFuture respFuture) {
         //发送请求数据包
         writeArray.clear();
         request.writeTo(this, writeArray);
@@ -157,28 +140,25 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     //发送半包和积压的请求数据包
-    private void sendHalfWriteInThread(R request, Throwable halfRequestExc) {
-        pauseWriting.set(false);
-        ClientFuture respFuture = this.currHalfWriteFuture;
-        if (respFuture != null) {
-            this.currHalfWriteFuture = null;
-            if (halfRequestExc == null) {
-                offerFirstRespFuture(respFuture);
-                sendRequestInThread(request, respFuture);
-            } else {
-                codec.responseComplete(true, respFuture, null, halfRequestExc);
+    void sendHalfWriteInReadThread(R request, Throwable halfRequestExc) {
+        writeLock.lock();
+        try {
+            pauseWriting.set(false);
+            ClientFuture respFuture = this.currHalfWriteFuture;
+            if (respFuture != null) {
+                this.currHalfWriteFuture = null;
+                if (halfRequestExc == null) {
+                    offerFirstRespFuture(respFuture);
+                    sendRequestInLocking(request, respFuture);
+                } else {
+                    codec.responseComplete(true, respFuture, null, halfRequestExc);
+                }
             }
-        }
-        while (!pauseWriting.get() && (respFuture = pauseRequests.poll()) != null) {
-            sendRequestInThread((R) respFuture.getRequest(), respFuture);
-        }
-    }
-
-    void sendHalfWrite(R request, Throwable halfRequestExc) {
-        if (channel.inCurrWriteThread()) {
-            sendHalfWriteInThread(request, halfRequestExc);
-        } else {
-            channel.executeWrite(() -> sendHalfWriteInThread(request, halfRequestExc));
+            while (!pauseWriting.get() && (respFuture = pauseRequests.poll()) != null) {
+                sendRequestInLocking((R) respFuture.getRequest(), respFuture);
+            }
+        } finally {
+            writeLock.unlock();
         }
     }
 
@@ -206,8 +186,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             client.connArray[index] = null; //必须connOpenStates之后
         } else if (connEntry != null) { //index=-1
             connEntry.connOpenState.set(false);
-        } else {//index=-2
-            client.localConnList.remove(this);
         }
     }
 
