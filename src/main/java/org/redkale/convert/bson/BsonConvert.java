@@ -62,16 +62,26 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     }
 
     @Override
-    public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> fieldFunc) {
-        return newConvert(fieldFunc, null);
+    public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc) {
+        return newConvert(objFieldFunc, null, null);
     }
 
     @Override
-    public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> fieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc) {
+        return newConvert(objFieldFunc, mapFieldFunc, null);
+    }
+
+    @Override
+    public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+        return newConvert(objFieldFunc, null, objExtFunc);
+    }
+
+    @Override
+    public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> fieldFunc, BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
         return new BsonConvert(getFactory(), tiny) {
             @Override
             protected <S extends BsonWriter> S configWrite(S writer) {
-                return fieldFunc(writer, fieldFunc, objExtFunc);
+                return fieldFunc(writer, fieldFunc, mapFieldFunc, objExtFunc);
             }
         };
     }

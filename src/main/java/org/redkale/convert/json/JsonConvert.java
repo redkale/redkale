@@ -61,24 +61,25 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc) {
-        return newConvert(objFieldFunc, null);
+        return newConvert(objFieldFunc, null, null);
     }
 
     @Override
     public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
-        return new JsonConvert(getFactory(), tiny) {
-            @Override
-            protected <S extends JsonWriter> S configWrite(S writer) {
-                return fieldFunc(writer, objFieldFunc, objExtFunc);
-            }
-        };
+        return newConvert(objFieldFunc, null, objExtFunc);
     }
 
-    public JsonConvert newConvert(BiFunction<Object, Object, Object> mapFieldFunc, final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    @Override
+    public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc) {
+        return newConvert(objFieldFunc, mapFieldFunc, null);
+    }
+
+    @Override
+    public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
         return new JsonConvert(getFactory(), tiny) {
             @Override
             protected <S extends JsonWriter> S configWrite(S writer) {
-                return fieldFunc(writer, mapFieldFunc, objFieldFunc, objExtFunc);
+                return fieldFunc(writer, objFieldFunc, mapFieldFunc, objExtFunc);
             }
         };
     }

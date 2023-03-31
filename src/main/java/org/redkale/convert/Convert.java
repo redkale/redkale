@@ -36,22 +36,26 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return writer;
     }
 
-    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
-        writer.objFieldFunc = objFieldFunc;
-        writer.objExtFunc = objExtFunc;
-        return writer;
-    }
-
-    protected <S extends W> S fieldFunc(S writer, BiFunction<Object, Object, Object> mapFieldFunc, BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
         writer.mapFieldFunc = mapFieldFunc;
         writer.objFieldFunc = objFieldFunc;
         writer.objExtFunc = objExtFunc;
         return writer;
     }
 
-    public abstract Convert<R, W> newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc);
+    public Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc) {
+        return newConvert(objFieldFunc, null, null);
+    }
 
-    public abstract Convert<R, W> newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc);
+    public Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc) {
+        return newConvert(objFieldFunc, mapFieldFunc, null);
+    }
+
+    public Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+        return newConvert(objFieldFunc, null, objExtFunc);
+    }
+
+    public abstract Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc);
 
     public abstract boolean isBinary();
 
