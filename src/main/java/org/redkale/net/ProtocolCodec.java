@@ -81,8 +81,8 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         final Response response = createResponse();
         try {
             decode(buffer, response, 0, null);
-        } catch (Throwable t) {  //此处不可  context.offerBuffer(buffer); 以免prepare.prepare内部异常导致重复 offerBuffer
-            context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
+        } catch (Throwable t) {  //此处不可  context.offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
+            context.logger.log(Level.WARNING, "dispatch servlet abort, force to close channel ", t);
             response.error(t);
         }
     }
@@ -103,7 +103,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             try {
                 decode(data, response, 0, null);
             } catch (Throwable t) {
-                context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
+                context.logger.log(Level.WARNING, "dispatch servlet abort, force to close channel ", t);
                 response.error(t);
             }
             return;
@@ -124,7 +124,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             try {
                 decode(data, response, 0, null);
             } catch (Throwable t) {
-                context.logger.log(Level.WARNING, "prepare servlet abort, force to close channel ", t);
+                context.logger.log(Level.WARNING, "dispatch servlet abort, force to close channel ", t);
                 response.error(t);
             }
             return;
@@ -144,11 +144,11 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         final Request request = response.request;
         final int rs = request.readHeader(buffer, lastReq);
         if (rs < 0) {  //表示数据格式不正确
-            final DispatcherServlet preparer = context.dispatcher;
-            preparer.incrExecuteCounter();
+            final DispatcherServlet dispatcher = context.dispatcher;
+            dispatcher.incrExecuteCounter();
             channel.offerReadBuffer(buffer);
             if (rs != Integer.MIN_VALUE) {
-                preparer.incrIllegalRequestCounter();
+                dispatcher.incrIllegalRequestCounter();
             }
             response.error(null);
             if (context.logger.isLoggable(Level.FINEST)) {
@@ -181,8 +181,8 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 final Response pipelineResponse = createResponse();
                 try {
                     decode(buffer, pipelineResponse, pindex + 1, hreq);
-                } catch (Throwable t) {  //此处不可  offerBuffer(buffer); 以免prepare.prepare内部异常导致重复 offerBuffer
-                    context.logger.log(Level.WARNING, "prepare pipeline servlet abort, force to close channel ", t);
+                } catch (Throwable t) {  //此处不可  offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
+                    context.logger.log(Level.WARNING, "dispatch pipeline servlet abort, force to close channel ", t);
                     pipelineResponse.error(t);
                 }
             }

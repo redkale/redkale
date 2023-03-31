@@ -6,17 +6,17 @@
 package org.redkale.net.http;
 
 import java.io.*;
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
 import java.net.*;
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.util.*;
-import java.util.function.*;
-import java.util.logging.*;
+import java.util.function.Supplier;
+import java.util.logging.Level;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
-import org.redkale.convert.json.*;
-import org.redkale.net.*;
+import org.redkale.convert.json.JsonConvert;
+import org.redkale.net.Request;
 import org.redkale.util.*;
 
 /**
@@ -292,7 +292,7 @@ public class HttpRequest extends Request<HttpContext> {
         final ByteBuffer buffer = buf;
         ByteArray bytes = array;
         if (this.readState == READ_STATE_ROUTE) {
-            int rs = readMethodLine(buffer);
+            int rs = readMethodUriLine(buffer);
             if (rs != 0) {
                 return rs;
             }
@@ -455,7 +455,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     //解析 GET /xxx HTTP/1.1
-    private int readMethodLine(final ByteBuffer buf) {
+    private int readMethodUriLine(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
         Charset charset = this.context.getCharset();
         int remain = buffer.remaining();

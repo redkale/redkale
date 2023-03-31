@@ -7,6 +7,7 @@ package org.redkale.net.client;
 
 import java.io.Serializable;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -46,6 +47,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final ByteArray writeArray = new ByteArray();
 
+    protected final ByteBuffer writeBuffer;
+
     final AtomicBoolean pauseWriting = new AtomicBoolean();
 
     final ConcurrentLinkedQueue<ClientFuture> pauseRequests = new ConcurrentLinkedQueue<>();
@@ -79,6 +82,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         this.connEntry = index == -2 ? null : (index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress()));
         this.respWaitingCounter = index == -2 ? new LongAdder() : (index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting);
         this.channel = channel.beforeCloseListener(this);
+        this.writeBuffer = channel.pollWriteBuffer();
     }
 
     protected abstract ClientCodec createCodec();
@@ -102,7 +106,14 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             request.writeTo(this, writeArray);
             doneRequestCounter.increment();
             if (writeArray.length() > 0) {
-                channel.write(writeArray, this, writeHandler);
+                if (writeBuffer.capacity() >= writeArray.length()) {
+                    writeBuffer.clear();
+                    writeBuffer.put(writeArray.content(), 0, writeArray.length());
+                    writeBuffer.flip();
+                    channel.write(writeBuffer, this, writeHandler);
+                } else {
+                    channel.write(writeArray, this, writeHandler);
+                }
             }
         } else {
             if (channel.inCurrWriteThread()) {
@@ -134,7 +145,14 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             currHalfWriteFuture = respFuture;
         }
         if (writeArray.length() > 0) {
-            channel.write(writeArray, this, writeHandler);
+            if (writeBuffer.capacity() >= writeArray.length()) {
+                writeBuffer.clear();
+                writeBuffer.put(writeArray.content(), 0, writeArray.length());
+                writeBuffer.flip();
+                channel.write(writeBuffer, this, writeHandler);
+            } else {
+                channel.write(writeArray, this, writeHandler);
+            }
         }
     }
 
@@ -194,6 +212,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     public void dispose(Throwable exc) {
+        channel.offerWriteBuffer(writeBuffer);
         channel.dispose();
         Throwable e = exc == null ? new ClosedChannelException() : exc;
         CompletableFuture f;
