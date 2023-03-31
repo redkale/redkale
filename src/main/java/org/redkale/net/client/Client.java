@@ -197,38 +197,33 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         if (closed.compareAndSet(false, true)) {
             this.timeoutScheduler.shutdownNow();
             for (ClientConnection conn : this.connArray) {
-                if (conn == null) {
-                    continue;
-                }
-                final R closeReq = closeRequestSupplier == null ? null : closeRequestSupplier.get();
-                if (closeReq == null) {
-                    conn.dispose(null);
-                } else {
-                    try {
-                        conn.writeChannel(closeReq).get(1, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                    }
-                    conn.dispose(null);
-                }
+                closeConnection(conn);
             }
             for (AddressConnEntry<C> entry : this.connAddrEntrys.values()) {
-                ClientConnection conn = entry.connection;
-                if (conn == null) {
-                    continue;
-                }
-                final R closeReq = closeRequestSupplier == null ? null : closeRequestSupplier.get();
-                if (closeReq == null) {
-                    conn.dispose(null);
-                } else {
-                    try {
-                        conn.writeChannel(closeReq).get(1, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                    }
-                    conn.dispose(null);
-                }
+                closeConnection(entry.connection);
             }
             this.connAddrEntrys.clear();
+            for (ClientConnection conn : this.localConnList) {
+                closeConnection(conn);
+            }
+            this.localConnList.clear();
             group.close();
+        }
+    }
+
+    private void closeConnection(ClientConnection conn) {
+        if (conn == null) {
+            return;
+        }
+        final R closeReq = closeRequestSupplier == null ? null : closeRequestSupplier.get();
+        if (closeReq == null) {
+            conn.dispose(null);
+        } else {
+            try {
+                conn.writeChannel(closeReq).get(1, TimeUnit.SECONDS);
+            } catch (Exception e) {
+            }
+            conn.dispose(null);
         }
     }
 
