@@ -10,7 +10,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
@@ -82,9 +82,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     private LongAdder closedCounter;
 
     private Consumer<AsyncConnection> beforeCloseListener;
-
-    //关联的事件数， 小于1表示没有事件
-    private final AtomicInteger eventing = new AtomicInteger();
 
     //用于服务端的Socket, 等同于一直存在的readCompletionHandler
     ProtocolCodec protocolCodec;
@@ -160,14 +157,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     public final boolean ssl() {
         return sslEngine != null;
-    }
-
-    public final int increEventing() {
-        return eventing.incrementAndGet();
-    }
-
-    public final int decreEventing() {
-        return eventing.decrementAndGet();
     }
 
     public final void executeRead(Runnable command) {

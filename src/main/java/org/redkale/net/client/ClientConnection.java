@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
-import org.redkale.annotation.Nullable;
+import org.redkale.annotation.*;
 import org.redkale.net.*;
 import org.redkale.util.ByteArray;
 
@@ -38,8 +38,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final Client client;
 
-    @Nullable
-    protected final LongAdder respWaitingCounter; //可能为null
+    @Nonnull
+    protected final LongAdder respWaitingCounter;
 
     protected final LongAdder doneRequestCounter = new LongAdder();
 
@@ -50,6 +50,18 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     protected final ByteArray writeArray = new ByteArray();
 
     protected final ByteBuffer writeBuffer;
+
+    protected final CompletionHandler<Integer, ClientConnection> writeHandler = new CompletionHandler<Integer, ClientConnection>() {
+
+        @Override
+        public void completed(Integer result, ClientConnection attachment) {
+        }
+
+        @Override
+        public void failed(Throwable exc, ClientConnection attachment) {
+            attachment.dispose(exc);
+        }
+    };
 
     final AtomicBoolean pauseWriting = new AtomicBoolean();
 
@@ -102,7 +114,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
         }
         respWaitingCounter.increment(); //放在writeChannelInWriteThread计数会延迟，导致不准确
-        
+
         writeLock.lock();
         try {
             offerRespFuture(respFuture);
@@ -336,15 +348,4 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         return s;
     }
 
-    protected final CompletionHandler<Integer, ClientConnection> writeHandler = new CompletionHandler<Integer, ClientConnection>() {
-
-        @Override
-        public void completed(Integer result, ClientConnection attachment) {
-        }
-
-        @Override
-        public void failed(Throwable exc, ClientConnection attachment) {
-            attachment.dispose(exc);
-        }
-    };
 }
