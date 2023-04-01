@@ -661,12 +661,15 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Local
+    @Override
     public abstract int directExecute(String sql);
 
     @Local
+    @Override
     public abstract int[] directExecute(String... sqls);
 
     @Local
+    @Override
     public abstract <V> V directQuery(String sql, Function<DataResultSet, V> handler);
 
     //是否异步

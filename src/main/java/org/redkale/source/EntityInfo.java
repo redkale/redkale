@@ -1266,6 +1266,17 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取主键字段的值
+     *
+     * @param entity 实体对象
+     *
+     * @return 主键值
+     */
+    public Serializable getPrimaryValue(T entity) {
+        return this.primary.get(entity);
+    }
+
+    /**
      * 获取主键字段的Attribute单一元素数组
      *
      * @return Attribute[]

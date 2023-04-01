@@ -432,124 +432,6 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return CompletableFuture.supplyAsync(supplier, getExecutor());
     }
 
-    protected DefaultBatchInfo parseBatchInfo(DefaultDataBatch batch, Function<Class, EntityInfo> func) {
-        final List<BatchAction> actions = ((DefaultDataBatch) batch).actions;
-        final Map<Class, EntityInfo> infos = new HashMap<>();
-        final Map<String, EntityInfo> notInsertDisTables = new HashMap<>();
-        final Map<String, EntityInfo> notUpDelDisTables = new HashMap<>();
-        for (BatchAction action : actions) {
-            if (action instanceof InsertBatchAction1) {
-                InsertBatchAction1 act = (InsertBatchAction1) action;
-                Object entity = act.entity;
-                Class clazz = entity.getClass();
-                if (!infos.containsKey(clazz)) {
-                    EntityInfo info = func.apply(clazz);
-                    infos.put(clazz, info);
-                    if (info.getTableStrategy() != null) {
-                        String tableKey = info.getTable(entity);
-                        if (!info.containsDisTable(tableKey)) {
-                            notInsertDisTables.put(tableKey, info);
-                        }
-                    }
-                }
-            } else if (action instanceof DeleteBatchAction1) {
-                DeleteBatchAction1 act = (DeleteBatchAction1) action;
-                Object entity = act.entity;
-                Class clazz = entity.getClass();
-                if (!infos.containsKey(clazz)) {
-                    EntityInfo info = func.apply(clazz);
-                    infos.put(clazz, info);
-                    if (info.getTableStrategy() != null) {
-                        String tableKey = info.getTable(entity);
-                        if (!info.containsDisTable(tableKey)) {
-                            notUpDelDisTables.put(tableKey, info);
-                        }
-                    }
-                }
-            } else if (action instanceof DeleteBatchAction2) {
-                DeleteBatchAction2 act = (DeleteBatchAction2) action;
-                Class clazz = act.clazz;
-                if (!infos.containsKey(clazz)) {
-                    EntityInfo info = func.apply(clazz);
-                    infos.put(clazz, info);
-                    if (info.getTableStrategy() != null) {
-                        String tableKey = info.getTable(act.pk);
-                        if (!info.containsDisTable(tableKey)) {
-                            notUpDelDisTables.put(tableKey, info);
-                        }
-                    }
-                }
-            } else if (action instanceof DeleteBatchAction3) {
-                DeleteBatchAction3 act = (DeleteBatchAction3) action;
-                Class clazz = act.clazz;
-                if (!infos.containsKey(clazz)) {
-                    EntityInfo info = func.apply(clazz);
-                    infos.put(clazz, info);
-                    if (info.getTableStrategy() != null) {
-                        String tableKey = info.getTable(act.node);
-                        if (!info.containsDisTable(tableKey)) {
-                            notUpDelDisTables.put(tableKey, info);
-                        }
-                    }
-                }
-            } else if (action instanceof UpdateBatchAction1) {
-                UpdateBatchAction1 act = (UpdateBatchAction1) action;
-                Object entity = act.entity;
-                Class clazz = entity.getClass();
-                if (!infos.containsKey(clazz)) {
-                    EntityInfo info = func.apply(clazz);
-                    infos.put(clazz, info);
-                    if (info.getTableStrategy() != null) {
-                        String tableKey = info.getTable(entity);
-                        if (!info.containsDisTable(tableKey)) {
-                            notUpDelDisTables.put(tableKey, info);
-                        }
-                    }
-                }
-            } else if (action instanceof UpdateBatchAction2) {
-                UpdateBatchAction2 act = (UpdateBatchAction2) action;
-                Class clazz = act.clazz;
-                if (!infos.containsKey(clazz)) {
-                    EntityInfo info = func.apply(clazz);
-                    infos.put(clazz, info);
-                    if (info.getTableStrategy() != null) {
-                        String tableKey = info.getTable(act.pk);
-                        if (!info.containsDisTable(tableKey)) {
-                            notUpDelDisTables.put(tableKey, info);
-                        }
-                    }
-                }
-            } else if (action instanceof UpdateBatchAction3) {
-                UpdateBatchAction3 act = (UpdateBatchAction3) action;
-                Class clazz = act.clazz;
-                if (!infos.containsKey(clazz)) {
-                    EntityInfo info = func.apply(clazz);
-                    infos.put(clazz, info);
-                    if (info.getTableStrategy() != null) {
-                        String tableKey = info.getTable(act.node);
-                        if (!info.containsDisTable(tableKey)) {
-                            notUpDelDisTables.put(tableKey, info);
-                        }
-                    }
-                }
-            } else if (action instanceof UpdateBatchAction4) {
-                UpdateBatchAction4 act = (UpdateBatchAction4) action;
-                Class clazz = act.entity.getClass();
-                if (!infos.containsKey(clazz)) {
-                    EntityInfo info = func.apply(clazz);
-                    infos.put(clazz, info);
-                    if (info.getTableStrategy() != null) {
-                        String tableKey = act.node == null ? info.getTable(act.entity) : info.getTable(act.node);
-                        if (!info.containsDisTable(tableKey)) {
-                            notUpDelDisTables.put(tableKey, info);
-                        }
-                    }
-                }
-            }
-        }
-        return new DefaultBatchInfo(infos, notInsertDisTables, notUpDelDisTables);
-    }
-
     @Override
     public int batch(final DataBatch batch) {
         return batchAsync(batch).join();
@@ -557,7 +439,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     @Override
     public CompletableFuture<Integer> batchAsync(final DataBatch batch) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not supported yet."));
     }
 
     @Override
@@ -1398,7 +1280,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public <T> DataBatch insert(T... entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
-                if (t.getClass().getAnnotation(Entity.class) == null && t.getClass().getAnnotation(javax.persistence.Entity.class) == null) {
+                if (t.getClass().getAnnotation(Entity.class) == null) {
                     throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
                 this.actions.add(new InsertBatchAction1(t));
@@ -1410,7 +1292,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public <T> DataBatch delete(T... entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
-                if (t.getClass().getAnnotation(Entity.class) == null && t.getClass().getAnnotation(javax.persistence.Entity.class) == null) {
+                if (t.getClass().getAnnotation(Entity.class) == null) {
                     throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
                 this.actions.add(new DeleteBatchAction1(t));
@@ -1421,7 +1303,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         @Override
         public <T> DataBatch delete(Class<T> clazz, Serializable... pks) {
             Objects.requireNonNull(clazz);
-            if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
+            if (clazz.getAnnotation(Entity.class) == null) {
                 throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
             if (pks.length < 1) {
@@ -1442,7 +1324,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         @Override
         public <T> DataBatch delete(Class<T> clazz, FilterNode node, Flipper flipper) {
             Objects.requireNonNull(clazz);
-            if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
+            if (clazz.getAnnotation(Entity.class) == null) {
                 throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
             this.actions.add(new DeleteBatchAction3(clazz, node, flipper));
@@ -1453,7 +1335,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         public <T> DataBatch update(T... entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
-                if (t.getClass().getAnnotation(Entity.class) == null && t.getClass().getAnnotation(javax.persistence.Entity.class) == null) {
+                if (t.getClass().getAnnotation(Entity.class) == null) {
                     throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
                 }
                 this.actions.add(new UpdateBatchAction1(t));
@@ -1469,7 +1351,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         @Override
         public <T> DataBatch update(Class<T> clazz, Serializable pk, ColumnValue... values) {
             Objects.requireNonNull(clazz);
-            if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
+            if (clazz.getAnnotation(Entity.class) == null) {
                 throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
             Objects.requireNonNull(pk);
@@ -1496,7 +1378,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         @Override
         public <T> DataBatch update(Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
             Objects.requireNonNull(clazz);
-            if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
+            if (clazz.getAnnotation(Entity.class) == null) {
                 throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
             }
             if (values.length < 1) {
@@ -1533,31 +1415,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         @Override
         public <T> DataBatch updateColumn(T entity, final FilterNode node, SelectColumn selects) {
             Objects.requireNonNull(entity);
-            if (entity.getClass().getAnnotation(Entity.class) == null && entity.getClass().getAnnotation(javax.persistence.Entity.class) == null) {
+            if (entity.getClass().getAnnotation(Entity.class) == null) {
                 throw new SourceException("Entity Class " + entity.getClass() + " must be on Annotation @Entity");
             }
             Objects.requireNonNull(selects);
             this.actions.add(new UpdateBatchAction4(entity, node, selects));
             return this;
-        }
-
-    }
-
-    protected static class DefaultBatchInfo {
-
-        //EntityInfo对象
-        public Map<Class, EntityInfo> entityInfos;
-
-        //新增操作可能不存在的分表
-        public Map<String, EntityInfo> notInsertDisTables;
-
-        //删除修改操作可能不存在的分表
-        public Map<String, EntityInfo> notUpDelDisTables;
-
-        public DefaultBatchInfo(Map<Class, EntityInfo> entityInfos, Map<String, EntityInfo> notInsertDisTables, Map<String, EntityInfo> notUpDelDisTables) {
-            this.entityInfos = entityInfos;
-            this.notInsertDisTables = notInsertDisTables;
-            this.notUpDelDisTables = notUpDelDisTables;
         }
 
     }
