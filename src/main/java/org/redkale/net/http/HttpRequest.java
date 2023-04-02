@@ -69,9 +69,15 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final String HEAD_CONTENT_TYPE = "Content-Type";
 
+    protected static final String HEAD_CONTENT_LENGTH = "Content-Length";
+
     protected static final String HEAD_ACCEPT = "Accept";
 
     protected static final String HEAD_HOST = "Host";
+
+    protected static final String HEAD_UPGRADE = "Upgrade";
+
+    protected static final String HEAD_USER_AGENT = "User-Agent";
 
     protected static final String HEAD_EXPECT = "Expect";
 
@@ -264,7 +270,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     protected boolean isWebSocket() {
-        return maybews && "Upgrade".equalsIgnoreCase(getHeader("Connection")) && "GET".equalsIgnoreCase(method);
+        return maybews && getmethod && "Upgrade".equalsIgnoreCase(getHeader("Connection"));
     }
 
     protected boolean isExpect() {
@@ -748,51 +754,40 @@ public class HttpRequest extends Request<HttpContext> {
                 bytes.put(b);
             }
             String value;
-            int vallen = bytes.length();
+            int vlen = bytes.length();
+            byte[] content = bytes.content();
             switch (name) {
-                case "Content-Type":
-                case "content-type":
-                    value = bytes.toString(true, charset);
-                    this.contentType = value;
+                case HEAD_CONTENT_TYPE: //Content-Type
+                    this.contentType = bytes.toString(true, charset);
                     break;
-                case "Content-Length":
-                case "content-length":
-                    value = bytes.toString(true, charset);
-                    this.contentLength = Long.decode(value);
+                case HEAD_CONTENT_LENGTH: //Content-Length
+                    this.contentLength = Long.decode(bytes.toString(true, charset));
                     break;
-                case "Host":
-                case "host":
-                    value = bytes.toString(charset);
-                    this.host = value;
+                case HEAD_HOST: //Host
+                    this.host = bytes.toString(charset);
                     break;
-                case "Cookie":
-                case "cookie":
-                    value = bytes.toString(charset);
+                case HEAD_COOKIE: //Cookie
                     if (this.cookie == null || this.cookie.isEmpty()) {
-                        this.cookie = value;
+                        this.cookie = bytes.toString(charset);
                     } else {
-                        this.cookie += ";" + value;
+                        this.cookie += ";" + bytes.toString(charset);
                     }
                     break;
-                case "Connection":
-                case "connection":
-                    if (vallen > 0) {
-                        byte[] content = bytes.content();
-                        if (content[0] == 'c' && vallen == 5
+                case HEAD_CONNECTION: //Connection
+                    if (vlen > 0) {
+                        if (vlen == 5 && content[0] == 'c'
                             && content[1] == 'l' && content[2] == 'o'
                             && content[3] == 's' && content[4] == 'e') {
                             value = "close";
                             this.setKeepAlive(false);
-                        } else if (content[0] == 'k' && vallen == 10
+                        } else if (vlen == 10 && content[0] == 'k'
                             && content[1] == 'e' && content[2] == 'e'
                             && content[3] == 'p' && content[4] == '-'
                             && content[5] == 'a' && content[6] == 'l'
                             && content[7] == 'i' && content[8] == 'v'
                             && content[9] == 'e') {
                             value = "keep-alive";
-                            //if (context.getAliveTimeoutSeconds() >= 0) {
                             this.setKeepAlive(true);
-                            //}
                         } else {
                             value = bytes.toString(charset);
                             this.setKeepAlive(true);
@@ -800,55 +795,51 @@ public class HttpRequest extends Request<HttpContext> {
                     } else {
                         value = "";
                     }
-                    headers.put("Connection", value);
+                    headers.put(HEAD_CONNECTION, value);
                     break;
-                case "Upgrade":
-                case "upgrade":
+                case HEAD_UPGRADE: //Upgrade          
+                    this.maybews = vlen == 9 && content[0] == 'w' && content[1] == 'e' && content[2] == 'b' && content[3] == 's'
+                        && content[4] == 'o' && content[5] == 'c' && content[6] == 'k' && content[7] == 'e' && content[8] == 't';
+                    headers.put(HEAD_UPGRADE, this.maybews ? "websocket" : bytes.toString(true, charset));
+                    break;
+                case HEAD_EXPECT: //Expect                
+                    this.expect = vlen == 12 && content[0] == '1' && content[1] == '0' && content[2] == '0' && content[3] == '-'
+                        && content[4] == 'c' && content[5] == 'o' && content[6] == 'n' && content[7] == 't' && content[8] == 'i'
+                        && content[9] == 'n' && content[10] == 'u' && content[11] == 'e';
+                    headers.put(HEAD_EXPECT, this.expect ? "100-continue" : bytes.toString(true, charset));
+                    break;
+                case Rest.REST_HEADER_RPC: //rest-rpc     
+                    this.rpc = vlen == 4 && content[0] == 't' && content[1] == 'r' && content[2] == 'u' && content[3] == 'e';
+                    headers.put(name, this.rpc ? "true"
+                        : (vlen == 5 && content[0] == 'f' && content[1] == 'a' && content[2] == 'l' && content[3] == 's' && content[4] == 'e'
+                            ? "false" : bytes.toString(true, charset)));
+                    break;
+                case Rest.REST_HEADER_CURRUSERID: //rest-curruserid
                     value = bytes.toString(true, charset);
-                    this.maybews = "websocket".equalsIgnoreCase(value);
-                    headers.put("Upgrade", value);
-                    break;
-                case "Expect":
-                case "expect":
-                    value = bytes.toString(true, charset);
-                    this.expect = "100-continue".equalsIgnoreCase(value);
-                    headers.put("Expect", value);
-                    break;
-                case "user-agent":
-                    value = bytes.toString(charset);
-                    headers.put("User-Agent", value);
-                    break;
-                case Rest.REST_HEADER_RPC:
-                    value = bytes.toString(true, charset);
-                    this.rpc = "true".equalsIgnoreCase(value);
-                    headers.put(name, value);
-                    break;
-                case Rest.REST_HEADER_CURRUSERID:
-                    value = bytes.toString(charset);
                     this.hashid = value.hashCode();
                     this.currentUserid = value;
                     headers.put(name, value);
                     break;
-                case Rest.REST_HEADER_PARAM_FROM_BODY:
-                    value = bytes.toString(true, charset);
-                    this.frombody = "true".equalsIgnoreCase(value);
-                    headers.put(name, value);
+                case Rest.REST_HEADER_PARAM_FROM_BODY: //rest-param-from-body
+                    this.frombody = vlen == 4 && content[0] == 't' && content[1] == 'r' && content[2] == 'u' && content[3] == 'e';
+                    headers.put(name, this.frombody ? "true"
+                        : (vlen == 5 && content[0] == 'f' && content[1] == 'a' && content[2] == 'l' && content[3] == 's' && content[4] == 'e'
+                            ? "false" : bytes.toString(true, charset)));
                     break;
-                case Rest.REST_HEADER_REQ_CONVERT_TYPE:
+                case Rest.REST_HEADER_REQ_CONVERT_TYPE: //rest-req-convert-type
                     value = bytes.toString(true, charset);
                     reqConvertType = ConvertType.valueOf(value);
                     reqConvert = ConvertFactory.findConvert(reqConvertType);
                     headers.put(name, value);
                     break;
-                case Rest.REST_HEADER_RESP_CONVERT_TYPE:
+                case Rest.REST_HEADER_RESP_CONVERT_TYPE: //rest-resp-convert-type
                     value = bytes.toString(true, charset);
                     respConvertType = ConvertType.valueOf(value);
                     respConvert = ConvertFactory.findConvert(respConvertType);
                     headers.put(name, value);
                     break;
                 default:
-                    value = bytes.toString(charset);
-                    headers.put(name, value);
+                    headers.put(name, bytes.toString(charset));
             }
         }
     }
@@ -873,16 +864,16 @@ public class HttpRequest extends Request<HttpContext> {
         final int size = bytes.length();
         final byte[] bs = bytes.content();
         final byte first = bs[0];
-        if (first == 'H' && size == 4) {  //Host
+        if ((first == 'H' || first == 'h') && size == 4) {  //Host
             if (bs[1] == 'o' && bs[2] == 's' && bs[3] == 't') {
                 return HEAD_HOST;
             }
-        } else if (first == 'A' && size == 6) {  //Accept
+        } else if ((first == 'A' || first == 'a') && size == 6) {  //Accept
             if (bs[1] == 'c' && bs[2] == 'c' && bs[3] == 'e'
                 && bs[4] == 'p' && bs[5] == 't') {
                 return HEAD_ACCEPT;
             }
-        } else if (first == 'C') {
+        } else if (first == 'C' || first == 'c') {
             if (size == 10) { //Connection
                 if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 'n'
                     && bs[4] == 'e' && bs[5] == 'c' && bs[6] == 't'
@@ -892,9 +883,18 @@ public class HttpRequest extends Request<HttpContext> {
             } else if (size == 12) { //Content-Type
                 if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 't'
                     && bs[4] == 'e' && bs[5] == 'n' && bs[6] == 't'
-                    && bs[7] == '-' && bs[8] == 'T' && bs[9] == 'y'
-                    && bs[10] == 'p' && bs[11] == 'e') {
+                    && bs[7] == '-' && (bs[8] == 'T' || bs[8] == 't')
+                    && bs[9] == 'y' && bs[10] == 'p' && bs[11] == 'e') {
                     return HEAD_CONTENT_TYPE;
+                }
+            } else if (size == 14) { //Content-Length
+                if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 't'
+                    && bs[4] == 'e' && bs[5] == 'n' && bs[6] == 't'
+                    && bs[7] == '-' && (bs[8] == 'L' || bs[8] == 'l')
+                    && bs[9] == 'e' && bs[10] == 'n' && bs[11] == 'g'
+                    && bs[12] == 't'
+                    && bs[13] == 'h') {
+                    return HEAD_CONTENT_LENGTH;
                 }
             } else if (size == 6) { //Cookie
                 if (bs[1] == 'o' && bs[2] == 'o' && bs[3] == 'k'
@@ -902,7 +902,20 @@ public class HttpRequest extends Request<HttpContext> {
                     return HEAD_COOKIE;
                 }
             }
-        } else if (first == 'E' && size == 6) {  //Expect
+        } else if (first == 'U' || first == 'u') {
+            if (size == 7) { //Upgrade
+                if (bs[1] == 'p' && bs[2] == 'g' && bs[3] == 'r'
+                    && bs[4] == 'a' && bs[5] == 'd' && bs[6] == 'e') {
+                    return HEAD_UPGRADE;
+                }
+            } else if (size == 10) { //User-Agent
+                if (bs[1] == 's' && bs[2] == 'e' && bs[3] == 'r'
+                    && bs[4] == '-' && (bs[5] == 'A' || bs[5] == 'a') && bs[6] == 'g'
+                    && bs[7] == 'e' && bs[8] == 'n' && bs[9] == 't') {
+                    return HEAD_USER_AGENT;
+                }
+            }
+        } else if ((first == 'E' || first == 'e') && size == 6) {  //Expect
             if (bs[1] == 'x' && bs[2] == 'p' && bs[3] == 'e'
                 && bs[4] == 'c' && bs[5] == 't') {
                 return HEAD_EXPECT;

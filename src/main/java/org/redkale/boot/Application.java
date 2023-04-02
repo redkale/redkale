@@ -565,7 +565,8 @@ public final class Application {
             if (workHash) {
                 workExecutor0 = WorkThread.createHashExecutor(workThreads, "Redkale-HashWorkThread-%s");
             } else {
-                workExecutor0 = WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
+                //指定threads则不使用虚拟线程池
+                workExecutor0 = executorConf.getValue("threads") != null ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s") : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
             }
         }
         this.workExecutor = workExecutor0;

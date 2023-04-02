@@ -76,7 +76,7 @@ public class ThreadHashExecutor extends AbstractExecutorService {
         }
     }
 
-    public int size() {
+    public int getCorePoolSize() {
         return executors.length;
     }
 
