@@ -6,7 +6,7 @@
 package org.redkale.net.client;
 
 import java.io.Serializable;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import org.redkale.net.WorkThread;
 import org.redkale.util.*;
 
@@ -28,7 +28,7 @@ public abstract class ClientRequest {
     protected String traceid;
 
     //只会在ClientCodec的读线程里调用
-    BiFunction respTransfer;
+    Function respTransfer;
 
     public abstract void writeTo(ClientConnection conn, ByteArray array);
 

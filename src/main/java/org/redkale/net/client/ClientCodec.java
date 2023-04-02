@@ -135,7 +135,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                         });
                     }
                 } else {
-                    final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(connection, message);
+                    final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
                     if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) {
                         workThread.execute(() -> {
                             Traces.currTraceid(request.traceid);
