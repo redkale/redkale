@@ -135,7 +135,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                         });
                     }
                 } else {
-                    final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
+                    final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(connection, message);
                     if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) {
                         workThread.execute(() -> {
                             Traces.currTraceid(request.traceid);
@@ -176,6 +176,12 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
 
     protected R findRequest(Serializable requestid) {
         return connection.findRequest(requestid);
+    }
+
+    protected ClientResponse<R, P> getLastMessage() {
+        List<ClientResponse<R, P>> results = this.respResults;
+        int size = results.size();
+        return size == 0 ? null : results.get(size - 1);
     }
 
     public void addMessage(R request, P result) {

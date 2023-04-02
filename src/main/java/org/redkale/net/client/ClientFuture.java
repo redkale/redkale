@@ -29,8 +29,6 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
 
     private ScheduledFuture timeout;
 
-    Boolean resumeHalfRequestFlag;
-
     ClientFuture(ClientConnection conn, R request) {
         super();
         Objects.requireNonNull(conn);

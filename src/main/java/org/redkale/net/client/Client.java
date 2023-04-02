@@ -225,7 +225,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return connect().thenCompose(conn -> writeChannel(conn, request));
     }
 
-    public final <T> CompletableFuture<T> sendAsync(R request, Function<P, T> respTransfer) {
+    public final <T> CompletableFuture<T> sendAsync(R request, BiFunction<C, P, T> respTransfer) {
         if (request.workThread == null) {
             request.workThread = WorkThread.currWorkThread();
         }
@@ -239,7 +239,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return connect(addr).thenCompose(conn -> writeChannel(conn, request));
     }
 
-    public final <T> CompletableFuture<T> sendAsync(SocketAddress addr, R request, Function<P, T> respTransfer) {
+    public final <T> CompletableFuture<T> sendAsync(SocketAddress addr, R request, BiFunction<C, P, T> respTransfer) {
         if (request.workThread == null) {
             request.workThread = WorkThread.currWorkThread();
         }
@@ -250,16 +250,8 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return conn.writeChannel(request);
     }
 
-    protected <T> CompletableFuture<T> writeChannel(ClientConnection conn, R request, Function<P, T> respTransfer) {
+    protected <T> CompletableFuture<T> writeChannel(ClientConnection conn, R request, BiFunction<C, P, T> respTransfer) {
         return conn.writeChannel(request, respTransfer);
-    }
-
-    //是否采用ThreadLocal连接池模式
-    //支持ThreadLocal连接池模式的最基本要求: 
-    //    1) 只能调用connect()获取连接，不能调用connect(SocketAddress addr)
-    //    2) request必须一次性输出，不能出现写入request后request.isCompleted()=false的情况
-    protected boolean isThreadLocalConnMode() {
-        return false;
     }
 
     private C createConnection(int index, AsyncConnection channel) {

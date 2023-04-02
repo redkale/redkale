@@ -106,7 +106,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     //respTransfer只会在ClientCodec的读线程里调用
-    protected final <T> CompletableFuture<T> writeChannel(R request, Function<P, T> respTransfer) {
+    protected final <T> CompletableFuture<T> writeChannel(R request, BiFunction<? extends ClientConnection<R, P>, P, T> respTransfer) {
         request.respTransfer = respTransfer;
         ClientFuture respFuture = createClientFuture(request);
         int rts = this.channel.getReadTimeoutSeconds();

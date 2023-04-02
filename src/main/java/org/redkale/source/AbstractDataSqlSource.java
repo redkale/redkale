@@ -230,11 +230,13 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     protected void slowLog(long startTime, String... sqls) {
-        long cost = System.currentTimeMillis() - startTime;
-        if (slowmsError > 0 && cost > slowmsError) {
-            logger.log(Level.SEVERE, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
-        } else if (slowmsWarn > 0 && cost > slowmsWarn) {
-            logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') very slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
+        if (slowmsError > 0 || slowmsWarn > 0) {
+            long cost = System.currentTimeMillis() - startTime;
+            if (slowmsError > 0 && cost > slowmsError) {
+                logger.log(Level.SEVERE, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') very slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
+            } else if (slowmsWarn > 0 && cost > slowmsWarn) {
+                logger.log(Level.WARNING, DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost + " ms, content: " + Arrays.toString(sqls));
+            }
         }
     }
 
