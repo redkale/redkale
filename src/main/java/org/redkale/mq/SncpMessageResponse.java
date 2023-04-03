@@ -24,11 +24,11 @@ public class SncpMessageResponse extends SncpResponse {
 
     protected MessageRecord message;
 
-    protected MessageProducer producer;
+    protected MessageClientProducer producer;
 
     protected Runnable callback;
 
-    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, Runnable callback, MessageClient messageClient, MessageProducer producer) {
+    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, Runnable callback, MessageClient messageClient, MessageClientProducer producer) {
         super(context, request);
         this.message = request.message;
         this.callback = callback;
@@ -36,7 +36,7 @@ public class SncpMessageResponse extends SncpResponse {
         this.producer = producer;
     }
 
-    public SncpMessageResponse(SncpContext context, MessageRecord message, Runnable callback, MessageClient messageClient, MessageProducer producer) {
+    public SncpMessageResponse(SncpContext context, MessageRecord message, Runnable callback, MessageClient messageClient, MessageClientProducer producer) {
         super(context, new SncpMessageRequest(context, message));
         this.message = message;
         this.callback = callback;

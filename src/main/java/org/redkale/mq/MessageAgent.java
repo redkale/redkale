@@ -43,9 +43,9 @@ public abstract class MessageAgent implements Resourcable {
 
     protected AnyValue config;
 
-    protected MessageProducers httpProducer;
+    protected MessageClientProducers httpProducer;
 
-    protected MessageProducers sncpProducer;
+    protected MessageClientProducers sncpProducer;
 
     protected final ReentrantLock httpProducerLock = new ReentrantLock();
 
@@ -143,9 +143,9 @@ public abstract class MessageAgent implements Resourcable {
         }
     }
 
-    protected List<MessageConsumer> getAllMessageConsumer() {
-        List<MessageConsumer> consumers = new ArrayList<>();
-        MessageConsumer one = this.httpMessageClient == null ? null : this.httpMessageClient.respConsumer;
+    protected List<MessageClientConsumer> getMessageClientConsumers() {
+        List<MessageClientConsumer> consumers = new ArrayList<>();
+        MessageClientConsumer one = this.httpMessageClient == null ? null : this.httpMessageClient.respConsumer;
         if (one != null) {
             consumers.add(one);
         }
@@ -157,15 +157,15 @@ public abstract class MessageAgent implements Resourcable {
         return consumers;
     }
 
-    protected List<MessageProducer> getAllMessageProducer() {
-        List<MessageProducer> producers = new ArrayList<>();
+    protected List<MessageClientProducer> getMessageClientProducers() {
+        List<MessageClientProducer> producers = new ArrayList<>();
         if (this.httpProducer != null) {
             producers.addAll(Utility.ofList(this.httpProducer.producers));
         }
         if (this.sncpProducer != null) {
             producers.addAll(Utility.ofList(this.sncpProducer.producers));
         }
-        MessageProducers one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
+        MessageClientProducers one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
         if (one != null) {
             producers.addAll(Utility.ofList(one.producers));
         }
@@ -225,15 +225,15 @@ public abstract class MessageAgent implements Resourcable {
     }
 
     //获取指定topic的生产处理器
-    public MessageProducers getSncpProducer() {
+    public MessageClientProducers getSncpMessageClientProducer() {
         if (this.sncpProducer == null) {
             sncpProducerLock.lock();
             try {
                 if (this.sncpProducer == null) {
                     long s = System.currentTimeMillis();
-                    MessageProducer[] producers = new MessageProducer[producerCount];
+                    MessageClientProducer[] producers = new MessageClientProducer[producerCount];
                     for (int i = 0; i < producers.length; i++) {
-                        MessageProducer producer = createProducer("SncpProducer");
+                        MessageClientProducer producer = createMessageClientProducer("SncpProducer");
                         producer.startup().join();
                         producers[i] = producer;
                     }
@@ -241,7 +241,7 @@ public abstract class MessageAgent implements Resourcable {
                     if (logger.isLoggable(Level.FINEST)) {
                         logger.log(Level.FINEST, "MessageAgent.SncpProducer startup all in " + e + "ms");
                     }
-                    this.sncpProducer = new MessageProducers(producers);
+                    this.sncpProducer = new MessageClientProducers(producers);
                 }
             } finally {
                 sncpProducerLock.unlock();
@@ -250,15 +250,15 @@ public abstract class MessageAgent implements Resourcable {
         return this.sncpProducer;
     }
 
-    public MessageProducers getHttpProducer() {
+    public MessageClientProducers getHttpMessageClientProducer() {
         if (this.httpProducer == null) {
             httpProducerLock.lock();
             try {
                 if (this.httpProducer == null) {
                     long s = System.currentTimeMillis();
-                    MessageProducer[] producers = new MessageProducer[producerCount];
+                    MessageClientProducer[] producers = new MessageClientProducer[producerCount];
                     for (int i = 0; i < producers.length; i++) {
-                        MessageProducer producer = createProducer("HttpProducer");
+                        MessageClientProducer producer = createMessageClientProducer("HttpProducer");
                         producer.startup().join();
                         producers[i] = producer;
                     }
@@ -266,7 +266,7 @@ public abstract class MessageAgent implements Resourcable {
                     if (logger.isLoggable(Level.FINEST)) {
                         logger.log(Level.FINEST, "MessageAgent.HttpProducer startup all in " + e + "ms");
                     }
-                    this.httpProducer = new MessageProducers(producers);
+                    this.httpProducer = new MessageClientProducers(producers);
                 }
             } finally {
                 httpProducerLock.unlock();
@@ -276,7 +276,7 @@ public abstract class MessageAgent implements Resourcable {
     }
 
     //创建指定topic的生产处理器
-    protected abstract MessageProducer createProducer(String name);
+    protected abstract MessageClientProducer createMessageClientProducer(String name);
 
     //创建topic，如果已存在则跳过
     public abstract boolean createTopic(String... topics);
@@ -291,7 +291,7 @@ public abstract class MessageAgent implements Resourcable {
     public abstract boolean acceptsConf(AnyValue config);
 
     //创建指定topic的消费处理器
-    public abstract MessageConsumer createConsumer(String[] topics, String group, MessageProcessor processor);
+    public abstract MessageClientConsumer createMessageClientConsumer(String[] topics, String group, MessageProcessor processor);
 
     public final void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
@@ -315,8 +315,8 @@ public abstract class MessageAgent implements Resourcable {
             if (messageNodes.containsKey(consumerid)) {
                 throw new RedkaleException("consumerid(" + consumerid + ") is repeat");
             }
-            HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, httpMessageClient, getHttpProducer(), ns, service, servlet);
-            this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(topics, consumerid, processor)));
+            HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, httpMessageClient, getHttpMessageClientProducer(), ns, service, servlet);
+            this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createMessageClientConsumer(topics, consumerid, processor)));
         } finally {
             httpNodesLock.unlock();
         }
@@ -338,8 +338,8 @@ public abstract class MessageAgent implements Resourcable {
             if (messageNodes.containsKey(consumerid)) {
                 throw new RedkaleException("consumerid(" + consumerid + ") is repeat");
             }
-            SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, sncpMessageClient, getSncpProducer(), ns, service, servlet);
-            this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createConsumer(new String[]{topic}, consumerid, processor)));
+            SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, sncpMessageClient, getSncpMessageClientProducer(), ns, service, servlet);
+            this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createMessageClientConsumer(new String[]{topic}, consumerid, processor)));
         } finally {
             sncpNodesLock.unlock();
         }
@@ -417,9 +417,9 @@ public abstract class MessageAgent implements Resourcable {
 
         public final MessageProcessor processor;
 
-        public final MessageConsumer consumer;
+        public final MessageClientConsumer consumer;
 
-        public MessageConsumerNode(NodeServer server, Service service, Servlet servlet, MessageProcessor processor, MessageConsumer consumer) {
+        public MessageConsumerNode(NodeServer server, Service service, Servlet servlet, MessageProcessor processor, MessageClientConsumer consumer) {
             this.server = server;
             this.service = service;
             this.servlet = servlet;

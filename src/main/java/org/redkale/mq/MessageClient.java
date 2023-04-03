@@ -35,7 +35,7 @@ public abstract class MessageClient {
 
     protected final AtomicLong msgSeqno;
 
-    protected MessageConsumer respConsumer;
+    protected MessageClientConsumer respConsumer;
 
     protected String respTopic;
 
@@ -96,7 +96,7 @@ public abstract class MessageClient {
                             }
                         };
                         long ones = System.currentTimeMillis();
-                        MessageConsumer one = messageAgent.createConsumer(new String[]{respTopic}, respConsumerid, processor);
+                        MessageClientConsumer one = messageAgent.createMessageClientConsumer(new String[]{respTopic}, respConsumerid, processor);
                         one.startup().join();
                         long onee = System.currentTimeMillis() - ones;
                         if (finest) {
@@ -136,7 +136,7 @@ public abstract class MessageClient {
         return message;
     }
 
-    protected abstract MessageProducers getProducer();
+    protected abstract MessageClientProducers getProducer();
 
     public MessageRecord createMessageRecord(String resptopic, String content) {
         return new MessageRecord(msgSeqno.incrementAndGet(), CTYPE_STRING, 1, 0, System.currentTimeMillis(), 0, null, null, resptopic, Traces.currTraceid(), content == null ? null : content.getBytes(StandardCharsets.UTF_8));

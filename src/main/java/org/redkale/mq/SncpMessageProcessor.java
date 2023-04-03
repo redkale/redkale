@@ -28,7 +28,7 @@ public class SncpMessageProcessor implements MessageProcessor {
 
     protected MessageClient messageClient;
 
-    protected final MessageProducers producer;
+    protected final MessageClientProducers producer;
 
     protected final NodeSncpServer server;
 
@@ -46,7 +46,7 @@ public class SncpMessageProcessor implements MessageProcessor {
         }
     };
 
-    public SncpMessageProcessor(Logger logger, SncpMessageClient messageClient, MessageProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
+    public SncpMessageProcessor(Logger logger, SncpMessageClient messageClient, MessageClientProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
         this.messageClient = messageClient;
         this.producer = producer;
@@ -105,7 +105,7 @@ public class SncpMessageProcessor implements MessageProcessor {
         }
     }
 
-    public MessageProducers getProducer() {
+    public MessageClientProducers getProducer() {
         return producer;
     }
 

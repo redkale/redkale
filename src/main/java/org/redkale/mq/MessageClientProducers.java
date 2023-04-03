@@ -17,17 +17,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @since 2.1.0
  */
-public class MessageProducers {
+public class MessageClientProducers {
 
-    protected final MessageProducer[] producers;
+    protected final MessageClientProducer[] producers;
 
     protected final AtomicInteger index = new AtomicInteger();
 
-    public MessageProducers(MessageProducer[] producers) {
+    public MessageClientProducers(MessageClientProducer[] producers) {
         this.producers = producers;
     }
 
-    public MessageProducer getProducer(MessageRecord message) {
+    public MessageClientProducer getProducer(MessageRecord message) {
         if (this.producers.length == 1) {
             return this.producers[0];
         }

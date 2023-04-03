@@ -29,7 +29,7 @@ public class HttpMessageProcessor implements MessageProcessor {
 
     protected HttpMessageClient messageClient;
 
-    protected final MessageProducers producers;
+    protected final MessageClientProducers producers;
 
     protected final NodeHttpServer server;
 
@@ -59,7 +59,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         }
     };
 
-    public HttpMessageProcessor(Logger logger, HttpMessageClient messageClient, MessageProducers producers, NodeHttpServer server, Service service, HttpServlet servlet) {
+    public HttpMessageProcessor(Logger logger, HttpMessageClient messageClient, MessageClientProducers producers, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.messageClient = messageClient;
         this.producers = producers;
@@ -134,7 +134,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         }
     }
 
-    public MessageProducers getProducer() {
+    public MessageClientProducers getProducer() {
         return producers;
     }
 

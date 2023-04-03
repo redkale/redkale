@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  *
  * @since 2.1.0
  */
-public abstract class MessageConsumer {
+public abstract class MessageClientConsumer {
 
     protected final String[] topics;
 
@@ -33,7 +33,7 @@ public abstract class MessageConsumer {
 
     protected volatile boolean closed;
 
-    protected MessageConsumer(MessageAgent messageAgent, String[] topics, final String consumerid, MessageProcessor processor) {
+    protected MessageClientConsumer(MessageAgent messageAgent, String[] topics, final String consumerid, MessageProcessor processor) {
         Objects.requireNonNull(messageAgent);
         Objects.requireNonNull(topics);
         Objects.requireNonNull(consumerid);

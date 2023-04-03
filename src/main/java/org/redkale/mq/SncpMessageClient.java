@@ -25,8 +25,8 @@ public class SncpMessageClient extends MessageClient {
     }
 
     @Override
-    protected MessageProducers getProducer() {
-        return messageAgent.getSncpProducer();
+    protected MessageClientProducers getProducer() {
+        return messageAgent.getSncpMessageClientProducer();
     }
 
     public String getRespTopic() {

@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  *
  * @since 2.1.0
  */
-public abstract class MessageProducer {
+public abstract class MessageClientProducer {
 
     protected final Logger logger;
 
@@ -26,7 +26,7 @@ public abstract class MessageProducer {
 
     protected final AtomicBoolean closed = new AtomicBoolean();
 
-    protected MessageProducer(String name, Logger logger) {
+    protected MessageClientProducer(String name, Logger logger) {
         this.name = name;
         this.logger = logger;
     }

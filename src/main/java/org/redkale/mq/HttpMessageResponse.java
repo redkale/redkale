@@ -34,7 +34,7 @@ public class HttpMessageResponse extends HttpResponse {
 
     protected MessageRecord message;
 
-    protected MessageProducer producer;
+    protected MessageClientProducer producer;
 
     protected Runnable callback;
 
@@ -45,16 +45,7 @@ public class HttpMessageResponse extends HttpResponse {
         this.messageClient = messageClient;
     }
 
-//    public HttpMessageResponse(HttpContext context, HttpMessageRequest request, Runnable callback,
-//        HttpResponseConfig config, HttpMessageClient messageClient, MessageProducer producer) {
-//        super(context, request, config);
-//        this.message = request.message;
-//        this.callback = callback;
-//        this.messageClient = messageClient;
-//        this.producer = producer;
-//        this.finest = producer.logger.isLoggable(Level.FINEST);
-//    }
-    public void prepare(MessageRecord message, Runnable callback, MessageProducer producer) {
+    public void prepare(MessageRecord message, Runnable callback, MessageClientProducer producer) {
         ((HttpMessageRequest) request).prepare(message);
         this.message = message;
         this.callback = callback;
@@ -73,7 +64,7 @@ public class HttpMessageResponse extends HttpResponse {
         finishHttpResult(producer.logger.isLoggable(Level.FINEST), respConvert == null ? ((HttpMessageRequest) this.request).getRespConvert() : respConvert, type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
     }
 
-    public static void finishHttpResult(boolean finest, Convert respConvert, Type type, MessageRecord msg, Runnable callback, MessageClient messageClient, MessageProducer producer, String resptopic, HttpResult result) {
+    public static void finishHttpResult(boolean finest, Convert respConvert, Type type, MessageRecord msg, Runnable callback, MessageClient messageClient, MessageClientProducer producer, String resptopic, HttpResult result) {
         if (callback != null) {
             callback.run();
         }

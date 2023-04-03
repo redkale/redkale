@@ -201,7 +201,7 @@ public class HttpMessageClient extends MessageClient {
     }
 
     @Override
-    protected MessageProducers getProducer() {
-        return messageAgent.getHttpProducer();
+    protected MessageClientProducers getProducer() {
+        return messageAgent.getHttpMessageClientProducer();
     }
 }
