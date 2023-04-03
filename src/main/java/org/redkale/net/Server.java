@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
@@ -313,8 +314,18 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         }
         serverChannel.accept(application, this);
         postStart();
+        ExecutorService workExecutor = context.workExecutor;
+        int workThreads = 0;
+        if (workExecutor instanceof ThreadPoolExecutor) {
+            workThreads = ((ThreadPoolExecutor) workExecutor).getCorePoolSize();
+        } else if (workExecutor instanceof ThreadHashExecutor) {
+            workThreads = ((ThreadHashExecutor) workExecutor).getCorePoolSize();
+        } else if (workExecutor != null) { //virtual thread pool
+            workThreads = -1;
+        }
         logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())
-            + ", cpu: " + Utility.cpus() + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
+            + ", cpu: " + Utility.cpus() + ", workThreads: " + (workThreads >= 0 ? workThreads : "[virtual]")
+            + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
             + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxBody) + startExtLog()
             + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms\r\n");
     }
