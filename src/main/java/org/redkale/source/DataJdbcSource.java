@@ -2150,15 +2150,17 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 try {
                     String prepareSQL = info.getFindQuestionPrepareSQL(ids[0]);
                     PreparedStatement ps = conn.prepareStatement(prepareSQL);
+                    DataJdbcResultSet rr = new DataJdbcResultSet(info);
                     for (Serializable pk : ids) {
                         ps.setObject(1, pk);
+                        ResultSet set = ps.executeQuery();
+                        rr.resultSet(set);
+                        if (set.next()) {
+                            list.add(getEntityValue(info, null, rr));
+                        } else {
+                            list.add(null);
+                        }
                     }
-                    ResultSet set = ps.executeQuery();
-                    final DataResultSet rr = createDataResultSet(info, set);
-                    while (set.next()) {
-                        list.add(getEntityValue(info, null, rr));
-                    }
-                    set.close();
                     ps.close();
                     slowLog(s, prepareSQL);
                     return list;
@@ -2553,120 +2555,132 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     public static DataResultSet createDataResultSet(EntityInfo info, ResultSet set) {
+        return new DataJdbcResultSet(info).resultSet(set);
+    }
 
-        final ResultSet rr = set;
+    protected static class DataJdbcResultSet implements DataResultSet {
 
-        return new DataResultSet() {
+        EntityInfo info;
 
-            @Override
-            public <T> Serializable getObject(Attribute<T, Serializable> attr, int index, String column) {
-                Class t = attr.type();
+        ResultSet rr;
 
-                if (t == java.util.Date.class) {
-                    Object val = index > 0 ? getObject(index) : getObject(column);
+        public DataJdbcResultSet(EntityInfo info) {
+            this.info = info;
 
-                    if (val
-                        == null) {
-                        return null;
-                    }
-                    return new java.util.Date(
-                        ((java.sql.Date) val).getTime());
-                } else if (t == java.time.LocalDate.class) {
-                    Object val = index > 0 ? getObject(index) : getObject(column);
+        }
 
-                    if (val
-                        == null) {
-                        return null;
-                    }
-                    return ((java.sql.Date) val).toLocalDate();
-                } else if (t == java.time.LocalTime.class) {
-                    Object val = index > 0 ? getObject(index) : getObject(column);
+        public DataJdbcResultSet resultSet(ResultSet set) {
+            this.rr = set;
+            return this;
+        }
 
-                    if (val
-                        == null) {
-                        return null;
-                    }
-                    return ((java.sql.Time) val).toLocalTime();
-                } else if (t == java.time.LocalDateTime.class) {
-                    Object val = index > 0 ? getObject(index) : getObject(column);
+        @Override
+        public <T> Serializable getObject(Attribute<T, Serializable> attr, int index, String column) {
+            Class t = attr.type();
 
-                    if (val
-                        == null) {
-                        return null;
-                    }
-                    return ((java.sql.Timestamp) val).toLocalDateTime();
-                } else if (t.getName().startsWith("java.sql.")) {
-                    return index > 0 ? (Serializable) getObject(index) : (Serializable) getObject(column);
+            if (t == java.util.Date.class) {
+                Object val = index > 0 ? getObject(index) : getObject(column);
+
+                if (val
+                    == null) {
+                    return null;
                 }
-                return DataResultSet.getRowColumnValue(this, attr, index, column);
-            }
+                return new java.util.Date(
+                    ((java.sql.Date) val).getTime());
+            } else if (t == java.time.LocalDate.class) {
+                Object val = index > 0 ? getObject(index) : getObject(column);
 
-            @Override
-            public boolean next() {
-                try {
-                    return rr.next();
-                } catch (SQLException e) {
-                    throw new SourceException(e);
+                if (val
+                    == null) {
+                    return null;
                 }
-            }
+                return ((java.sql.Date) val).toLocalDate();
+            } else if (t == java.time.LocalTime.class) {
+                Object val = index > 0 ? getObject(index) : getObject(column);
 
-            @Override
-            public List<String> getColumnLabels() {
-                try {
-                    ResultSetMetaData meta = rr.getMetaData();
-                    int count = meta.getColumnCount();
-                    List<String> labels = new ArrayList<>(count);
-                    for (int i = 1; i <= count; i++) {
-                        labels.add(meta.getColumnLabel(i));
-                    }
-                    return labels;
-                } catch (SQLException e) {
-                    throw new SourceException(e);
+                if (val
+                    == null) {
+                    return null;
                 }
-            }
+                return ((java.sql.Time) val).toLocalTime();
+            } else if (t == java.time.LocalDateTime.class) {
+                Object val = index > 0 ? getObject(index) : getObject(column);
 
-            @Override
-            public boolean wasNull() {
-                try {
-                    return rr.wasNull();
-                } catch (SQLException e) {
-                    throw new SourceException(e);
+                if (val
+                    == null) {
+                    return null;
                 }
+                return ((java.sql.Timestamp) val).toLocalDateTime();
+            } else if (t.getName().startsWith("java.sql.")) {
+                return index > 0 ? (Serializable) getObject(index) : (Serializable) getObject(column);
             }
+            return DataResultSet.getRowColumnValue(this, attr, index, column);
+        }
 
-            @Override
-            public void close() {
-                try {
-                    rr.close();
-                } catch (SQLException e) {
-                    throw new SourceException(e);
+        @Override
+        public boolean next() {
+            try {
+                return rr.next();
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public List<String> getColumnLabels() {
+            try {
+                ResultSetMetaData meta = rr.getMetaData();
+                int count = meta.getColumnCount();
+                List<String> labels = new ArrayList<>(count);
+                for (int i = 1; i <= count; i++) {
+                    labels.add(meta.getColumnLabel(i));
                 }
+                return labels;
+            } catch (SQLException e) {
+                throw new SourceException(e);
             }
+        }
 
-            @Override
-            public Object getObject(int index) {
-                try {
-                    return rr.getObject(index);
-                } catch (SQLException e) {
-                    throw new SourceException(e);
-                }
+        @Override
+        public boolean wasNull() {
+            try {
+                return rr.wasNull();
+            } catch (SQLException e) {
+                throw new SourceException(e);
             }
+        }
 
-            @Override
-            public Object getObject(String column) {
-                try {
-                    return rr.getObject(column);
-                } catch (SQLException e) {
-                    throw new SourceException(e);
-                }
+        @Override
+        public void close() {
+            try {
+                rr.close();
+            } catch (SQLException e) {
+                throw new SourceException(e);
             }
+        }
 
-            @Override
-            public EntityInfo getEntityInfo() {
-                return info;
+        @Override
+        public Object getObject(int index) {
+            try {
+                return rr.getObject(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
             }
+        }
 
-        };
+        @Override
+        public Object getObject(String column) {
+            try {
+                return rr.getObject(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public EntityInfo getEntityInfo() {
+            return info;
+        }
 
     }
 
