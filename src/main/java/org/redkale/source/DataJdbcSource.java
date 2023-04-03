@@ -202,7 +202,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final DefaultDataBatch dataBatch = (DefaultDataBatch) batch;
         if (dataBatch.actions.isEmpty()) {
             return 0;
-        } 
+        }
         int c = 0;
         Connection conn = null;
         try {
@@ -2548,6 +2548,13 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         public ConnectionPool(Properties prop) {
             this.connectTimeoutSeconds = Integer.decode(prop.getProperty(DATA_SOURCE_CONNECTTIMEOUT_SECONDS, "6"));
             int defMaxConns = Utility.cpus() * 4;
+            if (workExecutor instanceof ThreadPoolExecutor) {
+                defMaxConns = ((ThreadPoolExecutor) workExecutor).getCorePoolSize();
+            } else if (workExecutor instanceof ThreadHashExecutor) {
+                defMaxConns = ((ThreadHashExecutor) workExecutor).getCorePoolSize();
+            } else if (workExecutor != null) { //maybe virtual thread pool
+                defMaxConns = Math.min(1000, Utility.cpus() * 100);
+            }
             this.maxConns = Math.max(1, Integer.decode(prop.getProperty(DATA_SOURCE_MAXCONNS, "" + defMaxConns)));
             this.queue = new ArrayBlockingQueue<>(maxConns);
             this.url = prop.getProperty(DATA_SOURCE_URL);
