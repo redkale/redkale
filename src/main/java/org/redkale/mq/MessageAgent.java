@@ -67,8 +67,8 @@ public abstract class MessageAgent implements Resourcable {
 
     protected MessageCoder<MessageRecord> messageCoder = MessageRecordCoder.getInstance();
 
-    //本地Service消息接收处理器， key:consumer
-    protected HashMap<String, MessageConsumerNode> messageNodes = new LinkedHashMap<>();
+    //本地Service消息接收处理器， key:consumerid
+    protected HashMap<String, MessageClientConsumerNode> clientConsumerNodes = new LinkedHashMap<>();
 
     public void init(ResourceFactory factory, AnyValue config) {
         this.name = checkName(config.getValue("name", ""));
@@ -96,7 +96,7 @@ public abstract class MessageAgent implements Resourcable {
         }
         // application (it doesn't execute completion handlers).
         this.timeoutExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, (Runnable r) -> {
-            Thread t = new Thread(r, "Redkale-MessageAgent-Timeout-Thread");
+            Thread t = new Thread(r, "Redkale-MessageAgent-[" + name + "]-Timeout-Thread");
             t.setDaemon(true);
             return t;
         });
@@ -109,7 +109,7 @@ public abstract class MessageAgent implements Resourcable {
     public CompletableFuture<Map<String, Long>> start() {
         final LinkedHashMap<String, Long> map = new LinkedHashMap<>();
         final List<CompletableFuture> futures = new ArrayList<>();
-        this.messageNodes.values().forEach(node -> {
+        this.clientConsumerNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
             futures.add(node.consumer.startup().whenComplete((r, t) -> map.put(node.consumer.consumerid, System.currentTimeMillis() - s)));
         });
@@ -119,7 +119,7 @@ public abstract class MessageAgent implements Resourcable {
     //Application.shutdown  在执行server.shutdown之前执行
     public CompletableFuture<Void> stop() {
         List<CompletableFuture> futures = new ArrayList<>();
-        this.messageNodes.values().forEach(node -> {
+        this.clientConsumerNodes.values().forEach(node -> {
             futures.add(node.consumer.shutdown());
         });
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
@@ -153,7 +153,7 @@ public abstract class MessageAgent implements Resourcable {
         if (one != null) {
             consumers.add(one);
         }
-        consumers.addAll(messageNodes.values().stream().map(mcn -> mcn.consumer).collect(Collectors.toList()));
+        consumers.addAll(clientConsumerNodes.values().stream().map(mcn -> mcn.consumer).collect(Collectors.toList()));
         return consumers;
     }
 
@@ -291,7 +291,7 @@ public abstract class MessageAgent implements Resourcable {
     public abstract boolean acceptsConf(AnyValue config);
 
     //创建指定topic的消费处理器
-    public abstract MessageClientConsumer createMessageClientConsumer(String[] topics, String group, MessageProcessor processor);
+    public abstract MessageClientConsumer createMessageClientConsumer(String[] topics, String group, MessageClientProcessor processor);
 
     public final void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
@@ -312,11 +312,11 @@ public abstract class MessageAgent implements Resourcable {
         String consumerid = generateHttpConsumerid(topics, service);
         httpNodesLock.lock();
         try {
-            if (messageNodes.containsKey(consumerid)) {
+            if (clientConsumerNodes.containsKey(consumerid)) {
                 throw new RedkaleException("consumerid(" + consumerid + ") is repeat");
             }
-            HttpMessageProcessor processor = new HttpMessageProcessor(this.logger, httpMessageClient, getHttpMessageClientProducer(), ns, service, servlet);
-            this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createMessageClientConsumer(topics, consumerid, processor)));
+            HttpMessageClientProcessor processor = new HttpMessageClientProcessor(this.logger, httpMessageClient, getHttpMessageClientProducer(), ns, service, servlet);
+            this.clientConsumerNodes.put(consumerid, new MessageClientConsumerNode(ns, service, servlet, processor, createMessageClientConsumer(topics, consumerid, processor)));
         } finally {
             httpNodesLock.unlock();
         }
@@ -335,11 +335,11 @@ public abstract class MessageAgent implements Resourcable {
         String consumerid = generateSncpConsumerid(topic, service);
         sncpNodesLock.lock();
         try {
-            if (messageNodes.containsKey(consumerid)) {
+            if (clientConsumerNodes.containsKey(consumerid)) {
                 throw new RedkaleException("consumerid(" + consumerid + ") is repeat");
             }
-            SncpMessageProcessor processor = new SncpMessageProcessor(this.logger, sncpMessageClient, getSncpMessageClientProducer(), ns, service, servlet);
-            this.messageNodes.put(consumerid, new MessageConsumerNode(ns, service, servlet, processor, createMessageClientConsumer(new String[]{topic}, consumerid, processor)));
+            SncpMessageClientProcessor processor = new SncpMessageClientProcessor(this.logger, sncpMessageClient, getSncpMessageClientProducer(), ns, service, servlet);
+            this.clientConsumerNodes.put(consumerid, new MessageClientConsumerNode(ns, service, servlet, processor, createMessageClientConsumer(new String[]{topic}, consumerid, processor)));
         } finally {
             sncpNodesLock.unlock();
         }
@@ -407,7 +407,7 @@ public abstract class MessageAgent implements Resourcable {
         return protocol + ".resp.node" + nodeid;
     }
 
-    protected static class MessageConsumerNode {
+    protected static class MessageClientConsumerNode {
 
         public final NodeServer server;
 
@@ -415,11 +415,11 @@ public abstract class MessageAgent implements Resourcable {
 
         public final Servlet servlet;
 
-        public final MessageProcessor processor;
+        public final MessageClientProcessor processor;
 
         public final MessageClientConsumer consumer;
 
-        public MessageConsumerNode(NodeServer server, Service service, Servlet servlet, MessageProcessor processor, MessageClientConsumer consumer) {
+        public MessageClientConsumerNode(NodeServer server, Service service, Servlet servlet, MessageClientProcessor processor, MessageClientConsumer consumer) {
             this.server = server;
             this.service = service;
             this.servlet = servlet;

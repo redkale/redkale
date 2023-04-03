@@ -22,7 +22,7 @@ import org.redkale.util.Traces;
  *
  * @since 2.1.0
  */
-public class SncpMessageProcessor implements MessageProcessor {
+public class SncpMessageClientProcessor implements MessageClientProcessor {
 
     protected final Logger logger;
 
@@ -46,7 +46,7 @@ public class SncpMessageProcessor implements MessageProcessor {
         }
     };
 
-    public SncpMessageProcessor(Logger logger, SncpMessageClient messageClient, MessageClientProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
+    public SncpMessageClientProcessor(Logger logger, SncpMessageClient messageClient, MessageClientProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
         this.messageClient = messageClient;
         this.producer = producer;
@@ -90,7 +90,7 @@ public class SncpMessageProcessor implements MessageProcessor {
             if (response != null) {
                 response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);
             }
-            logger.log(Level.SEVERE, SncpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
+            logger.log(Level.SEVERE, SncpMessageClientProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }
     }
 

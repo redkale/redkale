@@ -36,6 +36,8 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     protected final BsonWriter writer = new BsonWriter();
 
+    protected final ByteArray onlyHeaderData = new ByteArray(HEADER_SIZE).putPlaceholder(HEADER_SIZE);
+
     protected final CompletionHandler realHandler = new CompletionHandler() {
         @Override
         public void completed(Object result, Object attachment) {
@@ -168,9 +170,9 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     //调用此方法时out已写入SncpHeader
     public void finish(final int retcode, final BsonWriter out) {
         if (out == null) {
-            final ByteArray buffer = new ByteArray(HEADER_SIZE);
-            fillHeader(buffer, 0, retcode);
-            finish(buffer);
+            final ByteArray array = onlyHeaderData;
+            fillHeader(array, 0, retcode);
+            finish(array);
             return;
         }
         final ByteArray array = out.toByteArray();
@@ -179,9 +181,9 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         finish(array);
     }
 
-    protected void fillHeader(ByteArray buffer, int bodyLength, int retcode) {
+    protected void fillHeader(ByteArray array, int bodyLength, int retcode) {
         SncpHeader header = request.getHeader();
-        header.writeTo(buffer, this.addrBytes, this.addrPort, header.getSeqid(), bodyLength, retcode);
+        header.writeTo(array, this.addrBytes, this.addrPort, header.getSeqid(), bodyLength, retcode);
     }
 
 }

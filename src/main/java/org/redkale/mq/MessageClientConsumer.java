@@ -27,13 +27,13 @@ public abstract class MessageClientConsumer {
 
     protected MessageAgent messageAgent;
 
-    protected final MessageProcessor processor;
+    protected final MessageClientProcessor processor;
 
     protected final Logger logger;
 
     protected volatile boolean closed;
 
-    protected MessageClientConsumer(MessageAgent messageAgent, String[] topics, final String consumerid, MessageProcessor processor) {
+    protected MessageClientConsumer(MessageAgent messageAgent, String[] topics, final String consumerid, MessageClientProcessor processor) {
         Objects.requireNonNull(messageAgent);
         Objects.requireNonNull(topics);
         Objects.requireNonNull(consumerid);
@@ -45,7 +45,7 @@ public abstract class MessageClientConsumer {
         this.processor = processor;
     }
 
-    public MessageProcessor getProcessor() {
+    public MessageClientProcessor getProcessor() {
         return processor;
     }
 

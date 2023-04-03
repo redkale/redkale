@@ -15,7 +15,7 @@ package org.redkale.mq;
  *
  * @since 2.1.0
  */
-public interface MessageProcessor {
+public interface MessageClientProcessor {
 
     default void begin(int size, long starttime) {
     }

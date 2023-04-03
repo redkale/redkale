@@ -67,7 +67,7 @@ public abstract class MessageClient {
                         this.respConsumerid = "consumer-" + this.respTopic;
                     }
                     if (this.respConsumer == null) {
-                        MessageProcessor processor = (msg, callback) -> {
+                        MessageClientProcessor processor = (msg, callback) -> {
                             long now = System.currentTimeMillis();
                             MessageRespFutureNode node = respNodes.remove(msg.getSeqid());
                             if (node == null) {

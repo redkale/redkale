@@ -118,6 +118,9 @@ public class SncpHeader {
         if (newAddrBytes.length != 4) {
             throw new SncpException("address bytes length must be 4, but " + newAddrBytes.length);
         }
+        if (array.length() < HEADER_SIZE) {
+            throw new SncpException("ByteArray length must more " + HEADER_SIZE);
+        }
         int offset = 0;
         array.putLong(offset, newSeqid); //8
         offset += 8;

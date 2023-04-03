@@ -23,7 +23,7 @@ import org.redkale.util.*;
  *
  * @since 2.1.0
  */
-public class HttpMessageProcessor implements MessageProcessor {
+public class HttpMessageClientProcessor implements MessageClientProcessor {
 
     protected final Logger logger;
 
@@ -59,7 +59,7 @@ public class HttpMessageProcessor implements MessageProcessor {
         }
     };
 
-    public HttpMessageProcessor(Logger logger, HttpMessageClient messageClient, MessageClientProducers producers, NodeHttpServer server, Service service, HttpServlet servlet) {
+    public HttpMessageClientProcessor(Logger logger, HttpMessageClient messageClient, MessageClientProducers producers, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.messageClient = messageClient;
         this.producers = producers;
@@ -118,7 +118,7 @@ public class HttpMessageProcessor implements MessageProcessor {
                 HttpMessageResponse.finishHttpResult(logger.isLoggable(Level.FINEST), request == null ? null : request.getRespConvert(),
                     null, message, callback, messageClient, producers.getProducer(message), message.getRespTopic(), new HttpResult().status(500));
             }
-            logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
+            logger.log(Level.SEVERE, HttpMessageClientProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }
     }
 
@@ -128,7 +128,7 @@ public class HttpMessageProcessor implements MessageProcessor {
             try {
                 this.cdl.await(30, TimeUnit.SECONDS);
             } catch (Exception ex) {
-                logger.log(Level.SEVERE, HttpMessageProcessor.class.getSimpleName() + " commit error, restmodule=" + this.restModule, ex);
+                logger.log(Level.SEVERE, HttpMessageClientProcessor.class.getSimpleName() + " commit error, restmodule=" + this.restModule, ex);
             }
             this.cdl = null;
         }
