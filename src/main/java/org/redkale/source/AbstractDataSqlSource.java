@@ -2604,16 +2604,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 return rs;
             }
         }
-        String[] tables = info.getTableOneArray(pk);
-        String sql = findSql(info, selects, pk);
-        if (info.isLoggable(logger, Level.FINEST, sql)) {
-            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
-        }
-        if (isAsync()) {
-            return findDBAsync(info, tables, sql, true, selects, pk, null).join();
-        } else {
-            return findDB(info, tables, sql, true, selects, pk, null);
-        }
+        return findUnCache(info, selects, pk);
     }
 
     @Override
@@ -2626,6 +2617,23 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 return CompletableFuture.completedFuture(rs);
             }
         }
+        return findUnCacheAsync(info, selects, pk);
+    }
+
+    protected <T> T findUnCache(final EntityInfo<T> info, final SelectColumn selects, final Serializable pk) {
+        String[] tables = info.getTableOneArray(pk);
+        String sql = findSql(info, selects, pk);
+        if (info.isLoggable(logger, Level.FINEST, sql)) {
+            logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
+        }
+        if (isAsync()) {
+            return findDBAsync(info, tables, sql, true, selects, pk, null).join();
+        } else {
+            return findDB(info, tables, sql, true, selects, pk, null);
+        }
+    }
+
+    protected <T> CompletableFuture<T> findUnCacheAsync(final EntityInfo<T> info, final SelectColumn selects, final Serializable pk) {
         String[] tables = info.getTableOneArray(pk);
         String sql = findSql(info, selects, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
