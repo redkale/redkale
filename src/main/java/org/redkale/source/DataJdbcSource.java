@@ -12,6 +12,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
@@ -121,7 +122,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         return false;
     }
 
-    protected <T> List<PreparedStatement> createInsertEntityPreparedStatements(final Connection conn, EntityInfo<T> info, Map<String, PrepareInfo<T>> prepareInfos, T... entitys) throws SQLException {
+    protected <T> List<PreparedStatement> prepareInsertEntityStatements(Connection conn, EntityInfo<T> info, Map<String, PrepareInfo<T>> prepareInfos, T... entitys) throws SQLException {
         Attribute<T, Serializable>[] attrs = info.insertAttributes;
         final List<PreparedStatement> prestmts = new ArrayList<>();
         for (Map.Entry<String, PrepareInfo<T>> en : prepareInfos.entrySet()) {
@@ -136,7 +137,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         return prestmts;
     }
 
-    protected <T> PreparedStatement createInsertEntityPreparedStatement(Connection conn, String sql, EntityInfo<T> info, T... entitys) throws SQLException {
+    protected <T> PreparedStatement prepareInsertEntityStatement(Connection conn, String sql, EntityInfo<T> info, T... entitys) throws SQLException {
         Attribute<T, Serializable>[] attrs = info.insertAttributes;
         final PreparedStatement prestmt = conn.prepareStatement(sql);
         for (final T value : entitys) {
@@ -146,7 +147,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         return prestmt;
     }
 
-    protected <T> List<PreparedStatement> createUpdateEntityPreparedStatements(final Connection conn, EntityInfo<T> info, Map<String, PrepareInfo<T>> prepareInfos, T... entitys) throws SQLException {
+    protected <T> List<PreparedStatement> prepareUpdateEntityStatements(Connection conn, EntityInfo<T> info, Map<String, PrepareInfo<T>> prepareInfos, T... entitys) throws SQLException {
         Attribute<T, Serializable> primary = info.primary;
         Attribute<T, Serializable>[] attrs = info.updateAttributes;
         final List<PreparedStatement> prestmts = new ArrayList<>();
@@ -163,7 +164,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         return prestmts;
     }
 
-    protected <T> PreparedStatement createUpdateEntityPreparedStatement(Connection conn, String prepareSQL, EntityInfo<T> info, T... entitys) throws SQLException {
+    protected <T> PreparedStatement prepareUpdateEntityStatement(Connection conn, String prepareSQL, EntityInfo<T> info, T... entitys) throws SQLException {
         Attribute<T, Serializable> primary = info.primary;
         Attribute<T, Serializable>[] attrs = info.updateAttributes;
         final PreparedStatement prestmt = conn.prepareStatement(prepareSQL);
@@ -333,10 +334,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Attribute<T, Serializable>[] attrs = info.insertAttributes;
         if (info.getTableStrategy() == null) { //单库单表
             presql = info.getInsertQuestionPrepareSQL(entitys[0]);
-            prestmt = createInsertEntityPreparedStatement(conn, presql, info, entitys);
+            prestmt = prepareInsertEntityStatement(conn, presql, info, entitys);
         } else {  //分库分表
             prepareInfos = getInsertQuestionPrepareInfo(info, entitys);
-            prestmts = createInsertEntityPreparedStatements(conn, info, prepareInfos, entitys);
+            prestmts = prepareInsertEntityStatements(conn, info, prepareInfos, entitys);
         }
         try {
             if (info.getTableStrategy() == null) { //单库单表
@@ -485,7 +486,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             if (info.getTableStrategy() == null) { //单库单表
                 prestmt.close();
-                prestmt = createInsertEntityPreparedStatement(conn, presql, info, entitys);
+                prestmt = prepareInsertEntityStatement(conn, presql, info, entitys);
                 int c1 = 0;
                 int[] cs = prestmt.executeBatch();
                 for (int cc : cs) {
@@ -497,7 +498,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 for (PreparedStatement stmt : prestmts) {
                     stmt.close();
                 }
-                prestmts = createInsertEntityPreparedStatements(conn, info, prepareInfos, entitys);
+                prestmts = prepareInsertEntityStatements(conn, info, prepareInfos, entitys);
                 int c1 = 0;
                 for (PreparedStatement stmt : prestmts) {
                     int[] cs = stmt.executeBatch();
@@ -1081,6 +1082,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     private <T> int updateEntityDB(final boolean batch, final Connection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
         final long s = System.currentTimeMillis();
         String presql = null;
+        String caseSql = null;
         PreparedStatement prestmt = null;
         List<PreparedStatement> prestmts = null;
         Map<String, PrepareInfo<T>> prepareInfos = null;
@@ -1088,8 +1090,25 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final Attribute<T, Serializable>[] attrs = info.updateAttributes;
         try {
             if (info.getTableStrategy() == null) {
-                presql = info.getUpdateQuestionPrepareSQL(entitys[0]);
-                prestmt = createUpdateEntityPreparedStatement(conn, presql, info, entitys);
+                caseSql = info.getUpdateQuestionPrepareCaseSQL(entitys);
+                if (caseSql == null) {
+                    presql = info.getUpdateQuestionPrepareSQL(entitys[0]);
+                    prestmt = prepareUpdateEntityStatement(conn, presql, info, entitys);
+                } else {
+                    presql = caseSql;
+                    prestmt = conn.prepareStatement(presql);
+                    int len = entitys.length;
+                    final Attribute<T, Serializable> primary = info.getPrimary();
+                    Attribute<T, Serializable> otherAttr = attrs[0];
+                    //UPDATE twointrecord SET randomNumber = ( CASE WHEN id = ? THEN ? WHEN id = ? THEN ? WHEN id = ? THEN ? END ) WHERE id IN (?,?,?)
+                    for (int i = 0; i < entitys.length; i++) {
+                        Serializable pk = primary.get(entitys[i]);
+                        prestmt.setObject(i * 2 + 1, pk);  //1 3 5
+                        prestmt.setObject(i * 2 + 2, getEntityAttrValue(info, otherAttr, entitys[i]));  //2 4 6
+                        prestmt.setObject(len * 2 + i + 1, pk); //7 8 9
+                    }
+                    prestmt.addBatch();
+                }
                 int c1 = 0;
                 int[] pc = prestmt.executeBatch();
                 for (int p : pc) {
@@ -1101,7 +1120,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 prestmt.close();
             } else {
                 prepareInfos = getUpdateQuestionPrepareInfo(info, entitys);
-                prestmts = createUpdateEntityPreparedStatements(conn, info, prepareInfos, entitys);
+                prestmts = prepareUpdateEntityStatements(conn, info, prepareInfos, entitys);
                 int c1 = 0;
                 for (PreparedStatement stmt : prestmts) {
                     int[] cs = stmt.executeBatch();
@@ -1164,7 +1183,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     if (prepareInfos.isEmpty()) { //分表全部不存在
                         return 0;
                     }
-                    prestmts = createUpdateEntityPreparedStatements(conn, info, prepareInfos, entitys);
+                    prestmts = prepareUpdateEntityStatements(conn, info, prepareInfos, entitys);
                     int c1 = 0;
                     for (PreparedStatement stmt : prestmts) {
                         int[] cs = stmt.executeBatch();
@@ -1183,7 +1202,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
         }
 
-        if (info.isLoggable(logger, Level.FINEST)) {  //打印调试信息
+        if (info.isLoggable(logger, Level.FINEST) && caseSql == null) {  //打印调试信息
             Attribute<T, Serializable> primary = info.getPrimary();
             if (info.getTableStrategy() == null) {
                 char[] sqlchars = presql.toCharArray();
@@ -2119,12 +2138,100 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     @Override
+    public <D extends Serializable, T> List<T> findsList(Class<T> clazz, Stream<D> pks) {
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        Serializable[] ids = pks.toArray(serialArrayFunc);
+        if (info.getTableStrategy() == null) {
+            Connection conn = null;
+            final long s = System.currentTimeMillis();
+            try {
+                conn = readPool.pollConnection();
+                final List<T> list = new ArrayList();
+                try {
+                    String prepareSQL = info.getFindQuestionPrepareSQL(ids[0]);
+                    PreparedStatement ps = conn.prepareStatement(prepareSQL);
+                    for (Serializable pk : ids) {
+                        ps.setObject(1, pk);
+                    }
+                    ResultSet set = ps.executeQuery();
+                    final DataResultSet rr = createDataResultSet(info, set);
+                    while (set.next()) {
+                        list.add(getEntityValue(info, null, rr));
+                    }
+                    set.close();
+                    ps.close();
+                    slowLog(s, prepareSQL);
+                    return list;
+                } catch (SQLException se) {
+                    if (isTableNotExist(info, se.getSQLState())) {
+                        return list;
+                    }
+                    throw new SourceException(se);
+                }
+            } catch (SourceException se) {
+                throw se;
+            } catch (Exception e) {
+                throw new SourceException(e);
+            } finally {
+                if (conn != null) {
+                    readPool.offerConnection(conn);
+                }
+            }
+        } else {
+            return queryList(info.getType(), null, null, FilterNode.create(info.getPrimarySQLColumn(), FilterExpress.IN, ids));
+        }
+    }
+
+    @Override
+    public <D extends Serializable, T> CompletableFuture<List<T>> findsListAsync(final Class<T> clazz, final Stream<D> pks) {
+        return supplyAsync(() -> findsList(clazz, pks));
+    }
+
+    @Override
     protected <T> CompletableFuture<Sheet<T>> querySheetDBAsync(EntityInfo<T> info, final boolean readCache, boolean needTotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
         return supplyAsync(() -> querySheetDB(info, readCache, needTotal, distinct, selects, flipper, node));
     }
 
+    protected <T> Sheet<T> querySheetFullListDB(EntityInfo<T> info) {
+        Connection conn = null;
+        final long s = System.currentTimeMillis();
+        try {
+            conn = readPool.pollConnection();
+            final List<T> list = new ArrayList();
+            try {
+                String prepareSQL = info.getAllQueryPrepareSQL();
+                PreparedStatement ps = conn.prepareStatement(prepareSQL);
+                ResultSet set = ps.executeQuery();
+                final DataResultSet rr = createDataResultSet(info, set);
+                while (set.next()) {
+                    list.add(getEntityValue(info, null, rr));
+                }
+                set.close();
+                ps.close();
+                slowLog(s, prepareSQL);
+                return Sheet.asSheet(list);
+            } catch (SQLException se) {
+                if (isTableNotExist(info, se.getSQLState())) {
+                    return Sheet.asSheet(list);
+                }
+                throw new SourceException(se);
+            }
+        } catch (SourceException se) {
+            throw se;
+        } catch (Exception e) {
+            throw new SourceException(e);
+        } finally {
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
+        }
+    }
+
     @Override
     protected <T> Sheet<T> querySheetDB(EntityInfo<T> info, final boolean readCache, boolean needTotal, final boolean distinct, SelectColumn selects, Flipper flipper, FilterNode node) {
+        if (!needTotal && !distinct && selects == null && flipper == null && node == null && info.getTableStrategy() == null) {
+            return querySheetFullListDB(info);
+        }
         Connection conn = null;
         final long s = System.currentTimeMillis();
         final SelectColumn sels = selects;
