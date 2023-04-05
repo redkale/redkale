@@ -95,9 +95,11 @@ public class HttpContext extends Context {
     }
 
     protected void updateWebSocketWriteIOThread(WebSocket webSocket) {
-        WebSocketWriteIOThread writeIOThread = webSocketWriterIOThreadFunc.apply(webSocket);
-        updateWriteIOThread(webSocket._channel, writeIOThread);
-        webSocket._writeIOThread = writeIOThread;
+        if (webSocketWriterIOThreadFunc != null) {
+            WebSocketWriteIOThread writeIOThread = webSocketWriterIOThreadFunc.apply(webSocket);
+            updateWriteIOThread(webSocket._channel, writeIOThread);
+            webSocket._writeIOThread = writeIOThread;
+        }
     }
 
     protected String createSessionid() {

@@ -286,7 +286,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 public void completed(Integer result, Void attachment) {
                     webSocket._readHandler = new WebSocketReadHandler(response.getContext(), webSocket, restMessageConsumer);
                     webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket);
-                    response.getContext().updateWebSocketWriteIOThread(webSocket);
+                    //response.getContext().updateWebSocketWriteIOThread(webSocket);
 
                     Runnable createUseridHandler = () -> {
                         CompletableFuture<Serializable> userFuture = webSocket.createUserid();
