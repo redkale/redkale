@@ -78,8 +78,8 @@ public class NodeSncpServer extends NodeServer {
         int maxTypeLength = 0;
         int maxNameLength = 0;
         for (SncpServlet en : servlets) {
-            maxNameLength = Math.max(maxNameLength, en.getServiceName().length() + 1);
-            maxTypeLength = Math.max(maxTypeLength, en.getServiceType().getName().length());
+            maxNameLength = Math.max(maxNameLength, en.getResourceName().length() + 1);
+            maxTypeLength = Math.max(maxTypeLength, en.getResourceType().getName().length());
         }
         for (SncpServlet en : servlets) {
             if (sb != null) {
@@ -93,8 +93,8 @@ public class NodeSncpServer extends NodeServer {
 
     private StringBuilder toSimpleString(SncpServlet servlet, int maxTypeLength, int maxNameLength) {
         StringBuilder sb = new StringBuilder();
-        Class serviceType = servlet.getServiceType();
-        String serviceName = servlet.getServiceName();
+        Class serviceType = servlet.getResourceType();
+        String serviceName = servlet.getResourceName();
         int size = servlet.getActionSize();
         sb.append(SncpServlet.class.getSimpleName()).append(" (type=").append(serviceType.getName());
         int len = maxTypeLength - serviceType.getName().length();

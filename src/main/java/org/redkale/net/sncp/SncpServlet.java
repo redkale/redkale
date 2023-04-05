@@ -31,9 +31,9 @@ import org.redkale.util.*;
  */
 public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse> implements Comparable<SncpServlet> {
 
-    protected final Class serviceType;
+    protected final Class resourceType;
 
-    protected final String serviceName;
+    protected final String resourceName;
 
     protected final Service service;
 
@@ -42,24 +42,25 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
     private final HashMap<Uint128, SncpActionServlet> actions = new HashMap<>();
 
     private SncpServlet(String resourceName, Class resourceType, Service service, Uint128 serviceid) {
-        this.serviceName = resourceName;
-        this.serviceType = resourceType;
+        this.resourceName = resourceName;
+        this.resourceType = resourceType;
         this.service = service;
         this.serviceid = serviceid;
     }
 
     protected SncpServlet(String resourceName, Class resourceType, Service service) {
-        this.serviceName = resourceName;
-        this.serviceType = resourceType;
+        this.resourceName = resourceName;
+        this.resourceType = resourceType;
         this.service = service;
         this._nonBlocking = true;
         this.serviceid = Sncp.serviceid(resourceName, resourceType);
 
-        RedkaleClassLoader.putReflectionPublicMethods(service.getClass().getName());
-        for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(resourceType).entrySet()) {
+        Class serviceImplClass = Sncp.getServiceType(service);
+        RedkaleClassLoader.putReflectionPublicMethods(serviceImplClass.getName());
+        for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(serviceImplClass).entrySet()) {
             SncpActionServlet action;
             try {
-                action = SncpActionServlet.create(resourceName, resourceType, service, serviceid, en.getKey(), en.getValue());
+                action = SncpActionServlet.create(resourceName, resourceType, serviceImplClass, service, serviceid, en.getKey(), en.getValue());
             } catch (RuntimeException e) {
                 throw new SncpException(en.getValue() + " create " + SncpActionServlet.class.getSimpleName() + " error", e);
             }
@@ -103,8 +104,8 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.getClass().getSimpleName()).append(" (type=").append(serviceType.getName());
-        sb.append(", serviceid=").append(serviceid).append(", name='").append(serviceName).append("'");
+        sb.append(this.getClass().getSimpleName()).append(" (type=").append(resourceType.getName());
+        sb.append(", serviceid=").append(serviceid).append(", name='").append(resourceName).append("'");
         sb.append(", actions.size=").append(actions.size() > 9 ? "" : " ").append(actions.size()).append(")");
         return sb.toString();
     }
@@ -113,12 +114,12 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
         return service;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getResourceName() {
+        return resourceName;
     }
 
-    public Class getServiceType() {
-        return serviceType;
+    public Class getResourceType() {
+        return resourceType;
     }
 
     public Uint128 getServiceid() {
@@ -136,20 +137,20 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
         }
         SncpServlet o = other;
         int rs = 0;
-        if (this.serviceType == null) {
-            rs = o.serviceType == null ? 0 : -1;
-        } else if (o.serviceType == null) {
+        if (this.resourceType == null) {
+            rs = o.resourceType == null ? 0 : -1;
+        } else if (o.resourceType == null) {
             rs = 1;
         } else {
-            rs = this.serviceType.getName().compareTo(o.serviceType.getName());
+            rs = this.resourceType.getName().compareTo(o.resourceType.getName());
         }
         if (rs == 0) {
-            if (this.serviceName == null) {
-                rs = o.serviceName == null ? 0 : -1;
-            } else if (o.serviceName == null) {
+            if (this.resourceName == null) {
+                rs = o.resourceName == null ? 0 : -1;
+            } else if (o.resourceName == null) {
                 rs = 1;
             } else {
-                rs = this.serviceName.compareTo(o.serviceName);
+                rs = this.resourceName.compareTo(o.resourceName);
             }
         }
         return rs;
@@ -424,12 +425,13 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          *
          * </pre></blockquote>
          *
-         * @param resourceName 资源名
-         * @param resourceType 资源类
-         * @param service      Service
-         * @param serviceid    类ID
-         * @param actionid     操作ID
-         * @param method       方法
+         * @param resourceName     资源名
+         * @param resourceType     资源类
+         * @param serviceImplClass Service实现类
+         * @param service          Service
+         * @param serviceid        类ID
+         * @param actionid         操作ID
+         * @param method           方法
          *
          * @return SncpActionServlet
          */
@@ -437,6 +439,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
         public static SncpActionServlet create(
             final String resourceName,
             final Class resourceType,
+            final Class serviceImplClass,
             final Service service,
             final Uint128 serviceid,
             final Uint128 actionid,
@@ -445,6 +448,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             final Class serviceClass = service.getClass();
             final String supDynName = SncpActionServlet.class.getName().replace('.', '/');
             final String resourceTypeName = resourceType.getName().replace('.', '/');
+            final String serviceImpTypeName = serviceImplClass.getName().replace('.', '/');
             final String convertName = Convert.class.getName().replace('.', '/');
             final String uint128Desc = Type.getDescriptor(Uint128.class);
             final String convertDesc = Type.getDescriptor(Convert.class);
@@ -594,14 +598,14 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                     {  //调用service
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "service", "()Lorg/redkale/service/Service;", false);
-                        mv.visitTypeInsn(CHECKCAST, resourceTypeName);
+                        mv.visitTypeInsn(CHECKCAST, serviceImpTypeName);
                         mv.visitVarInsn(ASTORE, store);
 
                         mv.visitVarInsn(ALOAD, store);
                         for (int[] j : codes) {
                             mv.visitVarInsn(j[0], j[1]);
                         }
-                        mv.visitMethodInsn(resourceType.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, resourceTypeName, method.getName(), Type.getMethodDescriptor(method), resourceType.isInterface());
+                        mv.visitMethodInsn(resourceType.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, serviceImpTypeName, method.getName(), Type.getMethodDescriptor(method), resourceType.isInterface());
                         store++;
                     }
                     if (method.getReturnType() != void.class) {

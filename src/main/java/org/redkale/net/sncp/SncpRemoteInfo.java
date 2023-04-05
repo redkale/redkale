@@ -44,7 +44,8 @@ public class SncpRemoteInfo<T extends Service> {
 
     protected final int serviceVersion;
 
-    protected final SncpRemoteAction[] actions;
+    //key: actionid.Uint128.toString()
+    protected final Map<String, SncpRemoteAction> actions = new HashMap<>();
 
     //非MQ模式下此字段才有值
     protected final SncpRpcGroups sncpRpcGroups;
@@ -86,16 +87,14 @@ public class SncpRemoteInfo<T extends Service> {
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
         this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(resourceName, resourceType);
 
-        final List<SncpRemoteAction> serviceActions = new ArrayList<>();
-        for (Map.Entry<Uint128, Method> en : loadMethodActions(resourceType).entrySet()) {
-            serviceActions.add(new SncpRemoteAction(serviceImplClass, en.getValue(), serviceid, en.getKey()));
+        for (Map.Entry<Uint128, Method> en : loadMethodActions(Sncp.getServiceType(serviceImplClass)).entrySet()) {
+            this.actions.put(en.getKey().toString(), new SncpRemoteAction(serviceImplClass, en.getValue(), serviceid, en.getKey()));
         }
-        this.actions = serviceActions.toArray(new SncpRemoteAction[serviceActions.size()]);
     }
 
     //由远程模式的DyncRemoveService调用
-    public <T> T remote(final int index, final Object... params) {
-        final SncpRemoteAction action = this.actions[index];
+    public <T> T remote(final String actionid, final Object... params) {
+        final SncpRemoteAction action = this.actions.get(actionid);
         CompletionHandler callbackHandler = null;
         Object callbackHandlerAttach = null;
         if (action.paramHandlerIndex >= 0) {
@@ -249,7 +248,7 @@ public class SncpRemoteInfo<T extends Service> {
         return this.getClass().getSimpleName() + "(service = " + serviceType.getSimpleName() + ", serviceid = " + serviceid
             + ", serviceVersion = " + serviceVersion + ", name = '" + name
             + "', address = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
-            + ", actions.size = " + actions.length + ")";
+            + ", actions.size = " + actions.size() + ")";
     }
 
     public String toSimpleString() { //给Sncp产生的Service用
@@ -257,7 +256,7 @@ public class SncpRemoteInfo<T extends Service> {
         return serviceType.getSimpleName() + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = " + serviceVersion
             + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
             + ((remoteGroup == null || remoteGroup.isEmpty()) ? "" : ", remoteGroup = " + remoteGroup)
-            + ", actions.size = " + actions.length + ")";
+            + ", actions.size = " + actions.size() + ")";
     }
 
     public void updateRemoteAddress(String remoteGroup, Set<InetSocketAddress> remoteAddresses) {
@@ -282,7 +281,7 @@ public class SncpRemoteInfo<T extends Service> {
     }
 
     public SncpRemoteAction[] getActions() {
-        return actions;
+        return actions.values().toArray(new SncpRemoteAction[actions.size()]);
     }
 
     public String getTopic() {

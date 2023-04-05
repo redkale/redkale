@@ -62,7 +62,7 @@ public abstract class Sncp {
 
         boolean remote();
 
-        Class type(); //resourceServiceType
+        Class type(); //serviceType
 
         int index() default 0;  //排列顺序， 主要用于Method
     }
@@ -83,6 +83,7 @@ public abstract class Sncp {
         final List<Method> list = new ArrayList<>();
         final List<Method> multis = new ArrayList<>();
         final Map<Uint128, Method> actionids = new LinkedHashMap<>();
+        RedkaleClassLoader.putReflectionPublicMethods(resourceServiceType.getName());
         for (final java.lang.reflect.Method method : resourceServiceType.getMethods()) {
             if (method.isSynthetic()) {
                 continue;
@@ -237,10 +238,16 @@ public abstract class Sncp {
         ResourceType type = serviceImplClass.getAnnotation(ResourceType.class);
         return type != null ? type.value() : serviceImplClass;
     }
-//
-//    public static Class getServiceType(Service service) {
-//        return isSncpDyn(service) && service.getClass().getSimpleName().startsWith("_Dyn") ? service.getClass().getSuperclass() : service.getClass();
-//    }
+
+    public static Class getServiceType(Service service) {
+        SncpDyn dyn = service.getClass().getAnnotation(SncpDyn.class);
+        return dyn != null ? dyn.type() : service.getClass();
+    }
+
+    public static <T extends Service> Class getServiceType(Class<T> serviceImplClass) {
+        SncpDyn dyn = serviceImplClass.getAnnotation(SncpDyn.class);
+        return dyn != null ? dyn.type() : serviceImplClass;
+    }
 
     public static AnyValue getResourceConf(Service service) {
         if (service == null || !isSncpDyn(service)) {
@@ -456,7 +463,7 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation(sncpDynDesc, true);
             av0.visit("remote", Boolean.FALSE);
-            av0.visit("type", Type.getType(Type.getDescriptor(getResourceType(serviceImplClass))));
+            av0.visit("type", Type.getType(Type.getDescriptor(serviceImplClass)));
             av0.visitEnd();
         }
         { //给新类加上原有的Annotation
@@ -663,18 +670,27 @@ public abstract class Sncp {
         if (!java.lang.reflect.Modifier.isPublic(mod)) {
             return null;
         }
-        final SncpRemoteInfo info = createSncpRemoteInfo(name, serviceTypeOrImplClass, serviceTypeOrImplClass, BsonConvert.root(), sncpRpcGroups, client, agent, remoteGroup);
+        final SncpRemoteInfo info = createSncpRemoteInfo(name, getResourceType(serviceTypeOrImplClass), serviceTypeOrImplClass, BsonConvert.root(), sncpRpcGroups, client, agent, remoteGroup);
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
-        final String clientName = SncpClient.class.getName().replace('.', '/');
         final String sncpInfoName = SncpRemoteInfo.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
         final String sncpInfoDesc = Type.getDescriptor(SncpRemoteInfo.class);
-        final String clientDesc = Type.getDescriptor(SncpClient.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         final ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
-        //final String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + REMOTEPREFIX + serviceTypeOrImplClass.getSimpleName();
-        final String newDynName = "org/redkaledyn/service/remote/_DynRemoteService__" + serviceTypeOrImplClass.getName().replace('.', '_').replace('$', '_');
+        String newDynName = "org/redkaledyn/service/remote/_DynRemoteService__" + serviceTypeOrImplClass.getName().replace('.', '_').replace('$', '_');
+        if (!name.isEmpty()) {
+            boolean normal = true;
+            for (char ch : name.toCharArray()) {
+                if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
+                    normal = false;
+                }
+            }
+            if (!normal) {
+                throw new SncpException(serviceTypeOrImplClass + "'s resource name is illegal, must be 0-9 _ a-z A-Z");
+            }
+            newDynName += "_" + (normal ? name : hash(name));
+        }
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
@@ -774,15 +790,7 @@ public abstract class Sncp {
 //            mv.visitMaxs(1, 1);
 //            mv.visitEnd();
 //        }
-        int i = -1;
-        Uint128 serviceid = serviceid(name, serviceTypeOrImplClass);
-        final List<SncpRemoteAction> serviceActions = new ArrayList<>();
-        Class serviceImpClass = realed ? createLocalServiceClass(loader, name, serviceTypeOrImplClass) : serviceTypeOrImplClass;
-        for (Map.Entry<Uint128, Method> en : loadMethodActions(serviceImpClass).entrySet()) {
-            serviceActions.add(new SncpRemoteAction(serviceImpClass, en.getValue(), serviceid, en.getKey()));
-        }
-        for (final SncpRemoteAction entry : serviceActions) {
-            final int index = ++i;
+        for (final SncpRemoteAction entry : info.getActions()) {
             final java.lang.reflect.Method method = entry.method;
             {
                 mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
@@ -798,7 +806,7 @@ public abstract class Sncp {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncp", sncpInfoDesc);
 
-                MethodDebugVisitor.pushInt(mv, index);
+                mv.visitLdcInsn(entry.actionid.toString());
 
                 {  //传参数
                     int paramlen = entry.paramTypes.length;
@@ -830,7 +838,7 @@ public abstract class Sncp {
                     }
                 }
 
-                mv.visitMethodInsn(INVOKEVIRTUAL, sncpInfoName, "remote", "(I[Ljava/lang/Object;)Ljava/lang/Object;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, sncpInfoName, "remote", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;", false);
                 //mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
                 if (method.getGenericReturnType() == void.class) {
                     mv.visitInsn(POP);
