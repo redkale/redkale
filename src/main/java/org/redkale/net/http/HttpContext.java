@@ -5,10 +5,12 @@
  */
 package org.redkale.net.http;
 
-import java.nio.channels.*;
-import java.security.*;
-import java.util.concurrent.*;
-import java.util.function.*;
+import java.nio.channels.CompletionHandler;
+import java.nio.charset.Charset;
+import java.security.SecureRandom;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -44,6 +46,9 @@ public class HttpContext extends Context {
     //所有Servlet方法都不需要读取http-header且RestBaseServlet不是自定义HttpServlet且不存在HttpFilter、WebSocket的情况下，lazyHeaders=true
     protected boolean lazyHeaders; //存在动态改值
 
+    //不带通配符的mapping url的缓存对象
+    final Map<ByteArray, String>[] uriPathCaches = new Map[100];
+
     Function<WebSocket, WebSocketWriteIOThread> webSocketWriterIOThreadFunc;
 
     public HttpContext(HttpContextConfig config) {
@@ -54,6 +59,29 @@ public class HttpContext extends Context {
         this.rpcAuthenticator = config.rpcAuthenticator;
         this.rpcAuthenticatorConfig = config.rpcAuthenticatorConfig;
         random.setSeed(Math.abs(System.nanoTime()));
+    }
+
+    String loadUriPath(ByteArray array, boolean latin1, Charset charset) {
+        int index = array.length() >= uriPathCaches.length ? 0 : array.length();
+        Map<ByteArray, String> map = uriPathCaches[index];
+        String uri = map == null ? null : map.get(array);
+        if (uri == null) {
+            uri = array.toString(latin1, charset);
+        }
+        return uri;
+    }
+
+    String loadUriPath(ByteArray array, int sublen, boolean latin1, Charset charset) {
+        int pos = array.length();
+        array.position(sublen);
+        int index = array.length() >= uriPathCaches.length ? 0 : array.length();
+        Map<ByteArray, String> map = uriPathCaches[index];
+        String uri = map == null ? null : map.get(array);
+        if (uri == null) {
+            uri = array.toString(latin1, 0, sublen, charset);
+        }
+        array.position(pos);
+        return uri;
     }
 
     @Override
@@ -207,21 +235,4 @@ public class HttpContext extends Context {
 
     }
 
-    protected static class RequestURINode {
-
-        public final byte[] bytes;
-
-        public final String path;
-
-        public RequestURINode(String path) {
-            this.path = path;
-            this.bytes = path.getBytes();
-        }
-
-        @Override
-        public String toString() {
-            return "RequestURINode{" + "path=" + path + '}';
-        }
-
-    }
 }

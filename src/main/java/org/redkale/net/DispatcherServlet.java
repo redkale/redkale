@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Predicate;
+import java.util.function.*;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.boot.Application;
@@ -163,6 +163,10 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     protected S mappingServlet(K key) {
         return mappings.get(key);
+    }
+
+    protected void forEachMappingKey(BiConsumer<K, S> consumer) {
+        mappings.forEach(consumer);
     }
 
     @Override

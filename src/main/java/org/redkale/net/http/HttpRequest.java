@@ -594,7 +594,7 @@ public class HttpRequest extends Request<HttpContext> {
             }
             size = bytes.length();
             if (qst > 0) { //带?参数
-                this.requestURI = decodeable ? toDecodeString(bytes, 0, qst, charset) : bytes.toString(latin1, 0, qst, charset);
+                this.requestURI = decodeable ? toDecodeString(bytes, 0, qst, charset) : context.loadUriPath(bytes, qst, latin1, charset);// bytes.toString(latin1, 0, qst, charset);
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
                 this.lastRequestURIString = null;
@@ -611,15 +611,15 @@ public class HttpRequest extends Request<HttpContext> {
                     this.lastRequestURIBytes = null;
                 } else if (context.lazyHeaders) {
                     byte[] lastURIBytes = lastRequestURIBytes;
-                    if (lastURIBytes != null && lastURIBytes.length == size && bytes.equal(lastURIBytes)) {
+                    if (lastURIBytes != null && lastURIBytes.length == size && bytes.deepEquals(lastURIBytes)) {
                         this.requestURI = this.lastRequestURIString;
                     } else {
-                        this.requestURI = bytes.toString(latin1, charset);
+                        this.requestURI = context.loadUriPath(bytes, latin1, charset);// bytes.toString(latin1, charset);
                         this.lastRequestURIString = this.requestURI;
                         this.lastRequestURIBytes = bytes.getBytes();
                     }
                 } else {
-                    this.requestURI = bytes.toString(latin1, charset);
+                    this.requestURI = context.loadUriPath(bytes, latin1, charset); //bytes.toString(latin1, charset);
                     this.lastRequestURIString = null;
                     this.lastRequestURIBytes = null;
                 }

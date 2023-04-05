@@ -408,7 +408,7 @@ public final class MultiContext {
             lasted = (byte) b;
             if (bd && bc == c) {
                 buf.put(lasted);
-                if (buf.equal(this.endBoundarray)) {
+                if (buf.deepEquals(this.endBoundarray)) {
                     break;
                 }
                 buf.removeLastByte();

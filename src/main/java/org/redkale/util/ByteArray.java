@@ -53,6 +53,18 @@ public final class ByteArray implements ByteTuple {
     }
 
     /**
+     * 设置count的新位置
+     *
+     * @param pos 新位置
+     *
+     * @return ByteArray
+     */
+    public ByteArray position(int pos) {
+        this.count = pos;
+        return this;
+    }
+
+    /**
      * 生成一个OutputStream
      *
      * @return OutputStream
@@ -79,21 +91,11 @@ public final class ByteArray implements ByteTuple {
      *
      * @return 是否相同
      */
-    public boolean equal(final byte[] bytes) {
+    public boolean deepEquals(final byte[] bytes) {
         if (bytes == null) {
             return false;
         }
-        int len = count;
-        if (len != bytes.length) {
-            return false;
-        }
-        byte[] ba = content;
-        for (int i = 0; i < len; i++) {
-            if (ba[i] != bytes[i]) {
-                return false;
-            }
-        }
-        return true;
+        return deepEquals(bytes, 0, bytes.length);
     }
 
     /**
@@ -105,7 +107,7 @@ public final class ByteArray implements ByteTuple {
      *
      * @return 是否相同
      */
-    public boolean equal(final byte[] bytes, int offset, int length) {
+    public boolean deepEquals(final byte[] bytes, int offset, int length) {
         if (bytes == null) {
             return false;
         }
@@ -126,26 +128,58 @@ public final class ByteArray implements ByteTuple {
     /**
      * 比较内容是否相同
      *
-     * @param bytes 待比较内容
+     * @param tuple 待比较内容
      *
      * @return 是否相同
      */
-    public boolean equal(final ByteArray bytes) {
-        if (bytes == null) {
+    public boolean deepEquals(final ByteTuple tuple) {
+        if (tuple == null) {
             return false;
         }
-        if (count != bytes.count) {
+        return deepEquals(tuple.content(), 0, tuple.length());
+    }
+
+    /**
+     * 比较内容是否相同
+     *
+     * @param array 待比较内容
+     *
+     * @return 是否相同
+     */
+    public boolean deepEquals(final ByteArray array) {
+        if (array == null) {
             return false;
         }
-        byte[] ba1 = content;
-        byte[] ba2 = bytes.content;
-        int len = count;
-        for (int i = 0; i < len; i++) {
-            if (ba1[i] != ba2[i]) {
-                return false;
-            }
+        return deepEquals(array.content, 0, array.count);
+    }
+
+    /**
+     * 比较内容是否相同
+     *
+     * @param obj 待比较内容
+     *
+     * @return 是否相同
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
         }
-        return true;
+        if (!(obj instanceof ByteArray)) {
+            return false;
+        }
+        ByteArray array = (ByteArray) obj;
+        return deepEquals(array.content, 0, array.count);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = this.count;
+        byte[] bs = content;
+        for (int i = 0; i < count; i++) {
+            hash = 31 * hash + bs[i];
+        }
+        return hash;
     }
 
     /**
