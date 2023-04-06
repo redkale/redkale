@@ -79,12 +79,12 @@ public abstract class Sncp {
     }
 
     //key: actionid
-    public static LinkedHashMap<Uint128, Method> loadMethodActions(final Class resourceServiceType) {
+    public static LinkedHashMap<Uint128, Method> loadMethodActions(final Class serviceTypeOrImplClass) {
         final List<Method> list = new ArrayList<>();
         final List<Method> multis = new ArrayList<>();
         final Map<Uint128, Method> actionids = new LinkedHashMap<>();
-        RedkaleClassLoader.putReflectionPublicMethods(resourceServiceType.getName());
-        for (final java.lang.reflect.Method method : resourceServiceType.getMethods()) {
+        RedkaleClassLoader.putReflectionPublicMethods(serviceTypeOrImplClass.getName());
+        for (final java.lang.reflect.Method method : serviceTypeOrImplClass.getMethods()) {
             if (method.isSynthetic()) {
                 continue;
             }
@@ -116,7 +116,7 @@ public abstract class Sncp {
             Method old = actionids.get(actionid);
             if (old != null) {
                 if (old.getDeclaringClass().equals(method.getDeclaringClass())) {
-                    throw new SncpException(resourceServiceType.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
+                    throw new SncpException(serviceTypeOrImplClass.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
                 }
                 continue;
             }

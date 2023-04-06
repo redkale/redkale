@@ -56,7 +56,6 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
         this.serviceid = Sncp.serviceid(resourceName, resourceType);
 
         Class serviceImplClass = Sncp.getServiceType(service);
-        RedkaleClassLoader.putReflectionPublicMethods(serviceImplClass.getName());
         for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(serviceImplClass).entrySet()) {
             SncpActionServlet action;
             try {

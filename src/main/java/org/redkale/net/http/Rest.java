@@ -3165,7 +3165,8 @@ public final class Rest {
             } else if (CompletionStage.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); //response
-                if (returnGenericNoFutureType == HttpScope.class) {
+                Class returnNoFutureType = TypeToken.typeToClassOrElse(returnGenericNoFutureType, Object.class);
+                if (returnNoFutureType == HttpScope.class) {
                     if (rcs != null && rcs.length > 0) {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3175,10 +3176,10 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScopeFuture", "(" + stageDesc + ")V", false);
                     }
-                } else if (returnGenericNoFutureType != byte[].class
-                    && returnGenericNoFutureType != RetResult.class
-                    && returnGenericNoFutureType != HttpResult.class
-                    && returnGenericNoFutureType != File.class
+                } else if (returnNoFutureType != byte[].class
+                    && returnNoFutureType != RetResult.class
+                    && returnNoFutureType != HttpResult.class
+                    && returnNoFutureType != File.class
                     && !((returnGenericNoFutureType instanceof Class) && (((Class) returnGenericNoFutureType).isPrimitive() || CharSequence.class.isAssignableFrom((Class) returnGenericNoFutureType)))) {
                     if (rcs != null && rcs.length > 0) {
                         mv.visitVarInsn(ALOAD, 0);
