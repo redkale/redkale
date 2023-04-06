@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import static org.redkale.net.http.WebSocket.*;
-import org.redkale.util.ByteArray;
+import org.redkale.util.*;
 
 /**
  *
@@ -25,27 +25,32 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
 
     protected final AtomicBoolean writePending = new AtomicBoolean();
 
-    protected final ByteArray writeArray = new ByteArray();
+    protected final ObjectPool<ByteArray> byteArrayPool;
 
-    protected final List<InnerWebSocketFuture<Integer>> respList = new ArrayList();
+    protected final ByteArray writeArray;
 
-    protected final ConcurrentLinkedDeque<InnerWebSocketFuture<Integer>> requestQueue = new ConcurrentLinkedDeque();
+    protected final List<WebSocketFuture<Integer>> respList = new ArrayList();
 
-    public WebSocketWriteHandler(HttpContext context, WebSocket webSocket) {
+    protected final ConcurrentLinkedDeque<WebSocketFuture<Integer>> requestQueue = new ConcurrentLinkedDeque();
+
+    public WebSocketWriteHandler(HttpContext context, WebSocket webSocket, ObjectPool<ByteArray> byteArrayPool) {
         this.context = context;
         this.webSocket = webSocket;
+        this.byteArrayPool = byteArrayPool;
+        this.writeArray = byteArrayPool.get();
     }
 
     public CompletableFuture<Integer> send(WebSocketPacket... packets) {
-        InnerWebSocketFuture<Integer> future = new InnerWebSocketFuture<>(packets);
+        WebSocketFuture<Integer> future = new WebSocketFuture<>(packets);
         if (writePending.compareAndSet(false, true)) {
             respList.clear();
             respList.add(future);
-            writeArray.clear();
+            ByteArray array = this.writeArray;
+            array.clear();
             for (WebSocketPacket p : packets) {
-                writeEncode(p);
+                writeEncode(array, p);
             }
-            webSocket._channel.write(writeArray, this);
+            webSocket._channel.write(array, this);
         } else {
             requestQueue.offer(future);
         }
@@ -55,35 +60,36 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
     @Override
     public void completed(Integer result, Void attachment) {
         webSocket.lastSendTime = System.currentTimeMillis();
-        for (InnerWebSocketFuture<Integer> future : respList) {
+        for (WebSocketFuture<Integer> future : respList) {
             future.complete(0);
         }
         respList.clear();
-        writeArray.clear();
-        InnerWebSocketFuture req;
+        ByteArray array = this.writeArray;
+        array.clear();
+        WebSocketFuture req;
         while ((req = requestQueue.poll()) != null) {
             respList.add(req);
             for (WebSocketPacket p : req.packets) {
-                writeEncode(p);
+                writeEncode(array, p);
             }
         }
-        if (writeArray.isEmpty()) {
+        if (array.isEmpty()) {
             if (!writePending.compareAndSet(true, false)) {
                 completed(0, attachment);
             }
         } else {
-            webSocket._channel.write(writeArray, this);
+            webSocket._channel.write(array, this);
         }
     }
 
     @Override
     public void failed(Throwable exc, Void attachment) {
-        InnerWebSocketFuture req;
+        WebSocketFuture req;
         try {
             while ((req = requestQueue.poll()) != null) {
                 req.completeExceptionally(exc);
             }
-            for (InnerWebSocketFuture<Integer> future : respList) {
+            for (WebSocketFuture<Integer> future : respList) {
                 future.completeExceptionally(exc);
             }
             respList.clear();
@@ -96,8 +102,7 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
     }
 
     //消息编码
-    protected void writeEncode(final WebSocketPacket packet) {
-        final ByteArray array = writeArray;
+    protected void writeEncode(final ByteArray array, final WebSocketPacket packet) {
         final byte opcode = (byte) (packet.type.getValue() | 0x80);
         final byte[] content = packet.getPayload();
         final int len = content.length;
@@ -116,15 +121,15 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
         array.put(content);
     }
 
-    protected static class InnerWebSocketFuture<T> extends CompletableFuture<T> {
+    protected static class WebSocketFuture<T> extends CompletableFuture<T> {
 
         protected WebSocketPacket[] packets;
 
-        public InnerWebSocketFuture() {
+        public WebSocketFuture() {
             super();
         }
 
-        public InnerWebSocketFuture(WebSocketPacket... packets) {
+        public WebSocketFuture(WebSocketPacket... packets) {
             super();
             this.packets = packets;
         }

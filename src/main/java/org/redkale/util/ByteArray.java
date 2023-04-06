@@ -52,6 +52,14 @@ public final class ByteArray implements ByteTuple {
         return this;
     }
 
+    public boolean recycle() {
+        this.count = 0;
+        if (this.content != null && this.content.length > 1024 * 32) {
+            this.content = new byte[1024];
+        }
+        return true;
+    }
+
     /**
      * 设置count的新位置
      *

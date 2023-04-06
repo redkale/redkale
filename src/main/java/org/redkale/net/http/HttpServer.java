@@ -45,8 +45,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private final ReentrantLock addLock = new ReentrantLock();
 
-    private WebSocketAsyncGroup asyncGroup;
-
     //配置<executor threads="0"> APP_EXECUTOR资源为null
     //RESNAME_APP_EXECUTOR
     protected ExecutorService workExecutor;
@@ -83,9 +81,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         if (this.dateScheduler != null) {
             this.dateScheduler.shutdownNow();
             this.dateScheduler = null;
-        }
-        if (asyncGroup != null) {
-            asyncGroup.close();
         }
         if (context.rpcAuthenticator != null) {
             context.rpcAuthenticator.destroy(context.rpcAuthenticatorConfig);
@@ -566,25 +561,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 throw new HttpException("init HttpRpcAuthenticator(" + impl + ") error", e);
             }
         }
-        HttpContext rs = new HttpContext(contextConfig);
-        if (false) {  //暂不使用WebSocketAsyncGroup模式
-            rs.webSocketWriterIOThreadFunc = ws -> {
-                if (asyncGroup == null) {
-                    groupLock.lock();
-                    try {
-                        if (asyncGroup == null) {
-                            WebSocketAsyncGroup g = new WebSocketAsyncGroup("Redkale-HTTP:" + address.getPort() + "-WebSocketWriteIOThread-%s", workExecutor, safeBufferPool);
-                            g.start();
-                            asyncGroup = g;
-                        }
-                    } finally {
-                        groupLock.unlock();
-                    }
-                }
-                return (WebSocketWriteIOThread) asyncGroup.nextWriteIOThread();
-            };
-        }
-        return rs;
+        return new HttpContext(contextConfig);
     }
 
     @Override

@@ -10,7 +10,6 @@ import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
@@ -48,8 +47,6 @@ public class HttpContext extends Context {
 
     //不带通配符的mapping url的缓存对象
     final Map<ByteArray, String>[] uriPathCaches = new Map[100];
-
-    Function<WebSocket, WebSocketWriteIOThread> webSocketWriterIOThreadFunc;
 
     public HttpContext(HttpContextConfig config) {
         super(config);
@@ -92,14 +89,6 @@ public class HttpContext extends Context {
     @Override
     protected void updateWriteIOThread(AsyncConnection conn, AsyncIOThread ioWriteThread) {
         super.updateWriteIOThread(conn, ioWriteThread);
-    }
-
-    protected void updateWebSocketWriteIOThread(WebSocket webSocket) {
-        if (webSocketWriterIOThreadFunc != null) {
-            WebSocketWriteIOThread writeIOThread = webSocketWriterIOThreadFunc.apply(webSocket);
-            updateWriteIOThread(webSocket._channel, writeIOThread);
-            webSocket._writeIOThread = writeIOThread;
-        }
     }
 
     protected String createSessionid() {

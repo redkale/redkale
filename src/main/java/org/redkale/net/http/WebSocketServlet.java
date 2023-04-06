@@ -70,6 +70,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer = createRestOnMessageConsumer();
 
+    private final ObjectPool<ByteArray> byteArrayPool = ObjectPool.createSafePool(1000, () -> new ByteArray(), null, ByteArray::recycle);
+
     protected Type messageRestType;  //RestWebSocket时会被修改
 
     //同RestWebSocket.single
@@ -284,9 +286,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
                 @Override
                 public void completed(Integer result, Void attachment) {
-                    webSocket._readHandler = new WebSocketReadHandler(response.getContext(), webSocket, restMessageConsumer);
-                    webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket);
-                    //response.getContext().updateWebSocketWriteIOThread(webSocket);
+                    webSocket._readHandler = new WebSocketReadHandler(response.getContext(), webSocket, byteArrayPool, restMessageConsumer);
+                    webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket, byteArrayPool);
 
                     Runnable createUseridHandler = () -> {
                         CompletableFuture<Serializable> userFuture = webSocket.createUserid();

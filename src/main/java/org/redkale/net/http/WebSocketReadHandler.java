@@ -16,7 +16,7 @@ import org.redkale.convert.Convert;
 import org.redkale.net.AsyncIOThread;
 import static org.redkale.net.http.WebSocket.*;
 import org.redkale.net.http.WebSocketPacket.FrameType;
-import org.redkale.util.ByteArray;
+import org.redkale.util.*;
 
 /**
  *
@@ -38,7 +38,9 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
 
     protected FrameType currSeriesMergeMessageType;
 
-    protected final ByteArray halfFrameBytes = new ByteArray();
+    protected final ObjectPool<ByteArray> byteArrayPool;
+
+    protected final ByteArray halfFrameBytes;
 
     protected byte halfFrameOpcode;
 
@@ -52,10 +54,12 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
 
     protected AsyncIOThread ioReadThread;
 
-    public WebSocketReadHandler(HttpContext context, WebSocket webSocket, BiConsumer<WebSocket, Object> messageConsumer) {
+    public WebSocketReadHandler(HttpContext context, WebSocket webSocket, ObjectPool<ByteArray> byteArrayPool, BiConsumer<WebSocket, Object> messageConsumer) {
         this.context = context;
-        this.restMessageConsumer = messageConsumer;
         this.webSocket = webSocket;
+        this.byteArrayPool = byteArrayPool;
+        this.restMessageConsumer = messageConsumer;
+        this.halfFrameBytes = byteArrayPool.get();
         this.ioReadThread = webSocket._channel.getReadIOThread();
         this.logger = context.getLogger();
     }

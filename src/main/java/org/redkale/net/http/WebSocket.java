@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import java.util.zip.*;
@@ -87,8 +86,6 @@ public abstract class WebSocket<G extends Serializable, T> {
     WebSocketReadHandler _readHandler;
 
     WebSocketWriteHandler _writeHandler;
-
-    WebSocketWriteIOThread _writeIOThread;
 
     InetSocketAddress _sncpAddress; //分布式下不可为空
 
@@ -721,42 +718,6 @@ public abstract class WebSocket<G extends Serializable, T> {
         return _engine.getLocalWebSockets();
     }
 
-    /**
-     * 获取ByteBuffer生成器
-     *
-     * @return Supplier
-     */
-    protected Supplier<ByteBuffer> getReadBufferSupplier() {
-        return this._channel.getReadBufferSupplier();
-    }
-
-    /**
-     * 获取ByteBuffer回收器
-     *
-     * @return Consumer
-     */
-    protected Consumer<ByteBuffer> getReadBufferConsumer() {
-        return this._channel.getReadBufferConsumer();
-    }
-
-    /**
-     * 获取ByteBuffer生成器
-     *
-     * @return Supplier
-     */
-    protected Supplier<ByteBuffer> getWriteBufferSupplier() {
-        return this._channel.getWriteBufferSupplier();
-    }
-
-    /**
-     * 获取ByteBuffer回收器
-     *
-     * @return Consumer
-     */
-    protected Consumer<ByteBuffer> getWriteBufferConsumer() {
-        return this._channel.getWriteBufferConsumer();
-    }
-
     //-------------------------------------------------------------------
     /**
      * 返回sessionid, null表示连接不合法或异常,默认实现是request.sessionid(true)，通常需要重写该方法
@@ -964,6 +925,12 @@ public abstract class WebSocket<G extends Serializable, T> {
             }
             CompletableFuture<Void> future = _engine.removeLocalThenDisconnect(this);
             _channel.dispose();
+            if (_readHandler != null) {
+                _readHandler.byteArrayPool.accept(_readHandler.halfFrameBytes);
+            }
+            if (_writeHandler != null) {
+                _writeHandler.byteArrayPool.accept(_writeHandler.writeArray);
+            }
             CompletableFuture closeFuture = onClose(code, reason);
             if (closeFuture == null) {
                 return future;
