@@ -50,7 +50,7 @@ public class MessageRespFutureNode implements Runnable {
     @Override  //超时后被timeoutExecutor调用
     public void run() { //timeout
         respNodes.remove(this.seqid);
-        future.completeExceptionally(new TimeoutException());
+        future.completeExceptionally(new TimeoutException("message-record: "+message));
         logger.log(Level.WARNING, getClass().getSimpleName() + " wait msg: " + message + " timeout " + (System.currentTimeMillis() - createTime) + "ms"
             + (message.userid != null || (message.groupid != null && !message.groupid.isEmpty()) ? (message.userid != null ? (", userid:" + message.userid) : (", groupid:" + message.groupid)) : ""));
     }

@@ -49,7 +49,7 @@ public class WebSocketFuture extends CompletableFuture<Integer> implements Runna
 
     @Override
     public void run() {
-        TimeoutException ex = new TimeoutException();
+        TimeoutException ex = new TimeoutException("packets: " + Arrays.toString(packets));
         workThread.runWork(() -> completeExceptionally(ex));
     }
 

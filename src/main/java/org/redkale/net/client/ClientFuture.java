@@ -73,7 +73,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
 
     private void runTimeout() {
         conn.removeRespFuture(request.getRequestid(), this);
-        TimeoutException ex = new TimeoutException();
+        TimeoutException ex = new TimeoutException("client-request: " + request);
         WorkThread workThread = null;
         if (request != null) {
             workThread = request.workThread;

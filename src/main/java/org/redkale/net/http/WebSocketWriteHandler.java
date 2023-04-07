@@ -31,7 +31,7 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
 
     protected final List<WebSocketFuture<Integer>> respList = new ArrayList();
 
-    protected final ConcurrentLinkedDeque<WebSocketFuture<Integer>> requestQueue = new ConcurrentLinkedDeque();
+    protected final ConcurrentLinkedQueue<WebSocketFuture<Integer>> requestQueue = new ConcurrentLinkedQueue();
 
     public WebSocketWriteHandler(HttpContext context, WebSocket webSocket, ObjectPool<ByteArray> byteArrayPool) {
         this.context = context;

@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.*;
+import java.util.Iterator;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -45,6 +45,8 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final LongAdder doneResponseCounter = new LongAdder();
 
+    protected final AtomicBoolean writePending = new AtomicBoolean();
+
     protected final ReentrantLock writeLock = new ReentrantLock();
 
     protected final ByteArray writeArray = new ByteArray();
@@ -77,10 +79,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     private final ClientCodec<R, P> codec;
 
     //respFutureQueue、respFutureMap二选一， SPSC队列模式
-    private final Deque<ClientFuture<R, P>> respFutureQueue = new ConcurrentLinkedDeque<>(); //Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 16) : new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedDeque<ClientFuture<R, P>> respFutureQueue = new ConcurrentLinkedDeque<>(); //Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 16) : new ConcurrentLinkedQueue<>();
 
     //respFutureQueue、respFutureMap二选一, key: requestid， SPSC模式
-    private final Map<Serializable, ClientFuture<R, P>> respFutureMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Serializable, ClientFuture<R, P>> respFutureMap = new ConcurrentHashMap<>();
 
     Iterator<ClientFuture<R, P>> currRespIterator; //必须在调用decodeMessages之前重置为null
 
