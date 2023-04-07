@@ -182,12 +182,12 @@ public class AsyncIOThread extends WorkThread {
                         if (key.isConnectable()) {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_CONNECT);
                             conn.doConnect();
-                        } else if (conn.readCompletionHandler != null && key.isReadable()) {
-                            key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
-                            conn.doRead(true);
                         } else if (conn.writeCompletionHandler != null && key.isWritable()) {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
                             conn.doWrite(true);
+                        } else if (conn.readCompletionHandler != null && key.isReadable()) {
+                            key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
+                            conn.doRead(true);
                         }
                     } else {
                         if (conn.readCompletionHandler != null && key.isReadable()) {

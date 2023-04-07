@@ -13,3 +13,6 @@ hs_err_pid*
 /target/
 /.idea/
 /redkale.iml
+/ClientConnection.java
+/nbactions.xml
+/nb-configuration.xml
