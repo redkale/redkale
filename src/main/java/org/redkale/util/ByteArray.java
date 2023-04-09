@@ -7,8 +7,10 @@ package org.redkale.util;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.*;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 简单的byte[]操作类。
@@ -58,6 +60,33 @@ public final class ByteArray implements ByteTuple {
             this.content = new byte[1024];
         }
         return true;
+    }
+
+    public ReadableByteChannel toChannel() {
+        final byte[] bytes = getBytes();
+        final AtomicInteger offset = new AtomicInteger();
+
+        return new ReadableByteChannel() {
+            @Override
+            public int read(ByteBuffer dst) throws IOException {
+                if (offset.get() >= bytes.length) {
+                    return -1;
+                }
+                int len = Math.min(bytes.length - offset.get(), dst.remaining());
+                dst.put(bytes, offset.get(), len);
+                offset.addAndGet(len);
+                return len;
+            }
+
+            @Override
+            public boolean isOpen() {
+                return true;
+            }
+
+            @Override
+            public void close() throws IOException {
+            }
+        };
     }
 
     /**
