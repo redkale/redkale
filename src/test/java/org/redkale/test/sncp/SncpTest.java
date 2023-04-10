@@ -8,6 +8,7 @@ package org.redkale.test.sncp;
 import java.net.InetSocketAddress;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.Test;
 import org.redkale.boot.*;
 import org.redkale.convert.bson.*;
 import org.redkale.net.*;
@@ -26,7 +27,7 @@ public class SncpTest {
 
     private static int port = 0;
 
-    private static int port2 = 4240;
+    private static int port2 = 1;
 
     private static final String protocol = "SNCP.TCP"; // TCP UDP
 
@@ -38,7 +39,16 @@ public class SncpTest {
 
     private static SncpRpcGroups rpcGroups;
 
-    public static void main(String[] args) throws Exception {
+    private boolean main;
+
+    public static void main(String[] args) throws Throwable {
+        SncpTest test = new SncpTest();
+        test.main = true;
+        test.run();
+    }
+
+    @Test
+    public void run() throws Exception {
         LoggingBaseHandler.initDebugLogConfig();
         application = Application.create(true);
         rpcGroups = application.getSncpRpcGroups();
@@ -60,7 +70,7 @@ public class SncpTest {
         }
     }
 
-    private static void runClient() throws Exception {
+    private void runClient() throws Exception {
         InetSocketAddress addr = new InetSocketAddress(myhost, port);
         rpcGroups.computeIfAbsent("client", protocol.endsWith(".UDP") ? "UDP" : "TCP").putAddress(addr);
         if (port2 > 0) {
@@ -91,7 +101,7 @@ public class SncpTest {
         System.out.println("bean： " + callbean);
         System.out.println("\r\n\r\n\r\n\r\n---------------------------------------------------");
         Thread.sleep(200);
-        final int count = 40;
+        final int count = main ? 40 : 11;
         final CountDownLatch cld = new CountDownLatch(count);
         final AtomicInteger ai = new AtomicInteger();
         long s = System.currentTimeMillis();
@@ -127,7 +137,9 @@ public class SncpTest {
         cld.await();
         System.out.println("---并发" + count + "次耗时: " + (System.currentTimeMillis() - s) / 1000.0 + "s");
         if (count == 1) {
-            System.exit(0);
+            if (main) {
+                System.exit(0);
+            }
             return;
         }
         Thread.sleep(200);
@@ -140,7 +152,6 @@ public class SncpTest {
         });
         cld2.await();
         System.out.println("---全部运行完毕---");
-        System.exit(0);
     }
 
     private static void runServer() throws Exception {

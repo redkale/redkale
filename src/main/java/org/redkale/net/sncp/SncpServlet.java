@@ -604,7 +604,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                         for (int[] j : codes) {
                             mv.visitVarInsn(j[0], j[1]);
                         }
-                        mv.visitMethodInsn(resourceType.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, serviceImpTypeName, method.getName(), Type.getMethodDescriptor(method), resourceType.isInterface());
+                        mv.visitMethodInsn(serviceImplClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, serviceImpTypeName, method.getName(), Type.getMethodDescriptor(method), serviceImplClass.isInterface());
                         store++;
                     }
                     if (method.getReturnType() != void.class) {
