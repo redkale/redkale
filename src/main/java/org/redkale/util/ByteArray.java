@@ -441,8 +441,8 @@ public final class ByteArray implements ByteTuple {
      *
      * @return 所在位置
      */
-    public int find(byte value) {
-        return find(0, value);
+    public int indexOf(byte value) {
+        return indexOf(0, value);
     }
 
     /**
@@ -453,8 +453,8 @@ public final class ByteArray implements ByteTuple {
      *
      * @return 所在位置
      */
-    public int find(int offset, char value) {
-        return find(offset, (byte) value);
+    public int indexOf(int offset, char value) {
+        return indexOf(offset, (byte) value);
     }
 
     /**
@@ -465,8 +465,8 @@ public final class ByteArray implements ByteTuple {
      *
      * @return 所在位置
      */
-    public int find(int offset, byte value) {
-        return find(offset, -1, value);
+    public int indexOf(int offset, byte value) {
+        return indexOf(offset, -1, value);
     }
 
     /**
@@ -478,8 +478,8 @@ public final class ByteArray implements ByteTuple {
      *
      * @return 所在位置
      */
-    public int find(int offset, int limit, char value) {
-        return find(offset, limit, (byte) value);
+    public int indexOf(int offset, int limit, char value) {
+        return indexOf(offset, limit, (byte) value);
     }
 
     /**
@@ -491,10 +491,89 @@ public final class ByteArray implements ByteTuple {
      *
      * @return 所在位置
      */
-    public int find(int offset, int limit, byte value) {
+    public int indexOf(int offset, int limit, byte value) {
         byte[] bytes = this.content;
         int end = limit > 0 ? limit : count;
         for (int i = offset; i < end; i++) {
+            if (bytes[i] == value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 查找指定值第一次出现的位置,没有返回-1
+     *
+     * @param value 查询值
+     *
+     * @return 所在位置
+     */
+    public int lastIndexOf(byte value) {
+        return lastIndexOf(count - 1, value);
+    }
+
+    /**
+     * 查找指定值第一次出现的位置,没有返回-1
+     *
+     * @param value 查询值
+     *
+     * @return 所在位置
+     */
+    public int lastIndexOf(char value) {
+        return lastIndexOf(count - 1, (byte) value);
+    }
+
+    /**
+     * 从指定的起始位置查询value值出现的位置,没有返回-1
+     *
+     * @param offset 起始位置
+     * @param value  查询值
+     *
+     * @return 所在位置
+     */
+    public int lastIndexOf(int offset, char value) {
+        return lastIndexOf(offset, (byte) value);
+    }
+
+    /**
+     * 从指定的起始位置查询value值出现的位置,没有返回-1
+     *
+     * @param offset 起始位置
+     * @param value  查询值
+     *
+     * @return 所在位置
+     */
+    public int lastIndexOf(int offset, byte value) {
+        return lastIndexOf(offset, -1, value);
+    }
+
+    /**
+     * 从指定的起始位置和长度查询value值出现的位置,没有返回-1
+     *
+     * @param offset 起始位置
+     * @param length 长度限制
+     * @param value  查询值
+     *
+     * @return 所在位置
+     */
+    public int lastIndexOf(int offset, int length, char value) {
+        return lastIndexOf(offset, length, (byte) value);
+    }
+
+    /**
+     * 从指定的起始位置和长度查询value值出现的位置,没有返回-1
+     *
+     * @param offset 起始位置
+     * @param length 长度限制
+     * @param value  查询值
+     *
+     * @return 所在位置
+     */
+    public int lastIndexOf(int offset, int length, byte value) {
+        byte[] bytes = this.content;
+        int end = length <= 0 || length >= offset ? 0 : (offset - length);
+        for (int i = offset; i >= end; i--) {
             if (bytes[i] == value) {
                 return i;
             }

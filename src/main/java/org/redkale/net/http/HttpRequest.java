@@ -1029,8 +1029,8 @@ public class HttpRequest extends Request<HttpContext> {
         }
         Charset charset = this.context.getCharset();
         int limit = offset + len;
-        int keypos = array.find(offset, limit, '=');
-        int valpos = array.find(offset, limit, '&');
+        int keypos = array.indexOf(offset, limit, '=');
+        int valpos = array.indexOf(offset, limit, '&');
         if (keypos <= 0 || (valpos >= 0 && valpos < keypos)) {
             if (valpos > 0) {
                 addParameter(array, body, valpos + 1, limit - valpos - 1);
