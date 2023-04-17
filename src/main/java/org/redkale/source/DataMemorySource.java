@@ -40,6 +40,16 @@ public class DataMemorySource extends AbstractDataSqlSource implements SearchSou
         this.cacheForbidden = false;
     }
 
+    @Override
+    protected int readMaxConns() {
+        return -1;
+    }
+
+    @Override
+    protected int writeMaxConns() {
+        return -1;
+    }
+
     @Local
     @Override
     public String getType() {

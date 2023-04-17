@@ -300,7 +300,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             if (pos > 0) {
                 url = url.substring(0, pos) + "...";
             }
-            return getClass().getSimpleName() + "{url=" + url + "}";
+            return getClass().getSimpleName() + "{url=" + url + ", maxconns=" + readMaxConns() + "}";
         } else {
             String readUrl = readConfProps.getProperty(DATA_SOURCE_URL);
             int pos = readUrl.indexOf('?');
@@ -312,9 +312,13 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             if (pos > 0) {
                 writeUrl = writeUrl.substring(0, pos) + "...";
             }
-            return getClass().getSimpleName() + "{readurl=" + readUrl + ",writeurl=" + writeUrl + "}";
+            return getClass().getSimpleName() + "{read-url=" + readUrl + ", read-maxconns=" + readMaxConns() + ",write-url=" + writeUrl + ", write-maxconns=" + writeMaxConns() + "}";
         }
     }
+
+    protected abstract int readMaxConns();
+
+    protected abstract int writeMaxConns();
 
     //生成创建表的SQL
     protected <T> String[] createTableSqls(EntityInfo<T> info) {
