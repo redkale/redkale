@@ -2786,30 +2786,15 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             this.connectAttrs.put("user", newUser);
             this.connectAttrs.put("password", newPassword);
             if (newMaxconns != this.maxConns) {
-                ArrayBlockingQueue<Connection> newQueue = new ArrayBlockingQueue<>(newMaxconns);
-                ArrayBlockingQueue<Connection> oldQueue = this.queue;
-                Semaphore oldSemaphore = this.canNewSemaphore;
-                this.queue = newQueue;
-                this.maxConns = newMaxconns;
-                this.canNewSemaphore = new Semaphore(this.maxConns);
-                Connection c;
-                while ((c = oldQueue.poll()) != null) {
-                    try {
-                        if (c.getClientInfo() != null) {
-                            c.getClientInfo().put("version", "-1");
-                        }
-                    } catch (SQLException e) {
-                    }
-                    offerConnection(c, oldSemaphore);
-                }
+                changeMaxConns(newMaxconns);
             }
         }
 
         private void resetMaxConnection() {
             if ("mysql".equals(dbtype()) || "postgresql".equals(dbtype())) {
                 int newMaxconns = this.maxConns;
-                Connection conn = pollConnection();
                 try {
+                    Connection conn = driver.connect(url, connectAttrs);
                     Statement stmt = conn.createStatement();
                     if ("mysql".equals(dbtype())) {
                         ResultSet rs = stmt.executeQuery("SHOW VARIABLES LIKE 'max_connections'");
@@ -2823,28 +2808,31 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         }
                     }
                     stmt.close();
-                } catch (SQLException e) {
-                } finally {
-                    offerConnection(conn);
+                    conn.close();
+                } catch (Exception e) {
                 }
                 if (this.maxConns > newMaxconns) { //配置连接数过大
-                    ArrayBlockingQueue<Connection> newQueue = new ArrayBlockingQueue<>(newMaxconns);
-                    ArrayBlockingQueue<Connection> oldQueue = this.queue;
-                    Semaphore oldSemaphore = this.canNewSemaphore;
-                    this.queue = newQueue;
-                    this.maxConns = newMaxconns;
-                    this.canNewSemaphore = new Semaphore(this.maxConns);
-                    Connection c;
-                    while ((c = oldQueue.poll()) != null) {
-                        try {
-                            if (c.getClientInfo() != null) {
-                                c.getClientInfo().put("version", "-1");
-                            }
-                        } catch (SQLException e) {
-                        }
-                        offerConnection(c, oldSemaphore);
-                    }
+                    changeMaxConns(newMaxconns);
                 }
+            }
+        }
+
+        private void changeMaxConns(int newMaxconns) {
+            ArrayBlockingQueue<Connection> newQueue = new ArrayBlockingQueue<>(newMaxconns);
+            ArrayBlockingQueue<Connection> oldQueue = this.queue;
+            Semaphore oldSemaphore = this.canNewSemaphore;
+            this.queue = newQueue;
+            this.maxConns = newMaxconns;
+            this.canNewSemaphore = new Semaphore(this.maxConns);
+            Connection c;
+            while ((c = oldQueue.poll()) != null) {
+                try {
+                    if (c.getClientInfo() != null) {
+                        c.getClientInfo().put("version", "-1");
+                    }
+                } catch (SQLException e) {
+                }
+                offerConnection(c, oldSemaphore);
             }
         }
 

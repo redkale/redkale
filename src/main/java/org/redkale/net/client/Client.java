@@ -371,6 +371,10 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return name;
     }
 
+    public int getMaxConns() {
+        return connLimit;
+    }
+
     public int getReadTimeoutSeconds() {
         return readTimeoutSeconds;
     }
