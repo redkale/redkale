@@ -2792,9 +2792,15 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 this.queue = newQueue;
                 this.maxConns = newMaxconns;
                 this.canNewSemaphore = new Semaphore(this.maxConns);
-                Connection conn;
-                while ((conn = oldQueue.poll()) != null) {
-                    offerConnection(conn, oldSemaphore);
+                Connection c;
+                while ((c = oldQueue.poll()) != null) {
+                    try {
+                        if (c.getClientInfo() != null) {
+                            c.getClientInfo().put("version", "-1");
+                        }
+                    } catch (SQLException e) {
+                    }
+                    offerConnection(c, oldSemaphore);
                 }
             }
         }
@@ -2830,6 +2836,12 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     this.canNewSemaphore = new Semaphore(this.maxConns);
                     Connection c;
                     while ((c = oldQueue.poll()) != null) {
+                        try {
+                            if (c.getClientInfo() != null) {
+                                c.getClientInfo().put("version", "-1");
+                            }
+                        } catch (SQLException e) {
+                        }
                         offerConnection(c, oldSemaphore);
                     }
                 }
