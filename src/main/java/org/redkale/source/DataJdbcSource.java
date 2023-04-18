@@ -2858,7 +2858,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             if (semaphore.tryAcquire()) {
                 try {
                     conn = driver.connect(url, connectAttrs);
-                    conn.setClientInfo(clientInfo);
+                    if (conn.getClientInfo() != null) {
+                        conn.getClientInfo().put("version", clientInfo.getProperty("version"));
+                    } else {
+                        conn.setClientInfo(clientInfo);
+                    }
                 } catch (SQLException ex) {
                     throw new SourceException(ex);
                 }
