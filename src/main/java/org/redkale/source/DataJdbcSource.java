@@ -2547,6 +2547,21 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
+    @Deprecated
+    public int directExecute(String sql) {
+        return nativeExecute(sql);
+    }
+
+    @Deprecated
+    public int[] directExecute(String... sqls) {
+        return nativeExecute(sqls);
+    }
+
+    @Deprecated
+    public <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
+        return nativeQuery(sql, handler);
+    }
+
     public static DataResultSet createDataResultSet(EntityInfo info, ResultSet set) {
         return new DataJdbcResultSet(info).resultSet(set);
     }

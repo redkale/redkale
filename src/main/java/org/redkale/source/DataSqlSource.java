@@ -23,18 +23,4 @@ public interface DataSqlSource extends DataSource {
 
     public <V> V nativeQuery(String sql, Function<DataResultSet, V> handler);
 
-    @Deprecated
-    default int directExecute(String sql) {
-        return nativeExecute(sql);
-    }
-
-    @Deprecated
-    default int[] directExecute(String... sqls) {
-        return nativeExecute(sqls);
-    }
-
-    @Deprecated
-    default <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
-        return nativeQuery(sql, handler);
-    }
 }
