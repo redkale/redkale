@@ -220,6 +220,14 @@ public abstract class Sncp {
         return serviceType.getAnnotation(SncpDyn.class) != null;
     }
 
+    public static boolean isComponent(Service service) {
+        return service.getClass().getAnnotation(Component.class) != null;
+    }
+
+    public static boolean isComponent(Class serviceType) {
+        return serviceType.getAnnotation(Component.class) != null;
+    }
+
     public static int getVersion(Service service) {
         return -1; //预留功能，暂不实现
     }
@@ -259,6 +267,19 @@ public abstract class Sncp {
             return (AnyValue) ts.get(service);
         } catch (Exception e) {
             throw new SncpException(service + " not found " + FIELDPREFIX + "_conf");
+        }
+    }
+
+    public static String getResourceMQ(Service service) {
+        if (service == null || !isSncpDyn(service)) {
+            return null;
+        }
+        try {
+            Field ts = service.getClass().getDeclaredField(FIELDPREFIX + "_mq");
+            ts.setAccessible(true);
+            return (String) ts.get(service);
+        } catch (Exception e) {
+            throw new SncpException(service + " not found " + FIELDPREFIX + "_mq");
         }
     }
 
@@ -307,6 +328,9 @@ public abstract class Sncp {
         int len;
         Class type = getResourceType(service);
         String name = getResourceName(service);
+        if(name==null) {
+            name = "#";
+        }
         sb.append("(type= ").append(type.getName());
         len = maxTypeLength - type.getName().length();
         for (int i = 0; i < len; i++) {
@@ -485,6 +509,10 @@ public abstract class Sncp {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_conf", anyValueDesc, null, null);
             fv.visitEnd();
         }
+        {
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_mq", Type.getDescriptor(String.class), null, null);
+            fv.visitEnd();
+        }
         { //构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             //mv.setDebug(true);
@@ -506,6 +534,9 @@ public abstract class Sncp {
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
+            RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+
+            c = newClazz.getDeclaredField(FIELDPREFIX + "_mq");
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
         } catch (Exception e) {
         }
@@ -579,6 +610,11 @@ public abstract class Sncp {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
                 c.set(service, conf);
+            }
+            {
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_mq");
+                c.setAccessible(true);
+                c.set(service, agent == null ? null : agent.getName());
             }
             return service;
         } catch (RuntimeException rex) {
@@ -701,6 +737,11 @@ public abstract class Sncp {
                 c.set(service, conf);
             }
             {
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_mq");
+                c.setAccessible(true);
+                c.set(service, agent == null ? null : agent.getName());
+            }
+            {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_sncp");
                 c.setAccessible(true);
                 c.set(service, info);
@@ -743,6 +784,10 @@ public abstract class Sncp {
         }
         {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_conf", anyValueDesc, null, null);
+            fv.visitEnd();
+        }
+        {
+            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_mq", Type.getDescriptor(String.class), null, null);
             fv.visitEnd();
         }
         {
@@ -888,6 +933,12 @@ public abstract class Sncp {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
                 c.set(service, conf);
+                RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+            }
+            {
+                Field c = newClazz.getDeclaredField(FIELDPREFIX + "_mq");
+                c.setAccessible(true);
+                c.set(service, agent == null ? null : agent.getName());
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
             }
             {

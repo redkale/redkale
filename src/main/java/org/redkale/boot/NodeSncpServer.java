@@ -5,7 +5,6 @@
  */
 package org.redkale.boot;
 
-import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.logging.Level;
@@ -13,7 +12,7 @@ import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
-import org.redkale.service.*;
+import org.redkale.service.Local;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
 
@@ -33,16 +32,6 @@ public class NodeSncpServer extends NodeServer {
     private NodeSncpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.sncpServer = (SncpServer) this.server;
-        this.consumer = sncpServer == null || application.isSingletonMode() ? null : (agent, x) -> {//singleton模式下不生成SncpServlet
-            if (x.getClass().getAnnotation(Local.class) != null) {
-                return; //本地模式的Service不生成SncpServlet
-            }
-            SncpServlet servlet = sncpServer.addSncpServlet(x);
-            dynServletMap.put(x, servlet);
-            if (agent != null) {
-                agent.putService(this, x, servlet);
-            }
-        };
     }
 
     public static NodeServer createNodeServer(Application application, AnyValue serconf) {
@@ -56,12 +45,6 @@ public class NodeSncpServer extends NodeServer {
     @Override
     public InetSocketAddress getSocketAddress() {
         return sncpServer == null ? null : sncpServer.getSocketAddress();
-    }
-
-    public void consumerAccept(MessageAgent messageAgent, Service service) {
-        if (this.consumer != null) {
-            this.consumer.accept(messageAgent, service);
-        }
     }
 
     @Override
@@ -131,7 +114,7 @@ public class NodeSncpServer extends NodeServer {
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
         for (FilterEntry<? extends Filter> en : list) {
             Class<SncpFilter> clazz = (Class<SncpFilter>) en.getType();
-            if (Modifier.isAbstract(clazz.getModifiers())) {
+            if (Utility.isAbstractOrInterface(clazz)) {
                 continue;
             }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
@@ -151,6 +134,19 @@ public class NodeSncpServer extends NodeServer {
     @Override
     protected void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception {
         RedkaleClassLoader.putReflectionPublicClasses(SncpServlet.class.getName());
+        if (!application.isSingletonMode()) {
+            this.servletServices.stream()
+                .filter(x -> x.getClass().getAnnotation(Local.class) == null) //Local模式的Service不生成SncpServlet
+                .forEach(x -> {
+                    SncpServlet servlet = sncpServer.addSncpServlet(x);
+                    dynServletMap.put(x, servlet);
+                    String mq = Sncp.getResourceMQ(x);
+                    if (mq != null) {
+                        MessageAgent agent = application.getMessageAgent(mq);
+                        agent.putService(this, x, servlet);
+                    }
+                });
+        }
     }
 
     @Override

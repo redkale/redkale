@@ -391,8 +391,8 @@ public class NodeHttpServer extends NodeServer {
             }
 
             final ClassFilter restFilter = ClassFilter.create(serverClassLoader, null, application.isCompileMode() ? "" : restConf.getValue("includes", ""), application.isCompileMode() ? "" : restConf.getValue("excludes", ""), includeValues, excludeValues);
-            final CountDownLatch scdl = new CountDownLatch(super.interceptorServices.size());
-            Stream<Service> stream = super.interceptorServices.stream();
+            final CountDownLatch scdl = new CountDownLatch(super.servletServices.size());
+            Stream<Service> stream = super.servletServices.stream();
             if (!application.isCompileMode()) {
                 stream = stream.parallel(); //不能并行，否则在maven plugin运行环境下ClassLoader不对
             }

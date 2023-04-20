@@ -257,6 +257,10 @@ public final class Utility {
         }
     }
 
+    public static boolean isAbstractOrInterface(Class clazz) {
+        return clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers());
+    }
+
     /**
      * @param value from which next positive power of two will be found.
      *

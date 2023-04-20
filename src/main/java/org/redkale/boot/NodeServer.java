@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.logging.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Command;
@@ -62,9 +61,6 @@ public abstract class NodeServer {
 
     protected final Thread serverThread;
 
-    //加载Service时的处理函数
-    protected BiConsumer<MessageAgent, Service> consumer;
-
     //server节点的配置
     protected AnyValue serverConf;
 
@@ -73,14 +69,14 @@ public abstract class NodeServer {
     //加载server节点后的拦截器
     protected NodeInterceptor interceptor;
 
-    //供interceptor使用的Service对象集合
-    protected final Set<Service> interceptorServices = new LinkedHashSet<>();
-
     //本地模式的Service对象集合
     protected final Set<Service> localServices = new LinkedHashSet<>();
 
     //远程模式的Service对象集合
     protected final Set<Service> remoteServices = new LinkedHashSet<>();
+
+    //需要转换成Servlet的Service对象集合, Component的Service不在其内
+    protected final Set<Service> servletServices = new LinkedHashSet<>();
 
     //存在SncpServlet、RestServlet
     protected final Map<Service, Servlet> dynServletMap = new LinkedHashMap<>();
@@ -297,7 +293,7 @@ public abstract class NodeServer {
                 }
 
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
-                Service service = Modifier.isFinal(resServiceType.getModifiers()) || resServiceType.getAnnotation(Component.class) != null
+                Service service = Modifier.isFinal(resServiceType.getModifiers()) || Sncp.isComponent(resServiceType)
                     ? (Service) resServiceType.getConstructor().newInstance()
                     : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
                 appResFactory.register(resourceName, resServiceType, service);
@@ -393,9 +389,8 @@ public abstract class NodeServer {
                     } else {
                         rf.inject(resourceName, nodeService); //动态加载的Service也存在按需加载的注入资源
                         localServices.add(nodeService);
-                        interceptorServices.add(nodeService);
-                        if (consumer != null) {
-                            consumer.accept(null, nodeService);
+                        if (!Sncp.isComponent(nodeService)) {
+                            servletServices.add(nodeService);
                         }
                     }
                     return nodeService;
@@ -454,15 +449,16 @@ public abstract class NodeServer {
             Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);
             if (oldother != null) { //Server加载Service时需要判断是否已经加载过了。
                 if (!Sncp.isRemote(oldother)) {
-                    interceptorServices.add(oldother);
+                    if (!Sncp.isComponent(oldother)) {
+                        servletServices.add(oldother);
+                    }
                 }
                 continue;
             }
             boolean isLocalGroup0 = rpcGroups.isLocalGroup(this.sncpGroup, this.sncpAddress, entry);
             final String group = isLocalGroup0 ? null : entry.getGroup();
             final boolean localMode = serviceImplClass.getAnnotation(Local.class) != null || isLocalGroup0;//本地模式
-            if ((localMode || serviceImplClass.getAnnotation(Component.class) != null)
-                && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) {
+            if ((localMode || Sncp.isComponent(serviceImplClass)) && Utility.isAbstractOrInterface(serviceImplClass)) {
                 continue; //本地模式或Component不能实例化接口和抽象类的Service类
             }
 
@@ -479,8 +475,7 @@ public abstract class NodeServer {
                     MessageAgent agent = getMessageAgent(entry.getProperty());
                     Service service;
                     final boolean ws = srcObj instanceof WebSocketServlet;
-                    final boolean component = serviceImplClass.getAnnotation(Component.class) != null;
-                    if (component) { //Component
+                    if (Sncp.isComponent(serviceImplClass)) { //Component
                         RedkaleClassLoader.putReflectionPublicConstructors(serviceImplClass, serviceImplClass.getName());
                         if (!acceptsComponent(serviceImplClass)) {
                             return null;
@@ -507,11 +502,8 @@ public abstract class NodeServer {
                             rf.inject(resourceName, service); //动态加载的Service也存在按需加载的注入资源
                         }
                         localServices.add(service);
-                        if (!component) {
-                            interceptorServices.add(service);
-                        }
-                        if (consumer != null) {
-                            consumer.accept(agent, service);
+                        if (!Sncp.isComponent(service)) {
+                            servletServices.add(service);
                         }
                     }
                     serviceCount.incrementAndGet();
@@ -593,18 +585,18 @@ public abstract class NodeServer {
                 long s = System.currentTimeMillis();
                 y.init(Sncp.getResourceConf(y));
                 long e = System.currentTimeMillis() - s;
-                String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
                 if (slist != null) {
+                    String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
                     slist.add(new StringBuilder().append(serstr).append(" load and init in ").append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
                 }
             });
             localServices.stream().forEach(y -> {
-                if (y.getClass().getAnnotation(Component.class) != null) {
+                if (Sncp.isComponent(y)) {
                     long s = System.currentTimeMillis();
-                    interceptComponent(y);
+                    boolean rs = interceptComponent(y);
                     long e = System.currentTimeMillis() - s;
-                    String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                    if (slist != null) {
+                    if (rs && slist != null) {
+                        String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
                         slist.add(new StringBuilder().append(serstr).append(" component-start in ").append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
                     }
                 }
@@ -615,7 +607,7 @@ public abstract class NodeServer {
             for (String s : wlist) {
                 sb.append(s);
             }
-            sb.append("All " + localServices.size() + " Services load in ").append(System.currentTimeMillis() - starts).append(" ms");
+            sb.append("All ").append(localServices.size()).append(" Services load in ").append(System.currentTimeMillis() - starts).append(" ms");
         }
         if (sb != null && preinite > 10) {
             sb.append(ClusterAgent.class.getSimpleName()).append(" register in ").append(preinite).append(" ms" + LINE_SEPARATOR);
@@ -626,7 +618,8 @@ public abstract class NodeServer {
     }
 
     private void calcMaxLength(Service y) { //计算toString中的长度
-        maxNameLength = Math.max(maxNameLength, Sncp.getResourceName(y).length());
+        String n = Sncp.getResourceName(y);
+        maxNameLength = Math.max(maxNameLength, n == null ? 1 : n.length()); //#
         maxTypeLength = Math.max(maxTypeLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
@@ -644,12 +637,14 @@ public abstract class NodeServer {
         return true;
     }
 
-    protected void interceptComponent(Service service) {
+    protected boolean interceptComponent(Service service) {
         if (service instanceof MessageConsumerListener) {
             MessageConsumer mqConsumer = service.getClass().getAnnotation(MessageConsumer.class);
             MessageAgent mqAgent = application.getMessageAgent(mqConsumer.mq());
             mqAgent.addConsumerListener((MessageConsumerListener) service);
+            return true;
         }
+        return false;
     }
 
     protected MessageAgent getMessageAgent(AnyValue serviceConf) {
@@ -954,8 +949,8 @@ public abstract class NodeServer {
         return (T) server;
     }
 
-    public Set<Service> getInterceptorServices() {
-        return new LinkedHashSet<>(interceptorServices);
+    public Set<Service> getServletServices() {
+        return new LinkedHashSet<>(servletServices);
     }
 
     public Set<Service> getLocalServices() {

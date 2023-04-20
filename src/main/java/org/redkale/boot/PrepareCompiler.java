@@ -5,7 +5,6 @@
  */
 package org.redkale.boot;
 
-import java.lang.reflect.Modifier;
 import org.redkale.annotation.Bean;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Decodeable;
@@ -13,6 +12,7 @@ import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.persistence.Entity;
 import org.redkale.source.*;
+import org.redkale.util.Utility;
 
 /**
  * 执行一次Application.run提前获取所有动态类
@@ -51,7 +51,7 @@ public class PrepareCompiler {
 
         for (FilterEntry en : entityFilter.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+            if (Utility.isAbstractOrInterface(clz)) {
                 continue;
             }
             try {
@@ -70,7 +70,7 @@ public class PrepareCompiler {
         }
         for (FilterEntry en : entityFilter2.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+            if (Utility.isAbstractOrInterface(clz)) {
                 continue;
             }
             try {
@@ -89,7 +89,7 @@ public class PrepareCompiler {
         }
         for (FilterEntry en : beanFilter.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+            if (Utility.isAbstractOrInterface(clz)) {
                 continue;
             }
             try {
@@ -107,7 +107,7 @@ public class PrepareCompiler {
         }
         for (FilterEntry en : beanFilter2.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+            if (Utility.isAbstractOrInterface(clz)) {
                 continue;
             }
             try {
@@ -125,7 +125,7 @@ public class PrepareCompiler {
         }
         for (FilterEntry en : filterFilter.getFilterEntrys()) {
             Class clz = en.getType();
-            if (clz.isInterface() || Modifier.isAbstract(clz.getModifiers())) {
+            if (Utility.isAbstractOrInterface(clz)) {
                 continue;
             }
             try {
