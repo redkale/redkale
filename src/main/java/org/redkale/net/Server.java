@@ -318,8 +318,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         int workThreads = 0;
         if (workExecutor instanceof ThreadPoolExecutor) {
             workThreads = ((ThreadPoolExecutor) workExecutor).getCorePoolSize();
-        } else if (workExecutor instanceof ThreadHashExecutor) {
-            workThreads = ((ThreadHashExecutor) workExecutor).getCorePoolSize();
         } else if (workExecutor != null) { //virtual thread pool
             workThreads = -1;
         }

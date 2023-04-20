@@ -560,14 +560,9 @@ public final class Application {
             executorConf = DefaultAnyValue.create();
         }
         final int workThreads = executorConf.getIntValue("threads", Utility.cpus() * 4);
-        boolean workHash = executorConf.getBoolValue("hash", false);
         if (workThreads > 0) {
-            if (workHash) {
-                workExecutor0 = WorkThread.createHashExecutor(workThreads, "Redkale-HashWorkThread-%s");
-            } else {
-                //指定threads则不使用虚拟线程池
-                workExecutor0 = executorConf.getValue("threads") != null ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s") : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
-            }
+            //指定threads则不使用虚拟线程池
+            workExecutor0 = executorConf.getValue("threads") != null ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s") : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
         }
         this.workExecutor = workExecutor0;
         this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);

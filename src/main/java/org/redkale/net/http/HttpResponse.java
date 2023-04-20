@@ -242,11 +242,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     @Override
-    protected ThreadHashExecutor getWorkHashExecutor() {
-        return super.getWorkHashExecutor();
-    }
-
-    @Override
     protected void updateNonBlocking(boolean nonBlocking) {
         super.updateNonBlocking(nonBlocking);
     }

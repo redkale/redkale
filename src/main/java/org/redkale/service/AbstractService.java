@@ -6,10 +6,10 @@
 package org.redkale.service;
 
 import java.util.concurrent.*;
-import org.redkale.annotation.*;
-import org.redkale.boot.*;
-import org.redkale.net.*;
-import org.redkale.util.*;
+import org.redkale.annotation.Resource;
+import org.redkale.boot.Application;
+import org.redkale.net.WorkThread;
+import org.redkale.util.ResourceFactory;
 
 /**
  *
@@ -49,35 +49,6 @@ public abstract class AbstractService implements Service {
             Thread thread = Thread.currentThread();
             if (thread instanceof WorkThread) {
                 ((WorkThread) thread).runAsync(command);
-            } else {
-                ForkJoinPool.commonPool().execute(command);
-            }
-        }
-    }
-
-    /**
-     * 异步执行任务
-     *
-     * @param hash    hash值
-     * @param command 任务
-     */
-    protected void runAsync(int hash, Runnable command) {
-        ExecutorService executor = this.workExecutor;
-        if (executor != null) {
-            if (executor instanceof ThreadHashExecutor) {
-                ((ThreadHashExecutor) executor).execute(hash, command);
-            } else {
-                Thread thread = Thread.currentThread();
-                if (thread instanceof WorkThread) {
-                    ((WorkThread) thread).runAsync(hash, command);
-                } else {
-                    executor.execute(command);
-                }
-            }
-        } else {
-            Thread thread = Thread.currentThread();
-            if (thread instanceof WorkThread) {
-                ((WorkThread) thread).runAsync(hash, command);
             } else {
                 ForkJoinPool.commonPool().execute(command);
             }

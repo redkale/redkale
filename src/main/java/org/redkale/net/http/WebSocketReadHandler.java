@@ -316,7 +316,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                 //消息处理
                 for (final WebSocketPacket packet : currPackets) {
                     if (packet.type == FrameType.TEXT) {
-                        ioReadThread.runWork(webSocket._userid, () -> {
+                        ioReadThread.runWork(() -> {
                             try {
                                 Convert convert = webSocket.getTextConvert();
                                 if (restMessageConsumer != null && convert != null) { //主要供RestWebSocket使用
@@ -329,7 +329,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                             }
                         });
                     } else if (packet.type == FrameType.BINARY) {
-                        ioReadThread.runWork(webSocket._userid, () -> {
+                        ioReadThread.runWork(() -> {
                             try {
                                 Convert convert = webSocket.getBinaryConvert();
                                 if (restMessageConsumer != null && convert != null) { //主要供RestWebSocket使用
@@ -342,7 +342,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                             }
                         });
                     } else if (packet.type == FrameType.PING) {
-                        ioReadThread.runWork(webSocket._userid, () -> {
+                        ioReadThread.runWork(() -> {
                             try {
                                 webSocket.onPing(packet.getPayload());
                             } catch (Exception e) {
@@ -350,7 +350,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                             }
                         });
                     } else if (packet.type == FrameType.PONG) {
-                        ioReadThread.runWork(webSocket._userid, () -> {
+                        ioReadThread.runWork(() -> {
                             try {
                                 //if (debug) logger.log(Level.FINEST, "WebSocket onMessage by PONG FrameType : " + packet);
                                 webSocket.onPong(packet.getPayload());

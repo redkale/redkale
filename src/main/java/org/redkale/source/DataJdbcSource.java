@@ -2710,8 +2710,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             int defMaxConns = Utility.cpus() * 4;
             if (workExecutor instanceof ThreadPoolExecutor) {
                 defMaxConns = ((ThreadPoolExecutor) workExecutor).getCorePoolSize();
-            } else if (workExecutor instanceof ThreadHashExecutor) {
-                defMaxConns = ((ThreadHashExecutor) workExecutor).getCorePoolSize();
             } else if (workExecutor != null) { //maybe virtual thread pool
                 defMaxConns = Math.min(1024, Utility.cpus() * 100);
             }

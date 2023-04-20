@@ -34,8 +34,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected final ExecutorService workExecutor;
 
-    protected final ThreadHashExecutor workHashExecutor;
-
     protected final R request;
 
     protected final WorkThread thread;
@@ -124,7 +122,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.thread = WorkThread.currWorkThread();
         this.writeBuffer = context != null ? ByteBuffer.allocateDirect(context.getBufferCapacity()) : null;
         this.workExecutor = context == null || context.workExecutor == null ? ForkJoinPool.commonPool() : context.workExecutor;
-        this.workHashExecutor = context == null ? null : context.workHashExecutor;
     }
 
     protected AsyncConnection removeChannel() {
@@ -163,10 +160,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected ExecutorService getWorkExecutor() {
         return workExecutor;
-    }
-
-    protected ThreadHashExecutor getWorkHashExecutor() {
-        return workHashExecutor;
     }
 
     protected void updateNonBlocking(boolean nonBlocking) {

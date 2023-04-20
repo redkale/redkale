@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.Function;
-import org.redkale.util.*;
+import org.redkale.util.Utility;
 
 /**
  * 协议处理的自定义线程类
@@ -23,8 +23,6 @@ public class WorkThread extends Thread implements Executor {
 
     protected final ExecutorService workExecutor;
 
-    protected final ThreadHashExecutor hashExecutor;
-
     private final int index;   //WorkThread下标，从0开始
 
     private final int threads; //WorkThread个数
@@ -37,26 +35,12 @@ public class WorkThread extends Thread implements Executor {
         this.index = index;
         this.threads = threads;
         this.workExecutor = workExecutor;
-        this.hashExecutor = workExecutor instanceof ThreadHashExecutor ? (ThreadHashExecutor) workExecutor : null;
         this.setDaemon(true);
     }
 
     public static WorkThread currWorkThread() {
         Thread t = Thread.currentThread();
         return t instanceof WorkThread ? (WorkThread) t : null;
-    }
-
-    public static ExecutorService createHashExecutor(final int threads, final String threadNameFormat) {
-        final AtomicReference<ExecutorService> ref = new AtomicReference<>();
-        final AtomicInteger counter = new AtomicInteger();
-        final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
-        return new ThreadHashExecutor(threads, (Runnable r) -> {
-            int i = counter.get();
-            int c = counter.incrementAndGet();
-            String threadName = String.format(threadNameFormat, formatIndex(threads, c));
-            Thread t = new WorkThread(g, threadName, i, threads, ref.get(), r);
-            return t;
-        });
     }
 
     public static ExecutorService createWorkExecutor(final int threads, final String threadNameFormat) {
@@ -137,47 +121,11 @@ public class WorkThread extends Thread implements Executor {
         }
     }
 
-    public void runWork(int hash, Runnable command) {
-        if (hashExecutor == null) {
-            if (workExecutor == null) {
-                command.run();
-            } else {
-                workExecutor.execute(command);
-            }
-        } else {
-            hashExecutor.execute(hash, command);
-        }
-    }
-
-    public void runWork(java.io.Serializable hash, Runnable command) {
-        if (hashExecutor == null) {
-            if (workExecutor == null) {
-                command.run();
-            } else {
-                workExecutor.execute(command);
-            }
-        } else {
-            hashExecutor.execute(hash, command);
-        }
-    }
-
     public void runAsync(Runnable command) {
         if (workExecutor == null) {
             ForkJoinPool.commonPool().execute(command);
         } else {
             workExecutor.execute(command);
-        }
-    }
-
-    public void runAsync(int hash, Runnable command) {
-        if (hashExecutor == null) {
-            if (workExecutor == null) {
-                ForkJoinPool.commonPool().execute(command);
-            } else {
-                workExecutor.execute(command);
-            }
-        } else {
-            hashExecutor.execute(hash, command);
         }
     }
 

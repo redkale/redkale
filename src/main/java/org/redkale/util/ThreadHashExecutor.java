@@ -16,9 +16,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @deprecated
  *
  * @since 2.1.0
  */
+@Deprecated(since = "2.8.0")
 public class ThreadHashExecutor extends AbstractExecutorService {
 
     private final LinkedBlockingQueue<Runnable>[] queues;

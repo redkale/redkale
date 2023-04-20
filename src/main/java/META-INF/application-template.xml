@@ -38,9 +38,8 @@
        【节点全局唯一】 @since 2.3.0
         全局Serivce执行的线程池， Application.workExecutor, 没配置该节点将自动创建一个。
         threads： 线程数，为0表示不启用workExecutor，只用IO线程。默认: CPU核数, 核数=1的情况下默认值为2
-        hash:     是否使用ThreadHashExecutor作为线程池，默认值为：false
     -->
-    <executor threads="4" hash="false"/>
+    <executor threads="4"/>
         
     <!--
        【节点全局唯一】

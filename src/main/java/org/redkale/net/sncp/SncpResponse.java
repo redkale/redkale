@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
-import org.redkale.util.*;
+import org.redkale.util.ByteArray;
 
 /**
  *
@@ -109,11 +109,6 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     @Override
     protected ExecutorService getWorkExecutor() {
         return super.getWorkExecutor();
-    }
-
-    @Override
-    protected ThreadHashExecutor getWorkHashExecutor() {
-        return super.getWorkHashExecutor();
     }
 
     @Override

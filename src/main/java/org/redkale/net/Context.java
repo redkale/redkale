@@ -30,8 +30,6 @@ public class Context {
     //Server的线程池
     protected final ExecutorService workExecutor;
 
-    protected final ThreadHashExecutor workHashExecutor;
-
     //SSL
     protected final SSLBuilder sslBuilder;
 
@@ -103,11 +101,6 @@ public class Context {
         this.writeTimeoutSeconds = writeTimeoutSeconds;
         this.jsonFactory = JsonFactory.root();
         this.bsonFactory = BsonFactory.root();
-        if (workExecutor instanceof ThreadHashExecutor) {
-            this.workHashExecutor = (ThreadHashExecutor) workExecutor;
-        } else {
-            this.workHashExecutor = null;
-        }
     }
 
     protected void executeDispatch(Request request, Response response) {
@@ -115,24 +108,7 @@ public class Context {
     }
 
     public void execute(Servlet servlet, Request request, Response response) {
-        if (workHashExecutor != null) {
-            response.updateNonBlocking(false);
-            workHashExecutor.execute(request.getHashid(), () -> {
-                try {
-                    long cha = System.currentTimeMillis() - request.getCreateTime();
-                    Traces.computeCurrTraceid(request.getTraceid());
-                    servlet.execute(request, response);
-                    if (cha > 1000 && response.context.logger.isLoggable(Level.WARNING)) {
-                        response.context.logger.log(Level.WARNING, "hash execute servlet delays=" + cha + "ms, request=" + request);
-                    } else if (cha > 100 && response.context.logger.isLoggable(Level.FINE)) {
-                        response.context.logger.log(Level.FINE, "hash execute servlet delay=" + cha + "ms, request=" + request);
-                    }
-                } catch (Throwable t) {
-                    response.context.logger.log(Level.WARNING, "Execute servlet occur exception. request = " + request, t);
-                    response.finishError(t);
-                }
-            });
-        } else if (workExecutor != null && response.inNonBlocking() && !servlet.isNonBlocking()) {
+        if (workExecutor != null && response.inNonBlocking() && !servlet.isNonBlocking()) {
             response.updateNonBlocking(false);
             workExecutor.execute(() -> {
                 try {
