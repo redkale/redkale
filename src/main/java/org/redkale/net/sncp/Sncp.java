@@ -234,7 +234,7 @@ public abstract class Sncp {
 
     public static String getResourceName(Service service) {
         Resource res = service.getClass().getAnnotation(Resource.class);
-        return res != null ? res.name() : null;
+        return res != null ? res.name() : (service instanceof Resourcable ? ((Resourcable) service).resourceName() : null);
     }
 
     public static Class getResourceType(Service service) {
@@ -328,8 +328,8 @@ public abstract class Sncp {
         int len;
         Class type = getResourceType(service);
         String name = getResourceName(service);
-        if(name==null) {
-            name = "#";
+        if (name == null) {
+            name = "";
         }
         sb.append("(type= ").append(type.getName());
         len = maxTypeLength - type.getName().length();

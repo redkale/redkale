@@ -619,7 +619,7 @@ public abstract class NodeServer {
 
     private void calcMaxLength(Service y) { //计算toString中的长度
         String n = Sncp.getResourceName(y);
-        maxNameLength = Math.max(maxNameLength, n == null ? 1 : n.length()); //#
+        maxNameLength = Math.max(maxNameLength, n == null ? 0 : n.length()); 
         maxTypeLength = Math.max(maxTypeLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
