@@ -2466,8 +2466,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      */
     @Local
     @Override
-    public int directExecute(String sql) {
-        return directExecute(new String[]{sql})[0];
+    public int nativeExecute(String sql) {
+        return nativeExecute(new String[]{sql})[0];
     }
 
     /**
@@ -2480,7 +2480,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      */
     @Local
     @Override
-    public int[] directExecute(String... sqls) {
+    public int[] nativeExecute(String... sqls) {
         if (sqls.length == 0) {
             return new int[0];
         }
@@ -2523,7 +2523,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      */
     @Local
     @Override
-    public <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
+    public <V> V nativeQuery(String sql, Function<DataResultSet, V> handler) {
         final long s = System.currentTimeMillis();
         final Connection conn = readPool.pollConnection();
         try {

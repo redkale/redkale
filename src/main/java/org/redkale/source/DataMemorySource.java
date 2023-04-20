@@ -94,17 +94,17 @@ public class DataMemorySource extends AbstractDataSqlSource implements SearchSou
     }
 
     @Override
-    public int directExecute(String sql) {
+    public int nativeExecute(String sql) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public int[] directExecute(String... sqls) {
+    public int[] nativeExecute(String... sqls) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
+    public <V> V nativeQuery(String sql, Function<DataResultSet, V> handler) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

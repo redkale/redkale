@@ -17,9 +17,24 @@ import java.util.function.Function;
  */
 public interface DataSqlSource extends DataSource {
 
-    public int directExecute(String sql);
+    public int nativeExecute(String sql);
 
-    public int[] directExecute(String... sqls);
+    public int[] nativeExecute(String... sqls);
 
-    public <V> V directQuery(String sql, Function<DataResultSet, V> handler);
+    public <V> V nativeQuery(String sql, Function<DataResultSet, V> handler);
+
+    @Deprecated
+    default int directExecute(String sql) {
+        return nativeExecute(sql);
+    }
+
+    @Deprecated
+    default int[] directExecute(String... sqls) {
+        return nativeExecute(sqls);
+    }
+
+    @Deprecated
+    default <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
+        return nativeQuery(sql, handler);
+    }
 }
