@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import org.redkale.annotation.Component;
 import org.redkale.convert.Convert;
 import org.redkale.util.*;
 
@@ -26,6 +27,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@Component
 public interface CacheSource extends Resourcable {
 
     public String getType();

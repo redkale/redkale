@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+import org.redkale.annotation.Component;
 import org.redkale.util.*;
 
 /**
@@ -39,6 +40,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
+@Component
 @SuppressWarnings("unchecked")
 public interface DataSource extends Resourcable {
 

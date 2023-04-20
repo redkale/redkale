@@ -218,7 +218,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Connection conn = null;
         try {
             conn = writePool.pollConnection();
-            conn.setReadOnly(false);
             conn.setAutoCommit(false);
             for (BatchAction action : dataBatch.actions) {
                 if (action instanceof InsertBatchAction1) {
@@ -314,7 +313,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Connection conn = null;
         try {
             conn = writePool.pollConnection();
-            conn.setReadOnly(false);
             conn.setAutoCommit(false);
             int c = insertDB(false, conn, info, entitys);
             conn.commit();
@@ -596,7 +594,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Connection conn = null;
         try {
             conn = writePool.pollConnection();
-            conn.setReadOnly(false);
             conn.setAutoCommit(false);
             int c = deleteDB(false, conn, info, tables, flipper, node, pkmap, sqls);
             conn.commit();
@@ -735,7 +732,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
-            conn.setReadOnly(false);
             conn.setAutoCommit(false);
             int c;
             if (sqls.length == 1) {
@@ -841,7 +837,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
-            conn.setReadOnly(false);
             conn.setAutoCommit(false);
             int c;
             if (copyTableSql == null) {
@@ -970,7 +965,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
-            conn.setReadOnly(false);
             conn.setAutoCommit(false);
             int c;
             if (sqls.length == 1) {
@@ -1069,7 +1063,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Connection conn = null;
         try {
             conn = writePool.pollConnection();
-            conn.setReadOnly(false);
             conn.setAutoCommit(false);
             int c = updateEntityDB(false, conn, info, entitys);
             conn.commit();
@@ -1477,7 +1470,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = readPool.pollConnection();
-            //conn.setReadOnly(true);
             stmt = conn.createStatement();
             ResultSet set = stmt.executeQuery(sql);
             if (set.next()) {
@@ -1580,7 +1572,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = readPool.pollConnection();
-            //conn.setReadOnly(true);
             stmt = conn.createStatement();
             Number rs = defVal;
             ResultSet set = stmt.executeQuery(sql);
@@ -1671,7 +1662,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = readPool.pollConnection();
-            //conn.setReadOnly(true);
             stmt = conn.createStatement();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
@@ -1759,7 +1749,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = readPool.pollConnection();
-            //conn.setReadOnly(true);
             stmt = conn.createStatement();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
@@ -1908,7 +1897,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         PreparedStatement ps = null;
         try {
             conn = readPool.pollConnection();
-            //conn.setReadOnly(true);
             ps = conn.prepareStatement(sql);
             ps.setFetchSize(1);
             final DataResultSet set = createDataResultSet(info, ps.executeQuery());
@@ -1989,7 +1977,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final Attribute<T, Serializable> attr = info.getAttribute(column);
         try {
             conn = readPool.pollConnection();
-            //conn.setReadOnly(true);
             ps = conn.prepareStatement(sql);
             ps.setFetchSize(1);
             final DataResultSet set = createDataResultSet(info, ps.executeQuery());
@@ -2075,7 +2062,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         PreparedStatement ps = null;
         try {
             conn = readPool.pollConnection();
-            //conn.setReadOnly(true);
             ps = conn.prepareStatement(sql);
             final ResultSet set = ps.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
@@ -2339,7 +2325,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, listSql);
             return new Sheet<>(total, list);
         } else {
-            //conn.setReadOnly(true);
             PreparedStatement ps = conn.prepareStatement(listSql);
             if (flipper != null && flipper.getLimit() > 0) {
                 ps.setFetchSize(flipper.getLimit());
@@ -2502,7 +2487,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final long s = System.currentTimeMillis();
         Connection conn = writePool.pollConnection();
         try {
-            conn.setReadOnly(false);
             conn.setAutoCommit(false);
             final Statement stmt = conn.createStatement();
             final int[] rs = new int[sqls.length];
@@ -2546,7 +2530,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             if (logger.isLoggable(Level.FINEST)) {
                 logger.finest("direct query sql=" + sql);
             }
-            //conn.setReadOnly(true);
             final Statement statement = conn.createStatement();
             //final PreparedStatement statement = conn.prepareStatement(sql);
             final ResultSet set = statement.executeQuery(sql);// ps.executeQuery();
@@ -2730,7 +2713,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             } else if (workExecutor instanceof ThreadHashExecutor) {
                 defMaxConns = ((ThreadHashExecutor) workExecutor).getCorePoolSize();
             } else if (workExecutor != null) { //maybe virtual thread pool
-                defMaxConns = Math.min(1000, Utility.cpus() * 100);
+                defMaxConns = Math.min(1024, Utility.cpus() * 100);
             }
             this.maxConns = Math.max(1, Integer.decode(prop.getProperty(DATA_SOURCE_MAXCONNS, "" + defMaxConns)));
             this.canNewSemaphore = new Semaphore(this.maxConns);

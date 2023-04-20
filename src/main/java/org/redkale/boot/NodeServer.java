@@ -21,7 +21,7 @@ import org.redkale.annotation.*;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
-import org.redkale.mq.MessageAgent;
+import org.redkale.mq.*;
 import org.redkale.net.Filter;
 import org.redkale.net.*;
 import org.redkale.net.client.ClientAddress;
@@ -297,7 +297,9 @@ public abstract class NodeServer {
                 }
 
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
-                Service service = Modifier.isFinal(resServiceType.getModifiers()) ? (Service) resServiceType.getConstructor().newInstance() : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
+                Service service = Modifier.isFinal(resServiceType.getModifiers()) || resServiceType.getAnnotation(Component.class) != null
+                    ? (Service) resServiceType.getConstructor().newInstance()
+                    : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
                 appResFactory.register(resourceName, resServiceType, service);
 
                 field.set(srcObj, service);
@@ -459,9 +461,11 @@ public abstract class NodeServer {
             boolean isLocalGroup0 = rpcGroups.isLocalGroup(this.sncpGroup, this.sncpAddress, entry);
             final String group = isLocalGroup0 ? null : entry.getGroup();
             final boolean localMode = serviceImplClass.getAnnotation(Local.class) != null || isLocalGroup0;//本地模式
-            if (localMode && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) {
-                continue; //本地模式不能实例化接口和抽象类的Service类
+            if ((localMode || serviceImplClass.getAnnotation(Component.class) != null)
+                && (serviceImplClass.isInterface() || Modifier.isAbstract(serviceImplClass.getModifiers()))) {
+                continue; //本地模式或Component不能实例化接口和抽象类的Service类
             }
+
             final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
                 try {
                     if (Sncp.loadMethodActions(Sncp.getResourceType(serviceImplClass)).isEmpty()
@@ -475,7 +479,14 @@ public abstract class NodeServer {
                     MessageAgent agent = getMessageAgent(entry.getProperty());
                     Service service;
                     final boolean ws = srcObj instanceof WebSocketServlet;
-                    if (ws || localMode) { //本地模式
+                    final boolean component = serviceImplClass.getAnnotation(Component.class) != null;
+                    if (component) { //Component
+                        RedkaleClassLoader.putReflectionPublicConstructors(serviceImplClass, serviceImplClass.getName());
+                        if (!acceptsComponent(serviceImplClass)) {
+                            return null;
+                        }
+                        service = serviceImplClass.getDeclaredConstructor().newInstance();
+                    } else if (ws || localMode) { //本地模式
                         service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
                     } else {
                         service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
@@ -496,7 +507,9 @@ public abstract class NodeServer {
                             rf.inject(resourceName, service); //动态加载的Service也存在按需加载的注入资源
                         }
                         localServices.add(service);
-                        interceptorServices.add(service);
+                        if (!component) {
+                            interceptorServices.add(service);
+                        }
                         if (consumer != null) {
                             consumer.accept(agent, service);
                         }
@@ -585,6 +598,17 @@ public abstract class NodeServer {
                     slist.add(new StringBuilder().append(serstr).append(" load and init in ").append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
                 }
             });
+            localServices.stream().forEach(y -> {
+                if (y.getClass().getAnnotation(Component.class) != null) {
+                    long s = System.currentTimeMillis();
+                    interceptComponent(y);
+                    long e = System.currentTimeMillis() - s;
+                    String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
+                    if (slist != null) {
+                        slist.add(new StringBuilder().append(serstr).append(" component-start in ").append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
+                    }
+                }
+            });
         }
         if (slist != null && sb != null) {
             List<String> wlist = new ArrayList<>(slist); //直接使用CopyOnWriteArrayList偶尔会出现莫名的异常(CopyOnWriteArrayList源码1185行)
@@ -604,6 +628,28 @@ public abstract class NodeServer {
     private void calcMaxLength(Service y) { //计算toString中的长度
         maxNameLength = Math.max(maxNameLength, Sncp.getResourceName(y).length());
         maxTypeLength = Math.max(maxTypeLength, Sncp.getResourceType(y).getName().length() + 1);
+    }
+
+    protected boolean acceptsComponent(Class<? extends Service> serviceImplClass) {
+        if (MessageConsumerListener.class.isAssignableFrom(serviceImplClass)) {
+            MessageConsumer mqConsumer = serviceImplClass.getAnnotation(MessageConsumer.class);
+            if (mqConsumer == null) {
+                return false;
+            }
+            MessageAgent mqAgent = application.getMessageAgent(mqConsumer.mq());
+            if (mqAgent == null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected void interceptComponent(Service service) {
+        if (service instanceof MessageConsumerListener) {
+            MessageConsumer mqConsumer = service.getClass().getAnnotation(MessageConsumer.class);
+            MessageAgent mqAgent = application.getMessageAgent(mqConsumer.mq());
+            mqAgent.addConsumerListener((MessageConsumerListener) service);
+        }
     }
 
     protected MessageAgent getMessageAgent(AnyValue serviceConf) {

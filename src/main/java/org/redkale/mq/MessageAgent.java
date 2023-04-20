@@ -55,6 +55,8 @@ public abstract class MessageAgent implements Resourcable {
 
     protected final ReentrantLock sncpNodesLock = new ReentrantLock();
 
+    protected final List<MessageConsumerListener> consumerListeners = new CopyOnWriteArrayList<>();
+
     protected final AtomicLong msgSeqno = new AtomicLong(System.nanoTime());
 
     protected HttpMessageClient httpMessageClient;
@@ -102,9 +104,6 @@ public abstract class MessageAgent implements Resourcable {
         });
         this.timeoutExecutor.setRemoveOnCancelPolicy(true);
     }
-
-    @ResourceListener
-    public abstract void onResourceChange(ResourceEvent[] events);
 
     public CompletableFuture<Map<String, Long>> start() {
         final LinkedHashMap<String, Long> map = new LinkedHashMap<>();
@@ -276,7 +275,7 @@ public abstract class MessageAgent implements Resourcable {
     }
 
     //创建指定topic的生产处理器
-    protected abstract MessageClientProducer createMessageClientProducer(String name);
+    protected abstract MessageClientProducer createMessageClientProducer(String producerName);
 
     //创建topic，如果已存在则跳过
     public abstract boolean createTopic(String... topics);
@@ -292,6 +291,13 @@ public abstract class MessageAgent implements Resourcable {
 
     //创建指定topic的消费处理器
     public abstract MessageClientConsumer createMessageClientConsumer(String[] topics, String group, MessageClientProcessor processor);
+
+    @ResourceListener
+    public abstract void onResourceChange(ResourceEvent[] events);
+
+    public void addConsumerListener(MessageConsumerListener listener) {
+
+    }
 
     public final void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
