@@ -5,7 +5,7 @@
  * @author zhangjx
  *
  */
-module redkale {
+module org.redkale {
 
     requires java.base;
     requires java.logging;    
