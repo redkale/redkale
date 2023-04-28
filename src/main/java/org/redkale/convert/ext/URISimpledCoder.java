@@ -19,7 +19,7 @@ import org.redkale.convert.*;
  */
 public class URISimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, URI> {
 
-    public static final URLSimpledCoder instance = new URLSimpledCoder();
+    public static final URISimpledCoder instance = new URISimpledCoder();
 
     @Override
     public void convertTo(final Writer out, final URI value) {
