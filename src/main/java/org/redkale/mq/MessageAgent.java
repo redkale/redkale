@@ -36,6 +36,9 @@ public abstract class MessageAgent implements Resourcable {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
+    @Resource(required = false)
+    protected Application application;
+    
     @Resource(name = RESNAME_APP_NODEID)
     protected int nodeid;
 
@@ -72,7 +75,7 @@ public abstract class MessageAgent implements Resourcable {
     //本地Service消息接收处理器， key:consumerid
     protected HashMap<String, MessageClientConsumerNode> clientConsumerNodes = new LinkedHashMap<>();
 
-    public void init(ResourceFactory factory, AnyValue config) {
+    public void init(AnyValue config) {
         this.name = checkName(config.getValue("name", ""));
         this.httpMessageClient = new HttpMessageClient(this);
         this.sncpMessageClient = new SncpMessageClient(this);
@@ -83,8 +86,8 @@ public abstract class MessageAgent implements Resourcable {
                 Class<MessageCoder<MessageRecord>> coderClass = (Class) Thread.currentThread().getContextClassLoader().loadClass(coderType);
                 RedkaleClassLoader.putReflectionPublicConstructors(coderClass, coderClass.getName());
                 MessageCoder<MessageRecord> coder = coderClass.getConstructor().newInstance();
-                if (factory != null) {
-                    factory.inject(coder);
+                if (application != null) {
+                    application.getResourceFactory().inject(coder);
                 }
                 if (coder instanceof Service) {
                     ((Service) coder).init(config);

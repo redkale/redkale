@@ -67,7 +67,7 @@ public abstract class ClusterAgent {
 
     protected final ConcurrentHashMap<String, ClusterEntry> remoteEntrys = new ConcurrentHashMap<>();
 
-    public void init(ResourceFactory factory, AnyValue config) {
+    public void init(AnyValue config) {
         this.config = config;
         this.name = config.getValue("name", "");
         this.waits = config.getBoolValue("waits", false);

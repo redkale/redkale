@@ -197,15 +197,29 @@ public abstract class NodeServer {
         }
         ClassFilter<Filter> filterFilter = createFilterClassFilter();
         ClassFilter<Servlet> servletFilter = createServletClassFilter();
-        ClassFilter otherFilter = createOtherClassFilter();
+        List<ClassFilter> otherFilters = createOtherClassFilters();
+        List<ClassFilter> filters = new ArrayList<>();
+        if (serviceFilter != null) {
+            filters.add(serviceFilter);
+        }
+        if (filterFilter != null) {
+            filters.add(filterFilter);
+        }
+        if (servletFilter != null) {
+            filters.add(servletFilter);
+        }
+        if (otherFilters != null) {
+            filters.addAll(otherFilters);
+        }
         long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(application.getHome(), serverClassLoader, ((application.excludelibs != null ? (application.excludelibs + ";") : "") + serverConf.getValue("excludelibs", "")).split(";"), serviceFilter, filterFilter, servletFilter, otherFilter);
+        ClassFilter.Loader.load(application.getHome(), serverClassLoader, ((application.excludelibs != null ? (application.excludelibs + ";") : "") + serverConf.getValue("excludelibs", "")).split(";"), filters.toArray(new ClassFilter[filters.size()]));
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
-        loadService(serviceFilter, otherFilter); //必须在servlet之前
+        loadService(serviceFilter); //必须在servlet之前
+        loadOthers(otherFilters);
         if (!application.isSingletonMode()) { //非singleton模式下才加载Filter、Servlet
-            loadFilter(filterFilter, otherFilter);
-            loadServlet(servletFilter, otherFilter);
+            loadFilter(filterFilter);
+            loadServlet(servletFilter);
             postLoadServlets();
         }
         if (this.interceptor != null) {
@@ -213,15 +227,17 @@ public abstract class NodeServer {
         }
     }
 
-    protected abstract void loadFilter(ClassFilter<? extends Filter> filterFilter, ClassFilter otherFilter) throws Exception;
+    protected void loadOthers(List<ClassFilter> otherFilters) throws Exception {
+    }
 
-    protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception;
+    protected abstract void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception;
+
+    protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception;
 
     private void initResource() {
         final NodeServer self = this;
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
-        final String confURI = appResFactory.find(RESNAME_APP_CONF_DIR, String.class);
         //------------------------------------- 注册 Resource --------------------------------------------------------
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
@@ -408,7 +424,7 @@ public abstract class NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadService(ClassFilter<? extends Service> serviceFilter, ClassFilter otherFilter) throws Exception {
+    protected void loadService(ClassFilter<? extends Service> serviceFilter) throws Exception {
         if (serviceFilter == null) {
             return;
         }
@@ -446,11 +462,11 @@ public abstract class NodeServer {
             if (!entry.isEmptyGroup() && !entry.isRemote() && rpcGroups.containsGroup(entry.getGroup())) {
                 throw new RedkaleException("Not found group(" + entry.getGroup() + ")");
             }
-            Service oldother = resourceFactory.find(entry.getName(), serviceImplClass);
-            if (oldother != null) { //Server加载Service时需要判断是否已经加载过了。
-                if (!Sncp.isRemote(oldother)) {
-                    if (!Sncp.isComponent(oldother)) {
-                        servletServices.add(oldother);
+            Service oldOther = resourceFactory.find(entry.getName(), serviceImplClass);
+            if (oldOther != null) { //Server加载Service时需要判断是否已在其他协议服务中加载
+                if (!Sncp.isRemote(oldOther)) {
+                    if (!Sncp.isComponent(oldOther)) {
+                        servletServices.add(oldOther);
                     }
                 }
                 continue;
@@ -619,7 +635,7 @@ public abstract class NodeServer {
 
     private void calcMaxLength(Service y) { //计算toString中的长度
         String n = Sncp.getResourceName(y);
-        maxNameLength = Math.max(maxNameLength, n == null ? 0 : n.length()); 
+        maxNameLength = Math.max(maxNameLength, n == null ? 0 : n.length());
         maxTypeLength = Math.max(maxTypeLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
@@ -705,7 +721,7 @@ public abstract class NodeServer {
 
     protected abstract ClassFilter<Servlet> createServletClassFilter();
 
-    protected ClassFilter createOtherClassFilter() {
+    protected List<ClassFilter> createOtherClassFilters() {
         return null;
     }
 

@@ -6,6 +6,7 @@ package org.redkale.mq;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
+import org.redkale.convert.ConvertType;
 
 /**
  * MQ资源注解
@@ -27,4 +28,6 @@ public @interface MessageConsumer {
     String group() default "";
 
     String[] topics();
+
+    ConvertType convertType() default ConvertType.JSON;
 }

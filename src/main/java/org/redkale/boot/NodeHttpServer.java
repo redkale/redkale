@@ -41,10 +41,13 @@ public class NodeHttpServer extends NodeServer {
 
     protected final HttpServer httpServer;
 
+    protected ClassFilter<? extends WebSocket> webSocketFilter;
+
     public NodeHttpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.httpServer = (HttpServer) server;
         this.rest = serconf == null ? false : serconf.getAnyValue("rest") != null;
+
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
@@ -79,18 +82,33 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @Override
-    protected ClassFilter createOtherClassFilter() {
-        return createClassFilter(null, RestWebSocket.class, WebSocket.class, null, null, "rest", "websocket");
+    protected List<ClassFilter> createOtherClassFilters() {
+        this.webSocketFilter = createClassFilter(null, RestWebSocket.class, WebSocket.class, null, null, "rest", "websocket");
+        List<ClassFilter> filters = super.createOtherClassFilters();
+        if (filters == null) {
+            filters = new ArrayList<>();
+        }
+        filters.add(webSocketFilter);
+        return filters;
     }
 
     @Override
-    protected void loadService(ClassFilter<? extends Service> serviceFilter, ClassFilter otherFilter) throws Exception {
-        super.loadService(serviceFilter, otherFilter);
+    protected void loadOthers(List<ClassFilter> otherFilters) throws Exception {
+        List<ClassFilter> filters = otherFilters;
+        if (filters != null) {
+            filters.remove(this.webSocketFilter); //webSocketFilter会在loadHttpFilter中处理，先剔除
+        }
+        super.loadOthers(filters);
+    }
+
+    @Override
+    protected void loadService(ClassFilter<? extends Service> serviceFilter) throws Exception {
+        super.loadService(serviceFilter);
         initWebSocketService();
     }
 
     @Override
-    protected void loadFilter(ClassFilter<? extends Filter> filterFilter, ClassFilter otherFilter) throws Exception {
+    protected void loadFilter(ClassFilter<? extends Filter> filterFilter) throws Exception {
         if (httpServer != null) {
             loadHttpFilter(filterFilter);
         }
@@ -98,9 +116,9 @@ public class NodeHttpServer extends NodeServer {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter, ClassFilter otherFilter) throws Exception {
+    protected void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception {
         if (httpServer != null) {
-            loadHttpServlet(servletFilter, otherFilter);
+            loadHttpServlet(servletFilter);
         }
     }
 
@@ -192,7 +210,7 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadHttpServlet(final ClassFilter<? extends Servlet> servletFilter, ClassFilter<? extends WebSocket> webSocketFilter) throws Exception {
+    protected void loadHttpServlet(final ClassFilter<? extends Servlet> servletFilter) throws Exception {
         RedkaleClassLoader.putReflectionPublicClasses(HttpServlet.class.getName());
         RedkaleClassLoader.putReflectionPublicClasses(HttpDispatcherServlet.class.getName());
         RedkaleClassLoader.putReflectionDeclaredConstructors(HttpResourceServlet.class, HttpResourceServlet.class.getName());
@@ -258,6 +276,7 @@ public class NodeHttpServer extends NodeServer {
             for (AnyValue restConf : serverConf.getAnyValues("rest")) {
                 loadRestServlet(webSocketFilter, restConf, restedObjects, restedLock, sb, rests, webss);
             }
+            this.webSocketFilter = null;
         }
         int max = 0;
         if (ss != null && sb != null) {

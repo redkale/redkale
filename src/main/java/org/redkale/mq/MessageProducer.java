@@ -6,6 +6,7 @@ package org.redkale.mq;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
+import org.redkale.convert.ConvertType;
 
 /**
  * MQ资源注解, 只能标记在MessageProducerSender类型字段上
@@ -23,4 +24,7 @@ import java.lang.annotation.*;
 public @interface MessageProducer {
 
     String mq();
+
+    ConvertType convertType() default ConvertType.JSON;
+    
 }

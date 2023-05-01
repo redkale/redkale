@@ -51,8 +51,8 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     protected final ConcurrentHashMap<String, Set<InetSocketAddress>> mqtpAddressMap = new ConcurrentHashMap<>();
 
     @Override
-    public void init(ResourceFactory factory, AnyValue config) {
-        super.init(factory, config);
+    public void init(AnyValue config) {
+        super.init(config);
         this.sourceName = getSourceName();
         this.ttls = config.getIntValue("ttls", 10);
         if (this.ttls < 5) {

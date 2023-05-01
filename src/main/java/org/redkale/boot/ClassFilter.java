@@ -607,6 +607,12 @@ public final class ClassFilter<T> {
                                 if (classname.startsWith("com.mysql.")) {
                                     break;
                                 }
+                                if (classname.startsWith("org.junit.")) {
+                                    break;
+                                }
+                                if (classname.startsWith("org.openjfx.")) {
+                                    break;
+                                }
                                 if (classname.startsWith("org.mariadb.")) {
                                     break;
                                 }
@@ -701,11 +707,10 @@ public final class ClassFilter<T> {
                     return;
                 }
                 File[] lfs = root.listFiles();
-                if (lfs == null) {
-                    throw new RedkaleException("File(" + root + ") cannot listFiles()");
-                }
-                for (File f : lfs) {
-                    loadClassFiles(exclude, f, files);
+                if (lfs != null) {
+                    for (File f : lfs) {
+                        loadClassFiles(exclude, f, files);
+                    }
                 }
             }
         }

@@ -6,8 +6,9 @@
 package org.redkale.boot;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import org.redkale.net.*;
-import org.redkale.net.http.*;
+import org.redkale.net.http.WebServlet;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.watch.*;
@@ -42,8 +43,8 @@ public class NodeWatchServer extends NodeHttpServer {
     }
 
     @Override
-    protected ClassFilter createOtherClassFilter() {
-        return null;
+    protected List<ClassFilter> createOtherClassFilters() {
+        return null;  //不调用 super.createOtherClassFilters()
     }
 
     @Override

@@ -1119,7 +1119,7 @@ public final class Application {
                 loadCacheSource(sourceName, false);
             }
             this.resourceFactory.inject(clusterAgent);
-            clusterAgent.init(this.resourceFactory, clusterAgent.getConfig());
+            clusterAgent.init(clusterAgent.getConfig());
             this.resourceFactory.register(ClusterAgent.class, clusterAgent);
             logger.info("ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") init in " + (System.currentTimeMillis() - s) + " ms");
         }
@@ -1130,7 +1130,7 @@ public final class Application {
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 this.resourceFactory.inject(agent);
-                agent.init(this.resourceFactory, agent.getConfig());
+                agent.init(agent.getConfig());
                 this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
                 this.resourceFactory.register(agent.getName(), HttpMessageClient.class, agent.getHttpMessageClient());
                 //this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient()); //不需要给开发者使用
