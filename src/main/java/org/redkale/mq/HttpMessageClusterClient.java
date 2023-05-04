@@ -55,7 +55,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     }
 
     @Override
-    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
+    protected CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
             return localClient.sendMessage(topic, userid, groupid, request, counter);
         } else {
@@ -64,7 +64,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     }
 
     @Override
-    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
+    protected void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
             localClient.produceMessage(topic, userid, groupid, request, counter);
         } else {
@@ -73,7 +73,7 @@ public class HttpMessageClusterClient extends HttpMessageClient {
     }
 
     @Override
-    public void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
+    protected void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
         mqtpAsync(userid, request);
     }
 
@@ -218,11 +218,14 @@ public class HttpMessageClusterClient extends HttpMessageClient {
             if (logger.isLoggable(Level.FINEST)) {
                 logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
             }
-            return forEachCollectionFuture(logger.isLoggable(Level.FINEST), userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(), clientHeaders, clientBody, addrs.iterator());
+            return forEachCollectionFuture(logger.isLoggable(Level.FINEST), userid, req,
+                (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(),
+                clientHeaders, clientBody, addrs.iterator());
         });
     }
 
-    private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(boolean finest, Serializable userid, HttpSimpleRequest req, String requesturi, final Map<String, String> clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
+    private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(boolean finest, Serializable userid,
+        HttpSimpleRequest req, String requesturi, final Map<String, String> clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
         if (!it.hasNext()) {
             return CompletableFuture.completedFuture(null);
         }

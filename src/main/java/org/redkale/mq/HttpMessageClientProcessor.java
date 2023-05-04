@@ -29,7 +29,7 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
 
     protected HttpMessageClient messageClient;
 
-    protected final MessageClientProducers producers;
+    protected final MessageClientProducer producer;
 
     protected final NodeHttpServer server;
 
@@ -59,10 +59,10 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
         }
     };
 
-    public HttpMessageClientProcessor(Logger logger, HttpMessageClient messageClient, MessageClientProducers producers, NodeHttpServer server, Service service, HttpServlet servlet) {
+    public HttpMessageClientProcessor(Logger logger, HttpMessageClient messageClient, MessageClientProducer producer, NodeHttpServer server, Service service, HttpServlet servlet) {
         this.logger = logger;
         this.messageClient = messageClient;
-        this.producers = producers;
+        this.producer = producer;
         this.server = server;
         this.service = service;
         this.servlet = servlet;
@@ -99,7 +99,7 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
             }
             HttpMessageResponse response = respSupplier.get();
             request = response.request();
-            response.prepare(message, callback, producers.getProducer(message));
+            response.prepare(message, callback, producer);
             if (multiConsumer) {
                 request.setRequestURI(request.getRequestURI().replaceFirst(this.multiModule, this.restModule));
             }
@@ -116,7 +116,7 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
         } catch (Throwable ex) {
             if (message.getRespTopic() != null && !message.getRespTopic().isEmpty()) {
                 HttpMessageResponse.finishHttpResult(logger.isLoggable(Level.FINEST), request == null ? null : request.getRespConvert(),
-                    null, message, callback, messageClient, producers.getProducer(message), message.getRespTopic(), new HttpResult().status(500));
+                    null, message, callback, messageClient, producer, message.getRespTopic(), new HttpResult().status(500));
             }
             logger.log(Level.SEVERE, HttpMessageClientProcessor.class.getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         }
@@ -134,8 +134,8 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
         }
     }
 
-    public MessageClientProducers getProducer() {
-        return producers;
+    public MessageClientProducer getProducer() {
+        return producer;
     }
 
     public NodeHttpServer getServer() {

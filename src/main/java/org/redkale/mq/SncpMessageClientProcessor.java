@@ -28,7 +28,7 @@ public class SncpMessageClientProcessor implements MessageClientProcessor {
 
     protected MessageClient messageClient;
 
-    protected final MessageClientProducers producer;
+    protected final MessageClientProducer producer;
 
     protected final NodeSncpServer server;
 
@@ -46,7 +46,7 @@ public class SncpMessageClientProcessor implements MessageClientProcessor {
         }
     };
 
-    public SncpMessageClientProcessor(Logger logger, SncpMessageClient messageClient, MessageClientProducers producer, NodeSncpServer server, Service service, SncpServlet servlet) {
+    public SncpMessageClientProcessor(Logger logger, SncpMessageClient messageClient, MessageClientProducer producer, NodeSncpServer server, Service service, SncpServlet servlet) {
         this.logger = logger;
         this.messageClient = messageClient;
         this.producer = producer;
@@ -75,7 +75,7 @@ public class SncpMessageClientProcessor implements MessageClientProcessor {
             long e = now - starttime;
             SncpContext context = server.getSncpServer().getContext();
             SncpMessageRequest request = new SncpMessageRequest(context, message);
-            response = new SncpMessageResponse(context, request, callback, messageClient, producer.getProducer(message));
+            response = new SncpMessageResponse(context, request, callback, messageClient, producer);
 
             context.execute(servlet, request, response);
             long o = System.currentTimeMillis() - now;
@@ -105,7 +105,7 @@ public class SncpMessageClientProcessor implements MessageClientProcessor {
         }
     }
 
-    public MessageClientProducers getProducer() {
+    public MessageClientProducer getProducer() {
         return producer;
     }
 

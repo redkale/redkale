@@ -6,7 +6,6 @@
 package org.redkale.mq;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
@@ -25,7 +24,7 @@ public class SncpMessageClient extends MessageClient {
     }
 
     @Override
-    protected MessageClientProducers getProducer() {
+    protected MessageClientProducer getProducer() {
         return messageAgent.getSncpMessageClientProducer();
     }
 
@@ -35,22 +34,12 @@ public class SncpMessageClient extends MessageClient {
 
     //只发送消息，不需要响应
     public final void produceMessage(MessageRecord message) {
-        produceMessage(message, null);
-    }
-
-    //只发送消息，不需要响应
-    public final void produceMessage(MessageRecord message, LongAdder counter) {
-        sendMessage(message, false, counter);
+        sendMessage(message, false);
     }
 
     //发送消息，需要响应
     public final CompletableFuture<MessageRecord> sendMessage(MessageRecord message) {
-        return sendMessage(message, null);
-    }
-
-    //发送消息，需要响应
-    public final CompletableFuture<MessageRecord> sendMessage(MessageRecord message, LongAdder counter) {
-        return sendMessage(message, true, counter);
+        return sendMessage(message, true);
     }
 
     @Override

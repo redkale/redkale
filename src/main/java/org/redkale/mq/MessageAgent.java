@@ -46,9 +46,9 @@ public abstract class MessageAgent implements Resourcable {
 
     protected AnyValue config;
 
-    protected MessageClientProducers httpProducer;
+    protected MessageClientProducer httpProducer;
 
-    protected MessageClientProducers sncpProducer;
+    protected MessageClientProducer sncpProducer;
 
     protected final ReentrantLock httpProducerLock = new ReentrantLock();
 
@@ -68,8 +68,6 @@ public abstract class MessageAgent implements Resourcable {
 
     protected ScheduledThreadPoolExecutor timeoutExecutor;
 
-    protected int producerCount = 1;
-
     protected MessageCoder<MessageRecord> messageCoder = MessageRecordCoder.getInstance();
 
     //本地Service消息接收处理器， key:consumerid
@@ -79,7 +77,6 @@ public abstract class MessageAgent implements Resourcable {
         this.name = checkName(config.getValue("name", ""));
         this.httpMessageClient = new HttpMessageClient(this);
         this.sncpMessageClient = new SncpMessageClient(this);
-        this.producerCount = config.getIntValue("producers", Utility.cpus());
         String coderType = config.getValue("coder", "");
         if (!coderType.trim().isEmpty()) {
             try {
@@ -162,18 +159,18 @@ public abstract class MessageAgent implements Resourcable {
     protected List<MessageClientProducer> getMessageClientProducers() {
         List<MessageClientProducer> producers = new ArrayList<>();
         if (this.httpProducer != null) {
-            producers.addAll(Utility.ofList(this.httpProducer.producers));
+            producers.add(this.httpProducer);
         }
         if (this.sncpProducer != null) {
-            producers.addAll(Utility.ofList(this.sncpProducer.producers));
+            producers.add(this.sncpProducer);
         }
-        MessageClientProducers one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
+        MessageClientProducer one = this.httpMessageClient == null ? null : this.httpMessageClient.getProducer();
         if (one != null) {
-            producers.addAll(Utility.ofList(one.producers));
+            producers.add(one);
         }
         one = this.sncpMessageClient == null ? null : this.sncpMessageClient.getProducer();
         if (one != null) {
-            producers.addAll(Utility.ofList(one.producers));
+            producers.add(one);
         }
         return producers;
     }
@@ -227,23 +224,17 @@ public abstract class MessageAgent implements Resourcable {
     }
 
     //获取指定topic的生产处理器
-    public MessageClientProducers getSncpMessageClientProducer() {
+    public MessageClientProducer getSncpMessageClientProducer() {
         if (this.sncpProducer == null) {
             sncpProducerLock.lock();
             try {
                 if (this.sncpProducer == null) {
-                    long s = System.currentTimeMillis();
-                    MessageClientProducer[] producers = new MessageClientProducer[producerCount];
-                    for (int i = 0; i < producers.length; i++) {
-                        MessageClientProducer producer = createMessageClientProducer("SncpProducer");
-                        producer.startup().join();
-                        producers[i] = producer;
-                    }
+                    long s = System.currentTimeMillis();                    
+                    this.sncpProducer = createMessageClientProducer("SncpProducer");
                     long e = System.currentTimeMillis() - s;
                     if (logger.isLoggable(Level.FINEST)) {
                         logger.log(Level.FINEST, "MessageAgent.SncpProducer startup all in " + e + "ms");
                     }
-                    this.sncpProducer = new MessageClientProducers(producers);
                 }
             } finally {
                 sncpProducerLock.unlock();
@@ -252,23 +243,17 @@ public abstract class MessageAgent implements Resourcable {
         return this.sncpProducer;
     }
 
-    public MessageClientProducers getHttpMessageClientProducer() {
+    public MessageClientProducer getHttpMessageClientProducer() {
         if (this.httpProducer == null) {
             httpProducerLock.lock();
             try {
                 if (this.httpProducer == null) {
                     long s = System.currentTimeMillis();
-                    MessageClientProducer[] producers = new MessageClientProducer[producerCount];
-                    for (int i = 0; i < producers.length; i++) {
-                        MessageClientProducer producer = createMessageClientProducer("HttpProducer");
-                        producer.startup().join();
-                        producers[i] = producer;
-                    }
+                    this.httpProducer = createMessageClientProducer("HttpProducer");
                     long e = System.currentTimeMillis() - s;
                     if (logger.isLoggable(Level.FINEST)) {
                         logger.log(Level.FINEST, "MessageAgent.HttpProducer startup all in " + e + "ms");
-                    }
-                    this.httpProducer = new MessageClientProducers(producers);
+                    }                    
                 }
             } finally {
                 httpProducerLock.unlock();
