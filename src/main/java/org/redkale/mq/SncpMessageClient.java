@@ -20,7 +20,7 @@ public class SncpMessageClient extends MessageClient {
 
     protected SncpMessageClient(MessageAgent messageAgent) {
         super(messageAgent);
-        this.respTopic = messageAgent.generateSncpRespTopic();
+        this.respTopic = messageAgent.generateApplicationSncpRespTopic();
     }
 
     @Override

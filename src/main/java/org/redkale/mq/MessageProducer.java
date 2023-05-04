@@ -3,13 +3,12 @@
  */
 package org.redkale.mq;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
-import org.redkale.convert.ConvertType;
+import java.lang.reflect.Type;
+import java.util.concurrent.CompletableFuture;
+import org.redkale.convert.Convert;
 
 /**
- * MQ资源注解, 只能标记在MessageProducerSender类型字段上
+ * MQ消息发送器
  *
  * <p>
  * 详情见: https://redkale.org
@@ -18,13 +17,15 @@ import org.redkale.convert.ConvertType;
  *
  * @since 2.8.0
  */
-@Documented
-@Target({FIELD})
-@Retention(RUNTIME)
-public @interface MessageProducer {
+public interface MessageProducer {
 
-    String mq();
+    public CompletableFuture<Void> sendMessage(String topic, Object value);
 
-    ConvertType convertType() default ConvertType.JSON;
-    
+    default CompletableFuture<Void> sendMessage(String topic, Convert convert, Object value) {
+        return sendMessage(topic, convert.convertToBytes(value));
+    }
+
+    default CompletableFuture<Void> sendMessage(String topic, Convert convert, Type type, Object value) {
+        return sendMessage(topic, convert.convertToBytes(type, value));
+    }
 }

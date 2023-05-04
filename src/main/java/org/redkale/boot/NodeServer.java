@@ -640,8 +640,8 @@ public abstract class NodeServer {
     }
 
     protected boolean acceptsComponent(Class<? extends Service> serviceImplClass) {
-        if (MessageConsumerListener.class.isAssignableFrom(serviceImplClass)) {
-            MessageConsumer mqConsumer = serviceImplClass.getAnnotation(MessageConsumer.class);
+        if (MessageConsumer.class.isAssignableFrom(serviceImplClass)) {
+            ResourceConsumer mqConsumer = serviceImplClass.getAnnotation(ResourceConsumer.class);
             if (mqConsumer == null) {
                 return false;
             }
@@ -654,10 +654,10 @@ public abstract class NodeServer {
     }
 
     protected boolean interceptComponent(Service service) {
-        if (service instanceof MessageConsumerListener) {
-            MessageConsumer mqConsumer = service.getClass().getAnnotation(MessageConsumer.class);
+        if (service instanceof MessageConsumer) {
+            ResourceConsumer mqConsumer = service.getClass().getAnnotation(ResourceConsumer.class);
             MessageAgent mqAgent = application.getMessageAgent(mqConsumer.mq());
-            mqAgent.addConsumerListener((MessageConsumerListener) service);
+            mqAgent.addMessageConsumer(mqConsumer, (MessageConsumer) service);
             return true;
         }
         return false;

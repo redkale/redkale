@@ -42,7 +42,7 @@ import static java.lang.annotation.ElementType.*;
  *
  * <p>
  * 注： 标记 &#64;MessageMultiConsumer 的Service的&#64;RestMapping方法都只能是void返回类型  <br>
- * 由 MessageConsumerListener 代替
+ * 由 MessageConsumer 代替
  * <p>
  * 详情见: https://redkale.org
  *

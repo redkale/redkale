@@ -474,6 +474,30 @@ public final class Utility {
     }
 
     /**
+     * 是否为空
+     *
+     * @param str 字符串
+     *
+     * @return 是否为空
+     *
+     */
+    public static boolean isEmpty(CharSequence str) {
+        return str == null || str.length() == 0;
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param str 字符串
+     *
+     * @return 是否不为空
+     *
+     */
+    public static boolean isNotEmpty(CharSequence str) {
+        return str != null && str.length() > 0;
+    }
+
+    /**
      * 将字符串首字母大写
      *
      * @param str 字符串

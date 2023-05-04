@@ -3,10 +3,9 @@
  */
 package org.redkale.mq;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
-import org.redkale.convert.ConvertType;
+import org.redkale.annotation.Component;
+import org.redkale.service.Local;
+import org.redkale.util.AnyValue;
 
 /**
  * MQ资源注解
@@ -15,19 +14,19 @@ import org.redkale.convert.ConvertType;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <T> 泛型
  *
  * @since 2.8.0
  */
-@Documented
-@Target({TYPE})
-@Retention(RUNTIME)
-public @interface MessageConsumer {
+@Local
+@Component
+public interface MessageConsumer<T> {
 
-    String mq();
+    default void init(AnyValue config) {
+    }
 
-    String group() default "";
+    public void onMessage(String topic, T message);
 
-    String[] topics();
-
-    ConvertType convertType() default ConvertType.JSON;
+    default void destroy(AnyValue config) {
+    }
 }
