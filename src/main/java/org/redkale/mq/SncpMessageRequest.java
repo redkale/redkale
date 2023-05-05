@@ -29,5 +29,5 @@ public class SncpMessageRequest extends SncpRequest {
         this.createTime = System.currentTimeMillis();
         readHeader(ByteBuffer.wrap(message.getContent()), null);
     }
-    
+
 }

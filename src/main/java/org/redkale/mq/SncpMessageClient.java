@@ -20,7 +20,7 @@ public class SncpMessageClient extends MessageClient {
 
     protected SncpMessageClient(MessageAgent messageAgent) {
         super(messageAgent);
-        this.respTopic = messageAgent.generateApplicationSncpRespTopic();
+        this.appRespTopic = messageAgent.generateAppSncpRespTopic();
     }
 
     @Override
@@ -28,8 +28,8 @@ public class SncpMessageClient extends MessageClient {
         return messageAgent.getSncpMessageClientProducer();
     }
 
-    public String getRespTopic() {
-        return this.respTopic;
+    public String getAppRespTopic() {
+        return this.appRespTopic;
     }
 
     //只发送消息，不需要响应

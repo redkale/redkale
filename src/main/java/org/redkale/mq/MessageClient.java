@@ -37,9 +37,9 @@ public abstract class MessageClient {
 
     protected MessageClientConsumer respConsumer;
 
-    protected String respTopic;
+    protected String appRespTopic;
 
-    protected String respConsumerid;
+    protected String appRespConsumerid;
 
     private final String clazzName;
 
@@ -67,8 +67,8 @@ public abstract class MessageClient {
             if (this.respConsumer == null) {
                 lock.lock();
                 try {
-                    if (this.respConsumerid == null) {
-                        this.respConsumerid = "consumer-" + this.respTopic;
+                    if (this.appRespConsumerid == null) {
+                        this.appRespConsumerid = "consumer-" + this.appRespTopic;
                     }
                     if (this.respConsumer == null) {
                         MessageClientProcessor processor = (msg, callback) -> {
@@ -100,7 +100,7 @@ public abstract class MessageClient {
                             }
                         };
                         long ones = System.currentTimeMillis();
-                        MessageClientConsumer one = messageAgent.createMessageClientConsumer(new String[]{respTopic}, respConsumerid, processor);
+                        MessageClientConsumer one = messageAgent.createMessageClientConsumer(new String[]{appRespTopic}, appRespConsumerid, processor);
                         one.startup().join();
                         long onee = System.currentTimeMillis() - ones;
                         if (finest) {
@@ -113,7 +113,7 @@ public abstract class MessageClient {
                 }
             }
             if (needresp && (message.getRespTopic() == null || message.getRespTopic().isEmpty())) {
-                message.setRespTopic(respTopic);
+                message.setRespTopic(appRespTopic);
             }
             if (counter != null) {
                 counter.increment();
@@ -129,11 +129,10 @@ public abstract class MessageClient {
             } else {
                 future.complete(null);
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             future.completeExceptionally(ex);
-        } finally {
-            return future;
         }
+        return future;
     }
 
     protected MessageRecord formatRespMessage(MessageRecord message) {

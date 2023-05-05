@@ -55,9 +55,10 @@ public abstract class MessageClientConsumer {
 
     public abstract CompletableFuture<Void> startup();
 
+    public abstract CompletableFuture<Void> shutdown();
+
     public boolean isClosed() {
         return closed;
     }
 
-    public abstract CompletableFuture<Void> shutdown();
 }

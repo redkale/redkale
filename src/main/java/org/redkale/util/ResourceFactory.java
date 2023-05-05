@@ -5,14 +5,14 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.*;
-import java.lang.ref.*;
+import java.lang.annotation.Annotation;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
@@ -46,8 +46,6 @@ public final class ResourceFactory {
 
     public static final String RESOURCE_SELF_TYPE = "@type";
 
-    private static final boolean skipCheckRequired = Boolean.getBoolean("redkale.resource.skip.check");
-
     private static final Logger logger = Logger.getLogger(ResourceFactory.class.getSimpleName());
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -56,7 +54,7 @@ public final class ResourceFactory {
 
     private final List<WeakReference<ResourceFactory>> chidren = new CopyOnWriteArrayList<>();
 
-    private final ConcurrentHashMap<Type, ResourceAnnotationProvider> resAnnotationProviderMap = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Class<? extends Annotation>, ResourceAnnotationProvider> resAnnotationProviderMap = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Type, ResourceTypeLoader> resTypeLoaderMap = new ConcurrentHashMap();
 
@@ -814,7 +812,7 @@ public final class ResourceFactory {
         try {
             list.add(srcObj);
             Class clazz = srcObj.getClass();
-            final boolean diyloaderflag = !parentRoot().resAnnotationProviderMap.isEmpty();
+            final boolean diyLoaderFlag = !parentRoot().resAnnotationProviderMap.isEmpty();
             do {
                 if (java.lang.Enum.class.isAssignableFrom(clazz)) {
                     break;
@@ -853,13 +851,12 @@ public final class ResourceFactory {
                                 break;
                             }
                         }
-                        if (flag && diyloaderflag) {
+                        if (flag && diyLoaderFlag) {
                             parentRoot().resAnnotationProviderMap.values().stream().forEach(iloader -> {
                                 Annotation ann = field.getAnnotation(iloader.annotationType());
-                                if (ann == null) {
-                                    return;
+                                if (ann != null) {
+                                    iloader.load(this, srcResourceName, srcObj, ann, field, attachment);
                                 }
-                                iloader.load(this, srcResourceName, srcObj, ann, field, attachment);
                             });
                         }
                         if (ns == null) {
@@ -1002,7 +999,7 @@ public final class ResourceFactory {
                     if (rs != null) {
                         field.set(srcObj, rs);
                     }
-                    if (rs == null && !skipCheckRequired && rc1 != null && rc1.required()) {
+                    if (rs == null && rc1 != null && rc1.required()) {
                         String t = srcObj.getClass().getName();
                         if (srcObj.getClass().getSimpleName().startsWith("_Dyn")) {
                             t = srcObj.getClass().getSuperclass().getName();

@@ -377,11 +377,6 @@ public abstract class MessageAgent implements Resourcable {
         return "sncp.req.module." + resourceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resourceName.isEmpty() ? "" : ("-" + resourceName));
     }
 
-    //格式: consumer-sncp.req.module.user  不提供外部使用
-    protected final String generateSncpConsumerid(String topic, Service service) {
-        return "consumer-" + topic;
-    }
-
     //格式: http.req.module.user
     public static String generateHttpReqTopic(String module) {
         return "http.req.module." + module.toLowerCase();
@@ -393,12 +388,12 @@ public abstract class MessageAgent implements Resourcable {
     }
 
     //格式: sncp.resp.app.node10
-    protected String generateApplicationSncpRespTopic() {
+    protected String generateAppSncpRespTopic() {
         return "sncp.resp.app." + (Utility.isEmpty(nodeName) ? "node" : nodeName) + "-" + nodeid;
     }
 
     //格式: http.resp.app.node10
-    protected String generateApplicationHttpRespTopic() {
+    protected String generateAppHttpRespTopic() {
         return "http.resp.app." + (Utility.isEmpty(nodeName) ? "node" : nodeName) + "-" + nodeid;
     }
 
@@ -411,6 +406,11 @@ public abstract class MessageAgent implements Resourcable {
             return new String[]{generateHttpReqTopic(mmc.module()) + (resname.isEmpty() ? "" : ("-" + resname))};
         }
         return new String[]{"http.req.module." + module + (resname.isEmpty() ? "" : ("-" + resname))};
+    }
+
+    //格式: consumer-sncp.req.module.user  不提供外部使用
+    protected final String generateSncpConsumerid(String topic, Service service) {
+        return "consumer-" + topic;
     }
 
     //格式: consumer-http.req.module.user

@@ -32,7 +32,7 @@ public class HttpMessageClient extends MessageClient {
     protected HttpMessageClient(MessageAgent messageAgent) {
         super(messageAgent);
         if (messageAgent != null) { // //RPC方式下无messageAgent
-            this.respTopic = messageAgent.generateApplicationHttpRespTopic();
+            this.appRespTopic = messageAgent.generateAppHttpRespTopic();
         }
     }
 
