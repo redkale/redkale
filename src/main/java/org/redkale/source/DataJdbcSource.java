@@ -355,7 +355,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     c1 += cc;
                 }
                 c = c1;
-                //prestmt.close();
+                prestmt.close();
             } else {  //分库分表
                 int c1 = 0;
                 for (PreparedStatement stmt : prestmts) {
@@ -493,7 +493,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
             }
             if (info.getTableStrategy() == null) { //单库单表
-                //prestmt.close();
+                prestmt.close();
                 prestmt = prepareInsertEntityStatement(conn, presql, info, entitys);
                 int c1 = 0;
                 int[] cs = prestmt.executeBatch();
@@ -501,7 +501,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     c1 += cc;
                 }
                 c = c1;
-                //prestmt.close();
+                prestmt.close();
             } else { //分库分表
                 //for (PreparedStatement stmt : prestmts) {
                 //    stmt.close();
@@ -1120,7 +1120,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     }
                 }
                 c = c1;
-                //prestmt.close();
+                prestmt.close();
             } else {
                 prepareInfos = getUpdateQuestionPrepareInfo(info, entitys);
                 prestmts = prepareUpdateEntityStatements(conn, info, prepareInfos, entitys);
@@ -1316,7 +1316,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         logger.finest(info.getType().getSimpleName() + " updateColumn sql=" + sql.sql);
                     }
                     c = prestmt.executeUpdate();
-                    //prestmt.close();
+                    prestmt.close();
                     if (!batch) {
                         conn.commit();
                     }
@@ -1349,7 +1349,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         for (int cc : cs) {
                             c1 += cc;
                         }
-                        //prestmt.close();
+                        prestmt.close();
                     }
                     c = c1;
                     if (!batch) {
@@ -1442,7 +1442,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         for (int cc : cs) {
                             c1 += cc;
                         }
-                        //prestmt.close();
+                        prestmt.close();
                     }
                     c = c1;
                     if (!batch) {
@@ -1865,11 +1865,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             String prepareSQL = info.getFindQuestionPrepareSQL(pk);
             prestmt = conn.prepareStatement(prepareSQL);
             prestmt.setObject(1, pk);
-            prestmt.addBatch();
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
             T rs = set.next() ? info.getFullEntityValue(set) : null;
             set.close();
-            //prestmt.close();
+            prestmt.close();
             slowLog(s, prepareSQL);
             return rs;
         } catch (SQLException e) {
@@ -1902,7 +1901,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
             T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
             set.close();
-            //prestmt.close();
+            prestmt.close();
             slowLog(s, sql);
             return rs;
         } catch (SQLException e) {
@@ -1941,14 +1940,14 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
                         }
                         if (prestmt != null) {
-                            //    prestmt.close();
+                            prestmt.close();
                         }
                         prestmt = conn.prepareStatement(sql);
                         prestmt.setFetchSize(1);
                         final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
                         T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
                         set.close();
-                        //prestmt.close();
+                        prestmt.close();
                         slowLog(s, sql);
                         return rs;
                     } catch (SQLException se) {
@@ -1985,7 +1984,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 val = info.getFieldValue(attr, set, 1);
             }
             set.close();
-            //prestmt.close();
+            prestmt.close();
             slowLog(s, sql);
             return val == null ? defValue : val;
         } catch (SQLException e) {
@@ -2024,7 +2023,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             logger.finest(info.getType().getSimpleName() + " findColumn sql=" + sql);
                         }
                         if (prestmt != null) {
-                            //    prestmt.close();
+                            prestmt.close();
                         }
                         prestmt = conn.prepareStatement(sql);
                         prestmt.setFetchSize(1);
@@ -2034,7 +2033,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             val = info.getFieldValue(attr, set, 1);
                         }
                         set.close();
-                        //prestmt.close();
+                        prestmt.close();
                         slowLog(s, sql);
                         return val == null ? defValue : val;
                     } catch (SQLException se) {
@@ -2066,7 +2065,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             final ResultSet set = prestmt.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
             set.close();
-            //prestmt.close();
+            prestmt.close();
             if (info.isLoggable(logger, Level.FINEST, sql)) {
                 logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
             }
@@ -2114,7 +2113,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         final ResultSet set = prestmt.executeQuery();
                         boolean rs = set.next() ? (set.getInt(1) > 0) : false;
                         set.close();
-                        //prestmt.close();
+                        prestmt.close();
                         if (info.isLoggable(logger, Level.FINEST, sql)) {
                             logger.finest(info.getType().getSimpleName() + " exists (" + rs + ") sql=" + sql);
                         }
@@ -2156,8 +2155,9 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         } else {
                             list.add(null);
                         }
+                        set.close();
                     }
-                    //prestmt.close();
+                    prestmt.close();
                     slowLog(s, prepareSQL);
                     return list;
                 } catch (SQLException se) {
@@ -2205,7 +2205,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     list.add(getEntityValue(info, null, rr));
                 }
                 set.close();
-                //prestmt.close();
+                prestmt.close();
                 slowLog(s, prepareSQL);
                 return Sheet.asSheet(list);
             } catch (SQLException se) {
@@ -2311,7 +2311,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 list.add(getEntityValue(info, sels, rr));
             }
             set.close();
-            //prestmt.close();
+            prestmt.close();
             long total = list.size();
             if (needTotal) {
                 prestmt = conn.prepareStatement(countSql);
@@ -2320,7 +2320,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     total = set.getLong(1);
                 }
                 set.close();
-                //prestmt.close();
+                prestmt.close();
             }
             slowLog(s, listSql);
             return new Sheet<>(total, list);
@@ -2359,7 +2359,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 total = set.getRow();
             }
             set.close();
-            //prestmt.close();
+            prestmt.close();
             slowLog(s, listSql);
             return new Sheet<>(total, list);
         }
@@ -2585,40 +2585,20 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         @Override
         public <T> Serializable getObject(Attribute<T, Serializable> attr, int index, String column) {
             Class t = attr.type();
-
-            if (t == java.util.Date.class) {
+            if (t == int.class || t == String.class) {
+                return DataResultSet.getRowColumnValue(this, attr, index, column);
+            } else if (t == java.util.Date.class) {
                 Object val = index > 0 ? getObject(index) : getObject(column);
-
-                if (val
-                    == null) {
-                    return null;
-                }
-                return new java.util.Date(
-                    ((java.sql.Date) val).getTime());
+                return val == null ? null : new java.util.Date(((java.sql.Date) val).getTime());
             } else if (t == java.time.LocalDate.class) {
                 Object val = index > 0 ? getObject(index) : getObject(column);
-
-                if (val
-                    == null) {
-                    return null;
-                }
-                return ((java.sql.Date) val).toLocalDate();
+                return val == null ? null : ((java.sql.Date) val).toLocalDate();
             } else if (t == java.time.LocalTime.class) {
                 Object val = index > 0 ? getObject(index) : getObject(column);
-
-                if (val
-                    == null) {
-                    return null;
-                }
-                return ((java.sql.Time) val).toLocalTime();
+                return val == null ? null : ((java.sql.Time) val).toLocalTime();
             } else if (t == java.time.LocalDateTime.class) {
                 Object val = index > 0 ? getObject(index) : getObject(column);
-
-                if (val
-                    == null) {
-                    return null;
-                }
-                return ((java.sql.Timestamp) val).toLocalDateTime();
+                return val == null ? null : ((java.sql.Timestamp) val).toLocalDateTime();
             } else if (t.getName().startsWith("java.sql.")) {
                 return index > 0 ? (Serializable) getObject(index) : (Serializable) getObject(column);
             }
