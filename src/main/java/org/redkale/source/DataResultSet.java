@@ -136,7 +136,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                         if (o instanceof byte[]) {
                             o = new BigDecimal(new String((byte[]) o));
                         } else {
-                            o = new BigInteger(o.toString());
+                            o = new BigDecimal(o.toString());
                         }
                     }
                 } else if (t == String.class) {
