@@ -29,12 +29,12 @@
             <property name="javax.persistence.connections.limit" value="12"/>
             
             <!--  包含的SQL模板，相当于反向LIKE，不同的JDBC驱动的SQL语句不一样，Redkale内置了MySQL的语句 -->
-            <property name="javax.persistence.contain.sqltemplate" value="LOCATE(${keystr}, ${column}) > 0"/>
-            <property name="javax.persistence.notcontain.sqltemplate" value="LOCATE(${keystr}, ${column}) = 0"/>
+            <property name="javax.persistence.contain.sqltemplate" value="LOCATE(#{keystr}, #{column}) > 0"/>
+            <property name="javax.persistence.notcontain.sqltemplate" value="LOCATE(#{keystr}, #{column}) = 0"/>
             
             <!--  复制表结构的SQL模板，Redkale内置了MySQL的语句 -->
             <property name="javax.persistence.tablenotexist.sqlstates" value="42000;42S02"/>
-            <property name="javax.persistence.tablecopy.sqltemplate" value="CREATE TABLE IF NOT EXISTS ${newtable} LIKE ${oldtable}"/>
+            <property name="javax.persistence.tablecopy.sqltemplate" value="CREATE TABLE IF NOT EXISTS #{newtable} LIKE #{oldtable}"/>
            
         </properties>
     </persistence-unit>

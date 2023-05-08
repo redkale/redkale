@@ -36,14 +36,6 @@ public class SncpMessageResponse extends SncpResponse {
         this.producer = producer;
     }
 
-    public SncpMessageResponse(SncpContext context, MessageRecord message, Runnable callback, MessageClient messageClient, MessageClientProducer producer) {
-        super(context, new SncpMessageRequest(context, message));
-        this.message = message;
-        this.callback = callback;
-        this.messageClient = messageClient;
-        this.producer = producer;
-    }
-
     @Override
     public void finish(final int retcode, final BsonWriter out) {
         if (callback != null) {

@@ -356,7 +356,7 @@ public final class ApiDocCommand {
                 in = new FileInputStream(doctemplate);
             }
             if (in != null) {
-                String content = Utility.read(in).replace("'${content}'", json);
+                String content = Utility.read(in).replace("'#{content}'", json);
                 in.close();
                 FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "apidoc.html"));
                 outhtml.write(content.getBytes(StandardCharsets.UTF_8));

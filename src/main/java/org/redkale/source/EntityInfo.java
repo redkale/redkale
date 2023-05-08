@@ -598,9 +598,9 @@ public final class EntityInfo<T> {
                 insertsbdollar.append("$").append(++index);
                 insertsbnames.append(":").append(col);
             }
-            this.insertQuestionPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "${newtable}") + "(" + insertsb + ") VALUES(" + insertsbquestion + ")";
-            this.insertDollarPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "${newtable}") + "(" + insertsb + ") VALUES(" + insertsbdollar + ")";
-            this.insertNamesPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "${newtable}") + "(" + insertsb + ") VALUES(" + insertsbnames + ")";
+            this.insertQuestionPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "#{newtable}") + "(" + insertsb + ") VALUES(" + insertsbquestion + ")";
+            this.insertDollarPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "#{newtable}") + "(" + insertsb + ") VALUES(" + insertsbdollar + ")";
+            this.insertNamesPrepareSQL = "INSERT INTO " + (this.tableStrategy == null ? table : "#{newtable}") + "(" + insertsb + ") VALUES(" + insertsbnames + ")";
             StringBuilder updatesbquestion = new StringBuilder();
             StringBuilder updatesbdollar = new StringBuilder();
             StringBuilder updatesbnames = new StringBuilder();
@@ -615,12 +615,12 @@ public final class EntityInfo<T> {
                 updatesbdollar.append(col).append(" = ").append("$").append(++index);
                 updatesbnames.append(col).append(" = :").append(col);
             }
-            this.updateQuestionPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbquestion + " WHERE " + getPrimarySQLColumn(null) + " = ?";
-            this.updateDollarPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbdollar + " WHERE " + getPrimarySQLColumn(null) + " = $" + (++index);
-            this.updateNamesPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "${newtable}") + " SET " + updatesbnames + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
-            this.deleteQuestionPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = ?";
-            this.deleteDollarPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = $1";
-            this.deleteNamesPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "${newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
+            this.updateQuestionPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "#{newtable}") + " SET " + updatesbquestion + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.updateDollarPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "#{newtable}") + " SET " + updatesbdollar + " WHERE " + getPrimarySQLColumn(null) + " = $" + (++index);
+            this.updateNamesPrepareSQL = "UPDATE " + (this.tableStrategy == null ? table : "#{newtable}") + " SET " + updatesbnames + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
+            this.deleteQuestionPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "#{newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = ?";
+            this.deleteDollarPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "#{newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = $1";
+            this.deleteNamesPrepareSQL = "DELETE FROM " + (this.tableStrategy == null ? table : "#{newtable}") + " WHERE " + getPrimarySQLColumn(null) + " = :" + getPrimarySQLColumn(null);
             this.allQueryPrepareSQL = "SELECT " + querydb + " FROM " + table;
             this.findQuestionPrepareSQL = "SELECT " + querydb + " FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = ?";
             this.findDollarPrepareSQL = "SELECT " + querydb + " FROM " + table + " WHERE " + getPrimarySQLColumn(null) + " = $1";
@@ -845,7 +845,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return findQuestionPrepareSQL;
         }
-        return findQuestionPrepareSQL.replace("${newtable}", getTable(pk));
+        return findQuestionPrepareSQL.replace("#{newtable}", getTable(pk));
     }
 
     /**
@@ -859,7 +859,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return findsQuestionPrepareSQL;
         }
-        return findsQuestionPrepareSQL.replace("${newtable}", getTable(pk));
+        return findsQuestionPrepareSQL.replace("#{newtable}", getTable(pk));
     }
 
     /**
@@ -883,7 +883,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return findDollarPrepareSQL;
         }
-        return findDollarPrepareSQL.replace("${newtable}", getTable(pk));
+        return findDollarPrepareSQL.replace("#{newtable}", getTable(pk));
     }
 
     /**
@@ -897,7 +897,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return findsDollarPrepareSQL;
         }
-        return findsDollarPrepareSQL.replace("${newtable}", getTable(pk));
+        return findsDollarPrepareSQL.replace("#{newtable}", getTable(pk));
     }
 
     /**
@@ -911,7 +911,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return findNamesPrepareSQL;
         }
-        return findNamesPrepareSQL.replace("${newtable}", getTable(pk));
+        return findNamesPrepareSQL.replace("#{newtable}", getTable(pk));
     }
 
     /**
@@ -925,7 +925,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return findsNamesPrepareSQL;
         }
-        return findsNamesPrepareSQL.replace("${newtable}", getTable(pk));
+        return findsNamesPrepareSQL.replace("#{newtable}", getTable(pk));
     }
 
     /**
@@ -939,7 +939,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return insertQuestionPrepareSQL;
         }
-        return insertQuestionPrepareSQL.replace("${newtable}", getTable(bean));
+        return insertQuestionPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**
@@ -953,7 +953,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return insertDollarPrepareSQL;
         }
-        return insertDollarPrepareSQL.replace("${newtable}", getTable(bean));
+        return insertDollarPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**
@@ -967,7 +967,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return insertNamesPrepareSQL;
         }
-        return insertNamesPrepareSQL.replace("${newtable}", getTable(bean));
+        return insertNamesPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**
@@ -981,7 +981,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return updateQuestionPrepareSQL;
         }
-        return updateQuestionPrepareSQL.replace("${newtable}", getTable(bean));
+        return updateQuestionPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**
@@ -995,7 +995,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return updateDollarPrepareSQL;
         }
-        return updateDollarPrepareSQL.replace("${newtable}", getTable(bean));
+        return updateDollarPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**
@@ -1049,7 +1049,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return updateNamesPrepareSQL;
         }
-        return updateNamesPrepareSQL.replace("${newtable}", getTable(bean));
+        return updateNamesPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**
@@ -1063,7 +1063,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return deleteQuestionPrepareSQL;
         }
-        return deleteQuestionPrepareSQL.replace("${newtable}", getTable(bean));
+        return deleteQuestionPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**
@@ -1077,7 +1077,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return deleteDollarPrepareSQL;
         }
-        return deleteDollarPrepareSQL.replace("${newtable}", getTable(bean));
+        return deleteDollarPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**
@@ -1091,7 +1091,7 @@ public final class EntityInfo<T> {
         if (this.tableStrategy == null) {
             return deleteNamesPrepareSQL;
         }
-        return deleteNamesPrepareSQL.replace("${newtable}", getTable(bean));
+        return deleteNamesPrepareSQL.replace("#{newtable}", getTable(bean));
     }
 
     /**

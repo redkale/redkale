@@ -130,11 +130,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     protected void afterResourceChange() {
         this.autoDDL = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false").trim());
 
-        this.containSQL = readConfProps.getProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) > 0");
-        this.notContainSQL = readConfProps.getProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "LOCATE(${keystr}, ${column}) = 0");
+        this.containSQL = readConfProps.getProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "LOCATE(#{keystr}, #{column}) > 0");
+        this.notContainSQL = readConfProps.getProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "LOCATE(#{keystr}, #{column}) = 0");
 
         this.tableNotExistSqlstates = ";" + readConfProps.getProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
-        this.tablecopySQL = readConfProps.getProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} LIKE ${oldtable}");
+        this.tablecopySQL = readConfProps.getProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS #{newtable} LIKE #{oldtable}");
 
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
         this.slowmsWarn = Integer.parseInt(readConfProps.getProperty(DATA_SOURCE_SLOWMS_WARN, "2000").trim());
@@ -265,23 +265,23 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     protected void initProperties(Properties props) {
         if ("oracle".equals(this.dbtype)) {
-            props.setProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) > 0");
-            props.setProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "INSTR(${keystr}, ${column}) = 0");
+            props.setProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "INSTR(#{keystr}, #{column}) > 0");
+            props.setProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "INSTR(#{keystr}, #{column}) = 0");
             if (!props.containsKey(DATA_SOURCE_TABLENOTEXIST_SQLSTATES)) {
                 props.setProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42000;42S02");
             }
             if (!props.containsKey(DATA_SOURCE_TABLECOPY_SQLTEMPLATE)) {
                 //注意：此语句复制表结构会导致默认值和主键信息的丢失
-                props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} AS SELECT * FROM ${oldtable} WHERE 1=2");
+                props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS #{newtable} AS SELECT * FROM #{oldtable} WHERE 1=2");
             }
         } else if ("sqlserver".equals(this.dbtype)) {
-            props.setProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) > 0");
-            props.setProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(${column}, ${keystr}) = 0");
+            props.setProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "CHARINDEX(#{column}, #{keystr}) > 0");
+            props.setProperty(DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE, "CHARINDEX(#{column}, #{keystr}) = 0");
         } else if ("postgresql".equals(this.dbtype)) {
             if (!props.containsKey(DATA_SOURCE_TABLECOPY_SQLTEMPLATE)) { //注意：此语句复制表结构会导致默认值和主键信息的丢失
                 //注意：postgresql不支持跨库复制表结构
-                //props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE ${newtable} AS (SELECT * FROM ${oldtable} LIMIT 0)");
-                props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS ${newtable} (LIKE ${oldtable} INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING COMMENTS INCLUDING INDEXES)");
+                //props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE #{newtable} AS (SELECT * FROM #{oldtable} LIMIT 0)");
+                props.setProperty(DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS #{newtable} (LIKE #{oldtable} INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING COMMENTS INCLUDING INDEXES)");
             }
             if (!props.containsKey(DATA_SOURCE_TABLENOTEXIST_SQLSTATES)) {
                 props.setProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42P01;3F000");
@@ -573,7 +573,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     @Local
     protected String getTableCopySQL(EntityInfo info, String newTable) {
-        return tablecopySQL.replace("${newtable}", newTable).replace("${oldtable}", info.table);
+        return tablecopySQL.replace("#{newtable}", newTable).replace("#{oldtable}", info.table);
     }
 
     @Local

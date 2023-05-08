@@ -480,16 +480,16 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         }
         StringBuilder sb = new StringBuilder(32);
         if (express == CONTAIN) {
-            return source.containSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
+            return source.containSQL.replace("#{column}", info.getSQLColumn(talis, column)).replace("#{keystr}", val);
         }
         if (express == IGNORECASECONTAIN) {
-            return source.containSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
+            return source.containSQL.replace("#{column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("#{keystr}", val);
         }
         if (express == NOTCONTAIN) {
-            return source.notContainSQL.replace("${column}", info.getSQLColumn(talis, column)).replace("${keystr}", val);
+            return source.notContainSQL.replace("#{column}", info.getSQLColumn(talis, column)).replace("#{keystr}", val);
         }
         if (express == IGNORECASENOTCONTAIN) {
-            return source.notContainSQL.replace("${column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("${keystr}", val);
+            return source.notContainSQL.replace("#{column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("#{keystr}", val);
         }
 
         if (express == LENGTH_EQUAL || express == LENGTH_LESSTHAN || express == LENGTH_LESSTHANOREQUALTO
