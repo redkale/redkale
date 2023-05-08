@@ -365,13 +365,13 @@ public class JsonReader extends Reader {
             if (nt == '}' || nt == ']') {
                 return false;
             }
-            this.position--;
+            backChar(ch);
             return true;
         }
         if (ch == '}' || ch == ']') {
             return false;
         }
-        this.position--; // { [ 交由 readObjectB 或 readMapB 或 readArrayB 读取
+        backChar(ch); // { [ 交由 readObjectB 或 readMapB 或 readArrayB 读取
         return true;
     }
 

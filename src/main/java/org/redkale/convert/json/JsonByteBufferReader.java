@@ -132,6 +132,7 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') {
             return null;
         }
+        int pos = this.position;
         StringBuilder sb = new StringBuilder();
         sb.append(ch);
         char one;
@@ -139,7 +140,7 @@ public class JsonByteBufferReader extends JsonReader {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
         }
-        throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch + "' in (" + sb + ")");
+        throw new ConvertException("a json object text must begin with '{' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
     }
 
     /**
