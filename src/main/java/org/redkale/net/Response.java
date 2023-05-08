@@ -8,6 +8,7 @@ package org.redkale.net;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.Level;
@@ -48,13 +49,15 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected BiConsumer<R, Response<C, R>> recycleListener;
 
+    protected List<Runnable> afterFinishListeners;
+
     protected Filter<C, R, ? extends Response<C, R>> filter;
 
     protected Servlet<C, R, ? extends Response<C, R>> servlet;
 
     private final ByteBuffer writeBuffer;
 
-    protected final CompletionHandler finishBytesIOThreadHandler = new CompletionHandler<Integer, Void>() {
+    private final CompletionHandler finishBytesIOThreadHandler = new CompletionHandler<Integer, Void>() {
 
         @Override
         public void completed(Integer result, Void attachment) {
@@ -68,7 +71,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     };
 
-    protected final CompletionHandler finishBufferIOThreadHandler = new CompletionHandler<Integer, ByteBuffer>() {
+    private final CompletionHandler finishBufferIOThreadHandler = new CompletionHandler<Integer, ByteBuffer>() {
 
         @Override
         public void completed(Integer result, ByteBuffer attachment) {
@@ -239,6 +242,13 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.recycleListener = recycleListener;
     }
 
+    public void addAfterFinishListener(Runnable listener) {
+        if (this.afterFinishListeners == null) {
+            this.afterFinishListeners = new ArrayList<>();
+        }
+        this.afterFinishListeners.add(listener);
+    }
+
     public Object getOutput() {
         return output;
     }
@@ -266,6 +276,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         completeInIOThread(true);
     }
 
+    protected void completeFinishBytes(Integer result, Void attachment) {
+        completeInIOThread();
+    }
+
     private void completeInIOThread(boolean kill) {
         if (!this.inited) {
             return; //避免重复关闭
@@ -274,10 +288,16 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         if (kill) {
             refuseAlive();
         }
+        if (this.afterFinishListeners != null) {
+            for (Runnable listener : this.afterFinishListeners) {
+                listener.run();
+            }
+            this.afterFinishListeners = null;
+        }
         if (this.recycleListener != null) {
             try {
                 this.recycleListener.accept(request, this);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 context.logger.log(Level.WARNING, "Response.recycleListener error, request = " + request, e);
             }
             this.recycleListener = null;

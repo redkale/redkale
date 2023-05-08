@@ -1360,7 +1360,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                             fileChannel.close();
                         } catch (IOException ie) {
                         }
-                        finishBytesIOThreadHandler.completed(result, attachment);
+                        completeFinishBytes(result, attachment);
                         return;
                     }
                     if (fileChannel == null) {
