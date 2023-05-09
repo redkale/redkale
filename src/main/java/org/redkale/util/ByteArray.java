@@ -9,7 +9,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.*;
-import java.util.Arrays;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -31,17 +31,18 @@ public final class ByteArray implements ByteTuple {
     }
 
     public ByteArray(int size) {
-        content = new byte[Math.max(1, size)];
+        this.content = new byte[Math.max(1, size)];
     }
 
     public ByteArray(ByteTuple tuple) {
-        content = tuple.content();
-        count = tuple.length();
+        this.content = tuple.content();
+        this.count = tuple.length();
     }
 
     public ByteArray(byte[] bs) {
-        content = bs;
-        count = 0;
+        Objects.requireNonNull(bs);
+        this.content = bs;
+        this.count = bs.length;
     }
 
     /**

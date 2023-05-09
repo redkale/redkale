@@ -365,7 +365,7 @@ public class JsonReader extends Reader {
             if (nt == '}' || nt == ']') {
                 return false;
             }
-            backChar(ch);
+            backChar(nt);
             return true;
         }
         if (ch == '}' || ch == ']') {

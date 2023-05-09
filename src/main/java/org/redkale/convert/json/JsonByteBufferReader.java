@@ -164,6 +164,7 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') {
             return SIGN_NULL;
         }
+        int pos = this.position;
         StringBuilder sb = new StringBuilder();
         sb.append(ch);
         char one;
@@ -171,7 +172,7 @@ public class JsonByteBufferReader extends JsonReader {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
         }
-        throw new ConvertException("a json array text must begin with '[' (position = " + position + ") but '" + ch + "' in (" + sb + ")");
+        throw new ConvertException("a json array text must begin with '[' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
     }
 
     /**
@@ -183,6 +184,7 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == ':') {
             return;
         }
+        int pos = this.position;
         StringBuilder sb = new StringBuilder();
         sb.append(ch);
         char one;
@@ -190,7 +192,7 @@ public class JsonByteBufferReader extends JsonReader {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
         }
-        throw new ConvertException("expected a ':' but '" + ch + "'(position = " + position + ") in (" + sb + ")");
+        throw new ConvertException("expected a ':' but '" + ch + "'(position = " + pos + ") in (" + sb + ")");
     }
 
     /**
