@@ -25,7 +25,7 @@ import org.redkale.service.Local;
 import org.redkale.util.*;
 
 /**
- * CacheSource的默认实现--内存缓存
+ * CacheSource的默认实现--内存缓存, 此实现只可用于调试，不可用于生产环境
  * 注意: url 需要指定为 memory:cachesource
  *
  * <p>
@@ -1053,8 +1053,69 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public boolean persist(final String key) {
+        if (key == null) {
+            return false;
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null) {
+            return false;
+        }
+        entry.expireSeconds = 0;
+        return true;
+    }
+
+    @Override
+    public boolean rename(String oldKey, String newKey) {
+        if (oldKey == null || newKey == null) {
+            return false;
+        }
+        CacheEntry entry = container.get(oldKey);
+        if (entry == null) {
+            return false;
+        }
+        entry.key = newKey;
+        container.put(newKey, entry);
+        container.remove(oldKey);
+        return true;
+    }
+
+    @Override
+    public boolean renamenx(String oldKey, String newKey) {
+        if (oldKey == null || newKey == null) {
+            return false;
+        }
+        if (container.containsKey(newKey)) {
+            return false;
+        }
+        CacheEntry entry = container.get(oldKey);
+        if (entry == null) {
+            return false;
+        }
+        entry.key = newKey;
+        container.put(newKey, entry);
+        container.remove(oldKey);
+        return true;
+    }
+
+    @Override
     public CompletableFuture<Void> expireAsync(final String key, final int expireSeconds) {
         return CompletableFuture.runAsync(() -> expire(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> persistAsync(String key) {
+        return CompletableFuture.supplyAsync(() -> persist(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> renameAsync(String oldKey, String newKey) {
+        return CompletableFuture.supplyAsync(() -> rename(oldKey, newKey), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> renamenxAsync(String oldKey, String newKey) {
+        return CompletableFuture.supplyAsync(() -> renamenx(oldKey, newKey), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1754,7 +1815,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         final CacheEntryType cacheType;
 
-        final String key;
+        String key;
 
         //<=0表示永久保存
         int expireSeconds;

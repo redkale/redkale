@@ -164,6 +164,12 @@ public interface CacheSource extends Resourcable {
 
     public void expire(final String key, final int seconds);
 
+    public boolean persist(final String key);
+
+    public boolean rename(String oldKey, String newKey);
+
+    public boolean renamenx(String oldKey, String newKey);
+
     public int del(final String... keys);
 
     public long incr(final String key);
@@ -448,6 +454,12 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Boolean> existsAsync(final String key);
 
     public CompletableFuture<Void> expireAsync(final String key, final int seconds);
+
+    public CompletableFuture<Boolean> persistAsync(final String key);
+
+    public CompletableFuture<Boolean> renameAsync(String oldKey, String newKey);
+
+    public CompletableFuture<Boolean> renamenxAsync(String oldKey, String newKey);
 
     public CompletableFuture<Integer> delAsync(final String... keys);
 
