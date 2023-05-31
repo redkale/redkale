@@ -207,6 +207,20 @@ public interface CacheSource extends Resourcable {
 
     public boolean hsetnxLong(final String key, final String field, final long value);
 
+    //------------------------ hgetall ------------------------
+    public <T> Map<String, T> hgetall(final String key, final Type type);
+
+    public Map<String, String> hgetallString(final String key);
+
+    public Map<String, Long> hgetallLong(final String key);
+
+    //------------------------ hvals  ------------------------
+    public <T> List<T> hvals(final String key, final Type type);
+
+    public List<String> hvalsString(final String key);
+
+    public List<Long> hvalsLong(final String key);
+
     //------------------------ hxxx ------------------------
     public int hdel(final String key, String... fields);
 
@@ -233,9 +247,9 @@ public interface CacheSource extends Resourcable {
 
     public <T> List<T> hmget(final String key, final Type type, final String... fields);
 
-    public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit);
+    public <T> Map<String, T> hscan(final String key, final Type type, int offset, int limit);
 
-    public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit, String pattern);
+    public <T> Map<String, T> hscan(final String key, final Type type, int offset, int limit, String pattern);
 
     //------------------------ list ------------------------
     public int llen(final String key);
@@ -498,6 +512,20 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Boolean> hsetnxLongAsync(final String key, final String field, final long value);
 
+    //------------------------ hgetallAsync ------------------------
+    public <T> CompletableFuture<Map<String, T>> hgetallAsync(final String key, final Type type);
+
+    public CompletableFuture<Map<String, String>> hgetallStringAsync(final String key);
+
+    public CompletableFuture<Map<String, Long>> hgetallLongAsync(final String key);
+
+    //------------------------ hvalsAsync  ------------------------
+    public <T> CompletableFuture<List<T>> hvalsAsync(final String key, final Type type);
+
+    public CompletableFuture<List<String>> hvalsStringAsync(final String key);
+
+    public CompletableFuture<List<Long>> hvalsLongAsync(final String key);
+
     //------------------------ hxxxAsync ------------------------
     public CompletableFuture<Integer> hdelAsync(final String key, String... fields);
 
@@ -524,9 +552,9 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields);
 
-    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit);
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, int offset, int limit);
 
-    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit, String pattern);
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, int offset, int limit, String pattern);
 
     //------------------------ listAsync ------------------------  
     public CompletableFuture<Integer> llenAsync(final String key);

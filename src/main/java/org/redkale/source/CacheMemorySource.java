@@ -363,12 +363,42 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit) {
-        return hmap(key, type, offset, limit, null);
+    public <T> Map<String, T> hgetall(final String key, final Type type) {
+        return hgetall(CacheEntryType.MAP, key);
     }
 
     @Override
-    public <T> Map<String, T> hmap(final String key, final Type type, int offset, int limit, String pattern) {
+    public Map<String, String> hgetallString(final String key) {
+        return hgetall(CacheEntryType.MAP, key);
+    }
+
+    @Override
+    public Map<String, Long> hgetallLong(final String key) {
+        return hgetall(CacheEntryType.MAP, key);
+    }
+
+    @Override
+    public <T> List<T> hvals(final String key, final Type type) {
+        return hvals(CacheEntryType.MAP, key);
+    }
+
+    @Override
+    public List<String> hvalsString(final String key) {
+        return hvals(CacheEntryType.MAP, key);
+    }
+
+    @Override
+    public List<Long> hvalsLong(final String key) {
+        return hvals(CacheEntryType.MAP, key);
+    }
+
+    @Override
+    public <T> Map<String, T> hscan(final String key, final Type type, int offset, int limit) {
+        return hscan(key, type, offset, limit, null);
+    }
+
+    @Override
+    public <T> Map<String, T> hscan(final String key, final Type type, int offset, int limit, String pattern) {
         if (key == null) {
             return new HashMap();
         }
@@ -591,13 +621,43 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit) {
-        return CompletableFuture.supplyAsync(() -> hmap(key, type, offset, limit), getExecutor());
+    public <T> CompletableFuture<Map<String, T>> hgetallAsync(final String key, final Type type) {
+        return CompletableFuture.supplyAsync(() -> hgetall(key, type), getExecutor());
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int offset, int limit, String pattern) {
-        return CompletableFuture.supplyAsync(() -> hmap(key, type, offset, limit, pattern), getExecutor());
+    public CompletableFuture<Map<String, String>> hgetallStringAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> hgetallString(key), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Long>> hgetallLongAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> hgetallLong(key), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<List<T>> hvalsAsync(final String key, final Type type) {
+        return CompletableFuture.supplyAsync(() -> hvals(key, type), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<List<String>> hvalsStringAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> hvalsString(key), getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<List<Long>> hvalsLongAsync(final String key) {
+        return CompletableFuture.supplyAsync(() -> hvalsLong(key), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, int offset, int limit) {
+        return CompletableFuture.supplyAsync(() -> hscan(key, type, offset, limit), getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, int offset, int limit, String pattern) {
+        return CompletableFuture.supplyAsync(() -> hscan(key, type, offset, limit, pattern), getExecutor());
     }
 
     @Override
@@ -762,6 +822,30 @@ public final class CacheMemorySource extends AbstractCacheSource {
             entry.expireSeconds = 0;
             entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
             return false;
+        }
+    }
+
+    protected Map hgetall(CacheEntryType cacheType, String key) {
+        if (key == null) {
+            return new LinkedHashMap();
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null) {
+            return new LinkedHashMap();
+        } else {
+            return new LinkedHashMap(entry.mapValue);
+        }
+    }
+
+    protected List hvals(CacheEntryType cacheType, String key) {
+        if (key == null) {
+            return new ArrayList();
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null) {
+            return new ArrayList();
+        } else {
+            return new ArrayList(entry.mapValue.values());
         }
     }
 
@@ -1909,63 +1993,77 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return mapValue;
         }
     }
-
+    
+    //-------------------------- 过期方法 ----------------------------------
+    
     @Override
+    @Deprecated(since = "2.8.0")
     public Collection<Long> getexLongCollection(String key, int expireSeconds) {
         return (Collection<Long>) getex(key, expireSeconds, long.class);
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getexCollectionAsync(final String key, final int expireSeconds, final Type componentType) {
         return CompletableFuture.supplyAsync(() -> getexCollection(key, expireSeconds, componentType), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<String>> getexStringCollectionAsync(final String key, final int expireSeconds) {
         return CompletableFuture.supplyAsync(() -> getexStringCollection(key, expireSeconds), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds) {
         return CompletableFuture.supplyAsync(() -> getexLongCollection(key, expireSeconds), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(boolean set, Type componentType, String... keys) {
         return CompletableFuture.supplyAsync(() -> getCollectionMap(set, componentType, keys), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> getStringCollection(key), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys) {
         return CompletableFuture.supplyAsync(() -> getStringCollectionMap(set, keys), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> getLongCollection(key), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys) {
         return CompletableFuture.supplyAsync(() -> getLongCollectionMap(set, keys), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(String key, Type componentType) {
         return CompletableFuture.supplyAsync(() -> getCollection(key, componentType), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public <T> Collection<T> getCollection(final String key, final Type componentType) {
         return (Collection<T>) get(key, componentType);
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys) {
         Map<String, Collection<T>> map = new HashMap<>();
         for (String key : keys) {
@@ -1978,11 +2076,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public Collection<String> getStringCollection(final String key) {
         return (Collection<String>) get(key, String.class);
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys) {
         Map<String, Collection<String>> map = new HashMap<>();
         for (String key : keys) {
@@ -1995,6 +2095,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public Map<String, Long> getLongMap(final String... keys) {
         Map<String, Long> map = new LinkedHashMap<>();
         for (String key : keys) {
@@ -2005,6 +2106,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public Long[] getLongArray(final String... keys) {
         Long[] rs = new Long[keys.length];
         int index = -1;
@@ -2016,16 +2118,19 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
         return CompletableFuture.supplyAsync(() -> getLongMap(keys), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Long[]> getLongArrayAsync(final String... keys) {
         return CompletableFuture.supplyAsync(() -> getLongArray(keys), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public Map<String, String> getStringMap(final String... keys) {
         Map<String, String> map = new LinkedHashMap<>();
         for (String key : keys) {
@@ -2036,6 +2141,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public String[] getStringArray(final String... keys) {
         String[] rs = new String[keys.length];
         int index = -1;
@@ -2047,16 +2153,19 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys) {
         return CompletableFuture.supplyAsync(() -> getStringMap(keys), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<String[]> getStringArrayAsync(final String... keys) {
         return CompletableFuture.supplyAsync(() -> getStringArray(keys), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public <T> Map<String, T> getMap(final Type componentType, final String... keys) {
         Map<String, T> map = new LinkedHashMap<>();
         for (String key : keys) {
@@ -2066,16 +2175,19 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys) {
         return CompletableFuture.supplyAsync(() -> getMap(componentType, keys), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public Collection<Long> getLongCollection(final String key) {
         return (Collection<Long>) get(key, long.class);
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys) {
         Map<String, Collection<Long>> map = new HashMap<>();
         for (String key : keys) {
@@ -2088,22 +2200,26 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public int getCollectionSize(final String key) {
         Collection collection = (Collection) get(key, Object.class);
         return collection == null ? 0 : collection.size();
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public CompletableFuture<Integer> getCollectionSizeAsync(final String key) {
         return CompletableFuture.supplyAsync(() -> getCollectionSize(key), getExecutor());
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType) {
         return (Collection<T>) getex(key, expireSeconds, componentType);
     }
 
     @Override
+    @Deprecated(since = "2.8.0")
     public Collection<String> getexStringCollection(final String key, final int expireSeconds) {
         return (Collection<String>) getex(key, expireSeconds, String.class);
     }
