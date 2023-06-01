@@ -1080,6 +1080,16 @@ public class HttpRequest extends Request<HttpContext> {
         return this;
     }
 
+    protected HttpRequest removeParameter(String name) {
+        this.params.remove(name);
+        return this;
+    }
+
+    protected HttpRequest removeHeader(String name) {
+        this.headers.remove(name);
+        return this;
+    }
+
     protected static String toDecodeString(ByteArray array, int offset, int len, final Charset charset) {
         byte[] content = array.content();
         if (len == 1) {
