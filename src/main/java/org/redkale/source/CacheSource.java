@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.annotation.Component;
 import org.redkale.convert.Convert;
 import org.redkale.util.*;
@@ -247,9 +248,9 @@ public interface CacheSource extends Resourcable {
 
     public <T> List<T> hmget(final String key, final Type type, final String... fields);
 
-    public <T> Map<String, T> hscan(final String key, final Type type, int offset, int limit);
+    public <T> Map<String, T> hmap(final String key, final Type type, AtomicInteger cursor, int limit);
 
-    public <T> Map<String, T> hscan(final String key, final Type type, int offset, int limit, String pattern);
+    public <T> Map<String, T> hmap(final String key, final Type type, AtomicInteger cursor, int limit, String pattern);
 
     //------------------------ list ------------------------
     public int llen(final String key);
@@ -552,9 +553,9 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields);
 
-    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, int offset, int limit);
+    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, AtomicInteger cursor, int limit);
 
-    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, int offset, int limit, String pattern);
+    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, AtomicInteger cursor, int limit, String pattern);
 
     //------------------------ listAsync ------------------------  
     public CompletableFuture<Integer> llenAsync(final String key);

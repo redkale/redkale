@@ -237,7 +237,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     private CompletableFuture<Set<InetSocketAddress>> queryAddress(final String serviceName) {
-        final CompletableFuture<Map<String, AddressEntry>> future = source.hscanAsync(serviceName, AddressEntry.class, 0, 10000);
+        final CompletableFuture<Map<String, AddressEntry>> future = source.hmapAsync(serviceName, AddressEntry.class, new AtomicInteger(), 10000);
         return future.thenApply(map -> {
             final Set<InetSocketAddress> set = new HashSet<>();
             map.forEach((n, v) -> {

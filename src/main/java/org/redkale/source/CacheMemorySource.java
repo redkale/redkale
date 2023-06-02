@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
@@ -393,12 +393,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> Map<String, T> hscan(final String key, final Type type, int offset, int limit) {
-        return hscan(key, type, offset, limit, null);
+    public <T> Map<String, T> hmap(final String key, final Type type, AtomicInteger cursor, int limit) {
+        return hmap(key, type, cursor, limit, null);
     }
 
     @Override
-    public <T> Map<String, T> hscan(final String key, final Type type, int offset, int limit, String pattern) {
+    public <T> Map<String, T> hmap(final String key, final Type type, AtomicInteger cursor, int limit, String pattern) {
         if (key == null) {
             return new HashMap();
         }
@@ -651,13 +651,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, int offset, int limit) {
-        return CompletableFuture.supplyAsync(() -> hscan(key, type, offset, limit), getExecutor());
+    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, AtomicInteger cursor, int limit) {
+        return CompletableFuture.supplyAsync(() -> hmap(key, type, cursor, limit), getExecutor());
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, int offset, int limit, String pattern) {
-        return CompletableFuture.supplyAsync(() -> hscan(key, type, offset, limit, pattern), getExecutor());
+    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, AtomicInteger cursor, int limit, String pattern) {
+        return CompletableFuture.supplyAsync(() -> hmap(key, type, cursor, limit, pattern), getExecutor());
     }
 
     @Override
@@ -1993,9 +1993,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return mapValue;
         }
     }
-    
+
     //-------------------------- 过期方法 ----------------------------------
-    
     @Override
     @Deprecated(since = "2.8.0")
     public Collection<Long> getexLongCollection(String key, int expireSeconds) {
