@@ -248,9 +248,11 @@ public interface CacheSource extends Resourcable {
 
     public <T> List<T> hmget(final String key, final Type type, final String... fields);
 
-    public <T> Map<String, T> hmap(final String key, final Type type, AtomicInteger cursor, int limit);
+    default <T> Map<String, T> hscan(final String key, final Type type, AtomicInteger cursor, int limit) {
+        return hscan(key, type, cursor, limit, null);
+    }
 
-    public <T> Map<String, T> hmap(final String key, final Type type, AtomicInteger cursor, int limit, String pattern);
+    public <T> Map<String, T> hscan(final String key, final Type type, AtomicInteger cursor, int limit, String pattern);
 
     //------------------------ list ------------------------
     public int llen(final String key);
@@ -330,6 +332,12 @@ public interface CacheSource extends Resourcable {
     }
 
     public List<String> keys(String pattern);
+
+    default List<String> scan(AtomicInteger cursor, int limit) {
+        return scan(cursor, limit, null);
+    }
+
+    public List<String> scan(AtomicInteger cursor, int limit, String pattern);
 
     public long dbsize();
 
@@ -553,9 +561,11 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields);
 
-    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, AtomicInteger cursor, int limit);
+    default <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicInteger cursor, int limit) {
+        return hscanAsync(key, type, cursor, limit, null);
+    }
 
-    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, AtomicInteger cursor, int limit, String pattern);
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicInteger cursor, int limit, String pattern);
 
     //------------------------ listAsync ------------------------  
     public CompletableFuture<Integer> llenAsync(final String key);
@@ -631,6 +641,12 @@ public interface CacheSource extends Resourcable {
     }
 
     public CompletableFuture<List<String>> keysAsync(String pattern);
+
+    default CompletableFuture<List<String>> scanAsync(AtomicInteger cursor, int limit) {
+        return scanAsync(cursor, limit, null);
+    }
+
+    public CompletableFuture<List<String>> scanAsync(AtomicInteger cursor, int limit, String pattern);
 
     public CompletableFuture<Long> dbsizeAsync();
 

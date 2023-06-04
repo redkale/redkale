@@ -3,7 +3,7 @@
 package org.redkale.source;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
@@ -113,5 +113,9 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
 
     protected <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
         return CompletableFuture.supplyAsync(supplier);
+    }
+
+    protected <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier, Executor executor) {
+        return CompletableFuture.supplyAsync(supplier, executor);
     }
 }

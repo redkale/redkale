@@ -393,12 +393,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> Map<String, T> hmap(final String key, final Type type, AtomicInteger cursor, int limit) {
-        return hmap(key, type, cursor, limit, null);
-    }
-
-    @Override
-    public <T> Map<String, T> hmap(final String key, final Type type, AtomicInteger cursor, int limit, String pattern) {
+    public <T> Map<String, T> hscan(final String key, final Type type, AtomicInteger cursor, int limit, String pattern) {
         if (key == null) {
             return new HashMap();
         }
@@ -460,7 +455,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Boolean> existsAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> exists(key), getExecutor());
+        return supplyAsync(() -> exists(key), getExecutor());
     }
 
     @Override
@@ -522,47 +517,47 @@ public final class CacheMemorySource extends AbstractCacheSource {
     //----------- hxxx --------------
     @Override
     public CompletableFuture<Integer> hdelAsync(final String key, String... fields) {
-        return CompletableFuture.supplyAsync(() -> hdel(key, fields), getExecutor());
+        return supplyAsync(() -> hdel(key, fields), getExecutor());
     }
 
     @Override
     public CompletableFuture<List<String>> hkeysAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> hkeys(key), getExecutor());
+        return supplyAsync(() -> hkeys(key), getExecutor());
     }
 
     @Override
     public CompletableFuture<Integer> hlenAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> hlen(key), getExecutor());
+        return supplyAsync(() -> hlen(key), getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> hincrAsync(final String key, String field) {
-        return CompletableFuture.supplyAsync(() -> hincr(key, field), getExecutor());
+        return supplyAsync(() -> hincr(key, field), getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> hincrbyAsync(final String key, String field, long num) {
-        return CompletableFuture.supplyAsync(() -> hincrby(key, field, num), getExecutor());
+        return supplyAsync(() -> hincrby(key, field, num), getExecutor());
     }
 
     @Override
     public CompletableFuture<Double> hincrbyFloatAsync(final String key, String field, double num) {
-        return CompletableFuture.supplyAsync(() -> hincrbyFloat(key, field, num), getExecutor());
+        return supplyAsync(() -> hincrbyFloat(key, field, num), getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> hdecrAsync(final String key, String field) {
-        return CompletableFuture.supplyAsync(() -> hdecr(key, field), getExecutor());
+        return supplyAsync(() -> hdecr(key, field), getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> hdecrbyAsync(final String key, String field, long num) {
-        return CompletableFuture.supplyAsync(() -> hdecrby(key, field, num), getExecutor());
+        return supplyAsync(() -> hdecrby(key, field, num), getExecutor());
     }
 
     @Override
     public CompletableFuture<Boolean> hexistsAsync(final String key, String field) {
-        return CompletableFuture.supplyAsync(() -> hexists(key, field), getExecutor());
+        return supplyAsync(() -> hexists(key, field), getExecutor());
     }
 
     @Override
@@ -587,22 +582,22 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Type type, final T value) {
-        return CompletableFuture.supplyAsync(() -> hsetnx(key, field, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> hsetnx(key, field, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value) {
-        return CompletableFuture.supplyAsync(() -> hsetnx(key, field, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> hsetnx(key, field, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Boolean> hsetnxStringAsync(final String key, final String field, final String value) {
-        return CompletableFuture.supplyAsync(() -> hsetnxString(key, field, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> hsetnxString(key, field, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Boolean> hsetnxLongAsync(final String key, final String field, final long value) {
-        return CompletableFuture.supplyAsync(() -> hsetnxLong(key, field, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> hsetnxLong(key, field, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -617,83 +612,78 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields) {
-        return CompletableFuture.supplyAsync(() -> hmget(key, type, fields), getExecutor());
+        return supplyAsync(() -> hmget(key, type, fields), getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Map<String, T>> hgetallAsync(final String key, final Type type) {
-        return CompletableFuture.supplyAsync(() -> hgetall(key, type), getExecutor());
+        return supplyAsync(() -> hgetall(key, type), getExecutor());
     }
 
     @Override
     public CompletableFuture<Map<String, String>> hgetallStringAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> hgetallString(key), getExecutor());
+        return supplyAsync(() -> hgetallString(key), getExecutor());
     }
 
     @Override
     public CompletableFuture<Map<String, Long>> hgetallLongAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> hgetallLong(key), getExecutor());
+        return supplyAsync(() -> hgetallLong(key), getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<List<T>> hvalsAsync(final String key, final Type type) {
-        return CompletableFuture.supplyAsync(() -> hvals(key, type), getExecutor());
+        return supplyAsync(() -> hvals(key, type), getExecutor());
     }
 
     @Override
     public CompletableFuture<List<String>> hvalsStringAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> hvalsString(key), getExecutor());
+        return supplyAsync(() -> hvalsString(key), getExecutor());
     }
 
     @Override
     public CompletableFuture<List<Long>> hvalsLongAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> hvalsLong(key), getExecutor());
+        return supplyAsync(() -> hvalsLong(key), getExecutor());
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, AtomicInteger cursor, int limit) {
-        return CompletableFuture.supplyAsync(() -> hmap(key, type, cursor, limit), getExecutor());
-    }
-
-    @Override
-    public <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, AtomicInteger cursor, int limit, String pattern) {
-        return CompletableFuture.supplyAsync(() -> hmap(key, type, cursor, limit, pattern), getExecutor());
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicInteger cursor, int limit, String pattern) {
+        return supplyAsync(() -> hscan(key, type, cursor, limit, pattern), getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<T> hgetAsync(final String key, final String field, final Type type) {
-        return CompletableFuture.supplyAsync(() -> hget(key, field, type), getExecutor());
+        return supplyAsync(() -> hget(key, field, type), getExecutor());
     }
 
     @Override
     public CompletableFuture<String> hgetStringAsync(final String key, final String field) {
-        return CompletableFuture.supplyAsync(() -> hgetString(key, field), getExecutor());
+        return supplyAsync(() -> hgetString(key, field), getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> hgetLongAsync(final String key, final String field, long defValue) {
-        return CompletableFuture.supplyAsync(() -> hgetLong(key, field, defValue), getExecutor());
+        return supplyAsync(() -> hgetLong(key, field, defValue), getExecutor());
     }
 
     //----------- hxxx --------------
     @Override
     public <T> CompletableFuture<T> getAsync(final String key, final Type type) {
-        return CompletableFuture.supplyAsync(() -> (T) get(key, type), getExecutor());
+        return supplyAsync(() -> (T) get(key, type), getExecutor());
     }
 
     @Override
     public CompletableFuture<String> getStringAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getString(key), getExecutor());
+        return supplyAsync(() -> getString(key), getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> getLongAsync(final String key, long defValue) {
-        return CompletableFuture.supplyAsync(() -> getLong(key, defValue), getExecutor());
+        return supplyAsync(() -> getLong(key, defValue), getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> getSetLongAsync(final String key, long value, long defValue) {
-        return CompletableFuture.supplyAsync(() -> getSetLong(key, value, defValue), getExecutor());
+        return supplyAsync(() -> getSetLong(key, value, defValue), getExecutor());
     }
 
     @Override
@@ -748,17 +738,17 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> CompletableFuture<T> getexAsync(final String key, final int expireSeconds, final Type type) {
-        return CompletableFuture.supplyAsync(() -> getex(key, expireSeconds, type), getExecutor());
+        return supplyAsync(() -> getex(key, expireSeconds, type), getExecutor());
     }
 
     @Override
     public CompletableFuture<String> getexStringAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getexString(key, expireSeconds), getExecutor());
+        return supplyAsync(() -> getexString(key, expireSeconds), getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> getexLongAsync(final String key, final int expireSeconds, long defValue) {
-        return CompletableFuture.supplyAsync(() -> getexLong(key, expireSeconds, defValue), getExecutor());
+        return supplyAsync(() -> getexLong(key, expireSeconds, defValue), getExecutor());
     }
 
     protected void set(CacheEntryType cacheType, String key, Object value) {
@@ -981,12 +971,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> CompletableFuture<Boolean> setnxAsync(String key, Type type, T value) {
-        return CompletableFuture.supplyAsync(() -> setnx(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnx(key, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public <T> CompletableFuture<Boolean> setnxAsync(String key, Convert convert, Type type, T value) {
-        return CompletableFuture.supplyAsync(() -> setnx(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnx(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1006,7 +996,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Boolean> setnxStringAsync(String key, String value) {
-        return CompletableFuture.supplyAsync(() -> setnxString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnxString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1021,7 +1011,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Boolean> setnxLongAsync(String key, long value) {
-        return CompletableFuture.supplyAsync(() -> setnxLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnxLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     protected void set(CacheEntryType cacheType, int expireSeconds, String key, Object value) {
@@ -1101,27 +1091,27 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Boolean> setnxexStringAsync(String key, int expireSeconds, String value) {
-        return CompletableFuture.supplyAsync(() -> setnxexString(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnxexString(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Boolean> setnxexLongAsync(String key, int expireSeconds, long value) {
-        return CompletableFuture.supplyAsync(() -> setnxexLong(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnxexLong(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Boolean> setnxexBytesAsync(String key, int expireSeconds, byte[] value) {
-        return CompletableFuture.supplyAsync(() -> setnxexBytes(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnxexBytes(key, expireSeconds, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Type type, final T value) {
-        return CompletableFuture.supplyAsync(() -> setnxex(key, expireSeconds, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnxex(key, expireSeconds, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
-        return CompletableFuture.supplyAsync(() -> setnxex(key, expireSeconds, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnxex(key, expireSeconds, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1189,17 +1179,17 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Boolean> persistAsync(String key) {
-        return CompletableFuture.supplyAsync(() -> persist(key), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> persist(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Boolean> renameAsync(String oldKey, String newKey) {
-        return CompletableFuture.supplyAsync(() -> rename(oldKey, newKey), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> rename(oldKey, newKey), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Boolean> renamenxAsync(String oldKey, String newKey) {
-        return CompletableFuture.supplyAsync(() -> renamenx(oldKey, newKey), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> renamenx(oldKey, newKey), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1221,7 +1211,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Long> incrAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> incr(key), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> incr(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1263,12 +1253,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Long> incrbyAsync(final String key, long num) {
-        return CompletableFuture.supplyAsync(() -> incrby(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> incrby(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Double> incrbyFloatAsync(final String key, double num) {
-        return CompletableFuture.supplyAsync(() -> incrbyFloat(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> incrbyFloat(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1278,7 +1268,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Long> decrAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> decr(key), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> decr(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1288,12 +1278,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Long> decrbyAsync(final String key, long num) {
-        return CompletableFuture.supplyAsync(() -> decrby(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> decrby(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Integer> delAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> del(keys), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> del(keys), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1391,22 +1381,22 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(Type componentType, String... keys) {
-        return CompletableFuture.supplyAsync(() -> lrange(componentType, keys), getExecutor());
+        return supplyAsync(() -> lrange(componentType, keys), getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Map<String, Set<T>>> smembersAsync(Type componentType, String... keys) {
-        return CompletableFuture.supplyAsync(() -> smembers(componentType, keys), getExecutor());
+        return supplyAsync(() -> smembers(componentType, keys), getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Set<T>> smembersAsync(String key, Type componentType) {
-        return CompletableFuture.supplyAsync(() -> smembers(key, componentType), getExecutor());
+        return supplyAsync(() -> smembers(key, componentType), getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<List<T>> lrangeAsync(String key, Type componentType) {
-        return CompletableFuture.supplyAsync(() -> lrange(key, componentType), getExecutor());
+        return supplyAsync(() -> lrange(key, componentType), getExecutor());
     }
 
     @Override
@@ -1423,12 +1413,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Integer> llenAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> llen(key), getExecutor());
+        return supplyAsync(() -> llen(key), getExecutor());
     }
 
     @Override
     public CompletableFuture<Integer> scardAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> scard(key), getExecutor());
+        return supplyAsync(() -> scard(key), getExecutor());
     }
 
     @Override
@@ -1439,7 +1429,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> CompletableFuture<Boolean> sismemberAsync(final String key, final Type type, final T value) {
-        return CompletableFuture.supplyAsync(() -> sismember(key, type, value), getExecutor());
+        return supplyAsync(() -> sismember(key, type, value), getExecutor());
     }
 
     @Override
@@ -1450,7 +1440,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Boolean> sismemberStringAsync(final String key, final String value) {
-        return CompletableFuture.supplyAsync(() -> sismemberString(key, value), getExecutor());
+        return supplyAsync(() -> sismemberString(key, value), getExecutor());
     }
 
     @Override
@@ -1461,7 +1451,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Boolean> sismemberLongAsync(final String key, final long value) {
-        return CompletableFuture.supplyAsync(() -> sismemberLong(key, value), getExecutor());
+        return supplyAsync(() -> sismemberLong(key, value), getExecutor());
     }
 
     protected void appendListItem(CacheEntryType cacheType, String key, Object value) {
@@ -1552,17 +1542,17 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> CompletableFuture<Integer> lremAsync(final String key, final Type componentType, T value) {
-        return CompletableFuture.supplyAsync(() -> lrem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> lrem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Integer> lremStringAsync(final String key, final String value) {
-        return CompletableFuture.supplyAsync(() -> lremString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> lremString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Integer> lremLongAsync(final String key, final long value) {
-        return CompletableFuture.supplyAsync(() -> lremLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> lremLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1726,17 +1716,17 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> CompletableFuture<Integer> sremAsync(final String key, final Type componentType, final T value) {
-        return CompletableFuture.supplyAsync(() -> srem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> srem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Integer> sremStringAsync(final String key, final String value) {
-        return CompletableFuture.supplyAsync(() -> sremString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> sremString(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Integer> sremLongAsync(final String key, final long value) {
-        return CompletableFuture.supplyAsync(() -> sremLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> sremLong(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1760,12 +1750,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<byte[]> getBytesAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getBytes(key), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> getBytes(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<byte[]> getSetBytesAsync(final String key, byte[] value) {
-        return CompletableFuture.supplyAsync(() -> getSetBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> getSetBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1784,7 +1774,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<byte[]> getexBytesAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getexBytes(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> getexBytes(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1804,7 +1794,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<Boolean> setnxBytesAsync(final String key, byte[] value) {
-        return CompletableFuture.supplyAsync(() -> setnxBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> setnxBytes(key, value), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1835,6 +1825,18 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public List<String> scan(AtomicInteger cursor, int limit, String pattern) {
+        if (pattern == null || pattern.isEmpty()) {
+            return new ArrayList<>(container.keySet());
+        } else {
+            List<String> rs = new ArrayList<>();
+            Predicate<String> filter = Pattern.compile(pattern).asPredicate();
+            container.keySet().stream().filter(filter).forEach(x -> rs.add(x));
+            return rs;
+        }
+    }
+    
+    @Override
     public List<String> keysStartsWith(String startsWith) {
         if (startsWith == null) {
             return keys();
@@ -1860,33 +1862,38 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public CompletableFuture<List<String>> scanAsync(AtomicInteger cursor, int limit, String pattern) {
+        return supplyAsync(() -> scan(cursor, limit, pattern), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public <T> CompletableFuture<T> spopAsync(String key, Type componentType) {
-        return CompletableFuture.supplyAsync(() -> spop(key, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> spop(key, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public <T> CompletableFuture<Set<T>> spopAsync(String key, int count, Type componentType) {
-        return CompletableFuture.supplyAsync(() -> spop(key, count, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> spop(key, count, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<String> spopStringAsync(String key) {
-        return CompletableFuture.supplyAsync(() -> spopString(key), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> spopString(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Set<String>> spopStringAsync(String key, int count) {
-        return CompletableFuture.supplyAsync(() -> spopString(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> spopString(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Long> spopLongAsync(String key) {
-        return CompletableFuture.supplyAsync(() -> spopLong(key), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> spopLong(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
     public CompletableFuture<Set<Long>> spopLongAsync(String key, int count) {
-        return CompletableFuture.supplyAsync(() -> spopLong(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> spopLong(key, count), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     public static enum CacheEntryType {
@@ -2004,55 +2011,55 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getexCollectionAsync(final String key, final int expireSeconds, final Type componentType) {
-        return CompletableFuture.supplyAsync(() -> getexCollection(key, expireSeconds, componentType), getExecutor());
+        return supplyAsync(() -> getexCollection(key, expireSeconds, componentType), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<String>> getexStringCollectionAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getexStringCollection(key, expireSeconds), getExecutor());
+        return supplyAsync(() -> getexStringCollection(key, expireSeconds), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<Long>> getexLongCollectionAsync(final String key, final int expireSeconds) {
-        return CompletableFuture.supplyAsync(() -> getexLongCollection(key, expireSeconds), getExecutor());
+        return supplyAsync(() -> getexLongCollection(key, expireSeconds), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(boolean set, Type componentType, String... keys) {
-        return CompletableFuture.supplyAsync(() -> getCollectionMap(set, componentType, keys), getExecutor());
+        return supplyAsync(() -> getCollectionMap(set, componentType, keys), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<String>> getStringCollectionAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getStringCollection(key), getExecutor());
+        return supplyAsync(() -> getStringCollection(key), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getStringCollectionMap(set, keys), getExecutor());
+        return supplyAsync(() -> getStringCollectionMap(set, keys), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Collection<Long>> getLongCollectionAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getLongCollection(key), getExecutor());
+        return supplyAsync(() -> getLongCollection(key), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getLongCollectionMap(set, keys), getExecutor());
+        return supplyAsync(() -> getLongCollectionMap(set, keys), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(String key, Type componentType) {
-        return CompletableFuture.supplyAsync(() -> getCollection(key, componentType), getExecutor());
+        return supplyAsync(() -> getCollection(key, componentType), getExecutor());
     }
 
     @Override
@@ -2119,13 +2126,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, Long>> getLongMapAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getLongMap(keys), getExecutor());
+        return supplyAsync(() -> getLongMap(keys), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Long[]> getLongArrayAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getLongArray(keys), getExecutor());
+        return supplyAsync(() -> getLongArray(keys), getExecutor());
     }
 
     @Override
@@ -2154,13 +2161,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Map<String, String>> getStringMapAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getStringMap(keys), getExecutor());
+        return supplyAsync(() -> getStringMap(keys), getExecutor());
     }
 
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<String[]> getStringArrayAsync(final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getStringArray(keys), getExecutor());
+        return supplyAsync(() -> getStringArray(keys), getExecutor());
     }
 
     @Override
@@ -2176,7 +2183,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Map<String, T>> getMapAsync(final Type componentType, final String... keys) {
-        return CompletableFuture.supplyAsync(() -> getMap(componentType, keys), getExecutor());
+        return supplyAsync(() -> getMap(componentType, keys), getExecutor());
     }
 
     @Override
@@ -2208,7 +2215,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Integer> getCollectionSizeAsync(final String key) {
-        return CompletableFuture.supplyAsync(() -> getCollectionSize(key), getExecutor());
+        return supplyAsync(() -> getCollectionSize(key), getExecutor());
     }
 
     @Override
