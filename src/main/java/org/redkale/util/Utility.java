@@ -474,6 +474,51 @@ public final class Utility {
     }
 
     /**
+     * 是否为数字字符串
+     *
+     * @param str 字符串
+     *
+     * @return 是否为数字字符串
+     *
+     */
+    public static boolean isNumeric(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+        int size = str.length();
+        for (int i = 0; i < size; i++) {
+            if (!Character.isDigit(str.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 是否为空白
+     *
+     * @param str 字符串
+     *
+     * @return 是否为空白
+     *
+     */
+    public static boolean isBlank(String str) {
+        return str == null || str.isEmpty() || str.isBlank();
+    }
+
+    /**
+     * 是否不为空白
+     *
+     * @param str 字符串
+     *
+     * @return 是否不为空白
+     *
+     */
+    public static boolean isNotBlank(String str) {
+        return str != null && !str.isEmpty() && !str.isBlank();
+    }
+
+    /**
      * 是否为空
      *
      * @param str 字符串
@@ -495,6 +540,54 @@ public final class Utility {
      */
     public static boolean isNotEmpty(CharSequence str) {
         return str != null && str.length() > 0;
+    }
+
+    /**
+     * 是否为空
+     *
+     * @param map Map
+     *
+     * @return 是否为空
+     *
+     */
+    public static boolean isEmpty(Map map) {
+        return map == null || map.isEmpty();
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param map Map
+     *
+     * @return 是否不为空
+     *
+     */
+    public static boolean isNotEmpty(Map map) {
+        return map != null && !map.isEmpty();
+    }
+
+    /**
+     * 是否为空
+     *
+     * @param collection Collection
+     *
+     * @return 是否为空
+     *
+     */
+    public static boolean isEmpty(Collection collection) {
+        return collection == null || collection.isEmpty();
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param collection Collection
+     *
+     * @return 是否不为空
+     *
+     */
+    public static boolean isNotEmpty(Collection collection) {
+        return collection != null && !collection.isEmpty();
     }
 
     /**
