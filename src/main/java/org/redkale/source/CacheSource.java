@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.annotation.Component;
 import org.redkale.convert.Convert;
 import org.redkale.util.*;
@@ -248,11 +248,11 @@ public interface CacheSource extends Resourcable {
 
     public <T> List<T> hmget(final String key, final Type type, final String... fields);
 
-    default <T> Map<String, T> hscan(final String key, final Type type, AtomicInteger cursor, int limit) {
+    default <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit) {
         return hscan(key, type, cursor, limit, null);
     }
 
-    public <T> Map<String, T> hscan(final String key, final Type type, AtomicInteger cursor, int limit, String pattern);
+    public <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit, String pattern);
 
     //------------------------ list ------------------------
     public int llen(final String key);
@@ -296,6 +296,28 @@ public interface CacheSource extends Resourcable {
 
     public <T> Set<T> spop(final String key, final int count, final Type componentType);
 
+    public <T> Set<T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern);
+
+    default <T> Set<T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit) {
+        return sscan(key, componentType, cursor, limit, null);
+    }
+
+    default Set<String> sscanString(final String key, AtomicLong cursor, int limit, String pattern) {
+        return sscan(key, String.class, cursor, limit, pattern);
+    }
+
+    default Set<Long> sscanLong(final String key, AtomicLong cursor, int limit, String pattern) {
+        return sscan(key, Long.class, cursor, limit, pattern);
+    }
+
+    default Set<String> sscanString(final String key, AtomicLong cursor, int limit) {
+        return sscan(key, String.class, cursor, limit, null);
+    }
+
+    default Set<Long> sscanLong(final String key, AtomicLong cursor, int limit) {
+        return sscan(key, Long.class, cursor, limit, null);
+    }
+
     //---------- set-string ----------
     default Set<String> smembersString(final String key) {
         return smembers(key, String.class);
@@ -333,11 +355,11 @@ public interface CacheSource extends Resourcable {
 
     public List<String> keys(String pattern);
 
-    default List<String> scan(AtomicInteger cursor, int limit) {
+    default List<String> scan(AtomicLong cursor, int limit) {
         return scan(cursor, limit, null);
     }
 
-    public List<String> scan(AtomicInteger cursor, int limit, String pattern);
+    public List<String> scan(AtomicLong cursor, int limit, String pattern);
 
     public long dbsize();
 
@@ -565,11 +587,11 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields);
 
-    default <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicInteger cursor, int limit) {
+    default <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicLong cursor, int limit) {
         return hscanAsync(key, type, cursor, limit, null);
     }
 
-    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicInteger cursor, int limit, String pattern);
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicLong cursor, int limit, String pattern);
 
     //------------------------ listAsync ------------------------  
     public CompletableFuture<Integer> llenAsync(final String key);
@@ -609,6 +631,28 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<Set<T>> spopAsync(final String key, final int count, final Type componentType);
 
+    public <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern);
+
+    default <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit) {
+        return sscanAsync(key, componentType, cursor, limit, null);
+    }
+
+    default CompletableFuture<Set<String>> sscanStringAsync(final String key, AtomicLong cursor, int limit, String pattern) {
+        return sscanAsync(key, String.class, cursor, limit, pattern);
+    }
+
+    default CompletableFuture<Set<Long>> sscanLongAsync(final String key, AtomicLong cursor, int limit, String pattern) {
+        return sscanAsync(key, Long.class, cursor, limit, pattern);
+    }
+
+    default CompletableFuture<Set<String>> sscanStringAsync(final String key, AtomicLong cursor, int limit) {
+        return sscanAsync(key, String.class, cursor, limit);
+    }
+
+    default CompletableFuture<Set<Long>> sscanLongAsync(final String key, AtomicLong cursor, int limit) {
+        return sscanAsync(key, Long.class, cursor, limit);
+    }
+
     //---------- set-string ----------
     default CompletableFuture<Set<String>> smembersStringAsync(final String key) {
         return smembersAsync(key, String.class);
@@ -646,11 +690,11 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<List<String>> keysAsync(String pattern);
 
-    default CompletableFuture<List<String>> scanAsync(AtomicInteger cursor, int limit) {
+    default CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit) {
         return scanAsync(cursor, limit, null);
     }
 
-    public CompletableFuture<List<String>> scanAsync(AtomicInteger cursor, int limit, String pattern);
+    public CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit, String pattern);
 
     public CompletableFuture<Long> dbsizeAsync();
 

@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
@@ -393,7 +393,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> Map<String, T> hscan(final String key, final Type type, AtomicInteger cursor, int limit, String pattern) {
+    public <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit, String pattern) {
         if (key == null) {
             return new HashMap();
         }
@@ -646,7 +646,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicInteger cursor, int limit, String pattern) {
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicLong cursor, int limit, String pattern) {
         return supplyAsync(() -> hscan(key, type, cursor, limit, pattern), getExecutor());
     }
 
@@ -1628,6 +1628,35 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return list;
     }
 
+    @Override
+    public <T> Set< T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern) {
+        if (key == null) {
+            return new LinkedHashSet();
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+            return new LinkedHashSet<>();
+        }
+        if (entry.csetValue.isEmpty()) {
+            return new LinkedHashSet<>();
+        }
+        Iterator it = entry.csetValue.iterator();
+        Set<T> list = new LinkedHashSet<>();
+        int index = 0;
+        while (it.hasNext()) {
+            Object obj = it.next();
+            if (obj != null && componentType == long.class) {
+                obj = ((Number) obj).longValue();
+            }
+            list.add((T) obj);
+            it.remove();
+            if (limit > 0 && ++index >= limit) {
+                break;
+            }
+        }
+        return list;
+    }
+
     protected void appendSetItem(CacheEntryType cacheType, String key, Object value) {
         if (key == null) {
             return;
@@ -1845,7 +1874,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public List<String> scan(AtomicInteger cursor, int limit, String pattern) {
+    public List<String> scan(AtomicLong cursor, int limit, String pattern) {
         if (pattern == null || pattern.isEmpty()) {
             return new ArrayList<>(container.keySet());
         } else {
@@ -1882,7 +1911,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<List<String>> scanAsync(AtomicInteger cursor, int limit, String pattern) {
+    public CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit, String pattern) {
         return supplyAsync(() -> scan(cursor, limit, pattern), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
@@ -1894,6 +1923,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> CompletableFuture<Set<T>> spopAsync(String key, int count, Type componentType) {
         return supplyAsync(() -> spop(key, count, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern) {
+        return supplyAsync(() -> sscan(key, componentType, cursor, limit, pattern), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

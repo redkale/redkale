@@ -8,7 +8,7 @@ package org.redkale.cluster;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
@@ -237,7 +237,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     private CompletableFuture<Set<InetSocketAddress>> queryAddress(final String serviceName) {
-        final CompletableFuture<Map<String, AddressEntry>> future = source.hscanAsync(serviceName, AddressEntry.class, new AtomicInteger(), 10000);
+        final CompletableFuture<Map<String, AddressEntry>> future = source.hscanAsync(serviceName, AddressEntry.class, new AtomicLong(), 10000);
         return future.thenApply(map -> {
             final Set<InetSocketAddress> set = new HashSet<>();
             map.forEach((n, v) -> {
