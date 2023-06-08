@@ -1547,8 +1547,8 @@ public final class Application {
             this.clusterAgent.start();
         }
         if (this.messageAgents != null) {
-            if (logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, "MessageAgent starting");
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "MessageAgent starting");
             }
             long s = System.currentTimeMillis();
             final StringBuffer sb = new StringBuffer();

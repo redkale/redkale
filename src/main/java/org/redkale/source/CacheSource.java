@@ -341,6 +341,10 @@ public interface CacheSource extends Resourcable {
 
     public long dbsize();
 
+    public void flushdb();
+
+    public void flushall();
+
     //---------------------- CompletableFuture 异步版 ---------------------------------
     default CompletableFuture<Boolean> isOpenAsync() {
         return CompletableFuture.completedFuture(isOpen());
@@ -649,6 +653,10 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<List<String>> scanAsync(AtomicInteger cursor, int limit, String pattern);
 
     public CompletableFuture<Long> dbsizeAsync();
+
+    public CompletableFuture<Void> flushdbAsync();
+
+    public CompletableFuture<Void> flushallAsync();
 
     //-------------------------- 过期方法 ----------------------------------
     @Deprecated(since = "2.8.0")

@@ -1813,6 +1813,26 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public void flushdb() {
+        container.clear();
+    }
+
+    @Override
+    public CompletableFuture<Void> flushdbAsync() {
+        return CompletableFuture.runAsync(() -> flushdb(), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public void flushall() {
+        container.clear();
+    }
+
+    @Override
+    public CompletableFuture<Void> flushallAsync() {
+        return CompletableFuture.runAsync(() -> flushall(), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public List<String> keys(String pattern) {
         if (pattern == null || pattern.isEmpty()) {
             return new ArrayList<>(container.keySet());
@@ -1835,7 +1855,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return rs;
         }
     }
-    
+
     @Override
     public List<String> keysStartsWith(String startsWith) {
         if (startsWith == null) {

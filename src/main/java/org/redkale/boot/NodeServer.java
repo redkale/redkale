@@ -643,6 +643,9 @@ public abstract class NodeServer {
     }
 
     protected boolean acceptsComponent(Class<? extends Service> serviceImplClass) {
+        if (Modifier.isAbstract(serviceImplClass.getModifiers()) || Modifier.isInterface(serviceImplClass.getModifiers())) {
+            return false;
+        }
         if (MessageConsumer.class.isAssignableFrom(serviceImplClass)) {
             ResourceConsumer mqConsumer = serviceImplClass.getAnnotation(ResourceConsumer.class);
             if (mqConsumer == null) {
@@ -650,6 +653,7 @@ public abstract class NodeServer {
             }
             MessageAgent mqAgent = application.getMessageAgent(mqConsumer.mq());
             if (mqAgent == null) {
+                logger.info("not found MessageAgent(mq = " + mqConsumer.mq() + ")");
                 return false;
             }
         }
