@@ -118,4 +118,8 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
     protected <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier, Executor executor) {
         return CompletableFuture.supplyAsync(supplier, executor);
     }
+
+    protected CompletableFuture<Void> runAsync(Runnable runner, Executor executor) {
+        return CompletableFuture.runAsync(runner, executor);
+    }
 }

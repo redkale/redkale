@@ -281,6 +281,68 @@ public interface CacheSource extends Resourcable {
         return lrange(key, Long.class, 0, -1);
     }
 
+    public void ltrim(final String key, int start, int stop);
+
+    public <T> T lpop(final String key, final Type componentType);
+
+    default String lpopString(final String key) {
+        return lpop(key, String.class);
+    }
+
+    default Long lpopLong(final String key) {
+        return lpop(key, Long.class);
+    }
+
+    public <T> void lpush(final String key, final Type componentType, T... values);
+
+    default void lpushString(final String key, String... values) {
+        lpush(key, String.class, values);
+    }
+
+    default void lpushLong(final String key, Long... values) {
+        lpush(key, Long.class, values);
+    }
+
+    public <T> void lpushx(final String key, final Type componentType, T value);
+
+    default void lpushxString(final String key, String value) {
+        lpushx(key, String.class, value);
+    }
+
+    default void lpushxLong(final String key, Long value) {
+        lpushx(key, Long.class, value);
+    }
+
+    public <T> void rpushx(final String key, final Type componentType, T value);
+
+    default void rpushxxString(final String key, String value) {
+        rpushx(key, String.class, value);
+    }
+
+    default void rpushxLong(final String key, Long value) {
+        rpushx(key, Long.class, value);
+    }
+
+    public <T> T rpop(final String key, final Type componentType);
+
+    default String rpopString(final String key) {
+        return rpop(key, String.class);
+    }
+
+    default Long rpopLong(final String key) {
+        return rpop(key, Long.class);
+    }
+
+    public <T> T rpoplpush(final String list1, final String list2, final Type componentType);
+
+    default String rpoplpushString(final String list1, final String list2) {
+        return rpoplpush(list1, list2, String.class);
+    }
+
+    default Long rpoplpushLong(final String list1, final String list2) {
+        return rpoplpush(list1, list2, Long.class);
+    }
+
     public <T> int lrem(final String key, final Type componentType, final T value);
 
     default int lremString(final String key, final String value) {
@@ -640,6 +702,68 @@ public interface CacheSource extends Resourcable {
 
     default CompletableFuture<List<Long>> lrangeLongAsync(final String key) {
         return lrangeAsync(key, Long.class, 0, -1);
+    }
+
+    public CompletableFuture<Void> ltrimAsync(final String key, int start, int stop);
+
+    public <T> CompletableFuture<T> lpopAsync(final String key, final Type componentType);
+
+    default CompletableFuture<String> lpopStringAsync(final String key) {
+        return lpopAsync(key, String.class);
+    }
+
+    default CompletableFuture<Long> lpopLongAsync(final String key) {
+        return lpopAsync(key, Long.class);
+    }
+
+    public <T> CompletableFuture<Void> lpushAsync(final String key, final Type componentType, T... values);
+
+    default CompletableFuture<Void> lpushStringAsync(final String key, String... values) {
+        return lpushAsync(key, String.class, values);
+    }
+
+    default CompletableFuture<Void> lpushLongAsync(final String key, Long... values) {
+        return lpushAsync(key, Long.class, values);
+    }
+
+    public <T> CompletableFuture<Void> lpushxAsync(final String key, final Type componentType, T value);
+
+    default CompletableFuture<Void> lpushxStringAsync(final String key, String value) {
+        return lpushxAsync(key, String.class, value);
+    }
+
+    default CompletableFuture<Void> lpushxLongAsync(final String key, Long value) {
+        return lpushxAsync(key, Long.class, value);
+    }
+
+    public <T> CompletableFuture<Void> rpushxAsync(final String key, final Type componentType, T value);
+
+    default CompletableFuture<Void> rpushxxStringAsync(final String key, String value) {
+        return rpushxAsync(key, String.class, value);
+    }
+
+    default CompletableFuture<Void> rpushxLongAsync(final String key, Long value) {
+        return rpushxAsync(key, Long.class, value);
+    }
+
+    public <T> CompletableFuture<T> rpopAsync(final String key, final Type componentType);
+
+    default CompletableFuture<String> rpopStringAsync(final String key) {
+        return rpopAsync(key, String.class);
+    }
+
+    default CompletableFuture<Long> rpopLongAsync(final String key) {
+        return rpopAsync(key, Long.class);
+    }
+
+    public <T> CompletableFuture<T> rpoplpushAsync(final String list1, final String list2, final Type componentType);
+
+    default CompletableFuture<String> rpoplpushStringAsync(final String list1, final String list2) {
+        return rpoplpushAsync(list1, list2, String.class);
+    }
+
+    default CompletableFuture<Long> rpoplpushLongAsync(final String list1, final String list2) {
+        return rpoplpushAsync(list1, list2, Long.class);
     }
 
     public <T> CompletableFuture<Integer> lremAsync(final String key, final Type componentType, final T value);
