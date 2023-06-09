@@ -1292,7 +1292,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> List<T> lrange(final String key, final Type componentType) {
+    public <T> List<T> lrange(final String key, final Type componentType, int start, int stop) {
         return (List<T>) get(key, componentType);
     }
 
@@ -1395,8 +1395,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> lrangeAsync(String key, Type componentType) {
-        return supplyAsync(() -> lrange(key, componentType), getExecutor());
+    public <T> CompletableFuture<List<T>> lrangeAsync(String key, Type componentType, int start, int stop) {
+        return supplyAsync(() -> lrange(key, componentType, start, stop), getExecutor());
     }
 
     @Override

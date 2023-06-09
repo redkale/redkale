@@ -257,27 +257,49 @@ public interface CacheSource extends Resourcable {
     //------------------------ list ------------------------
     public int llen(final String key);
 
-    public <T> List<T> lrange(final String key, final Type componentType);
-
     public <T> Map<String, List<T>> lrange(final Type componentType, final String... keys);
 
-    public <T> void rpush(final String key, final Type componentType, final T value);
+    public <T> List<T> lrange(final String key, final Type componentType, int start, int stop);
+
+    default List<String> lrangeString(final String key, int start, int stop) {
+        return lrange(key, String.class, start, stop);
+    }
+
+    default List<Long> lrangeLong(final String key, int start, int stop) {
+        return lrange(key, Long.class, start, stop);
+    }
+
+    default <T> List<T> lrange(final String key, final Type componentType) {
+        return lrange(key, componentType, 0, -1);
+    }
+
+    default List<String> lrangeString(final String key) {
+        return lrange(key, String.class, 0, -1);
+    }
+
+    default List<Long> lrangeLong(final String key) {
+        return lrange(key, Long.class, 0, -1);
+    }
 
     public <T> int lrem(final String key, final Type componentType, final T value);
 
-    //---------- list-string ----------
-    default List<String> lrangeString(final String key) {
-        return lrange(key, String.class);
+    default int lremString(final String key, final String value) {
+        return lrem(key, String.class, value);
     }
 
-    public void rpushString(final String key, final String value);
+    default int lremLong(final String key, final long value) {
+        return lrem(key, Long.class, value);
+    }
 
-    public int lremString(final String key, final String value);
+    public <T> void rpush(final String key, final Type componentType, final T value);
 
-    //---------- list-long ----------
-    public void rpushLong(final String key, final long value);
+    default void rpushString(final String key, final String value) {
+        rpush(key, String.class, value);
+    }
 
-    public int lremLong(final String key, final long value);
+    default void rpushLong(final String key, final long value) {
+        rpush(key, Long.class, value);
+    }
 
     //------------------------ set ------------------------   
     public int scard(final String key);
@@ -596,23 +618,49 @@ public interface CacheSource extends Resourcable {
     //------------------------ listAsync ------------------------  
     public CompletableFuture<Integer> llenAsync(final String key);
 
-    public <T> CompletableFuture<List<T>> lrangeAsync(final String key, final Type componentType);
-
     public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(final Type componentType, final String... keys);
 
-    public <T> CompletableFuture<Void> rpushAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<List<T>> lrangeAsync(final String key, final Type componentType, int start, int stop);
+
+    default CompletableFuture<List<String>> lrangeStringAsync(final String key, int start, int stop) {
+        return lrangeAsync(key, String.class, start, stop);
+    }
+
+    default CompletableFuture<List<Long>> lrangeLongAsync(final String key, int start, int stop) {
+        return lrangeAsync(key, Long.class, start, stop);
+    }
+
+    default <T> CompletableFuture<List<T>> lrangeAsync(final String key, final Type componentType) {
+        return lrangeAsync(key, componentType, 0, -1);
+    }
+
+    default CompletableFuture<List<String>> lrangeStringAsync(final String key) {
+        return lrangeAsync(key, String.class, 0, -1);
+    }
+
+    default CompletableFuture<List<Long>> lrangeLongAsync(final String key) {
+        return lrangeAsync(key, Long.class, 0, -1);
+    }
 
     public <T> CompletableFuture<Integer> lremAsync(final String key, final Type componentType, final T value);
 
-    //---------- list-string ----------
-    public CompletableFuture<Void> rpushStringAsync(final String key, final String value);
+    default CompletableFuture<Integer> lremStringAsync(final String key, final String value) {
+        return lremAsync(key, String.class, value);
+    }
 
-    public CompletableFuture<Integer> lremStringAsync(final String key, final String value);
+    default CompletableFuture<Integer> lremLongAsync(final String key, final long value) {
+        return lremAsync(key, Long.class, value);
+    }
 
-    //---------- list-long ----------
-    public CompletableFuture<Void> rpushLongAsync(final String key, final long value);
+    public <T> CompletableFuture<Void> rpushAsync(final String key, final Type componentType, final T value);
 
-    public CompletableFuture<Integer> lremLongAsync(final String key, final long value);
+    default CompletableFuture<Void> rpushStringAsync(final String key, final String value) {
+        return rpushAsync(key, String.class, value);
+    }
+
+    default CompletableFuture<Void> rpushLongAsync(final String key, final long value) {
+        return rpushAsync(key, Long.class, value);
+    }
 
     //------------------------ setAsync ------------------------
     public CompletableFuture<Integer> scardAsync(final String key);
