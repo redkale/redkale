@@ -315,7 +315,7 @@ public interface CacheSource extends Resourcable {
 
     public <T> void rpushx(final String key, final Type componentType, T value);
 
-    default void rpushxxString(final String key, String value) {
+    default void rpushxString(final String key, String value) {
         rpushx(key, String.class, value);
     }
 
@@ -738,7 +738,7 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<Void> rpushxAsync(final String key, final Type componentType, T value);
 
-    default CompletableFuture<Void> rpushxxStringAsync(final String key, String value) {
+    default CompletableFuture<Void> rpushxStringAsync(final String key, String value) {
         return rpushxAsync(key, String.class, value);
     }
 
