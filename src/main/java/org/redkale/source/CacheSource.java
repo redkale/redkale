@@ -33,11 +33,13 @@ public interface CacheSource extends Resourcable {
     public String getType();
 
     default boolean isOpen() {
-        return true;
+        return isOpenAsync().join();
     }
 
     //------------------------ get ------------------------    
-    public <T> T get(final String key, final Type type);
+    default <T> T get(final String key, final Type type) {
+        return (T) getAsync(key, type).join();
+    }
 
     default String getString(final String key) {
         return get(key, String.class);
@@ -49,7 +51,9 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ mget ------------------------    
-    public <T> Map<String, T> mget(final Type componentType, final String... keys);
+    default <T> Map<String, T> mget(final Type componentType, final String... keys) {
+        return (Map) mgetAsync(componentType, keys).join();
+    }
 
     default Map<String, String> mgetString(final String... keys) {
         return mget(String.class, keys);
@@ -87,7 +91,9 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ getex ------------------------
-    public <T> T getex(final String key, final int expireSeconds, final Type type);
+    default <T> T getex(final String key, final int expireSeconds, final Type type) {
+        return (T) getexAsync(key, expireSeconds, type).join();
+    }
 
     default String getexString(final String key, final int expireSeconds) {
         return getex(key, expireSeconds, String.class);
@@ -99,7 +105,9 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ getset ------------------------
-    public <T> T getSet(final String key, final Convert convert, final Type type, final T value);
+    default <T> T getSet(final String key, final Convert convert, final Type type, final T value) {
+        return getSetAsync(key, convert, type, value).join();
+    }
 
     default <T> T getSet(final String key, final Type type, final T value) {
         return getSet(key, (Convert) null, type, value);
@@ -116,11 +124,17 @@ public interface CacheSource extends Resourcable {
 
     //------------------------ set ------------------------
     //MSET key value [key value ...]
-    public void mset(final Serializable... keyVals);
+    default void mset(final Serializable... keyVals) {
+        msetAsync(keyVals).join();
+    }
 
-    public void mset(final Map map);
+    default void mset(final Map map) {
+        msetAsync(map).join();
+    }
 
-    public <T> void set(final String key, final Convert convert, final Type type, final T value);
+    default <T> void set(final String key, final Convert convert, final Type type, final T value) {
+        setAsync(key, convert, type, value).join();
+    }
 
     default <T> void set(final String key, final Type type, final T value) {
         set(key, (Convert) null, type, value);
@@ -135,7 +149,9 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ setnx ------------------------
-    public <T> boolean setnx(final String key, final Convert convert, final Type type, final T value);
+    default <T> boolean setnx(final String key, final Convert convert, final Type type, final T value) {
+        return setnxAsync(key, convert, type, value).join();
+    }
 
     default <T> boolean setnx(final String key, final Type type, final T value) {
         return setnx(key, (Convert) null, type, value);
@@ -150,7 +166,9 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ setnxex ------------------------
-    public <T> boolean setnxex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
+    default <T> boolean setnxex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
+        return setnxexAsync(key, expireSeconds, convert, type, value).join();
+    }
 
     default <T> boolean setnxex(final String key, final int expireSeconds, final Type type, final T value) {
         return setnxex(key, expireSeconds, (Convert) null, type, value);
@@ -165,7 +183,9 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ setex ------------------------
-    public <T> void setex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
+    default <T> void setex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
+        setexAsync(key, expireSeconds, convert, type, value).join();
+    }
 
     default <T> void setex(final String key, final int expireSeconds, final Type type, final T value) {
         setex(key, expireSeconds, (Convert) null, type, value);
@@ -180,30 +200,54 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ xxxx ------------------------
-    public boolean exists(final String key);
+    default boolean exists(final String key) {
+        return existsAsync(key).join();
+    }
 
-    public void expire(final String key, final int seconds);
+    default void expire(final String key, final int expireSeconds) {
+        expireAsync(key, expireSeconds).join();
+    }
 
-    public boolean persist(final String key);
+    default boolean persist(final String key) {
+        return persistAsync(key).join();
+    }
 
-    public boolean rename(String oldKey, String newKey);
+    default boolean rename(String oldKey, String newKey) {
+        return renameAsync(oldKey, newKey).join();
+    }
 
-    public boolean renamenx(String oldKey, String newKey);
+    default boolean renamenx(String oldKey, String newKey) {
+        return renamenxAsync(oldKey, newKey).join();
+    }
 
-    public long del(final String... keys);
+    default long del(final String... keys) {
+        return delAsync(keys).join();
+    }
 
-    public long incr(final String key);
+    default long incr(final String key) {
+        return incrAsync(key).join();
+    }
 
-    public long incrby(final String key, long num);
+    default long incrby(final String key, long num) {
+        return incrbyAsync(key, num).join();
+    }
 
-    public long decr(final String key);
+    default double incrbyFloat(final String key, double num) {
+        return incrbyFloatAsync(key, num).join();
+    }
 
-    public long decrby(final String key, long num);
+    default long decr(final String key) {
+        return decrAsync(key).join();
+    }
 
-    public double incrbyFloat(final String key, double num);
+    default long decrby(final String key, long num) {
+        return decrbyAsync(key, num).join();
+    }
 
     //------------------------ 键 Keys ------------------------    
-    public List<String> keys(String pattern);
+    default List<String> keys(String pattern) {
+        return keysAsync(pattern).join();
+    }
 
     default List<String> keys() {
         return keys(null);
@@ -213,43 +257,75 @@ public interface CacheSource extends Resourcable {
         return keys(startsWith + "*");
     }
 
-    public List<String> scan(AtomicLong cursor, int limit, String pattern);
+    default List<String> scan(AtomicLong cursor, int limit, String pattern) {
+        return scanAsync(cursor, limit, pattern).join();
+    }
 
     default List<String> scan(AtomicLong cursor, int limit) {
         return scan(cursor, limit, null);
     }
 
     //------------------------ 服务器 Server  ------------------------   
-    public long dbsize();
+    default long dbsize() {
+        return dbsizeAsync().join();
+    }
 
-    public void flushdb();
+    default void flushdb() {
+        flushdbAsync().join();
+    }
 
-    public void flushall();
+    default void flushall() {
+        flushallAsync().join();
+    }
 
     //------------------------ 哈希表 Hash ------------------------
-    public long hdel(final String key, String... fields);
+    default long hdel(final String key, String... fields) {
+        return hdelAsync(key, fields).join();
+    }
 
-    public List<String> hkeys(final String key);
+    default List<String> hkeys(final String key) {
+        return hkeysAsync(key).join();
+    }
 
-    public long hlen(final String key);
+    default long hlen(final String key) {
+        return hlenAsync(key).join();
+    }
 
-    public long hincr(final String key, String field);
+    default long hincr(final String key, String field) {
+        return hincrAsync(key, field).join();
+    }
 
-    public long hincrby(final String key, String field, long num);
+    default long hincrby(final String key, String field, long num) {
+        return hincrbyAsync(key, field, num).join();
+    }
 
-    public double hincrbyFloat(final String key, String field, double num);
+    default double hincrbyFloat(final String key, String field, double num) {
+        return hincrbyFloatAsync(key, field, num).join();
+    }
 
-    public long hdecr(final String key, String field);
+    default long hdecr(final String key, String field) {
+        return hdecrAsync(key, field).join();
+    }
 
-    public long hdecrby(final String key, String field, long num);
+    default long hdecrby(final String key, String field, long num) {
+        return hdecrbyAsync(key, field, num).join();
+    }
 
-    public boolean hexists(final String key, String field);
+    default boolean hexists(final String key, String field) {
+        return hexistsAsync(key, field).join();
+    }
 
-    public void hmset(final String key, final Serializable... values);
+    default void hmset(final String key, final Serializable... values) {
+        hmsetAsync(key, values).join();
+    }
 
-    public void hmset(final String key, final Map map);
+    default void hmset(final String key, final Map map) {
+        hmsetAsync(key, map).join();
+    }
 
-    public <T> List<T> hmget(final String key, final Type type, final String... fields);
+    default <T> List<T> hmget(final String key, final Type type, final String... fields) {
+        return (List) hmgetAsync(key, type, fields).join();
+    }
 
     default List<String> hmgetString(final String key, final String... fields) {
         return hmget(key, String.class, fields);
@@ -259,13 +335,17 @@ public interface CacheSource extends Resourcable {
         return hmget(key, Long.class, fields);
     }
 
-    public <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit, String pattern);
+    default <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit, String pattern) {
+        return (Map) hscanAsync(key, type, cursor, limit, pattern).join();
+    }
 
     default <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit) {
         return hscan(key, type, cursor, limit, null);
     }
 
-    public <T> T hget(final String key, final String field, final Type type);
+    default <T> T hget(final String key, final String field, final Type type) {
+        return (T) hgetAsync(key, field, type).join();
+    }
 
     default String hgetString(final String key, final String field) {
         return hget(key, field, String.class);
@@ -276,7 +356,9 @@ public interface CacheSource extends Resourcable {
         return val == null ? defValue : val;
     }
 
-    public <T> void hset(final String key, final String field, final Convert convert, final Type type, final T value);
+    default <T> void hset(final String key, final String field, final Convert convert, final Type type, final T value) {
+        hsetAsync(key, field, convert, type, value).join();
+    }
 
     default <T> void hset(final String key, final String field, final Type type, final T value) {
         hset(key, field, (Convert) null, type, value);
@@ -290,7 +372,9 @@ public interface CacheSource extends Resourcable {
         hset(key, field, Long.class, value);
     }
 
-    public <T> boolean hsetnx(final String key, final String field, final Convert convert, final Type type, final T value);
+    default <T> boolean hsetnx(final String key, final String field, final Convert convert, final Type type, final T value) {
+        return hsetnxAsync(key, field, convert, type, value).join();
+    }
 
     default <T> boolean hsetnx(final String key, final String field, final Type type, final T value) {
         return hsetnx(key, field, (Convert) null, type, value);
@@ -304,7 +388,9 @@ public interface CacheSource extends Resourcable {
         return hsetnx(key, field, Long.class, value);
     }
 
-    public <T> Map<String, T> hgetall(final String key, final Type type);
+    default <T> Map<String, T> hgetall(final String key, final Type type) {
+        return (Map) hgetallAsync(key, type).join();
+    }
 
     default Map<String, String> hgetallString(final String key) {
         return hgetall(key, String.class);
@@ -314,7 +400,9 @@ public interface CacheSource extends Resourcable {
         return hgetall(key, Long.class);
     }
 
-    public <T> List<T> hvals(final String key, final Type type);
+    default <T> List<T> hvals(final String key, final Type type) {
+        return (List) hvalsAsync(key, type).join();
+    }
 
     default List<String> hvalsString(final String key) {
         return hvals(key, String.class);
@@ -325,11 +413,17 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ 列表 List ------------------------
-    public long llen(final String key);
+    default long llen(final String key) {
+        return llenAsync(key).join();
+    }
 
-    public void ltrim(final String key, int start, int stop);
+    default void ltrim(final String key, int start, int stop) {
+        ltrimAsync(key, start, stop).join();
+    }
 
-    public <T> Map<String, List<T>> lrange(final Type componentType, final String... keys);
+    default <T> Map<String, List<T>> lrange(final Type componentType, final String... keys) {
+        return (Map) lrangeAsync(componentType, keys).join();
+    }
 
     default Map<String, List<String>> lrangeString(final String... keys) {
         return lrange(String.class, keys);
@@ -339,7 +433,9 @@ public interface CacheSource extends Resourcable {
         return lrange(Long.class, keys);
     }
 
-    public <T> List<T> lrange(final String key, final Type componentType, int start, int stop);
+    default <T> List<T> lrange(final String key, final Type componentType, int start, int stop) {
+        return (List) lrangeAsync(key, componentType, start, stop).join();
+    }
 
     default List<String> lrangeString(final String key, int start, int stop) {
         return lrange(key, String.class, start, stop);
@@ -361,7 +457,9 @@ public interface CacheSource extends Resourcable {
         return lrange(key, Long.class, 0, -1);
     }
 
-    public <T> T lpop(final String key, final Type componentType);
+    default <T> T lpop(final String key, final Type componentType) {
+        return (T) lpopAsync(key, componentType).join();
+    }
 
     default String lpopString(final String key) {
         return lpop(key, String.class);
@@ -371,7 +469,9 @@ public interface CacheSource extends Resourcable {
         return lpop(key, Long.class);
     }
 
-    public <T> void lpush(final String key, final Type componentType, T... values);
+    default <T> void lpush(final String key, final Type componentType, T... values) {
+        lpushAsync(key, componentType, values).join();
+    }
 
     default void lpushString(final String key, String... values) {
         lpush(key, String.class, values);
@@ -381,7 +481,9 @@ public interface CacheSource extends Resourcable {
         lpush(key, Long.class, values);
     }
 
-    public <T> void lpushx(final String key, final Type componentType, T... values);
+    default <T> void lpushx(final String key, final Type componentType, T... values) {
+        lpushxAsync(key, componentType, values).join();
+    }
 
     default void lpushxString(final String key, String... values) {
         lpushx(key, String.class, values);
@@ -391,7 +493,9 @@ public interface CacheSource extends Resourcable {
         lpushx(key, Long.class, values);
     }
 
-    public <T> void rpushx(final String key, final Type componentType, T... values);
+    default <T> void rpushx(final String key, final Type componentType, T... values) {
+        rpushxAsync(key, componentType, values).join();
+    }
 
     default void rpushxString(final String key, String... values) {
         rpushx(key, String.class, values);
@@ -401,7 +505,9 @@ public interface CacheSource extends Resourcable {
         rpushx(key, Long.class, values);
     }
 
-    public <T> T rpop(final String key, final Type componentType);
+    default <T> T rpop(final String key, final Type componentType) {
+        return (T) rpopAsync(key, componentType).join();
+    }
 
     default String rpopString(final String key) {
         return rpop(key, String.class);
@@ -411,7 +517,9 @@ public interface CacheSource extends Resourcable {
         return rpop(key, Long.class);
     }
 
-    public <T> T rpoplpush(final String key, final String key2, final Type componentType);
+    default <T> T rpoplpush(final String key, final String key2, final Type componentType) {
+        return (T) rpoplpushAsync(key, key2, componentType).join();
+    }
 
     default String rpoplpushString(final String key, final String key2) {
         return rpoplpush(key, key2, String.class);
@@ -421,7 +529,9 @@ public interface CacheSource extends Resourcable {
         return rpoplpush(key, key2, Long.class);
     }
 
-    public <T> int lrem(final String key, final Type componentType, final T value);
+    default <T> int lrem(final String key, final Type componentType, final T value) {
+        return lremAsync(key, componentType, value).join();
+    }
 
     default int lremString(final String key, final String value) {
         return lrem(key, String.class, value);
@@ -431,7 +541,9 @@ public interface CacheSource extends Resourcable {
         return lrem(key, Long.class, value);
     }
 
-    public <T> void rpush(final String key, final Type componentType, final T... values);
+    default <T> void rpush(final String key, final Type componentType, final T... values) {
+        rpushAsync(key, componentType, values).join();
+    }
 
     default void rpushString(final String key, final String... values) {
         rpush(key, String.class, values);
@@ -442,7 +554,9 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ 集合 Set ------------------------   
-    public <T> void sadd(final String key, final Type componentType, final T... values);
+    default <T> void sadd(final String key, final Type componentType, final T... values) {
+        saddAsync(key, componentType, values).join();
+    }
 
     default void saddString(final String key, final String... values) {
         sadd(key, String.class, values);
@@ -452,7 +566,9 @@ public interface CacheSource extends Resourcable {
         sadd(key, Long.class, values);
     }
 
-    public <T> Set<T> sdiff(final String key, final Type componentType, final String... key2s);
+    default <T> Set<T> sdiff(final String key, final Type componentType, final String... key2s) {
+        return (Set) sdiffAsync(key, componentType, key2s).join();
+    }
 
     default Set<String> sdiffString(final String key, final String... key2s) {
         return sdiff(key, String.class, key2s);
@@ -462,11 +578,33 @@ public interface CacheSource extends Resourcable {
         return sdiff(key, Long.class, key2s);
     }
 
-    public long sdiffstore(final String key, final String srcKey, final String... srcKey2s);
+    default long sdiffstore(final String key, final String srcKey, final String... srcKey2s) {
+        return sdiffstoreAsync(key, srcKey, srcKey2s).join();
+    }
 
-    public long scard(final String key);
+    default <T> Set<T> sinter(final String key, final Type componentType, final String... key2s) {
+        return (Set) sinterAsync(key, componentType, key2s).join();
+    }
 
-    public <T> Set<T> smembers(final String key, final Type componentType);
+    default Set<String> sinterString(final String key, final String... key2s) {
+        return sinter(key, String.class, key2s);
+    }
+
+    default Set<Long> sinterLong(final String key, final String... key2s) {
+        return sinter(key, Long.class, key2s);
+    }
+
+    default long sinterstore(final String key, final String srcKey, final String... srcKey2s) {
+        return sinterstoreAsync(key, srcKey, srcKey2s).join();
+    }
+
+    default long scard(final String key) {
+        return scardAsync(key).join();
+    }
+
+    default <T> Set<T> smembers(final String key, final Type componentType) {
+        return (Set) smembersAsync(key, componentType).join();
+    }
 
     default Set<String> smembersString(final String key) {
         return smembers(key, String.class);
@@ -476,7 +614,9 @@ public interface CacheSource extends Resourcable {
         return smembers(key, Long.class);
     }
 
-    public <T> Map<String, Set<T>> smembers(final Type componentType, final String... keys);
+    default <T> Map<String, Set<T>> smembers(final Type componentType, final String... keys) {
+        return (Map) smembersAsync(componentType, keys).join();
+    }
 
     default Map<String, Set<String>> smembersString(final String... keys) {
         return smembers(String.class, keys);
@@ -486,7 +626,9 @@ public interface CacheSource extends Resourcable {
         return smembers(Long.class, keys);
     }
 
-    public <T> boolean sismember(final String key, final Type componentType, final T value);
+    default <T> boolean sismember(final String key, final Type componentType, final T value) {
+        return sismemberAsync(key, componentType, value).join();
+    }
 
     default boolean sismemberString(final String key, final String value) {
         return sismember(key, String.class, value);
@@ -496,7 +638,18 @@ public interface CacheSource extends Resourcable {
         return sismember(key, Long.class, value);
     }
 
-    public <T> long srem(final String key, final Type componentType, final T... values);
+    default boolean smismember(final String key, final String member) {
+        List<Boolean> rs = smismembers(key, member);
+        return rs.get(0);
+    }
+
+    default List<Boolean> smismembers(final String key, final String... members) {
+        return smismembersAsync(key, members).join();
+    }
+
+    default <T> long srem(final String key, final Type componentType, final T... values) {
+        return sremAsync(key, componentType, values).join();
+    }
 
     default long sremString(final String key, final String... values) {
         return srem(key, String.class, values);
@@ -506,7 +659,9 @@ public interface CacheSource extends Resourcable {
         return srem(key, Long.class, values);
     }
 
-    public <T> T spop(final String key, final Type componentType);
+    default <T> T spop(final String key, final Type componentType) {
+        return (T) spopAsync(key, componentType).join();
+    }
 
     default String spopString(final String key) {
         return spop(key, String.class);
@@ -516,7 +671,9 @@ public interface CacheSource extends Resourcable {
         return spop(key, Long.class);
     }
 
-    public <T> Set<T> spop(final String key, final int count, final Type componentType);
+    default <T> Set<T> spop(final String key, final int count, final Type componentType) {
+        return (Set) spopAsync(key, count, componentType).join();
+    }
 
     default Set<String> spopString(final String key, final int count) {
         return spop(key, count, String.class);
@@ -526,7 +683,9 @@ public interface CacheSource extends Resourcable {
         return spop(key, count, Long.class);
     }
 
-    public <T> Set<T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern);
+    default <T> Set<T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern) {
+        return (Set) sscanAsync(key, componentType, cursor, limit, pattern).join();
+    }
 
     default Set<String> sscanString(final String key, AtomicLong cursor, int limit, String pattern) {
         return sscan(key, String.class, cursor, limit, pattern);
@@ -549,9 +708,7 @@ public interface CacheSource extends Resourcable {
     }
 
     //---------------------- CompletableFuture 异步版 ---------------------------------
-    default CompletableFuture<Boolean> isOpenAsync() {
-        return CompletableFuture.completedFuture(isOpen());
-    }
+    public CompletableFuture<Boolean> isOpenAsync();
 
     //------------------------ getAsync ------------------------  
     public <T> CompletableFuture<T> getAsync(final String key, final Type type);
@@ -980,6 +1137,18 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Long> sdiffstoreAsync(final String key, final String srcKey, final String... srcKey2s);
 
+    public <T> CompletableFuture<Set<T>> sinterAsync(final String key, final Type componentType, final String... key2s);
+
+    default CompletableFuture<Set<String>> sinterStringAsync(final String key, final String... key2s) {
+        return sinterAsync(key, String.class, key2s);
+    }
+
+    default CompletableFuture<Set<Long>> sinterLongAsync(final String key, final String... key2s) {
+        return sinterAsync(key, Long.class, key2s);
+    }
+
+    public CompletableFuture<Long> sinterstoreAsync(final String key, final String srcKey, final String... srcKey2s);
+
     public CompletableFuture<Long> scardAsync(final String key);
 
     public <T> CompletableFuture<Set<T>> smembersAsync(final String key, final Type componentType);
@@ -1011,6 +1180,8 @@ public interface CacheSource extends Resourcable {
     default CompletableFuture<Boolean> sismemberLongAsync(final String key, final long value) {
         return sismemberAsync(key, Long.class, value);
     }
+
+    public <T> CompletableFuture<List<Boolean>> smismembersAsync(final String key, final String... members);
 
     public <T> CompletableFuture<Long> sremAsync(final String key, final Type componentType, final T... values);
 

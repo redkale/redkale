@@ -154,6 +154,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     }
 
+    @Override
+    public CompletableFuture<Boolean> isOpenAsync() {
+        return CompletableFuture.completedFuture(true);
+    }
+
     //----------- hxxx --------------
     @Override
     public long hdel(final String key, String... fields) {
@@ -933,6 +938,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public CompletableFuture<List<Boolean>> smismembersAsync(final String key, final String... members) {
+        return supplyAsync(() -> smismembers(key, members), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
     public <T> Set<T> sdiff(final String key, final Type componentType, final String... key2s) {
         Set<T> rs = new HashSet<>();
         CacheEntry entry = container.get(key);
@@ -951,18 +961,56 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public long sdiffstore(final String key, final String srcKey, final String... srcKey2s) {
-        Set rs = new HashSet<>();
-        CacheEntry entry = container.get(srcKey);
+        Set rs = sdiff(srcKey, Object.class, srcKey2s);
+        if (container.containsKey(key)) {
+            CopyOnWriteArraySet set = container.get(srcKey).csetValue;
+            set.clear();
+            set.addAll(rs);
+        } else {
+            appendSetItem(CacheEntryType.OBJECT_SET, key, rs);
+        }
+        return rs.size();
+    }
+
+    @Override
+    public <T> CompletableFuture<Set<T>> sinterAsync(final String key, final Type componentType, final String... key2s) {
+        return supplyAsync(() -> sinter(key, componentType, key2s), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Long> sinterstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
+        return supplyAsync(() -> sinterstore(key, srcKey, srcKey2s), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> Set<T> sinter(final String key, final Type componentType, final String... key2s) {
+        Set<T> rs = new HashSet<>();
+        CacheEntry entry = container.get(key);
         if (entry == null || entry.csetValue == null) {
-            return 0L;
+            return rs;
         }
         rs.addAll(entry.csetValue);
-        for (String k : srcKey2s) {
+        for (String k : key2s) {
             CacheEntry en2 = container.get(k);
             if (en2 != null && en2.csetValue != null) {
-                en2.csetValue.forEach(v -> rs.remove(v));
+                Set<T> removes = new HashSet<>();
+                for (T v : rs) {
+                    if (!en2.csetValue.contains(v)) {
+                        removes.add(v);
+                    }
+                }
+                rs.removeAll(removes);
+            } else {
+                rs.clear();
+                return rs;
             }
         }
+        return rs;
+    }
+
+    @Override
+    public long sinterstore(final String key, final String srcKey, final String... srcKey2s) {
+        Set rs = sinter(srcKey, Object.class, srcKey2s);
         if (container.containsKey(key)) {
             CopyOnWriteArraySet set = container.get(srcKey).csetValue;
             set.clear();
@@ -993,6 +1041,16 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
         }
         return map;
+    }
+
+    @Override
+    public List<Boolean> smismembers(final String key, final String... members) {
+        Set s = (Set) get(key, Object.class);
+        List<Boolean> rs = new ArrayList<>();
+        for (String member : members) {
+            rs.add(s != null && s.contains(member));
+        }
+        return rs;
     }
 
     @Override
