@@ -19,7 +19,6 @@ import org.redkale.util.*;
  * CacheSource提供三种数据类型操作: String、Long、byte[]和泛型指定的数据类型。<br>
  * String统一用setString、getString等系列方法。<br>
  * Long统一用setLong、getLong、incr等系列方法。<br>
- * byte[]统一用setBytes、getBytes等系列方法。<br>
  * 其他则供自定义数据类型使用。
  *
  * param V value的类型 移除 @2.4.0
@@ -40,20 +39,25 @@ public interface CacheSource extends Resourcable {
     //------------------------ get ------------------------    
     public <T> T get(final String key, final Type type);
 
-    public String getString(final String key);
+    default String getString(final String key) {
+        return get(key, String.class);
+    }
 
-    public long getLong(final String key, long defValue);
-
-    public byte[] getBytes(final String key);
+    default long getLong(final String key, long defValue) {
+        Long val = get(key, Long.class);
+        return val == null ? defValue : val;
+    }
 
     //------------------------ mget ------------------------    
     public <T> Map<String, T> mget(final Type componentType, final String... keys);
 
-    public Map<String, String> mgetString(final String... keys);
+    default Map<String, String> mgetString(final String... keys) {
+        return mget(String.class, keys);
+    }
 
-    public Map<String, Long> mgetLong(final String... keys);
-
-    public Map<String, byte[]> mgetBytes(final String... keys);
+    default Map<String, Long> mgetLong(final String... keys) {
+        return mget(Long.class, keys);
+    }
 
     default <T> T[] mgets(final Type componentType, final String... keys) {
         T[] rs = (T[]) Creator.newArray(TypeToken.typeToClass(componentType), keys.length);
@@ -82,83 +86,98 @@ public interface CacheSource extends Resourcable {
         return rs;
     }
 
-    default byte[][] mgetsBytes(final String... keys) {
-        byte[][] rs = new byte[keys.length][];
-        Map<String, byte[]> map = mgetBytes(keys);
-        for (int i = 0; i < keys.length; i++) {
-            rs[i] = map.get(keys[i]);
-        }
-        return rs;
-    }
-
     //------------------------ getex ------------------------
     public <T> T getex(final String key, final int expireSeconds, final Type type);
 
-    public String getexString(final String key, final int expireSeconds);
+    default String getexString(final String key, final int expireSeconds) {
+        return getex(key, expireSeconds, String.class);
+    }
 
-    public long getexLong(final String key, final int expireSeconds, long defValue);
-
-    public byte[] getexBytes(final String key, final int expireSeconds);
+    default long getexLong(final String key, final int expireSeconds, long defValue) {
+        Long val = getex(key, expireSeconds, Long.class);
+        return val == null ? defValue : val;
+    }
 
     //------------------------ getset ------------------------
-    public <T> T getSet(final String key, final Type type, final T value);
-
     public <T> T getSet(final String key, final Convert convert, final Type type, final T value);
 
-    public long getSetLong(final String key, long value, long defValue);
+    default <T> T getSet(final String key, final Type type, final T value) {
+        return getSet(key, (Convert) null, type, value);
+    }
 
-    public String getSetString(final String key, final String value);
+    default String getSetString(final String key, final String value) {
+        return getSet(key, String.class, value);
+    }
 
-    public byte[] getSetBytes(final String key, final byte[] value);
+    default long getSetLong(final String key, long value, long defValue) {
+        Long val = getSet(key, Long.class, value);
+        return val == null ? defValue : val;
+    }
 
     //------------------------ set ------------------------
     //MSET key value [key value ...]
-    public void mset(final Object... keyVals);
+    public void mset(final Serializable... keyVals);
 
     public void mset(final Map map);
 
-    public <T> void set(final String key, final Type type, final T value);
-
     public <T> void set(final String key, final Convert convert, final Type type, final T value);
 
-    public void setString(final String key, final String value);
+    default <T> void set(final String key, final Type type, final T value) {
+        set(key, (Convert) null, type, value);
+    }
 
-    public void setLong(final String key, final long value);
+    default void setString(final String key, final String value) {
+        set(key, String.class, value);
+    }
 
-    public void setBytes(final String key, final byte[] value);
+    default void setLong(final String key, final long value) {
+        set(key, Long.class, value);
+    }
 
     //------------------------ setnx ------------------------
-    public <T> boolean setnx(final String key, final Type type, final T value);
-
     public <T> boolean setnx(final String key, final Convert convert, final Type type, final T value);
 
-    public boolean setnxString(final String key, final String value);
+    default <T> boolean setnx(final String key, final Type type, final T value) {
+        return setnx(key, (Convert) null, type, value);
+    }
 
-    public boolean setnxLong(final String key, final long value);
+    default boolean setnxString(final String key, final String value) {
+        return setnx(key, String.class, value);
+    }
 
-    public boolean setnxBytes(final String key, final byte[] value);
+    default boolean setnxLong(final String key, final long value) {
+        return setnx(key, Long.class, value);
+    }
 
     //------------------------ setnxex ------------------------
-    public <T> boolean setnxex(final String key, final int expireSeconds, final Type type, final T value);
-
     public <T> boolean setnxex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
-    public boolean setnxexString(final String key, final int expireSeconds, final String value);
+    default <T> boolean setnxex(final String key, final int expireSeconds, final Type type, final T value) {
+        return setnxex(key, expireSeconds, (Convert) null, type, value);
+    }
 
-    public boolean setnxexLong(final String key, final int expireSeconds, final long value);
+    default boolean setnxexString(final String key, final int expireSeconds, final String value) {
+        return setnxex(key, expireSeconds, String.class, value);
+    }
 
-    public boolean setnxexBytes(final String key, final int expireSeconds, final byte[] value);
+    default boolean setnxexLong(final String key, final int expireSeconds, final long value) {
+        return setnxex(key, expireSeconds, Long.class, value);
+    }
 
     //------------------------ setex ------------------------
-    public <T> void setex(final String key, final int expireSeconds, final Type type, final T value);
-
     public <T> void setex(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
-    public void setexString(final String key, final int expireSeconds, final String value);
+    default <T> void setex(final String key, final int expireSeconds, final Type type, final T value) {
+        setex(key, expireSeconds, (Convert) null, type, value);
+    }
 
-    public void setexLong(final String key, final int expireSeconds, final long value);
+    default void setexString(final String key, final int expireSeconds, final String value) {
+        setex(key, expireSeconds, String.class, value);
+    }
 
-    public void setexBytes(final String key, final int expireSeconds, final byte[] value);
+    default void setexLong(final String key, final int expireSeconds, final long value) {
+        setex(key, expireSeconds, Long.class, value);
+    }
 
     //------------------------ xxxx ------------------------
     public boolean exists(final String key);
@@ -171,7 +190,7 @@ public interface CacheSource extends Resourcable {
 
     public boolean renamenx(String oldKey, String newKey);
 
-    public int del(final String... keys);
+    public long del(final String... keys);
 
     public long incr(final String key);
 
@@ -186,48 +205,73 @@ public interface CacheSource extends Resourcable {
     //------------------------ hget ------------------------
     public <T> T hget(final String key, final String field, final Type type);
 
-    public String hgetString(final String key, final String field);
+    default String hgetString(final String key, final String field) {
+        return hget(key, field, String.class);
+    }
 
-    public long hgetLong(final String key, final String field, long defValue);
+    default long hgetLong(final String key, final String field, long defValue) {
+        Long val = hget(key, field, Long.class);
+        return val == null ? defValue : val;
+    }
 
     //------------------------ hset ------------------------
-    public <T> void hset(final String key, final String field, final Type type, final T value);
-
     public <T> void hset(final String key, final String field, final Convert convert, final Type type, final T value);
 
-    public void hsetString(final String key, final String field, final String value);
+    default <T> void hset(final String key, final String field, final Type type, final T value) {
+        hset(key, field, (Convert) null, type, value);
+    }
 
-    public void hsetLong(final String key, final String field, final long value);
+    default void hsetString(final String key, final String field, final String value) {
+        hset(key, field, String.class, value);
+    }
+
+    default void hsetLong(final String key, final String field, final long value) {
+        hset(key, field, Long.class, value);
+    }
 
     //------------------------ hsetnx ------------------------
-    public <T> boolean hsetnx(final String key, final String field, final Type type, final T value);
-
     public <T> boolean hsetnx(final String key, final String field, final Convert convert, final Type type, final T value);
 
-    public boolean hsetnxString(final String key, final String field, final String value);
+    default <T> boolean hsetnx(final String key, final String field, final Type type, final T value) {
+        return hsetnx(key, field, (Convert) null, type, value);
+    }
 
-    public boolean hsetnxLong(final String key, final String field, final long value);
+    default boolean hsetnxString(final String key, final String field, final String value) {
+        return hsetnx(key, field, String.class, value);
+    }
+
+    default boolean hsetnxLong(final String key, final String field, final long value) {
+        return hsetnx(key, field, Long.class, value);
+    }
 
     //------------------------ hgetall ------------------------
     public <T> Map<String, T> hgetall(final String key, final Type type);
 
-    public Map<String, String> hgetallString(final String key);
+    default Map<String, String> hgetallString(final String key) {
+        return hgetall(key, String.class);
+    }
 
-    public Map<String, Long> hgetallLong(final String key);
+    default Map<String, Long> hgetallLong(final String key) {
+        return hgetall(key, Long.class);
+    }
 
     //------------------------ hvals  ------------------------
     public <T> List<T> hvals(final String key, final Type type);
 
-    public List<String> hvalsString(final String key);
+    default List<String> hvalsString(final String key) {
+        return hvals(key, String.class);
+    }
 
-    public List<Long> hvalsLong(final String key);
+    default List<Long> hvalsLong(final String key) {
+        return hvals(key, Long.class);
+    }
 
     //------------------------ hxxx ------------------------
-    public int hdel(final String key, String... fields);
+    public long hdel(final String key, String... fields);
 
     public List<String> hkeys(final String key);
 
-    public int hlen(final String key);
+    public long hlen(final String key);
 
     public long hincr(final String key, String field);
 
@@ -248,16 +292,34 @@ public interface CacheSource extends Resourcable {
 
     public <T> List<T> hmget(final String key, final Type type, final String... fields);
 
-    default <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit) {
-        return hscan(key, type, cursor, limit, null);
+    default List<String> hmgetString(final String key, final String... fields) {
+        return hmget(key, String.class, fields);
+    }
+
+    default List<Long> hmgetLong(final String key, final String... fields) {
+        return hmget(key, Long.class, fields);
     }
 
     public <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit, String pattern);
 
+    default <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit) {
+        return hscan(key, type, cursor, limit, null);
+    }
+
     //------------------------ list ------------------------
-    public int llen(final String key);
+    public long llen(final String key);
+
+    public void ltrim(final String key, int start, int stop);
 
     public <T> Map<String, List<T>> lrange(final Type componentType, final String... keys);
+
+    default Map<String, List<String>> lrangeString(final String... keys) {
+        return lrange(String.class, keys);
+    }
+
+    default Map<String, List<Long>> lrangeLong(final String... keys) {
+        return lrange(Long.class, keys);
+    }
 
     public <T> List<T> lrange(final String key, final Type componentType, int start, int stop);
 
@@ -281,8 +343,6 @@ public interface CacheSource extends Resourcable {
         return lrange(key, Long.class, 0, -1);
     }
 
-    public void ltrim(final String key, int start, int stop);
-
     public <T> T lpop(final String key, final Type componentType);
 
     default String lpopString(final String key) {
@@ -303,24 +363,24 @@ public interface CacheSource extends Resourcable {
         lpush(key, Long.class, values);
     }
 
-    public <T> void lpushx(final String key, final Type componentType, T value);
+    public <T> void lpushx(final String key, final Type componentType, T... values);
 
-    default void lpushxString(final String key, String value) {
-        lpushx(key, String.class, value);
+    default void lpushxString(final String key, String... values) {
+        lpushx(key, String.class, values);
     }
 
-    default void lpushxLong(final String key, Long value) {
-        lpushx(key, Long.class, value);
+    default void lpushxLong(final String key, Long... values) {
+        lpushx(key, Long.class, values);
     }
 
-    public <T> void rpushx(final String key, final Type componentType, T value);
+    public <T> void rpushx(final String key, final Type componentType, T... values);
 
-    default void rpushxString(final String key, String value) {
-        rpushx(key, String.class, value);
+    default void rpushxString(final String key, String... values) {
+        rpushx(key, String.class, values);
     }
 
-    default void rpushxLong(final String key, Long value) {
-        rpushx(key, Long.class, value);
+    default void rpushxLong(final String key, Long... values) {
+        rpushx(key, Long.class, values);
     }
 
     public <T> T rpop(final String key, final Type componentType);
@@ -333,14 +393,14 @@ public interface CacheSource extends Resourcable {
         return rpop(key, Long.class);
     }
 
-    public <T> T rpoplpush(final String list1, final String list2, final Type componentType);
+    public <T> T rpoplpush(final String key, final String key2, final Type componentType);
 
-    default String rpoplpushString(final String list1, final String list2) {
-        return rpoplpush(list1, list2, String.class);
+    default String rpoplpushString(final String key, final String key2) {
+        return rpoplpush(key, key2, String.class);
     }
 
-    default Long rpoplpushLong(final String list1, final String list2) {
-        return rpoplpush(list1, list2, Long.class);
+    default Long rpoplpushLong(final String key, final String key2) {
+        return rpoplpush(key, key2, Long.class);
     }
 
     public <T> int lrem(final String key, final Type componentType, final T value);
@@ -353,38 +413,90 @@ public interface CacheSource extends Resourcable {
         return lrem(key, Long.class, value);
     }
 
-    public <T> void rpush(final String key, final Type componentType, final T value);
+    public <T> void rpush(final String key, final Type componentType, final T... values);
 
-    default void rpushString(final String key, final String value) {
-        rpush(key, String.class, value);
+    default void rpushString(final String key, final String... values) {
+        rpush(key, String.class, values);
     }
 
-    default void rpushLong(final String key, final long value) {
-        rpush(key, Long.class, value);
+    default void rpushLong(final String key, final Long... values) {
+        rpush(key, Long.class, values);
     }
 
     //------------------------ set ------------------------   
-    public int scard(final String key);
+    public long scard(final String key);
 
     public <T> Set<T> smembers(final String key, final Type componentType);
 
+    default Set<String> smembersString(final String key) {
+        return smembers(key, String.class);
+    }
+
+    default Set<Long> smembersLong(final String key) {
+        return smembers(key, Long.class);
+    }
+
     public <T> Map<String, Set<T>> smembers(final Type componentType, final String... keys);
+
+    default Map<String, Set<String>> smembersString(final String... keys) {
+        return smembers(String.class, keys);
+    }
+
+    default Map<String, Set<Long>> smembersLong(final String... keys) {
+        return smembers(Long.class, keys);
+    }
 
     public <T> boolean sismember(final String key, final Type componentType, final T value);
 
+    default boolean sismemberString(final String key, final String value) {
+        return sismember(key, String.class, value);
+    }
+
+    default boolean sismemberLong(final String key, final long value) {
+        return sismember(key, Long.class, value);
+    }
+
     public <T> void sadd(final String key, final Type componentType, final T value);
+
+    default void saddString(final String key, final String value) {
+        sadd(key, String.class, value);
+    }
+
+    default void saddLong(final String key, final long value) {
+        sadd(key, Long.class, value);
+    }
 
     public <T> int srem(final String key, final Type componentType, final T value);
 
+    default int sremString(final String key, final String value) {
+        return srem(key, String.class, value);
+    }
+
+    default int sremLong(final String key, final long value) {
+        return srem(key, Long.class, value);
+    }
+
     public <T> T spop(final String key, final Type componentType);
+
+    default String spopString(final String key) {
+        return spop(key, String.class);
+    }
+
+    default Long spopLong(final String key) {
+        return spop(key, Long.class);
+    }
 
     public <T> Set<T> spop(final String key, final int count, final Type componentType);
 
-    public <T> Set<T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern);
-
-    default <T> Set<T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit) {
-        return sscan(key, componentType, cursor, limit, null);
+    default Set<String> spopString(final String key, final int count) {
+        return spop(key, count, String.class);
     }
+
+    default Set<Long> spopLong(final String key, final int count) {
+        return spop(key, count, Long.class);
+    }
+
+    public <T> Set<T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern);
 
     default Set<String> sscanString(final String key, AtomicLong cursor, int limit, String pattern) {
         return sscan(key, String.class, cursor, limit, pattern);
@@ -392,6 +504,10 @@ public interface CacheSource extends Resourcable {
 
     default Set<Long> sscanLong(final String key, AtomicLong cursor, int limit, String pattern) {
         return sscan(key, Long.class, cursor, limit, pattern);
+    }
+
+    default <T> Set<T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit) {
+        return sscan(key, componentType, cursor, limit, null);
     }
 
     default Set<String> sscanString(final String key, AtomicLong cursor, int limit) {
@@ -402,33 +518,9 @@ public interface CacheSource extends Resourcable {
         return sscan(key, Long.class, cursor, limit, null);
     }
 
-    //---------- set-string ----------
-    default Set<String> smembersString(final String key) {
-        return smembers(key, String.class);
-    }
-
-    public boolean sismemberString(final String key, final String value);
-
-    public void saddString(final String key, final String value);
-
-    public int sremString(final String key, final String value);
-
-    public String spopString(final String key);
-
-    public Set<String> spopString(final String key, final int count);
-
-    //---------- set-long ----------
-    public boolean sismemberLong(final String key, final long value);
-
-    public void saddLong(final String key, final long value);
-
-    public int sremLong(final String key, final long value);
-
-    public Long spopLong(final String key);
-
-    public Set<Long> spopLong(final String key, final int count);
-
     //------------------------ keys ------------------------
+    public List<String> keys(String pattern);
+
     default List<String> keys() {
         return keys(null);
     }
@@ -437,13 +529,11 @@ public interface CacheSource extends Resourcable {
         return keys(startsWith + "*");
     }
 
-    public List<String> keys(String pattern);
+    public List<String> scan(AtomicLong cursor, int limit, String pattern);
 
     default List<String> scan(AtomicLong cursor, int limit) {
         return scan(cursor, limit, null);
     }
-
-    public List<String> scan(AtomicLong cursor, int limit, String pattern);
 
     public long dbsize();
 
@@ -459,20 +549,24 @@ public interface CacheSource extends Resourcable {
     //------------------------ getAsync ------------------------  
     public <T> CompletableFuture<T> getAsync(final String key, final Type type);
 
-    public CompletableFuture<String> getStringAsync(final String key);
+    default CompletableFuture<String> getStringAsync(final String key) {
+        return getAsync(key, String.class);
+    }
 
-    public CompletableFuture<Long> getLongAsync(final String key, long defValue);
-
-    public CompletableFuture<byte[]> getBytesAsync(final String key);
+    default CompletableFuture<Long> getLongAsync(final String key, long defValue) {
+        return getAsync(key, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
+    }
 
     //------------------------ mgetAsync ------------------------    
     public <T> CompletableFuture<Map<String, T>> mgetAsync(final Type componentType, final String... keys);
 
-    public CompletableFuture<Map<String, String>> mgetStringAsync(final String... keys);
+    default CompletableFuture<Map<String, String>> mgetStringAsync(final String... keys) {
+        return mgetAsync(String.class, keys);
+    }
 
-    public CompletableFuture<Map<String, Long>> mgetLongAsync(final String... keys);
-
-    public CompletableFuture<Map<String, byte[]>> mgetBytesAsync(final String... keys);
+    default CompletableFuture<Map<String, Long>> mgetLongAsync(final String... keys) {
+        return mgetAsync(Long.class, keys);
+    }
 
     default <T> CompletableFuture<T[]> mgetsAsync(final Type componentType, final String... keys) {
         return mgetAsync(componentType, keys).thenApply(map -> {
@@ -504,84 +598,96 @@ public interface CacheSource extends Resourcable {
         });
     }
 
-    default CompletableFuture<byte[][]> mgetsBytesAsync(final String... keys) {
-        return mgetBytesAsync(keys).thenApply(map -> {
-            byte[][] rs = new byte[keys.length][];
-            for (int i = 0; i < keys.length; i++) {
-                rs[i] = map.get(keys[i]);
-            }
-            return rs;
-        });
-    }
-
     //------------------------ getexAsync ------------------------
     public <T> CompletableFuture<T> getexAsync(final String key, final int expireSeconds, final Type type);
 
-    public CompletableFuture<String> getexStringAsync(final String key, final int expireSeconds);
+    default CompletableFuture<String> getexStringAsync(final String key, final int expireSeconds) {
+        return getexAsync(key, expireSeconds, String.class);
+    }
 
-    public CompletableFuture<Long> getexLongAsync(final String key, final int expireSeconds, long defValue);
-
-    public CompletableFuture<byte[]> getexBytesAsync(final String key, final int expireSeconds);
+    default CompletableFuture<Long> getexLongAsync(final String key, final int expireSeconds, long defValue) {
+        return getexAsync(key, expireSeconds, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
+    }
 
     //------------------------ getsetAsync ------------------------
-    public <T> CompletableFuture<T> getSetAsync(final String key, final Type type, final T value);
-
     public <T> CompletableFuture<T> getSetAsync(final String key, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Long> getSetLongAsync(final String key, long value, long defValue);
+    default <T> CompletableFuture<T> getSetAsync(final String key, final Type type, final T value) {
+        return getSetAsync(key, (Convert) null, type, value);
+    }
 
-    public CompletableFuture<String> getSetStringAsync(final String key, final String value);
+    default CompletableFuture<String> getSetStringAsync(final String key, final String value) {
+        return getSetAsync(key, String.class, value);
+    }
 
-    public CompletableFuture<byte[]> getSetBytesAsync(final String key, final byte[] value);
+    default CompletableFuture<Long> getSetLongAsync(final String key, long value, long defValue) {
+        return getSetAsync(key, Long.class, value).thenApply(v -> v == null ? defValue : (Long) v);
+    }
 
     //------------------------ setAsync ------------------------
     //MSET key value [key value ...]
-    public CompletableFuture<Void> msetAsync(final Object... keyVals);
+    public CompletableFuture<Void> msetAsync(final Serializable... keyVals);
 
     public CompletableFuture<Void> msetAsync(final Map map);
 
-    public <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value);
-
     public <T> CompletableFuture<Void> setAsync(final String key, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Void> setStringAsync(final String key, final String value);
+    default <T> CompletableFuture<Void> setAsync(final String key, final Type type, final T value) {
+        return setAsync(key, (Convert) null, type, value);
+    }
 
-    public CompletableFuture<Void> setLongAsync(final String key, long value);
+    default CompletableFuture<Void> setStringAsync(final String key, final String value) {
+        return setAsync(key, String.class, value);
+    }
 
-    public CompletableFuture<Void> setBytesAsync(final String key, final byte[] value);
+    default CompletableFuture<Void> setLongAsync(final String key, long value) {
+        return setAsync(key, Long.class, value);
+    }
 
     //------------------------ setnxAsync ------------------------
-    public <T> CompletableFuture<Boolean> setnxAsync(final String key, final Type type, final T value);
-
     public <T> CompletableFuture<Boolean> setnxAsync(final String key, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Boolean> setnxStringAsync(final String key, final String value);
+    default <T> CompletableFuture<Boolean> setnxAsync(final String key, final Type type, final T value) {
+        return setnxAsync(key, (Convert) null, type, value);
+    }
 
-    public CompletableFuture<Boolean> setnxLongAsync(final String key, long value);
+    default CompletableFuture<Boolean> setnxStringAsync(final String key, final String value) {
+        return setnxAsync(key, String.class, value);
+    }
 
-    public CompletableFuture<Boolean> setnxBytesAsync(final String key, final byte[] value);
+    default CompletableFuture<Boolean> setnxLongAsync(final String key, long value) {
+        return setnxAsync(key, Long.class, value);
+    }
 
     //------------------------ setnxexAsync ------------------------
-    public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Type type, final T value);
-
     public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Boolean> setnxexStringAsync(final String key, final int expireSeconds, final String value);
+    default <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Type type, final T value) {
+        return setnxexAsync(key, expireSeconds, (Convert) null, type, value);
+    }
 
-    public CompletableFuture<Boolean> setnxexLongAsync(final String key, final int expireSeconds, final long value);
+    default CompletableFuture<Boolean> setnxexStringAsync(final String key, final int expireSeconds, final String value) {
+        return setnxexAsync(key, expireSeconds, String.class, value);
+    }
 
-    public CompletableFuture<Boolean> setnxexBytesAsync(final String key, final int expireSeconds, final byte[] value);
+    default CompletableFuture<Boolean> setnxexLongAsync(final String key, final int expireSeconds, final long value) {
+        return setnxexAsync(key, expireSeconds, Long.class, value);
+    }
 
     //------------------------ setexAsync ------------------------
-    public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Type type, final T value);
-
     public <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Void> setexStringAsync(final String key, final int expireSeconds, final String value);
+    default <T> CompletableFuture<Void> setexAsync(final String key, final int expireSeconds, final Type type, final T value) {
+        return setexAsync(key, expireSeconds, (Convert) null, type, value);
+    }
 
-    public CompletableFuture<Void> setexLongAsync(final String key, final int expireSeconds, final long value);
+    default CompletableFuture<Void> setexStringAsync(final String key, final int expireSeconds, final String value) {
+        return setexAsync(key, expireSeconds, String.class, value);
+    }
 
-    public CompletableFuture<Void> setexBytesAsync(final String key, final int expireSeconds, final byte[] value);
+    default CompletableFuture<Void> setexLongAsync(final String key, final int expireSeconds, final long value) {
+        return setexAsync(key, expireSeconds, Long.class, value);
+    }
 
     //------------------------ xxxxAsync ------------------------
     public CompletableFuture<Boolean> existsAsync(final String key);
@@ -594,7 +700,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Boolean> renamenxAsync(String oldKey, String newKey);
 
-    public CompletableFuture<Integer> delAsync(final String... keys);
+    public CompletableFuture<Long> delAsync(final String... keys);
 
     public CompletableFuture<Long> incrAsync(final String key);
 
@@ -609,48 +715,72 @@ public interface CacheSource extends Resourcable {
     //------------------------ hgetAsync ------------------------
     public <T> CompletableFuture<T> hgetAsync(final String key, final String field, final Type type);
 
-    public CompletableFuture<String> hgetStringAsync(final String key, final String field);
+    default CompletableFuture<String> hgetStringAsync(final String key, final String field) {
+        return hgetAsync(key, field, String.class);
+    }
 
-    public CompletableFuture<Long> hgetLongAsync(final String key, final String field, long defValue);
+    default CompletableFuture<Long> hgetLongAsync(final String key, final String field, long defValue) {
+        return hgetAsync(key, field, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
+    }
 
     //------------------------ hsetAsync ------------------------
-    public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Type type, final T value);
-
     public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Void> hsetStringAsync(final String key, final String field, final String value);
+    default <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Type type, final T value) {
+        return hsetAsync(key, field, (Convert) null, type, value);
+    }
 
-    public CompletableFuture<Void> hsetLongAsync(final String key, final String field, final long value);
+    default CompletableFuture<Void> hsetStringAsync(final String key, final String field, final String value) {
+        return hsetAsync(key, field, String.class, value);
+    }
+
+    default CompletableFuture<Void> hsetLongAsync(final String key, final String field, final long value) {
+        return hsetAsync(key, field, Long.class, value);
+    }
 
     //------------------------ hsetnxAsync ------------------------
-    public <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Type type, final T value);
-
     public <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value);
 
-    public CompletableFuture<Boolean> hsetnxStringAsync(final String key, final String field, final String value);
+    default <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Type type, final T value) {
+        return hsetnxAsync(key, field, (Convert) null, type, value);
+    }
 
-    public CompletableFuture<Boolean> hsetnxLongAsync(final String key, final String field, final long value);
+    default CompletableFuture<Boolean> hsetnxStringAsync(final String key, final String field, final String value) {
+        return hsetnxAsync(key, field, String.class, value);
+    }
+
+    default CompletableFuture<Boolean> hsetnxLongAsync(final String key, final String field, final long value) {
+        return hsetnxAsync(key, field, Long.class, value);
+    }
 
     //------------------------ hgetallAsync ------------------------
     public <T> CompletableFuture<Map<String, T>> hgetallAsync(final String key, final Type type);
 
-    public CompletableFuture<Map<String, String>> hgetallStringAsync(final String key);
+    default CompletableFuture<Map<String, String>> hgetallStringAsync(final String key) {
+        return hgetallAsync(key, String.class);
+    }
 
-    public CompletableFuture<Map<String, Long>> hgetallLongAsync(final String key);
+    default CompletableFuture<Map<String, Long>> hgetallLongAsync(final String key) {
+        return hgetallAsync(key, Long.class);
+    }
 
     //------------------------ hvalsAsync  ------------------------
     public <T> CompletableFuture<List<T>> hvalsAsync(final String key, final Type type);
 
-    public CompletableFuture<List<String>> hvalsStringAsync(final String key);
+    default CompletableFuture<List<String>> hvalsStringAsync(final String key) {
+        return hvalsAsync(key, String.class);
+    }
 
-    public CompletableFuture<List<Long>> hvalsLongAsync(final String key);
+    default CompletableFuture<List<Long>> hvalsLongAsync(final String key) {
+        return hvalsAsync(key, Long.class);
+    }
 
     //------------------------ hxxxAsync ------------------------
-    public CompletableFuture<Integer> hdelAsync(final String key, String... fields);
+    public CompletableFuture<Long> hdelAsync(final String key, String... fields);
 
     public CompletableFuture<List<String>> hkeysAsync(final String key);
 
-    public CompletableFuture<Integer> hlenAsync(final String key);
+    public CompletableFuture<Long> hlenAsync(final String key);
 
     public CompletableFuture<Long> hincrAsync(final String key, String field);
 
@@ -671,16 +801,34 @@ public interface CacheSource extends Resourcable {
 
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields);
 
-    default <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicLong cursor, int limit) {
-        return hscanAsync(key, type, cursor, limit, null);
+    default CompletableFuture<List<String>> hmgetStringAsync(final String key, final String... fields) {
+        return hmgetAsync(key, String.class, fields);
+    }
+
+    default CompletableFuture<List<Long>> hmgetLongAsync(final String key, final String... fields) {
+        return hmgetAsync(key, Long.class, fields);
     }
 
     public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicLong cursor, int limit, String pattern);
 
+    default <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicLong cursor, int limit) {
+        return hscanAsync(key, type, cursor, limit, null);
+    }
+
     //------------------------ listAsync ------------------------  
-    public CompletableFuture<Integer> llenAsync(final String key);
+    public CompletableFuture<Long> llenAsync(final String key);
+
+    public CompletableFuture<Void> ltrimAsync(final String key, int start, int stop);
 
     public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(final Type componentType, final String... keys);
+
+    default CompletableFuture<Map<String, List<String>>> lrangeStringAsync(final String... keys) {
+        return lrangeAsync(String.class, keys);
+    }
+
+    default CompletableFuture<Map<String, List<Long>>> lrangeLongAsync(final String... keys) {
+        return lrangeAsync(Long.class, keys);
+    }
 
     public <T> CompletableFuture<List<T>> lrangeAsync(final String key, final Type componentType, int start, int stop);
 
@@ -704,8 +852,6 @@ public interface CacheSource extends Resourcable {
         return lrangeAsync(key, Long.class, 0, -1);
     }
 
-    public CompletableFuture<Void> ltrimAsync(final String key, int start, int stop);
-
     public <T> CompletableFuture<T> lpopAsync(final String key, final Type componentType);
 
     default CompletableFuture<String> lpopStringAsync(final String key) {
@@ -726,24 +872,24 @@ public interface CacheSource extends Resourcable {
         return lpushAsync(key, Long.class, values);
     }
 
-    public <T> CompletableFuture<Void> lpushxAsync(final String key, final Type componentType, T value);
+    public <T> CompletableFuture<Void> lpushxAsync(final String key, final Type componentType, T... values);
 
-    default CompletableFuture<Void> lpushxStringAsync(final String key, String value) {
-        return lpushxAsync(key, String.class, value);
+    default CompletableFuture<Void> lpushxStringAsync(final String key, String... values) {
+        return lpushxAsync(key, String.class, values);
     }
 
-    default CompletableFuture<Void> lpushxLongAsync(final String key, Long value) {
-        return lpushxAsync(key, Long.class, value);
+    default CompletableFuture<Void> lpushxLongAsync(final String key, Long... values) {
+        return lpushxAsync(key, Long.class, values);
     }
 
-    public <T> CompletableFuture<Void> rpushxAsync(final String key, final Type componentType, T value);
+    public <T> CompletableFuture<Void> rpushxAsync(final String key, final Type componentType, T... values);
 
-    default CompletableFuture<Void> rpushxStringAsync(final String key, String value) {
-        return rpushxAsync(key, String.class, value);
+    default CompletableFuture<Void> rpushxStringAsync(final String key, String... values) {
+        return rpushxAsync(key, String.class, values);
     }
 
-    default CompletableFuture<Void> rpushxLongAsync(final String key, Long value) {
-        return rpushxAsync(key, Long.class, value);
+    default CompletableFuture<Void> rpushxLongAsync(final String key, Long... values) {
+        return rpushxAsync(key, Long.class, values);
     }
 
     public <T> CompletableFuture<T> rpopAsync(final String key, final Type componentType);
@@ -756,14 +902,14 @@ public interface CacheSource extends Resourcable {
         return rpopAsync(key, Long.class);
     }
 
-    public <T> CompletableFuture<T> rpoplpushAsync(final String list1, final String list2, final Type componentType);
+    public <T> CompletableFuture<T> rpoplpushAsync(final String key, final String key2, final Type componentType);
 
-    default CompletableFuture<String> rpoplpushStringAsync(final String list1, final String list2) {
-        return rpoplpushAsync(list1, list2, String.class);
+    default CompletableFuture<String> rpoplpushStringAsync(final String key, final String key2) {
+        return rpoplpushAsync(key, key2, String.class);
     }
 
-    default CompletableFuture<Long> rpoplpushLongAsync(final String list1, final String list2) {
-        return rpoplpushAsync(list1, list2, Long.class);
+    default CompletableFuture<Long> rpoplpushLongAsync(final String key, final String key2) {
+        return rpoplpushAsync(key, key2, Long.class);
     }
 
     public <T> CompletableFuture<Integer> lremAsync(final String key, final Type componentType, final T value);
@@ -776,38 +922,90 @@ public interface CacheSource extends Resourcable {
         return lremAsync(key, Long.class, value);
     }
 
-    public <T> CompletableFuture<Void> rpushAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Void> rpushAsync(final String key, final Type componentType, final T... values);
 
-    default CompletableFuture<Void> rpushStringAsync(final String key, final String value) {
-        return rpushAsync(key, String.class, value);
+    default CompletableFuture<Void> rpushStringAsync(final String key, final String... values) {
+        return rpushAsync(key, String.class, values);
     }
 
-    default CompletableFuture<Void> rpushLongAsync(final String key, final long value) {
-        return rpushAsync(key, Long.class, value);
+    default CompletableFuture<Void> rpushLongAsync(final String key, final Long... values) {
+        return rpushAsync(key, Long.class, values);
     }
 
     //------------------------ setAsync ------------------------
-    public CompletableFuture<Integer> scardAsync(final String key);
+    public CompletableFuture<Long> scardAsync(final String key);
 
     public <T> CompletableFuture<Set<T>> smembersAsync(final String key, final Type componentType);
 
+    default CompletableFuture<Set<String>> smembersStringAsync(final String key) {
+        return smembersAsync(key, String.class);
+    }
+
+    default CompletableFuture<Set<Long>> smembersLongAsync(final String key) {
+        return smembersAsync(key, Long.class);
+    }
+
     public <T> CompletableFuture<Map<String, Set<T>>> smembersAsync(final Type componentType, final String... keys);
+
+    default CompletableFuture<Map<String, Set<String>>> smembersStringAsync(final String... keys) {
+        return smembersAsync(String.class, keys);
+    }
+
+    default CompletableFuture<Map<String, Set<Long>>> smembersLongAsync(final String... keys) {
+        return smembersAsync(Long.class, keys);
+    }
 
     public <T> CompletableFuture<Boolean> sismemberAsync(final String key, final Type componentType, final T value);
 
+    default CompletableFuture<Boolean> sismemberStringAsync(final String key, final String value) {
+        return sismemberAsync(key, String.class, value);
+    }
+
+    default CompletableFuture<Boolean> sismemberLongAsync(final String key, final long value) {
+        return sismemberAsync(key, Long.class, value);
+    }
+
     public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, final T value);
+
+    default CompletableFuture<Void> saddStringAsync(final String key, final String value) {
+        return saddAsync(key, String.class, value);
+    }
+
+    default CompletableFuture<Void> saddLongAsync(final String key, final long value) {
+        return saddAsync(key, Long.class, value);
+    }
 
     public <T> CompletableFuture<Integer> sremAsync(final String key, final Type componentType, final T value);
 
+    default CompletableFuture<Integer> sremStringAsync(final String key, final String value) {
+        return sremAsync(key, String.class, value);
+    }
+
+    default CompletableFuture<Integer> sremLongAsync(final String key, final long value) {
+        return sremAsync(key, Long.class, value);
+    }
+
     public <T> CompletableFuture<T> spopAsync(final String key, final Type componentType);
+
+    default CompletableFuture<String> spopStringAsync(final String key) {
+        return spopAsync(key, String.class);
+    }
+
+    default CompletableFuture<Long> spopLongAsync(final String key) {
+        return spopAsync(key, Long.class);
+    }
 
     public <T> CompletableFuture<Set<T>> spopAsync(final String key, final int count, final Type componentType);
 
-    public <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern);
-
-    default <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit) {
-        return sscanAsync(key, componentType, cursor, limit, null);
+    default CompletableFuture<Set<String>> spopStringAsync(final String key, final int count) {
+        return spopAsync(key, count, String.class);
     }
+
+    default CompletableFuture<Set<Long>> spopLongAsync(final String key, final int count) {
+        return spopAsync(key, count, Long.class);
+    }
+
+    public <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern);
 
     default CompletableFuture<Set<String>> sscanStringAsync(final String key, AtomicLong cursor, int limit, String pattern) {
         return sscanAsync(key, String.class, cursor, limit, pattern);
@@ -815,6 +1013,10 @@ public interface CacheSource extends Resourcable {
 
     default CompletableFuture<Set<Long>> sscanLongAsync(final String key, AtomicLong cursor, int limit, String pattern) {
         return sscanAsync(key, Long.class, cursor, limit, pattern);
+    }
+
+    default <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit) {
+        return sscanAsync(key, componentType, cursor, limit, null);
     }
 
     default CompletableFuture<Set<String>> sscanStringAsync(final String key, AtomicLong cursor, int limit) {
@@ -825,33 +1027,9 @@ public interface CacheSource extends Resourcable {
         return sscanAsync(key, Long.class, cursor, limit);
     }
 
-    //---------- set-string ----------
-    default CompletableFuture<Set<String>> smembersStringAsync(final String key) {
-        return smembersAsync(key, String.class);
-    }
-
-    public CompletableFuture<Boolean> sismemberStringAsync(final String key, final String value);
-
-    public CompletableFuture<Void> saddStringAsync(final String key, final String value);
-
-    public CompletableFuture<Integer> sremStringAsync(final String key, final String value);
-
-    public CompletableFuture<String> spopStringAsync(final String key);
-
-    public CompletableFuture<Set<String>> spopStringAsync(final String key, final int count);
-
-    //---------- set-long ----------
-    public CompletableFuture<Boolean> sismemberLongAsync(final String key, final long value);
-
-    public CompletableFuture<Void> saddLongAsync(final String key, final long value);
-
-    public CompletableFuture<Integer> sremLongAsync(final String key, final long value);
-
-    public CompletableFuture<Long> spopLongAsync(final String key);
-
-    public CompletableFuture<Set<Long>> spopLongAsync(final String key, final int count);
-
     //------------------------ keys-Async ------------------------
+    public CompletableFuture<List<String>> keysAsync(String pattern);
+
     default CompletableFuture<List<String>> keysAsync() {
         return keysAsync(null);
     }
@@ -860,13 +1038,11 @@ public interface CacheSource extends Resourcable {
         return keysAsync(startsWith + "*");
     }
 
-    public CompletableFuture<List<String>> keysAsync(String pattern);
+    public CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit, String pattern);
 
     default CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit) {
         return scanAsync(cursor, limit, null);
     }
-
-    public CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit, String pattern);
 
     public CompletableFuture<Long> dbsizeAsync();
 
@@ -942,7 +1118,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> hremoveAsync(final String key, String... fields) {
-        return hdelAsync(key, fields);
+        return hdelAsync(key, fields).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
@@ -967,12 +1143,12 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeAsync(final String key) {
-        return delAsync(key);
+        return delAsync(key).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
     default int hremove(final String key, String... fields) {
-        return hdel(key, fields);
+        return (int) hdel(key, fields);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1002,7 +1178,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default int remove(final String key) {
-        return del(key);
+        return (int) del(key);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1013,11 +1189,6 @@ public interface CacheSource extends Resourcable {
     @Deprecated(since = "2.8.0")
     default void setLong(final int expireSeconds, final String key, final long value) {
         setexLong(key, expireSeconds, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    default void setBytes(final int expireSeconds, final String key, final byte[] value) {
-        setexBytes(key, expireSeconds, value);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1041,11 +1212,6 @@ public interface CacheSource extends Resourcable {
     }
 
     @Deprecated(since = "2.8.0")
-    default byte[] getBytesAndRefresh(final String key, final int expireSeconds) {
-        return getexBytes(key, expireSeconds);
-    }
-
-    @Deprecated(since = "2.8.0")
     default CompletableFuture<Long> getLongAndRefreshAsync(final String key, final int expireSeconds, long defValue) {
         return getexLongAsync(key, expireSeconds, defValue);
     }
@@ -1056,18 +1222,13 @@ public interface CacheSource extends Resourcable {
     }
 
     @Deprecated(since = "2.8.0")
-    default CompletableFuture<byte[]> getBytesAndRefreshAsync(final String key, final int expireSeconds) {
-        return getexBytesAsync(key, expireSeconds);
-    }
-
-    @Deprecated(since = "2.8.0")
     default int hsize(final String key) {
-        return hlen(key);
+        return (int) hlen(key);
     }
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> hsizeAsync(final String key) {
-        return hlenAsync(key);
+        return hlenAsync(key).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
@@ -1378,5 +1539,25 @@ public interface CacheSource extends Resourcable {
     @Deprecated(since = "2.8.0")
     default int getKeySize() {
         return (int) dbsize();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int start, int limit, String pattern) {
+        return hscanAsync(key, type, new AtomicLong(start), limit, pattern);
+    }
+
+    @Deprecated(since = "2.8.0")
+    default <T> CompletableFuture<Map<String, T>> hmapAsync(final String key, final Type type, int start, int limit) {
+        return hscanAsync(key, type, new AtomicLong(start), limit);
+    }
+
+    @Deprecated(since = "2.8.0")
+    default <T> Map<String, T> hmap(final String key, final Type type, int start, int limit, String pattern) {
+        return hscan(key, type, new AtomicLong(start), limit, pattern);
+    }
+
+    @Deprecated(since = "2.8.0")
+    default <T> Map<String, T> hmap(final String key, final Type type, int start, int limit) {
+        return hscan(key, type, new AtomicLong(start), limit);
     }
 }
