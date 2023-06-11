@@ -1322,7 +1322,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return list;
     }
 
-    protected void appendSetItem(CacheEntryType cacheType, String key, Object value) {
+    protected void appendSetItem(CacheEntryType cacheType, String key, List<Object> values) {
         if (key == null) {
             return;
         }
@@ -1335,25 +1335,25 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 set = old.csetValue;
             }
             if (set != null) {
-                set.add(value);
+                set.addAll(values);
             }
         } else {
-            entry.csetValue.add(value);
+            entry.csetValue.addAll(values);
         }
     }
 
     @Override
-    public <T> void sadd(String key, final Type componentType, T value) {
-        appendSetItem(CacheEntryType.OBJECT_SET, key, value);
+    public <T> void sadd(String key, final Type componentType, T... values) {
+        appendSetItem(CacheEntryType.OBJECT_SET, key, List.of(values)); 
     }
 
     @Override
-    public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, T value) {
-        return runAsync(() -> sadd(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, T... values) {
+        return runAsync(() -> sadd(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
-    public <T> int srem(String key, Type type, T value) {
+    public <T> long srem(String key, Type type, T... values) {
         if (key == null) {
             return 0;
         }
@@ -1361,12 +1361,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (entry == null || entry.csetValue == null) {
             return 0;
         }
-        return entry.csetValue.remove(value) ? 1 : 0;
+        return entry.csetValue.removeAll(List.of(values)) ? 1 : 0;
     }
 
     @Override
-    public <T> CompletableFuture<Integer> sremAsync(final String key, final Type componentType, final T value) {
-        return supplyAsync(() -> srem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public <T> CompletableFuture<Long> sremAsync(final String key, final Type componentType, final T... values) {
+        return supplyAsync(() -> srem(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override

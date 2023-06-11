@@ -5,8 +5,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
-import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceType;
+import org.redkale.annotation.*;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import org.redkale.net.http.WebSocketNodeService;
 import org.redkale.service.*;
@@ -122,7 +121,7 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     @Override
     public CompletableFuture<Void> disconnect(Serializable userid, WebSocketAddress wsaddr) {
         tryAcquireSemaphore();
-        CompletableFuture<Integer> future = source.sremAsync(WS_SOURCE_KEY_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
+        CompletableFuture<Long> future = source.sremAsync(WS_SOURCE_KEY_USERID_PREFIX + userid, WebSocketAddress.class, wsaddr);
         if (semaphore != null) {
             future.whenComplete((r, e) -> releaseSemaphore());
         }

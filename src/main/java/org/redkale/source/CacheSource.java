@@ -456,24 +456,24 @@ public interface CacheSource extends Resourcable {
         return sismember(key, Long.class, value);
     }
 
-    public <T> void sadd(final String key, final Type componentType, final T value);
+    public <T> void sadd(final String key, final Type componentType, final T... values);
 
-    default void saddString(final String key, final String value) {
-        sadd(key, String.class, value);
+    default void saddString(final String key, final String... values) {
+        sadd(key, String.class, values);
     }
 
-    default void saddLong(final String key, final long value) {
-        sadd(key, Long.class, value);
+    default void saddLong(final String key, final Long... values) {
+        sadd(key, Long.class, values);
     }
 
-    public <T> int srem(final String key, final Type componentType, final T value);
+    public <T> long srem(final String key, final Type componentType, final T... values);
 
-    default int sremString(final String key, final String value) {
-        return srem(key, String.class, value);
+    default long sremString(final String key, final String... values) {
+        return srem(key, String.class, values);
     }
 
-    default int sremLong(final String key, final long value) {
-        return srem(key, Long.class, value);
+    default long sremLong(final String key, final Long... values) {
+        return srem(key, Long.class, values);
     }
 
     public <T> T spop(final String key, final Type componentType);
@@ -965,24 +965,24 @@ public interface CacheSource extends Resourcable {
         return sismemberAsync(key, Long.class, value);
     }
 
-    public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, final T... values);
 
-    default CompletableFuture<Void> saddStringAsync(final String key, final String value) {
-        return saddAsync(key, String.class, value);
+    default CompletableFuture<Void> saddStringAsync(final String key, final String... values) {
+        return saddAsync(key, String.class, values);
     }
 
-    default CompletableFuture<Void> saddLongAsync(final String key, final long value) {
-        return saddAsync(key, Long.class, value);
+    default CompletableFuture<Void> saddLongAsync(final String key, final Long... values) {
+        return saddAsync(key, Long.class, values);
     }
 
-    public <T> CompletableFuture<Integer> sremAsync(final String key, final Type componentType, final T value);
+    public <T> CompletableFuture<Long> sremAsync(final String key, final Type componentType, final T... values);
 
-    default CompletableFuture<Integer> sremStringAsync(final String key, final String value) {
-        return sremAsync(key, String.class, value);
+    default CompletableFuture<Long> sremStringAsync(final String key, final String... values) {
+        return sremAsync(key, String.class, values);
     }
 
-    default CompletableFuture<Integer> sremLongAsync(final String key, final long value) {
-        return sremAsync(key, Long.class, value);
+    default CompletableFuture<Long> sremLongAsync(final String key, final Long... values) {
+        return sremAsync(key, Long.class, values);
     }
 
     public <T> CompletableFuture<T> spopAsync(final String key, final Type componentType);
@@ -1050,37 +1050,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Void> flushallAsync();
 
-    //-------------------------- 过期方法 ----------------------------------
-    @Deprecated(since = "2.8.0")
-    public <T> Collection<T> getCollection(final String key, final Type componentType);
-
-    @Deprecated(since = "2.8.0")
-    public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys);
-
-    @Deprecated(since = "2.8.0")
-    public int getCollectionSize(final String key);
-
-    @Deprecated(since = "2.8.0")
-    public <T> Collection<T> getexCollection(final String key, final int expireSeconds, final Type componentType);
-
-    @Deprecated(since = "2.8.0")
-    public Map<String, Collection<String>> getStringCollectionMap(final boolean set, final String... keys);
-
-    @Deprecated(since = "2.8.0")
-    public Collection<String> getStringCollection(final String key);
-
-    @Deprecated(since = "2.8.0")
-    public Collection<String> getexStringCollection(final String key, final int expireSeconds);
-
-    @Deprecated(since = "2.8.0")
-    public Collection<Long> getLongCollection(final String key);
-
-    @Deprecated(since = "2.8.0")
-    public Map<String, Collection<Long>> getLongCollectionMap(final boolean set, final String... keys);
-
-    @Deprecated(since = "2.8.0")
-    public Collection<Long> getexLongCollection(final String key, final int expireSeconds);
-
+    //-------------------------- 过期方法 ----------------------------------    
     @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(final String key, final Type componentType);
 
@@ -1238,7 +1208,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default <T> int removeSetItem(final String key, final Type componentType, final T value) {
-        return srem(key, componentType, value);
+        return (int) srem(key, componentType, value);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1268,7 +1238,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Integer> removeSetItemAsync(final String key, final Type componentType, final T value) {
-        return sremAsync(key, componentType, value);
+        return sremAsync(key, componentType, value).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
@@ -1293,7 +1263,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default int removeStringSetItem(final String key, final String value) {
-        return sremString(key, value);
+        return (int) sremString(key, value);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1318,7 +1288,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default int removeLongSetItem(final String key, final long value) {
-        return sremLong(key, value);
+        return (int) sremLong(key, value);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1343,7 +1313,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeStringSetItemAsync(final String key, final String value) {
-        return sremStringAsync(key, value);
+        return sremStringAsync(key, value).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
@@ -1368,7 +1338,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeLongSetItemAsync(final String key, final long value) {
-        return sremLongAsync(key, value);
+        return sremLongAsync(key, value).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
@@ -1559,5 +1529,55 @@ public interface CacheSource extends Resourcable {
     @Deprecated(since = "2.8.0")
     default <T> Map<String, T> hmap(final String key, final Type type, int start, int limit) {
         return hscan(key, type, new AtomicLong(start), limit);
+    }
+
+    @Deprecated(since = "2.8.0")
+    default Collection<String> getStringCollection(String key) {
+        return getStringCollectionAsync(key).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default Map<String, Collection<String>> getStringCollectionMap(final boolean set, String... keys) {
+        return getStringCollectionMapAsync(set, keys).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default <T> Collection<T> getCollection(String key, final Type componentType) {
+        return (Collection) getCollectionAsync(key, componentType).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default int getCollectionSize(String key) {
+        return getCollectionSizeAsync(key).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default Collection<Long> getLongCollection(String key) {
+        return getLongCollectionAsync(key).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default Map<String, Collection<Long>> getLongCollectionMap(final boolean set, String... keys) {
+        return getLongCollectionMapAsync(set, keys).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default <T> Collection<T> getexCollection(String key, final int expireSeconds, final Type componentType) {
+        return (Collection) getexCollectionAsync(key, expireSeconds, componentType).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default Collection<String> getexStringCollection(String key, final int expireSeconds) {
+        return getexStringCollectionAsync(key, expireSeconds).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default Collection<Long> getexLongCollection(String key, final int expireSeconds) {
+        return getexLongCollectionAsync(key, expireSeconds).join();
+    }
+
+    @Deprecated(since = "2.8.0")
+    default <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, String... keys) {
+        return (Map) getCollectionMapAsync(set, componentType, keys).join();
     }
 }
