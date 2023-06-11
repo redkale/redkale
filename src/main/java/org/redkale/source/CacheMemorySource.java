@@ -923,6 +923,57 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<Set<T>> sdiffAsync(final String key, final Type componentType, final String... key2s) {
+        return supplyAsync(() -> sdiff(key, componentType, key2s), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Long> sdiffstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
+        return supplyAsync(() -> sdiffstore(key, srcKey, srcKey2s), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T> Set<T> sdiff(final String key, final Type componentType, final String... key2s) {
+        Set<T> rs = new HashSet<>();
+        CacheEntry entry = container.get(key);
+        if (entry == null || entry.csetValue == null) {
+            return rs;
+        }
+        rs.addAll(entry.csetValue);
+        for (String k : key2s) {
+            CacheEntry en2 = container.get(k);
+            if (en2 != null && en2.csetValue != null) {
+                en2.csetValue.forEach(v -> rs.remove(v));
+            }
+        }
+        return rs;
+    }
+
+    @Override
+    public long sdiffstore(final String key, final String srcKey, final String... srcKey2s) {
+        Set rs = new HashSet<>();
+        CacheEntry entry = container.get(srcKey);
+        if (entry == null || entry.csetValue == null) {
+            return 0L;
+        }
+        rs.addAll(entry.csetValue);
+        for (String k : srcKey2s) {
+            CacheEntry en2 = container.get(k);
+            if (en2 != null && en2.csetValue != null) {
+                en2.csetValue.forEach(v -> rs.remove(v));
+            }
+        }
+        if (container.containsKey(key)) {
+            CopyOnWriteArraySet set = container.get(srcKey).csetValue;
+            set.clear();
+            set.addAll(rs);
+        } else {
+            appendSetItem(CacheEntryType.OBJECT_SET, key, rs);
+        }
+        return rs.size();
+    }
+
+    @Override
     public <T> Set<T> smembers(final String key, final Type componentType) {
         return (Set<T>) get(key, componentType);
     }
@@ -1322,7 +1373,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return list;
     }
 
-    protected void appendSetItem(CacheEntryType cacheType, String key, List<Object> values) {
+    protected void appendSetItem(CacheEntryType cacheType, String key, Collection<Object> values) {
         if (key == null) {
             return;
         }
@@ -1344,7 +1395,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> void sadd(String key, final Type componentType, T... values) {
-        appendSetItem(CacheEntryType.OBJECT_SET, key, List.of(values)); 
+        appendSetItem(CacheEntryType.OBJECT_SET, key, List.of(values));
     }
 
     @Override
