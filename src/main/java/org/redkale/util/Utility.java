@@ -1352,43 +1352,6 @@ public final class Utility {
     /**
      * 将一个或多个新元素添加到数组结尾
      *
-     * @param <T>  泛型
-     * @param one  单个对象
-     * @param objs 待追加数据
-     *
-     * @return 新数组
-     */
-    public static <T> T[] append(final T one, final T... objs) {
-        if (one == null) {
-            return objs;
-        }
-        final T[] news = (T[]) Creator.newArray(one.getClass().getComponentType(), 1 + objs.length);
-        news[0] = one;
-        System.arraycopy(objs, 0, news, 1, objs.length);
-        return news;
-    }
-
-    /**
-     * 将一个或多个新元素添加到数组结尾
-     *
-     * @param <T>  泛型
-     * @param one  单个对象
-     * @param two  单个对象
-     * @param objs 待追加数据
-     *
-     * @return 新数组
-     */
-    public static <T> T[] append(final T one, T two, final T... objs) {
-        final T[] news = (T[]) Creator.newArray(one.getClass().getComponentType(), 2 + objs.length);
-        news[0] = one;
-        news[1] = two;
-        System.arraycopy(objs, 0, news, 2, objs.length);
-        return news;
-    }
-
-    /**
-     * 将一个或多个新元素添加到数组结尾
-     *
      * @param <T>   泛型
      * @param array 原数组
      * @param objs  待追加数据
