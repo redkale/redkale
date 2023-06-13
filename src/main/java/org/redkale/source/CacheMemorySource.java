@@ -963,11 +963,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public long sdiffstore(final String key, final String srcKey, final String... srcKey2s) {
         Set rs = sdiff(srcKey, Object.class, srcKey2s);
         if (container.containsKey(key)) {
-            CopyOnWriteArraySet set = container.get(srcKey).csetValue;
+            Set set = container.get(srcKey).csetValue;
             set.clear();
             set.addAll(rs);
         } else {
-            appendSetItem(CacheEntryType.OBJECT_SET, key, rs);
+            appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
         }
         return rs.size();
     }
@@ -1012,11 +1012,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public long sinterstore(final String key, final String srcKey, final String... srcKey2s) {
         Set rs = sinter(srcKey, Object.class, srcKey2s);
         if (container.containsKey(key)) {
-            CopyOnWriteArraySet set = container.get(srcKey).csetValue;
+            Set set = container.get(srcKey).csetValue;
             set.clear();
             set.addAll(rs);
         } else {
-            appendSetItem(CacheEntryType.OBJECT_SET, key, rs);
+            appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
         }
         return rs.size();
     }
@@ -1171,7 +1171,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> void lpush(final String key, final Type componentType, T... values) {
         for (T value : values) {
-            appendListItem(CacheEntryType.OBJECT_LIST, false, key, value);
+            appendListItem(CacheEntryType.LIST_OBJECT, false, key, value);
         }
     }
 
@@ -1184,7 +1184,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public <T> void lpushx(final String key, final Type componentType, T... values) {
         if (container.containsKey(key)) {
             for (T value : values) {
-                appendListItem(CacheEntryType.OBJECT_LIST, false, key, value);
+                appendListItem(CacheEntryType.LIST_OBJECT, false, key, value);
             }
         }
     }
@@ -1288,7 +1288,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public <T> void rpushx(String key, Type componentType, T... values) {
         if (container.containsKey(key)) {
             for (T value : values) {
-                appendListItem(CacheEntryType.OBJECT_LIST, key, value);
+                appendListItem(CacheEntryType.LIST_OBJECT, key, value);
             }
         }
     }
@@ -1300,7 +1300,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> void rpush(String key, Type componentType, T... values) {
-        appendListItem(CacheEntryType.OBJECT_LIST, key, values);
+        appendListItem(CacheEntryType.LIST_OBJECT, key, values);
     }
 
     @Override
@@ -1437,7 +1437,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            CopyOnWriteArraySet set = new CopyOnWriteArraySet();
+            Set set = cacheType == CacheEntryType.SET_SORTED ? Collections.synchronizedSet(new TreeSet<>()) : new CopyOnWriteArraySet();
             entry = new CacheEntry(cacheType, key, null, set, null, null);
             CacheEntry old = container.putIfAbsent(key, entry);
             if (old != null) {
@@ -1452,13 +1452,112 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void sadd(String key, final Type componentType, T... values) {
-        appendSetItem(CacheEntryType.OBJECT_SET, key, List.of(values));
+    public void zadd(String key, CacheScoredValue... values) {
+        List<Object> list = new ArrayList<>();
+        for (CacheScoredValue v : values) {
+            list.add(new CacheScoredValue.NumberScoredValue(v));
+        }
+        appendSetItem(CacheEntryType.SET_SORTED, key, list);
+    }
+
+    @Override
+    public long zcard(String key) {
+        if (key == null) {
+            return 0L;
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+            return 0L;
+        }
+        return entry.csetValue.size();
+    }
+
+    @Override
+    public long zrem(String key, String... members) {
+        if (key == null) {
+            return 0L;
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+            return 0L;
+        }
+        Set<CacheScoredValue> sets = entry.csetValue;
+        long c = 0;
+        Set<String> keys = Set.of(members);
+        Iterator<CacheScoredValue> it = sets.iterator();
+        while (it.hasNext()) {
+            CacheScoredValue v = it.next();
+            if (keys.contains(v.getValue())) {
+                c++;
+                it.remove();
+            }
+        }
+        return c;
+    }
+
+    @Override
+    public <T extends Number> List<T> zmscore(String key, Class<T> scoreType, String... members) {
+        List<T> list = new ArrayList<>();
+        if (key == null) {
+            for (int i = 0; i < members.length; i++) {
+                list.add(null);
+            }
+            return list;
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+            for (int i = 0; i < members.length; i++) {
+                list.add(null);
+            }
+            return list;
+        }
+        Set<String> keys = Set.of(members);
+        Set<CacheScoredValue> sets = entry.csetValue;
+        Map<String, T> map = new HashMap<>();
+        sets.stream().filter(v -> keys.contains(v.getValue())).forEach(v -> {
+            map.put(v.getValue(), formatScore(scoreType, v.getScore()));
+        });
+        for (String m : members) {
+            list.add(map.get(m));
+        }
+        return list;
+    }
+
+    private <T extends Number> T formatScore(Class<T> scoreType, Number score) {
+        if (scoreType == int.class || scoreType == Integer.class) {
+            return (T) (Number) score.intValue();
+        } else if (scoreType == long.class || scoreType == Long.class) {
+            return (T) (Number) score.longValue();
+        } else if (scoreType == float.class || scoreType == Float.class) {
+            return (T) (Number) score.floatValue();
+        } else if (scoreType == double.class || scoreType == Double.class) {
+            return (T) (Number) score.doubleValue();
+        } else {
+            return (T) score;
+        }
+    }
+
+    @Override
+    public <T extends Number> T zscore(String key, Class<T> scoreType, String member) {
+        if (key == null) {
+            return null;
+        }
+        CacheEntry entry = container.get(key);
+        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+            return null;
+        }
+        Set<CacheScoredValue> sets = entry.csetValue;
+        return (T) sets.stream().filter(v -> Objects.equals(member, v.getValue())).findAny().map(v -> v.getScore()).orElse(null);
     }
 
     @Override
     public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, T... values) {
         return runAsync(() -> sadd(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Long> zcardAsync(String key) {
+        return supplyAsync(() -> zcard(key), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
     @Override
@@ -1572,6 +1671,26 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return supplyAsync(() -> sscan(key, componentType, cursor, limit, pattern), getExecutor()).whenComplete(futureCompleteConsumer);
     }
 
+    @Override
+    public CompletableFuture<Void> zaddAsync(String key, CacheScoredValue... values) {
+        return runAsync(() -> zadd(key, values), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T extends Number> CompletableFuture<List<T>> zmscoreAsync(String key, Class<T> type, String... members) {
+        return supplyAsync(() -> zmscore(key, type, members), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public CompletableFuture<Long> zremAsync(String key, String... members) {
+        return supplyAsync(() -> zrem(key, members), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
+    @Override
+    public <T extends Number> CompletableFuture<T> zscoreAsync(String key, Class<T> type, String member) {
+        return supplyAsync(() -> zscore(key, type, member), getExecutor()).whenComplete(futureCompleteConsumer);
+    }
+
     protected CacheEntryType findEntryType(Type type) {
         if (type == String.class) {
             return CacheEntryType.STRING;
@@ -1585,8 +1704,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     public static enum CacheEntryType {
         LONG, STRING, OBJECT, BYTES, ATOMIC, MAP, DOUBLE,
-        LONG_SET, STRING_SET, OBJECT_SET,
-        LONG_LIST, STRING_LIST, OBJECT_LIST;
+        SET_LONG, SET_STRING, SET_OBJECT, SET_SORTED,
+        LIST_LONG, LIST_STRING, LIST_OBJECT;
     }
 
     public static final class CacheEntry<T> {
@@ -1606,20 +1725,20 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         final ReentrantLock mapLock = new ReentrantLock();
 
-        CopyOnWriteArraySet<T> csetValue;
+        Set<T> csetValue;
 
         ConcurrentLinkedDeque<T> listValue;
 
-        public CacheEntry(CacheEntryType cacheType, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedDeque<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
+        public CacheEntry(CacheEntryType cacheType, String key, T objectValue, Set<T> csetValue, ConcurrentLinkedDeque<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
             this(cacheType, 0, key, objectValue, csetValue, listValue, mapValue);
         }
 
-        public CacheEntry(CacheEntryType cacheType, int expireSeconds, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedDeque<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, String key, T objectValue, Set<T> csetValue, ConcurrentLinkedDeque<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
             this(cacheType, expireSeconds, (int) (System.currentTimeMillis() / 1000), key, objectValue, csetValue, listValue, mapValue);
         }
 
         @ConstructorParameters({"cacheType", "expireSeconds", "lastAccessed", "key", "objectValue", "csetValue", "listValue", "mapValue"})
-        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, String key, T objectValue, CopyOnWriteArraySet<T> csetValue, ConcurrentLinkedDeque<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
+        public CacheEntry(CacheEntryType cacheType, int expireSeconds, int lastAccessed, String key, T objectValue, Set<T> csetValue, ConcurrentLinkedDeque<T> listValue, ConcurrentHashMap<String, Serializable> mapValue) {
             this.cacheType = cacheType;
             this.expireSeconds = expireSeconds;
             this.lastAccessed = lastAccessed;
@@ -1637,12 +1756,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         @ConvertColumn(ignore = true)
         public boolean isListCacheType() {
-            return cacheType == CacheEntryType.LONG_LIST || cacheType == CacheEntryType.STRING_LIST || cacheType == CacheEntryType.OBJECT_LIST;
+            return cacheType == CacheEntryType.LIST_LONG || cacheType == CacheEntryType.LIST_STRING || cacheType == CacheEntryType.LIST_OBJECT;
         }
 
         @ConvertColumn(ignore = true)
         public boolean isSetCacheType() {
-            return cacheType == CacheEntryType.LONG_SET || cacheType == CacheEntryType.STRING_SET || cacheType == CacheEntryType.OBJECT_SET;
+            return cacheType == CacheEntryType.SET_LONG || cacheType == CacheEntryType.SET_STRING || cacheType == CacheEntryType.SET_OBJECT || cacheType == CacheEntryType.SET_SORTED;
         }
 
         @ConvertColumn(ignore = true)
@@ -1675,7 +1794,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return objectValue;
         }
 
-        public CopyOnWriteArraySet<T> getCsetValue() {
+        public Set<T> getCsetValue() {
             return csetValue;
         }
 
