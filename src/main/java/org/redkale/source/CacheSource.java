@@ -36,6 +36,104 @@ public interface CacheSource extends Resourcable {
         return isOpenAsync().join();
     }
 
+    //------------------------ 字符串 String ------------------------  
+    default long incr(String key) {
+        return incrAsync(key).join();
+    }
+
+    default long incrby(String key, long num) {
+        return incrbyAsync(key, num).join();
+    }
+
+    default double incrbyFloat(String key, double num) {
+        return incrbyFloatAsync(key, num).join();
+    }
+
+    default long decr(String key) {
+        return decrAsync(key).join();
+    }
+
+    default long decrby(String key, long num) {
+        return decrbyAsync(key, num).join();
+    }
+
+    //------------------------ set ------------------------
+    default <T> void set(String key, Convert convert, Type type, T value) {
+        setAsync(key, convert, type, value).join();
+    }
+
+    default <T> void set(String key, Type type, T value) {
+        set(key, (Convert) null, type, value);
+    }
+
+    default void setString(String key, String value) {
+        set(key, String.class, value);
+    }
+
+    default void setLong(String key, long value) {
+        set(key, Long.class, value);
+    }
+
+    //MSET key value [key value ...]
+    default void mset(Serializable... keyVals) {
+        msetAsync(keyVals).join();
+    }
+
+    default void mset(Map map) {
+        msetAsync(map).join();
+    }
+
+    //------------------------ setnx ------------------------
+    default <T> boolean setnx(String key, Convert convert, Type type, T value) {
+        return setnxAsync(key, convert, type, value).join();
+    }
+
+    default <T> boolean setnx(String key, Type type, T value) {
+        return setnx(key, (Convert) null, type, value);
+    }
+
+    default boolean setnxString(String key, String value) {
+        return setnx(key, String.class, value);
+    }
+
+    default boolean setnxLong(String key, long value) {
+        return setnx(key, Long.class, value);
+    }
+
+    //------------------------ setex ------------------------
+    default <T> void setex(String key, int expireSeconds, Convert convert, Type type, T value) {
+        setexAsync(key, expireSeconds, convert, type, value).join();
+    }
+
+    default <T> void setex(String key, int expireSeconds, Type type, T value) {
+        setex(key, expireSeconds, (Convert) null, type, value);
+    }
+
+    default void setexString(String key, int expireSeconds, String value) {
+        setex(key, expireSeconds, String.class, value);
+    }
+
+    default void setexLong(String key, int expireSeconds, long value) {
+        setex(key, expireSeconds, Long.class, value);
+    }
+
+    //------------------------ setnxex ------------------------
+    default <T> boolean setnxex(String key, int expireSeconds, Convert convert, Type type, T value) {
+        return setnxexAsync(key, expireSeconds, convert, type, value).join();
+    }
+
+    default <T> boolean setnxex(String key, int expireSeconds, Type type, T value) {
+        return setnxex(key, expireSeconds, (Convert) null, type, value);
+    }
+
+    default boolean setnxexString(String key, int expireSeconds, String value) {
+        return setnxex(key, expireSeconds, String.class, value);
+    }
+
+    default boolean setnxexLong(String key, int expireSeconds, long value) {
+        return setnxex(key, expireSeconds, Long.class, value);
+    }
+
     //------------------------ get ------------------------    
     default <T> T get(String key, Type type) {
         return (T) getAsync(key, type).join();
@@ -122,90 +220,29 @@ public interface CacheSource extends Resourcable {
         return val == null ? defValue : val;
     }
 
-    //------------------------ set ------------------------
-    //MSET key value [key value ...]
-    default void mset(Serializable... keyVals) {
-        msetAsync(keyVals).join();
+    //------------------------ 键 Keys ------------------------     
+    default long del(String... keys) {
+        return delAsync(keys).join();
     }
 
-    default void mset(Map map) {
-        msetAsync(map).join();
-    }
-
-    default <T> void set(String key, Convert convert, Type type, T value) {
-        setAsync(key, convert, type, value).join();
-    }
-
-    default <T> void set(String key, Type type, T value) {
-        set(key, (Convert) null, type, value);
-    }
-
-    default void setString(String key, String value) {
-        set(key, String.class, value);
-    }
-
-    default void setLong(String key, long value) {
-        set(key, Long.class, value);
-    }
-
-    //------------------------ setnx ------------------------
-    default <T> boolean setnx(String key, Convert convert, Type type, T value) {
-        return setnxAsync(key, convert, type, value).join();
-    }
-
-    default <T> boolean setnx(String key, Type type, T value) {
-        return setnx(key, (Convert) null, type, value);
-    }
-
-    default boolean setnxString(String key, String value) {
-        return setnx(key, String.class, value);
-    }
-
-    default boolean setnxLong(String key, long value) {
-        return setnx(key, Long.class, value);
-    }
-
-    //------------------------ setnxex ------------------------
-    default <T> boolean setnxex(String key, int expireSeconds, Convert convert, Type type, T value) {
-        return setnxexAsync(key, expireSeconds, convert, type, value).join();
-    }
-
-    default <T> boolean setnxex(String key, int expireSeconds, Type type, T value) {
-        return setnxex(key, expireSeconds, (Convert) null, type, value);
-    }
-
-    default boolean setnxexString(String key, int expireSeconds, String value) {
-        return setnxex(key, expireSeconds, String.class, value);
-    }
-
-    default boolean setnxexLong(String key, int expireSeconds, long value) {
-        return setnxex(key, expireSeconds, Long.class, value);
-    }
-
-    //------------------------ setex ------------------------
-    default <T> void setex(String key, int expireSeconds, Convert convert, Type type, T value) {
-        setexAsync(key, expireSeconds, convert, type, value).join();
-    }
-
-    default <T> void setex(String key, int expireSeconds, Type type, T value) {
-        setex(key, expireSeconds, (Convert) null, type, value);
-    }
-
-    default void setexString(String key, int expireSeconds, String value) {
-        setex(key, expireSeconds, String.class, value);
-    }
-
-    default void setexLong(String key, int expireSeconds, long value) {
-        setex(key, expireSeconds, Long.class, value);
-    }
-
-    //------------------------ xxxx ------------------------
     default boolean exists(String key) {
         return existsAsync(key).join();
     }
 
     default void expire(String key, int expireSeconds) {
         expireAsync(key, expireSeconds).join();
+    }
+
+    default List<String> keys(String pattern) {
+        return keysAsync(pattern).join();
+    }
+
+    default List<String> keys() {
+        return keys(null);
+    }
+
+    default List<String> keysStartsWith(String startsWith) {
+        return keys(startsWith + "*");
     }
 
     default boolean persist(String key) {
@@ -218,43 +255,6 @@ public interface CacheSource extends Resourcable {
 
     default boolean renamenx(String oldKey, String newKey) {
         return renamenxAsync(oldKey, newKey).join();
-    }
-
-    default long del(String... keys) {
-        return delAsync(keys).join();
-    }
-
-    default long incr(String key) {
-        return incrAsync(key).join();
-    }
-
-    default long incrby(String key, long num) {
-        return incrbyAsync(key, num).join();
-    }
-
-    default double incrbyFloat(String key, double num) {
-        return incrbyFloatAsync(key, num).join();
-    }
-
-    default long decr(String key) {
-        return decrAsync(key).join();
-    }
-
-    default long decrby(String key, long num) {
-        return decrbyAsync(key, num).join();
-    }
-
-    //------------------------ 键 Keys ------------------------    
-    default List<String> keys(String pattern) {
-        return keysAsync(pattern).join();
-    }
-
-    default List<String> keys() {
-        return keys(null);
-    }
-
-    default List<String> keysStartsWith(String startsWith) {
-        return keys(startsWith + "*");
     }
 
     default List<String> scan(AtomicLong cursor, int limit, String pattern) {
@@ -529,15 +529,15 @@ public interface CacheSource extends Resourcable {
         return rpoplpush(key, key2, Long.class);
     }
 
-    default <T> int lrem(String key, Type componentType, T value) {
+    default <T> long lrem(String key, Type componentType, T value) {
         return lremAsync(key, componentType, value).join();
     }
 
-    default int lremString(String key, String value) {
+    default long lremString(String key, String value) {
         return lrem(key, String.class, value);
     }
 
-    default int lremLong(String key, long value) {
+    default long lremLong(String key, long value) {
         return lrem(key, Long.class, value);
     }
 
@@ -767,7 +767,83 @@ public interface CacheSource extends Resourcable {
     //---------------------- CompletableFuture 异步版 ---------------------------------
     public CompletableFuture<Boolean> isOpenAsync();
 
-    //------------------------ getAsync ------------------------  
+    //------------------------ 键 Keys ------------------------    
+    public CompletableFuture<Long> incrAsync(String key);
+
+    public CompletableFuture<Long> incrbyAsync(String key, long num);
+
+    public CompletableFuture<Long> decrAsync(String key);
+
+    public CompletableFuture<Long> decrbyAsync(String key, long num);
+
+    public CompletableFuture<Double> incrbyFloatAsync(String key, double num);
+
+    //------------------------ set ------------------------
+    public <T> CompletableFuture<Void> setAsync(String key, Convert convert, Type type, T value);
+
+    default <T> CompletableFuture<Void> setAsync(String key, Type type, T value) {
+        return setAsync(key, (Convert) null, type, value);
+    }
+
+    default CompletableFuture<Void> setStringAsync(String key, String value) {
+        return setAsync(key, String.class, value);
+    }
+
+    default CompletableFuture<Void> setLongAsync(String key, long value) {
+        return setAsync(key, Long.class, value);
+    }
+
+    //MSET key value [key value ...]
+    public CompletableFuture<Void> msetAsync(Serializable... keyVals);
+
+    public CompletableFuture<Void> msetAsync(Map map);
+
+    //------------------------ setnx ------------------------
+    public <T> CompletableFuture<Boolean> setnxAsync(String key, Convert convert, Type type, T value);
+
+    default <T> CompletableFuture<Boolean> setnxAsync(String key, Type type, T value) {
+        return setnxAsync(key, (Convert) null, type, value);
+    }
+
+    default CompletableFuture<Boolean> setnxStringAsync(String key, String value) {
+        return setnxAsync(key, String.class, value);
+    }
+
+    default CompletableFuture<Boolean> setnxLongAsync(String key, long value) {
+        return setnxAsync(key, Long.class, value);
+    }
+
+    //------------------------ setex ------------------------
+    public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Convert convert, Type type, T value);
+
+    default <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Type type, T value) {
+        return setexAsync(key, expireSeconds, (Convert) null, type, value);
+    }
+
+    default CompletableFuture<Void> setexStringAsync(String key, int expireSeconds, String value) {
+        return setexAsync(key, expireSeconds, String.class, value);
+    }
+
+    default CompletableFuture<Void> setexLongAsync(String key, int expireSeconds, long value) {
+        return setexAsync(key, expireSeconds, Long.class, value);
+    }
+
+    //------------------------ setnxex ------------------------
+    public <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Convert convert, Type type, T value);
+
+    default <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Type type, T value) {
+        return setnxexAsync(key, expireSeconds, (Convert) null, type, value);
+    }
+
+    default CompletableFuture<Boolean> setnxexStringAsync(String key, int expireSeconds, String value) {
+        return setnxexAsync(key, expireSeconds, String.class, value);
+    }
+
+    default CompletableFuture<Boolean> setnxexLongAsync(String key, int expireSeconds, long value) {
+        return setnxexAsync(key, expireSeconds, Long.class, value);
+    }
+
+    //------------------------ get ------------------------ 
     public <T> CompletableFuture<T> getAsync(String key, Type type);
 
     default CompletableFuture<String> getStringAsync(String key) {
@@ -778,7 +854,7 @@ public interface CacheSource extends Resourcable {
         return getAsync(key, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
     }
 
-    //------------------------ mgetAsync ------------------------    
+    //------------------------ mget ------------------------   
     public <T> CompletableFuture<Map<String, T>> mgetAsync(Type componentType, String... keys);
 
     default CompletableFuture<Map<String, String>> mgetStringAsync(String... keys) {
@@ -819,7 +895,7 @@ public interface CacheSource extends Resourcable {
         });
     }
 
-    //------------------------ getexAsync ------------------------
+    //------------------------ getex ------------------------  
     public <T> CompletableFuture<T> getexAsync(String key, int expireSeconds, Type type);
 
     default CompletableFuture<String> getexStringAsync(String key, int expireSeconds) {
@@ -830,7 +906,7 @@ public interface CacheSource extends Resourcable {
         return getexAsync(key, expireSeconds, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
     }
 
-    //------------------------ getsetAsync ------------------------
+    //------------------------ getset ------------------------  
     public <T> CompletableFuture<T> getSetAsync(String key, Convert convert, Type type, T value);
 
     default <T> CompletableFuture<T> getSetAsync(String key, Type type, T value) {
@@ -845,95 +921,13 @@ public interface CacheSource extends Resourcable {
         return getSetAsync(key, Long.class, value).thenApply(v -> v == null ? defValue : (Long) v);
     }
 
-    //------------------------ setAsync ------------------------
-    //MSET key value [key value ...]
-    public CompletableFuture<Void> msetAsync(Serializable... keyVals);
+    //------------------------ 键 Keys ------------------------  
+    public CompletableFuture<Long> delAsync(String... keys);
 
-    public CompletableFuture<Void> msetAsync(Map map);
-
-    public <T> CompletableFuture<Void> setAsync(String key, Convert convert, Type type, T value);
-
-    default <T> CompletableFuture<Void> setAsync(String key, Type type, T value) {
-        return setAsync(key, (Convert) null, type, value);
-    }
-
-    default CompletableFuture<Void> setStringAsync(String key, String value) {
-        return setAsync(key, String.class, value);
-    }
-
-    default CompletableFuture<Void> setLongAsync(String key, long value) {
-        return setAsync(key, Long.class, value);
-    }
-
-    //------------------------ setnxAsync ------------------------
-    public <T> CompletableFuture<Boolean> setnxAsync(String key, Convert convert, Type type, T value);
-
-    default <T> CompletableFuture<Boolean> setnxAsync(String key, Type type, T value) {
-        return setnxAsync(key, (Convert) null, type, value);
-    }
-
-    default CompletableFuture<Boolean> setnxStringAsync(String key, String value) {
-        return setnxAsync(key, String.class, value);
-    }
-
-    default CompletableFuture<Boolean> setnxLongAsync(String key, long value) {
-        return setnxAsync(key, Long.class, value);
-    }
-
-    //------------------------ setnxexAsync ------------------------
-    public <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Convert convert, Type type, T value);
-
-    default <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Type type, T value) {
-        return setnxexAsync(key, expireSeconds, (Convert) null, type, value);
-    }
-
-    default CompletableFuture<Boolean> setnxexStringAsync(String key, int expireSeconds, String value) {
-        return setnxexAsync(key, expireSeconds, String.class, value);
-    }
-
-    default CompletableFuture<Boolean> setnxexLongAsync(String key, int expireSeconds, long value) {
-        return setnxexAsync(key, expireSeconds, Long.class, value);
-    }
-
-    //------------------------ setexAsync ------------------------
-    public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Convert convert, Type type, T value);
-
-    default <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Type type, T value) {
-        return setexAsync(key, expireSeconds, (Convert) null, type, value);
-    }
-
-    default CompletableFuture<Void> setexStringAsync(String key, int expireSeconds, String value) {
-        return setexAsync(key, expireSeconds, String.class, value);
-    }
-
-    default CompletableFuture<Void> setexLongAsync(String key, int expireSeconds, long value) {
-        return setexAsync(key, expireSeconds, Long.class, value);
-    }
-
-    //------------------------ xxxxAsync ------------------------
     public CompletableFuture<Boolean> existsAsync(String key);
 
     public CompletableFuture<Void> expireAsync(String key, int seconds);
 
-    public CompletableFuture<Boolean> persistAsync(String key);
-
-    public CompletableFuture<Boolean> renameAsync(String oldKey, String newKey);
-
-    public CompletableFuture<Boolean> renamenxAsync(String oldKey, String newKey);
-
-    public CompletableFuture<Long> delAsync(String... keys);
-
-    public CompletableFuture<Long> incrAsync(String key);
-
-    public CompletableFuture<Long> incrbyAsync(String key, long num);
-
-    public CompletableFuture<Long> decrAsync(String key);
-
-    public CompletableFuture<Long> decrbyAsync(String key, long num);
-
-    public CompletableFuture<Double> incrbyFloatAsync(String key, double num);
-
-    //------------------------ 键 Keys ------------------------    
     public CompletableFuture<List<String>> keysAsync(String pattern);
 
     default CompletableFuture<List<String>> keysAsync() {
@@ -943,6 +937,12 @@ public interface CacheSource extends Resourcable {
     default CompletableFuture<List<String>> keysStartsWithAsync(String startsWith) {
         return keysAsync(startsWith + "*");
     }
+
+    public CompletableFuture<Boolean> persistAsync(String key);
+
+    public CompletableFuture<Boolean> renameAsync(String oldKey, String newKey);
+
+    public CompletableFuture<Boolean> renamenxAsync(String oldKey, String newKey);
 
     public CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit, String pattern);
 
@@ -1151,13 +1151,13 @@ public interface CacheSource extends Resourcable {
         return rpoplpushAsync(key, key2, Long.class);
     }
 
-    public <T> CompletableFuture<Integer> lremAsync(String key, Type componentType, T value);
+    public <T> CompletableFuture<Long> lremAsync(String key, Type componentType, T value);
 
-    default CompletableFuture<Integer> lremStringAsync(String key, String value) {
+    default CompletableFuture<Long> lremStringAsync(String key, String value) {
         return lremAsync(key, String.class, value);
     }
 
-    default CompletableFuture<Integer> lremLongAsync(String key, long value) {
+    default CompletableFuture<Long> lremLongAsync(String key, long value) {
         return lremAsync(key, Long.class, value);
     }
 
@@ -1678,7 +1678,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Integer> removeListItemAsync(String key, Type componentType, T value) {
-        return lremAsync(key, componentType, value);
+        return lremAsync(key, componentType, value).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
@@ -1688,7 +1688,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeStringListItemAsync(String key, String value) {
-        return lremStringAsync(key, value);
+        return lremStringAsync(key, value).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
@@ -1698,7 +1698,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Integer> removeLongListItemAsync(String key, long value) {
-        return lremLongAsync(key, value);
+        return lremLongAsync(key, value).thenApply(v -> v.intValue());
     }
 
     @Deprecated(since = "2.8.0")
@@ -1708,7 +1708,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default <T> int removeListItem(String key, Type componentType, T value) {
-        return lrem(key, componentType, value);
+        return (int) lrem(key, componentType, value);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1718,7 +1718,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default int removeStringListItem(String key, String value) {
-        return lremString(key, value);
+        return (int) lremString(key, value);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1728,7 +1728,7 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default int removeLongListItem(String key, long value) {
-        return lremLong(key, value);
+        return (int) lremLong(key, value);
     }
 
     @Deprecated(since = "2.8.0")

@@ -824,6 +824,14 @@ public class JsonReader extends Reader {
      */
     @Override
     public String readString() {
+        return readString(true);
+    }
+
+    public final String readStringValue() {
+        return readString(false);
+    }
+
+    protected String readString(boolean flag) {
         final char[] text0 = this.text;
         char expected = nextGoodChar(true);
         int currpos = this.position;
@@ -833,7 +841,7 @@ public class JsonReader extends Reader {
                     this.position = currpos;
                     if (text0.length > currpos + 4) {
                         char ch = text0[currpos + 1];
-                        if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') {
+                        if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
                             return null;
                         }
                         final int start = currpos - 3;
@@ -842,7 +850,7 @@ public class JsonReader extends Reader {
                                 break;
                             }
                             ch = text0[currpos];
-                            if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') {
+                            if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
                                 break;
                             }
                             currpos++;
@@ -863,7 +871,7 @@ public class JsonReader extends Reader {
                         break;
                     }
                     char ch = text0[currpos];
-                    if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || ch == ':') {
+                    if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
                         break;
                     }
                     currpos++;

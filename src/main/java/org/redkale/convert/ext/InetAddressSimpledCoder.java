@@ -139,16 +139,12 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
 
         @Override
         public InetSocketAddress convertFrom(R in) {
-            String str = StringSimpledCoder.instance.convertFrom(in);
+            String str = in.readStringValue();
             if (str == null) {
                 return null;
             }
-            try {
-                int pos = str.indexOf(':');
-                return new InetSocketAddress(str.substring(0, pos), Integer.parseInt(str.substring(pos + 1)));
-            } catch (Exception ex) {
-                return null;
-            }
+            int pos = str.indexOf(':');
+            return new InetSocketAddress(str.substring(0, pos), Integer.parseInt(str.substring(pos + 1)));
         }
 
     }

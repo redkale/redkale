@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.annotation.*;
@@ -161,372 +162,322 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     //----------- hxxx --------------
     @Override
-    public long hdel(final String key, String... fields) {
-        long count = 0;
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.mapValue == null) {
-            return 0;
-        }
-        for (String field : fields) {
-            if (entry.mapValue.remove(field) != null) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    @Override
-    public List<String> hkeys(final String key) {
-        List<String> list = new ArrayList<>();
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.mapValue == null) {
-            return list;
-        }
-        list.addAll(entry.mapValue.keySet());
-        return list;
-    }
-
-    @Override
-    public long hlen(final String key) {
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.mapValue == null) {
-            return 0;
-        }
-        return entry.mapValue.keySet().size();
-    }
-
-    @Override
-    public long hincr(final String key, String field) {
-        return hincrby(key, field, 1);
-    }
-
-    @Override
-    public long hincrby(final String key, String field, long num) {
-        CacheEntry entry = container.get(key);
-        if (entry == null) {
-            containerLock.lock();
-            try {
-                entry = container.get(key);
-                if (entry == null) {
-                    ConcurrentHashMap<String, Serializable> map = new ConcurrentHashMap();
-                    map.put(field, new AtomicLong());
-                    entry = new CacheEntry(CacheEntryType.MAP, key, new AtomicLong(), null, null, map);
-                    container.put(key, entry);
-                }
-            } finally {
-                containerLock.unlock();
-            }
-        }
-        Serializable val = (Serializable) entry.mapValue.computeIfAbsent(field, f -> new AtomicLong());
-        if (!(val instanceof AtomicLong)) {
-            entry.mapLock.lock();
-            try {
-                if (!(val instanceof AtomicLong)) {
-                    if (val == null) {
-                        val = new AtomicLong();
-                    } else {
-                        val = new AtomicLong(((Number) val).longValue());
-                    }
-                    entry.mapValue.put(field, val);
-                }
-            } finally {
-                entry.mapLock.unlock();
-            }
-        }
-        return ((AtomicLong) entry.mapValue.get(field)).addAndGet(num);
-    }
-
-    @Override
-    public double hincrbyFloat(final String key, String field, double num) {
-        CacheEntry entry = container.get(key);
-        if (entry == null) {
-            containerLock.lock();
-            try {
-                entry = container.get(key);
-                if (entry == null) {
-                    ConcurrentHashMap<String, Serializable> map = new ConcurrentHashMap();
-                    map.put(field, new AtomicLong());
-                    entry = new CacheEntry(CacheEntryType.MAP, key, new AtomicLong(), null, null, map);
-                    container.put(key, entry);
-                }
-            } finally {
-                containerLock.unlock();
-            }
-        }
-        Serializable val = (Serializable) entry.mapValue.computeIfAbsent(field, f -> new AtomicLong());
-        if (!(val instanceof AtomicLong)) {
-            entry.mapLock.lock();
-            try {
-                if (!(val instanceof AtomicLong)) {
-                    if (val == null) {
-                        val = new AtomicLong();
-                    } else {
-                        val = new AtomicLong(((Number) val).longValue());
-                    }
-                    entry.mapValue.put(field, val);
-                }
-            } finally {
-                entry.mapLock.unlock();
-            }
-        }
-        return Double.longBitsToDouble(((AtomicLong) entry.mapValue.get(field)).addAndGet(Double.doubleToLongBits(num)));
-    }
-
-    @Override
-    public long hdecr(final String key, String field) {
-        return hincrby(key, field, -1);
-    }
-
-    @Override
-    public long hdecrby(final String key, String field, long num) {
-        return hincrby(key, field, -num);
-    }
-
-    @Override
-    public boolean hexists(final String key, String field) {
-        if (key == null) {
-            return false;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) {
-            return false;
-        }
-        return entry.mapValue.contains(field);
-    }
-
-    @Override
-    public <T> void hset(final String key, final String field, final Convert convert, final Type type, final T value) {
-        hset(CacheEntryType.MAP, key, field, value);
-    }
-
-    @Override
-    public <T> boolean hsetnx(final String key, final String field, final Convert convert, final Type type, final T value) {
-        return hsetnx(CacheEntryType.MAP, key, field, value);
-    }
-
-    @Override
-    public void hmset(final String key, final Serializable... values) {
-        for (int i = 0; i < values.length; i += 2) {
-            hset(CacheEntryType.MAP, key, (String) values[i], values[i + 1]);
-        }
-    }
-
-    @Override
-    public void hmset(final String key, final Map map) {
-        map.forEach((k, v) -> hset(CacheEntryType.MAP, key, (String) k, v));
-    }
-
-    @Override
-    public <T> List<T> hmget(final String key, final Type type, final String... fields) {
-        if (key == null) {
-            return null;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) {
-            return null;
-        }
-        List<T> rs = new ArrayList<>(fields.length);
-        for (int i = 0; i < fields.length; i++) {
-            Serializable val = (Serializable) entry.mapValue.get(fields[i]);
-            if (type == String.class) {
-                rs.add(val == null ? null : (T) String.valueOf(val));
-            } else {
-                rs.add((T) val);
-            }
-        }
-        return rs;
-    }
-
-    @Override
-    public <T> Map<String, T> hgetall(final String key, final Type type) {
-        return hgetall(CacheEntryType.MAP, key);
-    }
-
-    @Override
-    public <T> List<T> hvals(final String key, final Type type) {
-        return hvals(CacheEntryType.MAP, key);
-    }
-
-    @Override
-    public <T> Map<String, T> hscan(final String key, final Type type, AtomicLong cursor, int limit, String pattern) {
-        if (key == null) {
-            return new HashMap();
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) {
-            return new HashMap();
-        }
-        return new HashMap(entry.mapValue);
-    }
-
-    @Override
-    public <T> T hget(final String key, final String field, final Type type) {
-        if (key == null) {
-            return null;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired() || entry.mapValue == null) {
-            return null;
-        }
-        return (T) entry.mapValue.get(field);
-    }
-
-    //----------- hxxx --------------
-    @Override
-    public boolean exists(String key) {
-        if (key == null) {
-            return false;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null) {
-            return false;
-        }
-        return !entry.isExpired();
-    }
-
-    @Override
-    public CompletableFuture<Boolean> existsAsync(final String key) {
-        return supplyAsync(() -> exists(key), getExecutor());
-    }
-
-    @Override
-    public <T> T get(final String key, final Type type) {
-        if (key == null) {
-            return null;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) {
-            return null;
-        }
-        if (entry.isListCacheType()) {
-            return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
-        }
-        if (entry.isSetCacheType()) {
-            return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
-        }
-        return entry.cacheType == CacheEntryType.DOUBLE ? (T) (Double) Double.longBitsToDouble(((AtomicLong) entry.objectValue).intValue()) : (T) entry.objectValue;
-    }
-
-    //----------- hxxx --------------
-    @Override
     public CompletableFuture<Long> hdelAsync(final String key, String... fields) {
-        return supplyAsync(() -> hdel(key, fields), getExecutor());
+        return supplyAsync(() -> {
+            long count = 0;
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.mapValue == null) {
+                return 0L;
+            }
+            for (String field : fields) {
+                if (entry.mapValue.remove(field) != null) {
+                    count++;
+                }
+            }
+            return count;
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<List<String>> hkeysAsync(final String key) {
-        return supplyAsync(() -> hkeys(key), getExecutor());
+        return supplyAsync(() -> {
+            List<String> list = new ArrayList<>();
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.mapValue == null) {
+                return list;
+            }
+            list.addAll(entry.mapValue.keySet());
+            return list;
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> hlenAsync(final String key) {
-        return supplyAsync(() -> hlen(key), getExecutor());
+        return supplyAsync(() -> {
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.mapValue == null) {
+                return 0L;
+            }
+            return (long) entry.mapValue.keySet().size();
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> hincrAsync(final String key, String field) {
-        return supplyAsync(() -> hincr(key, field), getExecutor());
+        return hincrbyAsync(key, field, 1);
     }
 
     @Override
     public CompletableFuture<Long> hincrbyAsync(final String key, String field, long num) {
-        return supplyAsync(() -> hincrby(key, field, num), getExecutor());
+        return supplyAsync(() -> {
+            CacheEntry entry = container.get(key);
+            if (entry == null) {
+                containerLock.lock();
+                try {
+                    entry = container.get(key);
+                    if (entry == null) {
+                        ConcurrentHashMap<String, Serializable> map = new ConcurrentHashMap();
+                        map.put(field, new AtomicLong());
+                        entry = new CacheEntry(CacheEntryType.MAP, key, new AtomicLong(), null, null, map);
+                        container.put(key, entry);
+                    }
+                } finally {
+                    containerLock.unlock();
+                }
+            }
+            Serializable val = (Serializable) entry.mapValue.computeIfAbsent(field, f -> new AtomicLong());
+            if (!(val instanceof AtomicLong)) {
+                entry.mapLock.lock();
+                try {
+                    if (!(val instanceof AtomicLong)) {
+                        if (val == null) {
+                            val = new AtomicLong();
+                        } else {
+                            val = new AtomicLong(((Number) val).longValue());
+                        }
+                        entry.mapValue.put(field, val);
+                    }
+                } finally {
+                    entry.mapLock.unlock();
+                }
+            }
+            return ((AtomicLong) entry.mapValue.get(field)).addAndGet(num);
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Double> hincrbyFloatAsync(final String key, String field, double num) {
-        return supplyAsync(() -> hincrbyFloat(key, field, num), getExecutor());
+        return supplyAsync(() -> {
+            CacheEntry entry = container.get(key);
+            if (entry == null) {
+                containerLock.lock();
+                try {
+                    entry = container.get(key);
+                    if (entry == null) {
+                        ConcurrentHashMap<String, Serializable> map = new ConcurrentHashMap();
+                        map.put(field, new AtomicLong());
+                        entry = new CacheEntry(CacheEntryType.MAP, key, new AtomicLong(), null, null, map);
+                        container.put(key, entry);
+                    }
+                } finally {
+                    containerLock.unlock();
+                }
+            }
+            Serializable val = (Serializable) entry.mapValue.computeIfAbsent(field, f -> new AtomicLong());
+            if (!(val instanceof AtomicLong)) {
+                entry.mapLock.lock();
+                try {
+                    if (!(val instanceof AtomicLong)) {
+                        if (val == null) {
+                            val = new AtomicLong();
+                        } else {
+                            val = new AtomicLong(((Number) val).longValue());
+                        }
+                        entry.mapValue.put(field, val);
+                    }
+                } finally {
+                    entry.mapLock.unlock();
+                }
+            }
+            return Double.longBitsToDouble(((AtomicLong) entry.mapValue.get(field)).addAndGet(Double.doubleToLongBits(num)));
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> hdecrAsync(final String key, String field) {
-        return supplyAsync(() -> hdecr(key, field), getExecutor());
+        return hincrbyAsync(key, field, -1);
     }
 
     @Override
     public CompletableFuture<Long> hdecrbyAsync(final String key, String field, long num) {
-        return supplyAsync(() -> hdecrby(key, field, num), getExecutor());
+        return hincrbyAsync(key, field, -num);
     }
 
     @Override
     public CompletableFuture<Boolean> hexistsAsync(final String key, String field) {
-        return supplyAsync(() -> hexists(key, field), getExecutor());
+        return supplyAsync(() -> {
+            if (key == null) {
+                return false;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.isExpired() || entry.mapValue == null) {
+                return false;
+            }
+            return entry.mapValue.contains(field);
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Convert convert, final Type type, final T value) {
-        return runAsync(() -> hset(key, field, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return runAsync(() -> {
+            hset(CacheEntryType.MAP, key, field, value);
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value) {
-        return supplyAsync(() -> hsetnx(key, field, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            return hsetnx(CacheEntryType.MAP, key, field, value);
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Void> hmsetAsync(final String key, final Serializable... values) {
-        return runAsync(() -> hmset(key, values), getExecutor()).whenComplete(futureCompleteConsumer);
+        return runAsync(() -> {
+            for (int i = 0; i < values.length; i += 2) {
+                hset(CacheEntryType.MAP, key, (String) values[i], values[i + 1]);
+            }
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Void> hmsetAsync(final String key, final Map map) {
-        return runAsync(() -> hmset(key, map), getExecutor()).whenComplete(futureCompleteConsumer);
+        return runAsync(() -> {
+            map.forEach((k, v) -> hset(CacheEntryType.MAP, key, (String) k, v));
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<List<T>> hmgetAsync(final String key, final Type type, final String... fields) {
-        return supplyAsync(() -> hmget(key, type, fields), getExecutor());
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.isExpired() || entry.mapValue == null) {
+                return null;
+            }
+            List<T> rs = new ArrayList<>(fields.length);
+            for (int i = 0; i < fields.length; i++) {
+                Serializable val = (Serializable) entry.mapValue.get(fields[i]);
+                if (type == String.class) {
+                    rs.add(val == null ? null : (T) String.valueOf(val));
+                } else {
+                    rs.add((T) val);
+                }
+            }
+            return rs;
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Map<String, T>> hgetallAsync(final String key, final Type type) {
-        return supplyAsync(() -> hgetall(key, type), getExecutor());
+        return supplyAsync(() -> {
+            return hgetall(CacheEntryType.MAP, key, type);
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<List<T>> hvalsAsync(final String key, final Type type) {
-        return supplyAsync(() -> hvals(key, type), getExecutor());
+        return supplyAsync(() -> {
+            return hvals(CacheEntryType.MAP, key, type);
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicLong cursor, int limit, String pattern) {
-        return supplyAsync(() -> hscan(key, type, cursor, limit, pattern), getExecutor());
+        return supplyAsync(() -> {
+            if (key == null) {
+                return new HashMap();
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.isExpired() || entry.mapValue == null) {
+                return new HashMap();
+            }
+            if (Utility.isEmpty(pattern)) {
+                return new HashMap(entry.mapValue);
+            } else {
+                Predicate<String> regx = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
+                Set<Map.Entry<String, T>> set = entry.mapValue.entrySet();
+                return set.stream().filter(en -> regx.test(en.getKey())).collect(Collectors.toMap(en -> en.getKey(), en -> en.getValue()));
+            }
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<T> hgetAsync(final String key, final String field, final Type type) {
-        return supplyAsync(() -> hget(key, field, type), getExecutor());
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.isExpired() || entry.mapValue == null) {
+                return null;
+            }
+            Object obj = entry.mapValue.get(field);
+            if (obj == null) {
+                return null;
+            }
+            if (type == long.class || type == Long.class) {
+                return (T) (obj instanceof Long ? obj : Long.parseLong(obj.toString()));
+            }
+            return (T) obj;
+        }, getExecutor());
     }
 
     //----------- hxxx --------------
     @Override
-    public <T> CompletableFuture<T> getAsync(final String key, final Type type) {
-        return supplyAsync(() -> (T) get(key, type), getExecutor());
+    public CompletableFuture<Boolean> existsAsync(String key) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return false;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null) {
+                return false;
+            }
+            return !entry.isExpired();
+        }, getExecutor());
     }
 
     @Override
-    public <T> T getex(final String key, final int expireSeconds, final Type type) {
-        if (key == null) {
-            return null;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.isExpired()) {
-            return null;
-        }
-        entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
-        entry.expireSeconds = expireSeconds;
-        if (entry.isListCacheType()) {
-            return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
-        }
-        if (entry.isSetCacheType()) {
-            return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
-        }
-        return (T) entry.objectValue;
+    public <T> CompletableFuture<T> getAsync(final String key, final Type type) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.isExpired()) {
+                return null;
+            }
+            if (entry.isListCacheType()) {
+                return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
+            }
+            if (entry.isSetCacheType()) {
+                return (T) (entry.csetValue == null ? null : new LinkedHashSet<>(entry.csetValue));
+            }
+            if (entry.cacheType == CacheEntryType.DOUBLE) {
+                return (T) (Double) Double.longBitsToDouble(((AtomicLong) entry.objectValue).intValue());
+            }
+            Object obj = entry.objectValue;
+            if (obj != null && obj.getClass() != type) {
+                return (T) JsonConvert.root().convertFrom(type, JsonConvert.root().convertToBytes(obj));
+            }
+            return (T) obj;
+        }, getExecutor());
     }
 
+    //----------- hxxx --------------
     @Override
     public <T> CompletableFuture<T> getexAsync(final String key, final int expireSeconds, final Type type) {
-        return supplyAsync(() -> getex(key, expireSeconds, type), getExecutor());
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.isExpired()) {
+                return null;
+            }
+            entry.lastAccessed = (int) (System.currentTimeMillis() / 1000);
+            entry.expireSeconds = expireSeconds;
+            if (entry.isListCacheType()) {
+                return (T) (entry.listValue == null ? null : new ArrayList(entry.listValue));
+            }
+            if (entry.isSetCacheType()) {
+                return (T) (entry.csetValue == null ? null : new HashSet(entry.csetValue));
+            }
+            return (T) entry.objectValue;
+        }, getExecutor());
     }
 
     protected void set(CacheEntryType cacheType, String key, Object value) {
@@ -561,7 +512,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     protected void hset(CacheEntryType cacheType, String key, String field, Object value) {
-        if (key == null) {
+        if (key == null || value == null) {
             return;
         }
         CacheEntry entry = container.get(key);
@@ -593,19 +544,25 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     }
 
-    protected Map hgetall(CacheEntryType cacheType, String key) {
+    protected Map hgetall(CacheEntryType cacheType, String key, final Type type) {
         if (key == null) {
             return new LinkedHashMap();
         }
         CacheEntry entry = container.get(key);
         if (entry == null) {
             return new LinkedHashMap();
+        } else if (type == long.class || type == Long.class) {
+            Map map = new LinkedHashMap();
+            entry.mapValue.forEach((k, v) -> {
+                map.put(k, v instanceof Long ? v : (v == null ? null : Long.parseLong(v.toString())));
+            });
+            return map;
         } else {
             return new LinkedHashMap(entry.mapValue);
         }
     }
 
-    protected List hvals(CacheEntryType cacheType, String key) {
+    protected List hvals(CacheEntryType cacheType, String key, final Type type) {
         if (key == null) {
             return new ArrayList();
         }
@@ -613,86 +570,77 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (entry == null) {
             return new ArrayList();
         } else {
-            return new ArrayList(entry.mapValue.values());
-        }
-    }
-
-    @Override
-    public void mset(Serializable... keyVals) {
-        if (keyVals.length % 2 != 0) {
-            throw new SourceException("key value must be paired");
-        }
-        for (int i = 0; i < keyVals.length; i += 2) {
-            String key = keyVals[i].toString();
-            Object val = keyVals[i + 1];
-            if (val instanceof String) {
-                set(CacheEntryType.STRING, key, val);
-            } else if (val instanceof Number) {
-                set(CacheEntryType.LONG, key, ((Number) val).longValue());
+            if (type == long.class || type == Long.class) {
+                return entry.mapValue.values().stream().map(v -> v instanceof Long ? v : (v == null ? null : Long.parseLong(v.toString()))).toList();
             } else {
-                set(CacheEntryType.OBJECT, key, val);
+                return new ArrayList(entry.mapValue.values());
             }
         }
     }
 
     @Override
-    public void mset(Map map) {
-        map.forEach((key, val) -> {
-            if (val instanceof String) {
-                set(CacheEntryType.STRING, (String) key, val);
-            } else if (val instanceof Number) {
-                set(CacheEntryType.LONG, (String) key, ((Number) val).longValue());
-            } else {
-                set(CacheEntryType.OBJECT, (String) key, val);
+    public CompletableFuture<Void> msetAsync(Serializable... keyVals) {
+        return runAsync(() -> {
+            if (keyVals.length % 2 != 0) {
+                throw new SourceException("key value must be paired");
             }
-        });
+            for (int i = 0; i < keyVals.length; i += 2) {
+                String key = keyVals[i].toString();
+                Object val = keyVals[i + 1];
+                if (val instanceof String) {
+                    set(CacheEntryType.STRING, key, val);
+                } else if (val instanceof Number) {
+                    set(CacheEntryType.LONG, key, ((Number) val).longValue());
+                } else {
+                    set(CacheEntryType.OBJECT, key, val);
+                }
+            }
+        }, getExecutor());
     }
 
     @Override
-    public <T> void set(String key, Convert convert, Type type, T value) {
-        set(findEntryType(type), key, value);
-    }
-
-    @Override
-    public <T> boolean setnx(String key, Convert convert, Type type, T value) {
-        return setnx(findEntryType(type), key, value);
-    }
-
-    @Override
-    public <T> boolean setnxex(String key, int expireSeconds, Convert convert, Type type, T value) {
-        return setnxex(findEntryType(type), expireSeconds, key, value);
-    }
-
-    @Override
-    public <T> T getSet(String key, Convert convert, Type type, T value) {
-        T old = get(key, type);
-        set(findEntryType(type), key, value);
-        return old;
-    }
-
-    @Override
-    public CompletableFuture<Void> msetAsync(final Serializable... keyVals) {
-        return runAsync(() -> mset(keyVals), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public CompletableFuture<Void> msetAsync(final Map map) {
-        return runAsync(() -> mset(map), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> msetAsync(Map map) {
+        return runAsync(() -> {
+            map.forEach((key, val) -> {
+                if (val instanceof String) {
+                    set(CacheEntryType.STRING, (String) key, val);
+                } else if (val instanceof Number) {
+                    set(CacheEntryType.LONG, (String) key, ((Number) val).longValue());
+                } else {
+                    set(CacheEntryType.OBJECT, (String) key, val);
+                }
+            });
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Void> setAsync(String key, Convert convert, Type type, T value) {
-        return runAsync(() -> set(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return runAsync(() -> {
+            set(findEntryType(type), key, value);
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Boolean> setnxAsync(String key, Convert convert, Type type, T value) {
-        return supplyAsync(() -> setnx(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            return setnx(findEntryType(type), key, value);
+        }, getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Convert convert, Type type, T value) {
+        return supplyAsync(() -> {
+            return setnxex(findEntryType(type), expireSeconds, key, value);
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<T> getSetAsync(String key, Convert convert, Type type, T value) {
-        return runAsync(() -> getSet(key, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            T old = get(key, type);
+            set(findEntryType(type), key, value);
+            return old;
+        }, getExecutor());
     }
 
     protected void set(CacheEntryType cacheType, int expireSeconds, String key, Object value) {
@@ -731,405 +679,338 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void setex(String key, int expireSeconds, Convert convert, Type type, T value) {
-        set(findEntryType(type), expireSeconds, key, value);
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Type type, T value) {
-        return runAsync(() -> setex(key, expireSeconds, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
     public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Convert convert, Type type, T value) {
-        return runAsync(() -> setex(key, expireSeconds, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+        return runAsync(() -> {
+            set(findEntryType(type), expireSeconds, key, value);
+        }, getExecutor());
     }
 
     @Override
-    public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Type type, final T value) {
-        return supplyAsync(() -> setnxex(key, expireSeconds, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Void> expireAsync(String key, int expireSeconds) {
+        return runAsync(() -> {
+            if (key == null) {
+                return;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null) {
+                return;
+            }
+            entry.expireSeconds = expireSeconds;
+        }, getExecutor());
     }
 
     @Override
-    public <T> CompletableFuture<Boolean> setnxexAsync(final String key, final int expireSeconds, final Convert convert, final Type type, final T value) {
-        return supplyAsync(() -> setnxex(key, expireSeconds, convert, type, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public void expire(String key, int expireSeconds) {
-        if (key == null) {
-            return;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null) {
-            return;
-        }
-        entry.expireSeconds = expireSeconds;
-    }
-
-    @Override
-    public boolean persist(final String key) {
-        if (key == null) {
-            return false;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null) {
-            return false;
-        }
-        entry.expireSeconds = 0;
-        return true;
-    }
-
-    @Override
-    public boolean rename(String oldKey, String newKey) {
-        if (oldKey == null || newKey == null) {
-            return false;
-        }
-        CacheEntry entry = container.get(oldKey);
-        if (entry == null) {
-            return false;
-        }
-        entry.key = newKey;
-        container.put(newKey, entry);
-        container.remove(oldKey);
-        return true;
-    }
-
-    @Override
-    public boolean renamenx(String oldKey, String newKey) {
-        if (oldKey == null || newKey == null) {
-            return false;
-        }
-        if (container.containsKey(newKey)) {
-            return false;
-        }
-        CacheEntry entry = container.get(oldKey);
-        if (entry == null) {
-            return false;
-        }
-        entry.key = newKey;
-        container.put(newKey, entry);
-        container.remove(oldKey);
-        return true;
-    }
-
-    @Override
-    public CompletableFuture<Void> expireAsync(final String key, final int expireSeconds) {
-        return runAsync(() -> expire(key, expireSeconds), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> persistAsync(String key) {
-        return supplyAsync(() -> persist(key), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<Boolean> persistAsync(final String key) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return false;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null) {
+                return false;
+            }
+            if (entry.expireSeconds > 0) {
+                entry.expireSeconds = 0;
+                return true;
+            } else {
+                return false;
+            }
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Boolean> renameAsync(String oldKey, String newKey) {
-        return supplyAsync(() -> rename(oldKey, newKey), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            if (oldKey == null || newKey == null) {
+                return false;
+            }
+            CacheEntry entry = container.get(oldKey);
+            if (entry == null) {
+                return false;
+            }
+            entry.key = newKey;
+            container.put(newKey, entry);
+            container.remove(oldKey);
+            return true;
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Boolean> renamenxAsync(String oldKey, String newKey) {
-        return supplyAsync(() -> renamenx(oldKey, newKey), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public long del(final String... keys) {
-        if (keys == null) {
-            return 0;
-        }
-        int count = 0;
-        for (String key : keys) {
-            count += container.remove(key) == null ? 0 : 1;
-        }
-        return count;
-    }
-
-    @Override
-    public long incr(final String key) {
-        return incrby(key, 1);
-    }
-
-    @Override
-    public CompletableFuture<Long> incrAsync(final String key) {
-        return supplyAsync(() -> incr(key), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public long incrby(final String key, long num) {
-        CacheEntry entry = container.get(key);
-        if (entry == null) {
-            containerLock.lock();
-            try {
-                entry = container.get(key);
-                if (entry == null) {
-                    entry = new CacheEntry(CacheEntryType.ATOMIC, key, new AtomicLong(), null, null, null);
-                    container.put(key, entry);
-                }
-            } finally {
-                containerLock.unlock();
+        return supplyAsync(() -> {
+            if (oldKey == null || newKey == null) {
+                return false;
             }
-        }
-        return ((AtomicLong) entry.objectValue).addAndGet(num);
-    }
-
-    @Override
-    public double incrbyFloat(final String key, double num) {
-        CacheEntry entry = container.get(key);
-        if (entry == null) {
-            containerLock.lock();
-            try {
-                entry = container.get(key);
-                if (entry == null) {
-                    entry = new CacheEntry(CacheEntryType.DOUBLE, key, new AtomicLong(), null, null, null);
-                    container.put(key, entry);
-                }
-            } finally {
-                containerLock.unlock();
+            if (container.containsKey(newKey)) {
+                return false;
             }
-        }
-        Long v = ((AtomicLong) entry.objectValue).addAndGet(Double.doubleToLongBits(num));
-        return Double.longBitsToDouble(v.intValue());
-    }
-
-    @Override
-    public CompletableFuture<Long> incrbyAsync(final String key, long num) {
-        return supplyAsync(() -> incrby(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public CompletableFuture<Double> incrbyFloatAsync(final String key, double num) {
-        return supplyAsync(() -> incrbyFloat(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public long decr(final String key) {
-        return incrby(key, -1);
-    }
-
-    @Override
-    public CompletableFuture<Long> decrAsync(final String key) {
-        return supplyAsync(() -> decr(key), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public long decrby(final String key, long num) {
-        return incrby(key, -num);
-    }
-
-    @Override
-    public CompletableFuture<Long> decrbyAsync(final String key, long num) {
-        return supplyAsync(() -> decrby(key, num), getExecutor()).whenComplete(futureCompleteConsumer);
+            CacheEntry entry = container.get(oldKey);
+            if (entry == null) {
+                return false;
+            }
+            entry.key = newKey;
+            container.put(newKey, entry);
+            container.remove(oldKey);
+            return true;
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> delAsync(final String... keys) {
-        return supplyAsync(() -> del(keys), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            if (keys == null) {
+                return 0L;
+            }
+            long count = 0;
+            for (String key : keys) {
+                count += container.remove(key) == null ? 0 : 1;
+            }
+            return count;
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Long> incrAsync(final String key) {
+        return incrbyAsync(key, 1);
+    }
+
+    @Override
+    public CompletableFuture<Long> incrbyAsync(final String key, long num) {
+        return supplyAsync(() -> {
+            CacheEntry entry = container.get(key);
+            if (entry == null) {
+                containerLock.lock();
+                try {
+                    entry = container.get(key);
+                    if (entry == null) {
+                        entry = new CacheEntry(CacheEntryType.ATOMIC, key, new AtomicLong(), null, null, null);
+                        container.put(key, entry);
+                    }
+                } finally {
+                    containerLock.unlock();
+                }
+            }
+            if (!(entry.objectValue instanceof AtomicLong)) {
+                containerLock.lock();
+                try {
+                    if (!(entry.objectValue instanceof AtomicLong)) {
+                        entry.objectValue = new AtomicLong(Long.parseLong(entry.objectValue.toString()));
+                    }
+                } finally {
+                    containerLock.unlock();
+                }
+            }
+            return ((AtomicLong) entry.objectValue).addAndGet(num);
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Double> incrbyFloatAsync(final String key, double num) {
+        return supplyAsync(() -> {
+            CacheEntry entry = container.get(key);
+            if (entry == null) {
+                containerLock.lock();
+                try {
+                    entry = container.get(key);
+                    if (entry == null) {
+                        entry = new CacheEntry(CacheEntryType.DOUBLE, key, new AtomicLong(), null, null, null);
+                        container.put(key, entry);
+                    }
+                } finally {
+                    containerLock.unlock();
+                }
+            }
+            Long v = ((AtomicLong) entry.objectValue).addAndGet(Double.doubleToLongBits(num));
+            return Double.longBitsToDouble(v.intValue());
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Long> decrAsync(final String key) {
+        return incrbyAsync(key, -1);
+    }
+
+    @Override
+    public CompletableFuture<Long> decrbyAsync(final String key, long num) {
+        return incrbyAsync(key, -num);
     }
 
     @Override
     public <T> CompletableFuture<Set<T>> sdiffAsync(final String key, final Type componentType, final String... key2s) {
-        return supplyAsync(() -> sdiff(key, componentType, key2s), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            Set<T> rs = new HashSet<>();
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.csetValue == null) {
+                return rs;
+            }
+            rs.addAll(entry.csetValue);
+            for (String k : key2s) {
+                CacheEntry en2 = container.get(k);
+                if (en2 != null && en2.csetValue != null) {
+                    en2.csetValue.forEach(v -> rs.remove(v));
+                }
+            }
+            return rs;
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> sdiffstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
-        return supplyAsync(() -> sdiffstore(key, srcKey, srcKey2s), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public CompletableFuture<List<Boolean>> smismembersAsync(final String key, final String... members) {
-        return supplyAsync(() -> smismembers(key, members), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> Set<T> sdiff(final String key, final Type componentType, final String... key2s) {
-        Set<T> rs = new HashSet<>();
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) {
-            return rs;
-        }
-        rs.addAll(entry.csetValue);
-        for (String k : key2s) {
-            CacheEntry en2 = container.get(k);
-            if (en2 != null && en2.csetValue != null) {
-                en2.csetValue.forEach(v -> rs.remove(v));
+        return supplyAsync(() -> {
+            Set rs = sdiff(srcKey, Object.class, srcKey2s);
+            if (container.containsKey(key)) {
+                Set set = container.get(srcKey).csetValue;
+                set.clear();
+                set.addAll(rs);
+            } else {
+                appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
             }
-        }
-        return rs;
-    }
-
-    @Override
-    public long sdiffstore(final String key, final String srcKey, final String... srcKey2s) {
-        Set rs = sdiff(srcKey, Object.class, srcKey2s);
-        if (container.containsKey(key)) {
-            Set set = container.get(srcKey).csetValue;
-            set.clear();
-            set.addAll(rs);
-        } else {
-            appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
-        }
-        return rs.size();
+            return (long) rs.size();
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Set<T>> sinterAsync(final String key, final Type componentType, final String... key2s) {
-        return supplyAsync(() -> sinter(key, componentType, key2s), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            Set<T> rs = new HashSet<>();
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.csetValue == null) {
+                return rs;
+            }
+            rs.addAll(entry.csetValue);
+            for (String k : key2s) {
+                CacheEntry en2 = container.get(k);
+                if (en2 != null && en2.csetValue != null) {
+                    Set<T> removes = new HashSet<>();
+                    for (T v : rs) {
+                        if (!en2.csetValue.contains(v)) {
+                            removes.add(v);
+                        }
+                    }
+                    rs.removeAll(removes);
+                } else {
+                    rs.clear();
+                    return rs;
+                }
+            }
+            return rs;
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> sinterstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
-        return supplyAsync(() -> sinterstore(key, srcKey, srcKey2s), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> Set<T> sinter(final String key, final Type componentType, final String... key2s) {
-        Set<T> rs = new HashSet<>();
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) {
-            return rs;
-        }
-        rs.addAll(entry.csetValue);
-        for (String k : key2s) {
-            CacheEntry en2 = container.get(k);
-            if (en2 != null && en2.csetValue != null) {
-                Set<T> removes = new HashSet<>();
-                for (T v : rs) {
-                    if (!en2.csetValue.contains(v)) {
-                        removes.add(v);
-                    }
-                }
-                rs.removeAll(removes);
+        return supplyAsync(() -> {
+            Set rs = sinter(srcKey, Object.class, srcKey2s);
+            if (container.containsKey(key)) {
+                Set set = container.get(srcKey).csetValue;
+                set.clear();
+                set.addAll(rs);
             } else {
-                rs.clear();
-                return rs;
+                appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
             }
-        }
-        return rs;
+            return (long) rs.size();
+        }, getExecutor());
     }
 
     @Override
-    public long sinterstore(final String key, final String srcKey, final String... srcKey2s) {
-        Set rs = sinter(srcKey, Object.class, srcKey2s);
-        if (container.containsKey(key)) {
-            Set set = container.get(srcKey).csetValue;
-            set.clear();
-            set.addAll(rs);
-        } else {
-            appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
-        }
-        return rs.size();
+    public <T> CompletableFuture<Set<T>> smembersAsync(final String key, final Type componentType) {
+        return getAsync(key, componentType);
     }
 
     @Override
-    public <T> Set<T> smembers(final String key, final Type componentType) {
-        return (Set<T>) get(key, componentType);
+    public <T> CompletableFuture<List<T>> lrangeAsync(final String key, final Type componentType, int start, int stop) {
+        return getAsync(key, componentType);
     }
 
     @Override
-    public <T> List<T> lrange(final String key, final Type componentType, int start, int stop) {
-        return (List<T>) get(key, componentType);
-    }
-
-    @Override
-    public <T> Map<String, Set<T>> smembers(final Type componentType, final String... keys) {
-        Map<String, Set<T>> map = new HashMap<>();
-        for (String key : keys) {
-            Set<T> s = (Set<T>) get(key, componentType);
-            if (s != null) {
-                map.put(key, s);
+    public <T> CompletableFuture<Map<String, Set<T>>> smembersAsync(final Type componentType, final String... keys) {
+        return supplyAsync(() -> {
+            Map<String, Set<T>> map = new HashMap<>();
+            for (String key : keys) {
+                Set<T> s = (Set<T>) get(key, componentType);
+                if (s != null) {
+                    map.put(key, s);
+                }
             }
-        }
-        return map;
+            return map;
+        }, getExecutor());
     }
 
     @Override
-    public List<Boolean> smismembers(final String key, final String... members) {
-        Set s = (Set) get(key, Object.class);
-        List<Boolean> rs = new ArrayList<>();
-        for (String member : members) {
-            rs.add(s != null && s.contains(member));
-        }
-        return rs;
-    }
-
-    @Override
-    public <T> Map<String, List<T>> lrange(final Type componentType, final String... keys) {
-        Map<String, List<T>> map = new HashMap<>();
-        for (String key : keys) {
-            List<T> s = (List<T>) get(key, componentType);
-            if (s != null) {
-                map.put(key, s);
+    public CompletableFuture<List<Boolean>> smismembersAsync(final String key, final String... members) {
+        return supplyAsync(() -> {
+            Set s = (Set) get(key, Object.class);
+            List<Boolean> rs = new ArrayList<>();
+            for (String member : members) {
+                rs.add(s != null && s.contains(member));
             }
-        }
-        return map;
+            return rs;
+        }, getExecutor());
     }
 
     @Override
-    public <T> Map<String, T> mget(final Type componentType, final String... keys) {
-        Map<String, T> map = new LinkedHashMap<>();
-        for (String key : keys) {
-            map.put(key, (T) get(key, componentType));
-        }
-        return map;
+    public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(final Type componentType, final String... keys) {
+        return supplyAsync(() -> {
+            Map<String, List<T>> map = new HashMap<>();
+            for (String key : keys) {
+                List<T> s = (List<T>) get(key, componentType);
+                if (s != null) {
+                    map.put(key, s);
+                }
+            }
+            return map;
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Map<String, T>> mgetAsync(final Type componentType, final String... keys) {
-        return CompletableFuture.completedFuture(mget(componentType, keys));
-    }
-
-    @Override
-    public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(Type componentType, String... keys) {
-        return supplyAsync(() -> lrange(componentType, keys), getExecutor());
-    }
-
-    @Override
-    public <T> CompletableFuture<Map<String, Set<T>>> smembersAsync(Type componentType, String... keys) {
-        return supplyAsync(() -> smembers(componentType, keys), getExecutor());
-    }
-
-    @Override
-    public <T> CompletableFuture<Set<T>> smembersAsync(String key, Type componentType) {
-        return supplyAsync(() -> smembers(key, componentType), getExecutor());
-    }
-
-    @Override
-    public <T> CompletableFuture<List<T>> lrangeAsync(String key, Type componentType, int start, int stop) {
-        return supplyAsync(() -> lrange(key, componentType, start, stop), getExecutor());
-    }
-
-    @Override
-    public long llen(final String key) {
-        Collection collection = (Collection) get(key, Object.class);
-        return collection == null ? 0 : collection.size();
-    }
-
-    @Override
-    public long scard(final String key) {
-        Collection collection = (Collection) get(key, Object.class);
-        return collection == null ? 0 : collection.size();
+        return supplyAsync(() -> {
+            Map<String, T> map = new LinkedHashMap<>();
+            for (String key : keys) {
+                Object v = get(key, componentType);
+                if (v != null) {
+                    if (componentType == String.class) {
+                        map.put(key, (T) v.toString());
+                    } else if (componentType == long.class || componentType == Long.class) {
+                        map.put(key, (T) (Object) ((Number) v).longValue());
+                    } else {
+                        map.put(key, (T) v);
+                    }
+                }
+            }
+            return map;
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> llenAsync(final String key) {
-        return supplyAsync(() -> llen(key), getExecutor());
+        return supplyAsync(() -> {
+            Collection collection = (Collection) get(key, Object.class);
+            return collection == null ? 0L : collection.size();
+        }, getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, T... values) {
+        return runAsync(() -> {
+            appendSetItem(componentType == String.class ? CacheEntryType.SET_STRING : CacheEntryType.SET_OBJECT, key, List.of(values));
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> scardAsync(final String key) {
-        return supplyAsync(() -> scard(key), getExecutor());
-    }
-
-    @Override
-    public <T> boolean sismember(final String key, final Type type, final T value) {
-        Collection list = get(key, type);
-        return list != null && list.contains(value);
+        return supplyAsync(() -> {
+            Collection collection = (Collection) get(key, Object.class);
+            return collection == null ? 0L : collection.size();
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Boolean> sismemberAsync(final String key, final Type type, final T value) {
-        return supplyAsync(() -> sismember(key, type, value), getExecutor());
+        return supplyAsync(() -> {
+            Collection list = get(key, type);
+            return list != null && list.contains(value);
+        }, getExecutor());
     }
 
     protected void appendListItem(CacheEntryType cacheType, String key, Object... values) {
@@ -1169,266 +1050,220 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void lpush(final String key, final Type componentType, T... values) {
-        for (T value : values) {
-            appendListItem(CacheEntryType.LIST_OBJECT, false, key, value);
-        }
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> lpushAsync(final String key, final Type componentType, final T... values) {
-        return runAsync(() -> lpush(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> void lpushx(final String key, final Type componentType, T... values) {
-        if (container.containsKey(key)) {
+    public <T> CompletableFuture<Void> lpushAsync(final String key, final Type componentType, T... values) {
+        return runAsync(() -> {
             for (T value : values) {
                 appendListItem(CacheEntryType.LIST_OBJECT, false, key, value);
             }
-        }
+        }, getExecutor());
     }
 
     @Override
-    public <T> CompletableFuture<Void> lpushxAsync(final String key, final Type componentType, final T... values) {
-        return runAsync(() -> lpushx(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> T lpop(final String key, final Type componentType) {
-        if (key == null) {
-            return null;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
-            return null;
-        }
-        if (entry.listValue.isEmpty()) {
-            return null;
-        }
-        Object obj = entry.listValue.pollFirst();
-        if (obj != null && componentType == long.class) {
-            obj = ((Number) obj).longValue();
-        }
-        return (T) obj;
-    }
-
-    @Override
-    public void ltrim(final String key, int start, int stop) {
-        if (key == null) {
-            return;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
-            return;
-        }
-        if (entry.listValue.isEmpty()) {
-            return;
-        }
-        Iterator it = entry.listValue.iterator();
-        int index = -1;
-        int end = stop >= 0 ? stop : entry.listValue.size() + stop;
-        while (it.hasNext()) {
-            ++index;
-            if (index > end) {
-                break;
-            } else if (index >= start) {
-                it.remove();
+    public <T> CompletableFuture<Void> lpushxAsync(final String key, final Type componentType, T... values) {
+        return runAsync(() -> {
+            if (container.containsKey(key)) {
+                for (T value : values) {
+                    appendListItem(CacheEntryType.LIST_OBJECT, false, key, value);
+                }
             }
-        }
-    }
-
-    @Override
-    public CompletableFuture<Void> ltrimAsync(final String key, int start, int stop) {
-        return runAsync(() -> ltrim(key, start, stop), getExecutor()).whenComplete(futureCompleteConsumer);
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<T> lpopAsync(final String key, final Type componentType) {
-        return supplyAsync(() -> lpop(key, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
+                return null;
+            }
+            if (entry.listValue.isEmpty()) {
+                return null;
+            }
+            Object obj = entry.listValue.pollFirst();
+            if (obj != null && componentType == long.class) {
+                obj = ((Number) obj).longValue();
+            }
+            return (T) obj;
+        }, getExecutor());
     }
 
     @Override
-    public <T> T rpoplpush(final String list1, final String list2, final Type componentType) {
-        T val = rpop(list1, componentType);
-        lpush(list2, componentType, val);
-        return val;
+    public CompletableFuture<Void> ltrimAsync(final String key, int start, int stop) {
+        return runAsync(() -> {
+            if (key == null) {
+                return;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
+                return;
+            }
+            if (entry.listValue.isEmpty()) {
+                return;
+            }
+            Iterator it = entry.listValue.iterator();
+            int index = -1;
+            int end = stop >= 0 ? stop : entry.listValue.size() + stop;
+            while (it.hasNext()) {
+                ++index;
+                if (index > end) {
+                    break;
+                } else if (index >= start) {
+                    it.remove();
+                }
+            }
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<T> rpoplpushAsync(final String key, final String key2, final Type componentType) {
-        return supplyAsync(() -> rpoplpush(key, key2, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> T rpop(final String key, final Type componentType) {
-        if (key == null) {
-            return null;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
-            return null;
-        }
-        if (entry.listValue.isEmpty()) {
-            return null;
-        }
-        Object obj = entry.listValue.pollLast();
-        if (obj != null && componentType == long.class) {
-            obj = ((Number) obj).longValue();
-        }
-        return (T) obj;
+        return supplyAsync(() -> {
+            T val = rpop(key, componentType);
+            lpush(key2, componentType, val);
+            return val;
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<T> rpopAsync(final String key, final Type componentType) {
-        return supplyAsync(() -> rpop(key, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> void rpushx(String key, Type componentType, T... values) {
-        if (container.containsKey(key)) {
-            for (T value : values) {
-                appendListItem(CacheEntryType.LIST_OBJECT, key, value);
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
             }
-        }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
+                return null;
+            }
+            if (entry.listValue.isEmpty()) {
+                return null;
+            }
+            Object obj = entry.listValue.pollLast();
+            if (obj != null && componentType == long.class) {
+                obj = ((Number) obj).longValue();
+            }
+            return (T) obj;
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Void> rpushxAsync(final String key, final Type componentType, final T... values) {
-        return runAsync(() -> rpushx(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> void rpush(String key, Type componentType, T... values) {
-        appendListItem(CacheEntryType.LIST_OBJECT, key, values);
+        return runAsync(() -> {
+            if (container.containsKey(key)) {
+                for (T value : values) {
+                    appendListItem(CacheEntryType.LIST_OBJECT, key, value);
+                }
+            }
+        }, getExecutor());
     }
 
     @Override
     public <T> CompletableFuture<Void> rpushAsync(final String key, final Type componentType, final T... values) {
-        return runAsync(() -> rpush(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
+        return runAsync(() -> {
+            appendListItem(CacheEntryType.LIST_OBJECT, key, values);
+        }, getExecutor());
     }
 
     @Override
-    public <T> int lrem(String key, final Type componentType, T value) {
-        if (key == null) {
-            return 0;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) {
-            return 0;
-        }
-        return entry.listValue.remove(value) ? 1 : 0;
+    public <T> CompletableFuture<Long> lremAsync(final String key, final Type componentType, T value) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return 0L;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.listValue == null) {
+                return 0L;
+            }
+            return entry.listValue.remove(value) ? 1L : 0L;
+        }, getExecutor());
     }
 
     @Override
-    public int lremString(String key, String value) {
-        if (key == null) {
-            return 0;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) {
-            return 0;
-        }
-        return entry.listValue.remove(value) ? 1 : 0;
-    }
-
-    @Override
-    public int lremLong(String key, long value) {
-        if (key == null) {
-            return 0;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.listValue == null) {
-            return 0;
-        }
-        return entry.listValue.remove(value) ? 1 : 0;
-    }
-
-    @Override
-    public <T> CompletableFuture<Integer> lremAsync(final String key, final Type componentType, T value) {
-        return supplyAsync(() -> lrem(key, componentType, value), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> T spop(final String key, final Type componentType) {
-        if (key == null) {
+    public <T> CompletableFuture<T> spopAsync(final String key, final Type componentType) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return null;
+            }
+            if (entry.csetValue.isEmpty()) {
+                return null;
+            }
+            Iterator it = entry.csetValue.iterator();
+            Object del = null;
+            if (it.hasNext()) {
+                Object obj = it.next();
+                if (obj != null && componentType == long.class) {
+                    obj = ((Number) obj).longValue();
+                }
+                del = obj;
+            }
+            if (del != null) {
+                entry.csetValue.remove(del);
+                return (T) del;
+            }
             return null;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            return null;
-        }
-        if (entry.csetValue.isEmpty()) {
-            return null;
-        }
-        Iterator it = entry.csetValue.iterator();
-        if (it.hasNext()) {
-            Object obj = it.next();
-            if (obj != null && componentType == long.class) {
-                obj = ((Number) obj).longValue();
-            }
-            it.remove();
-            return (T) obj;
-        }
-        return null;
+        }, getExecutor());
     }
 
     @Override
-    public <T> Set<T> spop(final String key, final int count, final Type componentType) {
-        if (key == null) {
-            return new LinkedHashSet<>();
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            return new LinkedHashSet<>();
-        }
-        if (entry.csetValue.isEmpty()) {
-            return new LinkedHashSet<>();
-        }
-        Iterator it = entry.csetValue.iterator();
-        Set<T> list = new LinkedHashSet<>();
-        int index = 0;
-        while (it.hasNext()) {
-            Object obj = it.next();
-            if (obj != null && componentType == long.class) {
-                obj = ((Number) obj).longValue();
+    public <T> CompletableFuture<Set<T>> spopAsync(final String key, final int count, final Type componentType) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return new LinkedHashSet<>();
             }
-            list.add((T) obj);
-            it.remove();
-            if (++index >= count) {
-                break;
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return new LinkedHashSet<>();
             }
-        }
-        return list;
+            if (entry.csetValue.isEmpty()) {
+                return new LinkedHashSet<>();
+            }
+            Iterator it = entry.csetValue.iterator();
+            Set<T> list = new LinkedHashSet<>();
+            int index = 0;
+            while (it.hasNext()) {
+                Object obj = it.next();
+                if (obj != null && componentType == long.class) {
+                    obj = ((Number) obj).longValue();
+                }
+                list.add((T) obj);
+                if (++index >= count) {
+                    break;
+                }
+            }
+            entry.csetValue.removeAll(list);
+            return list;
+        }, getExecutor());
     }
 
     @Override
-    public <T> Set< T> sscan(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern) {
-        if (key == null) {
-            return new LinkedHashSet();
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            return new LinkedHashSet<>();
-        }
-        if (entry.csetValue.isEmpty()) {
-            return new LinkedHashSet<>();
-        }
-        Iterator it = entry.csetValue.iterator();
-        Set<T> list = new LinkedHashSet<>();
-        int index = 0;
-        while (it.hasNext()) {
-            Object obj = it.next();
-            if (obj != null && componentType == long.class) {
-                obj = ((Number) obj).longValue();
+    public <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return new LinkedHashSet();
             }
-            list.add((T) obj);
-            it.remove();
-            if (limit > 0 && ++index >= limit) {
-                break;
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return new LinkedHashSet<>();
             }
-        }
-        return list;
+            if (entry.csetValue.isEmpty()) {
+                return new LinkedHashSet<>();
+            }
+            Iterator it = entry.csetValue.iterator();
+            Set<T> list = new LinkedHashSet<>();
+            while (it.hasNext()) {
+                Object obj = it.next();
+                if (obj != null && componentType == long.class) {
+                    obj = ((Number) obj).longValue();
+                }
+                list.add((T) obj);
+            }
+            return list;
+        }, getExecutor());
     }
 
     protected void appendSetItem(CacheEntryType cacheType, String key, Collection<Object> values) {
@@ -1452,75 +1287,85 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public void zadd(String key, CacheScoredValue... values) {
-        List<Object> list = new ArrayList<>();
-        for (CacheScoredValue v : values) {
-            list.add(new CacheScoredValue.NumberScoredValue(v));
-        }
-        appendSetItem(CacheEntryType.SET_SORTED, key, list);
-    }
-
-    @Override
-    public long zcard(String key) {
-        if (key == null) {
-            return 0L;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            return 0L;
-        }
-        return entry.csetValue.size();
-    }
-
-    @Override
-    public long zrem(String key, String... members) {
-        if (key == null) {
-            return 0L;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            return 0L;
-        }
-        Set<CacheScoredValue> sets = entry.csetValue;
-        long c = 0;
-        Set<String> keys = Set.of(members);
-        Iterator<CacheScoredValue> it = sets.iterator();
-        while (it.hasNext()) {
-            CacheScoredValue v = it.next();
-            if (keys.contains(v.getValue())) {
-                c++;
-                it.remove();
+    public CompletableFuture<Void> zaddAsync(String key, CacheScoredValue... values) {
+        return runAsync(() -> {
+            List<Object> list = new ArrayList<>();
+            for (CacheScoredValue v : values) {
+                list.add(new CacheScoredValue.NumberScoredValue(v));
             }
-        }
-        return c;
+            appendSetItem(CacheEntryType.SET_SORTED, key, list);
+        }, getExecutor());
     }
 
     @Override
-    public <T extends Number> List<T> zmscore(String key, Class<T> scoreType, String... members) {
-        List<T> list = new ArrayList<>();
-        if (key == null) {
-            for (int i = 0; i < members.length; i++) {
-                list.add(null);
+    public CompletableFuture<Long> zcardAsync(String key) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return 0L;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return 0L;
+            }
+            return (long) entry.csetValue.size();
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Long> zremAsync(String key, String... members) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return 0L;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return 0L;
+            }
+            Set<CacheScoredValue> sets = entry.csetValue;
+            long c = 0;
+            Set<String> keys = Set.of(members);
+            Iterator<CacheScoredValue> it = sets.iterator();
+            Set<CacheScoredValue> dels = new HashSet<>();
+            while (it.hasNext()) {
+                CacheScoredValue v = it.next();
+                if (keys.contains(v.getValue())) {
+                    c++;
+                    dels.add(v);
+                }
+            }
+            sets.removeAll(dels);
+            return c;
+        }, getExecutor());
+    }
+
+    @Override
+    public <T extends Number> CompletableFuture<List<T>> zmscoreAsync(String key, Class<T> scoreType, String... members) {
+        return supplyAsync(() -> {
+            List<T> list = new ArrayList<>();
+            if (key == null) {
+                for (int i = 0; i < members.length; i++) {
+                    list.add(null);
+                }
+                return list;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                for (int i = 0; i < members.length; i++) {
+                    list.add(null);
+                }
+                return list;
+            }
+            Set<String> keys = Set.of(members);
+            Set<CacheScoredValue> sets = entry.csetValue;
+            Map<String, T> map = new HashMap<>();
+            sets.stream().filter(v -> keys.contains(v.getValue())).forEach(v -> {
+                map.put(v.getValue(), formatScore(scoreType, v.getScore()));
+            });
+            for (String m : members) {
+                list.add(map.get(m));
             }
             return list;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            for (int i = 0; i < members.length; i++) {
-                list.add(null);
-            }
-            return list;
-        }
-        Set<String> keys = Set.of(members);
-        Set<CacheScoredValue> sets = entry.csetValue;
-        Map<String, T> map = new HashMap<>();
-        sets.stream().filter(v -> keys.contains(v.getValue())).forEach(v -> {
-            map.put(v.getValue(), formatScore(scoreType, v.getScore()));
-        });
-        for (String m : members) {
-            list.add(map.get(m));
-        }
-        return list;
+        }, getExecutor());
     }
 
     private <T extends Number> T formatScore(Class<T> scoreType, Number score) {
@@ -1538,157 +1383,93 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T extends Number> T zscore(String key, Class<T> scoreType, String member) {
-        if (key == null) {
-            return null;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            return null;
-        }
-        Set<CacheScoredValue> sets = entry.csetValue;
-        return (T) sets.stream().filter(v -> Objects.equals(member, v.getValue())).findAny().map(v -> v.getScore()).orElse(null);
+    public <T extends Number> CompletableFuture<T> zscoreAsync(String key, Class<T> scoreType, String member) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return null;
+            }
+            Set<CacheScoredValue> sets = entry.csetValue;
+            return (T) sets.stream().filter(v -> Objects.equals(member, v.getValue())).findAny().map(v -> v.getScore()).orElse(null);
+        }, getExecutor());
     }
 
     @Override
-    public <T> CompletableFuture<Void> saddAsync(final String key, final Type componentType, T... values) {
-        return runAsync(() -> sadd(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public CompletableFuture<Long> zcardAsync(String key) {
-        return supplyAsync(() -> zcard(key), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> long srem(String key, Type type, T... values) {
-        if (key == null) {
-            return 0;
-        }
-        CacheEntry entry = container.get(key);
-        if (entry == null || entry.csetValue == null) {
-            return 0;
-        }
-        return entry.csetValue.removeAll(List.of(values)) ? 1 : 0;
-    }
-
-    @Override
-    public <T> CompletableFuture<Long> sremAsync(final String key, final Type componentType, final T... values) {
-        return supplyAsync(() -> srem(key, componentType, values), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public long dbsize() {
-        return container.size();
-    }
-
-    @Override
-    public void flushdb() {
-        container.clear();
-    }
-
-    @Override
-    public CompletableFuture<Void> flushdbAsync() {
-        return runAsync(() -> flushdb(), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public void flushall() {
-        container.clear();
-    }
-
-    @Override
-    public CompletableFuture<Void> flushallAsync() {
-        return runAsync(() -> flushall(), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public List<String> keys(String pattern) {
-        if (pattern == null || pattern.isEmpty()) {
-            return new ArrayList<>(container.keySet());
-        } else {
-            List<String> rs = new ArrayList<>();
-            Predicate<String> filter = Pattern.compile(pattern).asPredicate();
-            container.keySet().stream().filter(filter).forEach(x -> rs.add(x));
-            return rs;
-        }
-    }
-
-    @Override
-    public List<String> scan(AtomicLong cursor, int limit, String pattern) {
-        if (pattern == null || pattern.isEmpty()) {
-            return new ArrayList<>(container.keySet());
-        } else {
-            List<String> rs = new ArrayList<>();
-            Predicate<String> filter = Pattern.compile(pattern).asPredicate();
-            container.keySet().stream().filter(filter).forEach(x -> rs.add(x));
-            return rs;
-        }
-    }
-
-    @Override
-    public List<String> keysStartsWith(String startsWith) {
-        if (startsWith == null) {
-            return keys();
-        }
-        List<String> rs = new ArrayList<>();
-        container.keySet().stream().filter(x -> x.startsWith(startsWith)).forEach(x -> rs.add(x));
-        return rs;
-    }
-
-    @Override
-    public CompletableFuture<List<String>> keysAsync(String pattern) {
-        return CompletableFuture.completedFuture(keys(pattern));
-    }
-
-    @Override
-    public CompletableFuture<List<String>> keysStartsWithAsync(String startsWith) {
-        return CompletableFuture.completedFuture(keysStartsWith(startsWith));
+    public <T> CompletableFuture<Long> sremAsync(String key, Type type, T... values) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return 0L;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.csetValue == null) {
+                return 0L;
+            }
+            return entry.csetValue.removeAll(List.of(values)) ? 1L : 0L;
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<Long> dbsizeAsync() {
-        return CompletableFuture.completedFuture((long) container.size());
+        return supplyAsync(() -> {
+            return (long) container.size();
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Void> flushdbAsync() {
+        return runAsync(() -> {
+            container.clear();
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Void> flushallAsync() {
+        return runAsync(() -> {
+            container.clear();
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<List<String>> keysAsync(String pattern) {
+        return supplyAsync(() -> {
+            if (pattern == null || pattern.isEmpty()) {
+                return new ArrayList<>(container.keySet());
+            } else {
+                List<String> rs = new ArrayList<>();
+                Predicate<String> filter = Pattern.compile(pattern).asPredicate();
+                container.keySet().stream().filter(filter).forEach(x -> rs.add(x));
+                return rs;
+            }
+        }, getExecutor());
     }
 
     @Override
     public CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit, String pattern) {
-        return supplyAsync(() -> scan(cursor, limit, pattern), getExecutor()).whenComplete(futureCompleteConsumer);
+        return supplyAsync(() -> {
+            if (pattern == null || pattern.isEmpty()) {
+                return new ArrayList<>(container.keySet());
+            } else {
+                List<String> rs = new ArrayList<>();
+                Predicate<String> filter = Pattern.compile(pattern).asPredicate();
+                container.keySet().stream().filter(filter).forEach(x -> rs.add(x));
+                return rs;
+            }
+        }, getExecutor());
     }
 
     @Override
-    public <T> CompletableFuture<T> spopAsync(String key, Type componentType) {
-        return supplyAsync(() -> spop(key, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> CompletableFuture<Set<T>> spopAsync(String key, int count, Type componentType) {
-        return supplyAsync(() -> spop(key, count, componentType), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern) {
-        return supplyAsync(() -> sscan(key, componentType, cursor, limit, pattern), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public CompletableFuture<Void> zaddAsync(String key, CacheScoredValue... values) {
-        return runAsync(() -> zadd(key, values), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T extends Number> CompletableFuture<List<T>> zmscoreAsync(String key, Class<T> type, String... members) {
-        return supplyAsync(() -> zmscore(key, type, members), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public CompletableFuture<Long> zremAsync(String key, String... members) {
-        return supplyAsync(() -> zrem(key, members), getExecutor()).whenComplete(futureCompleteConsumer);
-    }
-
-    @Override
-    public <T extends Number> CompletableFuture<T> zscoreAsync(String key, Class<T> type, String member) {
-        return supplyAsync(() -> zscore(key, type, member), getExecutor()).whenComplete(futureCompleteConsumer);
+    public CompletableFuture<List<String>> keysStartsWithAsync(String startsWith) {
+        if (startsWith == null) {
+            return keysAsync();
+        }
+        return supplyAsync(() -> {
+            List<String> rs = new ArrayList<>();
+            container.keySet().stream().filter(x -> x.startsWith(startsWith)).forEach(x -> rs.add(x));
+            return rs;
+        }, getExecutor());
     }
 
     protected CacheEntryType findEntryType(Type type) {

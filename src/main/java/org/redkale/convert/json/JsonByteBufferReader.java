@@ -202,6 +202,21 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     public final String readSmallString() {
+        return readString(true);
+    }
+
+    /**
+     * 读取字符串， 必须是"或者'包围的字符串值
+     *
+     * @return String值
+     */
+    @Override
+    public final String readString() {
+        return readString(true);
+    }
+
+    @Override
+    protected String readString(boolean flag) {
         char ch = nextGoodChar(true);
         if (ch == 0) {
             return null;
@@ -282,7 +297,7 @@ public class JsonByteBufferReader extends JsonReader {
                         default:
                             throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ")");
                     }
-                } else if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') { //  ch <= ' ' 包含 0
+                } else if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || (flag && ch == ':')) { //  ch <= ' ' 包含 0
                     backChar(ch);
                     break;
                 } else {
@@ -292,16 +307,6 @@ public class JsonByteBufferReader extends JsonReader {
             String rs = sb.toString();
             return "null".equalsIgnoreCase(rs) ? null : rs;
         }
-    }
-
-    /**
-     * 读取字符串， 必须是"或者'包围的字符串值
-     *
-     * @return String值
-     */
-    @Override
-    public final String readString() {
-        return readSmallString();
     }
 
 }
