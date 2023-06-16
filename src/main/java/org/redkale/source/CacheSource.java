@@ -724,6 +724,22 @@ public interface CacheSource extends Resourcable {
         zadd(key, CacheScoredValue.create(score, member));
     }
 
+    default <T extends Number> T zincrby(String key, CacheScoredValue value) {
+        return (T) zincrbyAsync(key, value).join();
+    }
+
+    default int zincrby(String key, int score, String member) {
+        return zincrby(key, CacheScoredValue.create(score, member));
+    }
+
+    default long zincrby(String key, long score, String member) {
+        return zincrby(key, CacheScoredValue.create(score, member));
+    }
+
+    default double zincrby(String key, double score, String member) {
+        return zincrby(key, CacheScoredValue.create(score, member));
+    }
+
     default long zrem(String key, String... members) {
         return zremAsync(key, members).join();
     }
@@ -1305,6 +1321,20 @@ public interface CacheSource extends Resourcable {
 
     default CompletableFuture<Void> zaddAsync(String key, double score, String member) {
         return zaddAsync(key, CacheScoredValue.create(score, member));
+    }
+
+    public <T extends Number> CompletableFuture<T> zincrbyAsync(String key, CacheScoredValue value);
+
+    default CompletableFuture<Integer> zincrbyAsync(String key, int score, String member) {
+        return zincrbyAsync(key, CacheScoredValue.create(score, member));
+    }
+
+    default CompletableFuture<Long> zincrbyAsync(String key, long score, String member) {
+        return zincrbyAsync(key, CacheScoredValue.create(score, member));
+    }
+
+    default CompletableFuture<Double> zincrbyAsync(String key, double score, String member) {
+        return zincrbyAsync(key, CacheScoredValue.create(score, member));
     }
 
     public CompletableFuture<Long> zremAsync(String key, String... members);

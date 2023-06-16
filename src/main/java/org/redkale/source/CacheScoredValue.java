@@ -59,7 +59,7 @@ public interface CacheScoredValue<S extends Number> extends Serializable, Compar
             return value;
         }
 
-        public void setScore(Long score) {
+        public void setScore(Number score) {
             this.score = score;
         }
 
