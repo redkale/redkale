@@ -780,6 +780,14 @@ public interface CacheSource extends Resourcable {
         return zcardAsync(key).join();
     }
 
+    default Long zrank(String key, String member) {
+        return zrankAsync(key, member).join();
+    }
+
+    default Long zrevrank(String key, String member) {
+        return zrevrankAsync(key, member).join();
+    }
+
     //---------------------- CompletableFuture 异步版 ---------------------------------
     public CompletableFuture<Boolean> isOpenAsync();
 
@@ -1389,11 +1397,10 @@ public interface CacheSource extends Resourcable {
 //
 
 //
-//    public <T> CompletableFuture<Long> zrankAsync(String key, String member, boolean withScore);
-//
-//    default <T> CompletableFuture<Long> zrankAsync(String key, String member) {
-//        return zrankAsync(key, member, false);
-//    }
+    public CompletableFuture<Long> zrankAsync(String key, String member);
+
+    public CompletableFuture<Long> zrevrankAsync(String key, String member);
+
 //
 //    public <T> CompletableFuture<Set<T>> zscanAsync(String key, Type componentType, AtomicLong cursor, int limit, String pattern);
 //

@@ -1356,6 +1356,52 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public CompletableFuture<Long> zrankAsync(String key, String member) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return null;
+            }
+            List<CacheScoredValue.NumberScoredValue> list = new ArrayList<>(entry.csetValue);
+            Collections.sort(list);
+            long c = 0;
+            for (CacheScoredValue.NumberScoredValue v : list) {
+                if (Objects.equals(v.getValue(), member)) {
+                    return c;
+                }
+                c++;
+            }
+            return null;
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Long> zrevrankAsync(String key, String member) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return null;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return null;
+            }
+            List<CacheScoredValue.NumberScoredValue> list = new ArrayList<>(entry.csetValue);
+            Collections.sort(list, Collections.reverseOrder());
+            long c = 0;
+            for (CacheScoredValue.NumberScoredValue v : list) {
+                if (Objects.equals(v.getValue(), member)) {
+                    return c;
+                }
+                c++;
+            }
+            return null;
+        }, getExecutor());
+    }
+
+    @Override
     public CompletableFuture<Long> zremAsync(String key, String... members) {
         return supplyAsync(() -> {
             if (key == null) {
