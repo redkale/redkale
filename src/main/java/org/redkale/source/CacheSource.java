@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.annotation.Component;
 import org.redkale.convert.Convert;
-import org.redkale.util.*;
+import org.redkale.util.Resourcable;
 
 /**
  * Redkale中缓存数据源的核心类。 主要供业务开发者使用， 技术开发者提供CacheSource的实现。<br>
@@ -149,43 +149,28 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ mget ------------------------    
-    default <T> Map<String, T> mget(Type componentType, String... keys) {
-        return (Map) mgetAsync(componentType, keys).join();
+    default <T> List<T> mget(Type componentType, String... keys) {
+        return (List) mgetAsync(componentType, keys).join();
     }
 
-    default Map<String, String> mgetString(String... keys) {
+    default List<String> mgetString(String... keys) {
         return mget(String.class, keys);
     }
 
-    default Map<String, Long> mgetLong(String... keys) {
+    default List<Long> mgetLong(String... keys) {
         return mget(Long.class, keys);
     }
 
-    default <T> T[] mgets(Type componentType, String... keys) {
-        T[] rs = (T[]) Creator.newArray(TypeToken.typeToClass(componentType), keys.length);
-        Map<String, T> map = mget(componentType, keys);
-        for (int i = 0; i < keys.length; i++) {
-            rs[i] = map.get(keys[i]);
-        }
-        return rs;
+    default <T> Map<String, T> mgets(Type componentType, String... keys) {
+        return (Map) mgetsAsync(componentType, keys).join();
     }
 
-    default String[] mgetsString(String... keys) {
-        String[] rs = new String[keys.length];
-        Map<String, String> map = mgetString(keys);
-        for (int i = 0; i < keys.length; i++) {
-            rs[i] = map.get(keys[i]);
-        }
-        return rs;
+    default Map<String, String> mgetsString(String... keys) {
+        return mgets(String.class, keys);
     }
 
-    default Long[] mgetsLong(String... keys) {
-        Long[] rs = new Long[keys.length];
-        Map<String, Long> map = mgetLong(keys);
-        for (int i = 0; i < keys.length; i++) {
-            rs[i] = map.get(keys[i]);
-        }
-        return rs;
+    default Map<String, Long> mgetsLong(String... keys) {
+        return mgets(Long.class, keys);
     }
 
     //------------------------ getex ------------------------
@@ -421,16 +406,16 @@ public interface CacheSource extends Resourcable {
         ltrimAsync(key, start, stop).join();
     }
 
-    default <T> Map<String, List<T>> lrange(Type componentType, String... keys) {
-        return (Map) lrangeAsync(componentType, keys).join();
+    default <T> Map<String, List<T>> lranges(Type componentType, String... keys) {
+        return (Map) lrangesAsync(componentType, keys).join();
     }
 
-    default Map<String, List<String>> lrangeString(String... keys) {
-        return lrange(String.class, keys);
+    default Map<String, List<String>> lrangesString(String... keys) {
+        return lranges(String.class, keys);
     }
 
-    default Map<String, List<Long>> lrangeLong(String... keys) {
-        return lrange(Long.class, keys);
+    default Map<String, List<Long>> lrangesLong(String... keys) {
+        return lranges(Long.class, keys);
     }
 
     default <T> List<T> lrange(String key, Type componentType, int start, int stop) {
@@ -915,44 +900,35 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ mget ------------------------   
-    public <T> CompletableFuture<Map<String, T>> mgetAsync(Type componentType, String... keys);
+    public <T> CompletableFuture<List<T>> mgetAsync(Type componentType, String... keys);
 
-    default CompletableFuture<Map<String, String>> mgetStringAsync(String... keys) {
+    default CompletableFuture<List<String>> mgetStringAsync(String... keys) {
         return mgetAsync(String.class, keys);
     }
 
-    default CompletableFuture<Map<String, Long>> mgetLongAsync(String... keys) {
+    default CompletableFuture<List<Long>> mgetLongAsync(String... keys) {
         return mgetAsync(Long.class, keys);
     }
 
-    default <T> CompletableFuture<T[]> mgetsAsync(Type componentType, String... keys) {
-        return mgetAsync(componentType, keys).thenApply(map -> {
-            T[] rs = (T[]) Creator.newArray(TypeToken.typeToClass(componentType), keys.length);
+    default <T> CompletableFuture<Map<String, T>> mgetsAsync(Type componentType, String... keys) {
+        return mgetAsync(componentType, keys).thenApply(list -> {
+            Map<String, T> map = new LinkedHashMap<>();
             for (int i = 0; i < keys.length; i++) {
-                rs[i] = (T) map.get(keys[i]);
+                T obj = (T) list.get(i);
+                if (obj != null) {
+                    map.put(keys[i], obj);
+                }
             }
-            return rs;
+            return map;
         });
     }
 
-    default CompletableFuture<String[]> mgetsStringAsync(String... keys) {
-        return mgetStringAsync(keys).thenApply(map -> {
-            String[] rs = new String[keys.length];
-            for (int i = 0; i < keys.length; i++) {
-                rs[i] = map.get(keys[i]);
-            }
-            return rs;
-        });
+    default CompletableFuture<Map<String, String>> mgetsStringAsync(String... keys) {
+        return mgetsAsync(String.class, keys);
     }
 
-    default CompletableFuture<Long[]> mgetsLongAsync(String... keys) {
-        return mgetLongAsync(keys).thenApply(map -> {
-            Long[] rs = new Long[keys.length];
-            for (int i = 0; i < keys.length; i++) {
-                rs[i] = map.get(keys[i]);
-            }
-            return rs;
-        });
+    default CompletableFuture<Map<String, Long>> mgetsLongAsync(String... keys) {
+        return mgetsAsync(Long.class, keys);
     }
 
     //------------------------ getex ------------------------  
@@ -1119,14 +1095,14 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Void> ltrimAsync(String key, int start, int stop);
 
-    public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(Type componentType, String... keys);
+    public <T> CompletableFuture<Map<String, List<T>>> lrangesAsync(Type componentType, String... keys);
 
-    default CompletableFuture<Map<String, List<String>>> lrangeStringAsync(String... keys) {
-        return lrangeAsync(String.class, keys);
+    default CompletableFuture<Map<String, List<String>>> lrangesStringAsync(String... keys) {
+        return lrangesAsync(String.class, keys);
     }
 
-    default CompletableFuture<Map<String, List<Long>>> lrangeLongAsync(String... keys) {
-        return lrangeAsync(Long.class, keys);
+    default CompletableFuture<Map<String, List<Long>>> lrangesLongAsync(String... keys) {
+        return lrangesAsync(Long.class, keys);
     }
 
     public <T> CompletableFuture<List<T>> lrangeAsync(String key, Type componentType, int start, int stop);
@@ -1862,32 +1838,32 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default <T> Map<String, T> getMap(Type componentType, String... keys) {
-        return mget(componentType, keys);
+        return mgets(componentType, keys);
     }
 
     @Deprecated(since = "2.8.0")
     default Map<String, String> getStringMap(String... keys) {
-        return mgetString(keys);
+        return mgetsString(keys);
     }
 
     @Deprecated(since = "2.8.0")
     default Map<String, Long> getLongMap(String... keys) {
-        return mgetLong(keys);
+        return mgetsLong(keys);
     }
 
     @Deprecated(since = "2.8.0")
     default <T> CompletableFuture<Map<String, T>> getMapAsync(Type componentType, String... keys) {
-        return mgetAsync(componentType, keys);
+        return mgetsAsync(componentType, keys);
     }
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Map<String, String>> getStringMapAsync(String... keys) {
-        return mgetStringAsync(keys);
+        return mgetsStringAsync(keys);
     }
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Map<String, Long>> getLongMapAsync(String... keys) {
-        return mgetLongAsync(keys);
+        return mgetsLongAsync(keys);
     }
 
     @Deprecated(since = "2.8.0")
@@ -1902,22 +1878,24 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default String[] getStringArray(String... keys) {
-        return mgetsString(keys);
+        List<String> list = mgetString(keys);
+        return list.toArray(new String[list.size()]);
     }
 
     @Deprecated(since = "2.8.0")
     default Long[] getLongArray(String... keys) {
-        return mgetsLong(keys);
+        List<Long> list = mgetLong(keys);
+        return list.toArray(new Long[list.size()]);
     }
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<String[]> getStringArrayAsync(String... keys) {
-        return mgetsStringAsync(keys);
+        return mgetStringAsync(keys).thenApply(list -> list.toArray(new String[list.size()]));
     }
 
     @Deprecated(since = "2.8.0")
     default CompletableFuture<Long[]> getLongArrayAsync(String... keys) {
-        return mgetsLongAsync(keys);
+        return mgetLongAsync(keys).thenApply(list -> list.toArray(new Long[list.size()]));
     }
 
     @Deprecated(since = "2.8.0")

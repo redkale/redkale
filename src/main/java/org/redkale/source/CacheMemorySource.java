@@ -947,7 +947,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, List<T>>> lrangeAsync(final Type componentType, final String... keys) {
+    public <T> CompletableFuture<Map<String, List<T>>> lrangesAsync(final Type componentType, final String... keys) {
         return supplyAsync(() -> {
             Map<String, List<T>> map = new HashMap<>();
             for (String key : keys) {
@@ -961,22 +961,21 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, T>> mgetAsync(final Type componentType, final String... keys) {
+    public <T> CompletableFuture<List<T>> mgetAsync(final Type componentType, final String... keys) {
         return supplyAsync(() -> {
-            Map<String, T> map = new LinkedHashMap<>();
+            List<T> list = new ArrayList<>();
             for (String key : keys) {
                 Object v = get(key, componentType);
                 if (v != null) {
                     if (componentType == String.class) {
-                        map.put(key, (T) v.toString());
+                        v = v.toString();
                     } else if (componentType == long.class || componentType == Long.class) {
-                        map.put(key, (T) (Object) ((Number) v).longValue());
-                    } else {
-                        map.put(key, (T) v);
+                        v = (Object) ((Number) v).longValue();
                     }
                 }
+                list.add((T) v);
             }
-            return map;
+            return list;
         }, getExecutor());
     }
 
