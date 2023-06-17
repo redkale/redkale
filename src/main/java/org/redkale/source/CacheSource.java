@@ -788,6 +788,42 @@ public interface CacheSource extends Resourcable {
         return zrevrankAsync(key, member).join();
     }
 
+    default List<String> zrange(String key, int start, int stop) {
+        return zrangeAsync(key, start, stop).join();
+    }
+
+    default List<CacheScoredValue.NumberScoredValue> zscan(String key, Type scoreType, AtomicLong cursor, int limit, String pattern) {
+        return zscanAsync(key, scoreType, cursor, limit, pattern).join();
+    }
+
+    default List<CacheScoredValue.NumberScoredValue> zscanInteger(String key, AtomicLong cursor, int limit, String pattern) {
+        return zscan(key, Integer.class, cursor, limit, pattern);
+    }
+
+    default List<CacheScoredValue.NumberScoredValue> zscanLong(String key, AtomicLong cursor, int limit, String pattern) {
+        return zscan(key, Long.class, cursor, limit, pattern);
+    }
+
+    default List<CacheScoredValue.NumberScoredValue> zscanDouble(String key, AtomicLong cursor, int limit, String pattern) {
+        return zscan(key, Double.class, cursor, limit, pattern);
+    }
+
+    default List<CacheScoredValue.NumberScoredValue> zscan(String key, Type scoreType, AtomicLong cursor, int limit) {
+        return zscan(key, scoreType, cursor, limit, null);
+    }
+
+    default List<CacheScoredValue.NumberScoredValue> zscanInteger(String key, AtomicLong cursor, int limit) {
+        return zscan(key, Integer.class, cursor, limit, null);
+    }
+
+    default List<CacheScoredValue.NumberScoredValue> zscanLong(String key, AtomicLong cursor, int limit) {
+        return zscan(key, Long.class, cursor, limit, null);
+    }
+
+    default List<CacheScoredValue.NumberScoredValue> zscanDouble(String key, AtomicLong cursor, int limit) {
+        return zscan(key, Double.class, cursor, limit, null);
+    }
+
     //---------------------- CompletableFuture 异步版 ---------------------------------
     public CompletableFuture<Boolean> isOpenAsync();
 
@@ -1401,12 +1437,38 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Long> zrevrankAsync(String key, String member);
 
-//
-//    public <T> CompletableFuture<Set<T>> zscanAsync(String key, Type componentType, AtomicLong cursor, int limit, String pattern);
-//
-//    default <T> CompletableFuture<Set<T>> zscanAsync(String key, Type componentType, AtomicLong cursor, int limit) {
-//        return zscanAsync(key, componentType, cursor, limit, null);
-//    }
+    public CompletableFuture<List<String>> zrangeAsync(String key, int start, int stop);
+
+    public CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanAsync(String key, Type scoreType, AtomicLong cursor, int limit, String pattern);
+
+    default CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanIntegerAsync(String key, AtomicLong cursor, int limit, String pattern) {
+        return zscanAsync(key, Integer.class, cursor, limit, pattern);
+    }
+
+    default CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanLongAsync(String key, AtomicLong cursor, int limit, String pattern) {
+        return zscanAsync(key, Long.class, cursor, limit, pattern);
+    }
+
+    default CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanDoubleAsync(String key, AtomicLong cursor, int limit, String pattern) {
+        return zscanAsync(key, Double.class, cursor, limit, pattern);
+    }
+
+    default CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanAsync(String key, Type scoreType, AtomicLong cursor, int limit) {
+        return zscanAsync(key, scoreType, cursor, limit, null);
+    }
+
+    default CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanIntegerAsync(String key, AtomicLong cursor, int limit) {
+        return zscanAsync(key, Integer.class, cursor, limit, null);
+    }
+
+    default CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanLongAsync(String key, AtomicLong cursor, int limit) {
+        return zscanAsync(key, Long.class, cursor, limit, null);
+    }
+
+    default CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanDoubleAsync(String key, AtomicLong cursor, int limit) {
+        return zscanAsync(key, Double.class, cursor, limit, null);
+    }
+
     //-------------------------- 过期方法 ----------------------------------    
     @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(String key, Type componentType);

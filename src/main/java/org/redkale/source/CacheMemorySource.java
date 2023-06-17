@@ -1402,6 +1402,49 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public CompletableFuture<List<String>> zrangeAsync(String key, int start, int stop) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return new ArrayList<>();
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
+                return new ArrayList<>();
+            }
+            List<String> list = new ArrayList<>();
+            Set<CacheScoredValue> sets = entry.csetValue;
+            long c = 0;
+            for (CacheScoredValue v : sets) {
+                if (c >= start && (stop < 0 || c <= stop)) {
+                    list.add(v.getValue());
+                }
+                c++;
+            }
+            return list;
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanAsync(String key, Type scoreType, AtomicLong cursor, int limit, String pattern) {
+        return supplyAsync(() -> {
+            if (key == null) {
+                return new ArrayList<>();
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.isExpired() || entry.csetValue == null) {
+                return new ArrayList();
+            }
+            Set<CacheScoredValue.NumberScoredValue> sets = entry.csetValue;
+            if (Utility.isEmpty(pattern)) {
+                return sets.stream().collect(Collectors.toList());
+            } else {
+                Predicate<String> regx = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
+                return sets.stream().filter(en -> regx.test(en.getValue())).collect(Collectors.toList());
+            }
+        }, getExecutor());
+    }
+
+    @Override
     public CompletableFuture<Long> zremAsync(String key, String... members) {
         return supplyAsync(() -> {
             if (key == null) {
