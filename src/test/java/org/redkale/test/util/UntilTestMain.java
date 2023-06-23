@@ -5,8 +5,11 @@
  */
 package org.redkale.test.util;
 
-import org.redkale.util.Reproduce;
-import org.redkale.util.Attribute;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import javax.crypto.Cipher;
+import javax.crypto.spec.*;
+import org.redkale.util.*;
 
 /**
  *
@@ -17,6 +20,30 @@ public class UntilTestMain {
     public static void main(String[] args) throws Throwable {
         reproduce(args);
         attribute(args);
+        aes(args);
+    }
+
+    public static void aes(String[] args) throws Throwable {
+        String mingwen = "我是z前面的";
+        String secret = "after z content.";
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        Key secureKey = new SecretKeySpec(secret.getBytes(), "AES");
+        IvParameterSpec iv = new IvParameterSpec(secret.getBytes(StandardCharsets.UTF_8));
+        cipher.init(Cipher.ENCRYPT_MODE, secureKey, iv);
+        byte[] bs = cipher.doFinal(mingwen.getBytes());
+        System.out.println("加密后: " + Utility.binToHexString(bs));
+
+        System.out.println(new String(Utility.hexToBin("6166746572207a20636f6e74656e742e")));
+        String miwen = "2a2c3ff3b51205eb80a02e43e0eb0751";
+        secret = "after z content.";
+        byte[] ms = Utility.hexToBin(miwen);
+        cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        secureKey = new SecretKeySpec(secret.substring(0, 16).getBytes(), "AES");
+        iv = new IvParameterSpec(secret.substring(0, 16).getBytes(StandardCharsets.UTF_8));
+        cipher.init(Cipher.DECRYPT_MODE, secureKey, iv);
+        bs = cipher.doFinal(ms);
+        System.out.println("解密后: " + new String(bs));
+        System.out.println(Utility.binToHexString(secret.getBytes()));
     }
 
     public static void reproduce(String[] args) throws Throwable {
@@ -98,7 +125,8 @@ public class UntilTestMain {
         }
         e = System.nanoTime() - s;
         System.out.println("动态Attribute耗时: " + e);
-        System.out.println();
         System.out.println("TestBean.map: " + Attribute.create(TestBean.class.getDeclaredField("map")).genericType());
+        System.out.println();
+        System.out.println();
     }
 }

@@ -507,6 +507,29 @@ public final class Utility {
     }
 
     /**
+     * 是否为空白
+     *
+     * @param str       字符串
+     * @param fromIndex 起始位置
+     * @param toIndex   结束位置
+     *
+     * @return 是否为空白
+     *
+     */
+    public static boolean isBlank(String str, int fromIndex, int toIndex) {
+        if (str == null || str.isEmpty()) {
+            return true;
+        }
+        for (int i = fromIndex; i < toIndex; i++) {
+            char ch = str.charAt(i);
+            if (ch != ' ' && ch != '\t' && !Character.isWhitespace(ch)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * 是否不为空白
      *
      * @param str 字符串
@@ -516,6 +539,29 @@ public final class Utility {
      */
     public static boolean isNotBlank(String str) {
         return str != null && !str.isEmpty() && !str.isBlank();
+    }
+
+    /**
+     * 是否不为空白
+     *
+     * @param str       字符串
+     * @param fromIndex 起始位置
+     * @param toIndex   结束位置
+     *
+     * @return 是否为空白
+     *
+     */
+    public static boolean isNotBlank(String str, int fromIndex, int toIndex) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+        for (int i = fromIndex; i < toIndex; i++) {
+            char ch = str.charAt(i);
+            if (ch != ' ' && ch != '\t' && !Character.isWhitespace(ch)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

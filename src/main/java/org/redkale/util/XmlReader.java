@@ -413,12 +413,12 @@ public class XmlReader {
             .replace("&gt;", ">").replace("&amp;", "&");
     }
 
-    protected RuntimeException newException(String msg) {
+    protected RedkaleException newException(String msg) {
         return newException(msg, (Throwable) null);
     }
 
-    protected RuntimeException newException(String msg, Throwable chain) {
-        return new RuntimeException((msg == null ? "" : (msg + " "))
+    protected RedkaleException newException(String msg, Throwable chain) {
+        return new RedkaleException((msg == null ? "" : (msg + " "))
             + "(line: " + this.lineNumber + ", column: " + this.columnNumber + ", position:" + this.position + ") "
             + (chain == null ? "" : ("caused by: " + chain)));
     }
