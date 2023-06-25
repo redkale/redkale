@@ -8,6 +8,7 @@ package org.redkale.convert.bson;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.function.*;
 import org.redkale.convert.*;
 import org.redkale.util.*;
@@ -235,6 +236,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public void convertToBytes(final ByteArray array, final Type type, final Object value) {
+        Objects.requireNonNull(array);
         final BsonWriter writer = configWrite(new BsonWriter(array).tiny(tiny));
         if (value == null) {
             writer.writeNull();
@@ -258,9 +260,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
-        if (supplier == null) {
-            return null;
-        }
+        Objects.requireNonNull(supplier);
         BsonByteBufferWriter writer = pollWriter(supplier);
         if (value == null) {
             writer.writeNull();

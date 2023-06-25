@@ -9,6 +9,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.function.*;
 import org.redkale.convert.*;
 import org.redkale.service.RetResult;
@@ -390,6 +391,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public void convertToBytes(final ByteArray array, final Type type, final Object value) {
+        Objects.requireNonNull(array);
         JsonBytesWriter writer = configWrite(new JsonBytesWriter(tiny, array));
         if (value == null) {
             writer.writeNull();
@@ -428,9 +430,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
-        if (supplier == null) {
-            return null;
-        }
+        Objects.requireNonNull(supplier);
         JsonByteBufferWriter out = configWrite(new JsonByteBufferWriter(tiny, supplier));
         if (value == null) {
             out.writeNull();
