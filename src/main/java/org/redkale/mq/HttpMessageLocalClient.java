@@ -198,31 +198,11 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
 
         @Override
-        public void finishJson(final Object obj) {
-            finish((Convert) null, (Type) null, obj);
-        }
-
-        @Override
-        public void finishJson(final Convert convert, final Object obj) {
-            finish(convert, (Type) null, obj);
-        }
-
-        @Override
-        public void finishJson(final Type type, final Object obj) {
-            finish((Convert) null, type, obj);
-        }
-
-        @Override
         public void finishJson(final Convert convert, final Type type, final Object obj) {
             if (future == null) {
                 return;
             }
             future.complete(obj);
-        }
-
-        @Override
-        public void finish(Type type, org.redkale.service.RetResult ret) {
-            finish((Convert) null, type, ret);
         }
 
         @Override

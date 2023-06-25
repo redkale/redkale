@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.convert.Convert;
-import org.redkale.convert.json.JsonConvert;
 import static org.redkale.mq.MessageRecord.CTYPE_HTTP_RESULT;
 import org.redkale.net.Response;
 import org.redkale.net.http.*;
@@ -61,7 +60,7 @@ public class HttpMessageResponse extends HttpResponse {
             type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
     }
 
-    public void finishHttpResult(Type type, Convert respConvert, HttpResult result) {
+    public void finishHttpResult(Convert respConvert, Type type, HttpResult result) {
         finishHttpResult(producer.logger.isLoggable(Level.FINEST),
             respConvert == null ? ((HttpMessageRequest) this.request).getRespConvert() : respConvert,
             type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
@@ -116,34 +115,6 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finishJson(final Object obj) {
-        finishJson((JsonConvert) null, (Type) null, obj);
-    }
-
-    @Override
-    public void finishJson(final Convert convert, final Object obj) {
-        if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
-            return;
-        }
-        finishHttpResult(obj.getClass(), convert, new HttpResult(obj));
-
-    }
-
-    @Override
-    public void finishJson(final Type type, final Object obj) {
-        if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
-            return;
-        }
-        finishHttpResult(type, new HttpResult(obj));
-    }
-
-    @Override
     public void finishJson(final Convert convert, final Type type, final Object obj) {
         if (message.isEmptyRespTopic()) {
             if (callback != null) {
@@ -151,30 +122,18 @@ public class HttpMessageResponse extends HttpResponse {
             }
             return;
         }
-        finishHttpResult(type, convert, new HttpResult(obj));
+        finishHttpResult(convert, type, new HttpResult(obj));
     }
 
     @Override
-    public void finish(Type type, org.redkale.service.RetResult ret) {
+    public void finish(final Convert convert, Type type, RetResult ret) {
         if (message.isEmptyRespTopic()) {
             if (callback != null) {
                 callback.run();
             }
             return;
         }
-        finish(type, new HttpResult(ret));
-
-    }
-
-    @Override
-    public void finish(final Convert convert, Type type, org.redkale.service.RetResult ret) {
-        if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
-            return;
-        }
-        finishHttpResult(type, convert, new HttpResult(ret));
+        finishHttpResult(convert, type, new HttpResult(ret));
     }
 
     @Override
@@ -185,7 +144,7 @@ public class HttpMessageResponse extends HttpResponse {
             }
             return;
         }
-        finishHttpResult(type, convert, new HttpResult(obj));
+        finishHttpResult(convert, type, new HttpResult(obj));
     }
 
     @Override

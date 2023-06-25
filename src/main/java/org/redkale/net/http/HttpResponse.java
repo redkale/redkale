@@ -20,6 +20,7 @@ import java.util.logging.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.*;
+import org.redkale.service.RetResult;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.AnyValue.Entry;
 import org.redkale.util.*;
@@ -140,7 +141,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private BiConsumer<HttpResponse, byte[]> cacheHandler;
 
-    private BiFunction<HttpRequest, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler;
+    private BiFunction<HttpRequest, RetResult, RetResult> retResultHandler;
 
     //------------------------------------------------
     private final String plainContentType;
@@ -181,7 +182,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     protected final ConvertBytesHandler convertHandler = new ConvertBytesHandler() {
         @Override
         public <A> void completed(byte[] bs, int offset, int length, Consumer<A> callback, A attachment) {
-            HttpResponse.this.finish(bs, offset, length, callback, attachment);
+            finish(bs, offset, length, callback, attachment);
         }
     };
 
@@ -355,19 +356,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param obj 输出对象
      */
-    public void finishJson(final Object obj) {
-        this.contentType = this.jsonContentType;
-        if (this.recycleListener != null) {
-            this.output = obj;
-        }
-        Convert c = request.getRespConvert();
-        if (c == jsonRootConvert) {
-            JsonBytesWriter writer = jsonWriter;
-            c.convertTo(writer.clear(), obj);
-            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
-        } else {
-            c.convertToBytes(obj, convertHandler);
-        }
+    public final void finishJson(final Object obj) {
+        finishJson((Convert) null, (Type) null, obj);
     }
 
     /**
@@ -376,18 +366,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param convert 指定的JsonConvert
      * @param obj     输出对象
      */
-    public void finishJson(final Convert convert, final Object obj) {
-        this.contentType = this.jsonContentType;
-        if (this.recycleListener != null) {
-            this.output = obj;
-        }
-        if (convert == jsonRootConvert) {
-            JsonBytesWriter writer = jsonWriter;
-            convert.convertTo(writer.clear(), obj);
-            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
-        } else {
-            convert.convertToBytes(obj, convertHandler);
-        }
+    public final void finishJson(final Convert convert, final Object obj) {
+        finishJson(convert, (Type) null, obj);
     }
 
     /**
@@ -396,19 +376,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param type 指定的类型
      * @param obj  输出对象
      */
-    public void finishJson(final Type type, final Object obj) {
-        this.contentType = this.jsonContentType;
-        if (this.recycleListener != null) {
-            this.output = obj;
-        }
-        Convert c = request.getRespConvert();
-        if (c == jsonRootConvert) {
-            JsonBytesWriter writer = jsonWriter;
-            c.convertTo(writer.clear(), type, obj);
-            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
-        } else {
-            c.convertToBytes(type, obj, convertHandler);
-        }
+    public final void finishJson(final Type type, final Object obj) {
+        finishJson((Convert) null, type, obj);
     }
 
     /**
@@ -423,12 +392,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (this.recycleListener != null) {
             this.output = obj;
         }
-        if (convert == jsonRootConvert) {
+        Convert c = convert == null ? request.getRespConvert() : convert;
+        Type t = type == null ? (obj == null ? null : obj.getClass()) : type;
+        if (c == jsonRootConvert) {
             JsonBytesWriter writer = jsonWriter;
-            convert.convertTo(writer.clear(), type, obj);
+            c.convertTo(writer.clear(), t, obj);
             finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
         } else {
-            convert.convertToBytes(type, obj, convertHandler);
+            c.convertToBytes(t, obj, convertHandler);
         }
     }
 
@@ -450,7 +421,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param ret  RetResult输出对象
      */
 //    @Deprecated //@since 2.5.0
-//    public void finishJson(Type type, org.redkale.service.RetResult ret) {
+//    public void finishJson(Type type, RetResult ret) {
 //        this.contentType = this.jsonContentType;
 //        if (this.retResultHandler != null) {
 //            ret = this.retResultHandler.apply(this.request, ret);
@@ -478,7 +449,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param ret     RetResult输出对象
      */
 //    @Deprecated //@since 2.5.0
-//    public void finishJson(final Convert convert, Type type, org.redkale.service.RetResult ret) {
+//    public void finishJson(final Convert convert, Type type, RetResult ret) {
 //        this.contentType = this.jsonContentType;
 //        if (this.retResultHandler != null) {
 //            ret = this.retResultHandler.apply(this.request, ret);
@@ -514,34 +485,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param type 指定的RetResult泛型类型
      * @param ret  RetResult输出对象
      */
-    @SuppressWarnings("null")
-    public void finish(Type type, org.redkale.service.RetResult ret) {
-        if (this.retResultHandler != null) {
-            ret = this.retResultHandler.apply(this.request, ret);
-        }
-        if (this.recycleListener != null) {
-            this.output = ret;
-        }
-        if (ret != null && !ret.isSuccess()) {
-            this.header.addValue("retcode", String.valueOf(ret.getRetcode()));
-            this.header.addValue("retinfo", ret.getRetinfo());
-        }
-        Convert cc = ret == null ? null : ret.convert();
-        if (cc == null) {
-            cc = request.getRespConvert();
-        }
-        if (cc instanceof JsonConvert) {
-            this.contentType = this.jsonContentType;
-        } else if (cc instanceof TextConvert) {
-            this.contentType = this.plainContentType;
-        }
-        if (cc == jsonRootConvert) {
-            JsonBytesWriter writer = jsonWriter;
-            cc.convertTo(writer.clear(), type, ret);
-            finish(false, (String) null, writer.content(), writer.offset(), writer.length(), null, null);
-        } else {
-            cc.convertToBytes(type, ret, convertHandler);
-        }
+    public final void finish(Type type, RetResult ret) {
+        finish((Convert) null, type, ret);
     }
 
     /**
@@ -552,7 +497,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param ret     RetResult输出对象
      */
     @SuppressWarnings("null")
-    public void finish(final Convert convert, Type type, org.redkale.service.RetResult ret) {
+    public void finish(final Convert convert, Type type, RetResult ret) {
+        Objects.requireNonNull(type);
         if (this.retResultHandler != null) {
             ret = this.retResultHandler.apply(this.request, ret);
         }
@@ -590,8 +536,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param resultType HttpResult.result的泛型类型
      * @param result     HttpResult输出对象
      */
-    public void finish(Type resultType, HttpResult result) {
-        finish(request.getRespConvert(), resultType, result);
+    public final void finish(Type resultType, HttpResult result) {
+        finish((Convert) null, resultType, result);
     }
 
     /**
@@ -626,8 +572,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType CompletionFuture.value的泛型类型
      * @param future    CompletionStage输出对象
      */
-    public void finishFuture(Type valueType, CompletionStage future) {
-        finishFuture(request.getRespConvert(), valueType, future);
+    public final void finishFuture(Type valueType, CompletionStage future) {
+        finishFuture((Convert) null, valueType, future);
     }
 
     /**
@@ -658,7 +604,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType CompletionFuture.value的泛型类型
      * @param future    CompletionStage输出对象
      */
-    public void finishJsonFuture(Type valueType, CompletionStage future) {
+    public final void finishJsonFuture(Type valueType, CompletionStage future) {
         finishJsonFuture(request.getRespConvert(), valueType, future);
     }
 
@@ -691,7 +637,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType Publisher的泛型类型
      * @param publisher Publisher输出对象
      */
-    public <T> void finishPublisher(Type valueType, Flow.Publisher<T> publisher) {
+    public final <T> void finishPublisher(Type valueType, Flow.Publisher<T> publisher) {
         finishPublisher(request.getRespConvert(), valueType, publisher);
     }
 
@@ -703,7 +649,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType Publisher的泛型类型
      * @param publisher Publisher输出对象
      */
-    public <T> void finishPublisher(final Convert convert, Type valueType, Flow.Publisher<T> publisher) {
+    public final <T> void finishPublisher(final Convert convert, Type valueType, Flow.Publisher<T> publisher) {
         finishFuture(convert, valueType, (CompletionStage) Flows.createMonoFuture(publisher));
     }
 
@@ -713,8 +659,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType Publisher的泛型类型
      * @param publisher Publisher输出对象
      */
-    public void finishPublisher(Type valueType, Object publisher) {
-        finishPublisher(request.getRespConvert(), valueType, publisher);
+    public final void finishPublisher(Type valueType, Object publisher) {
+        finishPublisher((Convert) null, valueType, publisher);
     }
 
     /**
@@ -724,7 +670,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param valueType Publisher的泛型类型
      * @param publisher Publisher输出对象
      */
-    public void finishPublisher(final Convert convert, Type valueType, Object publisher) {
+    public final void finishPublisher(final Convert convert, Type valueType, Object publisher) {
         finishFuture(convert, valueType, (CompletionStage) Flows.maybePublisherToFuture(publisher));
     }
 
@@ -733,8 +679,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param future HttpScope输出异步对象
      */
-    public void finishScopeFuture(CompletionStage<HttpScope> future) {
-        finishScopeFuture(request.getRespConvert(), future);
+    public final void finishScopeFuture(CompletionStage<HttpScope> future) {
+        finishScopeFuture((Convert) null, future);
     }
 
     /**
@@ -763,8 +709,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param result HttpScope输出对象
      */
-    public void finish(HttpScope result) {
-        finish(request.getRespConvert(), result);
+    public final void finish(HttpScope result) {
+        finish((Convert) null, result);
     }
 
     /**
@@ -797,9 +743,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param obj 输出对象
      */
-    @SuppressWarnings("unchecked")
-    public void finish(final Object obj) {
-        finish(request.getRespConvert(), (Type) null, obj);
+    public final void finish(final Object obj) {
+        finish((Convert) null, (Type) null, obj);
     }
 
     /**
@@ -808,8 +753,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param convert 指定的Convert
      * @param obj     输出对象
      */
-    @SuppressWarnings("unchecked")
-    public void finish(final Convert convert, final Object obj) {
+    public final void finish(final Convert convert, final Object obj) {
         finish(convert, (Type) null, obj);
     }
 
@@ -819,8 +763,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param type 指定的类型, 不一定是obj的数据类型，必然obj为CompletableFuture， type应该为Future的元素类型
      * @param obj  输出对象
      */
-    @SuppressWarnings("unchecked")
-    public void finish(final Type type, Object obj) {
+    public final void finish(final Type type, Object obj) {
         finish((Convert) null, type, obj);
     }
 
@@ -845,7 +788,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             } else if (cc instanceof TextConvert) {
                 this.contentType = this.plainContentType;
             }
-            finish("null");
+            cc.convertToBytes(val, convertHandler);
         } else if (val instanceof CompletionStage) {
             finishFuture(convert, val == obj ? type : null, (CompletionStage) val);
         } else if (val instanceof CharSequence) {
@@ -859,8 +802,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 context.getLogger().log(Level.WARNING, "HttpServlet finish File occur, force to close channel. request = " + getRequest(), e);
                 finish(500, null);
             }
-        } else if (val instanceof org.redkale.service.RetResult) {
-            finish(convert, type, (org.redkale.service.RetResult) val);
+        } else if (val instanceof RetResult) {
+            finish(convert, type, (RetResult) val);
         } else if (val instanceof HttpResult) {
             finish(convert, type, (HttpResult) val);
         } else if (val instanceof HttpScope) {
@@ -1574,7 +1517,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @return 拦截器
      */
-    protected BiFunction<HttpRequest, org.redkale.service.RetResult, org.redkale.service.RetResult> getRetResultHandler() {
+    protected BiFunction<HttpRequest, RetResult, RetResult> getRetResultHandler() {
         return retResultHandler;
     }
 
@@ -1583,7 +1526,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param retResultHandler 拦截器
      */
-    public void retResultHandler(BiFunction<HttpRequest, org.redkale.service.RetResult, org.redkale.service.RetResult> retResultHandler) {
+    public void retResultHandler(BiFunction<HttpRequest, RetResult, RetResult> retResultHandler) {
         this.retResultHandler = retResultHandler;
     }
 
