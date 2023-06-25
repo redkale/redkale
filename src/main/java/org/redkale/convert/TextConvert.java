@@ -30,7 +30,9 @@ public abstract class TextConvert<R extends Reader, W extends Writer> extends Co
 
     public abstract <T> T convertFrom(final Type type, final String text);
 
-    public abstract String convertTo(final Object value);
+    public final String convertTo(final Object value) {
+        return convertTo((Type) null, value);
+    }
 
     public abstract String convertTo(final Type type, final Object value);
 

@@ -28,7 +28,9 @@ public abstract class BinaryConvert<R extends Reader, W extends Writer> extends 
         return true;
     }
 
-    public abstract byte[] convertTo(final Object value);
+    public final byte[] convertTo(final Object value) {
+        return convertTo((Type) null, value);
+    }
 
     public abstract byte[] convertTo(final Type type, final Object value);
 

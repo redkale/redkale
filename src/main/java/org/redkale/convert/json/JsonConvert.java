@@ -325,29 +325,19 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     //------------------------------ convertTo -----------------------------------------------------------
     @Override
-    public String convertTo(final Object value) {
-        if (value == null) {
-            return "null";
-        }
-        return convertTo(value.getClass(), value);
-    }
-
-    @Override
     public String convertTo(final Type type, final Object value) {
-        if (type == null) {
-            return null;
-        }
         if (value == null) {
             return "null";
         }
         JsonBytesWriter writer = pollJsonBytesWriter();
+        final Type t = type == null ? value.getClass() : type;
         Encodeable encoder = this.lastConvertEncodeable;
-        if (encoder == null || encoder.getType() != type) {
-            encoder = factory.loadEncoder(type);
+        if (encoder == null || encoder.getType() != t) {
+            encoder = factory.loadEncoder(t);
             this.lastConvertEncodeable = encoder;
         }
         if (encoder.specifyable()) {
-            writer.specificObjectType(type);
+            writer.specificObjectType(t);
         }
         encoder.convertTo(writer, value);
 
@@ -357,29 +347,19 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
-    public byte[] convertToBytes(final Object value) {
-        if (value == null) {
-            return null;
-        }
-        return convertToBytes(value.getClass(), value);
-    }
-
-    @Override
     public byte[] convertToBytes(final Type type, final Object value) {
-        if (type == null) {
-            return null;
-        }
         if (value == null) {
             return null;
         }
         JsonBytesWriter writer = pollJsonBytesWriter();
+        final Type t = type == null ? value.getClass() : type;
         Encodeable encoder = this.lastConvertEncodeable;
-        if (encoder == null || encoder.getType() != type) {
-            encoder = factory.loadEncoder(type);
+        if (encoder == null || encoder.getType() != t) {
+            encoder = factory.loadEncoder(t);
             this.lastConvertEncodeable = encoder;
         }
         if (encoder.specifyable()) {
-            writer.specificObjectType(type);
+            writer.specificObjectType(t);
         }
         encoder.convertTo(writer, value);
 
@@ -389,23 +369,19 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
-    public void convertToBytes(final Object value, final ConvertBytesHandler handler) {
-        convertToBytes(value == null ? null : value.getClass(), value, handler);
-    }
-
-    @Override
     public void convertToBytes(final Type type, final Object value, final ConvertBytesHandler handler) {
         JsonBytesWriter writer = pollJsonBytesWriter();
-        if (type == null) {
+        if (value == null) {
             writer.writeNull();
         } else {
+            final Type t = type == null ? value.getClass() : type;
             Encodeable encoder = this.lastConvertEncodeable;
-            if (encoder == null || encoder.getType() != type) {
-                encoder = factory.loadEncoder(type);
+            if (encoder == null || encoder.getType() != t) {
+                encoder = factory.loadEncoder(t);
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specificObjectType(type);
+                writer.specificObjectType(t);
             }
             encoder.convertTo(writer, value);
         }
@@ -413,59 +389,45 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
-    public void convertToBytes(final ByteArray array, final Object value) {
-        convertToBytes(array, value == null ? null : value.getClass(), value);
-    }
-
-    @Override
     public void convertToBytes(final ByteArray array, final Type type, final Object value) {
         JsonBytesWriter writer = configWrite(new JsonBytesWriter(tiny, array));
-        if (type == null) {
+        if (value == null) {
             writer.writeNull();
         } else {
+            final Type t = type == null ? value.getClass() : type;
             Encodeable encoder = this.lastConvertEncodeable;
-            if (encoder == null || encoder.getType() != type) {
-                encoder = factory.loadEncoder(type);
+            if (encoder == null || encoder.getType() != t) {
+                encoder = factory.loadEncoder(t);
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specificObjectType(type);
+                writer.specificObjectType(t);
             }
             encoder.convertTo(writer, value);
         }
         writer.directTo(array);
     }
 
-    public void convertTo(final OutputStream out, final Object value) {
-        if (value == null) {
-            configWrite(new JsonStreamWriter(tiny, out)).writeNull();
-        } else {
-            convertTo(out, value.getClass(), value);
-        }
-    }
-
     public void convertTo(final OutputStream out, final Type type, final Object value) {
-        if (type == null) {
-            return;
-        }
         if (value == null) {
             configWrite(new JsonStreamWriter(tiny, out)).writeNull();
         } else {
+            final Type t = type == null ? value.getClass() : type;
             JsonStreamWriter writer = configWrite(new JsonStreamWriter(tiny, out));
             Encodeable encoder = this.lastConvertEncodeable;
-            if (encoder == null || encoder.getType() != type) {
-                encoder = factory.loadEncoder(type);
+            if (encoder == null || encoder.getType() != t) {
+                encoder = factory.loadEncoder(t);
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specificObjectType(type);
+                writer.specificObjectType(t);
             }
             encoder.convertTo(writer, value);
         }
     }
 
     @Override
-    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
+    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
         if (supplier == null) {
             return null;
         }
@@ -473,59 +435,26 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             out.writeNull();
         } else {
-            factory.loadEncoder(value.getClass()).convertTo(out, value);
+            final Type t = type == null ? value.getClass() : type;
+            out.specificObjectType(t);
+            factory.loadEncoder(t).convertTo(out, value);
         }
         return out.toBuffers();
-    }
-
-    @Override
-    public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
-        if (supplier == null || type == null) {
-            return null;
-        }
-        JsonByteBufferWriter out = configWrite(new JsonByteBufferWriter(tiny, supplier));
-        if (value == null) {
-            out.writeNull();
-        } else {
-            out.specificObjectType(type);
-            factory.loadEncoder(type).convertTo(out, value);
-        }
-        return out.toBuffers();
-    }
-
-    @Override
-    public void convertTo(final JsonWriter writer, final Object value) {
-        if (value == null) {
-            writer.writeNull();
-        } else {
-            Class type = value.getClass();
-            Encodeable encoder = this.lastConvertEncodeable;
-            if (encoder == null || encoder.getType() != type) {
-                encoder = factory.loadEncoder(type);
-                this.lastConvertEncodeable = encoder;
-            }
-            if (encoder.specifyable()) {
-                writer.specificObjectType(type);
-            }
-            encoder.convertTo(writer, value);
-        }
     }
 
     @Override
     public void convertTo(final JsonWriter writer, final Type type, final Object value) {
-        if (type == null) {
-            return;
-        }
         if (value == null) {
             writer.writeNull();
         } else {
+            final Type t = type == null ? value.getClass() : type;
             Encodeable encoder = this.lastConvertEncodeable;
-            if (encoder == null || encoder.getType() != type) {
-                encoder = factory.loadEncoder(type);
+            if (encoder == null || encoder.getType() != t) {
+                encoder = factory.loadEncoder(t);
                 this.lastConvertEncodeable = encoder;
             }
             if (encoder.specifyable()) {
-                writer.specificObjectType(type);
+                writer.specificObjectType(t);
             }
             encoder.convertTo(writer, value);
         }
