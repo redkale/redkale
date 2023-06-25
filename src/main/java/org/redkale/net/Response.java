@@ -122,7 +122,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     protected Response(C context, final R request) {
         this.context = context;
         this.request = request;
-        this.thread = WorkThread.currWorkThread();
+        this.thread = WorkThread.currentWorkThread();
         this.writeBuffer = context != null ? ByteBuffer.allocateDirect(context.getBufferCapacity()) : null;
         this.workExecutor = context == null || context.workExecutor == null ? ForkJoinPool.commonPool() : context.workExecutor;
     }

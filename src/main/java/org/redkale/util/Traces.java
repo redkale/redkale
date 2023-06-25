@@ -49,13 +49,13 @@ public class Traces {
 //        }
 //        return traceid;
 //    }
-    public static void currTraceid(String traceid) {
+    public static void currentTraceid(String traceid) {
         if (enable) {
             localTrace.set(traceid);
         }
     }
 
-    public static String currTraceid() {
+    public static String currentTraceid() {
         return enable ? localTrace.get() : null;
     }
 

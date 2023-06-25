@@ -90,7 +90,7 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
     private void execute(final MessageRecord message, final Runnable callback) {
         HttpMessageRequest request = null;
         try {
-            Traces.currTraceid(message.getTraceid());
+            Traces.currentTraceid(message.getTraceid());
             long now = System.currentTimeMillis();
             long cha = now - message.createTime;
             long e = now - startTime;

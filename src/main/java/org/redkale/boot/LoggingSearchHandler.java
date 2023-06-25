@@ -298,7 +298,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             this.rawLog = log;
             this.rawTag = tag;
             this.threadName = Thread.currentThread().getName();
-            this.traceid = LoggingBaseHandler.traceFlag ? Traces.currTraceid() : null;
+            this.traceid = LoggingBaseHandler.traceFlag ? Traces.currentTraceid() : null;
             String msg = log.getMessage();
             if (log.getThrown() != null) {
                 StringWriter sw = new StringWriter();

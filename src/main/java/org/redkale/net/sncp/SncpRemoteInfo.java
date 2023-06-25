@@ -105,7 +105,7 @@ public class SncpRemoteInfo<T extends Service> {
                 params[action.paramHandlerAttachIndex] = null;
             }
         }
-        final CompletableFuture<byte[]> future = remote(action, Traces.currTraceid(), params);
+        final CompletableFuture<byte[]> future = remote(action, Traces.currentTraceid(), params);
         if (action.paramHandlerIndex >= 0) { //参数中存在CompletionHandler
             final CompletionHandler handler = callbackHandler;
             final Object attach = callbackHandlerAttach;

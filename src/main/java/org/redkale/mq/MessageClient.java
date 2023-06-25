@@ -143,12 +143,12 @@ public abstract class MessageClient {
 
     public MessageRecord createMessageRecord(String resptopic, String content) {
         return new MessageRecord(msgSeqno.incrementAndGet(), CTYPE_STRING, 1, 0, System.currentTimeMillis(), 0,
-            null, null, resptopic, Traces.currTraceid(), content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+            null, null, resptopic, Traces.currentTraceid(), content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, String content) {
         return new MessageRecord(msgSeqno.incrementAndGet(), CTYPE_STRING, 1, 0, System.currentTimeMillis(), 0,
-            null, topic, resptopic, Traces.currTraceid(), content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+            null, topic, resptopic, Traces.currentTraceid(), content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, String traceid, String content) {
@@ -158,7 +158,7 @@ public abstract class MessageClient {
 
     public MessageRecord createMessageRecord(int userid, String topic, String resptopic, String content) {
         return new MessageRecord(msgSeqno.incrementAndGet(), CTYPE_STRING, 1, 0, System.currentTimeMillis(), userid,
-            null, topic, resptopic, Traces.currTraceid(), content == null ? null : content.getBytes(StandardCharsets.UTF_8));
+            null, topic, resptopic, Traces.currentTraceid(), content == null ? null : content.getBytes(StandardCharsets.UTF_8));
     }
 
     public MessageRecord createMessageRecord(int userid, String topic, String resptopic, String traceid, String content) {
@@ -168,7 +168,7 @@ public abstract class MessageClient {
 
     public MessageRecord createMessageRecord(String topic, String resptopic, Convert convert, Object bean) {
         return new MessageRecord(msgSeqno.incrementAndGet(), ctype(convert, bean), 1, 0, System.currentTimeMillis(), 0,
-            null, topic, resptopic, Traces.currTraceid(), convert.convertToBytes(bean));
+            null, topic, resptopic, Traces.currentTraceid(), convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, String traceid, Convert convert, Object bean) {
@@ -178,29 +178,29 @@ public abstract class MessageClient {
 
     public MessageRecord createMessageRecord(int userid, String topic, String resptopic, Convert convert, Object bean) {
         return new MessageRecord(msgSeqno.incrementAndGet(), ctype(convert, bean), 1, 0, System.currentTimeMillis(), userid,
-            null, topic, resptopic, Traces.currTraceid(), convert.convertToBytes(bean));
+            null, topic, resptopic, Traces.currentTraceid(), convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
         return new MessageRecord(msgSeqno.incrementAndGet(), ctype(convert, bean), 1, 0, System.currentTimeMillis(), userid,
-            groupid, topic, resptopic, Traces.currTraceid(), convert.convertToBytes(bean));
+            groupid, topic, resptopic, Traces.currentTraceid(), convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(int flag, int userid, String groupid, String topic, String resptopic, Convert convert, Object bean) {
         return new MessageRecord(msgSeqno.incrementAndGet(), ctype(convert, bean), 1, flag, System.currentTimeMillis(), userid,
-            groupid, topic, resptopic, Traces.currTraceid(), convert.convertToBytes(bean));
+            groupid, topic, resptopic, Traces.currentTraceid(), convert.convertToBytes(bean));
     }
 
     public MessageRecord createMessageRecord(String topic, String resptopic, byte[] content) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), (byte) 0, topic, resptopic, Traces.currTraceid(), content);
+        return new MessageRecord(msgSeqno.incrementAndGet(), (byte) 0, topic, resptopic, Traces.currentTraceid(), content);
     }
 
     public MessageRecord createMessageRecord(long seqid, String topic, String resptopic, byte[] content) {
-        return new MessageRecord(seqid, (byte) 0, topic, resptopic, Traces.currTraceid(), content);
+        return new MessageRecord(seqid, (byte) 0, topic, resptopic, Traces.currentTraceid(), content);
     }
 
     protected MessageRecord createMessageRecord(byte ctype, String topic, String resptopic, byte[] content) {
-        return new MessageRecord(msgSeqno.incrementAndGet(), ctype, topic, resptopic, Traces.currTraceid(), content);
+        return new MessageRecord(msgSeqno.incrementAndGet(), ctype, topic, resptopic, Traces.currentTraceid(), content);
     }
 
     protected MessageRecord createMessageRecord(byte ctype, String topic, String resptopic, String traceid, byte[] content) {
@@ -208,7 +208,7 @@ public abstract class MessageClient {
     }
 
     protected MessageRecord createMessageRecord(long seqid, byte ctype, String topic, String resptopic, byte[] content) {
-        return new MessageRecord(seqid, ctype, topic, resptopic, Traces.currTraceid(), content);
+        return new MessageRecord(seqid, ctype, topic, resptopic, Traces.currentTraceid(), content);
     }
 
     protected MessageRecord createMessageRecord(long seqid, byte ctype, String topic, String resptopic, String traceid, byte[] content) {

@@ -394,7 +394,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 }
             });
         };
-        WorkThread workThread = WorkThread.currWorkThread();
+        WorkThread workThread = WorkThread.currentWorkThread();
         sessionFuture.whenComplete((sessionid, ex) -> {
             if (workThread == null || workThread == Thread.currentThread()) {
                 sessionConsumer.accept(sessionid, ex);

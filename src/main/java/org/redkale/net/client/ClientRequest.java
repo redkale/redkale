@@ -60,12 +60,12 @@ public abstract class ClientRequest {
         return traceid;
     }
 
-    public <T extends ClientRequest> T currThread(WorkThread thread) {
+    public <T extends ClientRequest> T workThread(WorkThread thread) {
         this.workThread = thread;
         return (T) this;
     }
 
-    public <T extends ClientRequest> T currTraceid(String traceid) {
+    public <T extends ClientRequest> T traceid(String traceid) {
         this.traceid = traceid;
         return (T) this;
     }
@@ -77,7 +77,7 @@ public abstract class ClientRequest {
 
     protected void prepare() {
         this.createTime = System.currentTimeMillis();
-        this.traceid = Traces.currTraceid();
+        this.traceid = Traces.currentTraceid();
         this.respTransfer = null;
     }
 

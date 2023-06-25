@@ -69,7 +69,7 @@ public class SncpMessageClientProcessor implements MessageClientProcessor {
     private void execute(final MessageRecord message, final Runnable callback) {
         SncpMessageResponse response = null;
         try {
-            Traces.currTraceid(message.getTraceid());
+            Traces.currentTraceid(message.getTraceid());
             long now = System.currentTimeMillis();
             long cha = now - message.createTime;
             long e = now - starttime;

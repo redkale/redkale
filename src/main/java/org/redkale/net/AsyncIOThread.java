@@ -54,7 +54,7 @@ public class AsyncIOThread extends WorkThread {
         return closed.get();
     }
 
-    public static AsyncIOThread currAsyncIOThread() {
+    public static AsyncIOThread currentAsyncIOThread() {
         Thread t = Thread.currentThread();
         return t instanceof AsyncIOThread ? (AsyncIOThread) t : null;
     }

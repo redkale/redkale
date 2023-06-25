@@ -38,7 +38,7 @@ public class WorkThread extends Thread implements Executor {
         this.setDaemon(true);
     }
 
-    public static WorkThread currWorkThread() {
+    public static WorkThread currentWorkThread() {
         Thread t = Thread.currentThread();
         return t instanceof WorkThread ? (WorkThread) t : null;
     }

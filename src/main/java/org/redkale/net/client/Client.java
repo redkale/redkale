@@ -220,28 +220,28 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     public final CompletableFuture<P> sendAsync(R request) {
         if (request.workThread == null) {
-            request.workThread = WorkThread.currWorkThread();
+            request.workThread = WorkThread.currentWorkThread();
         }
         return connect().thenCompose(conn -> writeChannel(conn, request));
     }
 
     public final <T> CompletableFuture<T> sendAsync(R request, Function<P, T> respTransfer) {
         if (request.workThread == null) {
-            request.workThread = WorkThread.currWorkThread();
+            request.workThread = WorkThread.currentWorkThread();
         }
         return connect().thenCompose(conn -> writeChannel(conn, request, respTransfer));
     }
 
     public final CompletableFuture<P> sendAsync(SocketAddress addr, R request) {
         if (request.workThread == null) {
-            request.workThread = WorkThread.currWorkThread();
+            request.workThread = WorkThread.currentWorkThread();
         }
         return connect(addr).thenCompose(conn -> writeChannel(conn, request));
     }
 
     public final <T> CompletableFuture<T> sendAsync(SocketAddress addr, R request, Function<P, T> respTransfer) {
         if (request.workThread == null) {
-            request.workThread = WorkThread.currWorkThread();
+            request.workThread = WorkThread.currentWorkThread();
         }
         return connect(addr).thenCompose(conn -> writeChannel(conn, request, respTransfer));
     }
@@ -264,7 +264,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     public final CompletableFuture<C> connect() {
         final int size = this.connArray.length;
-        WorkThread workThread = WorkThread.currWorkThread();
+        WorkThread workThread = WorkThread.currentWorkThread();
         final int connIndex = (workThread != null && workThread.threads() == size) ? workThread.index() : (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
         C cc = (C) this.connArray[connIndex];
         if (cc != null && cc.isOpen()) {

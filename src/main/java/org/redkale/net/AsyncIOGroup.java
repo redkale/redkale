@@ -200,7 +200,7 @@ public class AsyncIOGroup extends AsyncGroup {
 
         AsyncIOThread readThread = null;
         AsyncIOThread writeThread = null;
-        AsyncIOThread currThread = AsyncIOThread.currAsyncIOThread();
+        AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
         if (currThread != null) {
             if (this.ioReadThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
                 for (int i = 0; i < this.ioReadThreads.length; i++) {
@@ -284,7 +284,7 @@ public class AsyncIOGroup extends AsyncGroup {
         channel.configureBlocking(false);
         AsyncIOThread readThread = null;
         AsyncIOThread writeThread = null;
-        AsyncIOThread currThread = AsyncIOThread.currAsyncIOThread();
+        AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
         if (currThread != null) {
             for (int i = 0; i < this.ioReadThreads.length; i++) {
                 if (this.ioReadThreads[i].index() == currThread.index()) {

@@ -100,7 +100,7 @@ public abstract class LoggingBaseHandler extends Handler {
     protected static void fillLogRecord(LogRecord log) {
         String traceid = null;
         if (traceFlag && Traces.enable()) {
-            traceid = Traces.currTraceid();
+            traceid = Traces.currentTraceid();
             if (traceid == null || traceid.isEmpty()) {
                 traceid = "[TID:N/A] ";
             } else {
