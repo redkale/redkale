@@ -959,6 +959,21 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public CompletableFuture<Long> sinterstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
+        return supplyAsync(() -> {
+            Set rs = sinter(srcKey, Object.class, srcKey2s);
+            if (container.containsKey(key)) {
+                Set set = container.get(srcKey).csetValue;
+                set.clear();
+                set.addAll(rs);
+            } else {
+                appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
+            }
+            return (long) rs.size();
+        }, getExecutor());
+    }
+
+    @Override
     public <T> CompletableFuture<Set<T>> sunionAsync(final String key, final Type componentType, final String... key2s) {
         return supplyAsync(() -> {
             Set<T> rs = new HashSet<>();
@@ -981,21 +996,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public CompletableFuture<Long> sunionstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
         return supplyAsync(() -> {
             Set rs = sunion(srcKey, Object.class, srcKey2s);
-            if (container.containsKey(key)) {
-                Set set = container.get(srcKey).csetValue;
-                set.clear();
-                set.addAll(rs);
-            } else {
-                appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
-            }
-            return (long) rs.size();
-        }, getExecutor());
-    }
-
-    @Override
-    public CompletableFuture<Long> sinterstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
-        return supplyAsync(() -> {
-            Set rs = sinter(srcKey, Object.class, srcKey2s);
             if (container.containsKey(key)) {
                 Set set = container.get(srcKey).csetValue;
                 set.clear();
@@ -1081,6 +1081,70 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return supplyAsync(() -> {
             Collection collection = (Collection) get(key, Object.class);
             return collection == null ? 0L : collection.size();
+        }, getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<T> lindexAsync(String key, Type componentType, int index) {
+        return supplyAsync(() -> {
+            List<T> list = (List) get(key, Object.class);
+            if (list == null || list.isEmpty()) {
+                return null;
+            }
+            int pos = index >= 0 ? index : list.size() + index;
+            return pos >= list.size() ? null : list.get(pos);
+        }, getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Long> linsertBeforeAsync(String key, Type componentType, T pivot, T value) {
+        return linsertAsync(key, componentType, true, pivot, value);
+    }
+
+    @Override
+    public <T> CompletableFuture<Long> linsertAfterAsync(String key, Type componentType, T pivot, T value) {
+        return linsertAsync(key, componentType, false, pivot, value);
+    }
+
+    protected <T> CompletableFuture<Long> linsertAsync(String key, Type componentType, boolean before, T pivot, T value) {
+        return supplyAsync(() -> {
+            CacheEntry entry = container.get(key);
+            if (entry == null || !entry.isListCacheType() || entry.listValue == null) {
+                return 0L;
+            }
+            entry.lock();
+            try {
+                List<T> list = new ArrayList<>(entry.listValue);
+                int pos = list.indexOf(pivot);
+                if (pos < 0) {
+                    return -1L;
+                }
+                List<T> newList = new ArrayList<>();
+                if (before) {
+                    if (pos == 0) {
+                        newList.add(value);
+                        newList.addAll(list);
+                    } else {
+                        newList.addAll(list.subList(0, pos));
+                        newList.add(value);
+                        newList.addAll(list.subList(pos, list.size()));
+                    }
+                } else {
+                    if (pos == list.size() - 1) {
+                        newList.addAll(list);
+                        newList.add(value);
+                    } else {
+                        newList.addAll(list.subList(0, pos + 1));
+                        newList.add(value);
+                        newList.addAll(list.subList(pos + 1, list.size()));
+                    }
+                }
+                entry.listValue.clear();
+                entry.listValue.addAll(newList);
+                return 1L;
+            } finally {
+                entry.unlock();
+            }
         }, getExecutor());
     }
 
@@ -1736,7 +1800,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         ConcurrentHashMap<String, Serializable> mapValue;
 
-        final ReentrantLock lock = new ReentrantLock();
+        private final ReentrantLock lock = new ReentrantLock();
 
         Set<T> csetValue;
 
@@ -1785,6 +1849,14 @@ public final class CacheMemorySource extends AbstractCacheSource {
         @ConvertColumn(ignore = true)
         public boolean isExpired() {
             return expireSeconds > 0 && (lastAccessed + expireSeconds * 1000) < System.currentTimeMillis();
+        }
+
+        public void lock() {
+            lock.lock();
+        }
+
+        public void unlock() {
+            lock.unlock();
         }
 
         public CacheEntryType getCacheType() {

@@ -402,6 +402,42 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ 列表 List ------------------------
+    default <T> T lindex(String key, Type componentType, int index) {
+        return (T) lindexAsync(key, componentType, index).join();
+    }
+
+    default String lindexString(String key, int index) {
+        return lindex(key, String.class, index);
+    }
+
+    default Long lindexLong(String key, int index) {
+        return lindex(key, Long.class, index);
+    }
+
+    default <T> long linsertBefore(String key, Type componentType, T pivot, T value) {
+        return linsertBeforeAsync(key, componentType, pivot, value).join();
+    }
+
+    default long linsertBeforeString(String key, String pivot, String value) {
+        return linsertBefore(key, String.class, pivot, value);
+    }
+
+    default long linsertBeforeLong(String key, Long pivot, Long value) {
+        return linsertBefore(key, Long.class, pivot, value);
+    }
+
+    default <T> long linsertAfter(String key, Type componentType, T pivot, T value) {
+        return linsertAfterAsync(key, componentType, pivot, value).join();
+    }
+
+    default long linsertAfterString(String key, String pivot, String value) {
+        return linsertAfter(key, String.class, pivot, value);
+    }
+
+    default long linsertAfterLong(String key, Long pivot, Long value) {
+        return linsertAfter(key, Long.class, pivot, value);
+    }
+
     default long llen(String key) {
         return llenAsync(key).join();
     }
@@ -1149,6 +1185,36 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ 列表 List ------------------------
+    public <T> CompletableFuture<T> lindexAsync(String key, Type componentType, int index);
+
+    default CompletableFuture<String> lindexStringAsync(String key, int index) {
+        return lindexAsync(key, String.class, index);
+    }
+
+    default CompletableFuture<Long> lindexLongAsync(String key, int index) {
+        return lindexAsync(key, Long.class, index);
+    }
+
+    public <T> CompletableFuture<Long> linsertBeforeAsync(String key, Type componentType, T pivot, T value);
+
+    default CompletableFuture<Long> linsertBeforeStringAsync(String key, String pivot, String value) {
+        return linsertBeforeAsync(key, String.class, pivot, value);
+    }
+
+    default CompletableFuture<Long> linsertBeforeLongAsync(String key, Long pivot, Long value) {
+        return linsertBeforeAsync(key, Long.class, pivot, value);
+    }
+
+    public <T> CompletableFuture<Long> linsertAfterAsync(String key, Type componentType, T pivot, T value);
+
+    default CompletableFuture<Long> linsertAfterStringAsync(String key, String pivot, String value) {
+        return linsertAfterAsync(key, String.class, pivot, value);
+    }
+
+    default CompletableFuture<Long> linsertAfterLongAsync(String key, Long pivot, Long value) {
+        return linsertAfterAsync(key, Long.class, pivot, value);
+    }
+
     public CompletableFuture<Long> llenAsync(String key);
 
     public CompletableFuture<Void> ltrimAsync(String key, int start, int stop);
