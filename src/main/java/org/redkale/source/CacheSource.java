@@ -555,6 +555,42 @@ public interface CacheSource extends Resourcable {
         sadd(key, Long.class, values);
     }
 
+    default <T> boolean smove(String key, String key2, Type componentType, T member) {
+        return smoveAsync(key, key2, componentType, member).join();
+    }
+
+    default boolean smoveString(String key, String key2, String member) {
+        return smove(key, key2, String.class, member);
+    }
+
+    default boolean smoveLong(String key, String key2, Long member) {
+        return smove(key, key2, Long.class, member);
+    }
+
+    default <T> List<T> srandmember(String key, Type componentType, int count) {
+        return (List) srandmemberAsync(key, componentType, count).join();
+    }
+
+    default List<String> srandmemberString(String key, int count) {
+        return srandmember(key, String.class, count);
+    }
+
+    default List<Long> srandmemberLong(String key, int count) {
+        return srandmember(key, Long.class, count);
+    }
+
+    default <T> T srandmember(String key, Type componentType) {
+        return (T) srandmemberAsync(key, componentType).join();
+    }
+
+    default CompletableFuture<String> srandmemberString(String key) {
+        return srandmember(key, String.class);
+    }
+
+    default Long srandmemberLong(String key) {
+        return srandmember(key, Long.class);
+    }
+
     default <T> Set<T> sdiff(String key, Type componentType, String... key2s) {
         return (Set) sdiffAsync(key, componentType, key2s).join();
     }
@@ -1232,6 +1268,38 @@ public interface CacheSource extends Resourcable {
 
     default CompletableFuture<Set<Long>> sdiffLongAsync(String key, String... key2s) {
         return sdiffAsync(key, Long.class, key2s);
+    }
+
+    public <T> CompletableFuture<Boolean> smoveAsync(String key, String key2, Type componentType, T member);
+
+    default CompletableFuture<Boolean> smoveStringAsync(String key, String key2, String member) {
+        return smoveAsync(key, key2, String.class, member);
+    }
+
+    default CompletableFuture<Boolean> smoveLongAsync(String key, String key2, Long member) {
+        return smoveAsync(key, key2, Long.class, member);
+    }
+
+    public <T> CompletableFuture<List<T>> srandmemberAsync(String key, Type componentType, int count);
+
+    default CompletableFuture<List<String>> srandmemberStringAsync(String key, int count) {
+        return srandmemberAsync(key, String.class, count);
+    }
+
+    default CompletableFuture<List<Long>> srandmemberLongAsync(String key, int count) {
+        return srandmemberAsync(key, Long.class, count);
+    }
+
+    default <T> CompletableFuture<T> srandmemberAsync(String key, Type componentType) {
+        return srandmemberAsync(key, componentType, 1).thenApply(list -> list != null && !list.isEmpty() ? (T) list.get(0) : null);
+    }
+
+    default CompletableFuture<String> srandmemberStringAsync(String key) {
+        return srandmemberAsync(key, String.class);
+    }
+
+    default CompletableFuture<Long> srandmemberLongAsync(String key) {
+        return srandmemberAsync(key, Long.class);
     }
 
     public CompletableFuture<Long> sdiffstoreAsync(String key, String srcKey, String... srcKey2s);

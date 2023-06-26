@@ -852,6 +852,51 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<List<T>> srandmemberAsync(String key, Type componentType, int count) {
+        return supplyAsync(() -> {
+            List<T> list = new ArrayList<>();
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.csetValue == null) {
+                return list;
+            }
+            List<T> vals = new ArrayList<>(entry.csetValue);
+            if (count < 0) {  //可以重复
+                for (int i = 0; i < Math.abs(count); i++) {
+                    int index = ThreadLocalRandom.current().nextInt(vals.size());
+                    T val = vals.get(index);
+                    list.add(val);
+                }
+            } else { //不可以重复
+                if (count >= vals.size()) {
+                    return vals;
+                }
+                return vals.subList(0, count);
+            }
+            return list;
+        }, getExecutor());
+    }
+
+    @Override
+    public <T> CompletableFuture<Boolean> smoveAsync(String key, String key2, Type componentType, T member) {
+        return supplyAsync(() -> {
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.csetValue == null) {
+                return false;
+            }
+            boolean rs = entry.csetValue.remove(member);
+            if (rs) {
+                CacheEntry entry2 = container.get(key2);
+                if (entry2 == null || entry2.csetValue == null) {
+                    appendSetItem(componentType == String.class ? CacheEntryType.SET_STRING : CacheEntryType.SET_OBJECT, key2, List.of(member));
+                } else {
+                    entry2.csetValue.add(member);
+                }
+            }
+            return rs;
+        }, getExecutor());
+    }
+
+    @Override
     public <T> CompletableFuture<Set<T>> sdiffAsync(final String key, final Type componentType, final String... key2s) {
         return supplyAsync(() -> {
             Set<T> rs = new HashSet<>();
