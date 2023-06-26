@@ -415,6 +415,24 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }, getExecutor());
     }
 
+    @Override
+    public CompletableFuture<Long> hstrlenAsync(final String key, final String field) {
+        return supplyAsync(() -> {
+            if (key == null || field == null) {
+                return 0L;
+            }
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.isExpired() || entry.mapValue == null) {
+                return 0L;
+            }
+            Object obj = entry.mapValue.get(field);
+            if (obj == null) {
+                return 0L;
+            }
+            return (long) obj.toString().length();
+        }, getExecutor());
+    }
+
     //----------- hxxx --------------
     @Override
     public CompletableFuture<Boolean> existsAsync(String key) {

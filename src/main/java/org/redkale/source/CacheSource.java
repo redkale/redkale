@@ -373,6 +373,10 @@ public interface CacheSource extends Resourcable {
         return hsetnx(key, field, Long.class, value);
     }
 
+    default long hstrlen(String key, String field) {
+        return hstrlenAsync(key, field).join();
+    }
+
     default <T> Map<String, T> hgetall(String key, Type type) {
         return (Map) hgetallAsync(key, type).join();
     }
@@ -1031,6 +1035,8 @@ public interface CacheSource extends Resourcable {
     default CompletableFuture<Boolean> hsetnxLongAsync(String key, String field, long value) {
         return hsetnxAsync(key, field, Long.class, value);
     }
+
+    public CompletableFuture<Long> hstrlenAsync(String key, String field);
 
     public <T> CompletableFuture<Map<String, T>> hgetallAsync(String key, Type type);
 
