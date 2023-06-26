@@ -623,6 +623,22 @@ public interface CacheSource extends Resourcable {
         return sinterstoreAsync(key, srcKey, srcKey2s).join();
     }
 
+    default <T> Set<T> sunion(String key, Type componentType, String... key2s) {
+        return (Set) sunionAsync(key, componentType, key2s).join();
+    }
+
+    default Set<String> sunionString(String key, String... key2s) {
+        return sunion(key, String.class, key2s);
+    }
+
+    default Set<Long> sunionLong(String key, String... key2s) {
+        return sunion(key, Long.class, key2s);
+    }
+
+    default long sunionstore(String key, String srcKey, String... srcKey2s) {
+        return sunionstoreAsync(key, srcKey, srcKey2s).join();
+    }
+
     default long scard(String key) {
         return scardAsync(key).join();
     }
@@ -1315,6 +1331,18 @@ public interface CacheSource extends Resourcable {
     }
 
     public CompletableFuture<Long> sinterstoreAsync(String key, String srcKey, String... srcKey2s);
+
+    public <T> CompletableFuture<Set<T>> sunionAsync(String key, Type componentType, String... key2s);
+
+    default CompletableFuture<Set<String>> sunionStringAsync(String key, String... key2s) {
+        return sunionAsync(key, String.class, key2s);
+    }
+
+    default CompletableFuture<Set<Long>> sunionLongAsync(String key, String... key2s) {
+        return sunionAsync(key, Long.class, key2s);
+    }
+
+    public CompletableFuture<Long> sunionstoreAsync(String key, String srcKey, String... srcKey2s);
 
     public CompletableFuture<Long> scardAsync(String key);
 

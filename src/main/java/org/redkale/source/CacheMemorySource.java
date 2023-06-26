@@ -959,6 +959,40 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> CompletableFuture<Set<T>> sunionAsync(final String key, final Type componentType, final String... key2s) {
+        return supplyAsync(() -> {
+            Set<T> rs = new HashSet<>();
+            CacheEntry entry = container.get(key);
+            if (entry == null || entry.csetValue == null) {
+                return rs;
+            }
+            rs.addAll(entry.csetValue);
+            for (String k : key2s) {
+                CacheEntry en2 = container.get(k);
+                if (en2 != null && en2.csetValue != null) {
+                    rs.addAll(en2.csetValue);
+                }
+            }
+            return rs;
+        }, getExecutor());
+    }
+
+    @Override
+    public CompletableFuture<Long> sunionstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
+        return supplyAsync(() -> {
+            Set rs = sunion(srcKey, Object.class, srcKey2s);
+            if (container.containsKey(key)) {
+                Set set = container.get(srcKey).csetValue;
+                set.clear();
+                set.addAll(rs);
+            } else {
+                appendSetItem(CacheEntryType.SET_OBJECT, key, rs);
+            }
+            return (long) rs.size();
+        }, getExecutor());
+    }
+
+    @Override
     public CompletableFuture<Long> sinterstoreAsync(final String key, final String srcKey, final String... srcKey2s) {
         return supplyAsync(() -> {
             Set rs = sinter(srcKey, Object.class, srcKey2s);
