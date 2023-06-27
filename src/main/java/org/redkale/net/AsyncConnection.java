@@ -352,38 +352,35 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     }
 
     public final void write(byte[] bytes, CompletionHandler<Integer, Void> handler) {
-        write(bytes, 0, bytes.length, null, 0, 0, null, null, handler);
+        write(bytes, 0, bytes.length, null, 0, 0, handler);
     }
 
     public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
-        write(array.content(), array.offset(), array.length(), null, 0, 0, null, null, handler);
+        write(array.content(), array.offset(), array.length(), null, 0, 0, handler);
     }
 
     public final <A> void write(ByteTuple array, A attachment, CompletionHandler<Integer, ? super A> handler) {
-        write(array.content(), array.offset(), array.length(), null, 0, 0, null, null, attachment, handler);
+        write(array.content(), array.offset(), array.length(), null, 0, 0, attachment, handler);
     }
 
     public final void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
-        write(bytes, offset, length, null, 0, 0, null, null, handler);
+        write(bytes, offset, length, null, 0, 0, handler);
     }
 
     public final void write(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
-        write(header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length(), null, null, handler);
+        write(header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length(), handler);
     }
 
-    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
-        write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, null, handler);
+    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, CompletionHandler<Integer, Void> handler) {
+        write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, null, handler);
     }
 
-    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Consumer bodyCallback, Object bodyAttachment, Object handlerAttachment, CompletionHandler handler) {
+    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Object handlerAttachment, CompletionHandler handler) {
         final ByteBuffer buffer = sslEngine == null ? pollWriteBuffer() : pollWriteSSLBuffer();
         if (buffer.remaining() >= headerLength + bodyLength) {
             buffer.put(headerContent, headerOffset, headerLength);
             if (bodyLength > 0) {
                 buffer.put(bodyContent, bodyOffset, bodyLength);
-                if (bodyCallback != null) {
-                    bodyCallback.accept(bodyAttachment);
-                }
             }
             buffer.flip();
             CompletionHandler<Integer, Object> newHandler = new CompletionHandler<Integer, Object>() {
@@ -405,9 +402,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             writer.put(headerContent, headerOffset, headerLength);
             if (bodyLength > 0) {
                 writer.put(bodyContent, bodyOffset, bodyLength);
-                if (bodyCallback != null) {
-                    bodyCallback.accept(bodyAttachment);
-                }
             }
             final ByteBuffer[] buffers = writer.toBuffers();
             CompletionHandler<Integer, Object> newHandler = new CompletionHandler<Integer, Object>() {
@@ -486,11 +480,11 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    public final void writeInIOThread(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
+    public final void writeInIOThread(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
-            write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, handler);
+            write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler);
         } else {
-            executeWrite(() -> write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, handler));
+            executeWrite(() -> write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler));
         }
     }
 

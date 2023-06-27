@@ -367,7 +367,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    public <A> void finish(boolean kill, final byte[] bs1, int offset1, int length1, final byte[] bs2, int offset2, int length2, Consumer<A> callback, A attachment) {
+    public <A> void finish(boolean kill, final byte[] bs1, int offset1, int length1, final byte[] bs2, int offset2, int length2) {
         if (kill) {
             refuseAlive();
         }
@@ -384,7 +384,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
             this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
         } else {
-            this.channel.writeInIOThread(bs1, offset1, length1, bs2, offset2, length2, callback, attachment, finishBytesIOThreadHandler);
+            this.channel.writeInIOThread(bs1, offset1, length1, bs2, offset2, length2, finishBytesIOThreadHandler);
         }
     }
 

@@ -184,7 +184,7 @@ public class AsyncIOThread extends WorkThread {
                             conn.doConnect();
                         } else if (conn.writeCompletionHandler != null && key.isWritable()) {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
-                            conn.doWrite(true);
+                            conn.doWrite();
                         } else if (conn.readCompletionHandler != null && key.isReadable()) {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
                             conn.doRead(true);
@@ -195,7 +195,7 @@ public class AsyncIOThread extends WorkThread {
                             conn.doRead(true);
                         } else if (conn.writeCompletionHandler != null && key.isWritable()) {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
-                            conn.doWrite(true);
+                            conn.doWrite();
                         } else if (key.isConnectable()) {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_CONNECT);
                             conn.doConnect();

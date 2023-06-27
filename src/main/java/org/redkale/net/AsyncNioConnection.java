@@ -63,10 +63,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected int writeByteTuple2Length;
 
-    protected Consumer writeByteTuple2Callback;
-
-    protected Object writeByteTuple2Attachment;
-
     //写操作, 二选一，要么writeByteBuffer有值，要么writeByteBuffers、writeOffset、writeLength有值
     protected ByteBuffer writeByteBuffer;
 
@@ -188,11 +184,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     @Override
     public void write(byte[] headerContent, int headerOffset, int headerLength,
-        byte[] bodyContent, int bodyOffset, int bodyLength,
-        Consumer bodyCallback, Object bodyAttachment, CompletionHandler<Integer, Void> handler) {
+        byte[] bodyContent, int bodyOffset, int bodyLength, CompletionHandler<Integer, Void> handler) {
 
         if (sslEngine != null) {
-            super.write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, bodyCallback, bodyAttachment, handler);
+            super.write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler);
             return;
         }
         Objects.requireNonNull(headerContent);
@@ -212,8 +207,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeByteTuple2Array = bodyContent;
         this.writeByteTuple2Offset = bodyOffset;
         this.writeByteTuple2Length = bodyLength;
-        this.writeByteTuple2Callback = bodyCallback;
-        this.writeByteTuple2Attachment = bodyAttachment;
         this.writeAttachment = null;
         if (this.writeTimeoutSeconds > 0) {
             AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
@@ -225,7 +218,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             newHandler.handler(handler, null);   // new AsyncNioCompletionHandler(handler, null);
             this.writeCompletionHandler = newHandler;
         }
-        doWrite(true); //如果不是true，则bodyCallback的执行可能会切换线程
+        doWrite(); //如果不是true，则bodyCallback的执行可能会切换线程
     }
 
     @Override
@@ -251,7 +244,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         } else {
             this.writeCompletionHandler = (CompletionHandler) handler;
         }
-        doWrite(true);
+        doWrite();
     }
 
     @Override
@@ -279,7 +272,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         } else {
             this.writeCompletionHandler = (CompletionHandler) handler;
         }
-        doWrite(true);
+        doWrite();
     }
 
     public void doRead(boolean direct) {
@@ -315,104 +308,93 @@ abstract class AsyncNioConnection extends AsyncConnection {
         }
     }
 
-    public void doWrite(boolean direct) {
+    public void doWrite() {
         try {
             this.writeTime = System.currentTimeMillis();
             int totalCount = 0;
             boolean hasRemain = true;
             boolean writeCompleted = true;
-            if (direct) {
-                int batchOffset = writeOffset;
-                int batchLength = writeLength;
-                while (hasRemain) { //必须要将buffer写完为止
-                    if (writeByteTuple1Array != null) {
-                        final ByteBuffer buffer = pollWriteBuffer();
-                        if (buffer.remaining() >= writeByteTuple1Length + writeByteTuple2Length) {
-                            buffer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
-                            if (writeByteTuple2Length > 0) {
-                                buffer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
-                                if (writeByteTuple2Callback != null) {
-                                    writeByteTuple2Callback.accept(writeByteTuple2Attachment);
-                                }
-                            }
-                            buffer.flip();
-                            writeByteBuffer = buffer;
-                            writeByteTuple1Array = null;
-                            writeByteTuple1Offset = 0;
-                            writeByteTuple1Length = 0;
-                            writeByteTuple2Array = null;
-                            writeByteTuple2Offset = 0;
-                            writeByteTuple2Length = 0;
-                            writeByteTuple2Callback = null;
-                            writeByteTuple2Attachment = null;
-                        } else {
-                            ByteBufferWriter writer = ByteBufferWriter.create(getWriteBufferSupplier(), buffer);
-                            writer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
-                            if (writeByteTuple2Length > 0) {
-                                writer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
-                                if (writeByteTuple2Callback != null) {
-                                    writeByteTuple2Callback.accept(writeByteTuple2Attachment);
-                                }
-                            }
-                            final ByteBuffer[] buffers = writer.toBuffers();
-                            writeByteBuffers = buffers;
-                            writeOffset = 0;
-                            writeLength = buffers.length;
-                            batchOffset = writeOffset;
-                            batchLength = writeLength;
-                            writeByteTuple1Array = null;
-                            writeByteTuple1Offset = 0;
-                            writeByteTuple1Length = 0;
-                            writeByteTuple2Array = null;
-                            writeByteTuple2Offset = 0;
-                            writeByteTuple2Length = 0;
-                            writeByteTuple2Callback = null;
-                            writeByteTuple2Attachment = null;
-                        }
-                        if (this.writeCompletionHandler == this.writeTimeoutCompletionHandler) {
-                            if (writeByteBuffer == null) {
-                                this.writeTimeoutCompletionHandler.buffers(writeByteBuffers);
-                            } else {
-                                this.writeTimeoutCompletionHandler.buffer(writeByteBuffer);
-                            }
-                        }
-                    }
-                    int writeCount;
-                    if (writeByteBuffer != null) {
-                        writeCount = implWrite(writeByteBuffer);
-                        hasRemain = writeByteBuffer.hasRemaining();
-                    } else {
-                        writeCount = implWrite(writeByteBuffers, batchOffset, batchLength);
-                        boolean remain = false;
-                        for (int i = 0; i < batchLength; i++) {
-                            if (writeByteBuffers[batchOffset + i].hasRemaining()) {
-                                remain = true;
-                                batchOffset += i;
-                                batchLength -= i;
-                                break;
-                            }
-                        }
-                        hasRemain = remain;
-                    }
 
-                    if (writeCount == 0) {
-                        if (hasRemain) {
-                            //writeCompleted = false;
-                            //writeTotal = totalCount;
-                            continue;  //要全部输出完才返回
+            int batchOffset = writeOffset;
+            int batchLength = writeLength;
+            while (hasRemain) { //必须要将buffer写完为止
+                if (writeByteTuple1Array != null) {
+                    final ByteBuffer buffer = pollWriteBuffer();
+                    if (buffer.remaining() >= writeByteTuple1Length + writeByteTuple2Length) {
+                        buffer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
+                        if (writeByteTuple2Length > 0) {
+                            buffer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
                         }
-                        break;
-                    } else if (writeCount < 0) {
-                        if (totalCount == 0) {
-                            totalCount = writeCount;
-                        }
-                        break;
+                        buffer.flip();
+                        writeByteBuffer = buffer;
+                        writeByteTuple1Array = null;
+                        writeByteTuple1Offset = 0;
+                        writeByteTuple1Length = 0;
+                        writeByteTuple2Array = null;
+                        writeByteTuple2Offset = 0;
+                        writeByteTuple2Length = 0;
                     } else {
-                        totalCount += writeCount;
+                        ByteBufferWriter writer = ByteBufferWriter.create(getWriteBufferSupplier(), buffer);
+                        writer.put(writeByteTuple1Array, writeByteTuple1Offset, writeByteTuple1Length);
+                        if (writeByteTuple2Length > 0) {
+                            writer.put(writeByteTuple2Array, writeByteTuple2Offset, writeByteTuple2Length);
+                        }
+                        final ByteBuffer[] buffers = writer.toBuffers();
+                        writeByteBuffers = buffers;
+                        writeOffset = 0;
+                        writeLength = buffers.length;
+                        batchOffset = writeOffset;
+                        batchLength = writeLength;
+                        writeByteTuple1Array = null;
+                        writeByteTuple1Offset = 0;
+                        writeByteTuple1Length = 0;
+                        writeByteTuple2Array = null;
+                        writeByteTuple2Offset = 0;
+                        writeByteTuple2Length = 0;
                     }
-                    if (!hasRemain) {
-                        break;
+                    if (this.writeCompletionHandler == this.writeTimeoutCompletionHandler) {
+                        if (writeByteBuffer == null) {
+                            this.writeTimeoutCompletionHandler.buffers(writeByteBuffers);
+                        } else {
+                            this.writeTimeoutCompletionHandler.buffer(writeByteBuffer);
+                        }
                     }
+                }
+                int writeCount;
+                if (writeByteBuffer != null) {
+                    writeCount = implWrite(writeByteBuffer);
+                    hasRemain = writeByteBuffer.hasRemaining();
+                } else {
+                    writeCount = implWrite(writeByteBuffers, batchOffset, batchLength);
+                    boolean remain = false;
+                    for (int i = 0; i < batchLength; i++) {
+                        if (writeByteBuffers[batchOffset + i].hasRemaining()) {
+                            remain = true;
+                            batchOffset += i;
+                            batchLength -= i;
+                            break;
+                        }
+                    }
+                    hasRemain = remain;
+                }
+
+                if (writeCount == 0) {
+                    if (hasRemain) {
+                        //writeCompleted = false;
+                        //writeTotal = totalCount;
+                        continue;  //要全部输出完才返回
+                    }
+                    break;
+                } else if (writeCount < 0) {
+                    if (totalCount == 0) {
+                        totalCount = writeCount;
+                    }
+                    break;
+                } else {
+                    totalCount += writeCount;
+                }
+                if (!hasRemain) {
+                    break;
                 }
             }
 
