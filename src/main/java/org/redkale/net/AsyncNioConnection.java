@@ -127,28 +127,34 @@ abstract class AsyncNioConnection extends AsyncConnection {
             handler.failed(new NotYetConnectedException(), null);
             return;
         }
-        if (this.readPending) {
-            handler.failed(new ReadPendingException(), null);
-            return;
-        }
-        this.readPending = true;
-        if (this.readTimeoutSeconds > 0) {
-            AsyncNioCompletionHandler newHandler = this.readTimeoutCompletionHandler;
-            newHandler.handler(handler, this.readByteBuffer);   // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
-            this.readCompletionHandler = newHandler;
-            newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.readTimeoutSeconds, TimeUnit.SECONDS);
+        if (handler != protocolCodec) {
+            if (this.readPending) {
+                handler.failed(new ReadPendingException(), null);
+                return;
+            }
+            this.readPending = true;
+            if (this.readTimeoutSeconds > 0) {
+                AsyncNioCompletionHandler newHandler = this.readTimeoutCompletionHandler;
+                newHandler.handler(handler, this.readByteBuffer);   // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
+                this.readCompletionHandler = newHandler;
+                newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.readTimeoutSeconds, TimeUnit.SECONDS);
+            } else {
+                this.readCompletionHandler = handler;
+            }
         } else {
             this.readCompletionHandler = handler;
+            this.readPending = true;
         }
-
         try {
             if (readKey == null) {
                 ioReadThread.register(selector -> {
-                    try {
-                        readKey = implRegister(selector, SelectionKey.OP_READ);
-                        readKey.attach(this);
-                    } catch (ClosedChannelException e) {
-                        handleRead(0, e);
+                    if (readKey == null) {
+                        try {
+                            readKey = implRegister(selector, SelectionKey.OP_READ);
+                            readKey.attach(this);
+                        } catch (ClosedChannelException e) {
+                            handleRead(0, e);
+                        }
                     }
                 });
             } else {
