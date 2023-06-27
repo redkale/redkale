@@ -44,6 +44,8 @@ import java.lang.annotation.*;
  *
  * <p>
  * 详情见: https://redkale.org
+ * 
+ * @see org.redkale.annotation.ResourceListener
  *
  * @author zhangjx
  * @deprecated replaced by org.redkale.annotation.ResourceListener

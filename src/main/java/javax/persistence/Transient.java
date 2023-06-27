@@ -38,6 +38,8 @@ import static java.lang.annotation.ElementType.*;
  * @since Java Persistence 1.0
  * 
  * @deprecated replace by org.redkale.persistence.Transient
+ * 
+ * @see org.redkale.persistence.Transient
  */
 @Deprecated(since = "2.8.0")
 @Target({METHOD, FIELD})

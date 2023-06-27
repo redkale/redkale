@@ -39,6 +39,8 @@ import java.lang.annotation.*;
  * @since Java Persistence 2.1
  * 
  * @deprecated replace by org.redkale.persistence.Index
+ * 
+ * @see org.redkale.persistence.Index
  *
  */
 @Deprecated(since = "2.8.0")

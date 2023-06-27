@@ -9,6 +9,8 @@ import java.lang.annotation.*;
 
 /**
  * @since Common Annotations 1.0
+ * 
+ * @see org.redkale.annotation.Resource
  *
  * @deprecated replace by org.redkale.annotation.Resource
  */

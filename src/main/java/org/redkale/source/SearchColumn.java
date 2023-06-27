@@ -20,6 +20,7 @@ import java.lang.annotation.*;
  * @since 2.4.0
  * 
  * @deprecated  replaced by org.redkale.persistence.SearchColumn
+ * @see  org.redkale.persistence.SearchColumn
  */
 @Deprecated(since = "2.8.0")
 @Target({FIELD})

@@ -15,6 +15,8 @@ import static java.lang.annotation.ElementType.*;
  * <p>
  * 详情见: https://redkale.org
  *
+ * @see org.redkale.annotation.Command
+ * 
  * @author zhangjx
  *
  * @since 2.1.0

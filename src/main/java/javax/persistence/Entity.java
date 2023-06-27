@@ -26,6 +26,8 @@ import java.lang.annotation.*;
  * @since Java Persistence 1.0
  * 
  * @deprecated replace by org.redkale.persistence.Entity
+ * 
+ * @see org.redkale.persistence.Entity
  */
 @Deprecated(since = "2.8.0")
 @Inherited

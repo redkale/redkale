@@ -38,6 +38,8 @@ import java.lang.annotation.*;
  * @since Java Persistence 1.0
  * 
  * @deprecated replace by org.redkale.persistence.Table
+ * 
+ * @see org.redkale.persistence.Table
  */
 @Deprecated(since = "2.8.0")
 @Target(TYPE)

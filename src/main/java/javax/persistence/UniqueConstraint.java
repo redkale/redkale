@@ -36,6 +36,9 @@ import java.lang.annotation.*;
  * @since Java Persistence 1.0
  * 
  * @deprecated replace by org.redkale.persistence.UniqueConstraint
+ * 
+ * @see org.redkale.persistence.UniqueConstraint
+ * 
  */
 @Deprecated(since = "2.8.0")
 @Target({})

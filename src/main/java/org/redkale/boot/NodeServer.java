@@ -311,7 +311,8 @@ public abstract class NodeServer {
                 //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
                 Service service = Modifier.isFinal(resServiceType.getModifiers()) || Sncp.isComponent(resServiceType)
                     ? (Service) resServiceType.getConstructor().newInstance()
-                    : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType, appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
+                    : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType,
+                        appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
                 appResFactory.register(resourceName, resServiceType, service);
 
                 field.set(srcObj, service);
@@ -397,7 +398,8 @@ public abstract class NodeServer {
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) {
                             groups.add(NodeServer.this.sncpGroup);
                         }
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, null, (String) null, (AnyValue) null);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class,
+                            application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, null, (String) null, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
                         ((org.redkale.net.http.WebSocketNodeService) nodeService).setName(resourceName);
                     }

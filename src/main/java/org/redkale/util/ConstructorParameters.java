@@ -14,6 +14,8 @@ import static java.lang.annotation.ElementType.*;
  *
  * <p>
  * 详情见: https://redkale.org
+ * 
+ * @see org.redkale.annotation.ConstructorParameters
  *
  * @author zhangjx
  * @deprecated replaced by org.redkale.annotation.ConstructorParameters

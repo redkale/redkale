@@ -15,6 +15,7 @@ import java.lang.annotation.*;
  * 2、被标记为&#64;AutoLoad(false)的Servlet类不会被自动加载
  *
  * <p> 详情见: https://redkale.org
+ * @see org.redkale.annotation.AutoLoad
  * @author zhangjx
  * @deprecated replaced by org.redkale.annotation.AutoLoad
  */

@@ -34,6 +34,7 @@ import java.lang.annotation.*;
  * @since Java Persistence 2.0
  * 
  * @deprecated replace by org.redkale.persistence.Cacheable
+ * @see org.redkale.persistence.Cacheable
  */
 @Deprecated(since = "2.8.0")
 @Target({TYPE})

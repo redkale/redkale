@@ -20,6 +20,7 @@ import java.util.function.BiFunction;
  *
  * @author zhangjx
  * @deprecated  replaced by org.redkale.persistence.VirtualEntity
+ * @see  org.redkale.persistence.VirtualEntity
  */
 @Deprecated(since = "2.8.0")
 @Documented
