@@ -16,7 +16,7 @@ import org.redkale.util.Resourcable;
 
 /**
  * Redkale中缓存数据源的核心类。 主要供业务开发者使用， 技术开发者提供CacheSource的实现。<br>
- * CacheSource提供三种数据类型操作: String、Long、byte[]和泛型指定的数据类型。<br>
+ * CacheSource提供三种数据类型操作: String、Long和泛型指定的数据类型。<br>
  * String统一用setString、getString等系列方法。<br>
  * Long统一用setLong、getLong、incr等系列方法。<br>
  * 其他则供自定义数据类型使用。

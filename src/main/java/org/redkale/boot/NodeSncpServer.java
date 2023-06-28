@@ -112,15 +112,18 @@ public class NodeSncpServer extends NodeServer {
     protected void loadSncpFilter(final AnyValue servletsConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
-        for (FilterEntry<? extends Filter> en : list) {
-            Class<SncpFilter> clazz = (Class<SncpFilter>) en.getType();
+        for (FilterEntry<? extends Filter> entry : list) {
+            Class<SncpFilter> clazz = (Class<SncpFilter>) entry.getType();
             if (Utility.isAbstractOrInterface(clazz)) {
+                continue;
+            }
+            if (entry.isExpect()) { //跳过不自动加载的Filter
                 continue;
             }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
             final SncpFilter filter = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(filter, this);
-            DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
+            DefaultAnyValue filterConf = (DefaultAnyValue) entry.getProperty();
             this.sncpServer.addSncpFilter(filter, filterConf);
             if (sb != null) {
                 sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);

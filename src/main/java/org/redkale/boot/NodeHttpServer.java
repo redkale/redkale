@@ -190,15 +190,18 @@ public class NodeHttpServer extends NodeServer {
     protected void loadHttpFilter(final ClassFilter<? extends Filter> classFilter) throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
-        for (FilterEntry<? extends Filter> en : list) {
-            Class<HttpFilter> clazz = (Class<HttpFilter>) en.getType();
+        for (FilterEntry<? extends Filter> entry : list) {
+            Class<HttpFilter> clazz = (Class<HttpFilter>) entry.getType();
             if (Modifier.isAbstract(clazz.getModifiers())) {
+                continue;
+            }
+            if (entry.isExpect()) { //跳过不自动加载的Filter
                 continue;
             }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
             final HttpFilter filter = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(filter, this);
-            DefaultAnyValue filterConf = (DefaultAnyValue) en.getProperty();
+            DefaultAnyValue filterConf = (DefaultAnyValue) entry.getProperty();
             this.httpServer.addHttpFilter(filter, filterConf);
             if (sb != null) {
                 sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);
@@ -238,13 +241,16 @@ public class NodeHttpServer extends NodeServer {
         });
         final long starts = System.currentTimeMillis();
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
-        for (FilterEntry<? extends Servlet> en : list) {
-            Class<HttpServlet> clazz = (Class<HttpServlet>) en.getType();
+        for (FilterEntry<? extends Servlet> entry : list) {
+            Class<HttpServlet> clazz = (Class<HttpServlet>) entry.getType();
             if (Modifier.isAbstract(clazz.getModifiers())) {
                 continue;
             }
             if (clazz.getAnnotation(Rest.RestDyn.class) != null) {
                 continue; //动态生成的跳过
+            }
+            if (entry.isExpect()) { //跳过不自动加载的Servlet
+                continue;
             }
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
             if (ws == null) {
@@ -259,7 +265,7 @@ public class NodeHttpServer extends NodeServer {
             resourceFactory.inject(servlet, this);
             final String[] mappings = ws.value();
             String pref = ws.repair() ? prefix : "";
-            DefaultAnyValue servletConf = (DefaultAnyValue) en.getProperty();
+            DefaultAnyValue servletConf = (DefaultAnyValue) entry.getProperty();
             this.httpServer.addHttpServlet(servlet, pref, servletConf, mappings);
             if (ss != null) {
                 for (int i = 0; i < mappings.length; i++) {
