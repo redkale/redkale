@@ -9,7 +9,6 @@ import java.util.concurrent.*;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.WorkThread;
-import org.redkale.util.ResourceFactory;
 
 /**
  *
@@ -21,10 +20,10 @@ public abstract class AbstractService implements Service {
     @Resource(name = Application.RESNAME_APP_EXECUTOR, required = false)
     private ExecutorService workExecutor;
 
-    @Resource(name = ResourceFactory.RESOURCE_SELF_NAME, required = false)
+    @Resource(name = Resource.SELF_NAME, required = false)
     private String serviceName;
 
-    @Resource(name = ResourceFactory.RESOURCE_SELF_TYPE, required = false)
+    @Resource(name = Resource.SELF_TYPE, required = false)
     private Class serviceType;
 
     protected String serviceName() {

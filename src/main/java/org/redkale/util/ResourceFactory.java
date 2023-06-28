@@ -40,12 +40,6 @@ import org.redkale.convert.*;
 @SuppressWarnings("unchecked")
 public final class ResourceFactory {
 
-    public static final String RESOURCE_PARENT_NAME = "$";
-
-    public static final String RESOURCE_SELF_NAME = "@name";
-
-    public static final String RESOURCE_SELF_TYPE = "@type";
-
     private static final Logger logger = Logger.getLogger(ResourceFactory.class.getSimpleName());
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -575,19 +569,19 @@ public final class ResourceFactory {
                     if (rc == null) {
                         continue;
                     }
-                    if (!rc.name().equals(RESOURCE_SELF_NAME) && !rc.name().equals(RESOURCE_SELF_TYPE)) {
+                    if (!rc.name().equals(Resource.SELF_NAME) && !rc.name().equals(Resource.SELF_TYPE)) {
                         continue;
                     }
                     final Class classType = field.getType();
                     RedkaleClassLoader.putReflectionField(cname, field);
                     try {
-                        if (rc.name().equals(RESOURCE_SELF_NAME)) {
+                        if (rc.name().equals(Resource.SELF_NAME)) {
                             if (classType != String.class) {
                                 throw new ResourceInjectException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be String ");
                             }
                             field.setAccessible(true);
                             field.set(val, name);
-                        } else if (rc.name().equals(RESOURCE_SELF_TYPE)) {
+                        } else if (rc.name().equals(Resource.SELF_TYPE)) {
                             if (classType != Type.class && classType != Class.class) {
                                 throw new ResourceInjectException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be Type or Class ");
                             }
@@ -792,13 +786,13 @@ public final class ResourceFactory {
         }
         int pos = name.indexOf("{system.property.");
         if (pos < 0) {
-            return (name.contains(RESOURCE_PARENT_NAME) && parent != null) ? name.replace(RESOURCE_PARENT_NAME, parent) : name;
+            return (name.contains(Resource.PARENT_NAME) && parent != null) ? name.replace(Resource.PARENT_NAME, parent) : name;
         }
         String prefix = name.substring(0, pos);
         String subName = name.substring(pos + "{system.property.".length());
         pos = subName.lastIndexOf('}');
         if (pos < 0) {
-            return (name.contains(RESOURCE_PARENT_NAME) && parent != null) ? name.replace(RESOURCE_PARENT_NAME, parent) : name;
+            return (name.contains(Resource.PARENT_NAME) && parent != null) ? name.replace(Resource.PARENT_NAME, parent) : name;
         }
         String postfix = subName.substring(pos + 1);
         String property = subName.substring(0, pos);
@@ -883,10 +877,10 @@ public final class ResourceFactory {
                         consumer.accept(srcObj, field);
                     }
                     String tname = rc1 == null ? rc2.name() : rc1.name();
-                    if (tname.equals(RESOURCE_SELF_NAME) || tname.equals(RESOURCE_SELF_TYPE)) {
+                    if (tname.equals(Resource.SELF_NAME) || tname.equals(Resource.SELF_TYPE)) {
                         continue;
                     }
-                    if (tname.contains(RESOURCE_PARENT_NAME)) {
+                    if (tname.contains(Resource.PARENT_NAME)) {
                         Resource res1 = srcObj.getClass().getAnnotation(Resource.class);
                         javax.annotation.Resource res2 = srcObj.getClass().getAnnotation(javax.annotation.Resource.class);
                         String presname = res1 == null ? (res2 == null ? srcResourceName : res2.name()) : res1.name();
@@ -894,13 +888,13 @@ public final class ResourceFactory {
                             if (srcObj instanceof Resourcable) {
                                 String oname = ((Resourcable) srcObj).resourceName();
                                 if (oname != null) {
-                                    tname = tname.replace(RESOURCE_PARENT_NAME, oname);
+                                    tname = tname.replace(Resource.PARENT_NAME, oname);
                                 }
                             } else {
                                 logger.log(Level.SEVERE, srcObj.getClass().getName() + " not found @Resource on Class or not implements Resourcable");
                             }
                         } else {
-                            tname = tname.replace(RESOURCE_PARENT_NAME, presname);
+                            tname = tname.replace(Resource.PARENT_NAME, presname);
                         }
 
                     }

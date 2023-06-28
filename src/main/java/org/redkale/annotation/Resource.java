@@ -20,6 +20,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
 
+    public static final String PARENT_NAME = "$";
+
+    public static final String SELF_NAME = "@name";
+
+    public static final String SELF_TYPE = "@type";
+
     /**
      * 是否必须存在
      *
