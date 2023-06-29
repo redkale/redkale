@@ -306,8 +306,11 @@ public final class Utility {
             ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(out.toByteArray())) {
                 @Override
                 protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-                    Class<?> clazz = super.resolveClass(desc);
-                    return clazz == java.lang.invoke.SerializedLambda.class ? org.redkale.util.SerializedLambda.class : clazz;
+                    if (desc.getName().contains("SerializedLambda") || desc.getName().contains("$Lambda$")) {
+                        return org.redkale.util.SerializedLambda.class;
+                    } else {
+                        return super.resolveClass(desc);
+                    }
                 }
             };
             return Utility.readFieldName(((org.redkale.util.SerializedLambda) in.readObject()).getImplMethodName());
