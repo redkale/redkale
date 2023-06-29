@@ -302,10 +302,12 @@ public final class Utility {
     private static String readLambdaFieldNameFromBytes(Serializable func) {
         try {
             Logger logger = Logger.getLogger(Utility.class.getSimpleName());
-            ObjectWriteStream out = new ObjectWriteStream();
-           logger.info("设置enableReplaceObject结果: + " + out.enableReplaceObject(true));
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            ObjectWriteStream out = new ObjectWriteStream(bytes);
+           logger.info("enableReplaceObject-setting: " + out.enableReplaceObject(true));
             out.writeObject(func);
             out.close();
+           logger.info("out-content: " + binToHexString(bytes.toByteArray()));
             return readFieldName(out.methodNameReference.get());
         } catch (IOException e) {
             throw new RedkaleException(e);
@@ -334,14 +336,14 @@ public final class Utility {
 
         public final ObjectReference<String> methodNameReference = new ObjectReference<>();
 
-        public ObjectWriteStream() throws IOException {
-            super(new ByteArrayOutputStream());
+        public ObjectWriteStream(OutputStream out) throws IOException {
+            super(out);
         }
 
         @Override
         protected Object replaceObject​(Object obj) throws IOException {
             Logger logger = Logger.getLogger(Utility.class.getSimpleName());
-            logger.info("obj类: " + obj.getClass() + ", 内容: " + obj); 
+            logger.info("obj-class: " + obj.getClass() + ", content: " + obj); 
             if (obj instanceof java.lang.invoke.SerializedLambda) {
                 methodNameReference.set(((java.lang.invoke.SerializedLambda) obj).getImplMethodName());
             }
