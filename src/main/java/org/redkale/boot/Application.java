@@ -502,14 +502,9 @@ public final class Application {
             Set<String> mqnames = new HashSet<>();
             for (int i = 0; i < mqConfs.length; i++) {
                 AnyValue mqConf = mqConfs[i];
-                String mqname = mqConf.getValue("name", "");
-                if (mqnames.contains(mqname)) {
-                    throw new RedkaleException("mq.name(" + mqname + ") is repeat");
-                }
-                mqnames.add(mqname);
-                String namex = mqConf.getValue("names");
-                if (namex != null && !namex.isEmpty()) {
-                    for (String n : namex.split(";")) {
+                String names = mqConf.getValue("name"); //含,或者;表示多个别名使用同一mq对象
+                if (names != null && !names.isEmpty()) {
+                    for (String n : names.replace(',', ';').split(";")) {
                         if (n.trim().isEmpty()) {
                             continue;
                         }
@@ -658,7 +653,7 @@ public final class Application {
         if (propertiesConf != null) {
             final Properties agentEnvs = new Properties();
             if (propertiesConf.getValue("load") != null) { //本地配置项文件加载
-                for (String dfload : propertiesConf.getValue("load").split(";")) {
+                for (String dfload : propertiesConf.getValue("load").replace(',', ';').split(";")) {
                     if (dfload.trim().isEmpty()) {
                         continue;
                     }
@@ -1262,6 +1257,9 @@ public final class Application {
                         resourceFactory.register(sourceName, SearchSource.class, source);
                     } else {
                         resourceFactory.register(sourceName, DataSource.class, source);
+                        if (source instanceof DataSqlSource) {
+                            resourceFactory.register(sourceName, DataSqlSource.class, source);
+                        }
                     }
                 }
                 return source;
@@ -1273,6 +1271,9 @@ public final class Application {
                     resourceFactory.register(sourceName, SearchSource.class, source);
                 } else {
                     resourceFactory.register(sourceName, DataSource.class, source);
+                    if (source instanceof DataSqlSource) {
+                        resourceFactory.register(sourceName, DataSqlSource.class, source);
+                    }
                 }
                 logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source);
                 return source;
@@ -1656,7 +1657,7 @@ public final class Application {
                                 try {
                                     if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
                                         ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
-                                        ClassFilter.Loader.load(home, classLoader, ((excludelibs != null ? (excludelibs + ";") : "") + serconf.getValue("excludelibs", "")).split(";"), profilter);
+                                        ClassFilter.Loader.load(home, classLoader, ((excludelibs != null ? (excludelibs + ";") : "") + serconf.getValue("excludelibs", "")).replace(',', ';').split(";"), profilter);
                                         final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
                                         for (FilterEntry<NodeServer> entry : entrys) {
                                             final Class<? extends NodeServer> type = entry.getType();

@@ -339,9 +339,6 @@ public abstract class NodeServer {
                 }
                 DataSource source = application.loadDataSource(resourceName, false);
                 field.set(srcObj, source);
-                if (source instanceof DataSqlSource) {
-                    rf.register(resourceName, DataSqlSource.class, source);
-                }
                 return source;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
