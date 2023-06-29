@@ -18,9 +18,9 @@ import java.util.function.Supplier;
  * @param <T> 泛型
  */
 @FunctionalInterface
-public interface LambdaSupplier<T extends Serializable> extends Supplier<T>, Serializable {
+public interface LambdaSupplier<T> extends Supplier<T>, Serializable {
 
-    public static <T extends Serializable> String readColumn(LambdaSupplier<T> func) {
+    public static <V> String readColumn(LambdaSupplier<V> func) {
         return Utility.readFieldName(func);
     }
 }

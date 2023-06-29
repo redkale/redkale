@@ -390,7 +390,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                         //writeTotal = totalCount;
                         continue;  //要全部输出完才返回
                     }
-                    break;
+                    break; 
                 } else if (writeCount < 0) {
                     if (totalCount == 0) {
                         totalCount = writeCount;
