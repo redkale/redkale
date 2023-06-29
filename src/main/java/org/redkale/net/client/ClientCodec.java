@@ -128,14 +128,16 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                             Traces.currentTraceid(request.traceid);
                             respFuture.completeExceptionally(exc);
                         });
-                    } else if (workThread.inIO()) {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.completeExceptionally(exc);
                     } else if (workThread.getState() == Thread.State.RUNNABLE) {
-                        workThread.execute(() -> {
+                        if (workThread.inIO()) {
                             Traces.currentTraceid(request.traceid);
                             respFuture.completeExceptionally(exc);
-                        });
+                        } else {
+                            workThread.execute(() -> {
+                                Traces.currentTraceid(request.traceid);
+                                respFuture.completeExceptionally(exc);
+                            });
+                        }
                     } else {
                         workThread.runWork(() -> {
                             Traces.currentTraceid(request.traceid);
@@ -149,14 +151,16 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                             Traces.currentTraceid(request.traceid);
                             respFuture.complete(rs);
                         });
-                    } else if (workThread.inIO()) {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.complete(rs);
                     } else if (workThread.getState() == Thread.State.RUNNABLE) {
-                        workThread.execute(() -> {
+                        if (workThread.inIO()) {
                             Traces.currentTraceid(request.traceid);
                             respFuture.complete(rs);
-                        });
+                        } else {
+                            workThread.execute(() -> {
+                                Traces.currentTraceid(request.traceid);
+                                respFuture.complete(rs);
+                            });
+                        }
                     } else {
                         workThread.runWork(() -> {
                             Traces.currentTraceid(request.traceid);

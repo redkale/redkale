@@ -19,7 +19,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
@@ -282,33 +281,27 @@ public final class Utility {
         }
         return lambdaFieldNameCache.computeIfAbsent(func.getClass(), clazz -> {
             try {
-                if (nativeImageEnv) {
-                    return readLambdaFieldNameFromBytes(func);
-                } else {
-                    MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(func.getClass(), MethodHandles.lookup());
-                    MethodHandle mh = lookup.findVirtual(func.getClass(), "writeReplace", MethodType.methodType(Object.class));
-                    String methodName = ((java.lang.invoke.SerializedLambda) mh.invoke(func)).getImplMethodName();
-                    return readFieldName(methodName);
-                }
+                MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(func.getClass(), MethodHandles.lookup());
+                MethodHandle mh = lookup.findVirtual(func.getClass(), "writeReplace", MethodType.methodType(Object.class));
+                String methodName = ((java.lang.invoke.SerializedLambda) mh.invoke(func)).getImplMethodName();
+                return readFieldName(methodName);
             } catch (Throwable e) {
-                if (!nativeImageEnv) {
-                    return readLambdaFieldNameFromBytes(func);
-                }
-                throw e instanceof RedkaleException ? (RedkaleException) e : new RedkaleException(e);
+                return readLambdaFieldNameFromBytes(func);
             }
         });
     }
 
     private static String readLambdaFieldNameFromBytes(Serializable func) {
         try {
-            Logger logger = Logger.getLogger(Utility.class.getSimpleName());
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            ObjectWriteStream out = new ObjectWriteStream(bytes);
-           logger.info("enableReplaceObject-setting: " + out.enableReplaceObject(true));
+            ObjectWriteStream out = new ObjectWriteStream(new ByteArrayOutputStream());
             out.writeObject(func);
             out.close();
-           logger.info("out-content: " + binToHexString(bytes.toByteArray()));
-            return readFieldName(out.methodNameReference.get());
+            String methodName = out.methodNameReference.get();
+            if (methodName != null) {
+                return readFieldName(methodName);
+            } else {
+                throw new RedkaleException("cannot found method-name from lambda " + func);
+            }
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
@@ -342,8 +335,6 @@ public final class Utility {
 
         @Override
         protected Object replaceObject​(Object obj) throws IOException {
-            Logger logger = Logger.getLogger(Utility.class.getSimpleName());
-            logger.info("obj-class: " + obj.getClass() + ", content: " + obj); 
             if (obj instanceof java.lang.invoke.SerializedLambda) {
                 methodNameReference.set(((java.lang.invoke.SerializedLambda) obj).getImplMethodName());
             }

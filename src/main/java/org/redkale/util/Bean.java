@@ -11,6 +11,7 @@ import java.lang.annotation.*;
 
 /**
  * 标记参数bean
+ * @see org.redkale.annotation.Bean
  *
  * @since 2.5.0
  */
