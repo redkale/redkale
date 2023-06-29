@@ -30,7 +30,7 @@ public interface LambdaFunction<T, R> extends Function<T, R>, Serializable {
     }
 
     public static <T> String readColumn(LambdaFunction<T, ?> func) {
-        return SerializedLambda.readColumn(func);
+        return Utility.readFieldName(func);
     }
 
 }

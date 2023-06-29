@@ -21,6 +21,6 @@ import java.util.function.Supplier;
 public interface LambdaSupplier<T extends Serializable> extends Supplier<T>, Serializable {
 
     public static <T extends Serializable> String readColumn(LambdaSupplier<T> func) {
-        return SerializedLambda.readColumn(func);
+        return Utility.readFieldName(func);
     }
 }

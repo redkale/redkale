@@ -5,6 +5,7 @@
 package org.redkale.util;
 
 import java.io.*;
+import java.lang.invoke.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -45,6 +46,8 @@ public final class Utility {
     private static final int cpus = Integer.getInteger("redkale.cpus", Runtime.getRuntime().availableProcessors());
 
     private static final int MAX_POW2 = 1 << 30;
+
+    private static final ConcurrentHashMap<Class, String> lambdaFieldNameCache = new ConcurrentHashMap();
 
     private static final Class JAVA_RECORD_CLASS;
 
@@ -259,6 +262,44 @@ public final class Utility {
 
     public static boolean isAbstractOrInterface(Class clazz) {
         return clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers());
+    }
+
+    public static String readFieldName(LambdaFunction func) {
+        return readLambdaFieldName(func);
+    }
+
+    public static String readFieldName(LambdaSupplier func) {
+        return readLambdaFieldName(func);
+    }
+
+    private static String readLambdaFieldName(Serializable func) {
+        if (!func.getClass().isSynthetic()) { //必须是Lambda表达式的合成类
+            throw new RedkaleException("Not a synthetic lambda class");
+        }
+        return lambdaFieldNameCache.computeIfAbsent(func.getClass(), clazz -> {
+            try {
+                MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(func.getClass(), MethodHandles.lookup());
+                MethodHandle mh = lookup.findVirtual(func.getClass(), "writeReplace", MethodType.methodType(Object.class));
+                String methodName = ((SerializedLambda) mh.invoke(func)).getImplMethodName();
+                String name;
+                if (methodName.startsWith("is")) {
+                    name = methodName.substring(2);
+                } else if (methodName.startsWith("get") || methodName.startsWith("set")) {
+                    name = methodName.substring(3);
+                } else {
+                    name = methodName;
+                }
+                if (name.length() < 2) {
+                    return name.toLowerCase(Locale.ENGLISH);
+                } else if (Character.isUpperCase(name.charAt(1))) {
+                    return name;
+                } else {
+                    return name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
+                }
+            } catch (Throwable e) {
+                throw new RedkaleException(e);
+            }
+        });
     }
 
     /**
