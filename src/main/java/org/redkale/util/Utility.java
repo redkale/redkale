@@ -96,6 +96,9 @@ public final class Utility {
 
     private static final ReentrantLock clientLock = new ReentrantLock();
 
+    //是否native-image运行环境
+    private static final boolean nativeImageEnv = "executable".equals(System.getProperty("org.graalvm.nativeimage.kind"));
+
     private static HttpClient httpClient;
 
     //private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
@@ -112,7 +115,7 @@ public final class Utility {
         Consumer<Consumer<String>> signalShutdownConsumer0 = null;
         Function<String, ExecutorService> virtualExecutorFunction0 = null;
 
-        if (!"executable".equals(System.getProperty("org.graalvm.nativeimage.kind"))) { //not native-image
+        if (!nativeImageEnv) { //not native-image
             try {
                 final ClassLoader loader = Thread.currentThread().getContextClassLoader();
                 { //virtualExecutorFunction
@@ -278,28 +281,36 @@ public final class Utility {
         }
         return lambdaFieldNameCache.computeIfAbsent(func.getClass(), clazz -> {
             try {
-                MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(func.getClass(), MethodHandles.lookup());
-                MethodHandle mh = lookup.findVirtual(func.getClass(), "writeReplace", MethodType.methodType(Object.class));
-                String methodName = ((SerializedLambda) mh.invoke(func)).getImplMethodName();
-                String name;
-                if (methodName.startsWith("is")) {
-                    name = methodName.substring(2);
-                } else if (methodName.startsWith("get") || methodName.startsWith("set")) {
-                    name = methodName.substring(3);
+                if (nativeImageEnv) {
+                    return org.redkale.util.SerializedLambda.readLambdaFieldName(func);
                 } else {
-                    name = methodName;
-                }
-                if (name.length() < 2) {
-                    return name.toLowerCase(Locale.ENGLISH);
-                } else if (Character.isUpperCase(name.charAt(1))) {
-                    return name;
-                } else {
-                    return name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
+                    MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(func.getClass(), MethodHandles.lookup());
+                    MethodHandle mh = lookup.findVirtual(func.getClass(), "writeReplace", MethodType.methodType(Object.class));
+                    String methodName = ((java.lang.invoke.SerializedLambda) mh.invoke(func)).getImplMethodName();
+                    return readFieldName(methodName);
                 }
             } catch (Throwable e) {
                 throw new RedkaleException(e);
             }
         });
+    }
+
+    static String readFieldName(String methodName) {
+        String name;
+        if (methodName.startsWith("is")) {
+            name = methodName.substring(2);
+        } else if (methodName.startsWith("get") || methodName.startsWith("set")) {
+            name = methodName.substring(3);
+        } else {
+            name = methodName;
+        }
+        if (name.length() < 2) {
+            return name.toLowerCase(Locale.ENGLISH);
+        } else if (Character.isUpperCase(name.charAt(1))) {
+            return name;
+        } else {
+            return name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
+        }
     }
 
     /**
