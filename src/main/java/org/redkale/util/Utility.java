@@ -300,21 +300,12 @@ public final class Utility {
 
     private static String readLambdaFieldNameFromBytes(Serializable func) {
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(out);
-            oos.writeObject(func);
-            ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(out.toByteArray())) {
-                @Override
-                protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-                    if (desc.getName().contains("SerializedLambda") || desc.getName().contains("$Lambda$")) {
-                        return org.redkale.util.SerializedLambda.class;
-                    } else {
-                        return super.resolveClass(desc);
-                    }
-                }
-            };
-            return Utility.readFieldName(((org.redkale.util.SerializedLambda) in.readObject()).getImplMethodName());
-        } catch (Throwable e) {
+            ObjectWriteStream out = new ObjectWriteStream();
+            out.enableReplaceObject(true);
+            out.writeObject(func);
+            out.close();
+            return readFieldName(out.methodNameReference.get());
+        } catch (IOException e) {
             throw new RedkaleException(e);
         }
     }
@@ -334,6 +325,28 @@ public final class Utility {
             return name;
         } else {
             return name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
+        }
+    }
+
+    static class ObjectWriteStream extends ObjectOutputStream {
+
+        public final ObjectReference<String> methodNameReference = new ObjectReference<>();
+
+        public ObjectWriteStream() throws IOException {
+            super(new ByteArrayOutputStream());
+        }
+
+        @Override
+        protected Object replaceObject​(Object obj) throws IOException {
+            if (obj instanceof java.lang.invoke.SerializedLambda) {
+                methodNameReference.set(((java.lang.invoke.SerializedLambda) obj).getImplMethodName());
+            }
+            return super.replaceObject(obj);
+        }
+
+        @Override
+        public boolean enableReplaceObject(boolean enable) throws SecurityException {
+            return super.enableReplaceObject(enable);
         }
     }
 
