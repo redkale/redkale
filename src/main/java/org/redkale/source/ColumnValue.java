@@ -8,6 +8,7 @@ package org.redkale.source;
 import java.io.Serializable;
 import java.util.Objects;
 import static org.redkale.source.ColumnExpress.*;
+import org.redkale.util.*;
 
 /**
  * ColumnValue主要用于多个字段更新的表达式。
@@ -28,6 +29,22 @@ public class ColumnValue {
     private Serializable value;
 
     public ColumnValue() {
+    }
+
+    public <T extends Serializable> ColumnValue(LambdaSupplier<T> func) {
+        this(LambdaSupplier.readColumn(func), ColumnExpress.MOV, func.get());
+    }
+
+    public <T extends Serializable> ColumnValue(LambdaSupplier<T> func, ColumnExpress express) {
+        this(LambdaSupplier.readColumn(func), express, func.get());
+    }
+
+    public <T> ColumnValue(LambdaFunction<T, ?> func, Serializable value) {
+        this(LambdaFunction.readColumn(func), ColumnExpress.MOV, value);
+    }
+
+    public <T> ColumnValue(LambdaFunction<T, ?> func, ColumnExpress express, Serializable value) {
+        this(LambdaFunction.readColumn(func), express, value);
     }
 
     public ColumnValue(String column, Serializable value) {
@@ -173,6 +190,256 @@ public class ColumnValue {
      */
     public static ColumnValue orr(String column, Serializable value) {
         return new ColumnValue(column, ORR, value);
+    }
+
+    /**
+     * 同 mov 操作
+     *
+     * @param func 字段名Lambda
+     *
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue create(LambdaSupplier<T> func) {
+        return new ColumnValue(func);
+    }
+
+    /**
+     * 返回 {column} = {value} 操作
+     *
+     * @param func 字段名Lambda
+     * @param <T>  值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue mov(LambdaSupplier<T> func) {
+        return new ColumnValue(func, MOV);
+    }
+
+    /**
+     * 返回 {column} = {column} + {value} 操作
+     *
+     * @param func 字段名Lambda
+     * @param <T>  值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue inc(LambdaSupplier<T> func) {
+        return new ColumnValue(func, INC);
+    }
+
+    /**
+     * 返回 {column} = {column} - {value} 操作
+     *
+     * @param func 字段名Lambda
+     * @param <T>  值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue dec(LambdaSupplier<T> func) {
+        return new ColumnValue(func, DEC);
+    }
+
+    /**
+     * 返回 {column} = {column} * {value} 操作
+     *
+     * @param func 字段名Lambda
+     * @param <T>  值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue mul(LambdaSupplier<T> func) {
+        return new ColumnValue(func, MUL);
+    }
+
+    /**
+     * 返回 {column} = {column} / {value} 操作
+     *
+     * @param func 字段名Lambda
+     * @param <T>  值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue div(LambdaSupplier<T> func) {
+        return new ColumnValue(func, DIV);
+    }
+
+    /**
+     * 返回 {column} = {column} &#38; {value} 操作
+     *
+     * @param func 字段名Lambda
+     * @param <T>  值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue and(LambdaSupplier<T> func) {
+        return new ColumnValue(func, AND);
+    }
+
+    /**
+     * 返回 {column} = {column} | {value} 操作
+     *
+     * @param func 字段名Lambda
+     * @param <T>  值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue orr(LambdaSupplier<T> func) {
+        return new ColumnValue(func, ORR);
+    }
+
+    /**
+     * 同 mov 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue create(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, value);
+    }
+
+    /**
+     * 返回 {column} = {value} 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue mov(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, MOV, value);
+    }
+
+    /**
+     * 返回 {column} = {column} + {value} 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue inc(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, INC, value);
+    }
+
+    /**
+     * 返回 {column} = {column} + 1 操作
+     *
+     * @param func 字段名Lambda
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue inc(LambdaFunction<T, ?> func) {
+        return new ColumnValue(func, INC, 1);
+    }
+
+    /**
+     * 返回 {column} = {column} - {value} 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue dec(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, DEC, value);
+    }
+
+    /**
+     * 返回 {column} = {column} - 1 操作
+     *
+     * @param func 字段名Lambda
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue dec(LambdaFunction<T, ?> func) {
+        return new ColumnValue(func, DEC, 1);
+    }
+
+    /**
+     * 返回 {column} = {column} * {value} 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue mul(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, MUL, value);
+    }
+
+    /**
+     * 返回 {column} = {column} / {value} 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue div(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, DIV, value);
+    }
+
+    /**
+     * 返回 {column} = {column} &#38; {value} 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue and(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, AND, value);
+    }
+
+    /**
+     * 返回 {column} = {column} | {value} 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue orr(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, ORR, value);
     }
 
     public String getColumn() {

@@ -7,23 +7,14 @@ package org.redkale.test.source;
 
 import java.lang.reflect.Method;
 import java.util.*;
-
-import org.redkale.persistence.Cacheable;
-import org.redkale.persistence.Id;
-import org.redkale.persistence.VirtualEntity;
-import org.redkale.source.FilterNodeBean;
-import org.redkale.source.FilterExpress;
-import org.redkale.source.FilterColumn;
-import org.redkale.util.Sheet;
-import org.redkale.source.FilterBean;
-import org.redkale.source.Flipper;
-import org.redkale.source.EntityInfo;
-import org.redkale.source.FilterNode;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.BiFunction;
-
-import org.redkale.convert.json.*;
+import org.junit.jupiter.api.Assertions;
+import org.redkale.convert.json.JsonConvert;
+import org.redkale.persistence.*;
+import org.redkale.persistence.VirtualEntity;
 import org.redkale.source.*;
+import org.redkale.util.Sheet;
 
 /**
  *
@@ -71,6 +62,8 @@ public class TestSourceCache {
         flipper.setSort("userid DESC, createtime DESC");
         final FilterNode node = FilterNode.create("userid", FilterExpress.GREATERTHAN, 1000).and("username", FilterExpress.LIKE, "用户");
         System.out.println("node = " + node);
+        final FilterNode node2 = FilterNode.create(TestEntity::getUserid, FilterExpress.GREATERTHAN, 1000).and("username", FilterExpress.LIKE, "用户");
+        Assertions.assertEquals(node.toString(), node2.toString());
         Sheet<TestEntity> sheet = info.getCache().querySheet(null, flipper, node);
         System.out.println(sheet);
         System.out.println(info.getCache().querySheet(null, flipper, FilterNodeBean.createFilterNode(new TestEntityBean(1000, "用户"))));

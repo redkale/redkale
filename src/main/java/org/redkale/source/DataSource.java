@@ -579,6 +579,23 @@ public interface DataSource extends Resourcable {
      * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
      * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id}  <br>
      *
+     * @param <T>   Entity泛型
+     * @param <V>   更新值泛型
+     * @param clazz Entity类
+     * @param pk    主键
+     * @param func  更新值Lambda
+     *
+     * @return 影响的记录条数
+     */
+    default <T, V extends Serializable> int updateColumn(final Class<T> clazz, final Serializable pk, final LambdaSupplier<V> func) {
+        return updateColumn(clazz, pk, LambdaSupplier.readColumn(func), func.get());
+    }
+
+    /**
+     * 更新单个记录的单个字段  <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id}  <br>
+     *
      * @param <T>    Entity泛型
      * @param clazz  Entity类
      * @param pk     主键
@@ -588,6 +605,23 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, final String column, final Serializable value);
+
+    /**
+     * 更新单个记录的单个字段  <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param <V>   更新值泛型
+     * @param clazz Entity类
+     * @param pk    主键
+     * @param func  更新值Lambda
+     *
+     * @return 影响的记录条数
+     */
+    default <T, V extends Serializable> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, final LambdaSupplier<V> func) {
+        return updateColumnAsync(clazz, pk, LambdaSupplier.readColumn(func), func.get());
+    }
 
     /**
      * 更新符合过滤条件记录的单个字段   <br>
@@ -609,6 +643,23 @@ public interface DataSource extends Resourcable {
      * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
      * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
      *
+     * @param <T>   Entity泛型
+     * @param <V>   更新值泛型
+     * @param clazz Entity类
+     * @param func  更新值Lambda
+     * @param node  过滤条件
+     *
+     * @return 影响的记录条数
+     */
+    default <T, V extends Serializable> int updateColumn(final Class<T> clazz, final LambdaSupplier<V> func, final FilterNode node) {
+        return updateColumn(clazz, LambdaSupplier.readColumn(func), func.get(), node);
+    }
+
+    /**
+     * 更新符合过滤条件记录的单个字段   <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
+     *
      * @param <T>    Entity泛型
      * @param clazz  Entity类
      * @param column 待更新的字段名
@@ -619,6 +670,23 @@ public interface DataSource extends Resourcable {
      */
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final String column, final Serializable value, final FilterNode node);
 
+    /**
+     * 更新符合过滤条件记录的单个字段   <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
+     *
+     * @param <T>   Entity泛型
+     * @param <V>   更新值泛型
+     * @param clazz Entity类
+     * @param func  更新值Lambda
+     * @param node  过滤条件
+     *
+     * @return 影响的记录条数
+     */
+    default <T, V extends Serializable> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final LambdaSupplier<V> func, final FilterNode node) {
+        return updateColumnAsync(clazz, LambdaSupplier.readColumn(func), func.get(), node);
+    }
+    
     /**
      * 更新指定主键值记录的部分字段   <br>
      * 字段赋值操作选项见 ColumnExpress   <br>
@@ -733,6 +801,21 @@ public interface DataSource extends Resourcable {
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
      * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
      *
+     * @param <T>    Entity泛型
+     * @param entity 待更新的Entity对象
+     * @param funcs  需更新的字段名Lambda集合
+     *
+     * @return 影响的记录条数
+     */
+    default <T> int updateColumn(final T entity, final LambdaFunction<T, ?>... funcs) {
+        return updateColumn(entity, (FilterNode) null, LambdaFunction.readColumns(funcs));
+    }
+
+    /**
+     * 更新单个记录的指定字段   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     *
      * @param <T>     Entity泛型
      * @param entity  待更新的Entity对象
      * @param columns 需更新的字段名
@@ -741,6 +824,21 @@ public interface DataSource extends Resourcable {
      */
     default <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final String... columns) {
         return updateColumnAsync(entity, (FilterNode) null, columns);
+    }
+
+    /**
+     * 更新单个记录的指定字段   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     *
+     * @param <T>    Entity泛型
+     * @param entity 待更新的Entity对象
+     * @param funcs  需更新的字段名Lambda集合
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final LambdaFunction<T, ?>... funcs) {
+        return updateColumnAsync(entity, (FilterNode) null, LambdaFunction.readColumns(funcs));
     }
 
     /**
@@ -762,6 +860,22 @@ public interface DataSource extends Resourcable {
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
      * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
      *
+     * @param <T>    Entity泛型
+     * @param entity 待更新的Entity对象
+     * @param node   过滤条件
+     * @param funcs  需更新的字段名Lambda集合
+     *
+     * @return 影响的记录条数
+     */
+    default <T> int updateColumn(final T entity, final FilterNode node, final LambdaFunction<T, ?>... funcs) {
+        return updateColumn(entity, node, LambdaFunction.readColumns(funcs));
+    }
+
+    /**
+     * 更新符合过滤条件记录的指定字段   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     *
      * @param <T>     Entity泛型
      * @param entity  待更新的Entity对象
      * @param node    过滤条件
@@ -770,6 +884,22 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final FilterNode node, final String... columns);
+
+    /**
+     * 更新符合过滤条件记录的指定字段   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     *
+     * @param <T>    Entity泛型
+     * @param entity 待更新的Entity对象
+     * @param node   过滤条件
+     * @param funcs  需更新的字段名Lambda集合
+     *
+     * @return 影响的记录条数
+     */
+    default <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final FilterNode node, final LambdaFunction<T, ?>... funcs) {
+        return updateColumnAsync(entity, node, LambdaFunction.readColumns(funcs));
+    }
 
     /**
      * 更新单个记录的指定字段   <br>

@@ -86,6 +86,19 @@ public class SelectColumn implements Predicate<String> {
 //    public static SelectColumn createIncludes(String... columns) {
 //        return new SelectColumn(columns, false);
 //    }
+//
+//    
+    /**
+     * class中的字段名
+     *
+     * @param funcs 包含的字段名Lambda集合
+     *
+     * @return SelectColumn
+     */
+    public static <T> SelectColumn includes(LambdaFunction<T, ?>... funcs) {
+        return includes(LambdaFunction.readColumns(funcs));
+    }
+
     /**
      * class中的字段名
      *
@@ -109,6 +122,8 @@ public class SelectColumn implements Predicate<String> {
 //    public static SelectColumn createIncludes(String[] cols, String... columns) {
 //        return new SelectColumn(Utility.append(cols, columns), false);
 //    }
+//
+//    
     /**
      * class中的字段名
      *
@@ -133,6 +148,19 @@ public class SelectColumn implements Predicate<String> {
 //    public static SelectColumn createExcludes(String... columns) {
 //        return new SelectColumn(columns, true);
 //    }
+//
+//    
+    /**
+     * class中的字段名
+     *
+     * @param funcs 包含的字段名Lambda集合
+     *
+     * @return SelectColumn
+     */
+    public static <T> SelectColumn excludes(LambdaFunction<T, ?>... funcs) {
+        return excludes(LambdaFunction.readColumns(funcs));
+    }    
+    
     /**
      * class中的字段名
      *
@@ -156,6 +184,8 @@ public class SelectColumn implements Predicate<String> {
 //    public static SelectColumn createExcludes(String[] cols, String... columns) {
 //        return new SelectColumn(Utility.append(cols, columns), true);
 //    }
+//
+//    
     /**
      *
      * class中的字段名

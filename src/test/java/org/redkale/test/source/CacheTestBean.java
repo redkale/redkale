@@ -9,8 +9,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
-import org.redkale.persistence.Id;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.persistence.*;
 import org.redkale.persistence.VirtualEntity;
 import org.redkale.source.*;
 
@@ -45,6 +45,9 @@ public class CacheTestBean {
         System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.EQUAL, "BB")));
         System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.IGNORECASEEQUAL, "BB")));
         System.out.println(cache.querySheet(null, null, FilterNode.create("name", FilterExpress.IGNORECASENOTLIKE, "B")));
+        System.out.println(cache.find(null, FilterNode.create(CacheTestBean::getName, FilterExpress.EQUAL, "BB")));
+        System.out.println(cache.find(null, FilterNode.create(CacheTestBean::getName, FilterExpress.IGNORECASEEQUAL, "BB")));
+        System.out.println(cache.querySheet(null, null, FilterNode.create(CacheTestBean::getName, FilterExpress.IGNORECASENOTLIKE, "B")));
     }
 
     public CacheTestBean() {
