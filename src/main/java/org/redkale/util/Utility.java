@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
@@ -300,8 +301,9 @@ public final class Utility {
 
     private static String readLambdaFieldNameFromBytes(Serializable func) {
         try {
+            Logger logger = Logger.getLogger(Utility.class.getSimpleName());
             ObjectWriteStream out = new ObjectWriteStream();
-            out.enableReplaceObject(true);
+           logger.info("设置enableReplaceObject结果: + " + out.enableReplaceObject(true));
             out.writeObject(func);
             out.close();
             return readFieldName(out.methodNameReference.get());
@@ -338,6 +340,8 @@ public final class Utility {
 
         @Override
         protected Object replaceObject​(Object obj) throws IOException {
+            Logger logger = Logger.getLogger(Utility.class.getSimpleName());
+            logger.info("obj类: " + obj.getClass() + ", 内容: " + obj); 
             if (obj instanceof java.lang.invoke.SerializedLambda) {
                 methodNameReference.set(((java.lang.invoke.SerializedLambda) obj).getImplMethodName());
             }
