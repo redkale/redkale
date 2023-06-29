@@ -3,10 +3,9 @@
  */
 package org.redkale.util;
 
-import java.io.*;
+import java.io.Serializable;
 import java.lang.invoke.MethodHandleInfo;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 完全复制java.lang.invoke.SerializedLambda类源码，必须保持字段信息一样
@@ -247,31 +246,6 @@ public class SerializedLambda implements Serializable {
             implClass, implMethodName, implMethodSignature,
             "instantiatedMethodType", instantiatedMethodType,
             "numCaptured", capturedArgs.length);
-    }
-
-    private static final ConcurrentHashMap<Class, String> lambdaFieldNameCache = new ConcurrentHashMap();
-
-    public static String readLambdaFieldName(Serializable func) {
-        if (!func.getClass().isSynthetic()) { //必须是Lambda表达式的合成类
-            throw new RedkaleException("Not a synthetic lambda class");
-        }
-        return lambdaFieldNameCache.computeIfAbsent(func.getClass(), clazz -> {
-            try {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(out);
-                oos.writeObject(func);
-                ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(out.toByteArray())) {
-                    @Override
-                    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-                        Class<?> clazz = super.resolveClass(desc);
-                        return clazz == java.lang.invoke.SerializedLambda.class ? SerializedLambda.class : clazz;
-                    }
-                };
-                return Utility.readFieldName(((SerializedLambda) in.readObject()).getImplMethodName());
-            } catch (Exception e) {
-                throw new RedkaleException(e);
-            }
-        });
     }
 
 }

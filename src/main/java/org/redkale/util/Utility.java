@@ -282,7 +282,7 @@ public final class Utility {
         return lambdaFieldNameCache.computeIfAbsent(func.getClass(), clazz -> {
             try {
                 if (nativeImageEnv) {
-                    return org.redkale.util.SerializedLambda.readLambdaFieldName(func);
+                    return readLambdaFieldNameFromBytes(func);
                 } else {
                     MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(func.getClass(), MethodHandles.lookup());
                     MethodHandle mh = lookup.findVirtual(func.getClass(), "writeReplace", MethodType.methodType(Object.class));
@@ -290,9 +290,30 @@ public final class Utility {
                     return readFieldName(methodName);
                 }
             } catch (Throwable e) {
-                throw new RedkaleException(e);
+                if (!nativeImageEnv) {
+                    return readLambdaFieldNameFromBytes(func);
+                }
+                throw e instanceof RedkaleException ? (RedkaleException) e : new RedkaleException(e);
             }
         });
+    }
+
+    private static String readLambdaFieldNameFromBytes(Serializable func) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(out);
+            oos.writeObject(func);
+            ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(out.toByteArray())) {
+                @Override
+                protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+                    Class<?> clazz = super.resolveClass(desc);
+                    return clazz == java.lang.invoke.SerializedLambda.class ? org.redkale.util.SerializedLambda.class : clazz;
+                }
+            };
+            return Utility.readFieldName(((org.redkale.util.SerializedLambda) in.readObject()).getImplMethodName());
+        } catch (Throwable e) {
+            throw new RedkaleException(e);
+        }
     }
 
     static String readFieldName(String methodName) {
