@@ -79,7 +79,7 @@ public abstract class WebSocket<G extends Serializable, T> {
     public static final int RETCODE_WSOFFLINE = 1 << 8; //256
 
     @Comment("WebSocket将延迟发送")
-    public static final int RETCODE_DEAYSEND = 1 << 9; //512
+    public static final int RETCODE_DELAYSEND = 1 << 9; //512
 
     WebSocketEngine _engine; //不可能为空 
 
@@ -242,7 +242,7 @@ public abstract class WebSocket<G extends Serializable, T> {
                 delayPackets = new ArrayList<>();
             }
             delayPackets.add(packet);
-            return CompletableFuture.completedFuture(RETCODE_DEAYSEND);
+            return CompletableFuture.completedFuture(RETCODE_DELAYSEND);
         }
         CompletableFuture<Integer> rs = this._writeHandler.send(packet); //this._writeIOThread.send(this, packet);
         if (_engine.logger.isLoggable(Level.FINER) && packet != WebSocketPacket.DEFAULT_PING_PACKET) {

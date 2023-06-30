@@ -92,7 +92,7 @@ public class AsyncIOThread extends WorkThread {
      * @param command 操作
      */
     @Override
-    public void execute(Runnable command) {
+    public final void execute(Runnable command) {
         commandQueue.offer(command);
         selector.wakeup();
     }
@@ -103,7 +103,7 @@ public class AsyncIOThread extends WorkThread {
      * @param commands 操作
      */
     @Override
-    public void execute(Runnable... commands) {
+    public final void execute(Runnable... commands) {
         for (Runnable command : commands) {
             commandQueue.offer(command);
         }
@@ -116,7 +116,7 @@ public class AsyncIOThread extends WorkThread {
      * @param commands 操作
      */
     @Override
-    public void execute(Collection<Runnable> commands) {
+    public final void execute(Collection<Runnable> commands) {
         if (commands != null) {
             for (Runnable command : commands) {
                 commandQueue.offer(command);

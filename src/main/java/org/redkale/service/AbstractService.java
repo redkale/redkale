@@ -47,7 +47,7 @@ public abstract class AbstractService implements Service {
         } else {
             Thread thread = Thread.currentThread();
             if (thread instanceof WorkThread) {
-                ((WorkThread) thread).runAsync(command);
+                ((WorkThread) thread).runWork(command);
             } else {
                 ForkJoinPool.commonPool().execute(command);
             }

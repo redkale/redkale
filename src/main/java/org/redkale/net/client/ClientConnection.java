@@ -191,9 +191,11 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 } else {
                     channel.write(writeArray, this, writeHandler);
                 }
+            } else {
+                writePending.compareAndSet(true, false);
             }
         } else {
-            requestQueue.add(respFuture);
+            requestQueue.offer(respFuture);
         }
     }
 

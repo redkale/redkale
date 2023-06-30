@@ -84,6 +84,7 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
 
     @Override
     public void failed(Throwable exc, Void attachment) {
+        writePending.set(false);
         WebSocketFuture req;
         try {
             while ((req = requestQueue.poll()) != null) {

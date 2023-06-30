@@ -86,6 +86,11 @@ public class WorkThread extends Thread implements Executor {
         }
     }
 
+    //与execute的区别在于子类AsyncIOThread中execute会被重载，确保在IO线程中执行
+    public final void runWork(Runnable command) {
+        execute(command);
+    }
+
     public void execute(Runnable... commands) {
         if (workExecutor == null) {
             for (Runnable command : commands) {
@@ -110,22 +115,6 @@ public class WorkThread extends Thread implements Executor {
             for (Runnable command : commands) {
                 workExecutor.execute(command);
             }
-        }
-    }
-
-    public void runWork(Runnable command) {
-        if (workExecutor == null) {
-            command.run();
-        } else {
-            workExecutor.execute(command);
-        }
-    }
-
-    public void runAsync(Runnable command) {
-        if (workExecutor == null) {
-            ForkJoinPool.commonPool().execute(command);
-        } else {
-            workExecutor.execute(command);
         }
     }
 
