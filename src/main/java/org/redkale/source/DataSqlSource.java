@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 /**
  *
- * 关系型数据库的数据源， 接口与DataSource基本一致。  <br>
+ * 关系型sql数据库的数据源， 比DataSource多了操作sql语句的接口。  <br>
  *
  * <p>
  * 详情见: https://redkale.org

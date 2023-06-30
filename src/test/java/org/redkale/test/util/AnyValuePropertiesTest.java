@@ -5,6 +5,7 @@ package org.redkale.test.util;
 import java.util.Properties;
 import org.junit.jupiter.api.*;
 import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  *
@@ -106,4 +107,14 @@ public class AnyValuePropertiesTest {
         //System.out.println(conf.copy().merge(conf2));
         //System.out.println(conf);
     }
+
+    @Test
+    public void run3() {
+        DefaultAnyValue conf = AnyValue.create();
+        conf.addValue("name", "haha");
+        conf.addValue("value", AnyValue.create().addValue("id", 1234).addValue("key", (String) null).addValue("desc", "nothing !!!"));
+        String json = "{\"name\":\"haha\",\"value\":{\"id\":\"1234\",\"key\":null,\"desc\":\"nothing !!!\"}}";
+        Assertions.assertEquals(json, conf.toJsonString());
+    }
+
 }

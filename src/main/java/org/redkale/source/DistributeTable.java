@@ -5,11 +5,9 @@
  */
 package org.redkale.source;
 
-import org.redkale.source.DistributeTableStrategy;
-
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Entity分库分表的注解，需要结合DistributeTableStrategy使用 <br>

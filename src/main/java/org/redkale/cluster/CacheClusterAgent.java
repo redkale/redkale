@@ -30,7 +30,7 @@ import org.redkale.util.*;
  */
 public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
-    @Resource(name = "$")
+    @Resource(name = Resource.PARENT_NAME)
     private CacheSource source;
 
     private String sourceName;

@@ -1673,8 +1673,8 @@ public abstract class AnyValue {
      *
      * @return String
      */
-    public String toXML(String rootName) {
-        return toXMLString(new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\r\n"), rootName, this, 0).toString();
+    public String toXml(String rootName) {
+        return toXmlString(new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\r\n"), rootName, this, 0).toString();
     }
 
     /**
@@ -1687,7 +1687,7 @@ public abstract class AnyValue {
      *
      * @return StringBuilder
      */
-    protected static StringBuilder toXMLString(StringBuilder sb, String nodeName, AnyValue conf, int indent) { //indent: 缩进长度
+    protected static StringBuilder toXmlString(StringBuilder sb, String nodeName, AnyValue conf, int indent) { //indent: 缩进长度
         if (indent < 0) {
             indent = 0;
         }
@@ -1702,9 +1702,40 @@ public abstract class AnyValue {
         }
         sb.append(">\r\n\r\n");
         for (Entry<AnyValue> en : conf.getAnyEntrys()) {
-            toXMLString(sb, en.name, en.getValue(), indent + 4);
+            toXmlString(sb, en.name, en.getValue(), indent + 4);
         }
         return sb.append(space).append("</").append(nodeName).append(">\r\n\r\n");
+    }
+
+    public String toJsonString() {
+        Entry<String>[] stringArray = getStringEntrys();
+        Entry<AnyValue>[] anyArray = getAnyEntrys();
+        final StringBuilder sb = new StringBuilder();
+        sb.append('{');
+        int size = (stringArray == null ? 0 : stringArray.length) + (anyArray == null ? 0 : anyArray.length);
+        int index = 0;
+        if (stringArray != null) {
+            for (Entry<String> en : stringArray) {
+                if (en.value == null) {
+                    sb.append('"').append(en.name.replace("\"", "\\\"")).append("\":null");
+                } else {
+                    sb.append('"').append(en.name.replace("\"", "\\\"")).append("\":\"").append(en.value.replace("\"", "\\\"")).append('"');
+                }
+                if (++index < size) {
+                    sb.append(',');
+                }
+            }
+        }
+        if (anyArray != null) {
+            for (Entry<AnyValue> en : anyArray) {
+                sb.append('"').append(en.name.replace("\"", "\\\"")).append("\":").append(en.value.toJsonString());
+                if (++index < size) {
+                    sb.append(',');
+                }
+            }
+        }
+        sb.append('}');
+        return sb.toString();
     }
 
 }

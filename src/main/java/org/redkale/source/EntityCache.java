@@ -41,8 +41,6 @@ public final class EntityCache<T> {
     //continuousid=true此字段值才有效
     private T[] array;
 
-    private final IntFunction<T> mapFunc = c -> array[c];
-
     //Flipper.sort转换成Comparator的缓存
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
