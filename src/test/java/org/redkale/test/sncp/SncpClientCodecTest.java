@@ -46,7 +46,7 @@ public class SncpClientCodecTest {
         //----------------------------------------------
         ByteBuffer realBuf;
         {
-            SncpHeader header = new SncpHeader(sncpAddress, Uint128.ZERO, Uint128.ZERO);
+            SncpHeader header = new SncpHeader(sncpAddress, Uint128.ZERO, "", Uint128.ZERO, "");
             SncpClientRequest request = new SncpClientRequest();
             ByteArray writeArray = new ByteArray();
             request.prepare(header, 1, "", new byte[20]);

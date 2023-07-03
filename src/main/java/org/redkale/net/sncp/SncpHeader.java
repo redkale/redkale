@@ -22,10 +22,14 @@ public class SncpHeader {
 
     private Uint128 serviceid;
 
+    private String serviceName;
+
     //【预留字段】service接口版本
     private int serviceVersion;
 
     private Uint128 actionid;
+
+    private String methodName;
 
     //SncpRequest的值是clientSncpAddress，SncpResponse的值是serverSncpAddress
     private byte[] addrBytes;
@@ -50,11 +54,13 @@ public class SncpHeader {
     public SncpHeader() {
     }
 
-    public SncpHeader(InetSocketAddress clientSncpAddress, Uint128 serviceid, Uint128 actionid) {
+    public SncpHeader(InetSocketAddress clientSncpAddress, Uint128 serviceid, String serviceName, Uint128 actionid, String methodName) {
         this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
         this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
         this.serviceid = serviceid;
+        this.serviceName = serviceName;
         this.actionid = actionid;
+        this.methodName = methodName;
         if (addrBytes.length != 4) {
             throw new SncpException("address bytes length must be 4, but " + addrBytes.length);
         }
@@ -149,9 +155,12 @@ public class SncpHeader {
     @Override
     public String toString() {
         return getClass().getSimpleName()
-            + (this.seqid == null ? ("{serviceid=" + this.serviceid) : ("{seqid=" + this.seqid + ",serviceid=" + this.serviceid))
+            + (this.seqid == null
+                ? ("{serviceid=" + this.serviceid + ",serviceName=" + this.serviceName)
+                : ("{seqid=" + this.seqid + ",serviceid=" + this.serviceid + ",serviceName=" + this.serviceName))
             + ",serviceVersion=" + this.serviceVersion
             + ",actionid=" + this.actionid
+            + ",methodName=" + this.methodName
             + ",address=" + getAddress()
             + ",timestamp=" + this.timestamp
             + ",retcode=" + this.retcode
