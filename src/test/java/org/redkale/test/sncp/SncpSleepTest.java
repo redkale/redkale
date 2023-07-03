@@ -44,7 +44,7 @@ public class SncpSleepTest {
         server.start();
 
         int port = server.getSocketAddress().getPort();
-        System.out.println("服务器启动端口: " + port);
+        System.out.println("SNCP服务器启动端口: " + port);
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", port);
         final SncpClient client = new SncpClient("", asyncGroup, sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
         final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
