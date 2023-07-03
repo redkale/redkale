@@ -9,11 +9,11 @@ import java.io.*;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
-import org.redkale.util.ByteBufferWriter;
+import org.redkale.util.*;
 
 /**
  *
@@ -80,6 +80,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SelectionKey writeKey;
 
+    //-------------------------- 用于客户端的Socket --------------------------    
+    //用于客户端的Socket
+    protected final Queue<byte[]> clientModeWriteQueue = new ConcurrentLinkedQueue<>();
+
     public AsyncNioConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
         AsyncIOThread ioWriteThread, final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext) {
         super(clientMode, ioGroup, ioReadThread, ioWriteThread, bufferCapacity, sslBuilder, sslContext);
@@ -127,7 +131,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             handler.failed(new NotYetConnectedException(), null);
             return;
         }
-        if (handler != protocolCodec) {
+        if (handler != readCompletionHandler && handler != readTimeoutCompletionHandler.handler) {
             if (this.readPending) {
                 handler.failed(new ReadPendingException(), null);
                 return;
@@ -142,19 +146,20 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 this.readCompletionHandler = handler;
             }
         } else {
-            this.readCompletionHandler = handler;
             this.readPending = true;
         }
         try {
             if (readKey == null) {
                 ioReadThread.register(selector -> {
-                    if (readKey == null) {
-                        try {
+                    try {
+                        if (readKey == null) {
                             readKey = implRegister(selector, SelectionKey.OP_READ);
                             readKey.attach(this);
-                        } catch (ClosedChannelException e) {
-                            handleRead(0, e);
+                        } else {
+                            readKey.interestOps(readKey.interestOps() | SelectionKey.OP_READ);
                         }
+                    } catch (ClosedChannelException e) {
+                        handleRead(0, e);
                     }
                 });
             } else {
@@ -281,6 +286,38 @@ abstract class AsyncNioConnection extends AsyncConnection {
         doWrite();
     }
 
+    @Override
+    public <A> void clientWrite(byte[] data, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        if (!this.isConnected()) {
+            handler.failed(new NotYetConnectedException(), null);
+            return;
+        }
+        Objects.requireNonNull(data);
+        Objects.requireNonNull(handler);
+        this.writePending = true;
+        this.clientModeWriteQueue.offer(data);
+        this.writeCompletionHandler = (CompletionHandler) handler;
+        this.writeAttachment = attachment;
+        if (writeKey == null) {
+            ioWriteThread.register(selector -> {
+                try {
+                    if (writeKey == null) {
+                        writeKey = implRegister(selector, SelectionKey.OP_WRITE);
+                        writeKey.attach(this);
+                    } else {
+                        writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
+                    }
+                } catch (ClosedChannelException e) {
+                    this.writeCompletionHandler = (CompletionHandler) handler;
+                    this.writeAttachment = attachment;
+                    handleWrite(0, e);
+                }
+            });
+        } else {
+            ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
+        }
+    }
+
     public void doRead(boolean direct) {
         try {
             this.readTime = System.currentTimeMillis();
@@ -300,8 +337,12 @@ abstract class AsyncNioConnection extends AsyncConnection {
             } else if (readKey == null) {
                 ioReadThread.register(selector -> {
                     try {
-                        readKey = implRegister(selector, SelectionKey.OP_READ);
-                        readKey.attach(this);
+                        if (readKey == null) {
+                            readKey = implRegister(selector, SelectionKey.OP_READ);
+                            readKey.attach(this);
+                        } else {
+                            readKey.interestOps(readKey.interestOps() | SelectionKey.OP_READ);
+                        }
                     } catch (ClosedChannelException e) {
                         handleRead(0, e);
                     }
@@ -320,6 +361,23 @@ abstract class AsyncNioConnection extends AsyncConnection {
             int totalCount = 0;
             boolean hasRemain = true;
             boolean writeCompleted = true;
+
+            if (clientMode && writeByteTuple1Array == null && !clientModeWriteQueue.isEmpty()) {
+                byte[] bs = null;
+                byte[] item;
+                while ((item = clientModeWriteQueue.poll()) != null) {
+                    bs = Utility.append(bs, item);
+                }
+                this.writePending = true;
+                this.writeByteTuple1Array = bs;
+                this.writeByteTuple1Offset = 0;
+                this.writeByteTuple1Length = bs == null ? 0 : bs.length;
+                this.writeByteTuple2Array = null;
+                this.writeByteTuple2Offset = 0;
+                this.writeByteTuple2Length = 0;
+                this.writeOffset = 0;
+                this.writeLength = this.writeByteTuple1Length;
+            }
 
             int batchOffset = writeOffset;
             int batchLength = writeLength;
@@ -386,11 +444,11 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
                 if (writeCount == 0) {
                     if (hasRemain) {
-                        writeCompleted = false;
-                        writeTotal = totalCount;
-                        //continue;  //要全部输出完才返回
+                        //writeCompleted = false;
+                        //writeTotal = totalCount;
+                        continue;  //要全部输出完才返回
                     }
-                    break; 
+                    break;
                 } else if (writeCount < 0) {
                     if (totalCount == 0) {
                         totalCount = writeCount;
@@ -407,14 +465,27 @@ abstract class AsyncNioConnection extends AsyncConnection {
             if (writeCompleted && (totalCount != 0 || !hasRemain)) {
                 handleWrite(writeTotal + totalCount, null);
             } else if (writeKey == null) {
-                ioWriteThread.register(selector -> {
+                if (inCurrWriteThread()) {
                     try {
-                        writeKey = implRegister(selector, SelectionKey.OP_WRITE);
+                        writeKey = implRegister(ioWriteThread.selector, SelectionKey.OP_WRITE);
                         writeKey.attach(this);
                     } catch (ClosedChannelException e) {
                         handleWrite(0, e);
                     }
-                });
+                } else {
+                    ioWriteThread.register(selector -> {
+                        try {
+                            if (writeKey == null) {
+                                writeKey = implRegister(selector, SelectionKey.OP_WRITE);
+                                writeKey.attach(this);
+                            } else {
+                                writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
+                            }
+                        } catch (ClosedChannelException e) {
+                            handleWrite(0, e);
+                        }
+                    });
+                }
             } else {
                 ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
             }

@@ -60,9 +60,7 @@ public class AsyncIOThread extends WorkThread {
     }
 
     public void interestOpsOr(SelectionKey key, int opt) {
-        if (key == null) {
-            return;
-        }
+        Objects.requireNonNull(key);
         if (key.selector() != selector) {
             throw new RedkaleException("NioThread.selector not the same to SelectionKey.selector");
         }

@@ -281,16 +281,18 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             if (authenticate != null) {
                 future = future.thenCompose(authenticate);
             }
-            return future.thenApply(c -> {
-                c.setAuthenticated(true);
-                this.connArray[connIndex] = c;
-                CompletableFuture<C> f;
-                while ((f = waitQueue.poll()) != null) {
-                    if (!f.isDone()) {
-                        f.complete(c);
+            return future.thenCompose(c -> {
+                return CompletableFuture.supplyAsync(() -> {
+                    c.setAuthenticated(true);
+                    this.connArray[connIndex] = c;
+                    CompletableFuture<C> f;
+                    while ((f = waitQueue.poll()) != null) {
+                        if (!f.isDone()) {
+                            f.complete(c);
+                        }
                     }
-                }
-                return c;
+                    return c;
+                }, c.channel.getWriteIOThread());
             }).whenComplete((r, t) -> {
                 if (t != null) {
                     this.connOpenStates[connIndex].set(false);
@@ -324,16 +326,18 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             if (authenticate != null) {
                 future = future.thenCompose(authenticate);
             }
-            return future.thenApply(c -> {
-                c.setAuthenticated(true);
-                entry.connection = c;
-                CompletableFuture<C> f;
-                while ((f = waitQueue.poll()) != null) {
-                    if (!f.isDone()) {
-                        f.complete(c);
+            return future.thenCompose(c -> {
+                return CompletableFuture.supplyAsync(() -> {
+                    c.setAuthenticated(true);
+                    entry.connection = c;
+                    CompletableFuture<C> f;
+                    while ((f = waitQueue.poll()) != null) {
+                        if (!f.isDone()) {
+                            f.complete(c);
+                        }
                     }
-                }
-                return c;
+                    return c;
+                }, c.channel.getWriteIOThread());
             }).whenComplete((r, t) -> {
                 if (t != null) {
                     entry.connOpenState.set(false);

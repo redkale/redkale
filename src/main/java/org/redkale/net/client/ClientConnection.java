@@ -51,47 +51,16 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final ByteArray writeArray = new ByteArray();
 
+    protected final ThreadLocal<ByteArray> arrayThreadLocal = ThreadLocal.withInitial(() -> new ByteArray());
+
     protected final ByteBuffer writeBuffer;
 
     protected final CompletionHandler<Integer, ClientConnection> writeHandler = new CompletionHandler<Integer, ClientConnection>() {
 
         @Override
         public void completed(Integer result, ClientConnection attachment) {
-            if (pauseWriting.get()) { //等待sendHalfWriteInReadThread调用
-                if (!writePending.compareAndSet(true, false)) {
-                    completed(0, attachment);
-                }
-                return;
-            }
-            ByteArray array = writeArray;
-            array.clear();
-            ClientFuture<R, P> respFuture;
-            while ((respFuture = requestQueue.poll()) != null) {
-                if (!respFuture.isDone()) {
-                    R request = respFuture.request;
-                    request.writeTo(attachment, array);
-                    if (request.isCompleted()) {
-                        doneRequestCounter.increment();
-                    } else { //还剩半包没发送完
-                        pauseWriting.set(true);
-                        currHalfWriteFuture = respFuture;
-                        break;
-                    }
-                }
-            }
-            if (array.length() > 0) {
-                if (writeBuffer.capacity() >= array.length()) {
-                    writeBuffer.clear();
-                    writeBuffer.put(array.content(), 0, array.length());
-                    writeBuffer.flip();
-                    channel.write(writeBuffer, attachment, this);
-                } else {
-                    channel.write(array, attachment, this);
-                }
-            } else {
-                if (!writePending.compareAndSet(true, false)) {
-                    completed(0, attachment);
-                }
+            if (attachment == null) { //新方式
+                channel.readRegister(getCodec());
             }
         }
 
@@ -115,8 +84,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     protected final AsyncConnection channel;
 
     private final ClientCodec<R, P> codec;
-
-    private final ConcurrentLinkedQueue<ClientFuture<R, P>> requestQueue = new ConcurrentLinkedQueue();
 
     //respFutureQueue、respFutureMap二选一， SPSC队列模式
     private final ConcurrentLinkedDeque<ClientFuture<R, P>> respFutureQueue = new ConcurrentLinkedDeque<>();
@@ -156,7 +123,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
         }
         respWaitingCounter.increment(); //放在writeChannelInWriteThread计数会延迟，导致不准确
-
         writeLock.lock();
         try {
             offerRespFuture(respFuture);
@@ -172,7 +138,18 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     private void sendRequestInLocking(R request, ClientFuture respFuture) {
-        if (writePending.compareAndSet(false, true)) {
+        if (true) { //新方式
+            ByteArray array = arrayThreadLocal.get();
+            array.clear();
+            request.writeTo(this, array);
+            if (request.isCompleted()) {
+                doneRequestCounter.increment();
+            } else { //还剩半包没发送完
+                pauseWriting.set(true);
+                currHalfWriteFuture = respFuture;
+            }
+            channel.clientWrite(array.getBytes(), writeHandler);
+        } else { //旧方式
             //发送请求数据包
             writeArray.clear();
             request.writeTo(this, writeArray);
@@ -191,11 +168,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 } else {
                     channel.write(writeArray, this, writeHandler);
                 }
-            } else {
-                writePending.compareAndSet(true, false);
             }
-        } else {
-            requestQueue.offer(respFuture);
         }
     }
 
@@ -207,26 +180,14 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             ClientFuture respFuture = this.currHalfWriteFuture;
             if (respFuture != null) {
                 this.currHalfWriteFuture = null;
-                if (!respFuture.isDone()) {
-                    if (halfRequestExc == null) {
-                        offerFirstRespFuture(respFuture);
-                        ClientFuture future;
-                        while ((future = pauseRequests.poll()) != null) {
-                            requestQueue.add(future);
-                        }
-                        sendRequestInLocking(request, respFuture);
-                        return;
-                    } else {
-                        codec.responseComplete(true, respFuture, null, halfRequestExc);
-                    }
+                if (halfRequestExc == null) {
+                    offerFirstRespFuture(respFuture);
+                    sendRequestInLocking(request, respFuture);
+                } else {
+                    codec.responseComplete(true, respFuture, null, halfRequestExc);
                 }
             }
-            respFuture = pauseRequests.poll();
-            if (respFuture != null) {
-                ClientFuture future;
-                while ((future = pauseRequests.poll()) != null) {
-                    requestQueue.add(future);
-                }
+            while (!pauseWriting.get() && (respFuture = pauseRequests.poll()) != null) {
                 sendRequestInLocking((R) respFuture.getRequest(), respFuture);
             }
         } finally {

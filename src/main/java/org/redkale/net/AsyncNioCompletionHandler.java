@@ -24,7 +24,7 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
 
     private final boolean readMode;
 
-    private CompletionHandler<Integer, A> handler;
+    CompletionHandler<Integer, A> handler;
 
     private A attachment;
 
