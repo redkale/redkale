@@ -204,6 +204,11 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
     }
 
     @Override
+    protected SelectionKey keyFor(Selector sel) {
+        return this.channel.keyFor(sel);
+    }
+    
+    @Override
     protected SelectionKey implRegister(Selector sel, int ops) throws ClosedChannelException {
         return this.channel.register(sel, ops);
     }

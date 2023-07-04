@@ -153,7 +153,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 ioReadThread.register(selector -> {
                     try {
                         if (readKey == null) {
-                            readKey = implRegister(selector, SelectionKey.OP_READ);
+                            SelectionKey oldKey = keyFor(selector);
+                            int ops = oldKey == null ? SelectionKey.OP_READ : (SelectionKey.OP_READ | oldKey.interestOps());
+                            readKey = implRegister(selector, ops);
                             readKey.attach(this);
                         } else {
                             readKey.interestOps(readKey.interestOps() | SelectionKey.OP_READ);
@@ -287,7 +289,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public <A> void clientWrite(byte[] data, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    public <A> void fastWrite(byte[] data, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (!this.isConnected()) {
             handler.failed(new NotYetConnectedException(), null);
             return;
@@ -303,7 +305,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 ioWriteThread.register(selector -> {
                     try {
                         if (writeKey == null) {
-                            writeKey = implRegister(selector, SelectionKey.OP_WRITE);
+                            SelectionKey oldKey = keyFor(selector);
+                            int ops = oldKey == null ? SelectionKey.OP_WRITE : (SelectionKey.OP_WRITE | oldKey.interestOps());
+                            writeKey = implRegister(selector, ops);
                             writeKey.attach(this);
                         } else {
                             writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
@@ -340,7 +344,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 ioReadThread.register(selector -> {
                     try {
                         if (readKey == null) {
-                            readKey = implRegister(selector, SelectionKey.OP_READ);
+                            SelectionKey oldKey = keyFor(selector);
+                            int ops = oldKey == null ? SelectionKey.OP_READ : (SelectionKey.OP_READ | oldKey.interestOps());
+                            readKey = implRegister(selector, ops);
                             readKey.attach(this);
                         } else {
                             readKey.interestOps(readKey.interestOps() | SelectionKey.OP_READ);
@@ -467,27 +473,20 @@ abstract class AsyncNioConnection extends AsyncConnection {
             if (writeCompleted && (totalCount != 0 || !hasRemain)) {
                 handleWrite(writeTotal + totalCount, null);
             } else if (writeKey == null) {
-                if (inCurrWriteThread()) {
+                ioWriteThread.register(selector -> {
                     try {
-                        writeKey = implRegister(ioWriteThread.selector, SelectionKey.OP_WRITE);
-                        writeKey.attach(this);
+                        if (writeKey == null) {
+                            SelectionKey oldKey = keyFor(selector);
+                            int ops = oldKey == null ? SelectionKey.OP_WRITE : (SelectionKey.OP_WRITE | oldKey.interestOps());
+                            writeKey = implRegister(selector, ops);
+                            writeKey.attach(this);
+                        } else {
+                            writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
+                        }
                     } catch (ClosedChannelException e) {
                         handleWrite(0, e);
                     }
-                } else {
-                    ioWriteThread.register(selector -> {
-                        try {
-                            if (writeKey == null) {
-                                writeKey = implRegister(selector, SelectionKey.OP_WRITE);
-                                writeKey.attach(this);
-                            } else {
-                                writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
-                            }
-                        } catch (ClosedChannelException e) {
-                            handleWrite(0, e);
-                        }
-                    });
-                }
+                });
             } else {
                 ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
             }
@@ -640,6 +639,8 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
         };
     }
+
+    protected abstract SelectionKey keyFor(Selector sel);
 
     protected abstract SelectionKey implRegister(Selector sel, int ops) throws ClosedChannelException;
 

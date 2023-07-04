@@ -59,9 +59,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
         @Override
         public void completed(Integer result, ClientConnection attachment) {
-            if (attachment == null) { //新方式
-                channel.readRegister(getCodec());
-            }
+            
         }
 
         @Override
@@ -148,7 +146,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 pauseWriting.set(true);
                 currHalfWriteFuture = respFuture;
             }
-            channel.clientWrite(array.getBytes(), writeHandler);
+            channel.fastWrite(array.getBytes(), writeHandler);
         } else { //旧方式
             //发送请求数据包
             writeArray.clear();
