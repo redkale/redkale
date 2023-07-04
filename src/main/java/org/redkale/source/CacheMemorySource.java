@@ -1430,7 +1430,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         CacheEntry entry = container.get(key);
         if (entry == null || !entry.isSetCacheType() || entry.csetValue == null) {
-            Set set = cacheType == CacheEntryType.SET_SORTED ? Collections.synchronizedSet(new TreeSet<>()) : new CopyOnWriteArraySet();
+            Set set = cacheType == CacheEntryType.SET_SORTED ? new ConcurrentSkipListSet<>() : new CopyOnWriteArraySet();
             entry = new CacheEntry(cacheType, key, null, set, null, null);
             CacheEntry old = container.putIfAbsent(key, entry);
             if (old != null) {

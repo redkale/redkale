@@ -298,23 +298,25 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.clientModeWriteQueue.offer(data);
         this.writeCompletionHandler = (CompletionHandler) handler;
         this.writeAttachment = attachment;
-        if (writeKey == null) {
-            ioWriteThread.register(selector -> {
-                try {
-                    if (writeKey == null) {
-                        writeKey = implRegister(selector, SelectionKey.OP_WRITE);
-                        writeKey.attach(this);
-                    } else {
-                        writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
+        try {
+            if (writeKey == null) {
+                ioWriteThread.register(selector -> {
+                    try {
+                        if (writeKey == null) {
+                            writeKey = implRegister(selector, SelectionKey.OP_WRITE);
+                            writeKey.attach(this);
+                        } else {
+                            writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
+                        }
+                    } catch (ClosedChannelException e) {
+                        handleWrite(0, e);
                     }
-                } catch (ClosedChannelException e) {
-                    this.writeCompletionHandler = (CompletionHandler) handler;
-                    this.writeAttachment = attachment;
-                    handleWrite(0, e);
-                }
-            });
-        } else {
-            ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
+                });
+            } else {
+                ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
+            }
+        } catch (Exception e) {
+            handleWrite(0, e);
         }
     }
 
