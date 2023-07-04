@@ -40,6 +40,7 @@ public class ByteBufferWriter {
         ByteBufferWriter writer = new ByteBufferWriter(supplier);
         writer.bigEndian = one.order() == ByteOrder.BIG_ENDIAN;
         writer.buffers = new ByteBuffer[]{one};
+        writer.position = one.position();
         return writer;
     }
 
