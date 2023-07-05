@@ -10,7 +10,6 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
-import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.util.ByteArray;
 
 /**
@@ -30,13 +29,11 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public static final int RETCODE_THROWEXCEPTION = (1 << 4); //内部异常
 
-    private final byte[] addrBytes;
+    final byte[] addrBytes;
 
-    private final int addrPort;
+    final int addrPort;
 
     protected final BsonWriter writer = new BsonWriter();
-
-    protected final ByteArray onlyHeaderData = new ByteArray(HEADER_SIZE).putPlaceholder(HEADER_SIZE);
 
     protected final CompletionHandler realHandler = new CompletionHandler() {
         @Override
@@ -106,6 +103,14 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         return writer;
     }
 
+    protected SncpRequest request() {
+        return request;
+    }
+
+    protected void writeHeader(ByteArray array, int bodyLength, int retcode) {
+        request.getHeader().writeTo(array, this, bodyLength, retcode);
+    }
+
     @Override
     protected ExecutorService getWorkExecutor() {
         return super.getWorkExecutor();
@@ -127,8 +132,9 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     public final void finishVoid() {
+        int headerSize = SncpHeader.calcHeaderSize(request);
         BsonWriter out = getBsonWriter();
-        out.writePlaceholderTo(HEADER_SIZE);
+        out.writePlaceholderTo(headerSize);
         finish(0, out);
     }
 
@@ -153,8 +159,9 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     public final void finish(final Type type, final Object result) {
+        int headerSize = SncpHeader.calcHeaderSize(request);
         BsonWriter out = getBsonWriter();
-        out.writePlaceholderTo(HEADER_SIZE);
+        out.writePlaceholderTo(headerSize);
         if (result != null || type != Void.class) {
             out.writeByte((byte) 0);  //body的第一个字节为0，表示返回结果对象，而不是参数回调对象
             context.getBsonConvert().convertTo(out, type, result);
@@ -162,23 +169,19 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         finish(0, out);
     }
 
-    //调用此方法时out已写入SncpHeader
+    //调用此方法时out已写入SncpHeader的占位空间
     public void finish(final int retcode, final BsonWriter out) {
+        int headerSize = SncpHeader.calcHeaderSize(request);
         if (out == null) {
-            final ByteArray array = onlyHeaderData;
-            fillHeader(array, 0, retcode);
+            final ByteArray array = new ByteArray(headerSize).putPlaceholder(headerSize);
+            writeHeader(array, 0, retcode);
             finish(array);
             return;
         }
         final ByteArray array = out.toByteArray();
-        final int bodyLength = array.length() - HEADER_SIZE;
-        fillHeader(array, bodyLength, retcode);
+        final int bodyLength = array.length() - headerSize;
+        writeHeader(array, bodyLength, retcode);
         finish(array);
-    }
-
-    protected void fillHeader(ByteArray array, int bodyLength, int retcode) {
-        SncpHeader header = request.getHeader();
-        header.writeTo(array, this.addrBytes, this.addrPort, header.getSeqid(), bodyLength, retcode);
     }
 
 }

@@ -6,7 +6,6 @@ package org.redkale.net.sncp;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 import org.redkale.net.client.ClientCodec;
-import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
 import org.redkale.util.*;
 
 /**
@@ -27,9 +26,13 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
 
     private ByteArray recyclableArray;
 
-    protected ByteArray halfBodyBytes;
+    private ByteArray halfBodyBytes;
 
-    protected ByteArray halfHeaderBytes;
+    private ByteArray halfHeaderBytes;
+
+    private int halfHeaderSize;
+
+    private Byte halfHeaderSizeFirstByte;
 
     SncpClientResult lastResult = null;
 
@@ -59,22 +62,20 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
     public void decodeMessages(ByteBuffer realBuf, ByteArray array) {
         ByteBuffer buffer = realBuf;
         while (buffer.hasRemaining()) {
-            if (halfHeaderBytes != null) {
-                if (buffer.remaining() + halfHeaderBytes.length() < SncpHeader.HEADER_SIZE) { //buffer不足以读取完整header
+            if (this.halfHeaderBytes != null) {
+                if (buffer.remaining() + halfHeaderBytes.length() < halfHeaderSize - 2) { //buffer不足以读取完整header
                     halfHeaderBytes.put(buffer);
                     return;
                 }
-                halfHeaderBytes.put(buffer, SncpHeader.HEADER_SIZE - halfHeaderBytes.length());
+                halfHeaderBytes.put(buffer, halfHeaderSize - 2 - halfHeaderBytes.length());
                 //读取完整header
                 SncpClientResult result = new SncpClientResult();
-                int headerSize = result.readHeader(halfHeaderBytes);
-                if (headerSize != HEADER_SIZE) {
-                    occurError(null, new SncpException("sncp header length must be " + HEADER_SIZE + ", but " + headerSize)); //request不一定存在
+                result.readHeader(halfHeaderBytes, halfHeaderSize);
+                halfHeaderSize = 0;
+                if (!result.getHeader().isValid()) {
+                    occurError(null, new SncpException("sncp header not valid"));
                     return;
                 }
-                //if (halfHeaderBytes.length() != HEADER_SIZE) {
-                //    logger.log(Level.SEVERE, "halfHeaderBytes.length must be " + HEADER_SIZE + ", but " + halfHeaderBytes.length());
-                //}
                 halfHeaderBytes = null;
                 if (result.getBodyLength() < 1) {
                     addMessage(findRequest(result.getRequestid()), result);
@@ -116,15 +117,30 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                 lastResult = null;
                 continue;
             }
-            if (buffer.remaining() < SncpHeader.HEADER_SIZE) { //buffer不足以读取完整header
-                halfHeaderBytes = pollArray();
-                halfHeaderBytes.put(buffer);
-                return;
+            if (this.halfHeaderSize < 1) {
+                if (buffer.remaining() < 2) { //只有一个字节
+                    this.halfHeaderSizeFirstByte = buffer.get();
+                    return;
+                } else {
+                    if (this.halfHeaderSizeFirstByte != null) {
+                        byte secondByte = buffer.get();
+                        this.halfHeaderSize = (0xff00 & (this.halfHeaderSizeFirstByte << 8)) | (0xff & secondByte);
+                    } else {
+                        this.halfHeaderSize = buffer.getChar();
+                    }
+                    this.halfHeaderSizeFirstByte = null;
+                    if (buffer.remaining() < this.halfHeaderSize - 2) { //buffer不足以读取完整header
+                        this.halfHeaderBytes = pollArray();
+                        this.halfHeaderBytes.put(buffer);
+                        return;
+                    }
+                }
             }
             SncpClientResult result = new SncpClientResult();
-            int headerSize = result.readHeader(buffer);
-            if (headerSize != HEADER_SIZE) {
-                occurError(null, new SncpException("sncp header length must be " + HEADER_SIZE + ", but " + headerSize)); //request不一定存在
+            result.readHeader(buffer, halfHeaderSize);
+            halfHeaderSize = 0;
+            if (!result.getHeader().isValid()) {
+                occurError(null, new SncpException("sncp header not valid"));
                 return;
             }
             if (result.getBodyLength() < 1) {

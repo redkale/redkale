@@ -22,7 +22,7 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
 
     private final ReentrantLock updateLock = new ReentrantLock();
 
-    private final byte[] pongBytes = Sncp.getPongBytes();
+    private final ThreadLocal<ByteArray> localArray = ThreadLocal.withInitial(ByteArray::new);
 
     protected SncpDispatcherServlet() {
         super();
@@ -83,7 +83,11 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         if (request.isPing()) {
-            response.finish(pongBytes);
+            ByteArray array = localArray.get().clear();
+            int headerSize = SncpHeader.calcHeaderSize(request);
+            array.putPlaceholder(headerSize);
+            response.writeHeader(array, 0, 0);
+            response.finish(array.getBytes());
             return;
         }
         SncpServlet servlet = mappingServlet(request.getHeader().getServiceid());

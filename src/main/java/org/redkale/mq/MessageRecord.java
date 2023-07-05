@@ -13,6 +13,7 @@ import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.net.sncp.SncpHeader;
+import org.redkale.util.ByteArray;
 
 /**
  * 存在MQ里面的数据结构<p>
@@ -318,8 +319,8 @@ public class MessageRecord implements Serializable {
             sb.append(",\"respTopic\":\"").append(this.respTopic).append("\"");
         }
         if (this.content != null) {
-            if (this.ctype == CTYPE_BSON_RESULT && this.content.length > SncpHeader.HEADER_SIZE) {
-                int offset = SncpHeader.HEADER_SIZE + 1; //循环占位符
+            if (this.ctype == CTYPE_BSON_RESULT && this.content.length > SncpHeader.HEADER_SUBSIZE) {
+                int offset = new ByteArray(this.content).getChar(0) + 1; //循环占位符
                 Object rs = BsonConvert.root().convertFrom(Object.class, this.content, offset, this.content.length - offset);
                 sb.append(",\"content\":").append(rs);
             } else if (this.ctype == CTYPE_HTTP_REQUEST) {

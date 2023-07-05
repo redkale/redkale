@@ -15,7 +15,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.*;
 import static org.redkale.net.sncp.Sncp.loadMethodActions;
-import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SUBSIZE;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -88,7 +88,7 @@ public class SncpRemoteInfo<T extends Service> {
         this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(resourceName, resourceType);
 
         for (Map.Entry<Uint128, Method> en : loadMethodActions(Sncp.getServiceType(serviceImplClass)).entrySet()) {
-            this.actions.put(en.getKey().toString(), new SncpRemoteAction(serviceImplClass, resourceType, en.getValue(), serviceid, en.getKey()));
+            this.actions.put(en.getKey().toString(), new SncpRemoteAction(serviceImplClass, resourceType, en.getValue(), serviceid, en.getKey(), sncpClient));
         }
     }
 
@@ -176,11 +176,11 @@ public class SncpRemoteInfo<T extends Service> {
                 return null;
             }
             ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
-            SncpHeader header = new SncpHeader();
-            int headerSize = header.read(buffer);
-            if (headerSize != HEADER_SIZE) {
-                throw new SncpException("sncp header length must be " + HEADER_SIZE + ", but is " + headerSize);
+            int headerSize = buffer.getChar();
+            if (headerSize <= HEADER_SUBSIZE) {
+                throw new SncpException("sncp header length must more " + HEADER_SUBSIZE + ", but is " + headerSize);
             }
+            SncpHeader header = SncpHeader.read(buffer, headerSize);
             if (!header.checkValid(action.header)) {
                 throw new SncpException("sncp header error, response-header:" + action.header + "+, response-header:" + header);
             }
@@ -331,7 +331,7 @@ public class SncpRemoteInfo<T extends Service> {
         protected final SncpHeader header;
 
         @SuppressWarnings("unchecked")
-        SncpRemoteAction(final Class serviceImplClass, Class resourceType, Method method, Uint128 serviceid, Uint128 actionid) {
+        SncpRemoteAction(final Class serviceImplClass, Class resourceType, Method method, Uint128 serviceid, Uint128 actionid, final SncpClient sncpClient) {
             this.actionid = actionid == null ? Sncp.actionid(method) : actionid;
             Type rt = TypeToken.getGenericType(method.getGenericReturnType(), serviceImplClass);
             this.returnObjectType = rt == void.class || rt == Void.class ? null : rt;
@@ -424,7 +424,7 @@ public class SncpRemoteInfo<T extends Service> {
             this.paramHandlerClass = handlerFuncClass;
             this.paramHandlerResultType = handlerResultType;
             this.paramHandlerAttachIndex = handlerAttachIndex;
-            this.header = new SncpHeader(null, serviceid, resourceType.getName(), actionid, method.getName());
+            this.header = SncpHeader.create(sncpClient == null ? null : sncpClient.getClientSncpAddress(), serviceid, resourceType.getName(), actionid, method.getName());
             if (this.paramHandlerIndex >= 0 && method.getReturnType() != void.class) {
                 throw new SncpException(method + " have CompletionHandler type parameter but return type is not void");
             }

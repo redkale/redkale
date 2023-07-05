@@ -6,6 +6,7 @@
 package org.redkale.net.client;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 import org.redkale.net.WorkThread;
 import org.redkale.util.*;
@@ -20,6 +21,8 @@ import org.redkale.util.*;
  * @since 2.3.0
  */
 public abstract class ClientRequest {
+
+    public static final byte[] EMPTY_TRACEID = new byte[0];
 
     protected long createTime = System.currentTimeMillis();
 
@@ -58,6 +61,10 @@ public abstract class ClientRequest {
 
     public String getTraceid() {
         return traceid;
+    }
+
+    public byte[] traceBytes() {
+        return Utility.isEmpty(traceid) ? EMPTY_TRACEID : traceid.getBytes(StandardCharsets.UTF_8);
     }
 
     public <T extends ClientRequest> T workThread(WorkThread thread) {

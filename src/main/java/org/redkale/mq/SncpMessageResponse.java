@@ -41,14 +41,15 @@ public class SncpMessageResponse extends SncpResponse {
         if (callback != null) {
             callback.run();
         }
+        int headerSize = SncpHeader.calcHeaderSize(request);
         if (out == null) {
-            final ByteArray result = onlyHeaderData;
-            fillHeader(result, 0, retcode);
+            final ByteArray result = new ByteArray(headerSize).putPlaceholder(headerSize);
+            writeHeader(result, 0, retcode);
             producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getRespTopic(), null, (byte[]) null));
             return;
         }
         final ByteArray result = out.toByteArray();
-        fillHeader(result, result.length() - SncpHeader.HEADER_SIZE, retcode);
+        writeHeader(result, result.length() - headerSize, retcode);
         producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getRespTopic(), null, result.getBytes()));
     }
 }

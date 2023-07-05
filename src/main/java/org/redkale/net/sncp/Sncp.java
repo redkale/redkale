@@ -36,12 +36,6 @@ import org.redkale.util.*;
  */
 public abstract class Sncp {
 
-    private static final byte[] PING_BYTES = new SncpHeader(null, Uint128.ZERO, "", Uint128.ZERO, "")
-        .writeTo(new ByteArray(SncpHeader.HEADER_SIZE).putPlaceholder(SncpHeader.HEADER_SIZE), null, 0, 0, 0)
-        .getBytes();
-
-    private static final byte[] PONG_BYTES = Arrays.copyOf(PING_BYTES, PING_BYTES.length);
-
     static final String FIELDPREFIX = "_redkale";
 
     /**
@@ -68,14 +62,6 @@ public abstract class Sncp {
     }
 
     private Sncp() {
-    }
-
-    public static byte[] getPingBytes() {
-        return Arrays.copyOf(PING_BYTES, PING_BYTES.length);
-    }
-
-    public static byte[] getPongBytes() {
-        return Arrays.copyOf(PONG_BYTES, PONG_BYTES.length);
     }
 
     //key: actionid

@@ -33,14 +33,14 @@ public class SncpClientResult {
         return true;
     }
 
-    protected int readHeader(ByteBuffer buffer) {
-        this.header = new SncpHeader();
-        return this.header.read(buffer);
+    protected boolean readHeader(ByteBuffer buffer, int headerSize) {
+        this.header = SncpHeader.read(buffer, headerSize);
+        return this.header.isValid();
     }
 
-    protected int readHeader(ByteArray array) {
-        this.header = new SncpHeader();
-        return this.header.read(array);
+    protected boolean readHeader(ByteArray array, int headerSize) {
+        this.header = SncpHeader.read(array, headerSize);
+        return this.header.isValid();
     }
 
     protected boolean readBody(ByteBuffer buffer) {

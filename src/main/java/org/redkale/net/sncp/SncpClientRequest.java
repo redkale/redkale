@@ -47,6 +47,7 @@ public class SncpClientRequest extends ClientRequest {
         boolean rs = super.recycle();
         this.header = null;
         this.seqid = 0;
+        this.traceid = null;
         this.bodyContent = null;
         return rs;
     }
@@ -58,11 +59,11 @@ public class SncpClientRequest extends ClientRequest {
 
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
-        array.putPlaceholder(SncpHeader.HEADER_SIZE);
+        array.putPlaceholder(SncpHeader.calcHeaderSize(this));
         if (bodyContent == null) {
-            header.writeTo(array, header.getAddrBytes(), header.getAddrPort(), seqid, 0, 0);
+            header.writeTo(array, this, 0, 0);
         } else {
-            header.writeTo(array, header.getAddrBytes(), header.getAddrPort(), seqid, bodyContent.length, 0);
+            header.writeTo(array, this, bodyContent.length, 0);
             array.put(bodyContent);
         }
     }
@@ -70,7 +71,7 @@ public class SncpClientRequest extends ClientRequest {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "_" + Objects.hashCode(this) + "{"
-            + "header=" + header + ", seqid =" + seqid
+            + "header=" + header + ", seqid =" + seqid + ", traceid =" + traceid
             + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
             + "}";
     }

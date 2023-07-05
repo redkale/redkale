@@ -7,13 +7,14 @@ package org.redkale.net.sncp;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.bson.BsonReader;
 import org.redkale.net.Request;
-import static org.redkale.net.sncp.SncpHeader.HEADER_SIZE;
-import org.redkale.util.Uint128;
+import static org.redkale.net.client.ClientRequest.EMPTY_TRACEID;
+import org.redkale.util.*;
 
 /**
  *
@@ -36,6 +37,8 @@ public class SncpRequest extends Request<SncpContext> {
 
     protected int readState = READ_STATE_ROUTE;
 
+    private int headerSize;
+
     private SncpHeader header;
 
     private int bodyOffset;
@@ -50,17 +53,21 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override  //request.header与response.header数据格式保持一致
     protected int readHeader(ByteBuffer buffer, Request last) {
-        //---------------------head----------------------------------
+        //---------------------route----------------------------------
         if (this.readState == READ_STATE_ROUTE) {
-            if (buffer.remaining() < HEADER_SIZE) {
-                return HEADER_SIZE - buffer.remaining(); //小于60
+            if (buffer.remaining() < 2) {
+                return 2 - buffer.remaining(); //小于2
             }
-            this.header = new SncpHeader();
-            int headerSize = this.header.read(buffer);
-            if (headerSize != HEADER_SIZE) {
-                context.getLogger().log(Level.WARNING, "sncp buffer header.length not " + HEADER_SIZE + ", but " + headerSize);
+            this.headerSize = buffer.getChar();
+            if (headerSize < SncpHeader.HEADER_SUBSIZE) {
+                context.getLogger().log(Level.WARNING, "sncp buffer header.length must more " + SncpHeader.HEADER_SUBSIZE + ", but " + this.headerSize);
                 return -1;
             }
+            this.readState = READ_STATE_HEADER;
+        }
+        //---------------------head----------------------------------
+        if (this.readState == READ_STATE_HEADER) {
+            this.header = SncpHeader.read(buffer, this.headerSize);
             if (this.header.getRetcode() != 0) { // retcode
                 context.getLogger().log(Level.WARNING, "sncp buffer header.retcode not 0");
                 return -1;
@@ -108,7 +115,9 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override
     public String toString() {
-        return SncpRequest.class.getSimpleName() + "_" + Objects.hashCode(this) + "{header=" + this.header + ",bodyOffset=" + this.bodyOffset + ",body=[" + (this.body == null ? -1 : this.body.length) + "]}";
+        return SncpRequest.class.getSimpleName() + "_" + Objects.hashCode(this)
+            + "{header=" + this.header + ",bodyOffset=" + this.bodyOffset
+            + ",body=[" + (this.body == null ? -1 : this.body.length) + "]}";
     }
 
     @Override
@@ -132,6 +141,10 @@ public class SncpRequest extends Request<SncpContext> {
 
     public Reader getReader() {
         return body == null ? null : reader.setBytes(body);
+    }
+
+    public byte[] traceBytes() {
+        return Utility.isEmpty(traceid) ? EMPTY_TRACEID : traceid.getBytes(StandardCharsets.UTF_8);
     }
 
     public byte[] getBody() {

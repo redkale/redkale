@@ -5,6 +5,7 @@ package org.redkale.net.sncp;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import org.redkale.util.*;
 
@@ -14,7 +15,7 @@ import org.redkale.util.*;
  */
 public class SncpHeader {
 
-    public static final int HEADER_SIZE = 72;
+    public static final int HEADER_SUBSIZE = 72;
 
     private static final byte[] EMPTY_ADDR = new byte[4];
 
@@ -24,8 +25,8 @@ public class SncpHeader {
 
     private String serviceName;
 
-    //【预留字段】service接口版本
-    private int serviceVersion;
+    //sncp协议版本
+    private int sncpVersion;
 
     private Uint128 actionid;
 
@@ -43,6 +44,9 @@ public class SncpHeader {
     //时间戳
     private long timestamp;
 
+    //日志ID
+    private String traceid;
+
     //结果码，非0表示错误
     private int retcode;
 
@@ -51,90 +55,111 @@ public class SncpHeader {
 
     private boolean valid;
 
-    public SncpHeader() {
+    private SncpHeader() {
     }
 
-    public SncpHeader(InetSocketAddress clientSncpAddress, Uint128 serviceid, String serviceName, Uint128 actionid, String methodName) {
-        this.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
-        this.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
-        this.serviceid = serviceid;
-        this.serviceName = serviceName;
-        this.actionid = actionid;
-        this.methodName = methodName;
-        if (addrBytes.length != 4) {
-            throw new SncpException("address bytes length must be 4, but " + addrBytes.length);
+    public static SncpHeader create(InetSocketAddress clientSncpAddress, Uint128 serviceid, String serviceName, Uint128 actionid, String methodName) {
+        SncpHeader header = new SncpHeader();
+        header.addrBytes = clientSncpAddress == null ? new byte[4] : clientSncpAddress.getAddress().getAddress();
+        header.addrPort = clientSncpAddress == null ? 0 : clientSncpAddress.getPort();
+        header.serviceid = serviceid;
+        header.serviceName = serviceName;
+        header.actionid = actionid;
+        header.methodName = methodName;
+        if (header.addrBytes.length != 4) {
+            throw new SncpException("address bytes length must be 4, but " + header.addrBytes.length);
         }
+        return header;
     }
 
-    //返回Header Size
-    public int read(ByteBuffer buffer) {
-        this.seqid = buffer.getLong();  //8
-        int size = buffer.getChar();
-        this.valid = size != HEADER_SIZE;   //2
-        this.serviceid = Uint128.read(buffer); //16
-        this.serviceVersion = buffer.getInt(); //4
-        this.actionid = Uint128.read(buffer); //16
-        if (this.addrBytes == null) {
-            this.addrBytes = new byte[4];
+    //此处的buffer不包含开头headerSize的两字节，返回Header Size
+    public static SncpHeader read(ByteBuffer buffer, final int headerSize) {
+        SncpHeader header = new SncpHeader();
+        header.valid = headerSize > HEADER_SUBSIZE;   //2
+        header.seqid = buffer.getLong();  //8
+        header.serviceid = Uint128.read(buffer); //16
+        header.sncpVersion = buffer.getInt(); //4
+        header.actionid = Uint128.read(buffer); //16
+        if (header.addrBytes == null) {
+            header.addrBytes = new byte[4];
         }
-        buffer.get(this.addrBytes); //addr      4
-        this.addrPort = buffer.getChar(); //port 2
-        this.abilities = buffer.getInt(); //4
-        this.timestamp = buffer.getLong(); //8
-        this.retcode = buffer.getInt(); //4
-        this.bodyLength = buffer.getInt(); //4
-        return size;
+        buffer.get(header.addrBytes); //addr      4
+        header.addrPort = buffer.getChar(); //port 2
+        header.abilities = buffer.getInt(); //4
+        header.timestamp = buffer.getLong(); //8
+        int traceSize = buffer.getChar(); //2
+        if (traceSize > 0) {
+            byte[] traces = new byte[traceSize];
+            buffer.get(traces);
+            header.traceid = new String(traces, StandardCharsets.UTF_8);
+        }
+        header.retcode = buffer.getInt(); //4
+        header.bodyLength = buffer.getInt(); //4
+        return header;
     }
 
-    //返回Header Size
-    public int read(ByteArray array) {
+    //此处的array不包含开头headerSize的两字节，返回Header Size
+    public static SncpHeader read(ByteArray array, final int headerSize) {
+        SncpHeader header = new SncpHeader();
+        header.valid = headerSize > HEADER_SUBSIZE;   //2
         int offset = 0;
-        this.seqid = array.getLong(offset);  //8
+        header.seqid = array.getLong(offset);  //8
         offset += 8;
-        int size = array.getChar(offset);
-        this.valid = size != HEADER_SIZE;  //2
-        offset += 2;
-        this.serviceid = array.getUint128(offset); //16
+        header.serviceid = array.getUint128(offset); //16
         offset += 16;
-        this.serviceVersion = array.getInt(offset); //4
+        header.sncpVersion = array.getInt(offset); //4
         offset += 4;
-        this.actionid = array.getUint128(offset); //16        
+        header.actionid = array.getUint128(offset); //16        
         offset += 16;
-        this.addrBytes = array.getBytes(offset, 4); //addr 4        
+        header.addrBytes = array.getBytes(offset, 4); //addr 4        
         offset += 4;
-        this.addrPort = array.getChar(offset); //port 2        
+        header.addrPort = array.getChar(offset); //port 2        
         offset += 2;
-        this.abilities = array.getInt(offset); //4       
+        header.abilities = array.getInt(offset); //4       
         offset += 4;
-        this.timestamp = array.getLong(offset); //8        
+        header.timestamp = array.getLong(offset); //8        
         offset += 8;
-        this.retcode = array.getInt(offset); //4          
+        int traceSize = array.getChar(offset); //2
+        offset += 2;
+        if (traceSize > 0) {
+            byte[] traces = array.getBytes(offset, traceSize);
+            header.traceid = new String(traces, StandardCharsets.UTF_8);
+            offset += traceSize;
+        }
+        header.retcode = array.getInt(offset); //4          
         offset += 4;
-        this.bodyLength = array.getInt(offset); //4 
-        return size;
+        header.bodyLength = array.getInt(offset); //4 
+        return header;
     }
 
-    public ByteArray writeTo(ByteArray array, InetSocketAddress address, long newSeqid, int bodyLength, int retcode) {
-        byte[] newAddrBytes = address == null ? EMPTY_ADDR : address.getAddress().getAddress();
-        int newAddrPort = address == null ? 0 : address.getPort();
-        return writeTo(array, newAddrBytes, newAddrPort, newSeqid, bodyLength, retcode);
+    public ByteArray writeTo(ByteArray array, SncpClientRequest clientRequest, int bodyLength, int retcode) {
+        return writeTo(array, this.addrBytes, this.addrPort, (Long) clientRequest.getRequestid(), clientRequest.traceBytes(), bodyLength, retcode);
     }
 
-    public ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, int bodyLength, int retcode) {
+    public ByteArray writeTo(ByteArray array, SncpResponse response, int bodyLength, int retcode) {
+        SncpRequest request = response.request();
+        return writeTo(array, response.addrBytes, response.addrPort, (Long) request.getRequestid(), request.traceBytes(), bodyLength, retcode);
+    }
+
+    private ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, byte[] traces, int bodyLength, int retcode) {
         if (newAddrBytes.length != 4) {
             throw new SncpException("address bytes length must be 4, but " + newAddrBytes.length);
         }
-        if (array.length() < HEADER_SIZE) {
-            throw new SncpException("ByteArray length must more " + HEADER_SIZE);
+        if (traces == null) {
+            traces = SncpClientRequest.EMPTY_TRACEID;
+        }
+        int size = HEADER_SUBSIZE + 2 + traces.length;
+        if (array.length() < size) {
+            throw new SncpException("ByteArray length must more " + size);
         }
         int offset = 0;
+        array.putChar(offset, (char) size); //2
+        offset += 2;
         array.putLong(offset, newSeqid); //8
         offset += 8;
-        array.putChar(offset, (char) HEADER_SIZE); //2
-        offset += 2;
         array.putUint128(offset, serviceid); //16
         offset += 16;
-        array.putInt(offset, serviceVersion); //4
+        array.putInt(offset, sncpVersion); //4
         offset += 4;
         array.putUint128(offset, actionid); //16   
         offset += 16;
@@ -146,9 +171,15 @@ public class SncpHeader {
         offset += 4;
         array.putLong(offset, System.currentTimeMillis()); //8 
         offset += 8;
+        array.putChar(offset, (char) traces.length); //2
+        offset += 2;
+        if (traces.length > 0) {
+            array.put(offset, traces); //traces.length
+            offset += traces.length;
+        }
         array.putInt(offset, retcode); //4 
         offset += 4;
-        array.putInt(offset, bodyLength); //4   
+        array.putInt(offset, bodyLength); //4  
         return array;
     }
 
@@ -158,11 +189,12 @@ public class SncpHeader {
             + (this.seqid == null
                 ? ("{serviceid=" + this.serviceid + ",serviceName=" + this.serviceName)
                 : ("{seqid=" + this.seqid + ",serviceid=" + this.serviceid + ",serviceName=" + this.serviceName))
-            + ",serviceVersion=" + this.serviceVersion
+            + ",sncpVersion=" + this.sncpVersion
             + ",actionid=" + this.actionid
             + ",methodName=" + this.methodName
             + ",address=" + getAddress()
             + ",timestamp=" + this.timestamp
+            + ",traceid=" + getTraceid()
             + ",retcode=" + this.retcode
             + ",bodyLength=" + this.bodyLength
             + "}";
@@ -186,6 +218,14 @@ public class SncpHeader {
             && Objects.equals(this.actionid, other.actionid);
     }
 
+    public static int calcHeaderSize(SncpClientRequest request) {
+        return HEADER_SUBSIZE + 2 + request.traceBytes().length;
+    }
+
+    public static int calcHeaderSize(SncpRequest request) {
+        return HEADER_SUBSIZE + 2 + request.traceBytes().length;
+    }
+
     public Long getSeqid() {
         return seqid;
     }
@@ -194,8 +234,8 @@ public class SncpHeader {
         return serviceid;
     }
 
-    public int getServiceVersion() {
-        return serviceVersion;
+    public int getSncpVersion() {
+        return sncpVersion;
     }
 
     public Uint128 getActionid() {
@@ -210,12 +250,20 @@ public class SncpHeader {
         return addrPort;
     }
 
-    public int getBodyLength() {
-        return bodyLength;
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public String getTraceid() {
+        return traceid;
     }
 
     public int getRetcode() {
         return retcode;
+    }
+
+    public int getBodyLength() {
+        return bodyLength;
     }
 
 }
