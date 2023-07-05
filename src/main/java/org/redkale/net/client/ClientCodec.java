@@ -125,17 +125,17 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 if (exc != null) {
                     if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
                         if (workThread.inIO()) {
-                            Traces.currentTraceid(request.traceid);
+                            Traces.computeIfAbsent(request.traceid);
                             respFuture.completeExceptionally(exc);
                         } else {
                             workThread.execute(() -> {
-                                Traces.currentTraceid(request.traceid);
+                                Traces.computeIfAbsent(request.traceid);
                                 respFuture.completeExceptionally(exc);
                             });
                         }
                     } else {
                         workThread.runWork(() -> {
-                            Traces.currentTraceid(request.traceid);
+                            Traces.computeIfAbsent(request.traceid);
                             respFuture.completeExceptionally(exc);
                         });
                     }
@@ -143,17 +143,17 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                     final P rs = request.respTransfer == null ? message : (P) request.respTransfer.apply(message);
                     if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
                         if (workThread.inIO()) {
-                            Traces.currentTraceid(request.traceid);
+                            Traces.computeIfAbsent(request.traceid);
                             respFuture.complete(rs);
                         } else {
                             workThread.execute(() -> {
-                                Traces.currentTraceid(request.traceid);
+                                Traces.computeIfAbsent(request.traceid);
                                 respFuture.complete(rs);
                             });
                         }
                     } else {
                         workThread.runWork(() -> {
-                            Traces.currentTraceid(request.traceid);
+                            Traces.computeIfAbsent(request.traceid);
                             respFuture.complete(rs);
                         });
                     }
@@ -161,17 +161,17 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
             } catch (Throwable t) {
                 if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
                     if (workThread.inIO()) {
-                        Traces.currentTraceid(request.traceid);
+                        Traces.computeIfAbsent(request.traceid);
                         respFuture.completeExceptionally(t);
                     } else {
                         workThread.execute(() -> {
-                            Traces.currentTraceid(request.traceid);
+                            Traces.computeIfAbsent(request.traceid);
                             respFuture.completeExceptionally(t);
                         });
                     }
                 } else {
                     workThread.runWork(() -> {
-                        Traces.currentTraceid(request.traceid);
+                        Traces.computeIfAbsent(request.traceid);
                         respFuture.completeExceptionally(t);
                     });
                 }

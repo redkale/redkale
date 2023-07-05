@@ -103,7 +103,8 @@ public class Context {
         this.bsonFactory = BsonFactory.root();
     }
 
-    protected void executeDispatch(Request request, Response response) {
+    protected final void executeDispatch(Request request, Response response) {
+        request.traceid = Traces.computeIfAbsent(request.getTraceid());
         dispatcher.dispatch(request, response);
     }
 
@@ -112,7 +113,7 @@ public class Context {
             response.updateNonBlocking(false);
             workExecutor.execute(() -> {
                 try {
-                    Traces.computeCurrTraceid(request.getTraceid());
+                    request.traceid = Traces.computeIfAbsent(request.getTraceid());
                     servlet.execute(request, response);
                 } catch (Throwable t) {
                     response.context.logger.log(Level.WARNING, "Execute servlet occur exception. request = " + request, t);
@@ -121,7 +122,7 @@ public class Context {
             });
         } else {
             try {
-                Traces.computeCurrTraceid(request.getTraceid());
+                request.traceid = Traces.computeIfAbsent(request.getTraceid());
                 servlet.execute(request, response);
             } catch (Throwable t) {
                 response.context.logger.log(Level.WARNING, "Execute servlet occur exception. request = " + request, t);

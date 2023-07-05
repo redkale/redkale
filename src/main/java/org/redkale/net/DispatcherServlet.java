@@ -13,7 +13,7 @@ import java.util.function.*;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.boot.Application;
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
 
 /**
  * 根Servlet， 一个Server只能存在一个根Servlet
@@ -291,7 +291,6 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
 
     public final void dispatch(final R request, final P response) {
         try {
-            Traces.computeCurrTraceid(request.getTraceid());
             request.prepare();
             response.filter = this.headFilter;
             response.servlet = this;

@@ -30,33 +30,20 @@ public class Traces {
         return enable ? tidSupplier.get() : null;
     }
 
-    public static void computeCurrTraceid(String requestTraceid) {
-        if (enable) {
-            if (requestTraceid == null) {
-                localTrace.set(tidSupplier.get());
-            } else {
-                localTrace.set(requestTraceid);
-            }
-        }
-    }
-
-//    public static String loadTraceid() {
-//        if (!enable) return null;
-//        String traceid = localTrace.get();
-//        if (traceid == null) {
-//            traceid = tidSupplier.get();
-//            localTrace.set(traceid);
-//        }
-//        return traceid;
-//    }
-    public static void currentTraceid(String traceid) {
-        if (enable) {
-            localTrace.set(traceid);
-        }
-    }
-
     public static String currentTraceid() {
         return enable ? localTrace.get() : null;
+    }
+
+    public static String computeIfAbsent(String requestTraceid) {
+        if (enable) {
+            String rs = requestTraceid;
+            if (rs == null || rs.isEmpty()) {
+                rs = tidSupplier.get();
+            }
+            localTrace.set(rs);
+            return rs;
+        }
+        return requestTraceid;
     }
 
 }
