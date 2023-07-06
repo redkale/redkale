@@ -76,9 +76,9 @@ public class SncpHeader {
     public static SncpHeader read(ByteBuffer buffer, final int headerSize) {
         SncpHeader header = new SncpHeader();
         header.valid = headerSize > HEADER_SUBSIZE;   //2
+        header.sncpVersion = buffer.getInt(); //4
         header.seqid = buffer.getLong();  //8
         header.serviceid = Uint128.read(buffer); //16
-        header.sncpVersion = buffer.getInt(); //4
         header.actionid = Uint128.read(buffer); //16
         if (header.addrBytes == null) {
             header.addrBytes = new byte[4];
@@ -103,12 +103,12 @@ public class SncpHeader {
         SncpHeader header = new SncpHeader();
         header.valid = headerSize > HEADER_SUBSIZE;   //2
         int offset = 0;
+        header.sncpVersion = array.getInt(offset); //4
+        offset += 4;
         header.seqid = array.getLong(offset);  //8
         offset += 8;
         header.serviceid = array.getUint128(offset); //16
         offset += 16;
-        header.sncpVersion = array.getInt(offset); //4
-        offset += 4;
         header.actionid = array.getUint128(offset); //16        
         offset += 16;
         header.addrBytes = array.getBytes(offset, 4); //addr 4        
@@ -155,12 +155,12 @@ public class SncpHeader {
         int offset = 0;
         array.putChar(offset, (char) size); //2
         offset += 2;
+        array.putInt(offset, sncpVersion); //4
+        offset += 4;
         array.putLong(offset, newSeqid); //8
         offset += 8;
         array.putUint128(offset, serviceid); //16
         offset += 16;
-        array.putInt(offset, sncpVersion); //4
-        offset += 4;
         array.putUint128(offset, actionid); //16   
         offset += 16;
         array.put(offset, newAddrBytes); //4   
@@ -201,10 +201,9 @@ public class SncpHeader {
     }
 
     public InetSocketAddress getAddress() {
-        if (addrBytes == null) {
-            return null;
-        }
-        return new InetSocketAddress((0xff & addrBytes[0]) + "." + (0xff & addrBytes[1]) + "." + (0xff & addrBytes[2]) + "." + (0xff & addrBytes[3]), addrPort);
+        return addrBytes == null ? null
+            : new InetSocketAddress((0xff & addrBytes[0]) + "." + (0xff & addrBytes[1])
+                + "." + (0xff & addrBytes[2]) + "." + (0xff & addrBytes[3]), addrPort);
     }
 
     public boolean isValid() {
