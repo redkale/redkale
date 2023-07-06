@@ -116,7 +116,6 @@
         默认置入的system.property.的有：
            System.setProperty("redkale.convert.pool.size", "128");
            System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
-           System.setProperty("redkale.trace.enable", "false");
            
         <properties>节点下也可包含非<property>节点.
         非<property>其节点可以通过@Resource(name="properties.xxxxxx")进行注入, 被注解的字段类型只能是AnyValue、AnyValue[]

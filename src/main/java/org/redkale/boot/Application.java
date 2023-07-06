@@ -310,10 +310,7 @@ public final class Application {
             if (System.getProperty("redkale.convert.writer.buffer.defsize") == null) {
                 System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
             }
-            if (System.getProperty("redkale.trace.enable") == null) {
-                System.setProperty("redkale.trace.enable", "false");
-            }
-
+            
             System.setProperty("redkale.version", Redkale.getDotedVersion());
             int nid = config.getIntValue("nodeid", 0);
             this.nodeid = nid;
