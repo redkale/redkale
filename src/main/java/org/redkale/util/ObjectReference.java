@@ -20,22 +20,28 @@ public final class ObjectReference<V> {
     private V value;
 
     public ObjectReference(V initialValue) {
-        value = initialValue;
+        this.value = initialValue;
     }
 
     public ObjectReference() {
     }
 
     public final V get() {
-        return value;
+        return this.value;
     }
 
     public final void set(V newValue) {
-        value = newValue;
+        this.value = newValue;
+    }
+
+    public final void setIfNull(V newValue) {
+        if (this.value == null) {
+            this.value = newValue;
+        }
     }
 
     @Override
     public String toString() {
-        return String.valueOf(value);
+        return String.valueOf(this.value);
     }
 }
