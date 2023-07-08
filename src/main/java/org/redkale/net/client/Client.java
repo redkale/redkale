@@ -6,7 +6,7 @@
 package org.redkale.net.client;
 
 import java.net.SocketAddress;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
@@ -252,6 +252,50 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected <T> CompletableFuture<T> writeChannel(ClientConnection conn, R request, Function<P, T> respTransfer) {
         return conn.writeChannel(request, respTransfer);
+    }
+
+    public final CompletableFuture<List<P>> sendAsync(R[] requests) {
+        for (R request : requests) {
+            if (request.workThread == null) {
+                request.workThread = WorkThread.currentWorkThread();
+            }
+        }
+        return connect().thenCompose(conn -> writeChannel(conn, requests));
+    }
+
+    public final <T> CompletableFuture<List<T>> sendAsync(R[] requests, Function<P, T> respTransfer) {
+        for (R request : requests) {
+            if (request.workThread == null) {
+                request.workThread = WorkThread.currentWorkThread();
+            }
+        }
+        return connect().thenCompose(conn -> writeChannel(conn, requests, respTransfer));
+    }
+
+    public final CompletableFuture<List<P>> sendAsync(SocketAddress addr, R[] requests) {
+        for (R request : requests) {
+            if (request.workThread == null) {
+                request.workThread = WorkThread.currentWorkThread();
+            }
+        }
+        return connect(addr).thenCompose(conn -> writeChannel(conn, requests));
+    }
+
+    public final <T> CompletableFuture<List<T>> sendAsync(SocketAddress addr, R[] requests, Function<P, T> respTransfer) {
+        for (R request : requests) {
+            if (request.workThread == null) {
+                request.workThread = WorkThread.currentWorkThread();
+            }
+        }
+        return connect(addr).thenCompose(conn -> writeChannel(conn, requests, respTransfer));
+    }
+
+    protected CompletableFuture<List<P>> writeChannel(ClientConnection conn, R[] requests) {
+        return conn.writeChannel(requests);
+    }
+
+    protected <T> CompletableFuture<List<T>> writeChannel(ClientConnection conn, R[] requests, Function<P, T> respTransfer) {
+        return conn.writeChannel(requests, respTransfer);
     }
 
     private C createConnection(int index, AsyncConnection channel) {
