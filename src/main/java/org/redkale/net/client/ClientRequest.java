@@ -35,12 +35,6 @@ public abstract class ClientRequest {
 
     public abstract void writeTo(ClientConnection conn, ByteArray array);
 
-    WorkThread removeWorkThread(WorkThread defaultValue) {
-        WorkThread t = this.workThread;
-        this.workThread = null;
-        return t == null ? defaultValue : t;
-    }
-
     public Serializable getRequestid() {
         return null;
     }
