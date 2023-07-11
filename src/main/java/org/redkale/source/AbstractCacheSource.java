@@ -30,9 +30,6 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
     public static final String CACHE_SOURCE_RESOURCE = "resource";
 
     //@since 2.7.0
-    public static final String CACHE_SOURCE_URL = "url";
-
-    //@since 2.7.0
     public static final String CACHE_SOURCE_DB = "db";
 
     //@since 2.7.0
@@ -44,8 +41,11 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
     //@since 2.7.0
     public static final String CACHE_SOURCE_ENCODING = "encoding";
 
-    //@since 2.7.0
-    public static final String CACHE_SOURCE_NODE = "node";
+    //@since 2.8.0
+    public static final String CACHE_SOURCE_NODES = "nodes";
+
+    //@since 2.8.0
+    public static final String CACHE_SOURCE_TYPE = "type";
 
     //@since 2.7.0
     public static final String CACHE_SOURCE_MAXCONNS = "maxconns";

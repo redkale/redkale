@@ -79,7 +79,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     public static boolean acceptsConf(AnyValue config) {
-        return config.getValue(CACHE_SOURCE_URL).startsWith("memory:");
+        return config.getValue(CACHE_SOURCE_NODES).startsWith("memory:");
     }
 
     @Override
