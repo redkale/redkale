@@ -66,7 +66,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
     }
 
     //仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
-    public CollectionDecoder(final ConvertFactory factory, Type type, Type componentType,
+    public CollectionDecoder(Type type, Type componentType,
         Creator<Collection<T>> creator, final Decodeable<Reader, T> componentDecoder) {
         Objects.requireNonNull(componentDecoder);
         this.type = type;

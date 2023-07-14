@@ -19,7 +19,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class AnyDecoder implements Decodeable<Reader, Object> {
+public class AnyDecoder<T> implements Decodeable<Reader, T> {
 
     private static final Type collectionObjectType = new TypeToken<Collection<Object>>() {
     }.getType();
@@ -29,13 +29,13 @@ public class AnyDecoder implements Decodeable<Reader, Object> {
 
     private static final Creator<ArrayList> collectionCreator = Creator.create(ArrayList.class);
 
-    private static final Creator<HashMap> mapCreator = Creator.create(HashMap.class);
+    private static final Creator<LinkedHashMap> mapCreator = Creator.create(LinkedHashMap.class);
 
-    final Decodeable<Reader, String> stringDecoder;
+    protected final Decodeable<Reader, ? extends CharSequence> stringDecoder;
 
-    final CollectionDecoder collectionDecoder;
+    protected final CollectionDecoder collectionDecoder;
 
-    final MapDecoder mapDecoder;
+    protected final MapDecoder mapDecoder;
 
     /**
      * 构造函数
@@ -43,24 +43,33 @@ public class AnyDecoder implements Decodeable<Reader, Object> {
      * @param factory ConvertFactory
      */
     public AnyDecoder(final ConvertFactory factory) {
-        this.stringDecoder = factory.loadDecoder(String.class);
-        this.collectionDecoder = new CollectionDecoder(factory, collectionObjectType, Object.class, collectionCreator, this);
-        this.mapDecoder = new MapDecoder(factory, mapObjectType, String.class, Object.class, mapCreator, stringDecoder, this);
+        this(mapCreator, mapObjectType, collectionCreator, collectionObjectType, factory.loadDecoder(String.class));
+    }
+
+    protected AnyDecoder(Creator<? extends Map> mapCreator, Type mapObjectType,
+        Creator<? extends Collection> listCreator, Type listObjectType, Decodeable<Reader, String> keyDecoder) {
+        this.stringDecoder = keyDecoder;
+        this.collectionDecoder = new CollectionDecoder(listObjectType, Object.class, listCreator, this);
+        this.mapDecoder = new MapDecoder(mapObjectType, String.class, Object.class, mapCreator, keyDecoder, this);
     }
 
     @Override
-    public Object convertFrom(Reader in) {
+    public T convertFrom(Reader in) {
         ValueType vt = in.readType();
         if (vt == null) {
             return null;
         }
         switch (vt) {
             case ARRAY:
-                return this.collectionDecoder.convertFrom(in);
+                return (T) this.collectionDecoder.convertFrom(in);
             case MAP:
-                return this.mapDecoder.convertFrom(in);
+                return (T) this.mapDecoder.convertFrom(in);
         }
-        return this.stringDecoder.convertFrom(in);
+        return (T) stringFrom(in);
+    }
+
+    protected T stringFrom(Reader in) {
+        return (T) this.stringDecoder.convertFrom(in);
     }
 
     @Override

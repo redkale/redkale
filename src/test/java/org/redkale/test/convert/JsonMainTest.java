@@ -6,12 +6,9 @@
 package org.redkale.test.convert;
 
 import java.io.*;
-import org.redkale.convert.json.JsonConvert;
-import org.redkale.convert.json.JsonFactory;
-import java.nio.*;
-import java.util.*;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import java.nio.ByteBuffer;
+import java.util.Map;
+import org.junit.jupiter.api.*;
 import org.redkale.convert.json.*;
 
 /**
@@ -106,5 +103,41 @@ public class JsonMainTest {
         final JsonConvert convert = JsonConvert.root();
         long v = convert.convertFrom(long.class, "100");
         Assertions.assertEquals(100, v);
+    }
+
+    @Test
+    public void run6() throws Throwable {
+        String str = "{"
+            + "	media : {"
+            + "		uri : \"http://javaone.com/keynote.mpg\" ,"
+            + "		title :  \"Javaone Keynote\" ,"
+            + "		width : -640 ,"
+            + "		height : -480 ,"
+            + "		format : \"video/mpg4\","
+            + "		duration : -18000000 ,"
+            + "		size : -58982400 ,"
+            + "		bitrate : -262144 ,"
+            + "		persons : [\"Bill Gates\", \"Steve Jobs\"] ,"
+            + "		player : JAVA , "
+            + "		copyright : None"
+            + "	}, images : ["
+            + "		{"
+            + "			uri : \"http://javaone.com/keynote_large.jpg\","
+            + "			title : \"Javaone Keynote\","
+            + "			width : -1024,"
+            + "			height : -768,"
+            + "			size : LARGE"
+            + "		}, {"
+            + "			uri : \"http://javaone.com/keynote_small.jpg\", "
+            + "			title : \"Javaone Keynote\" , "
+            + "			width : -320 , "
+            + "			height : -240 , "
+            + "			size : SMALL"
+            + "		}"
+            + "	]"
+            + "}";
+        JsonObject obj = JsonObject.convertFrom(str);
+        Assertions.assertEquals(JsonObject.class.getName(), obj.get("media").getClass().getName());
+        Assertions.assertEquals(JsonArray.class.getName(), obj.get("images").getClass().getName());
     }
 }

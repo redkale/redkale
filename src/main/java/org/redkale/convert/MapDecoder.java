@@ -80,7 +80,7 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
     }
 
     //仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
-    public MapDecoder(final ConvertFactory factory, Type type, Type keyType, Type valueType,
+    public MapDecoder(Type type, Type keyType, Type valueType,
         Creator<Map<K, V>> creator, final Decodeable<Reader, K> keyDecoder, Decodeable<Reader, V> valueDecoder) {
         Objects.requireNonNull(keyDecoder);
         Objects.requireNonNull(valueDecoder);

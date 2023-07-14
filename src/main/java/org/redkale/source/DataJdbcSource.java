@@ -137,7 +137,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final List<PreparedStatement> prestmts = new ArrayList<>();
         for (Map.Entry<String, PrepareInfo<T>> en : prepareInfos.entrySet()) {
             PrepareInfo<T> prepareInfo = en.getValue();
-            PreparedStatement prestmt = conn.prepareStatement(prepareInfo.prepareSql);
+            PreparedStatement prestmt = conn.prepareUpdateStatement(prepareInfo.prepareSql);
             for (final T value : prepareInfo.entitys) {
                 bindStatementParameters(conn, prestmt, info, attrs, value);
                 prestmt.addBatch();
@@ -149,7 +149,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     protected <T> PreparedStatement prepareInsertEntityStatement(SourceConnection conn, String sql, EntityInfo<T> info, T... entitys) throws SQLException {
         Attribute<T, Serializable>[] attrs = info.insertAttributes;
-        final PreparedStatement prestmt = conn.prepareStatement(sql);
+        final PreparedStatement prestmt = conn.prepareUpdateStatement(sql);
         for (final T value : entitys) {
             bindStatementParameters(conn, prestmt, info, attrs, value);
             prestmt.addBatch();
@@ -163,7 +163,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final List<PreparedStatement> prestmts = new ArrayList<>();
         for (Map.Entry<String, PrepareInfo<T>> en : prepareInfos.entrySet()) {
             PrepareInfo<T> prepareInfo = en.getValue();
-            PreparedStatement prestmt = conn.prepareStatement(prepareInfo.prepareSql);
+            PreparedStatement prestmt = conn.prepareUpdateStatement(prepareInfo.prepareSql);
             for (final T value : prepareInfo.entitys) {
                 int k = bindStatementParameters(conn, prestmt, info, attrs, value);
                 prestmt.setObject(++k, primary.get(value));
@@ -177,7 +177,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     protected <T> PreparedStatement prepareUpdateEntityStatement(SourceConnection conn, String prepareSQL, EntityInfo<T> info, T... entitys) throws SQLException {
         Attribute<T, Serializable> primary = info.primary;
         Attribute<T, Serializable>[] attrs = info.updateAttributes;
-        final PreparedStatement prestmt = conn.prepareStatement(prepareSQL);
+        final PreparedStatement prestmt = conn.prepareUpdateStatement(prepareSQL);
         for (final T value : entitys) {
             int k = bindStatementParameters(conn, prestmt, info, attrs, value);
             prestmt.setObject(++k, primary.get(value));
@@ -300,7 +300,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     @Override
     public CompletableFuture<Integer> batchAsync(final DataBatch batch) {
-        return CompletableFuture.supplyAsync(() -> batch(batch), getExecutor());
+        return supplyAsync(() -> batch(batch));
     }
 
     @Override
@@ -385,7 +385,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     throw se;
                 }
                 //创建单表结构
-                Statement st = conn.createStatement();
+                Statement st = conn.createUpdateStatement();
                 if (tableSqls.length == 1) {
                     st.execute(tableSqls[0]);
                 } else {
@@ -409,7 +409,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     });
                     try {
                         //执行一遍创建分表操作
-                        Statement st = conn.createStatement();
+                        Statement st = conn.createUpdateStatement();
                         for (String copySql : tableCopys) {
                             st.addBatch(copySql);
                         }
@@ -421,7 +421,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 String[] tableSqls = createTableSqls(info);
                                 if (tableSqls != null) {
                                     //创建原始表
-                                    Statement st = conn.createStatement();
+                                    Statement st = conn.createUpdateStatement();
                                     if (tableSqls.length == 1) {
                                         st.execute(tableSqls[0]);
                                     } else {
@@ -432,7 +432,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                     }
                                     st.close();
                                     //再执行一遍创建分表操作
-                                    st = conn.createStatement();
+                                    st = conn.createUpdateStatement();
                                     for (String copySql : tableCopys) {
                                         st.addBatch(copySql);
                                     }
@@ -442,7 +442,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             } else { //需要先建库
                                 Statement st;
                                 try {
-                                    st = conn.createStatement();
+                                    st = conn.createUpdateStatement();
                                     for (String newCatalog : newCatalogs) {
                                         st.addBatch(("postgresql".equals(dbtype()) ? "CREATE SCHEMA IF NOT EXISTS " : "CREATE DATABASE IF NOT EXISTS ") + newCatalog);
                                     }
@@ -453,7 +453,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 }
                                 try {
                                     //再执行一遍创建分表操作
-                                    st = conn.createStatement();
+                                    st = conn.createUpdateStatement();
                                     for (String copySql : tableCopys) {
                                         st.addBatch(copySql);
                                     }
@@ -463,7 +463,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                     if (isTableNotExist(info, sqle2.getSQLState())) {
                                         String[] tableSqls = createTableSqls(info);
                                         if (tableSqls != null) { //创建原始表
-                                            st = conn.createStatement();
+                                            st = conn.createUpdateStatement();
                                             if (tableSqls.length == 1) {
                                                 st.execute(tableSqls[0]);
                                             } else {
@@ -474,7 +474,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                             }
                                             st.close();
                                             //再执行一遍创建分表操作
-                                            st = conn.createStatement();
+                                            st = conn.createUpdateStatement();
                                             for (String copySql : tableCopys) {
                                                 st.addBatch(copySql);
                                             }
@@ -618,12 +618,12 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             int c;
             if (sqls.length == 1) {
-                final Statement stmt = conn.createStatement();
+                final Statement stmt = conn.createUpdateStatement();
                 int c1 = stmt.executeUpdate(sqls[0]);
                 stmt.close();
                 c = c1;
             } else {
-                final Statement stmt = conn.createStatement();
+                final Statement stmt = conn.createUpdateStatement();
                 for (String sql : sqls) {
                     stmt.addBatch(sql);
                 }
@@ -651,7 +651,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
                     if (tableSqls != null) {
-                        Statement st = conn.createStatement();
+                        Statement st = conn.createUpdateStatement();
                         if (tableSqls.length == 1) {
                             st.execute(tableSqls[0]);
                         } else {
@@ -697,7 +697,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         logger.finest(info.getType().getSimpleName() + " delete sql=" + Arrays.toString(sqls));
                     }
                     try {
-                        final Statement stmt = conn.createStatement();
+                        final Statement stmt = conn.createUpdateStatement();
                         for (String sql : sqls) {
                             stmt.addBatch(sql);
                         }
@@ -735,12 +735,12 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             conn.setAutoCommit(false);
             int c;
             if (sqls.length == 1) {
-                final Statement stmt = conn.createStatement();
+                final Statement stmt = conn.createUpdateStatement();
                 int c1 = stmt.executeUpdate(sqls[0]);
                 stmt.close();
                 c = c1;
             } else {
-                final Statement stmt = conn.createStatement();
+                final Statement stmt = conn.createUpdateStatement();
                 for (String sql : sqls) {
                     stmt.addBatch(sql);
                 }
@@ -792,7 +792,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         logger.finest(info.getType().getSimpleName() + " clearTable sql=" + Arrays.toString(sqls));
                     }
                     try {
-                        final Statement stmt = conn.createStatement();
+                        final Statement stmt = conn.createUpdateStatement();
                         for (String sql : sqls) {
                             stmt.addBatch(sql);
                         }
@@ -841,12 +841,12 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             int c;
             if (copyTableSql == null) {
                 if (sqls.length == 1) {
-                    stmt = conn.createStatement();
+                    stmt = conn.createUpdateStatement();
                     int c1 = stmt.executeUpdate(sqls[0]);
                     stmt.close();
                     c = c1;
                 } else {
-                    stmt = conn.createStatement();
+                    stmt = conn.createUpdateStatement();
                     for (String sql : sqls) {
                         stmt.addBatch(sql);
                     }
@@ -860,7 +860,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
             } else { //建分表
                 try {
-                    stmt = conn.createStatement();
+                    stmt = conn.createUpdateStatement();
                     c = stmt.executeUpdate(copyTableSql);
                 } catch (SQLException se) {
                     if (isTableNotExist(info, se.getSQLState())) { //分表的原始表不存在
@@ -870,7 +870,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
                             }
                             //创建原始表
-                            stmt = conn.createStatement();
+                            stmt = conn.createUpdateStatement();
                             if (sqls.length == 1) {
                                 stmt.execute(sqls[0]);
                             } else {
@@ -884,7 +884,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             if (info.isLoggable(logger, Level.FINEST, copyTableSql)) {
                                 logger.finest(info.getType().getSimpleName() + " createTable sql=" + copyTableSql);
                             }
-                            stmt = conn.createStatement();
+                            stmt = conn.createUpdateStatement();
                             c = stmt.executeUpdate(copyTableSql);
                             stmt.close();
 
@@ -895,7 +895,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 if (info.isLoggable(logger, Level.FINEST, catalogSql)) {
                                     logger.finest(info.getType().getSimpleName() + " createCatalog sql=" + catalogSql);
                                 }
-                                stmt = conn.createStatement();
+                                stmt = conn.createUpdateStatement();
                                 stmt.executeUpdate(catalogSql);
                                 stmt.close();
                             } catch (SQLException sqle1) {
@@ -906,7 +906,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 if (info.isLoggable(logger, Level.FINEST, copyTableSql)) {
                                     logger.finest(info.getType().getSimpleName() + " createTable sql=" + copyTableSql);
                                 }
-                                stmt = conn.createStatement();
+                                stmt = conn.createUpdateStatement();
                                 c = stmt.executeUpdate(copyTableSql);
                                 stmt.close();
                             } catch (SQLException sqle2) {
@@ -915,7 +915,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                         logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
                                     }
                                     //创建原始表
-                                    stmt = conn.createStatement();
+                                    stmt = conn.createUpdateStatement();
                                     if (sqls.length == 1) {
                                         stmt.execute(sqls[0]);
                                     } else {
@@ -929,7 +929,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                     if (info.isLoggable(logger, Level.FINEST, copyTableSql)) {
                                         logger.finest(info.getType().getSimpleName() + " createTable sql=" + copyTableSql);
                                     }
-                                    stmt = conn.createStatement();
+                                    stmt = conn.createUpdateStatement();
                                     c = stmt.executeUpdate(copyTableSql);
                                     stmt.close();
                                 } else {
@@ -968,12 +968,12 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             conn.setAutoCommit(false);
             int c;
             if (sqls.length == 1) {
-                final Statement stmt = conn.createStatement();
+                final Statement stmt = conn.createUpdateStatement();
                 int c1 = stmt.executeUpdate(sqls[0]);
                 stmt.close();
                 c = c1;
             } else {
-                final Statement stmt = conn.createStatement();
+                final Statement stmt = conn.createUpdateStatement();
                 for (String sql : sqls) {
                     stmt.addBatch(sql);
                 }
@@ -1025,7 +1025,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         logger.finest(info.getType().getSimpleName() + " dropTable sql=" + Arrays.toString(sqls));
                     }
                     try {
-                        final Statement stmt = conn.createStatement();
+                        final Statement stmt = conn.createUpdateStatement();
                         for (String sql : sqls) {
                             stmt.addBatch(sql);
                         }
@@ -1099,7 +1099,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     prestmt = prepareUpdateEntityStatement(conn, presql, info, entitys);
                 } else {
                     presql = caseSql;
-                    prestmt = conn.prepareStatement(presql);
+                    prestmt = conn.prepareUpdateStatement(presql);
                     int len = entitys.length;
                     final Attribute<T, Serializable> primary = info.getPrimary();
                     Attribute<T, Serializable> otherAttr = attrs[0];
@@ -1148,7 +1148,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     String[] tableSqls = createTableSqls(info);
                     if (tableSqls != null) {
                         try {
-                            Statement st = conn.createStatement();
+                            Statement st = conn.createUpdateStatement();
                             if (tableSqls.length == 1) {
                                 st.execute(tableSqls[0]);
                             } else {
@@ -1305,7 +1305,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             if (sql.blobs != null || sql.tables != null) {
                 if (sql.tables == null) {
-                    final PreparedStatement prestmt = conn.prepareStatement(sql.sql);
+                    final PreparedStatement prestmt = conn.prepareUpdateStatement(sql.sql);
                     int index = 0;
                     for (byte[] param : sql.blobs) {
                         Blob blob = conn.createBlob();
@@ -1328,7 +1328,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     String[] sqls = new String[sql.tables.length];
                     for (int i = 0; i < sql.tables.length; i++) {
                         sqls[i] = i == 0 ? sql.sql : sql.sql.replaceFirst(firstTable, sql.tables[i]);
-                        PreparedStatement prestmt = conn.prepareStatement(sqls[i]);
+                        PreparedStatement prestmt = conn.prepareUpdateStatement(sqls[i]);
                         int index = 0;
                         if (sql.blobs != null) {
                             for (byte[] param : sql.blobs) {
@@ -1362,7 +1362,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 if (info.isLoggable(logger, Level.FINEST, sql.sql)) {
                     logger.finest(info.getType().getSimpleName() + " updateColumn sql=" + sql.sql);
                 }
-                final Statement stmt = conn.createStatement();
+                final Statement stmt = conn.createUpdateStatement();
                 c = stmt.executeUpdate(sql.sql);
                 stmt.close();
                 if (!batch) {
@@ -1380,7 +1380,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     String[] tableSqls = createTableSqls(info);
                     if (tableSqls != null) {
                         try {
-                            Statement st = conn.createStatement();
+                            Statement st = conn.createUpdateStatement();
                             if (tableSqls.length == 1) {
                                 st.execute(tableSqls[0]);
                             } else {
@@ -1421,7 +1421,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     String[] sqls = new String[sql.tables.length];
                     for (int i = 0; i < sql.tables.length; i++) {
                         sqls[i] = sql.sql.replaceFirst(firstTable, sql.tables[i]);
-                        PreparedStatement prestmt = conn.prepareStatement(sqls[i]);
+                        PreparedStatement prestmt = conn.prepareUpdateStatement(sqls[i]);
                         int index = 0;
                         if (sql.blobs != null) {
                             for (byte[] param : sql.blobs) {
@@ -1470,7 +1470,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = readPool.pollConnection();
-            stmt = conn.createStatement();
+            stmt = conn.createQueryStatement();
             ResultSet set = stmt.executeQuery(sql);
             if (set.next()) {
                 int index = 0;
@@ -1528,7 +1528,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         if (stmt != null) {
                             stmt.close();
                         }
-                        stmt = conn.createStatement();
+                        stmt = conn.createQueryStatement();
                         ResultSet set = stmt.executeQuery(sql);
                         if (set.next()) {
                             int index = 0;
@@ -1572,7 +1572,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = readPool.pollConnection();
-            stmt = conn.createStatement();
+            stmt = conn.createQueryStatement();
             Number rs = defVal;
             ResultSet set = stmt.executeQuery(sql);
             if (set.next()) {
@@ -1623,7 +1623,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         if (stmt != null) {
                             stmt.close();
                         }
-                        stmt = conn.createStatement();
+                        stmt = conn.createQueryStatement();
                         Number rs = defVal;
                         ResultSet set = stmt.executeQuery(sql);
                         if (set.next()) {
@@ -1662,7 +1662,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = readPool.pollConnection();
-            stmt = conn.createStatement();
+            stmt = conn.createQueryStatement();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
             boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
@@ -1712,7 +1712,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         if (stmt != null) {
                             stmt.close();
                         }
-                        stmt = conn.createStatement();
+                        stmt = conn.createQueryStatement();
                         ResultSet set = stmt.executeQuery(sql);
                         ResultSetMetaData rsd = set.getMetaData();
                         boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
@@ -1749,7 +1749,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = readPool.pollConnection();
-            stmt = conn.createStatement();
+            stmt = conn.createQueryStatement();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
             boolean[] smallints = null;
@@ -1814,7 +1814,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         if (stmt != null) {
                             stmt.close();
                         }
-                        stmt = conn.createStatement();
+                        stmt = conn.createQueryStatement();
                         ResultSet set = stmt.executeQuery(sql);
                         ResultSetMetaData rsd = set.getMetaData();
                         boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
@@ -1863,7 +1863,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             conn = readPool.pollConnection();
             String prepareSQL = info.getFindQuestionPrepareSQL(pk);
-            prestmt = conn.prepareStatement(prepareSQL);
+            prestmt = conn.prepareQueryStatement(prepareSQL);
             prestmt.setObject(1, pk);
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
             T rs = set.next() ? info.getFullEntityValue(set) : null;
@@ -1896,7 +1896,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         PreparedStatement prestmt = null;
         try {
             conn = readPool.pollConnection();
-            prestmt = conn.prepareStatement(sql);
+            prestmt = conn.prepareQueryStatement(sql);
             prestmt.setFetchSize(1);
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
             T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
@@ -1942,7 +1942,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         if (prestmt != null) {
                             prestmt.close();
                         }
-                        prestmt = conn.prepareStatement(sql);
+                        prestmt = conn.prepareQueryStatement(sql);
                         prestmt.setFetchSize(1);
                         final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
                         T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
@@ -1976,7 +1976,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final Attribute<T, Serializable> attr = info.getAttribute(column);
         try {
             conn = readPool.pollConnection();
-            prestmt = conn.prepareStatement(sql);
+            prestmt = conn.prepareQueryStatement(sql);
             prestmt.setFetchSize(1);
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
             Serializable val = defValue;
@@ -2025,7 +2025,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         if (prestmt != null) {
                             prestmt.close();
                         }
-                        prestmt = conn.prepareStatement(sql);
+                        prestmt = conn.prepareQueryStatement(sql);
                         prestmt.setFetchSize(1);
                         final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
                         Serializable val = defValue;
@@ -2061,7 +2061,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         PreparedStatement prestmt = null;
         try {
             conn = readPool.pollConnection();
-            prestmt = conn.prepareStatement(sql);
+            prestmt = conn.prepareQueryStatement(sql);
             final ResultSet set = prestmt.executeQuery();
             boolean rs = set.next() ? (set.getInt(1) > 0) : false;
             set.close();
@@ -2109,7 +2109,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         if (prestmt != null) {
                             //    prestmt.close();
                         }
-                        prestmt = conn.prepareStatement(sql);
+                        prestmt = conn.prepareQueryStatement(sql);
                         final ResultSet set = prestmt.executeQuery();
                         boolean rs = set.next() ? (set.getInt(1) > 0) : false;
                         set.close();
@@ -2144,7 +2144,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 final List<T> list = new ArrayList();
                 try {
                     String prepareSQL = info.getFindQuestionPrepareSQL(ids[0]);
-                    PreparedStatement prestmt = conn.prepareStatement(prepareSQL);
+                    PreparedStatement prestmt = conn.prepareQueryStatement(prepareSQL);
                     DataJdbcResultSet rr = new DataJdbcResultSet(info);
                     for (Serializable pk : ids) {
                         prestmt.setObject(1, pk);
@@ -2198,7 +2198,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             final List<T> list = new ArrayList();
             try {
                 String prepareSQL = info.getAllQueryPrepareSQL();
-                PreparedStatement prestmt = conn.prepareStatement(prepareSQL);
+                PreparedStatement prestmt = conn.prepareQueryStatement(prepareSQL);
                 ResultSet set = prestmt.executeQuery();
                 final DataResultSet rr = createDataResultSet(info, set);
                 while (set.next()) {
@@ -2304,7 +2304,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         long s, SourceConnection conn, boolean mysqlOrPgsql, String listSql, String countSql) throws SQLException {
         final List<T> list = new ArrayList();
         if (mysqlOrPgsql) {  //sql可以带limit、offset
-            PreparedStatement prestmt = conn.prepareStatement(listSql);
+            PreparedStatement prestmt = conn.prepareQueryStatement(listSql);
             ResultSet set = prestmt.executeQuery();
             final DataResultSet rr = createDataResultSet(info, set);
             while (set.next()) {
@@ -2314,7 +2314,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             prestmt.close();
             long total = list.size();
             if (needTotal) {
-                prestmt = conn.prepareStatement(countSql);
+                prestmt = conn.prepareQueryStatement(countSql);
                 set = prestmt.executeQuery();
                 if (set.next()) {
                     total = set.getLong(1);
@@ -2325,7 +2325,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, listSql);
             return new Sheet<>(total, list);
         } else {
-            PreparedStatement prestmt = conn.prepareStatement(listSql);
+            PreparedStatement prestmt = conn.prepareQueryStatement(listSql);
             if (flipper != null && flipper.getLimit() > 0) {
                 prestmt.setFetchSize(flipper.getLimit());
             }
@@ -2488,7 +2488,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         SourceConnection conn = writePool.pollConnection();
         try {
             conn.setAutoCommit(false);
-            final Statement stmt = conn.createStatement();
+            final Statement stmt = conn.createUpdateStatement();
             final int[] rs = new int[sqls.length];
             int i = -1;
             for (String sql : sqls) {
@@ -2530,7 +2530,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             if (logger.isLoggable(Level.FINEST)) {
                 logger.finest("direct query sql=" + sql);
             }
-            final Statement statement = conn.createStatement();
+            final Statement statement = conn.createQueryStatement();
             //final PreparedStatement prestmt = conn.prepareStatement(sql);
             final ResultSet set = statement.executeQuery(sql);// prestmt.executeQuery();
             V rs = handler.apply(createDataResultSet(null, set));
@@ -2898,11 +2898,25 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             this.version = version;
         }
 
-        public Statement createStatement() throws SQLException {
+        public Statement createStreamStatement() throws SQLException {
+            Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            statement.setFetchSize(Integer.MIN_VALUE);
+            return statement;
+        }
+
+        public Statement createQueryStatement() throws SQLException {
             return conn.createStatement();
         }
 
-        public PreparedStatement prepareStatement(String sql) throws SQLException {
+        public Statement createUpdateStatement() throws SQLException {
+            return conn.createStatement();
+        }
+
+        public PreparedStatement prepareQueryStatement(String sql) throws SQLException {
+            return conn.prepareStatement(sql);
+        }
+
+        public PreparedStatement prepareUpdateStatement(String sql) throws SQLException {
             return conn.prepareStatement(sql);
         }
 
