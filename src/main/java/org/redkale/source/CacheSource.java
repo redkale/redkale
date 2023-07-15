@@ -205,6 +205,20 @@ public interface CacheSource extends Resourcable {
         return val == null ? defValue : val;
     }
 
+    //------------------------ getdel ------------------------
+    default <T> T getDel(String key, Type type) {
+        return (T) getDelAsync(key, type).join();
+    }
+
+    default String getDelString(String key) {
+        return getDel(key, String.class);
+    }
+
+    default long getDelLong(String key, long defValue) {
+        Long val = getDel(key, Long.class);
+        return val == null ? defValue : val;
+    }
+
     //------------------------ 键 Keys ------------------------     
     default long del(String... keys) {
         return delAsync(keys).join();
@@ -1047,6 +1061,17 @@ public interface CacheSource extends Resourcable {
 
     default CompletableFuture<Long> getSetLongAsync(String key, long value, long defValue) {
         return getSetAsync(key, Long.class, value).thenApply(v -> v == null ? defValue : (Long) v);
+    }
+
+    //------------------------ getdel ------------------------  
+    public <T> CompletableFuture<T> getDelAsync(String key, Type type);
+
+    default CompletableFuture<String> getDelStringAsync(String key) {
+        return getDelAsync(key, String.class);
+    }
+
+    default CompletableFuture<Long> getDelLongAsync(String key, long defValue) {
+        return getDelAsync(key, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
     }
 
     //------------------------ 键 Keys ------------------------  

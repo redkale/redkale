@@ -661,6 +661,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }, getExecutor());
     }
 
+    @Override
+    public <T> CompletableFuture<T> getDelAsync(String key, Type type) {
+        return supplyAsync(() -> {
+            return (T) container.remove(key);
+        }, getExecutor());
+    }
+
     protected void set(CacheEntryType cacheType, int expireSeconds, String key, Object value) {
         if (key == null) {
             return;
