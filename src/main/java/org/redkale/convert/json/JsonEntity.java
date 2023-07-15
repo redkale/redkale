@@ -20,6 +20,8 @@ public interface JsonEntity extends java.io.Serializable {
 
     public boolean isArray();
 
+    public boolean isString();
+
     public static JsonEntity convertFrom(String text) {
         return convertFrom(Utility.charArray(text));
     }
@@ -29,7 +31,11 @@ public interface JsonEntity extends java.io.Serializable {
     }
 
     public static JsonEntity convertFrom(char[] text, final int offset, final int length) {
-        return JsonEntityDecoder.instance.convertFrom(new JsonReader(text, offset, length));
+        Object val = JsonEntityDecoder.instance.convertFrom(new JsonReader(text, offset, length));
+        if (val instanceof CharSequence) {
+            return new JsonString(val.toString());
+        }
+        return (JsonEntity) val;
     }
 
 }
