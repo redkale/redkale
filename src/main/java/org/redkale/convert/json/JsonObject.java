@@ -34,16 +34,30 @@ public class JsonObject extends LinkedHashMap<String, Object> implements JsonEnt
         return convertFrom(text, 0, text.length);
     }
 
-    public static JsonObject convertFrom(char[] text, final int offset, final int length) {
+    public static JsonObject convertFrom(char[] text, int offset, int length) {
         return (JsonObject) JsonEntityDecoder.instance.convertFrom(new JsonReader(text, offset, length));
     }
 
-    public static JsonObject of(Object javaBean) {
-        return convertFrom(JsonConvert.root().convertTo(javaBean));
+    public static JsonObject of(Object bean) {
+        if (bean instanceof CharSequence) {
+            return convertFrom(bean.toString());
+        }
+        if (bean instanceof JsonObject) {
+            return (JsonObject) bean;
+        }
+        if (bean instanceof Map) {
+            return new JsonObject((Map) bean);
+        }
+        return convertFrom(JsonConvert.root().convertTo(bean));
     }
 
     public JsonObject append(String key, Object value) {
         super.put(key, value);
+        return this;
+    }
+
+    public JsonObject append(String key, Collection value) {
+        super.put(key, value == null || value instanceof JsonArray ? value : new JsonArray(value));
         return this;
     }
 

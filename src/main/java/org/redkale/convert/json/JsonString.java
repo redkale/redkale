@@ -55,7 +55,7 @@ public class JsonString implements CharSequence, JsonEntity, Comparable<JsonStri
 
     @Override
     public int compareTo(JsonString o) {
-        return o == null ? -1 : CharSequence.compare(this, o.getValue());
+        return o == null || o.value == null ? (value == null ? 0 : 1) : (this.value == null ? -1 : this.value.compareTo(o.value));
     }
 
     @Override
