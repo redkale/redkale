@@ -258,6 +258,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         } finally {
             writeLock.unlock();
         }
+        channel.readRegister(getCodec()); //不能在创建连接时注册读事件
         return respFuture;
     }
 

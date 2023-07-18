@@ -74,6 +74,10 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 } else {
                     ClientFuture<R, P> respFuture = connection.pollRespFuture(cr.getRequestid());
                     if (respFuture != null) {
+                        if (respFuture.request != cr.request) {
+                            connection.dispose(new RedkaleException("request pipeline error"));
+                            return;
+                        }
                         responseComplete(false, respFuture, cr.message, cr.exc);
                     }
                     respPool.accept(cr);

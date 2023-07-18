@@ -176,7 +176,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected abstract C createClientConnection(final int index, AsyncConnection channel);
 
-    //创建连接后先从服务器拉取数据构建的虚拟请求，返回null表示连上服务器后不读取数据
+    //创建连接后会立马从服务器拉取数据构建的虚拟请求，返回null表示连上服务器后不会立马读取数据
     protected R createVirtualRequestAfterConnect() {
         return null;
     }
@@ -298,14 +298,6 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return conn.writeChannel(requests, respTransfer);
     }
 
-    private C createConnection(int index, AsyncConnection channel) {
-        C conn = createClientConnection(index, channel);
-        if (!channel.isReadPending()) {
-            channel.readRegister(conn.getCodec()); //不用readRegisterInIOThread，因executeRead可能会异步
-        }
-        return conn;
-    }
-
     public final CompletableFuture<C> connect() {
         final int size = this.connArray.length;
         WorkThread workThread = WorkThread.currentWorkThread();
@@ -317,10 +309,15 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         final Queue<CompletableFuture<C>> waitQueue = this.connAcquireWaitings[connIndex];
         if (this.connOpenStates[connIndex].compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
-                .thenApply(c -> (C) createConnection(connIndex, c).setMaxPipelines(maxPipelines));
+                .thenApply(c -> (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
+            } else {
+                future = future.thenApply(conn -> {
+                    conn.channel.readRegister(conn.getCodec()); //不用readRegisterInIOThread，因executeRead可能会异步
+                    return conn;
+                });
             }
             if (authenticate != null) {
                 future = future.thenCompose(authenticate);
@@ -362,10 +359,15 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
         if (entry.connOpenState.compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds)
-                .thenApply(c -> (C) createConnection(-1, c).setMaxPipelines(maxPipelines));
+                .thenApply(c -> (C) createClientConnection(-1, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
+            } else {
+                future = future.thenApply(conn -> {
+                    conn.channel.readRegister(conn.getCodec()); //不用readRegisterInIOThread，因executeRead可能会异步
+                    return conn;
+                });
             }
             if (authenticate != null) {
                 future = future.thenCompose(authenticate);
