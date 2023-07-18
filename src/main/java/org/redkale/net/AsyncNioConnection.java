@@ -85,6 +85,8 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SelectionKey writeKey;
 
+    protected CompletionHandler<Integer, Object> writeFastHandler;
+
     public AsyncNioConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
         AsyncIOThread ioWriteThread, final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext) {
         super(clientMode, ioGroup, ioReadThread, ioWriteThread, bufferCapacity, sslBuilder, sslContext);
@@ -113,6 +115,13 @@ abstract class AsyncNioConnection extends AsyncConnection {
     @Override
     public int getWriteTimeoutSeconds() {
         return this.writeTimeoutSeconds;
+    }
+
+    @Override
+    public <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler) {
+        Objects.requireNonNull(handler);
+        this.writeFastHandler = (CompletionHandler) handler;
+        return this;
     }
 
     @Override
@@ -291,18 +300,19 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public <A> void fastWrite(byte[] data, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    public <A> void fastWrite(byte[] data) {
+        CompletionHandler<Integer, ? super A> handler = this.writeFastHandler;
+        Objects.requireNonNull(data);
+        Objects.requireNonNull(handler, "fastHandler is null");
         if (!this.isConnected()) {
             handler.failed(new NotYetConnectedException(), null);
             return;
         }
-        Objects.requireNonNull(data);
-        Objects.requireNonNull(handler);
         this.writePending = true;
         this.fastWriteQueue.offer(data);
         this.fastWriteCount.incrementAndGet();
         this.writeCompletionHandler = (CompletionHandler) handler;
-        this.writeAttachment = attachment;
+        this.writeAttachment = null;
         try {
             if (writeKey == null) {
                 ioWriteThread.register(selector -> {

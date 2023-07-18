@@ -102,7 +102,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         this.index = index;
         this.connEntry = index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress());
         this.respWaitingCounter = index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting;
-        this.channel = channel.beforeCloseListener(this);
+        this.channel = channel.beforeCloseListener(this).fastHandler(writeHandler);
         this.writeBuffer = channel.pollWriteBuffer();
     }
 
@@ -180,7 +180,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 pauseWriting.set(true);
                 currHalfWriteFuture = respFuture;
             }
-            channel.fastWrite(array.getBytes(), writeHandler);
+            channel.fastWrite(array.getBytes());
         } else { //旧方式
             //发送请求数据包
             writeArray.clear();
@@ -221,7 +221,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
                 }
             }
         }
-        channel.fastWrite(array.getBytes(), writeHandler);
+        channel.fastWrite(array.getBytes());
     }
 
     //发送半包和积压的请求数据包
