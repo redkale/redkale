@@ -148,6 +148,10 @@ public interface CacheSource extends Resourcable {
         return val == null ? defValue : val;
     }
 
+    default Long getLong(String key) {
+        return get(key, Long.class);
+    }
+
     //------------------------ mget ------------------------    
     default <T> List<T> mget(Type componentType, String... keys) {
         return (List) mgetAsync(componentType, keys).join();
@@ -187,6 +191,10 @@ public interface CacheSource extends Resourcable {
         return val == null ? defValue : val;
     }
 
+    default Long getexLong(String key, int expireSeconds) {
+        return getex(key, expireSeconds, Long.class);
+    }
+
     //------------------------ getset ------------------------
     default <T> T getSet(String key, Convert convert, Type type, T value) {
         return getSetAsync(key, convert, type, value).join();
@@ -205,6 +213,10 @@ public interface CacheSource extends Resourcable {
         return val == null ? defValue : val;
     }
 
+    default Long getSetLong(String key, long value) {
+        return getSet(key, Long.class, value);
+    }
+
     //------------------------ getdel ------------------------
     default <T> T getDel(String key, Type type) {
         return (T) getDelAsync(key, type).join();
@@ -217,6 +229,10 @@ public interface CacheSource extends Resourcable {
     default long getDelLong(String key, long defValue) {
         Long val = getDel(key, Long.class);
         return val == null ? defValue : val;
+    }
+
+    default Long getDelLong(String key) {
+        return getDel(key, Long.class);
     }
 
     //------------------------ 键 Keys ------------------------     
@@ -353,6 +369,10 @@ public interface CacheSource extends Resourcable {
     default long hgetLong(String key, String field, long defValue) {
         Long val = hget(key, field, Long.class);
         return val == null ? defValue : val;
+    }
+
+    default Long hgetLong(String key, String field) {
+        return hget(key, field, Long.class);
     }
 
     default <T> void hset(String key, String field, Convert convert, Type type, T value) {
@@ -1005,6 +1025,10 @@ public interface CacheSource extends Resourcable {
         return getAsync(key, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
     }
 
+    default CompletableFuture<Long> getLongAsync(String key) {
+        return getAsync(key, Long.class);
+    }
+
     //------------------------ mget ------------------------   
     public <T> CompletableFuture<List<T>> mgetAsync(Type componentType, String... keys);
 
@@ -1048,6 +1072,10 @@ public interface CacheSource extends Resourcable {
         return getexAsync(key, expireSeconds, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
     }
 
+    default CompletableFuture<Long> getexLongAsync(String key, int expireSeconds) {
+        return getexAsync(key, expireSeconds, Long.class);
+    }
+
     //------------------------ getset ------------------------  
     public <T> CompletableFuture<T> getSetAsync(String key, Convert convert, Type type, T value);
 
@@ -1063,6 +1091,10 @@ public interface CacheSource extends Resourcable {
         return getSetAsync(key, Long.class, value).thenApply(v -> v == null ? defValue : (Long) v);
     }
 
+    default CompletableFuture<Long> getSetLongAsync(String key, long value) {
+        return getSetAsync(key, Long.class, value);
+    }
+
     //------------------------ getdel ------------------------  
     public <T> CompletableFuture<T> getDelAsync(String key, Type type);
 
@@ -1072,6 +1104,10 @@ public interface CacheSource extends Resourcable {
 
     default CompletableFuture<Long> getDelLongAsync(String key, long defValue) {
         return getDelAsync(key, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
+    }
+
+    default CompletableFuture<Long> getDelLongAsync(String key) {
+        return getDelAsync(key, Long.class);
     }
 
     //------------------------ 键 Keys ------------------------  
@@ -1119,6 +1155,10 @@ public interface CacheSource extends Resourcable {
 
     default CompletableFuture<Long> hgetLongAsync(String key, String field, long defValue) {
         return hgetAsync(key, field, Long.class).thenApply(v -> v == null ? defValue : (Long) v);
+    }
+
+    default CompletableFuture<Long> hgetLongAsync(String key, String field) {
+        return hgetAsync(key, field, Long.class);
     }
 
     public <T> CompletableFuture<Void> hsetAsync(String key, String field, Convert convert, Type type, T value);
