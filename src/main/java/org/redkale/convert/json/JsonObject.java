@@ -35,7 +35,7 @@ public class JsonObject extends LinkedHashMap<String, Object> implements JsonEnt
     }
 
     public static JsonObject convertFrom(char[] text, int offset, int length) {
-        return (JsonObject) JsonEntityDecoder.instance.convertFrom(new JsonReader(text, offset, length));
+        return JsonConvert.root().convertFrom(JsonObject.class, text, offset, length);
     }
 
     public static JsonObject of(Object bean) {

@@ -39,7 +39,7 @@ public class JsonArray extends ArrayList<Object> implements JsonEntity {
     }
 
     public static JsonArray convertFrom(char[] text, int offset, int length) {
-        return (JsonArray) JsonEntityDecoder.instance.convertFrom(new JsonReader(text, offset, length));
+        return JsonConvert.root().convertFrom(JsonArray.class, text, offset, length);
     }
 
     public JsonArray append(Object value) {

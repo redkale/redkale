@@ -31,7 +31,7 @@ public interface JsonEntity extends java.io.Serializable {
     }
 
     public static JsonEntity convertFrom(char[] text, final int offset, final int length) {
-        Object val = JsonEntityDecoder.instance.convertFrom(new JsonReader(text, offset, length));
+        Object val = JsonConvert.root().convertFrom(JsonEntity.class, text, offset, length);
         if (val instanceof CharSequence) {
             return new JsonString(val.toString());
         }

@@ -27,6 +27,7 @@ public class JsonMainTest {
         test.run3();
         test.run4();
         test.run5();
+        test.run6();
     }
 
     @Test
@@ -137,6 +138,10 @@ public class JsonMainTest {
             + "	]"
             + "}";
         JsonObject obj = JsonObject.convertFrom(str);
+        JsonObject obj2 = JsonConvert.root().convertFrom(JsonObject.class, str);
+        System.out.println("结果1: " + obj);
+        System.out.println("结果2: " + obj2);
+        System.out.println("结果3: " + JsonConvert.root().convertTo(obj2));
         Assertions.assertEquals(JsonObject.class.getName(), obj.get("media").getClass().getName());
         Assertions.assertEquals(JsonArray.class.getName(), obj.get("images").getClass().getName());
     }
