@@ -288,37 +288,42 @@ public final class Application {
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
-        { //设置系统变量
-            AnyValue propertiesConf = this.config.getAnyValue("properties");
-            if (propertiesConf != null) { //设置配置文件中的系统变量
-                for (AnyValue prop : propertiesConf.getAnyValues("property")) {
-                    String key = prop.getValue("name", "");
-                    if (key.startsWith("system.property.")) {
-                        String propName = key.substring("system.property.".length());
-                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
-                            String value = prop.getValue("value");
-                            //replaceValue调用前必须给home、name赋值
-                            System.setProperty(propName, value == null ? value : replaceValue(value));
-                        }
-                    }
-                }
-            }
-            //设置默认系统变量
-            if (System.getProperty("redkale.convert.pool.size") == null) {
-                System.setProperty("redkale.convert.pool.size", "128");
-            }
-            if (System.getProperty("redkale.convert.writer.buffer.defsize") == null) {
-                System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
-            }
-            
+        {   //设置系统变量
             System.setProperty("redkale.version", Redkale.getDotedVersion());
             int nid = config.getIntValue("nodeid", 0);
             this.nodeid = nid;
             this.resourceFactory.register(RESNAME_APP_NODEID, nid);
             System.setProperty(RESNAME_APP_NODEID, "" + nid);
+            //设置配置项中的系统变量
+            AnyValue propertiesConf = this.config.getAnyValue("properties");
+            Properties sysProperties = new Properties();
+            if (propertiesConf != null) { //设置配置文件中的系统变量
+                for (AnyValue prop : propertiesConf.getAnyValues("property")) {
+                    String key = prop.getValue("name", "");
+                    String value = prop.getValue("value");
+                    if (value != null && key.startsWith("system.property.")) {
+                        String propName = key.substring("system.property.".length());
+                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
+                            sysProperties.put(propName, value);
+                        }
+                    }
+                }
+            }
+            //设置默认系统变量
+            if (System.getProperty("redkale.convert.pool.size") == null
+                && sysProperties.getProperty("redkale.convert.pool.size") == null) {
+                System.setProperty("redkale.convert.pool.size", "128");
+            }
+            if (System.getProperty("redkale.convert.writer.buffer.defsize") == null
+                && sysProperties.getProperty("redkale.convert.writer.buffer.defsize") == null) {
+                System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
+            }
+            sysProperties.forEach((key, value) -> {
+                System.setProperty(key.toString(), replaceValue(value.toString(), sysProperties));
+            });
         }
 
-        String localaddr = config.getValue("address", "").trim();
+        String localaddr = replaceValue(config.getValue("address", "").trim());
         InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
         this.localAddress = new InetSocketAddress(addr, config.getIntValue("port"));
         this.resourceFactory.register(RESNAME_APP_ADDR, addr.getHostAddress());
@@ -383,7 +388,9 @@ public final class Application {
                     Properties properties0 = new Properties();
                     properties0.load(fin);
                     fin.close();
-                    reconfigLogging(properties0);
+                    Properties logProps = new Properties();
+                    properties0.forEach((k, v) -> logProps.put(k.toString(), replaceValue(v.toString(), properties0)));
+                    reconfigLogging(logProps);
                 } catch (IOException e) {
                     Logger.getLogger(this.getClass().getSimpleName()).log(Level.WARNING, "init logger configuration error", e);
                 }
@@ -452,7 +459,7 @@ public final class Application {
         AnyValue clusterConf = config.getAnyValue("cluster");
         if (clusterConf != null) {
             try {
-                String classVal = clusterConf.getValue("type", clusterConf.getValue("value")); //兼容value字段
+                String classVal = replaceValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
                 if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: consul, nacos
                     Iterator<ClusterAgentProvider> it = ServiceLoader.load(ClusterAgentProvider.class, classLoader).iterator();
                     RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
@@ -499,7 +506,7 @@ public final class Application {
             Set<String> mqnames = new HashSet<>();
             for (int i = 0; i < mqConfs.length; i++) {
                 AnyValue mqConf = mqConfs[i];
-                String names = mqConf.getValue("name"); //含,或者;表示多个别名使用同一mq对象
+                String names = replaceValue(mqConf.getValue("name")); //含,或者;表示多个别名使用同一mq对象
                 if (names != null && !names.isEmpty()) {
                     for (String n : names.replace(',', ';').split(";")) {
                         if (n.trim().isEmpty()) {
@@ -512,7 +519,7 @@ public final class Application {
                     }
                 }
                 try {
-                    String classVal = mqConf.getValue("type", mqConf.getValue("value")); //兼容value字段
+                    String classVal = replaceValue(mqConf.getValue("type", mqConf.getValue("value"))); //兼容value字段
                     if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: kafka, pulsar
                         Iterator<MessageAgentProvider> it = ServiceLoader.load(MessageAgentProvider.class, classLoader).iterator();
                         RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
@@ -649,7 +656,7 @@ public final class Application {
         }
         if (propertiesConf != null) {
             final Properties agentEnvs = new Properties();
-            if (propertiesConf.getValue("load") != null) { //本地配置项文件加载
+            if (propertiesConf.getValue("load") != null) { //加载本地配置项文件
                 for (String dfload : propertiesConf.getValue("load").replace(',', ';').split(";")) {
                     if (dfload.trim().isEmpty()) {
                         continue;
@@ -772,9 +779,11 @@ public final class Application {
         });
 
         if (!dyncProps.isEmpty()) {
+            Properties newDyncProps = new Properties();
+            dyncProps.forEach((k, v) -> newDyncProps.put(k.toString(), replaceValue(v.toString(), dyncProps)));
             //合并配置
-            this.config.merge(AnyValue.loadFromProperties(dyncProps).getAnyValue("redkale"), NodeServer.appConfigmergeFunction);
-            dyncProps.forEach((key, val) -> {
+            this.config.merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), NodeServer.appConfigmergeFunction);
+            newDyncProps.forEach((key, val) -> {
                 if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
                     || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
                     if (key.toString().endsWith(".name")) {
@@ -805,7 +814,7 @@ public final class Application {
                 if (key == null) {
                     continue;
                 }
-                value = value == null ? value : replaceValue(value);
+                value = value == null ? value : replaceValue(value, dyncProps);
                 if (key.startsWith("system.property.")) {
                     String propName = key.substring("system.property.".length());
                     if (System.getProperty(propName) == null) { //命令行传参数优先级高
@@ -833,8 +842,6 @@ public final class Application {
             properties.put(x.getKey().toString().replace(searchRawHandler, searchReadHandler),
                 x.getValue().toString()
                     .replace("%m", "%tY%tm").replace("%d", "%tY%tm%td") //兼容旧时间格式
-                    .replace("${" + RESNAME_APP_NAME + "}", getName())
-                    .replace("${" + RESNAME_APP_HOME + "}", getHome().getPath().replace('\\', '/'))
                     .replace(searchRawHandler, searchReadHandler)
             );
         });
@@ -1923,8 +1930,51 @@ public final class Application {
         System.exit(0); //必须要有
     }
 
-    private String replaceValue(String value) {
-        return value == null ? value : value.replace("${APP_HOME}", homePath).replace("${APP_NAME}", name);
+    private String replaceValue(String value, Properties... envs) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        final String val = value;
+        //${domain}/${path}/xxx    ${aa${bbb}}
+        int pos2 = val.indexOf("}");
+        int pos1 = val.lastIndexOf("${", pos2);
+        if (pos1 >= 0 && pos2 > 0) {
+            String key = val.substring(pos1 + 2, pos2);
+            String newVal = null;
+            if (RESNAME_APP_NAME.equals(key)) {
+                newVal = getName();
+            } else if (RESNAME_APP_HOME.equals(key)) {
+                newVal = getHome().getPath().replace('\\', '/');
+            } else if (RESNAME_APP_NODEID.equals(key)) {
+                newVal = String.valueOf(getNodeid());
+            } else if (RESNAME_APP_TIME.equals(key)) {
+                newVal = String.valueOf(getStartTime());
+            } else {
+                List<Properties> list = new ArrayList<>();
+                list.addAll(Arrays.asList(envs));
+                list.add(this.envProperties);
+                list.add(this.sourceProperties);
+                list.add(this.clusterProperties);
+                list.add(this.loggingProperties);
+                list.add(this.messageProperties);
+                for (Properties prop : envs) {
+                    if (prop.containsKey(key)) {
+                        newVal = replaceValue(prop.getProperty(key), envs);
+                        break;
+                    }
+                }
+                if (newVal == null) {
+                    newVal = this.resourceFactory.find(key, String.class);
+                }
+            }
+            if (newVal == null) {
+                throw new RedkaleException("Not found '" + key + "' value");
+            }
+            return replaceValue(val.substring(0, pos2) + newVal + val.substring(pos2 + 1), envs);
+        } else if ((pos1 >= 0 && pos2 < 0) || (pos1 < 0 && pos2 >= 0)) {
+            throw new RedkaleException(value + " is illegal naming");
+        }
+        return val;
     }
 
     void updateEnvironmentProperties(String namespace, List<ResourceEvent> events) {

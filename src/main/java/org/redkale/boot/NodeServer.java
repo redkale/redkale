@@ -578,6 +578,11 @@ public abstract class NodeServer {
             if (v != 0) {
                 return v;
             }
+            int v1 = o1.getClass().getAnnotation(Component.class) == null ? -1 : 1;
+            int v2 = o2.getClass().getAnnotation(Component.class) == null ? -1 : 1;
+            if (v1 != v2) {
+                return v1 - v2;
+            }
             int rs = Sncp.getResourceType(o1).getName().compareTo(Sncp.getResourceType(o2).getName());
             if (rs == 0) {
                 rs = Sncp.getResourceName(o1).compareTo(Sncp.getResourceName(o2));
