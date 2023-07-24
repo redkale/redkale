@@ -4,7 +4,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
-import org.redkale.util.*;
+import org.redkale.util.SelectColumn;
 
 /**
  * DataSource批量操作对象，操作类型只能是增删改   <br>
@@ -21,6 +21,8 @@ public interface DataBatch {
     public static DataBatch create() {
         return new AbstractDataSource.DefaultDataBatch();
     }
+
+    public DataBatch run(Runnable task);
 
     public <T> DataBatch insert(T... entitys);
 

@@ -1276,6 +1276,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         protected DefaultDataBatch() {
         }
 
+        public DataBatch run(Runnable task) {
+            Objects.requireNonNull(task);
+            this.actions.add(new RunnableBatchAction(task));
+            return this;
+        }
+
         @Override  //entitys不一定是同一表的数据
         public <T> DataBatch insert(T... entitys) {
             for (T t : entitys) {
@@ -1427,6 +1433,15 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     protected abstract static class BatchAction {
 
+    }
+
+    protected static class RunnableBatchAction extends BatchAction {
+
+        public Runnable task;
+
+        public RunnableBatchAction(Runnable task) {
+            this.task = task;
+        }
     }
 
     protected static class InsertBatchAction1 extends BatchAction {
