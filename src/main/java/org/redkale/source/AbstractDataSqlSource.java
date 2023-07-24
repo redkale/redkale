@@ -666,17 +666,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return autoDDL;
     }
 
-    @Local
-    @Override
-    public abstract int nativeExecute(String sql);
-
-    @Local
-    @Override
-    public abstract int[] nativeExecute(String... sqls);
-
-    @Local
-    @Override
-    public abstract <V> V nativeQuery(String sql, Function<DataResultSet, V> handler);
 
     //是否异步
     protected abstract boolean isAsync();

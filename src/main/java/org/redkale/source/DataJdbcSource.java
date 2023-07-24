@@ -2464,8 +2464,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      */
     @Local
     @Override
-    public int nativeExecute(String sql) {
-        return nativeExecute(new String[]{sql})[0];
+    public int executeUpdate(String sql) {
+        return executeUpdate(new String[]{sql})[0];
     }
 
     /**
@@ -2478,7 +2478,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      */
     @Local
     @Override
-    public int[] nativeExecute(String... sqls) {
+    public int[] executeUpdate(String... sqls) {
         if (sqls.length == 0) {
             return new int[0];
         }
@@ -2521,7 +2521,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      */
     @Local
     @Override
-    public <V> V nativeQuery(String sql, Function<DataResultSet, V> handler) {
+    public <V> V executeQuery(String sql, Function<DataResultSet, V> handler) {
         final long s = System.currentTimeMillis();
         final SourceConnection conn = readPool.pollConnection();
         try {
@@ -2547,17 +2547,17 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     @Deprecated
     public int directExecute(String sql) {
-        return nativeExecute(sql);
+        return executeUpdate(sql);
     }
 
     @Deprecated
     public int[] directExecute(String... sqls) {
-        return nativeExecute(sqls);
+        return executeUpdate(sqls);
     }
 
     @Deprecated
     public <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
-        return nativeQuery(sql, handler);
+        return executeQuery(sql, handler);
     }
 
     public static DataResultSet createDataResultSet(EntityInfo info, ResultSet set) {

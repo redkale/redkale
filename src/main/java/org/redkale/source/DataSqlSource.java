@@ -17,10 +17,10 @@ import java.util.function.Function;
  */
 public interface DataSqlSource extends DataSource {
 
-    public int nativeExecute(String sql);
+    public int executeUpdate(String sql);
 
-    public int[] nativeExecute(String... sqls);
+    public int[] executeUpdate(String... sqls);
 
-    public <V> V nativeQuery(String sql, Function<DataResultSet, V> handler);
+    public <V> V executeQuery(String sql, Function<DataResultSet, V> handler);
 
 }
