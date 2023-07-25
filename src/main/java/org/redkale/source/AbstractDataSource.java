@@ -339,6 +339,20 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     /**
+     * 根据ResultSet获取对象
+     *
+     * @param <T>  泛型
+     * @param info EntityInfo
+     * @param sels 过滤字段
+     * @param row  ResultSet
+     *
+     * @return 对象
+     */
+    protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final EntityInfo.DataResultSetRow row) {
+        return sels == null ? info.getBuilder().getFullEntityValue(row) : info.getBuilder().getEntityValue(sels, row);
+    }
+
+    /**
      * 根据翻页参数构建排序SQL
      *
      * @param <T>     泛型
