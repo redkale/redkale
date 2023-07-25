@@ -88,10 +88,6 @@ public final class EntityInfo<T> {
     //存放所有与数据库对应的字段， 包括主键
     final Attribute<T, Serializable>[] attributes;
 
-    //key是field的name， value是Column的别名，即数据库表的字段名
-    //只有field.name 与 Column.name不同才存放在aliasmap里.
-    private final Map<String, String> aliasmap;
-
     //所有可更新字段，即排除了主键字段和标记为&#064;Column(updatable=false)的字段
     private final Map<String, Attribute<T, Serializable>> updateAttributeMap = new HashMap<>();
 
@@ -387,7 +383,7 @@ public final class EntityInfo<T> {
         }
         String[] constructorParameters = cps;
         Attribute idAttr0 = null;
-        Map<String, String> aliasmap0 = null;
+        Map<String, String> aliasmap = null;
         Class cltmp = type;
         Set<String> fields = new HashSet<>();
         List<String> queryCols = new ArrayList<>();
@@ -421,10 +417,10 @@ public final class EntityInfo<T> {
                 final Column col = field.getAnnotation(Column.class);
                 final String sqlField = col == null || col.name().isEmpty() ? fieldName : col.name();
                 if (!fieldName.equals(sqlField)) {
-                    if (aliasmap0 == null) {
-                        aliasmap0 = new HashMap<>();
+                    if (aliasmap == null) {
+                        aliasmap = new HashMap<>();
                     }
-                    aliasmap0.put(fieldName, sqlField);
+                    aliasmap.put(fieldName, sqlField);
                 }
                 Attribute attr;
                 try {
@@ -494,7 +490,6 @@ public final class EntityInfo<T> {
 
         this.primary = idAttr0;
         this.primaryOneArray = new Attribute[]{this.primary};
-        this.aliasmap = aliasmap0;
         List<EntityColumn> ddls = new ArrayList<>();
         Collections.reverse(ddlList);  //父类的字段排在前面
         for (List<EntityColumn> ls : ddlList) {
@@ -1324,15 +1319,6 @@ public final class EntityInfo<T> {
     }
 
     /**
-     * 判断Entity类的字段名与表字段名s是否存在不一致的值
-     *
-     * @return boolean
-     */
-    public boolean isNoAlias() {
-        return this.aliasmap == null;
-    }
-
-    /**
      * 根据Flipper获取ORDER BY的SQL语句，不存在Flipper或sort字段返回空字符串
      *
      * @param flipper 翻页对象
@@ -1353,7 +1339,7 @@ public final class EntityInfo<T> {
         }
         final StringBuilder sb = new StringBuilder();
         sb.append(" ORDER BY ");
-        if (isNoAlias()) {
+        if (builder.isNoAlias()) {
             sb.append(sort);
         } else {
             boolean flag = false;
@@ -1387,8 +1373,7 @@ public final class EntityInfo<T> {
      * @return String
      */
     public String getSQLColumn(String tabalis, String fieldname) {
-        return this.aliasmap == null ? (tabalis == null ? fieldname : (tabalis + '.' + fieldname))
-            : (tabalis == null ? aliasmap.getOrDefault(fieldname, fieldname) : (tabalis + '.' + aliasmap.getOrDefault(fieldname, fieldname)));
+        return builder.getSQLColumn(tabalis, fieldname);
     }
 
     /**

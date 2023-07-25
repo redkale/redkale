@@ -8,6 +8,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.Nullable;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.persistence.*;
 import org.redkale.util.*;
 
@@ -215,7 +216,7 @@ public class EntityBuilder<T> {
      *
      * @return Entity对象
      */
-    public T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final EntityInfo.DataResultSetRow row) {
+    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final EntityInfo.DataResultSetRow row) {
         if (row.wasNull()) {
             return null;
         }
@@ -254,7 +255,7 @@ public class EntityBuilder<T> {
      *
      * @return Entity对象
      */
-    public T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final Serializable... values) {
+    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final Serializable... values) {
         if (values == null) {
             return null;
         }
@@ -284,7 +285,7 @@ public class EntityBuilder<T> {
         return obj;
     }
 
-    public Serializable getFieldValue(Attribute<T, Serializable> attr, final EntityInfo.DataResultSetRow row, int index) {
+    protected Serializable getFieldValue(Attribute<T, Serializable> attr, final EntityInfo.DataResultSetRow row, int index) {
         return row.getObject(attr, index, index > 0 ? null : this.getSQLColumn(null, attr.field()));
     }
 
@@ -305,6 +306,17 @@ public class EntityBuilder<T> {
         return constructorAttributes != null;
     }
 
+    /**
+     * 判断Entity类的字段名与表字段名s是否存在不一致的值
+     *
+     * @return boolean
+     */
+    @ConvertDisabled
+    public boolean isNoAlias() {
+        return this.aliasmap == null;
+    }
+
+    @ConvertDisabled
     public Creator<T> getCreator() {
         return creator;
     }
