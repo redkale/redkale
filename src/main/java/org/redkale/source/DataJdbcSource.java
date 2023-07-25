@@ -10,10 +10,11 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.service.Local;
@@ -2460,7 +2461,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      * @return 结果
      */
     @Override
-    public <V> V executeQuery(String sql, Function<DataResultSet, V> handler) {
+    public <V> V executeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler) {
         final long s = System.currentTimeMillis();
         final SourceConnection conn = readPool.pollConnection();
         try {
@@ -2468,8 +2469,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 logger.finest("executeQuery sql=" + sql);
             }
             final Statement stmt = conn.createQueryStatement();
-            //final PreparedStatement prestmt = conn.prepareStatement(sql);
-            final ResultSet set = stmt.executeQuery(sql);// prestmt.executeQuery();
+            if (consumer != null) {
+                consumer.accept(conn, stmt);
+            }
+            final ResultSet set = stmt.executeQuery(sql);
             V rs = handler.apply(createDataResultSet(null, set));
             set.close();
             conn.offerQueryStatement(stmt);
@@ -2499,7 +2502,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         return executeQuery(sql, handler);
     }
 
-    public static DataResultSet createDataResultSet(EntityInfo info, ResultSet set) {
+    public static DataResultSet createDataResultSet(@Nullable EntityInfo info, ResultSet set) {
         return new DataJdbcResultSet(info).resultSet(set);
     }
 

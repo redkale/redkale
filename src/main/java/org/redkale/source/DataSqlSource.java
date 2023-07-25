@@ -4,7 +4,7 @@
 package org.redkale.source;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.*;
 
 /**
  *
@@ -22,7 +22,12 @@ public interface DataSqlSource extends DataSource {
 
     public int[] executeUpdate(String... sqls);
 
-    public <V> V executeQuery(String sql, Function<DataResultSet, V> handler);
+    //BiConsumer 参数1: connection, 参数2: statement
+    public <V> V executeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler);
+
+    default <V> V executeQuery(String sql, Function<DataResultSet, V> handler) {
+        return executeQuery(sql, null, handler);
+    }
 
     default <V> V executeQueryOne(Class<V> type, String sql) {
         return executeQuery(sql, rset -> {

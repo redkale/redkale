@@ -8,7 +8,7 @@ package org.redkale.source;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
+import java.util.function.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
@@ -104,7 +104,7 @@ public class DataMemorySource extends AbstractDataSqlSource implements SearchSou
     }
 
     @Override
-    public <V> V executeQuery(String sql, Function<DataResultSet, V> handler) {
+    public <V> V executeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
