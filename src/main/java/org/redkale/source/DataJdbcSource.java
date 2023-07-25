@@ -2465,7 +2465,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final SourceConnection conn = readPool.pollConnection();
         try {
             if (logger.isLoggable(Level.FINEST)) {
-                logger.finest("direct query sql=" + sql);
+                logger.finest("executeQuery sql=" + sql);
             }
             final Statement stmt = conn.createQueryStatement();
             //final PreparedStatement prestmt = conn.prepareStatement(sql);

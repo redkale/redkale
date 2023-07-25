@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.Nullable;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.persistence.*;
+import org.redkale.source.EntityInfo.DataResultSetRow;
 import org.redkale.util.*;
 
 /**
@@ -29,7 +30,7 @@ public class EntityBuilder<T> {
     @Nullable
     private final String[] constructorParameters;
 
-    //key是field的name， value是Column的别名，即数据库表的字段名
+    //key：类字段名， value：数据库字段名
     //只有field.name 与 Column.name不同才存放在aliasmap里.
     @Nullable
     private final Map<String, String> aliasmap;
@@ -42,7 +43,11 @@ public class EntityBuilder<T> {
     @Nullable
     private final Attribute<T, Serializable>[] unconstructorAttributes;
 
-    private final HashMap<String, Attribute<T, Serializable>> attributeMap;
+    //key：类字段名
+    private final Map<String, Attribute<T, Serializable>> attributeMap;
+
+    //key：数据库字段名
+    private final Map<String, Attribute<T, Serializable>> sqlAttrMap;
 
     //数据库中所有字段, 顺序必须与querySqlColumns、querySqlColumnSequence一致
     private final Attribute<T, Serializable>[] attributes;
@@ -51,7 +56,7 @@ public class EntityBuilder<T> {
         Map<String, String> aliasmap, String[] constructorParameters,
         Attribute<T, Serializable>[] constructorAttributes,
         Attribute<T, Serializable>[] unconstructorAttributes,
-        HashMap<String, Attribute<T, Serializable>> attributeMap,
+        Map<String, Attribute<T, Serializable>> attributeMap,
         Attribute<T, Serializable>[] queryAttributes) {
         this.creator = creator;
         this.aliasmap = aliasmap;
@@ -60,6 +65,8 @@ public class EntityBuilder<T> {
         this.unconstructorAttributes = unconstructorAttributes;
         this.attributeMap = attributeMap;
         this.attributes = queryAttributes;
+        this.sqlAttrMap = new HashMap<>();
+        attributeMap.forEach((k, v) -> sqlAttrMap.put(getSQLColumn(null, k), v));
     }
 
     public static <T> EntityBuilder<T> load(Class<T> type) {
@@ -164,6 +171,64 @@ public class EntityBuilder<T> {
             unconstructorAttributes, attributeMap, queryAttrs.toArray(new Attribute[queryAttrs.size()]));
     }
 
+    public List<T> getObjectList(final DataResultSet rset) {
+        List<T> list = new ArrayList<>();
+        List<String> sqlColumns = rset.getColumnLabels();
+        while (rset.next()) {
+            list.add(getObjectValue(sqlColumns, rset));
+        }
+        return list;
+    }
+
+    public T getObjectValue(final DataResultSetRow row) {
+        return getObjectValue(null, row);
+    }
+
+    protected T getObjectValue(List<String> sqlColumns, final DataResultSetRow row) {
+        if (row.wasNull()) {
+            return null;
+        }
+        T obj;
+        if (sqlColumns == null) {
+            sqlColumns = row.getColumnLabels();
+        }
+        Map<String, Attribute<T, Serializable>> attrs = this.sqlAttrMap;
+        if (this.constructorParameters == null) {
+            obj = creator.create();
+            for (String sqlCol : sqlColumns) {
+                Attribute<T, Serializable> attr = attrs.get(sqlCol);
+                if (attr != null) { //兼容返回的字段不存在类中
+                    attr.set(obj, getFieldValue(attr, row, 0));
+                }
+            }
+        } else {
+            Object[] cps = new Object[this.constructorParameters.length];
+            for (int i = 0; i < this.constructorAttributes.length; i++) {
+                Attribute<T, Serializable> attr = this.constructorAttributes[i];
+                String sqlCol = getSQLColumn(null, attr.field());
+                if (sqlColumns.contains(sqlCol)) {
+                    cps[i] = getFieldValue(attr, row, 0);
+                }
+            }
+            obj = creator.create(cps);
+            for (Attribute<T, Serializable> attr : this.unconstructorAttributes) {
+                String sqlCol = getSQLColumn(null, attr.field());
+                if (sqlColumns.contains(sqlCol)) {
+                    attr.set(obj, getFieldValue(attr, row, 0));
+                }
+            }
+        }
+        return obj;
+    }
+
+    public List<T> getEntityList(final SelectColumn sels, final DataResultSet rset) {
+        List<T> list = new ArrayList<>();
+        while (rset.next()) {
+            list.add(getEntityValue(sels, rset));
+        }
+        return list;
+    }
+
     /**
      * 将一行的ResultSet组装成一个Entity对象
      *
@@ -172,7 +237,7 @@ public class EntityBuilder<T> {
      *
      * @return Entity对象
      */
-    public T getEntityValue(final SelectColumn sels, final EntityInfo.DataResultSetRow row) {
+    public T getEntityValue(final SelectColumn sels, final DataResultSetRow row) {
         if (row.wasNull()) {
             return null;
         }
@@ -199,7 +264,15 @@ public class EntityBuilder<T> {
         return obj;
     }
 
-    public T getFullEntityValue(final EntityInfo.DataResultSetRow row) {
+    public List<T> getFullEntityList(final DataResultSet rset) {
+        List<T> list = new ArrayList<>();
+        while (rset.next()) {
+            list.add(getFullEntityValue(rset));
+        }
+        return list;
+    }
+
+    public T getFullEntityValue(final DataResultSetRow row) {
         return getEntityValue(constructorAttributes, constructorAttributes == null ? attributes : unconstructorAttributes, row);
     }
 
@@ -216,7 +289,7 @@ public class EntityBuilder<T> {
      *
      * @return Entity对象
      */
-    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final EntityInfo.DataResultSetRow row) {
+    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final DataResultSetRow row) {
         if (row.wasNull()) {
             return null;
         }
@@ -285,7 +358,7 @@ public class EntityBuilder<T> {
         return obj;
     }
 
-    protected Serializable getFieldValue(Attribute<T, Serializable> attr, final EntityInfo.DataResultSetRow row, int index) {
+    protected Serializable getFieldValue(Attribute<T, Serializable> attr, final DataResultSetRow row, int index) {
         return row.getObject(attr, index, index > 0 ? null : this.getSQLColumn(null, attr.field()));
     }
 
