@@ -55,19 +55,10 @@ public final class EntityInfo<T> {
     final JsonConvert jsonConvert;
 
     //Entity构建器
-    private final Creator<T> creator;
+    private final EntityBuilder<T> builder;
 
     //Entity数值构建器
     private final IntFunction<T[]> arrayer;
-
-    //Entity构建器参数
-    private final String[] constructorParameters;
-
-    //Entity构建器参数Attribute， 数组个数与constructorParameters相同
-    final Attribute<T, Serializable>[] constructorAttributes;
-
-    //Entity构建器参数Attribute
-    final Attribute<T, Serializable>[] unconstructorAttributes;
 
     //主键
     final Attribute<T, Serializable> primary;
@@ -376,12 +367,12 @@ public final class EntityInfo<T> {
         this.tableStrategy = dts;
 
         this.arrayer = Creator.arrayFunction(type);
-        this.creator = Creator.create(type);
+        Creator creator = Creator.create(type);
         String[] cps = null;
         try {
-            Method cm = this.creator.getClass().getMethod("create", Object[].class);
-            RedkaleClassLoader.putReflectionPublicMethods(this.creator.getClass().getName());
-            RedkaleClassLoader.putReflectionMethod(this.creator.getClass().getName(), cm);
+            Method cm = creator.getClass().getMethod("create", Object[].class);
+            RedkaleClassLoader.putReflectionPublicMethods(creator.getClass().getName());
+            RedkaleClassLoader.putReflectionMethod(creator.getClass().getName(), cm);
             ConstructorParameters cp = cm.getAnnotation(ConstructorParameters.class);
             if (cp != null && cp.value().length > 0) {
                 cps = cp.value();
@@ -394,7 +385,7 @@ public final class EntityInfo<T> {
         } catch (Exception e) {
             logger.log(Level.SEVERE, type + " cannot find ConstructorParameters Creator", e);
         }
-        this.constructorParameters = cps;
+        String[] constructorParameters = cps;
         Attribute idAttr0 = null;
         Map<String, String> aliasmap0 = null;
         Class cltmp = type;
@@ -528,31 +519,33 @@ public final class EntityInfo<T> {
         this.updateEntityAttributes = Utility.append(this.updateAttributes, this.primary);
         this.updateEntityColumns = Utility.append(this.updateColumns, this.primaryColumn);
 
-        if (this.constructorParameters == null) {
-            this.constructorAttributes = null;
-            this.unconstructorAttributes = null;
+        Attribute<T, Serializable>[] constructorAttributes;
+        Attribute<T, Serializable>[] unconstructorAttributes;
+        if (constructorParameters == null) {
+            constructorAttributes = null;
+            unconstructorAttributes = null;
         } else {
-            this.constructorAttributes = new Attribute[this.constructorParameters.length];
+            constructorAttributes = new Attribute[constructorParameters.length];
             List<Attribute<T, Serializable>> unconstructorAttrs = new ArrayList<>();
             List<String> newquerycols1 = new ArrayList<>();
             List<String> newquerycols2 = new ArrayList<>();
             for (Attribute<T, Serializable> attr : new ArrayList<>(queryAttrs)) {
                 int pos = -1;
-                for (int i = 0; i < this.constructorParameters.length; i++) {
-                    if (attr.field().equals(this.constructorParameters[i])) {
+                for (int i = 0; i < constructorParameters.length; i++) {
+                    if (attr.field().equals(constructorParameters[i])) {
                         pos = i;
                         break;
                     }
                 }
                 if (pos >= 0) {
-                    this.constructorAttributes[pos] = attr;
+                    constructorAttributes[pos] = attr;
                     newquerycols1.add(queryCols.get(queryAttrs.indexOf(attr)));
                 } else {
                     unconstructorAttrs.add(attr);
                     newquerycols2.add(queryCols.get(queryAttrs.indexOf(attr)));
                 }
             }
-            this.unconstructorAttributes = unconstructorAttrs.toArray(new Attribute[unconstructorAttrs.size()]);
+            unconstructorAttributes = unconstructorAttrs.toArray(new Attribute[unconstructorAttrs.size()]);
             newquerycols1.addAll(newquerycols2);
             queryCols = newquerycols1;
             List<Attribute<T, Serializable>> newqueryattrs = new ArrayList<>();
@@ -569,6 +562,8 @@ public final class EntityInfo<T> {
             String field = this.queryAttributes[i].field();
             this.queryColumns[i] = Utility.find(this.ddlColumns, c -> c.field.equals(field));
         }
+        this.builder = new EntityBuilder<>(creator, aliasmap, constructorParameters, constructorAttributes, unconstructorAttributes, attributeMap, queryAttributes);
+
         if (table != null) {
             StringBuilder querydb = new StringBuilder();
             int index = 0;
@@ -747,8 +742,17 @@ public final class EntityInfo<T> {
      *
      * @return Creator
      */
+    public EntityBuilder<T> getBuilder() {
+        return builder;
+    }
+
+    /**
+     * 获取Entity构建器
+     *
+     * @return Creator
+     */
     public Creator<T> getCreator() {
-        return creator;
+        return builder.getCreator();
     }
 
     /**
@@ -1680,131 +1684,6 @@ public final class EntityInfo<T> {
             return new StringBuilder().append('\'').append(jsonConvert.convertTo(value).replace("'", "\\'")).append('\'').toString();
         }
         return String.valueOf(value);
-    }
-
-    /**
-     * 将一行的ResultSet组装成一个Entity对象
-     *
-     * @param sels 指定字段
-     * @param row  ResultSet
-     *
-     * @return Entity对象
-     */
-    protected T getEntityValue(final SelectColumn sels, final DataResultSetRow row) {
-        if (row.wasNull()) {
-            return null;
-        }
-        T obj;
-        Attribute<T, Serializable>[] attrs = this.queryAttributes;
-        if (this.constructorParameters == null) {
-            obj = creator.create();
-        } else {
-            Object[] cps = new Object[this.constructorParameters.length];
-            for (int i = 0; i < this.constructorAttributes.length; i++) {
-                Attribute<T, Serializable> attr = this.constructorAttributes[i];
-                if (sels == null || sels.test(attr.field())) {
-                    cps[i] = getFieldValue(attr, row, 0);
-                }
-            }
-            obj = creator.create(cps);
-            attrs = this.unconstructorAttributes;
-        }
-        for (Attribute<T, Serializable> attr : attrs) {
-            if (sels == null || sels.test(attr.field())) {
-                attr.set(obj, getFieldValue(attr, row, 0));
-            }
-        }
-        return obj;
-    }
-
-    protected T getFullEntityValue(final DataResultSetRow row) {
-        return getEntityValue(constructorAttributes, constructorAttributes == null ? queryAttributes : unconstructorAttributes, row);
-    }
-
-    public T getFullEntityValue(final Serializable... values) {
-        return getEntityValue(constructorAttributes, constructorAttributes == null ? queryAttributes : unconstructorAttributes, values);
-    }
-
-    /**
-     * 将一行的ResultSet组装成一个Entity对象
-     *
-     * @param constructorAttrs   构建函数的Attribute数组, 大小必须与this.constructorAttributes相同
-     * @param unconstructorAttrs 非构建函数的Attribute数组
-     * @param row                ResultSet
-     *
-     * @return Entity对象
-     */
-    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final DataResultSetRow row) {
-        if (row.wasNull()) {
-            return null;
-        }
-        T obj;
-        int index = 0;
-        if (this.constructorParameters == null) {
-            obj = creator.create();
-        } else {
-            Object[] cps = new Object[this.constructorParameters.length];
-            for (int i = 0; i < constructorAttrs.length; i++) {
-                Attribute<T, Serializable> attr = constructorAttrs[i];
-                if (attr == null) {
-                    continue;
-                }
-                cps[i] = getFieldValue(attr, row, ++index);
-            }
-            obj = creator.create(cps);
-        }
-        if (unconstructorAttrs != null) {
-            for (Attribute<T, Serializable> attr : unconstructorAttrs) {
-                if (attr == null) {
-                    continue;
-                }
-                attr.set(obj, getFieldValue(attr, row, ++index));
-            }
-        }
-        return obj;
-    }
-
-    /**
-     * 将一行的ResultSet组装成一个Entity对象
-     *
-     * @param constructorAttrs   构建函数的Attribute数组, 大小必须与this.constructorAttributes相同
-     * @param unconstructorAttrs 非构建函数的Attribute数组
-     * @param values             字段值集合
-     *
-     * @return Entity对象
-     */
-    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final Serializable... values) {
-        if (values == null) {
-            return null;
-        }
-        T obj;
-        int index = -1;
-        if (this.constructorParameters == null) {
-            obj = creator.create();
-        } else {
-            Object[] cps = new Object[this.constructorParameters.length];
-            for (int i = 0; i < constructorAttrs.length; i++) {
-                Attribute<T, Serializable> attr = constructorAttrs[i];
-                if (attr == null) {
-                    continue;
-                }
-                cps[i] = values[++index];
-            }
-            obj = creator.create(cps);
-        }
-        if (unconstructorAttrs != null) {
-            for (Attribute<T, Serializable> attr : unconstructorAttrs) {
-                if (attr == null) {
-                    continue;
-                }
-                attr.set(obj, values[++index]);
-            }
-        }
-        return obj;
-    }
-
-    protected Serializable getFieldValue(Attribute<T, Serializable> attr, final DataResultSetRow row, int index) {
-        return row.getObject(attr, index, index > 0 ? null : this.getSQLColumn(null, attr.field()));
     }
 
     @Override

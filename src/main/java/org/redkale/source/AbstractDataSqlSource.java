@@ -330,7 +330,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             StringBuilder sb = new StringBuilder();
             sb.append("CREATE TABLE IF NOT EXISTS `").append(info.getOriginTable()).append("`(\n");
             EntityColumn primary = null;
-            T one = info.constructorAttributes == null ? info.getCreator().create() : null;
+            T one = !info.getBuilder().hasConstructorAttribute() ? info.getCreator().create() : null;
             for (EntityColumn column : info.getDDLColumns()) {
                 if (column.primary) {
                     primary = column;
@@ -458,7 +458,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             StringBuilder sb = new StringBuilder();
             sb.append("CREATE TABLE IF NOT EXISTS ").append(info.getOriginTable()).append("(\n");
             EntityColumn primary = null;
-            T one = info.constructorAttributes == null ? info.getCreator().create() : null;
+            T one = !info.getBuilder().hasConstructorAttribute() ? info.getCreator().create() : null;
             List<String> comments = new ArrayList<>();
             if (table != null && !table.comment().isEmpty()) {
                 comments.add("COMMENT ON TABLE " + info.getOriginTable() + " IS '" + table.comment().replace('\'', '"') + "'");

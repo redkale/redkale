@@ -1806,7 +1806,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             prestmt = conn.prepareQueryStatement(prepareSQL);
             prestmt.setObject(1, pk);
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
-            T rs = set.next() ? info.getFullEntityValue(set) : null;
+            T rs = set.next() ? info.getBuilder().getFullEntityValue(set) : null;
             set.close();
             conn.offerQueryStatement(prestmt);
             slowLog(s, prepareSQL);
@@ -1838,7 +1838,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             prestmt = conn.prepareQueryStatement(sql);
             prestmt.setFetchSize(1);
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
-            T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
+            T rs = set.next() ? selects == null ? info.getBuilder().getFullEntityValue(set) : info.getBuilder().getEntityValue(selects, set) : null;
             set.close();
             conn.offerQueryStatement(prestmt);
             slowLog(s, sql);
@@ -1884,7 +1884,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         prestmt = conn.prepareQueryStatement(sql);
                         prestmt.setFetchSize(1);
                         final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
-                        T rs = set.next() ? selects == null ? info.getFullEntityValue(set) : info.getEntityValue(selects, set) : null;
+                        T rs = set.next() ? selects == null ? info.getBuilder().getFullEntityValue(set) : info.getBuilder().getEntityValue(selects, set) : null;
                         set.close();
                         conn.offerQueryStatement(prestmt);
                         slowLog(s, sql);
@@ -1920,7 +1920,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
             Serializable val = defValue;
             if (set.next()) {
-                val = info.getFieldValue(attr, set, 1);
+                val = info.getBuilder().getFieldValue(attr, set, 1);
             }
             set.close();
             conn.offerQueryStatement(prestmt);
@@ -1969,7 +1969,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
                         Serializable val = defValue;
                         if (set.next()) {
-                            val = info.getFieldValue(attr, set, 1);
+                            val = info.getBuilder().getFieldValue(attr, set, 1);
                         }
                         set.close();
                         conn.offerQueryStatement(prestmt);
@@ -2275,10 +2275,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             final int limit = flipper == null || flipper.getLimit() < 1 ? Integer.MAX_VALUE : flipper.getLimit();
             int i = 0;
             final DataResultSet rr = createDataResultSet(info, set);
+            EntityBuilder<T> builder = info.getBuilder();
             if (sels == null) {
                 while (set.next()) {
                     i++;
-                    list.add(info.getFullEntityValue(rr));
+                    list.add(builder.getFullEntityValue(rr));
                     if (limit <= i) {
                         break;
                     }
@@ -2286,7 +2287,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             } else {
                 while (set.next()) {
                     i++;
-                    list.add(info.getEntityValue(sels, rr));
+                    list.add(builder.getEntityValue(sels, rr));
                     if (limit <= i) {
                         break;
                     }

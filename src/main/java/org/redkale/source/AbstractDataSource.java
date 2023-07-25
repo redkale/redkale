@@ -339,35 +339,6 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     /**
-     * 根据ResultSet获取对象
-     *
-     * @param <T>  泛型
-     * @param info EntityInfo
-     * @param sels 过滤字段
-     * @param row  ResultSet
-     *
-     * @return 对象
-     */
-    protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final EntityInfo.DataResultSetRow row) {
-        return sels == null ? info.getFullEntityValue(row) : info.getEntityValue(sels, row);
-    }
-
-    /**
-     * 根据ResultSet获取对象
-     *
-     * @param <T>                泛型
-     * @param info               EntityInfo
-     * @param constructorAttrs   构造函数字段
-     * @param unconstructorAttrs 非构造函数字段
-     * @param row                ResultSet
-     *
-     * @return 对象
-     */
-    protected <T> T getEntityValue(EntityInfo<T> info, final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final EntityInfo.DataResultSetRow row) {
-        return info.getEntityValue(constructorAttrs, unconstructorAttrs, row);
-    }
-
-    /**
      * 根据翻页参数构建排序SQL
      *
      * @param <T>     泛型
