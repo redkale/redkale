@@ -566,17 +566,14 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return null;
     }
 
-    @Local
     protected boolean isTableNotExist(EntityInfo info, String sqlCode) {
         return sqlCode != null && !sqlCode.isEmpty() && tableNotExistSqlstates.contains(';' + sqlCode + ';');
     }
 
-    @Local
     protected String getTableCopySQL(EntityInfo info, String newTable) {
         return tablecopySQL.replace("#{newtable}", newTable).replace("#{oldtable}", info.table);
     }
 
-    @Local
     protected <T> Serializable getSQLAttrValue(EntityInfo info, Attribute attr, Serializable val) {
         if (val != null && !(val instanceof Number) && !(val instanceof CharSequence) && !(val instanceof java.util.Date)
             && !val.getClass().getName().startsWith("java.sql.") && !val.getClass().getName().startsWith("java.time.")) {
@@ -587,7 +584,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return val;
     }
 
-    @Local
     protected <T> Map<String, PrepareInfo<T>> getInsertQuestionPrepareInfo(EntityInfo<T> info, T... entitys) {
         Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();//一定要是LinkedHashMap
         for (T entity : entitys) {
@@ -597,7 +593,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return map;
     }
 
-    @Local
     protected <T> Map<String, PrepareInfo<T>> getInsertDollarPrepareInfo(EntityInfo<T> info, T... entitys) {
         Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();//一定要是LinkedHashMap
         for (T entity : entitys) {
@@ -607,7 +602,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return map;
     }
 
-    @Local
     protected <T> Map<String, PrepareInfo<T>> getUpdateQuestionPrepareInfo(EntityInfo<T> info, T... entitys) {
         Map<String, PrepareInfo<T>> map = new LinkedHashMap<>(); //一定要是LinkedHashMap
         for (T entity : entitys) {
@@ -617,7 +611,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return map;
     }
 
-    @Local
     protected <T> Map<String, PrepareInfo<T>> getUpdateDollarPrepareInfo(EntityInfo<T> info, T... entitys) {
         Map<String, PrepareInfo<T>> map = new LinkedHashMap<>();//一定要是LinkedHashMap
         for (T entity : entitys) {
@@ -627,7 +620,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return map;
     }
 
-    @Local
     protected <T> Serializable getEntityAttrValue(EntityInfo info, Attribute attr, T entity) {
         Serializable val = info.getSQLValue(attr, entity);
         Class clazz = attr.type();
@@ -648,12 +640,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    @Local
+
     public <T> void compile(Class<T> clazz) {
         EntityInfo.compile(clazz, this);
     }
 
-    @Local
     public final String dbtype() {
         if (dbtype == null) {
             throw new NullPointerException("dbtype is null");
@@ -661,11 +652,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return dbtype;
     }
 
-    @Local
     public final boolean autoddl() {
         return autoDDL;
     }
-
 
     //是否异步
     protected abstract boolean isAsync();
@@ -801,7 +790,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return node == null ? null : node.createSQLExpress(this, info, joinTabalis);
     }
 
-    @Local
     @Override
     public String getType() {
         return "sql";
@@ -812,13 +800,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return name;
     }
 
-    @Local
     @Override
     public EntityInfo apply(Class t) {
         return loadEntityInfo(t);
     }
 
-    @Local
     @Override
     public void close() throws Exception {
     }
@@ -2209,7 +2195,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    @Local
     protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, FilterFuncColumn... columns) {
         return future.thenApply((DataResultSet dataset) -> {
             final Map map = new HashMap<>();
@@ -2285,7 +2270,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    @Local
     protected <T> CompletableFuture<Number> getNumberResultDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, Number defVal, String column) {
         return future.thenApply((DataResultSet dataset) -> {
             Number rs = defVal;
@@ -2371,7 +2355,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    @Local
     protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, final String keyColumn) {
         return future.thenApply((DataResultSet dataset) -> {
             Map<K, N> rs = new LinkedHashMap<>();
@@ -2502,7 +2485,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    @Local
     protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, final ColumnNode[] funcNodes, final String[] groupByColumns) {
         return future.thenApply((DataResultSet dataset) -> {
             Map rs = new LinkedHashMap<>();
@@ -2704,7 +2686,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    @Local
     protected <T> CompletableFuture<T> findDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, boolean onlypk, SelectColumn selects) {
         return future.thenApply((DataResultSet pgset) -> {
             T rs = pgset.next() ? (onlypk && selects == null ? getEntityValue(info, null, pgset) : getEntityValue(info, selects, pgset)) : null;
@@ -2826,7 +2807,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    @Local
     protected <T> CompletableFuture<Serializable> findColumnDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, boolean onlypk, String column, Serializable defValue) {
         return future.thenApply((DataResultSet dataset) -> {
             Serializable val = defValue;
@@ -2954,7 +2934,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    @Local
     protected <T> CompletableFuture<Boolean> existsDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, boolean onlypk) {
         return future.thenApply((DataResultSet pgset) -> {
             boolean rs = pgset.next() ? (((Number) pgset.getObject(1)).intValue() > 0) : false;

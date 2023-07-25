@@ -1295,7 +1295,31 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         }
 
         @Override  //entitys不一定是同一表的数据
+        public <T> DataBatch insert(Collection<T> entitys) {
+            for (T t : entitys) {
+                Objects.requireNonNull(t);
+                if (t.getClass().getAnnotation(Entity.class) == null) {
+                    throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                }
+                this.actions.add(new InsertBatchAction1(t));
+            }
+            return this;
+        }
+
+        @Override  //entitys不一定是同一表的数据
         public <T> DataBatch delete(T... entitys) {
+            for (T t : entitys) {
+                Objects.requireNonNull(t);
+                if (t.getClass().getAnnotation(Entity.class) == null) {
+                    throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                }
+                this.actions.add(new DeleteBatchAction1(t));
+            }
+            return this;
+        }
+
+        @Override  //entitys不一定是同一表的数据
+        public <T> DataBatch delete(Collection<T> entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
                 if (t.getClass().getAnnotation(Entity.class) == null) {
@@ -1339,6 +1363,18 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
         @Override  //entitys不一定是同一表的数据
         public <T> DataBatch update(T... entitys) {
+            for (T t : entitys) {
+                Objects.requireNonNull(t);
+                if (t.getClass().getAnnotation(Entity.class) == null) {
+                    throw new SourceException("Entity Class " + t.getClass() + " must be on Annotation @Entity");
+                }
+                this.actions.add(new UpdateBatchAction1(t));
+            }
+            return this;
+        }
+
+        @Override  //entitys不一定是同一表的数据
+        public <T> DataBatch update(Collection<T> entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
                 if (t.getClass().getAnnotation(Entity.class) == null) {

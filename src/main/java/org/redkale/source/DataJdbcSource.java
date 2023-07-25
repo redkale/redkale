@@ -87,7 +87,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    @Local
     @Override
     public void close() throws Exception {
         super.close();
@@ -112,12 +111,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         return true;
     }
 
-    @Local
     protected ConnectionPool readPool() {
         return readPool;
     }
 
-    @Local
     protected ConnectionPool writePool() {
         return writePool;
     }
@@ -491,7 +488,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             if (info.getTableStrategy() == null) { //单库单表
                 conn.offerUpdateStatement(prestmt);
                 prestmt = prepareInsertEntityStatement(conn, presql, info, entitys);
-                c = Utility.sum(prestmt.executeBatch());;
+                c = Utility.sum(prestmt.executeBatch());
                 conn.offerUpdateStatement(prestmt);
             } else { //分库分表
                 for (PreparedStatement stmt : prestmts) {
@@ -2406,7 +2403,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      *
      * @return 结果数组
      */
-    @Local
     @Override
     public int executeUpdate(String sql) {
         return executeUpdate(new String[]{sql})[0];
@@ -2420,7 +2416,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      *
      * @return 结果数组
      */
-    @Local
     @Override
     public int[] executeUpdate(String... sqls) {
         if (sqls.length == 0) {
@@ -2463,7 +2458,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      *
      * @return 结果
      */
-    @Local
     @Override
     public <V> V executeQuery(String sql, Function<DataResultSet, V> handler) {
         final long s = System.currentTimeMillis();

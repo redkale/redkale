@@ -4,6 +4,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import java.util.Collection;
 import org.redkale.util.SelectColumn;
 
 /**
@@ -14,8 +15,8 @@ import org.redkale.util.SelectColumn;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @since 2.8.0
  */
-@SuppressWarnings("unchecked")
 public interface DataBatch {
 
     public static DataBatch create() {
@@ -26,7 +27,11 @@ public interface DataBatch {
 
     public <T> DataBatch insert(T... entitys);
 
+    public <T> DataBatch insert(Collection<T> entitys);
+
     public <T> DataBatch delete(T... entitys);
+
+    public <T> DataBatch delete(Collection<T> entitys);
 
     public <T> DataBatch delete(Class<T> clazz, Serializable... pks);
 
@@ -35,6 +40,8 @@ public interface DataBatch {
     public <T> DataBatch delete(Class<T> clazz, FilterNode node, Flipper flipper);
 
     public <T> DataBatch update(T... entitys);
+
+    public <T> DataBatch update(Collection<T> entitys);
 
     public <T> DataBatch update(Class<T> clazz, Serializable pk, String column, Serializable value);
 
