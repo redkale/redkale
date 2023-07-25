@@ -5,6 +5,7 @@ package org.redkale.source;
 
 import java.util.*;
 import java.util.function.*;
+import static org.redkale.source.DataResultSet.formatColumnValue;
 
 /**
  *
@@ -35,7 +36,7 @@ public interface DataSqlSource extends DataSource {
                 return null;
             }
             if (type.isPrimitive() || type == byte[].class || type.getName().startsWith("java.")) {
-                return (V) DataResultSet.formatColumnValue(type, rset.getObject(1));
+                return (V) formatColumnValue(type, rset.getObject(1));
             }
             return EntityBuilder.load(type).getObjectValue(rset);
         });
@@ -46,11 +47,24 @@ public interface DataSqlSource extends DataSource {
             if (type.isPrimitive() || type == byte[].class || type.getName().startsWith("java.")) {
                 List<V> list = new ArrayList<>();
                 while (rset.next()) {
-                    list.add(rset.wasNull() ? null : (V) DataResultSet.formatColumnValue(type, rset.getObject(1)));
+                    list.add(rset.wasNull() ? null : (V) formatColumnValue(type, rset.getObject(1)));
                 }
                 return list;
             }
             return EntityBuilder.load(type).getObjectList(rset);
         });
     }
+
+    default <K, V> Map<K, V> executeQueryMap(Class<K> keyType, Class<V> valType, String sql) {
+        return executeQuery(sql, rset -> {
+            Map<K, V> map = new LinkedHashMap<K, V>();
+            while (rset.next()) {
+                if (!rset.wasNull()) {
+                    map.put((K) formatColumnValue(keyType, rset.getObject(1)), (V) formatColumnValue(valType, rset.getObject(2)));
+                }
+            }
+            return map;
+        });
+    }
+
 }
