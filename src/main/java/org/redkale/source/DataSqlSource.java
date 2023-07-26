@@ -67,4 +67,11 @@ public interface DataSqlSource extends DataSource {
         });
     }
 
+    default Map<String, String> executeQueryStrStrMap(String sql) {
+        return executeQueryMap(String.class, String.class, sql);
+    }
+
+    default Map<Integer, String> executeQueryIntStrMap(String sql) {
+        return executeQueryMap(Integer.class, String.class, sql);
+    }
 }
