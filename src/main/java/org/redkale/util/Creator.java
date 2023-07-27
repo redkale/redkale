@@ -173,6 +173,10 @@ public interface Creator<T> {
         return (Object... params) -> func.apply(params);
     }
 
+    public static <T> Creator<T> load(Class<T> clazz) {
+        return CreatorInner.creatorCacheMap.computeIfAbsent(clazz, v -> create(clazz));
+    }
+
     /**
      * 根据指定的class采用ASM技术生产Creator。
      *

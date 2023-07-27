@@ -111,6 +111,23 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
         return source;
     }
 
+    protected <U> CompletableFuture<U> supplyFuture(Supplier<U> supplier) {
+        try {
+            return CompletableFuture.completedFuture(supplier.get());
+        } catch (Throwable t) {
+            return CompletableFuture.failedFuture(t);
+        }
+    }
+
+    protected CompletableFuture<Void> runFuture(Runnable runner) {
+        try {
+            runner.run();
+            return CompletableFuture.completedFuture(null);
+        } catch (Throwable t) {
+            return CompletableFuture.failedFuture(t);
+        }
+    }
+
     protected <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
         return CompletableFuture.supplyAsync(supplier);
     }

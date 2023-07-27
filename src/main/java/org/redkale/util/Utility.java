@@ -885,6 +885,39 @@ public final class Utility {
     }
 
     /**
+     * 比较两个版本号的大小，ver1小于ver2返回 -1
+     *
+     * @param version1 版本号
+     * @param version2 版本号
+     *
+     * @return 版本大小
+     */
+    public static int compareVersion(String version1, String version2) {
+        if (isEmpty(version1)) {
+            return isEmpty(version2) ? 0 : -1;
+        }
+        if (isEmpty(version2)) {
+            return 1;
+        }
+        String[] ver1 = version1.split("\\.");
+        String[] ver2 = version2.split("\\.");
+        int len = Math.min(ver1.length, ver2.length);
+        for (int i = 0; i < len; i++) {
+            if (ver1[i].length() > ver2[i].length()) {
+                return 1;
+            }
+            if (ver1[i].length() < ver2[i].length()) {
+                return -1;
+            }
+            int v = Integer.parseInt(ver1[i]) - Integer.parseInt(ver2[i]);
+            if (v != 0) {
+                return v > 0 ? 1 : -1;
+            }
+        }
+        return 0;
+    }
+
+    /**
      * 将一个或多个新元素添加到数组开始，数组中的元素自动后移
      *
      * @param <T>   泛型
