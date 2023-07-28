@@ -407,8 +407,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
             entry.lock();
             try {
                 if (entry.cacheType != CacheEntryType.ATOMIC) {
-                    entry.cacheType = CacheEntryType.ATOMIC;
                     entry.objectValue = new AtomicLong(Long.parseLong(entry.objectValue.toString()));
+                    entry.cacheType = CacheEntryType.ATOMIC;
                 }
                 return ((AtomicLong) entry.objectValue).addAndGet(num);
             } finally {
@@ -434,8 +434,17 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     containerLock.unlock();
                 }
             }
-            Long v = ((AtomicLong) entry.objectValue).addAndGet(Double.doubleToLongBits(num));
-            return Double.longBitsToDouble(v.intValue());
+            entry.lock();
+            try {
+                if (entry.cacheType != CacheEntryType.DOUBLE) {
+                    entry.objectValue = new AtomicLong(Long.parseLong(entry.objectValue.toString()));
+                    entry.cacheType = CacheEntryType.DOUBLE;
+                }
+                Long v = ((AtomicLong) entry.objectValue).addAndGet(Double.doubleToLongBits(num));
+                return Double.longBitsToDouble(v.intValue());
+            } finally {
+                entry.unlock();
+            }
         });
     }
 
@@ -507,36 +516,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     }
 
-//    private void set0(CacheEntryType cacheType, String key, Object value) {
-//        if (key == null) {
-//            return;
-//        }
-//        CacheEntry entry = container.get(key);
-//        if (entry == null) {
-//            entry = new CacheEntry(cacheType, key, value, null, null, null);
-//            container.put(key, entry);
-//        } else {
-//            entry.expireSeconds = 0;
-//            entry.objectValue = value;
-//            entry.lastAccessed = System.currentTimeMillis();
-//        }
-//    }
-//
-//    private boolean setnx0(CacheEntryType cacheType, String key, Object value) {
-//        if (key == null) {
-//            return false;
-//        }
-//        CacheEntry entry = container.get(key);
-//        if (entry == null) {
-//            entry = new CacheEntry(cacheType, key, value, null, null, null);
-//            container.putIfAbsent(key, entry);
-//            return true;
-//        } else {
-//            entry.expireSeconds = 0;
-//            entry.lastAccessed = System.currentTimeMillis();
-//            return false;
-//        }
-//    }
     //------------------------ 哈希表 Hash ------------------------
     @Override
     public CompletableFuture<Long> hdelAsync(final String key, String... fields) {
@@ -578,10 +557,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public CompletableFuture<Long> hlenAsync(final String key) {
         return supplyFuture(() -> {
             CacheEntry entry = find(key, CacheEntryType.MAP);
-            if (entry == null) {
-                return 0L;
-            }
-            return (long) entry.mapValue.keySet().size();
+            return entry == null ? 0L : (long) entry.mapValue.keySet().size();
         });
     }
 
@@ -598,7 +574,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 entry = find(key, CacheEntryType.MAP);
                 if (entry == null) {
                     entry = new CacheEntry(CacheEntryType.MAP, key);
-                    entry.mapValue = new ConcurrentHashMap();
                     container.put(key, entry);
                 }
             } finally {
@@ -643,7 +618,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public CompletableFuture<Boolean> hexistsAsync(final String key, String field) {
         return supplyFuture(() -> {
             CacheEntry entry = find(key, CacheEntryType.MAP);
-            return entry == null ? false : entry.mapValue.contains(field);
+            return entry != null && entry.mapValue.contains(field);
         });
     }
 
@@ -705,9 +680,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
             if (entry == null) {
                 return null;
             }
+            Map map = entry.mapValue;
             List<T> rs = new ArrayList<>(fields.length);
             for (String field : fields) {
-                rs.add(formatValue(type, entry.mapValue.get(field)));
+                rs.add((T) formatValue(type, map.get(field)));
             }
             return rs;
         });
@@ -1101,7 +1077,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 for (int i = 0; i < Math.abs(count); i++) {
                     int index = ThreadLocalRandom.current().nextInt(vals.size());
                     T val = vals.get(index);
-                    list.add(val);
+                    list.add(formatValue(componentType, val));
                 }
             } else { //不可以重复
                 if (count >= vals.size()) {
