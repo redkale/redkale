@@ -20,6 +20,19 @@ import org.redkale.util.*;
  */
 public class BsonMainTest {
 
+
+    public static void main(String[] args) throws Throwable {
+        BsonMainTest test = new BsonMainTest();
+        test.run1();
+        test.run2();
+        test.run3();
+        test.run4();
+        test.run5();
+        test.run6();
+        test.run7();
+        test.run8();
+    }
+
     @Test
     public void run1() throws Throwable {
         Serializable[] sers = new Serializable[]{"aaa", 4};
@@ -38,7 +51,7 @@ public class BsonMainTest {
         SimpleChildEntity entry = SimpleChildEntity.create();
         byte[] bytes = convert.convertTo(SimpleEntity.class, entry);
         System.out.println("长度: " + bytes.length);
-        Assertions.assertEquals(271, bytes.length);
+        Assertions.assertEquals(260, bytes.length);
         BsonByteBufferWriter writer = convert.pollWriter(() -> ByteBuffer.allocate(1));
         convert.convertTo(writer, SimpleEntity.class, entry);
         ByteBuffer[] buffers = writer.toBuffers();
@@ -52,7 +65,7 @@ public class BsonMainTest {
             b.flip();
         }
         System.out.println("长度: " + len);
-        Assertions.assertEquals(271, len);
+        Assertions.assertEquals(260, len);
         SimpleChildEntity entry2 = convert.convertFrom(SimpleChildEntity.class, buffers);
         System.out.println(entry);
         Assertions.assertEquals(entry.toString(), entry2.toString());

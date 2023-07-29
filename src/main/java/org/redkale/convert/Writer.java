@@ -75,6 +75,13 @@ public abstract class Writer {
     public abstract boolean tiny();
 
     /**
+     * 当nullable=true时， 字段值为null时会输出该字段
+     *
+     * @return 是否简化
+     */
+    public abstract boolean nullable();
+
+    /**
      * 输出null值
      */
     public abstract void writeNull();
@@ -132,6 +139,12 @@ public abstract class Writer {
             value = objFieldFunc.apply(member.attribute, obj);
         }
         if (value == null) {
+            if (nullable()) {
+                Attribute attr = member.getAttribute();
+                this.writeFieldName(member, attr.field(), attr.genericType(), member.getPosition());
+                writeNull();
+                this.comma = true;
+            }
             return;
         }
         if (tiny()) {
@@ -164,6 +177,11 @@ public abstract class Writer {
     @SuppressWarnings("unchecked")
     public void writeObjectField(final String fieldName, Type fieldType, int fieldPos, Encodeable anyEncoder, Object value) {
         if (value == null) {
+            if (nullable()) {
+                this.writeFieldName(null, fieldName, fieldType, fieldPos);
+                writeNull();
+                this.comma = true;
+            }
             return;
         }
         if (fieldType == null) {

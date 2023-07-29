@@ -114,7 +114,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         continue;
                     }
                     ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
-                    colFactory = factory.columnFactory(field.getType(), field.getAnnotationsByType(ConvertCoder.class), false);
+                    colFactory = factory.columnFactory(field.getGenericType(), field.getAnnotationsByType(ConvertCoder.class), false);
                     Decodeable<R, ?> fieldCoder;
                     if (small != null && field.getType() == String.class) {
                         fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
@@ -197,9 +197,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
                     ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
                     Field maybeField = ConvertFactory.readGetSetField(method);
-                    colFactory = factory.columnFactory(method.getParameterTypes()[0], method.getAnnotationsByType(ConvertCoder.class), false);
+                    colFactory = factory.columnFactory(method.getGenericParameterTypes()[0], method.getAnnotationsByType(ConvertCoder.class), false);
                     if (maybeField != null && colFactory == factory) {
-                        colFactory = factory.columnFactory(maybeField.getType(), maybeField.getAnnotationsByType(ConvertCoder.class), false);
+                        colFactory = factory.columnFactory(maybeField.getGenericType(), maybeField.getAnnotationsByType(ConvertCoder.class), false);
                     }
                     Decodeable<R, ?> fieldCoder;
                     if (small != null && method.getParameterTypes()[0] == String.class) {

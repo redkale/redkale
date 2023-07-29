@@ -386,7 +386,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         final Map<String, AccessibleObject> mixedNames = mixedNames0;
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
         final String newDynName = "org/redkaledyn/json/_Dyn" + JsonDynEncoder.class.getSimpleName()
-            + "__" + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.tiny() + "_" + Utility.md5Hex(memberb.toString()); //tiny必须要加上, 同一个类会有多个字段定制Convert
+            + "__" + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.tiny() + "_" + factory.nullable() + "_" + Utility.md5Hex(memberb.toString()); //tiny必须要加上, 同一个类会有多个字段定制Convert
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
@@ -512,7 +512,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             int maxLocals = 4;
             int elementIndex = -1;
             final Class firstType = readGetSetFieldType(members.get(0));
-            final boolean mustHadComma = firstType.isPrimitive() && (firstType != boolean.class || !factory.tiny()); //byte/short/char/int/float/long/double
+            final boolean mustHadComma = firstType.isPrimitive() && (firstType != boolean.class || !factory.tiny() || factory.nullable()); //byte/short/char/int/float/long/double
 
             if (onlyOneLatin1FieldObjectFlag) {
                 //out.writeObjectByOnlyOneLatin1FieldValue(messageFirstFieldBytes, value.getMessage());elementIndex++;
@@ -670,7 +670,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         }
                     }
                     Label msgnotemptyif = null;
-                    if (!fieldtype.isPrimitive()) { //if (message != null) { start 
+                    if (!fieldtype.isPrimitive() && !factory.nullable()) { //if (message != null) { start 
                         mv.visitVarInsn(loadid, maxLocals);
                         msgnotemptyif = new Label();
                         mv.visitJumpInsn(IFNULL, msgnotemptyif);
@@ -794,7 +794,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         mv.visitVarInsn(loadid, maxLocals);
                         mv.visitMethodInsn(INVOKEINTERFACE, encodeableName, "convertTo", "(" + writerDesc + "Ljava/lang/Object;)V", true);
                     }
-                    if (!fieldtype.isPrimitive()) { //if (message != null) } end 
+                    if (!fieldtype.isPrimitive() && !factory.nullable()) { //if (message != null) } end 
                         mv.visitLabel(msgnotemptyif);
                         mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                     } else if (fieldtype == boolean.class && factory.tiny()) {

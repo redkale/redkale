@@ -104,6 +104,10 @@ public class JsonCharsWriter extends JsonWriter {
      */
     @Override
     public void writeLatin1To(final boolean quote, final String value) {
+        if (value == null) {
+            writeNull();
+            return;
+        }
         int len = value.length();
         expand(len + (quote ? 2 : 0));
         if (quote) {
@@ -220,6 +224,12 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override
     public void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value) {
+        if (value == null && nullable()) {
+            writeTo(fieldBytes);
+            writeNull();
+            writeTo('}');
+            return;
+        }
         if (value == null || (tiny && value.isEmpty())) {
             expand(1);
             content[count++] = '}';
@@ -241,6 +251,13 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override //firstFieldBytes 必须带{开头
     public void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value) {
+        if (value == null && nullable()) {
+            writeTo('{');
+            writeTo(firstFieldBytes);
+            writeNull();
+            writeTo('}');
+            return;
+        }
         if (value == null || (tiny && value.isEmpty())) {
             expand(2);
             content[count++] = '{';

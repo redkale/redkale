@@ -95,7 +95,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         continue;
                     }
                     ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
-                    colFactory = factory.columnFactory(field.getType(), field.getAnnotationsByType(ConvertCoder.class), true);
+                    colFactory = factory.columnFactory(field.getGenericType(), field.getAnnotationsByType(ConvertCoder.class), true);
                     Encodeable<W, ?> fieldCoder;
                     if (small != null && field.getType() == String.class) {
                         fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
@@ -165,9 +165,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         }
                     }
                     Field maybeField = ConvertFactory.readGetSetField(method);
-                    colFactory = factory.columnFactory(method.getReturnType(), method.getAnnotationsByType(ConvertCoder.class), true);
+                    colFactory = factory.columnFactory(method.getGenericReturnType(), method.getAnnotationsByType(ConvertCoder.class), true);
                     if (maybeField != null && colFactory == factory) {
-                        colFactory = factory.columnFactory(maybeField.getType(), maybeField.getAnnotationsByType(ConvertCoder.class), true);
+                        colFactory = factory.columnFactory(maybeField.getGenericType(), maybeField.getAnnotationsByType(ConvertCoder.class), true);
                     }
                     Encodeable<W, ?> fieldCoder;
                     if (small != null && method.getReturnType() == String.class) {

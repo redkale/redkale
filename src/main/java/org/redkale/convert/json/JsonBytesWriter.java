@@ -5,9 +5,9 @@
  */
 package org.redkale.convert.json;
 
-import java.lang.reflect.*;
-import java.nio.charset.*;
-import java.util.function.*;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.function.Consumer;
 import org.redkale.convert.*;
 import static org.redkale.convert.json.JsonWriter.*;
 import org.redkale.util.*;
@@ -55,8 +55,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         this.count = array.length();
     }
 
-    public JsonBytesWriter(boolean tiny, ByteArray array) {
+    public JsonBytesWriter(boolean tiny, boolean nullable, ByteArray array) {
         this.tiny = tiny;
+        this.nullable = nullable;
         this.content = array.content();
         this.count = array.length();
     }
@@ -158,6 +159,10 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
      */
     @Override
     public void writeLatin1To(final boolean quote, final String value) {
+        if (value == null) {
+            writeNull();
+            return;
+        }
         byte[] bs = Utility.latin1ByteArray(value);
         int len = bs.length;
         if (quote) {
@@ -271,6 +276,12 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override
     public void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value) {
+        if (value == null && nullable()) {
+            writeTo(fieldBytes);
+            writeNull();
+            writeTo('}');
+            return;
+        }
         if (value == null || (tiny && value.isEmpty())) {
             expand(1);
             content[count++] = '}';
@@ -294,6 +305,13 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override  //firstFieldBytes 必须带{开头
     public void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value) {
+        if (value == null && nullable()) {
+            writeTo('{');
+            writeTo(firstFieldBytes);
+            writeNull();
+            writeTo('}');
+            return;
+        }
         if (value == null || (tiny && value.isEmpty())) {
             expand(2);
             content[count++] = '{';

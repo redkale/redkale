@@ -37,6 +37,7 @@ public class JsonMainTest {
         String json = "{\"access_token\":\"null\",\"priv\":null, vvv:nulla,\"priv2\":\"nulla\",\"expires_in\":7200, \"aa\":\"\"}";
         Map<String, String> map = convert.convertFrom(JsonConvert.TYPE_MAP_STRING_STRING, json);
         System.out.println(map);
+        System.out.println(map.get("priv") == null);
         String rs = convert.convertTo(map);
         System.out.println(rs);
         ByteBuffer[] buffers = convert.convertTo(() -> ByteBuffer.allocate(1024), map);
@@ -52,7 +53,7 @@ public class JsonMainTest {
         SimpleChildEntity entry = SimpleChildEntity.create();
         String json = convert.convertTo(SimpleEntity.class, entry);
         System.out.println("长度: " + json.length());
-        JsonByteBufferWriter writer = new JsonByteBufferWriter(false, () -> ByteBuffer.allocate(1)) {
+        JsonByteBufferWriter writer = new JsonByteBufferWriter(false, false, () -> ByteBuffer.allocate(1)) {
         };
         convert.convertTo(writer, SimpleEntity.class, entry);
         ByteBuffer[] buffers = writer.toBuffers();

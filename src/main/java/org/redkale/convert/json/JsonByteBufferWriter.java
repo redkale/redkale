@@ -34,12 +34,13 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     private int index;
 
-    public JsonByteBufferWriter(boolean tiny, Supplier<ByteBuffer> supplier) {
-        this(tiny, null, supplier);
+    public JsonByteBufferWriter(boolean tiny, boolean nullable, Supplier<ByteBuffer> supplier) {
+        this(tiny, nullable, null, supplier);
     }
 
-    public JsonByteBufferWriter(boolean tiny, Charset charset, Supplier<ByteBuffer> supplier) {
+    public JsonByteBufferWriter(boolean tiny, boolean nullable, Charset charset, Supplier<ByteBuffer> supplier) {
         this.tiny = tiny;
+        this.nullable = nullable;
         this.charset = charset;
         this.supplier = supplier;
     }
@@ -311,6 +312,10 @@ public class JsonByteBufferWriter extends JsonWriter {
      */
     @Override
     public void writeLatin1To(final boolean quote, final String value) {
+        if (value == null) {
+            writeNull();
+            return;
+        }
         byte[] bs = Utility.latin1ByteArray(value);
         int expandsize = expand(bs.length + (quote ? 2 : 0));
         if (expandsize == 0) {// 只需要一个buffer 
@@ -564,6 +569,12 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value) {
+        if (value == null && nullable()) {
+            writeTo(fieldBytes);
+            writeNull();
+            writeTo('}');
+            return;
+        }
         if (value == null || (tiny && value.isEmpty())) {
             expand(1);
             this.buffers[index].put((byte) '}');
@@ -616,6 +627,13 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override //firstFieldBytes 必须带{开头
     public void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value) {
+        if (value == null && nullable()) {
+            writeTo('{');
+            writeTo(firstFieldBytes);
+            writeNull();
+            writeTo('}');
+            return;
+        }
         if (value == null || (tiny && value.isEmpty())) {
             int expandsize = expand(2);
             if (expandsize == 0) { // 只需要一个buffer 

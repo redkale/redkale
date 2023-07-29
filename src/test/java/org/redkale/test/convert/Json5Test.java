@@ -17,11 +17,21 @@ public class Json5Test {
     public static void main(String[] args) throws Throwable {
         Json5Test test = new Json5Test();
         test.main = true;
-        test.run();
+        test.run1();
+        test.run2();
     }
 
     @Test
-    public void run() throws Exception {
+    public void run1() throws Exception {
+        JsonFactory factory = JsonFactory.root().tiny(true).nullable(true);
+        final JsonConvert convert = factory.getConvert();
+        Json5Bean bean = new Json5Bean();
+        bean.id = 60;
+        System.out.println(convert.convertTo(bean));
+    }
+
+    @Test
+    public void run2() throws Exception {
         JsonConvert convert = JsonConvert.root();
         Json5Bean bean = new Json5Bean();
         bean.id = 500;

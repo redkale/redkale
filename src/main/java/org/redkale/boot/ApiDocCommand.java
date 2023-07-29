@@ -60,7 +60,9 @@ public final class ApiDocCommand {
 
         if (params != null && params.length > 0) {
             for (String param : params) {
-                if (param == null) continue;
+                if (param == null) {
+                    continue;
+                }
                 param = param.toLowerCase();
                 if (param.startsWith("--api-skiprpc=")) {
                     skipRPC = "true".equalsIgnoreCase(param.substring("--api-skiprpc=".length()));
@@ -80,7 +82,9 @@ public final class ApiDocCommand {
         List<Map> swaggerTags = new ArrayList<>();
         Map<String, Map<String, Object>> swaggerComponentsMap = new LinkedHashMap<>();
         for (NodeServer node : app.servers) {
-            if (!(node instanceof NodeHttpServer)) continue;
+            if (!(node instanceof NodeHttpServer)) {
+                continue;
+            }
             final Map<String, Object> map = new LinkedHashMap<>();
             serverList.add(map);
             HttpServer server = node.getServer();
@@ -89,12 +93,20 @@ public final class ApiDocCommand {
             List<Map<String, Object>> servletsList = new ArrayList<>();
             map.put("servlets", servletsList);
             String plainContentType = server.getResponseConfig() == null ? "application/json" : server.getResponseConfig().plainContentType;
-            if (plainContentType == null || plainContentType.isEmpty()) plainContentType = "application/json";
-            if (plainContentType.indexOf(';') > 0) plainContentType = plainContentType.substring(0, plainContentType.indexOf(';'));
+            if (plainContentType == null || plainContentType.isEmpty()) {
+                plainContentType = "application/json";
+            }
+            if (plainContentType.indexOf(';') > 0) {
+                plainContentType = plainContentType.substring(0, plainContentType.indexOf(';'));
+            }
 
             for (HttpServlet servlet : server.getDispatcherServlet().getServlets()) {
-                if (!(servlet instanceof HttpServlet)) continue;
-                if (servlet instanceof WebSocketServlet) continue;
+                if (!(servlet instanceof HttpServlet)) {
+                    continue;
+                }
+                if (servlet instanceof WebSocketServlet) {
+                    continue;
+                }
                 if (servlet.getClass().getAnnotation(MessageMultiConsumer.class) != null) {
                     node.logger.log(Level.INFO, servlet + " be skipped because has @MessageMultiConsumer");
                     continue;
@@ -128,16 +140,29 @@ public final class ApiDocCommand {
                 Class clz = servlet.getClass();
                 HashSet<String> actionUrls = new HashSet<>();
                 do {
-                    if (Modifier.isAbstract(clz.getModifiers())) break;
+                    if (Modifier.isAbstract(clz.getModifiers())) {
+                        break;
+                    }
                     for (Method method : clz.getMethods()) {
-                        if (method.getParameterCount() != 2) continue;
+                        if (method.getParameterCount() != 2) {
+                            continue;
+                        }
                         HttpMapping action = method.getAnnotation(HttpMapping.class);
-                        if (action == null) continue;
-                        if (!action.inherited() && selfClz != clz) continue; //忽略不被继承的方法
-                        if (actionUrls.contains(action.url())) continue;
-                        if (HttpScope.class.isAssignableFrom(action.result())) continue; //忽略模板引擎的方法
-                        if (action.rpconly() && skipRPC) continue; //不生成RPC接口
-
+                        if (action == null) {
+                            continue;
+                        }
+                        if (!action.inherited() && selfClz != clz) {
+                            continue; //忽略不被继承的方法
+                        }
+                        if (actionUrls.contains(action.url())) {
+                            continue;
+                        }
+                        if (HttpScope.class.isAssignableFrom(action.result())) {
+                            continue; //忽略模板引擎的方法
+                        }
+                        if (action.rpconly() && skipRPC) {
+                            continue; //不生成RPC接口
+                        }
                         final List<Map<String, Object>> swaggerParamsList = new ArrayList<>();
 
                         final Map<String, Object> mappingMap = new LinkedHashMap<>();
@@ -241,20 +266,36 @@ public final class ApiDocCommand {
                                     swaggerParamsList.add(swaggerParamMap);
                                 }
                             }
-                            if (param.style() == HttpParam.HttpParameterStyle.BODY) hasbodyparam = true;
-                            if (ptype.isPrimitive() || ptype == String.class) continue;
-                            if (typesMap.containsKey(ptype.getName())) continue;
-                            if (ptype.getName().startsWith("java.")) continue;
-                            if (ptype.getName().startsWith("javax.")) continue;
+                            if (param.style() == HttpParam.HttpParameterStyle.BODY) {
+                                hasbodyparam = true;
+                            }
+                            if (ptype.isPrimitive() || ptype == String.class) {
+                                continue;
+                            }
+                            if (typesMap.containsKey(ptype.getName())) {
+                                continue;
+                            }
+                            if (ptype.getName().startsWith("java.")) {
+                                continue;
+                            }
+                            if (ptype.getName().startsWith("javax.")) {
+                                continue;
+                            }
 
                             final Map<String, Map<String, Object>> typeMap = new LinkedHashMap<>();
                             Class loop = ptype;
                             final boolean filter = FilterBean.class.isAssignableFrom(loop);
                             do {
-                                if (loop == null || loop.isInterface()) break;
+                                if (loop == null || loop.isInterface()) {
+                                    break;
+                                }
                                 for (Field field : loop.getDeclaredFields()) {
-                                    if (Modifier.isFinal(field.getModifiers())) continue;
-                                    if (Modifier.isStatic(field.getModifiers())) continue;
+                                    if (Modifier.isFinal(field.getModifiers())) {
+                                        continue;
+                                    }
+                                    if (Modifier.isStatic(field.getModifiers())) {
+                                        continue;
+                                    }
 
                                     Map<String, Object> fieldmap = new LinkedHashMap<>();
                                     fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
@@ -276,7 +317,9 @@ public final class ApiDocCommand {
                                     fieldmap.put("updatable", (filter || col == null || col.updatable()));
 
                                     if (servlet.getClass().getAnnotation(Rest.RestDyn.class) != null) {
-                                        if (field.getAnnotation(RestAddress.class) != null) continue;
+                                        if (field.getAnnotation(RestAddress.class) != null) {
+                                            continue;
+                                        }
                                     }
 
                                     typeMap.put(field.getName(), fieldmap);
@@ -301,11 +344,17 @@ public final class ApiDocCommand {
                         Map<String, Object> respMap = new LinkedHashMap<>();
                         respMap.put("schema", respSchemaMap);
                         Object example = formatExample(returnFactory, action.example(), action.result(), resultType);
-                        if (example != null) respSchemaMap.put("example", example);
-                        if (!swaggerRequestBody.isEmpty()) swaggerOperatMap.put("requestBody", swaggerRequestBody);
+                        if (example != null) {
+                            respSchemaMap.put("example", example);
+                        }
+                        if (!swaggerRequestBody.isEmpty()) {
+                            swaggerOperatMap.put("requestBody", swaggerRequestBody);
+                        }
                         swaggerOperatMap.put("parameters", swaggerParamsList);
                         String actiondesc = action.comment();
-                        if (action.rpconly()) actiondesc = "[Only for RPC API] " + actiondesc;
+                        if (action.rpconly()) {
+                            actiondesc = "[Only for RPC API] " + actiondesc;
+                        }
                         swaggerOperatMap.put("responses", Utility.ofMap("200", Utility.ofMap("description", actiondesc, "content", Utility.ofMap("application/json", respMap))));
 
                         String m = action.methods() == null || action.methods().length == 0 ? null : action.methods()[0].toLowerCase();
@@ -319,7 +368,9 @@ public final class ApiDocCommand {
                 } while ((clz = clz.getSuperclass()) != HttpServlet.class);
                 mappingsList.sort((o1, o2) -> ((String) o1.get("url")).compareTo((String) o2.get("url")));
                 servletsList.add(servletMap);
-                if (!actionUrls.isEmpty()) swaggerTags.add(Utility.ofMap("name", tag, "description", ws.comment()));
+                if (!actionUrls.isEmpty()) {
+                    swaggerTags.add(Utility.ofMap("name", tag, "description", ws.comment()));
+                }
             }
             servletsList.sort((o1, o2) -> {
                 String[] urlregs1 = (String[]) o1.get("urlregs");
@@ -337,7 +388,9 @@ public final class ApiDocCommand {
             swaggerResultMap.put("servers", swaggerServers);
             swaggerResultMap.put("paths", swaggerPathsMap);
             swaggerResultMap.put("tags", swaggerTags);
-            if (!swaggerComponentsMap.isEmpty()) swaggerResultMap.put("components", Utility.ofMap("schemas", swaggerComponentsMap));
+            if (!swaggerComponentsMap.isEmpty()) {
+                swaggerResultMap.put("components", Utility.ofMap("schemas", swaggerComponentsMap));
+            }
             final FileOutputStream out = new FileOutputStream(new File(app.getHome(), "openapi-doc.json"));
             out.write(JsonConvert.root().convertTo(swaggerResultMap).getBytes(StandardCharsets.UTF_8));
             out.close();
@@ -421,8 +474,12 @@ public final class ApiDocCommand {
             Set<Type> types = new HashSet<>();
             Encodeable encodeable = JsonFactory.root().loadEncoder(genericType);
             String ct = componentKey(factory, logger, types, componentsMap, null, encodeable, true);
-            if (ct == null || ct.length() == 0) return null;
-            if (componentsMap.containsKey(ct)) return ct;
+            if (ct == null || ct.length() == 0) {
+                return null;
+            }
+            if (componentsMap.containsKey(ct)) {
+                return ct;
+            }
             Map<String, Object> cmap = new LinkedHashMap<>();
             componentsMap.put(ct, cmap); //必须在调用simpleSchemaType之前put，不然嵌套情况下死循环
 
@@ -440,11 +497,15 @@ public final class ApiDocCommand {
                             FilterColumn fcol = member.getField().getAnnotation(FilterColumn.class);
                             if (fcol != null) {
                                 desc = fcol.comment();
-                                if (fcol.required()) requireds.add(member.getAttribute().field());
+                                if (fcol.required()) {
+                                    requireds.add(member.getAttribute().field());
+                                }
                             }
                         } else {
                             desc = col.comment();
-                            if (!col.nullable()) requireds.add(member.getAttribute().field());
+                            if (!col.nullable()) {
+                                requireds.add(member.getAttribute().field());
+                            }
                         }
                         if (desc.isEmpty() && member.getField().getAnnotation(Comment.class) != null) {
                             desc = member.getField().getAnnotation(Comment.class).value();
@@ -457,11 +518,15 @@ public final class ApiDocCommand {
                             FilterColumn fcol = member.getMethod().getAnnotation(FilterColumn.class);
                             if (fcol != null) {
                                 desc = fcol.comment();
-                                if (fcol.required()) requireds.add(member.getAttribute().field());
+                                if (fcol.required()) {
+                                    requireds.add(member.getAttribute().field());
+                                }
                             }
                         } else {
                             desc = col.comment();
-                            if (!col.nullable()) requireds.add(member.getAttribute().field());
+                            if (!col.nullable()) {
+                                requireds.add(member.getAttribute().field());
+                            }
                         }
                         if (desc.isEmpty() && member.getMethod().getAnnotation(Comment.class) != null) {
                             desc = member.getMethod().getAnnotation(Comment.class).value();
@@ -469,11 +534,15 @@ public final class ApiDocCommand {
                             desc = member.getMethod().getAnnotation(org.redkale.util.Comment.class).value();
                         }
                     }
-                    if (!desc.isEmpty()) schemaMap.put("description", desc);
+                    if (!desc.isEmpty()) {
+                        schemaMap.put("description", desc);
+                    }
                     properties.put(member.getAttribute().field(), schemaMap);
                 }
             }
-            if (!requireds.isEmpty()) cmap.put("required", requireds);
+            if (!requireds.isEmpty()) {
+                cmap.put("required", requireds);
+            }
             cmap.put("properties", properties);
             return ct;
         } catch (Exception e) {
@@ -484,7 +553,9 @@ public final class ApiDocCommand {
 
     private static String componentKey(JsonFactory factory, Logger logger, Set<Type> types, Map<String, Map<String, Object>> componentsMap, EnMember field, Encodeable encodeable, boolean first) {
         if (encodeable instanceof ObjectEncoder) {
-            if (types.contains(encodeable.getType())) return "";
+            if (types.contains(encodeable.getType())) {
+                return "";
+            }
             types.add(encodeable.getType());
             StringBuilder sb = new StringBuilder();
             sb.append(((ObjectEncoder) encodeable).getTypeClass().getSimpleName());
@@ -492,19 +563,33 @@ public final class ApiDocCommand {
                 if (member.getEncoder() instanceof ArrayEncoder
                     || member.getEncoder() instanceof CollectionEncoder) {
                     String subsb = componentKey(factory, logger, types, componentsMap, member, member.getEncoder(), false);
-                    if (subsb == null) return null;
+                    if (subsb == null) {
+                        return null;
+                    }
                     AccessibleObject real = member.getField() == null ? member.getMethod() : member.getField();
-                    if (real == null) continue;
+                    if (real == null) {
+                        continue;
+                    }
                     Class cz = real instanceof Field ? ((Field) real).getType() : ((Method) real).getReturnType();
                     Type ct = real instanceof Field ? ((Field) real).getGenericType() : ((Method) real).getGenericReturnType();
-                    if (cz == ct) continue;
-                    if (field == null && encodeable.getType() instanceof Class) continue;
-                    if (sb.length() > 0 && subsb.length() > 0) sb.append("_");
+                    if (cz == ct) {
+                        continue;
+                    }
+                    if (field == null && encodeable.getType() instanceof Class) {
+                        continue;
+                    }
+                    if (sb.length() > 0 && subsb.length() > 0) {
+                        sb.append("_");
+                    }
                     sb.append(subsb);
                 } else if (member.getEncoder() instanceof ObjectEncoder || member.getEncoder() instanceof SimpledCoder) {
                     AccessibleObject real = member.getField() == null ? member.getMethod() : member.getField();
-                    if (real == null) continue;
-                    if (types.contains(member.getEncoder().getType())) continue;
+                    if (real == null) {
+                        continue;
+                    }
+                    if (types.contains(member.getEncoder().getType())) {
+                        continue;
+                    }
                     types.add(member.getEncoder().getType());
                     if (member.getEncoder() instanceof SimpledCoder) {
                         simpleSchemaType(factory, logger, componentsMap, ((SimpledCoder) member.getEncoder()).getType(), ((SimpledCoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
@@ -513,11 +598,19 @@ public final class ApiDocCommand {
                     }
                     Class cz = real instanceof Field ? ((Field) real).getType() : ((Method) real).getReturnType();
                     Type ct = real instanceof Field ? ((Field) real).getGenericType() : ((Method) real).getGenericReturnType();
-                    if (cz == ct) continue;
+                    if (cz == ct) {
+                        continue;
+                    }
                     String subsb = componentKey(factory, logger, types, componentsMap, member, member.getEncoder(), false);
-                    if (subsb == null) return null;
-                    if (field == null && member.getEncoder().getType() instanceof Class) continue;
-                    if (sb.length() > 0 && subsb.length() > 0) sb.append("_");
+                    if (subsb == null) {
+                        return null;
+                    }
+                    if (field == null && member.getEncoder().getType() instanceof Class) {
+                        continue;
+                    }
+                    if (sb.length() > 0 && subsb.length() > 0) {
+                        sb.append("_");
+                    }
                     sb.append(subsb);
                 } else if (member.getEncoder() instanceof MapEncoder) {
                     continue;
@@ -529,9 +622,13 @@ public final class ApiDocCommand {
         } else if (encodeable instanceof ArrayEncoder || encodeable instanceof CollectionEncoder) {
             final boolean array = (encodeable instanceof ArrayEncoder);
             Encodeable subEncodeable = array ? ((ArrayEncoder) encodeable).getComponentEncoder() : ((CollectionEncoder) encodeable).getComponentEncoder();
-            if (subEncodeable instanceof SimpledCoder && field != null) return "";
+            if (subEncodeable instanceof SimpledCoder && field != null) {
+                return "";
+            }
             final String sb = componentKey(factory, logger, types, componentsMap, null, subEncodeable, false);
-            if (sb == null || sb.isEmpty()) return sb;
+            if (sb == null || sb.isEmpty()) {
+                return sb;
+            }
             if (field != null && field.getField() != null && field.getField().getDeclaringClass() == Sheet.class) {
                 return sb;
             }
@@ -550,7 +647,9 @@ public final class ApiDocCommand {
     }
 
     private static Object formatExample(JsonFactory factory, String example, Class type, Type genericType) {
-        if (example != null && !example.isEmpty()) return example;
+        if (example != null && !example.isEmpty()) {
+            return example;
+        }
         JsonFactory jsonFactory = factory == null || factory == JsonFactory.root() ? exampleFactory : factory;
         if (type == Flipper.class) {
             return new Flipper();
@@ -642,8 +741,12 @@ public final class ApiDocCommand {
                     json.append("{");
                     int index = 0;
                     for (DeMember member : ((ObjectDecoder) decoder).getMembers()) {
-                        if (!(member.getDecoder() instanceof ObjectDecoder)) continue;
-                        if (index > 0) json.append(",");
+                        if (!(member.getDecoder() instanceof ObjectDecoder)) {
+                            continue;
+                        }
+                        if (index > 0) {
+                            json.append(",");
+                        }
                         json.append('"').append(member.getAttribute().field()).append("\":{}");
                         index++;
                     }
@@ -659,6 +762,6 @@ public final class ApiDocCommand {
         return example;
     }
 
-    private static final JsonFactory exampleFactory = JsonFactory.create().tiny(false);
+    private static final JsonFactory exampleFactory = JsonFactory.create().tiny(false).nullable(false);
 
 }

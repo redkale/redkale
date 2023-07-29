@@ -21,12 +21,12 @@ class JsonStreamWriter extends JsonByteBufferWriter {
 
     private OutputStream out;
 
-    protected JsonStreamWriter(boolean tiny, OutputStream out) {
-        this(tiny, null, out);
+    protected JsonStreamWriter(boolean tiny, boolean nullable, OutputStream out) {
+        this(tiny, nullable, null, out);
     }
 
-    protected JsonStreamWriter(boolean tiny, Charset charset, OutputStream out) {
-        super(tiny, charset, null);
+    protected JsonStreamWriter(boolean tiny, boolean nullable, Charset charset, OutputStream out) {
+        super(tiny, nullable, charset, null);
         this.out = out;
     }
 
@@ -101,6 +101,10 @@ class JsonStreamWriter extends JsonByteBufferWriter {
      */
     @Override
     public void writeLatin1To(final boolean quote, final String value) {
+        if (value == null) {
+            writeNull();
+            return;
+        }
         char[] chs = Utility.charArray(value);
         writeTo(quote, chs, 0, chs.length);
     }

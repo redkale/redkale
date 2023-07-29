@@ -6,7 +6,7 @@
 package org.redkale.convert;
 
 /**
- * Convert的扩展实现类加载器
+ * Convert的扩展实现类加载器, 通过此类可以创建自定义的序列化格式，例如：protobuf、xmlbean
  *
  *
  * 详情见: https://redkale.org

@@ -18,8 +18,8 @@ class BsonStreamWriter extends BsonByteBufferWriter {
 
     private OutputStream out;
 
-    protected BsonStreamWriter(boolean tiny, OutputStream out) {
-        super(tiny, null);
+    protected BsonStreamWriter(boolean tiny, boolean nullable, OutputStream out) {
+        super(tiny, nullable, null);
         this.out = out;
     }
 

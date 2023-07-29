@@ -44,7 +44,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     protected Convert<R, W> convert;
 
-    protected boolean tiny; //String类型值为""，Boolean类型值为false时是否需要输出， 默认为false
+    protected boolean tiny; //值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
+
+    protected boolean nullable; ///值为true时 字段值为null时会输出，默认为false
 
     private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
 
@@ -72,8 +74,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private boolean skipAllIgnore = false;
 
-    protected ConvertFactory(ConvertFactory<R, W> parent, boolean tiny) {
+    protected ConvertFactory(ConvertFactory<R, W> parent, boolean tiny, boolean nullable) {
         this.tiny = tiny;
+        this.nullable = nullable;
         this.parent = parent;
         if (parent == null) {
             //---------------------------------------------------------
@@ -251,7 +254,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public abstract ConvertFactory createChild();
 
-    public abstract ConvertFactory createChild(boolean tiny);
+    public abstract ConvertFactory createChild(boolean tiny, boolean nullable);
 
     protected SimpledCoder createEnumSimpledCoder(Class enumClass) {
         return new EnumSimpledCoder(this, enumClass);
@@ -332,6 +335,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public ConvertFactory tiny(boolean tiny) {
         this.tiny = tiny;
+        return this;
+    }
+
+    public ConvertFactory nullable(boolean nullable) {
+        this.nullable = nullable;
         return this;
     }
 
@@ -630,7 +638,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
     }
 
-    ConvertFactory columnFactory(Class type, ConvertCoder[] coders, boolean encode) {
+    ConvertFactory columnFactory(Type type, ConvertCoder[] coders, boolean encode) {
         if (coders == null || coders.length < 1) {
             return this;
         }
@@ -642,7 +650,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             if (!ann.type().contains(ct)) {
                 continue;
             }
-            Class colType = type;
+            Type colType = type;
             if (ann.column() != Object.class) {
                 colType = ann.column();
             }
@@ -679,7 +687,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                             if (paramTypes.length == 0) {
                                 encoder = creator.create();
                             } else if (paramTypes.length == 1) {
-                                if (Type.class.isAssignableFrom(paramTypes[0])) {
+                                if (Class.class.isAssignableFrom(paramTypes[0])) {
+                                    encoder = creator.create((Object) TypeToken.typeToClass(colType));
+                                } else if (Type.class.isAssignableFrom(paramTypes[0])) {
                                     encoder = creator.create((Object) colType);
                                 } else if (ConvertFactory.class.isAssignableFrom(paramTypes[0])) {
                                     encoder = creator.create(this);
@@ -687,7 +697,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                                     throw new ConvertException(enClazz + " not found public empty-parameter Constructor");
                                 }
                             } else if (paramTypes.length == 2) {
-                                if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Type.class.isAssignableFrom(paramTypes[1])) {
+                                if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Class.class.isAssignableFrom(paramTypes[1])) {
+                                    encoder = creator.create(this, TypeToken.typeToClass(colType));
+                                } else if (Class.class.isAssignableFrom(paramTypes[0]) && ConvertFactory.class.isAssignableFrom(paramTypes[1])) {
+                                    encoder = creator.create(TypeToken.typeToClass(colType), this);
+                                } else if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Type.class.isAssignableFrom(paramTypes[1])) {
                                     encoder = creator.create(this, colType);
                                 } else if (Type.class.isAssignableFrom(paramTypes[0]) && ConvertFactory.class.isAssignableFrom(paramTypes[1])) {
                                     encoder = creator.create(colType, this);
@@ -740,7 +754,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                             if (paramTypes.length == 0) {
                                 decoder = creator.create();
                             } else if (paramTypes.length == 1) {
-                                if (Type.class.isAssignableFrom(paramTypes[0])) {
+                                if (Class.class.isAssignableFrom(paramTypes[0])) {
+                                    decoder = creator.create((Object) TypeToken.typeToClass(colType));
+                                } else if (Type.class.isAssignableFrom(paramTypes[0])) {
                                     decoder = creator.create((Object) colType);
                                 } else if (ConvertFactory.class.isAssignableFrom(paramTypes[0])) {
                                     decoder = creator.create(this);
@@ -748,7 +764,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                                     throw new ConvertException(deClazz + " not found public empty-parameter Constructor");
                                 }
                             } else if (paramTypes.length == 2) {
-                                if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Type.class.isAssignableFrom(paramTypes[1])) {
+                                if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Class.class.isAssignableFrom(paramTypes[1])) {
+                                    decoder = creator.create(this, TypeToken.typeToClass(colType));
+                                } else if (Class.class.isAssignableFrom(paramTypes[0]) && ConvertFactory.class.isAssignableFrom(paramTypes[1])) {
+                                    decoder = creator.create(TypeToken.typeToClass(colType), this);
+                                } else if (ConvertFactory.class.isAssignableFrom(paramTypes[0]) && Type.class.isAssignableFrom(paramTypes[1])) {
                                     decoder = creator.create(this, colType);
                                 } else if (Type.class.isAssignableFrom(paramTypes[0]) && ConvertFactory.class.isAssignableFrom(paramTypes[1])) {
                                     decoder = creator.create(colType, this);

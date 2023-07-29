@@ -24,7 +24,9 @@ import org.redkale.util.TypeToken;
 @SuppressWarnings("unchecked")
 public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
-    private static final BsonFactory instance = new BsonFactory(null, getSystemPropertyBoolean("redkale.convert.bson.tiny", "redkale.convert.tiny", false));
+    private static final BsonFactory instance = new BsonFactory(null,
+        getSystemPropertyBoolean("redkale.convert.bson.tiny", "redkale.convert.tiny", true),
+        getSystemPropertyBoolean("redkale.convert.bson.nullable", "redkale.convert.nullable", false));
 
     static final Decodeable objectDecoder = instance.loadDecoder(Object.class);
 
@@ -48,8 +50,8 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         //instance.register(AnyValue.class, instance.loadEncoder(AnyValue.DefaultAnyValue.class));
     }
 
-    private BsonFactory(BsonFactory parent, boolean tiny) {
-        super(parent, tiny);
+    private BsonFactory(BsonFactory parent, boolean tiny, boolean nullable) {
+        super(parent, tiny, nullable);
     }
 
     @Override
@@ -63,6 +65,16 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     }
 
     @Override
+    public BsonFactory nullable(boolean nullable) {
+        this.nullable = nullable;
+        return this;
+    }
+
+    protected boolean nullable() {
+        return this.nullable;
+    }
+
+    @Override
     public BsonFactory skipAllIgnore(final boolean skipIgnore) {
         this.registerSkipAllIgnore(skipIgnore);
         return this;
@@ -73,25 +85,26 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     }
 
     public static BsonFactory create() {
-        return new BsonFactory(null, getSystemPropertyBoolean("redkale.convert.bson.tiny", "redkale.convert.tiny", false));
+        return new BsonFactory(null, getSystemPropertyBoolean("redkale.convert.bson.tiny", "redkale.convert.tiny", true),
+            getSystemPropertyBoolean("redkale.convert.bson.nullable", "redkale.convert.nullable", false));
     }
 
     @Override
     public final BsonConvert getConvert() {
         if (convert == null) {
-            convert = new BsonConvert(this, tiny);
+            convert = new BsonConvert(this, tiny, nullable);
         }
         return (BsonConvert) convert;
     }
 
     @Override
     public BsonFactory createChild() {
-        return new BsonFactory(this, this.tiny);
+        return new BsonFactory(this, this.tiny, this.nullable);
     }
 
     @Override
-    public BsonFactory createChild(boolean tiny) {
-        return new BsonFactory(this, tiny);
+    public BsonFactory createChild(boolean tiny, boolean nullable) {
+        return new BsonFactory(this, tiny, nullable);
     }
 
     @Override

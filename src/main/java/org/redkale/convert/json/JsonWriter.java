@@ -23,6 +23,8 @@ public abstract class JsonWriter extends Writer {
 
     protected boolean tiny = JsonFactory.root().tiny();
 
+    protected boolean nullable = JsonFactory.root().nullable();
+
     @Override
     public boolean tiny() {
         return tiny;
@@ -35,6 +37,16 @@ public abstract class JsonWriter extends Writer {
 
     public boolean isExtFuncEmpty() {
         return this.objExtFunc == null && this.objFieldFunc == null;
+    }
+
+    @Override
+    public boolean nullable() {
+        return nullable;
+    }
+
+    public JsonWriter nullable(boolean nullable) {
+        this.nullable = nullable;
+        return this;
     }
 
     //-----------------------------------------------------------------------
