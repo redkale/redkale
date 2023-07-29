@@ -24,7 +24,7 @@ public class FilterJoinNode extends FilterNode {
 
     private Class joinClass;
 
-    private EntityInfo joinEntity;  //在调用  createSQLJoin  和 isCacheUseable 时会注入
+    private EntityInfo joinEntity;  //在调用createSQLJoin和isCacheUseable时会注入
 
     private String[] joinColumns;
 
@@ -98,7 +98,8 @@ public class FilterJoinNode extends FilterNode {
     protected FilterNode any(final FilterNode node0, boolean signor) {
         Objects.requireNonNull(node0);
         if (!(node0 instanceof FilterJoinNode)) {
-            throw new IllegalArgumentException(this + (signor ? " or " : " and ") + " a node but " + String.valueOf(node0) + " is not a " + FilterJoinNode.class.getSimpleName());
+            throw new IllegalArgumentException(this + (signor ? " or " : " and ") + " a node but "
+                + String.valueOf(node0) + " is not a " + FilterJoinNode.class.getSimpleName());
         }
         final FilterJoinNode node = (FilterJoinNode) node0;
         if (this.nodes == null) {

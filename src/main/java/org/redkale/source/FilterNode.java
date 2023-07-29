@@ -542,8 +542,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         }
         if (express == FV_MOD || express == FV_DIV) {
             FilterValue fv = (FilterValue) val0;
-            return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(' ').append(fv.getOptvalue())
-                .append(' ').append(fv.getExpress().value()).append(' ').append(fv.getDestvalue());
+            return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(' ').append(fv.getFirst())
+                .append(' ').append(fv.getExpress().value()).append(' ').append(fv.getSecond());
         }
         final boolean fk = (val0 instanceof FilterKey);
         CharSequence val = fk ? info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) : formatToString(express, info.getSQLValue(column, (Serializable) val0));
@@ -1201,12 +1201,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) == fv0.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() % fv0.getFirst().longValue()) == fv0.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                                return field + " " + express.value() + " " + fv0.getFirst() + " " + fv0.getExpress().value() + " " + fv0.getSecond();
                             }
                         };
                     case NOTEQUAL:
@@ -1214,12 +1214,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) != fv0.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() % fv0.getFirst().longValue()) != fv0.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                                return field + " " + express.value() + " " + fv0.getFirst() + " " + fv0.getExpress().value() + " " + fv0.getSecond();
                             }
                         };
                     case GREATERTHAN:
@@ -1227,12 +1227,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) > fv0.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() % fv0.getFirst().longValue()) > fv0.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                                return field + " " + express.value() + " " + fv0.getFirst() + " " + fv0.getExpress().value() + " " + fv0.getSecond();
                             }
                         };
                     case LESSTHAN:
@@ -1240,12 +1240,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) < fv0.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() % fv0.getFirst().longValue()) < fv0.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                                return field + " " + express.value() + " " + fv0.getFirst() + " " + fv0.getExpress().value() + " " + fv0.getSecond();
                             }
                         };
                     case GREATERTHANOREQUALTO:
@@ -1253,12 +1253,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) >= fv0.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() % fv0.getFirst().longValue()) >= fv0.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                                return field + " " + express.value() + " " + fv0.getFirst() + " " + fv0.getExpress().value() + " " + fv0.getSecond();
                             }
                         };
                     case LESSTHANOREQUALTO:
@@ -1266,12 +1266,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getOptvalue().longValue()) <= fv0.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() % fv0.getFirst().longValue()) <= fv0.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getOptvalue() + " " + fv0.getExpress().value() + " " + fv0.getDestvalue();
+                                return field + " " + express.value() + " " + fv0.getFirst() + " " + fv0.getExpress().value() + " " + fv0.getSecond();
                             }
                         };
                     default:
@@ -1285,12 +1285,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) == fv1.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() / fv1.getFirst().longValue()) == fv1.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                                return field + " " + express.value() + " " + fv1.getFirst() + " " + fv1.getExpress().value() + " " + fv1.getSecond();
                             }
                         };
                     case NOTEQUAL:
@@ -1298,12 +1298,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) != fv1.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() / fv1.getFirst().longValue()) != fv1.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                                return field + " " + express.value() + " " + fv1.getFirst() + " " + fv1.getExpress().value() + " " + fv1.getSecond();
                             }
                         };
                     case GREATERTHAN:
@@ -1311,12 +1311,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) > fv1.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() / fv1.getFirst().longValue()) > fv1.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                                return field + " " + express.value() + " " + fv1.getFirst() + " " + fv1.getExpress().value() + " " + fv1.getSecond();
                             }
                         };
                     case LESSTHAN:
@@ -1324,12 +1324,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) < fv1.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() / fv1.getFirst().longValue()) < fv1.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                                return field + " " + express.value() + " " + fv1.getFirst() + " " + fv1.getExpress().value() + " " + fv1.getSecond();
                             }
                         };
                     case GREATERTHANOREQUALTO:
@@ -1337,12 +1337,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) >= fv1.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() / fv1.getFirst().longValue()) >= fv1.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                                return field + " " + express.value() + " " + fv1.getFirst() + " " + fv1.getExpress().value() + " " + fv1.getSecond();
                             }
                         };
                     case LESSTHANOREQUALTO:
@@ -1350,12 +1350,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getOptvalue().longValue()) <= fv1.getDestvalue().longValue();
+                                return (((Number) attr.get(t)).longValue() / fv1.getFirst().longValue()) <= fv1.getSecond().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getOptvalue() + " " + fv1.getExpress().value() + " " + fv1.getDestvalue();
+                                return field + " " + express.value() + " " + fv1.getFirst() + " " + fv1.getExpress().value() + " " + fv1.getSecond();
                             }
                         };
                     default:

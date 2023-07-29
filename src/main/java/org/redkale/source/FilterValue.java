@@ -5,46 +5,51 @@
  */
 package org.redkale.source;
 
+import org.redkale.convert.ConvertColumn;
+
 /**
  * FilterValue主要用于复杂的表达式。<br>
  * 例如: col / 10 = 3 、MOD(col, 8) &gt; 0 这些都不是单独一个数值能表达的，因此需要FilterValue 才构建 8 、 &gt; 、0 组合值。
  *
  * <p>
  * 详情见: https://redkale.org
- * 
+ *
  * @author zhangjx
  */
 public class FilterValue implements java.io.Serializable {
 
-    private Number optvalue;
+    @ConvertColumn(index = 1)
+    private Number first;
 
+    @ConvertColumn(index = 2)
     private FilterExpress express;
 
-    private Number destvalue;
+    @ConvertColumn(index = 3)
+    private Number second;
 
     public FilterValue() {
     }
 
-    public FilterValue(Number optvalue, Number destvalue) {
-        this(optvalue, FilterExpress.EQUAL, destvalue);
+    public FilterValue(Number first, Number second) {
+        this(first, FilterExpress.EQUAL, second);
     }
 
-    public FilterValue(Number optvalue, FilterExpress express) {
-        this(optvalue, express, 0);
+    public FilterValue(Number first, FilterExpress express) {
+        this(first, express, 0);
     }
 
-    public FilterValue(Number optvalue, FilterExpress express, Number destvalue) {
-        this.optvalue = optvalue;
+    public FilterValue(Number first, FilterExpress express, Number second) {
+        this.first = first;
         this.express = express;
-        this.destvalue = destvalue;
+        this.second = second;
     }
 
-    public Number getOptvalue() {
-        return optvalue == null ? 0 : optvalue;
+    public Number getFirst() {
+        return first == null ? 0 : first;
     }
 
-    public void setOptvalue(Number optvalue) {
-        this.optvalue = optvalue;
+    public void setFirst(Number first) {
+        this.first = first;
     }
 
     public FilterExpress getExpress() {
@@ -55,16 +60,16 @@ public class FilterValue implements java.io.Serializable {
         this.express = express;
     }
 
-    public Number getDestvalue() {
-        return destvalue == null ? 0 : destvalue;
+    public Number getSecond() {
+        return second == null ? 0 : second;
     }
 
-    public void setDestvalue(Number destvalue) {
-        this.destvalue = destvalue;
+    public void setSecond(Number second) {
+        this.second = second;
     }
 
     @Override
     public String toString() {
-        return FilterValue.class.getSimpleName() + "[optvalue=" + getOptvalue() + ", express=" + getExpress() + ", destvalue=" + getDestvalue() + "]";
+        return FilterValue.class.getSimpleName() + "[first=" + getFirst() + ", express=" + getExpress() + ", second=" + getSecond() + "]";
     }
 }
