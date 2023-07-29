@@ -33,8 +33,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     protected Serializable value;
 
-    protected boolean itemand;
-
     //----------------------------------------------
     protected boolean or;
 
@@ -43,7 +41,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     public FilterNode() {
     }
 
-    protected FilterNode(String col, FilterExpress exp, boolean itemand, Serializable val) {
+    protected FilterNode(String col, FilterExpress exp, Serializable val) {
         Objects.requireNonNull(col);
         if (exp == null) {
             if (val instanceof Range) {
@@ -78,7 +76,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         }
         this.column = col;
         this.express = exp == null ? EQUAL : exp;
-        this.itemand = itemand;
         this.value = val;
     }
 
@@ -91,7 +88,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         node.column = this.column;
         node.express = this.express;
         node.value = this.value;
-        node.itemand = this.itemand;
         node.or = this.or;
         if (this.nodes != null) {
             node.nodes = new FilterNode[this.nodes.length];
@@ -154,11 +150,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public final FilterNode and(String column, FilterExpress express, Serializable value) {
-        return and(column, express, true, value);
-    }
-
-    public final FilterNode and(String column, FilterExpress express, boolean itemand, Serializable value) {
-        return and(new FilterNode(column, express, itemand, value));
+        return and(new FilterNode(column, express, value));
     }
 
     public final <T extends Serializable> FilterNode and(LambdaSupplier<T> func) {
@@ -166,11 +158,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public final <T extends Serializable> FilterNode and(LambdaSupplier<T> func, FilterExpress express) {
-        return and(func, express, true);
-    }
-
-    public final <T extends Serializable> FilterNode and(LambdaSupplier<T> func, FilterExpress express, boolean itemand) {
-        return and(new FilterNode(LambdaSupplier.readColumn(func), express, itemand, func.get()));
+        return and(new FilterNode(LambdaSupplier.readColumn(func), express, func.get()));
     }
 
     public final <T> FilterNode and(LambdaFunction<T, ?> func, Serializable value) {
@@ -178,11 +166,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public final <T> FilterNode and(LambdaFunction<T, ?> func, FilterExpress express, Serializable value) {
-        return and(func, express, true, value);
-    }
-
-    public final <T> FilterNode and(LambdaFunction<T, ?> func, FilterExpress express, boolean itemand, Serializable value) {
-        return and(new FilterNode(LambdaFunction.readColumn(func), express, itemand, value));
+        return and(new FilterNode(LambdaFunction.readColumn(func), express, value));
     }
 
     public final FilterNode or(FilterNode node) {
@@ -194,11 +178,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public final FilterNode or(String column, FilterExpress express, Serializable value) {
-        return or(column, express, true, value);
-    }
-
-    public final FilterNode or(String column, FilterExpress express, boolean itemand, Serializable value) {
-        return or(new FilterNode(column, express, itemand, value));
+        return or(new FilterNode(column, express, value));
     }
 
     public final <T extends Serializable> FilterNode or(LambdaSupplier<T> func) {
@@ -206,11 +186,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public final <T extends Serializable> FilterNode or(LambdaSupplier<T> func, FilterExpress express) {
-        return or(func, express, true);
-    }
-
-    public final <T extends Serializable> FilterNode or(LambdaSupplier<T> func, FilterExpress express, boolean itemand) {
-        return or(new FilterNode(LambdaSupplier.readColumn(func), express, itemand, func.get()));
+        return or(new FilterNode(LambdaSupplier.readColumn(func), express, func.get()));
     }
 
     public final <T> FilterNode or(LambdaFunction<T, ?> func, Serializable value) {
@@ -218,11 +194,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public final <T> FilterNode or(LambdaFunction<T, ?> func, FilterExpress express, Serializable value) {
-        return or(func, express, true, value);
-    }
-
-    public final <T> FilterNode or(LambdaFunction<T, ?> func, FilterExpress express, boolean itemand, Serializable value) {
-        return or(new FilterNode(LambdaFunction.readColumn(func), express, itemand, value));
+        return or(new FilterNode(LambdaFunction.readColumn(func), express, value));
     }
 
     protected FilterNode any(FilterNode node, boolean signor) {
@@ -233,7 +205,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (this.column == null) {
             this.column = node.column;
             this.express = node.express;
-            this.itemand = node.itemand;
             this.value = node.value;
             return this;
         }
@@ -246,13 +217,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             this.nodes = Utility.append(this.nodes, node);
             return this;
         }
-        FilterNode newnode = new FilterNode(this.column, this.express, this.itemand, this.value);
+        FilterNode newnode = new FilterNode(this.column, this.express, this.value);
         newnode.or = this.or;
         newnode.nodes = this.nodes;
         this.nodes = new FilterNode[]{newnode, node};
         this.column = null;
         this.express = null;
-        this.itemand = true;
         this.or = signor;
         this.value = null;
         return this;
@@ -388,11 +358,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public static FilterNode create(String column, FilterExpress express, Serializable value) {
-        return create(column, express, true, value);
-    }
-
-    public static FilterNode create(String column, FilterExpress express, boolean itemand, Serializable value) {
-        return new FilterNode(column, express, itemand, value);
+        return new FilterNode(column, express, value);
     }
 
     public static <T extends Serializable> FilterNode create(LambdaSupplier<T> func) {
@@ -400,11 +366,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public static <T extends Serializable> FilterNode create(LambdaSupplier<T> func, FilterExpress express) {
-        return create(func, express, true);
-    }
-
-    public static <T extends Serializable> FilterNode create(LambdaSupplier<T> func, FilterExpress express, boolean itemand) {
-        return new FilterNode(LambdaSupplier.readColumn(func), express, itemand, func.get());
+        return new FilterNode(LambdaSupplier.readColumn(func), express, func.get());
     }
 
     public static <T> FilterNode create(LambdaFunction<T, ?> func, Serializable value) {
@@ -412,11 +374,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public static <T> FilterNode create(LambdaFunction<T, ?> func, FilterExpress express, Serializable value) {
-        return create(func, express, true, value);
-    }
-
-    public static <T> FilterNode create(LambdaFunction<T, ?> func, FilterExpress express, boolean itemand, Serializable value) {
-        return new FilterNode(LambdaFunction.readColumn(func), express, itemand, value);
+        return new FilterNode(LambdaFunction.readColumn(func), express, value);
     }
 
     @Deprecated(since = "2.8.0")
@@ -426,12 +384,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     @Deprecated(since = "2.8.0")
     public static FilterNode filter(String column, FilterExpress express, Serializable value) {
-        return create(column, express, true, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static FilterNode filter(String column, FilterExpress express, boolean itemand, Serializable value) {
-        return new FilterNode(column, express, itemand, value);
+        return new FilterNode(column, express, value);
     }
 
     private boolean needSplit(final Object val0) {
@@ -486,7 +439,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         continue;
                     }
                     if (sb.length() > 2) {
-                        sb.append(itemand ? " AND " : " OR ");
+                        sb.append(" AND ");
                     }
                     sb.append(cs);
                 }
@@ -510,7 +463,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         continue;
                     }
                     if (sb.length() > 2) {
-                        sb.append(itemand ? " AND " : " OR ");
+                        sb.append(" AND ");
                     }
                     sb.append(cs);
                 }
@@ -656,18 +609,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                     final Predicate<T> one = filter;
                     final Predicate<T> two = f;
-                    filter = (filter == null) ? f : (!itemand ? new Predicate<T>() {
-
-                        @Override
-                        public boolean test(T t) {
-                            return one.test(t) || two.test(t);
-                        }
-
-                        @Override
-                        public String toString() {
-                            return "(" + one + " OR " + two + ")";
-                        }
-                    } : new Predicate<T>() {
+                    filter = (filter == null) ? f : new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
@@ -678,7 +620,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         public String toString() {
                             return "(" + one + " AND " + two + ")";
                         }
-                    });
+                    };
                 }
                 return filter;
             } else if (val0.getClass().isArray()) {
@@ -753,18 +695,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                     final Predicate<T> one = filter;
                     final Predicate<T> two = f;
-                    filter = (filter == null) ? f : (!itemand ? new Predicate<T>() {
-
-                        @Override
-                        public boolean test(T t) {
-                            return one.test(t) || two.test(t);
-                        }
-
-                        @Override
-                        public String toString() {
-                            return "(" + one + " OR " + two + ")";
-                        }
-                    } : new Predicate<T>() {
+                    filter = (filter == null) ? f : new Predicate<T>() {
 
                         @Override
                         public boolean test(T t) {
@@ -775,7 +706,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         public String toString() {
                             return "(" + one + " AND " + two + ")";
                         }
-                    });
+                    };
                 }
                 return filter;
             }
@@ -2125,7 +2056,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         continue;
                     }
                     if (sb.length() > 2) {
-                        sb.append(itemand ? " AND " : " OR ");
+                        sb.append(" AND ");
                     }
                     sb.append(cs);
                 }
@@ -2149,7 +2080,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         continue;
                     }
                     if (sb.length() > 2) {
-                        sb.append(itemand ? " AND " : " OR ");
+                        sb.append(" AND ");
                     }
                     sb.append(cs);
                 }
@@ -2305,14 +2236,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     public final void setExpress(FilterExpress express) {
         this.express = express;
-    }
-
-    public final boolean isItemand() {
-        return itemand;
-    }
-
-    public final void setItemand(boolean itemand) {
-        this.itemand = itemand;
     }
 
     public final FilterNode[] getNodes() {

@@ -34,8 +34,6 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
 
     private FilterExpress express;
 
-    private boolean itemand;
-
     private boolean or;
 
     private FilterNodeBean[] nodeBeans;
@@ -56,7 +54,6 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         this.beanAttr = bean == null ? null : bean.beanAttr;
         this.column = bean == null ? null : bean.column;
         this.express = bean == null ? null : bean.express;
-        this.itemand = bean == null ? true : bean.itemand;
         this.joinClass = bean == null ? null : bean.joinClass;
         this.joinColumns = bean == null ? null : bean.joinColumns;
         this.least = bean == null ? 1 : bean.least;
@@ -119,7 +116,6 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             this.beanAttr = node.beanAttr;
             this.column = node.column;
             this.express = node.express;
-            this.itemand = node.itemand;
             this.joinClass = node.joinClass;
             this.joinColumns = node.joinColumns;
             this.least = node.least;
@@ -182,9 +178,9 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             }
             if (!skip) {
                 if (this.joinClass == null) {
-                    node = FilterNode.create(column, express, itemand, val);
+                    node = FilterNode.create(column, express, val);
                 } else {
-                    node = FilterJoinNode.create(joinClass, joinColumns, column, express, itemand, val);
+                    node = FilterJoinNode.create(joinClass, joinColumns, column, express, val);
                 }
             }
         }

@@ -31,7 +31,7 @@ public class FilterJoinNode extends FilterNode {
     public FilterJoinNode() {
     }
 
-    protected FilterJoinNode(Class joinClass, String[] joinColumns, String column, FilterExpress express, boolean itemand, Serializable value) {
+    protected FilterJoinNode(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
         Objects.requireNonNull(joinClass);
         Objects.requireNonNull(joinColumns);
         if (express == null && value != null) {
@@ -47,12 +47,11 @@ public class FilterJoinNode extends FilterNode {
         this.joinColumns = joinColumns;
         this.column = column;
         this.express = express == null ? EQUAL : express;
-        this.itemand = itemand;
         this.value = value;
     }
 
     protected FilterJoinNode(FilterJoinNode node) {
-        this(node.joinClass, node.joinColumns, node.column, node.express, node.itemand, node.value);
+        this(node.joinClass, node.joinColumns, node.column, node.express, node.value);
         this.joinEntity = node.joinEntity;
         this.or = node.or;
         this.nodes = node.nodes;
@@ -66,20 +65,12 @@ public class FilterJoinNode extends FilterNode {
         return create(joinClass, new String[]{joinColumn}, column, express, value);
     }
 
-    public static FilterJoinNode create(Class joinClass, String joinColumn, String column, FilterExpress express, boolean itemand, Serializable value) {
-        return create(joinClass, new String[]{joinColumn}, column, express, itemand, value);
-    }
-
     public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, Serializable value) {
         return create(joinClass, joinColumns, column, null, value);
     }
 
     public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
-        return create(joinClass, joinColumns, column, express, true, value);
-    }
-
-    public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, FilterExpress express, boolean itemand, Serializable value) {
-        return new FilterJoinNode(joinClass, joinColumns, column, express, itemand, value);
+        return new FilterJoinNode(joinClass, joinColumns, column, express, value);
     }
 
     @Override
@@ -117,7 +108,6 @@ public class FilterJoinNode extends FilterNode {
         this.nodes = new FilterNode[]{new FilterJoinNode(this), node};
         this.column = null;
         this.express = null;
-        this.itemand = true;
         this.value = null;
         this.joinClass = null;
         this.joinEntity = null;
