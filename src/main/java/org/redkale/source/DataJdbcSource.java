@@ -2490,8 +2490,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      * @return 结果数组
      */
     @Override
-    public int executeUpdate(String sql) {
-        return executeUpdate(new String[]{sql})[0];
+    public int nativeUpdate(String sql) {
+        return nativeUpdate(new String[]{sql})[0];
     }
 
     /**
@@ -2503,7 +2503,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      * @return 结果数组
      */
     @Override
-    public int[] executeUpdate(String... sqls) {
+    public int[] nativeUpdate(String... sqls) {
         if (sqls.length == 0) {
             return new int[0];
         }
@@ -2545,7 +2545,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      * @return 结果
      */
     @Override
-    public <V> V executeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler) {
+    public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler) {
         final long s = System.currentTimeMillis();
         final SourceConnection conn = readPool.pollConnection();
         try {
@@ -2573,17 +2573,17 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     @Deprecated
     public int directExecute(String sql) {
-        return executeUpdate(sql);
+        return nativeUpdate(sql);
     }
 
     @Deprecated
     public int[] directExecute(String... sqls) {
-        return executeUpdate(sqls);
+        return nativeUpdate(sqls);
     }
 
     @Deprecated
     public <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
-        return executeQuery(sql, handler);
+        return nativeQuery(sql, handler);
     }
 
     public static DataResultSet createDataResultSet(@Nullable EntityInfo info, ResultSet set) {

@@ -19,19 +19,19 @@ import static org.redkale.source.DataResultSet.formatColumnValue;
  */
 public interface DataSqlSource extends DataSource {
 
-    public int executeUpdate(String sql);
+    public int nativeUpdate(String sql);
 
-    public int[] executeUpdate(String... sqls);
+    public int[] nativeUpdate(String... sqls);
 
     //BiConsumer 参数1: connection, 参数2: statement
-    public <V> V executeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler);
+    public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler);
 
-    default <V> V executeQuery(String sql, Function<DataResultSet, V> handler) {
-        return executeQuery(sql, null, handler);
+    default <V> V nativeQuery(String sql, Function<DataResultSet, V> handler) {
+        return nativeQuery(sql, null, handler);
     }
 
-    default <V> V executeQueryOne(Class<V> type, String sql) {
-        return executeQuery(sql, rset -> {
+    default <V> V nativeQueryOne(Class<V> type, String sql) {
+        return nativeQuery(sql, rset -> {
             if (!rset.next()) {
                 return null;
             }
@@ -42,8 +42,8 @@ public interface DataSqlSource extends DataSource {
         });
     }
 
-    default <V> List<V> executeQueryList(Class<V> type, String sql) {
-        return executeQuery(sql, rset -> {
+    default <V> List<V> nativeQueryList(Class<V> type, String sql) {
+        return nativeQuery(sql, rset -> {
             if (type.isPrimitive() || type == byte[].class || type.getName().startsWith("java.")) {
                 List<V> list = new ArrayList<>();
                 while (rset.next()) {
@@ -55,8 +55,8 @@ public interface DataSqlSource extends DataSource {
         });
     }
 
-    default <K, V> Map<K, V> executeQueryMap(Class<K> keyType, Class<V> valType, String sql) {
-        return executeQuery(sql, rset -> {
+    default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql) {
+        return nativeQuery(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<K, V>();
             while (rset.next()) {
                 if (!rset.wasNull()) {
@@ -67,11 +67,11 @@ public interface DataSqlSource extends DataSource {
         });
     }
 
-    default Map<String, String> executeQueryStrStrMap(String sql) {
-        return executeQueryMap(String.class, String.class, sql);
+    default Map<String, String> nativeQueryStrStrMap(String sql) {
+        return nativeQueryMap(String.class, String.class, sql);
     }
 
-    default Map<Integer, String> executeQueryIntStrMap(String sql) {
-        return executeQueryMap(Integer.class, String.class, sql);
+    default Map<Integer, String> nativeQueryIntStrMap(String sql) {
+        return nativeQueryMap(Integer.class, String.class, sql);
     }
 }
