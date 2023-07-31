@@ -111,7 +111,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Resource(name = "$_sendconvert", required = false)
     protected Convert sendConvert;
 
-    @Resource(name = "$")
+    @Resource(name = Resource.PARENT_NAME)
     protected WebSocketNode webSocketNode;
 
     @Resource(name = RESNAME_SERVER_RESFACTORY)

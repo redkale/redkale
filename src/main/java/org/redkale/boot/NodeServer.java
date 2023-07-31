@@ -458,8 +458,8 @@ public abstract class NodeServer {
                     continue;
                 }
             }
-            if (entry.getName().contains("$")) {
-                throw new RedkaleException("<name> value cannot contains '$' in " + entry.getProperty());
+            if (entry.getName().contains(Resource.PARENT_NAME)) {
+                throw new RedkaleException("<name> value cannot contains '" + Resource.PARENT_NAME + "' in " + entry.getProperty());
             }
             if (!entry.isEmptyGroup() && !entry.isRemote() && rpcGroups.containsGroup(entry.getGroup())) {
                 throw new RedkaleException("Not found group(" + entry.getGroup() + ")");

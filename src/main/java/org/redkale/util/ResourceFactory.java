@@ -24,11 +24,11 @@ import org.redkale.convert.*;
  *
  * 依赖注入功能主类   <br>
  *
- * 如果&#64;Resource(name = "$") 表示资源name采用所属对象的name  <br>
+ * 如果&#64;Resource(name = "#") 表示资源name采用所属对象的name  <br>
  * 如果没有&#64;Resource且对象实现了Resourcable, 则会取对象的resourceName()方法值
  * <blockquote><pre>
  * name规则:
- *    1: "$"有特殊含义, 表示资源本身，"$"不能单独使用
+ *    1: "#"有特殊含义, 表示资源本身，"#"不能单独使用
  *    2: "@name"、"@type"有特殊含义
  *    3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
  * </pre></blockquote>
@@ -124,7 +124,7 @@ public final class ResourceFactory {
      * 检查资源名是否合法
      * <blockquote><pre>
      * name规则:
-     *    1: "$"有特殊含义, 表示资源本身，"$"不能单独使用
+     *    1: "#"有特殊含义, 表示资源本身，"#"不能单独使用
      *    2: "@name"、"@type"有特殊含义
      *    3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
      * </pre></blockquote>
@@ -912,9 +912,19 @@ public final class ResourceFactory {
                                 || classType == Float.class || classType == Double.class
                                 || classType == BigInteger.class || classType == BigDecimal.class) {
                                 re = findEntry(rcname, String.class);
-                                if (re == null && rcname.startsWith("property.")) { //兼容2.8.0之前版本自动追加property.开头的配置项
+                                if (re == null && rcname.startsWith("${")) {
+                                    if (rcname.charAt(rcname.length() - 1) != '}') {
+                                        throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
+                                    }
+                                    re = findEntry(rcname.substring(2, rcname.length() - 1), String.class);
+                                } else if (re == null && rcname.startsWith("property.")) { //兼容2.8.0之前版本自动追加property.开头的配置项
                                     re = findEntry(rcname.substring("property.".length()), String.class);
                                 }
+                            } else if (re == null && rcname.startsWith("${")) {
+                                if (rcname.charAt(rcname.length() - 1) != '}') {
+                                    throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
+                                }
+                                re = findEntry(rcname.substring(2, rcname.length() - 1), String.class);
                             } else if (classType == String.class && rcname.startsWith("property.")) {//兼容2.8.0之前版本自动追加property.开头的配置项
                                 re = findEntry(rcname.substring("property.".length()), String.class);
                             } else {

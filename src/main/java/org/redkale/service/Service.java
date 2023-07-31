@@ -5,11 +5,11 @@
  */
 package org.redkale.service;
 
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
 
 /**
  * 所有Service的实现类不得声明为final， 允许远程模式的public方法都不能声明为final。<br>
- * 注意: "$"是一个很特殊的Service.name值 。 被标记为&#64;Resource(name = "$") 的Service的资源名与所属父Service的资源名一致。<br>
+ * 注意: "#"是一个很特殊的Service.name值 。 被标记为&#64;Resource(name = "#") 的Service的资源名与所属父Service的资源名一致。<br>
  *
  * <blockquote><pre>
  * Service的资源类型

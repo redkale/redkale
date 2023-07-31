@@ -52,13 +52,13 @@ public abstract class WebSocketNode implements Service {
     @RpcRemote
     protected WebSocketNode remoteNode;
 
-    @Resource(name = "$_sendconvert", required = false)
+    @Resource(name = Resource.PARENT_NAME + "_sendconvert", required = false)
     protected Convert sendConvert;
 
     //存放所有用户分布在节点上的队列信息,Set<WebSocketAddress> 为 sncpnode 的集合， key: groupid
     //集合包含 localSncpAddress
     //如果不是分布式(没有SNCP)，source 将不会被用到
-    @Resource(name = "$", required = false)
+    @Resource(name = Resource.PARENT_NAME, required = false)
     protected CacheSource source;
 
     //当前节点的本地WebSocketEngine

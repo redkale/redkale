@@ -5,11 +5,11 @@
  */
 package org.redkale.test.util;
 
-import java.math.*;
+import java.math.BigInteger;
 import java.util.Properties;
-import org.redkale.annotation.*;
 import org.junit.jupiter.api.Test;
 import org.redkale.annotation.ConstructorParameters;
+import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.util.*;
 
@@ -30,7 +30,7 @@ public class ResourceTest {
     @Test
     public void run() throws Exception {
         ResourceFactory factory = ResourceFactory.create();
-        factory.register("property.id", "2345"); //注入String类型的property.id
+        factory.register("id", "2345"); //注入String类型的property.id
         AService aservice = new AService();
         BService bservice = new BService("eeeee");
 
@@ -47,13 +47,13 @@ public class ResourceTest {
         factory.register("bigint", new BigInteger("666666666666666")); //放进Resource池内, 同时ResourceFactory会自动更新aservice对象的bigint值   
         System.out.println(aservice); //输出结果为：{id:"2345", intid: 2345, bigint:666666666666666, bservice:{name:eeeee}}  可以看出seqid与bigint值都已自动更新
 
-        factory.register("property.id", "6789"); //更新Resource池内的id资源值, 同时ResourceFactory会自动更新aservice、bservice的id值
+        factory.register("id", "6789"); //更新Resource池内的id资源值, 同时ResourceFactory会自动更新aservice、bservice的id值
         System.out.println(aservice); //输出结果为：{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}
         System.out.println(bservice); //输出结果为：{name:"eeeee", id: 6789, aserivce:{id:"6789", intid: 6789, bigint:666666666666666, bservice:{name:eeeee}}}
 
         Properties props = new Properties();
-        props.put("property.id", "5555");
-        props.put("property.desc", "my desc");
+        props.put("id", "5555");
+        props.put("desc", "my desc");
         factory.register(props);
 
         bservice = new BService("ffff");
@@ -67,10 +67,10 @@ public class ResourceTest {
 
 class BService {
 
-    @Resource(name = "property.id")
+    @Resource(name = "${id}")
     private String id;
 
-    @Resource(name = "property.desc", required = false)
+    @Resource(name = "${desc}", required = false)
     private String desc;
 
     @Resource
@@ -122,10 +122,10 @@ class BService {
 
 class AService {
 
-    @Resource(name = "property.id")
+    @Resource(name = "${id}")
     private String id;
 
-    @Resource(name = "property.id") //property.开头的资源名允许String自动转换成primitive数值类型
+    @Resource(name = "id") //property.开头的资源名允许String自动转换成primitive数值类型
     private int intid;
 
     @Resource(name = "bigint", required = false)

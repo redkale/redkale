@@ -8,7 +8,7 @@ package org.redkale.annotation;
 import java.lang.annotation.*;
 
 /**
- * &#64;Resource(name = "$") 表示资源name采用所属对象的name  <br>
+ * &#64;Resource(name = "#") 表示资源name采用所属对象的name  <br>
  * &#64;Resource(name = "@name") 表示资源对象自身的name  <br>
  * &#64;Resource(name = "@type") 表示资源对象自身的类型  <br>
  *
@@ -20,7 +20,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
 
-    public static final String PARENT_NAME = "$";
+    public static final String PARENT_NAME = "#";
 
     public static final String SELF_NAME = "@name";
 
@@ -39,7 +39,7 @@ public @interface Resource {
      * 资源名称  <br>
      * <blockquote><pre>
      * name规则:
-     * 1: "$"有特殊含义, 表示资源本身，"$"不能单独使用
+     * 1: "#"有特殊含义, 表示资源本身，"#"不能单独使用
      * 2: "@name"、"@type"有特殊含义
      * 3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
      * </pre></blockquote>
