@@ -11,7 +11,7 @@ import java.util.Map;
  *
  * @author zhangjx
  */
-public class TestBean extends TestABean {
+public class TestBean extends TestABean implements TestInterface {
 
     private String name;
 

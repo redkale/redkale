@@ -223,6 +223,8 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             };
         }
         // ------------------------------------------------------------------------------
+        final boolean destIsMap = Map.class.isAssignableFrom(destClass);
+        final boolean srcIsMap = Map.class.isAssignableFrom(srcClass);
         final String supDynName = Reproduce.class.getName().replace('.', '/');
         final String destClassName = destClass.getName().replace('.', '/');
         final String srcClassName = srcClass.getName().replace('.', '/');
@@ -274,29 +276,57 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 }
 
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
-                java.lang.reflect.Method setter = null;
-                try {
-                    if (!field.getType().equals(destClass.getField(dfname).getType())) {
-                        continue;
+                if (destIsMap) {
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitLdcInsn(dfname);
+                    mv.visitVarInsn(ALOAD, 2);
+                    Class st = field.getType();
+                    String td = Type.getDescriptor(st);
+                    mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
+                    if (st == boolean.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                    } else if (st == byte.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
+                    } else if (st == short.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
+                    } else if (st == char.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
+                    } else if (st == int.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                    } else if (st == float.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
+                    } else if (st == long.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
+                    } else if (st == double.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
                     }
-                } catch (Exception e) {
-                    try {
-                        char[] cs = dfname.toCharArray();
-                        cs[0] = Character.toUpperCase(cs[0]);
-                        String dfname2 = new String(cs);
-                        setter = destClass.getMethod("set" + dfname2, field.getType());
-                    } catch (Exception e2) {
-                        continue;
-                    }
-                }
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitVarInsn(ALOAD, 2);
-                String td = Type.getDescriptor(field.getType());
-                mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
-                if (setter == null) {
-                    mv.visitFieldInsn(PUTFIELD, destClassName, dfname, td);
+                    mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                    mv.visitInsn(POP);
                 } else {
-                    mv.visitMethodInsn(INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
+                    java.lang.reflect.Method setter = null;
+                    try {
+                        if (!field.getType().equals(destClass.getField(dfname).getType())) {
+                            continue;
+                        }
+                    } catch (Exception e) {
+                        try {
+                            char[] cs = dfname.toCharArray();
+                            cs[0] = Character.toUpperCase(cs[0]);
+                            String dfname2 = new String(cs);
+                            setter = destClass.getMethod("set" + dfname2, field.getType());
+                        } catch (Exception e2) {
+                            continue;
+                        }
+                    }
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitVarInsn(ALOAD, 2);
+                    String td = Type.getDescriptor(field.getType());
+                    mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
+                    if (setter == null) {
+                        mv.visitFieldInsn(PUTFIELD, destClassName, dfname, td);
+                    } else {
+                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                    }
                 }
             }
 
@@ -328,30 +358,57 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 }
 
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
-                java.lang.reflect.Method setter = null;
-                java.lang.reflect.Field srcField = null;
-                char[] cs = dfname.toCharArray();
-                cs[0] = Character.toUpperCase(cs[0]);
-                String dfname2 = new String(cs);
-                try {
-                    setter = destClass.getMethod("set" + dfname2, getter.getReturnType());
-                } catch (Exception e) {
+                if (destIsMap) {
+                    Class st = getter.getReturnType();
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitLdcInsn(dfname);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                    if (st == boolean.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                    } else if (st == byte.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
+                    } else if (st == short.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
+                    } else if (st == char.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
+                    } else if (st == int.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                    } else if (st == float.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
+                    } else if (st == long.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
+                    } else if (st == double.class) {
+                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
+                    }
+                    mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                    mv.visitInsn(POP);
+                } else {
+                    java.lang.reflect.Method setter = null;
+                    java.lang.reflect.Field srcField = null;
+                    char[] cs = dfname.toCharArray();
+                    cs[0] = Character.toUpperCase(cs[0]);
+                    String dfname2 = new String(cs);
                     try {
-                        srcField = destClass.getField(dfname);
-                        if (!getter.getReturnType().equals(srcField.getType())) {
+                        setter = destClass.getMethod("set" + dfname2, getter.getReturnType());
+                    } catch (Exception e) {
+                        try {
+                            srcField = destClass.getField(dfname);
+                            if (!getter.getReturnType().equals(srcField.getType())) {
+                                continue;
+                            }
+                        } catch (Exception e2) {
                             continue;
                         }
-                    } catch (Exception e2) {
-                        continue;
                     }
-                }
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), false);
-                if (srcField == null) {
-                    mv.visitMethodInsn(INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
-                } else {
-                    mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                    if (srcField == null) {
+                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                    } else {
+                        mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
+                    }
                 }
             }
             mv.visitVarInsn(ALOAD, 1);
