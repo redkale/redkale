@@ -263,7 +263,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         entry.lock();
         try {
-            entry.objectValue = formatValue(type, value);
+            entry.objectValue = Utility.convertValue(type, value);
             entry.expireSeconds(expireSeconds);
             entry.lastAccessed = System.currentTimeMillis();
         } finally {
@@ -496,9 +496,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
         // OBJECT, ATOMIC, DOUBLE, SSET, ZSET, LIST, MAP;
         switch (entry.cacheType) {
             case ATOMIC:
-                return formatValue(type, (AtomicLong) entry.objectValue);
+                return Utility.convertValue(type, (AtomicLong) entry.objectValue);
             case DOUBLE:
-                return formatValue(type, Double.longBitsToDouble(((AtomicLong) entry.objectValue).intValue()));
+                return Utility.convertValue(type, Double.longBitsToDouble(((AtomicLong) entry.objectValue).intValue()));
             case SSET:
                 return (T) new LinkedHashSet(entry.setValue);
             case ZSET:
@@ -648,7 +648,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
             entry.lock();
             try {
-                boolean rs = entry.mapValue.putIfAbsent(field, formatValue(type, value)) == null;
+                boolean rs = entry.mapValue.putIfAbsent(field, Utility.convertValue(type, value)) == null;
                 entry.lastAccessed = System.currentTimeMillis();
                 return rs;
             } finally {
@@ -683,7 +683,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             Map map = entry.mapValue;
             List<T> rs = new ArrayList<>(fields.length);
             for (String field : fields) {
-                rs.add((T) formatValue(type, map.get(field)));
+                rs.add((T) Utility.convertValue(type, map.get(field)));
             }
             return rs;
         });
@@ -698,7 +698,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             } else {
                 Map map = new LinkedHashMap();
                 entry.mapValue.forEach((k, v) -> {
-                    map.put(k, formatValue(type, v));
+                    map.put(k, Utility.convertValue(type, v));
                 });
                 return map;
             }
@@ -712,7 +712,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             if (entry == null) {
                 return new ArrayList();
             } else {
-                return new ArrayList(entry.mapValue.values().stream().map(v -> formatValue(type, v)).toList());
+                return new ArrayList(entry.mapValue.values().stream().map(v -> Utility.convertValue(type, v)).toList());
             }
         });
     }
@@ -748,7 +748,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 return null;
             }
             Object obj = entry.mapValue.get(field);
-            return obj == null ? null : formatValue(type, obj);
+            return obj == null ? null : Utility.convertValue(type, obj);
         });
     }
 
@@ -786,7 +786,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         entry.lock();
         try {
-            entry.mapValue.put(field, formatValue(type, value));
+            entry.mapValue.put(field, Utility.convertValue(type, value));
             entry.lastAccessed = System.currentTimeMillis();
         } finally {
             entry.unlock();
@@ -941,7 +941,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
             entry.lock();
             try {
-                return formatValue(componentType, entry.listValue.pollFirst());
+                return Utility.convertValue(componentType, entry.listValue.pollFirst());
             } finally {
                 entry.unlock();
             }
@@ -993,7 +993,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
             entry.lock();
             try {
-                return formatValue(componentType, entry.listValue.pollLast());
+                return Utility.convertValue(componentType, entry.listValue.pollLast());
             } finally {
                 entry.unlock();
             }
@@ -1077,7 +1077,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 for (int i = 0; i < Math.abs(count); i++) {
                     int index = ThreadLocalRandom.current().nextInt(vals.size());
                     T val = vals.get(index);
-                    list.add(formatValue(componentType, val));
+                    list.add(Utility.convertValue(componentType, val));
                 }
             } else { //不可以重复
                 if (count >= vals.size()) {
@@ -1424,7 +1424,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 Set<T> list = new LinkedHashSet<>();
                 int index = 0;
                 while (it.hasNext()) {
-                    list.add(formatValue(componentType, it.next()));
+                    list.add(Utility.convertValue(componentType, it.next()));
                     if (++index >= count) {
                         break;
                     }
@@ -1453,7 +1453,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 Iterator it = cset.iterator();
                 Set<T> list = new LinkedHashSet<>();
                 while (it.hasNext()) {
-                    list.add((T) formatValue(componentType, it.next()));
+                    list.add((T) Utility.convertValue(componentType, it.next()));
                 }
                 return list;
             } finally {
@@ -1712,28 +1712,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
             Set<CacheScoredValue> sets = entry.setValue;
             return formatScore(scoreType, sets.stream().filter(v -> Objects.equals(member, v.getValue())).findAny().map(v -> v.getScore()).orElse(null));
         });
-    }
-
-    private <T> T formatValue(@Nullable Type componentType, Object obj) {
-        if (componentType == null || obj == null || componentType == obj.getClass()) {
-            return (T) obj;
-        }
-        if (componentType == String.class) {
-            obj = obj.toString();
-        } else if (componentType == long.class || componentType == Long.class) {
-            if (obj instanceof Number) {
-                obj = ((Number) obj).longValue();
-            } else {
-                obj = Long.parseLong(obj.toString());
-            }
-        } else if (componentType == int.class || componentType == Integer.class) {
-            if (obj instanceof Number) {
-                obj = ((Number) obj).intValue();
-            } else {
-                obj = Integer.parseInt(obj.toString());
-            }
-        }
-        return (T) obj;
     }
 
     @Override

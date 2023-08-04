@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
+import org.redkale.convert.json.JsonConvert;
 
 /**
  *
@@ -2679,6 +2680,56 @@ public final class Utility {
             }
         }
         return -1;
+    }
+
+    /**
+     * 将源对象转换成目标类型
+     *
+     * @param <T>   泛型
+     * @param type  目标类型
+     * @param value 源对象
+     *
+     * @return 对象
+     */
+    public static <T> T convertValue(Type type, Object value) {
+        if (type == null || value == null) {
+            return (T) value;
+        }
+        final Class clazz = TypeToken.typeToClass(type);
+        final Class vclz = value.getClass();
+        if (clazz == vclz) {
+            return (T) value;
+        } else if (clazz == String.class) {
+            return (T) value.toString();
+        } else if (clazz.isAssignableFrom(vclz)) {
+            return (T) value;
+        } else if (clazz == double.class || clazz == Double.class) {
+            if (value instanceof Number) {
+                return (T) (Number) ((Number) value).doubleValue();
+            }
+        } else if (clazz == float.class || clazz == Float.class) {
+            if (value instanceof Number) {
+                return (T) (Number) ((Number) value).floatValue();
+            }
+        } else if (clazz == long.class || clazz == Long.class) {
+            if (value instanceof Number) {
+                return (T) (Number) ((Number) value).longValue();
+            }
+        } else if (clazz == int.class || clazz == Integer.class) {
+            if (value instanceof Number) {
+                return (T) (Number) ((Number) value).intValue();
+            }
+        } else if (clazz == short.class || clazz == Short.class) {
+            if (value instanceof Number) {
+                return (T) (Number) ((Number) value).shortValue();
+            }
+        } else if (clazz == byte.class || clazz == Byte.class) {
+            if (value instanceof Number) {
+                return (T) (Number) ((Number) value).byteValue();
+            }
+        }
+        JsonConvert convert = JsonConvert.root();
+        return convert.convertFrom(type, convert.convertToBytes(value));
     }
 
     /**
