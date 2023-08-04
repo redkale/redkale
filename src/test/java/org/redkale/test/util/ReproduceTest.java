@@ -20,6 +20,7 @@ public class ReproduceTest {
         test.run2();
         test.run3();
         test.run4();
+        test.run5();
     }
 
     @Test
@@ -72,5 +73,18 @@ public class ReproduceTest {
         map.put("time", 55555L);
         map.put("id", 222);
         Assertions.assertEquals(bean.toString(), JsonConvert.root().convertTo(map));
+    }
+
+    @Test
+    public void run5() throws Exception {
+        Map map = new TreeMap();
+        map.put("name", "haha");
+        map.put("time", "55555");
+        map.put("id", "222");
+        map.put("map", Utility.ofMap("aa", "bbb"));
+        Map rs = new TreeMap();
+        Reproduce.load(Map.class, Map.class).apply(rs, map);
+        System.out.println("Map: " + JsonConvert.root().convertTo(rs));
+        Assertions.assertEquals(JsonConvert.root().convertTo(map), JsonConvert.root().convertTo(rs));
     }
 }
