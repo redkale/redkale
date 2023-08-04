@@ -6,6 +6,7 @@
 package org.redkale.test.util;
 
 import java.util.Map;
+import org.redkale.convert.json.JsonConvert;
 
 /**
  *
@@ -43,4 +44,8 @@ public class TestBean extends TestABean implements TestInterface {
         this.map = map;
     }
 
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

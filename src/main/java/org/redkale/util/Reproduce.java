@@ -1,12 +1,13 @@
 package org.redkale.util;
 
-import java.lang.reflect.Modifier;
-import java.util.Map;
+import java.lang.reflect.*;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
+import org.redkale.asm.Type;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
@@ -231,6 +232,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         final String destDesc = Type.getDescriptor(destClass);
         final String srcDesc = Type.getDescriptor(srcClass);
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        final String utilClassName = Utility.class.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/reproduce/_Dyn" + Reproduce.class.getSimpleName()
             + "__" + destClass.getName().replace('.', '_').replace('$', '_')
             + "__" + srcClass.getName().replace('.', '_').replace('$', '_');
@@ -239,6 +241,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             return (Reproduce) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
         } catch (Throwable ex) {
         }
+        final Predicate<Class<?>> throwPredicate = e -> !RuntimeException.class.isAssignableFrom(e);
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -256,7 +259,153 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
-        {
+        if (srcIsMap) { //destClass不是Map
+            {
+                mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + destDesc + srcDesc + ")" + destDesc, null, null));
+                //mv.setDebug(true);
+                mv.visitVarInsn(ALOAD, 2);
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitInvokeDynamicInsn("accept",
+                    "(" + destDesc + ")Ljava/util/function/BiConsumer;",
+                    new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false),
+                    new Object[]{Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V"), new Handle(Opcodes.H_INVOKESTATIC, newDynName, "lambda$0", "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V", false), Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V")});
+                mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, "forEach", "(Ljava/util/function/BiConsumer;)V", srcClass.isInterface());
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitInsn(ARETURN);
+                mv.visitMaxs(2, 3);
+                mv.visitEnd();
+            }
+            {
+                final Map<String, AccessibleObject> elements = new LinkedHashMap<>();
+                for (java.lang.reflect.Field field : destClass.getFields()) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        continue;
+                    }
+                    if (Modifier.isFinal(field.getModifiers())) {
+                        continue;
+                    }
+                    if (!Modifier.isPublic(field.getModifiers())) {
+                        continue;
+                    }
+                    final String sfname = field.getName();
+                    if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) {
+                        continue;
+                    }
+                    final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
+                    elements.put(dfname, field);
+                }
+
+                for (java.lang.reflect.Method setter : destClass.getMethods()) {
+                    if (Modifier.isStatic(setter.getModifiers())) {
+                        continue;
+                    }
+                    if (setter.getParameterTypes().length != 1) {
+                        continue;
+                    }
+                    if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
+                        continue;  //setter方法带有非RuntimeException异常
+                    }
+                    if (!setter.getName().startsWith("set")) {
+                        continue;
+                    }
+                    String sfname = Utility.readFieldName(setter.getName());
+                    if (sfname.isEmpty()) {
+                        continue;
+                    }
+                    if (srcColumnPredicate != null && !srcColumnPredicate.test(setter, sfname)) {
+                        continue;
+                    }
+                    final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
+                    elements.put(dfname, setter);
+                }
+
+                mv = cw.visitMethod(ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC, "lambda$0", "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V", null, null);
+                Label ifLabel = new Label();
+                int i = 0;
+                for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
+                    final int index = ++i;
+                    final java.lang.reflect.Type fieldType = en.getValue() instanceof Field
+                        ? ((Field) en.getValue()).getGenericType()
+                        : ((Method) en.getValue()).getGenericParameterTypes()[0];
+                    final Class fieldClass = en.getValue() instanceof Field
+                        ? ((Field) en.getValue()).getType()
+                        : ((Method) en.getValue()).getParameterTypes()[0];
+
+                    mv.visitLdcInsn(en.getKey());
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/Object;)Z", false);
+                    Label ifeq = index == elements.size() ? ifLabel : new Label();
+                    mv.visitJumpInsn(IFEQ, ifeq);
+                    mv.visitVarInsn(ALOAD, 0);
+
+                    if (fieldClass == boolean.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TYPE", "Ljava/lang/Class;");
+                    } else if (fieldClass == byte.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Byte", "TYPE", "Ljava/lang/Class;");
+                    } else if (fieldClass == char.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Character", "TYPE", "Ljava/lang/Class;");
+                    } else if (fieldClass == short.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Short", "TYPE", "Ljava/lang/Class;");
+                    } else if (fieldClass == int.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
+                    } else if (fieldClass == float.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Float", "TYPE", "Ljava/lang/Class;");
+                    } else if (fieldClass == long.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
+                    } else if (fieldClass == double.class) {
+                        mv.visitFieldInsn(GETSTATIC, "java/lang/Double", "TYPE", "Ljava/lang/Class;");
+                    } else {
+                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(fieldClass)));
+                    }
+
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                    if (fieldClass == boolean.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
+                    } else if (fieldClass == byte.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Byte");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "byteValue", "()B", false);
+                    } else if (fieldClass == short.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
+                    } else if (fieldClass == char.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Character");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
+                    } else if (fieldClass == int.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
+                    } else if (fieldClass == float.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
+                    } else if (fieldClass == long.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
+                    } else if (fieldClass == double.class) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
+                    } else {
+                        mv.visitTypeInsn(CHECKCAST, fieldClass.getName().replace('.', '/'));
+                    }
+
+                    if (en.getValue() instanceof Field) {
+                        mv.visitFieldInsn(PUTFIELD, destClassName, en.getKey(), Type.getDescriptor(fieldClass));
+                    } else {
+                        Method setter = (Method) en.getValue();
+                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                    }
+                    if (index != elements.size()) {
+                        mv.visitJumpInsn(GOTO, ifLabel);
+                    }
+                    mv.visitLabel(ifeq);
+                    mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+                }
+
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(3, 3);
+                mv.visitEnd();
+            }
+        } else {
             mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + destDesc + srcDesc + ")" + destDesc, null, null));
             //mv.setDebug(true);
 
@@ -340,18 +489,15 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 if ("getClass".equals(getter.getName())) {
                     continue;
                 }
+                if (Utility.contains(getter.getExceptionTypes(), throwPredicate)) {
+                    continue;  //setter方法带有非RuntimeException异常
+                }
                 if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) {
                     continue;
                 }
-                final boolean is = getter.getName().startsWith("is");
-                String sfname = getter.getName().substring(is ? 2 : 3);
+                final String sfname = Utility.readFieldName(getter.getName());
                 if (sfname.isEmpty()) {
                     continue;
-                }
-                if (sfname.length() < 2 || Character.isLowerCase(sfname.charAt(1))) {
-                    char[] cs = sfname.toCharArray();
-                    cs[0] = Character.toLowerCase(cs[0]);
-                    sfname = new String(cs);
                 }
                 if (srcColumnPredicate != null && !srcColumnPredicate.test(getter, sfname)) {
                     continue;
@@ -391,6 +537,9 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                     String dfname2 = new String(cs);
                     try {
                         setter = destClass.getMethod("set" + dfname2, getter.getReturnType());
+                        if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
+                            continue;  //setter方法带有非RuntimeException异常
+                        }
                     } catch (Exception e) {
                         try {
                             srcField = destClass.getField(dfname);
