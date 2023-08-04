@@ -6,6 +6,7 @@
 package org.redkale.util;
 
 import java.lang.reflect.*;
+import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
@@ -34,6 +35,16 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
      */
     public RETURN_TYPE invoke(OBJECT_TYPE obj, Object... params);
 
+    public static <OBJECT_TYPE, RETURN_TYPE> Invoker<OBJECT_TYPE, RETURN_TYPE> load(final Class<OBJECT_TYPE> clazz, final String methodName, final Class... paramTypes) {
+        java.lang.reflect.Method method = null;
+        try {
+            method = clazz.getMethod(methodName, paramTypes);
+        } catch (Exception ex) {
+            throw new RedkaleException(ex);
+        }
+        return load(clazz, method);
+    }
+
     public static <OBJECT_TYPE, RETURN_TYPE> Invoker<OBJECT_TYPE, RETURN_TYPE> create(final Class<OBJECT_TYPE> clazz, final String methodName, final Class... paramTypes) {
         java.lang.reflect.Method method = null;
         try {
@@ -42,6 +53,12 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
             throw new RedkaleException(ex);
         }
         return create(clazz, method);
+    }
+
+    public static <C, T> Invoker<C, T> load(final Class<C> clazz, final Method method) {
+        return InvokerInner.caches
+            .computeIfAbsent(clazz, t -> new ConcurrentHashMap<>())
+            .computeIfAbsent(method, v -> create(clazz, method));
     }
 
     public static <C, T> Invoker<C, T> create(final Class<C> clazz, final Method method) {
@@ -225,4 +242,9 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
         }
     }
 
+    static class InvokerInner {
+
+        static final ConcurrentHashMap<Class, ConcurrentHashMap<Method, Invoker>> caches = new ConcurrentHashMap();
+
+    }
 }

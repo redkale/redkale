@@ -20,9 +20,27 @@ import static org.redkale.asm.Opcodes.*;
  */
 public interface Reproduce<D, S> extends BiFunction<D, S, D> {
 
+    /**
+     * 将源对象字段复制到目标对象
+     *
+     * @param dest 目标对象
+     * @param src  源对象
+     *
+     * @return 目标对象
+     */
     @Override
     public D apply(D dest, S src);
 
+    /**
+     * 将源对象字段复制到目标对象
+     *
+     * @param <D>  目标类泛型
+     * @param <S>  源类泛型
+     * @param dest 目标对象
+     * @param src  源对象
+     *
+     * @return 目标对象
+     */
     public static <D, S> D copy(final D dest, final S src) {
         if (src == null || dest == null) {
             return null;
@@ -32,6 +50,16 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         return load(destClass, (Class<S>) src.getClass()).apply(creator.create(), src);
     }
 
+    /**
+     * 将源对象字段复制到目标对象
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param src       源对象
+     *
+     * @return 目标对象
+     */
     public static <D, S> D copy(final Class<D> destClass, final S src) {
         if (src == null) {
             return null;
@@ -40,6 +68,16 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         return load(destClass, (Class<S>) src.getClass()).apply(creator.create(), src);
     }
 
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
+     *
+     * @return 复制器
+     */
     public static <D, S> Reproduce<D, S> load(final Class<D> destClass, final Class<S> srcClass) {
         if (destClass == srcClass) {
             return ReproduceInner.reproduceOneCaches
@@ -51,31 +89,139 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         }
     }
 
+    /**
+     * 创建源类到目标类的复制器
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
+     *
+     * @return 复制器
+     */
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass) {
         return create(destClass, srcClass, (BiPredicate) null, (Map<String, String>) null);
     }
 
+    /**
+     * 创建源类到目标类的复制器
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
+     * @param names     源字段名与目标字段名的映射关系
+     *
+     * @return 复制器
+     */
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Map<String, String> names) {
         return create(destClass, srcClass, (BiPredicate) null, names);
     }
 
+    /**
+     * 创建源类到目标类的复制器
+     *
+     * @param <D>                目标类泛型
+     * @param <S>                源类泛型
+     * @param destClass          目标类名
+     * @param srcClass           源类名
+     * @param srcColumnPredicate 需复制的字段名判断期
+     *
+     * @return 复制器
+     */
     @SuppressWarnings("unchecked")
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> srcColumnPredicate) {
         return create(destClass, srcClass, (sc, m) -> srcColumnPredicate.test(m), (Map<String, String>) null);
     }
 
+    /**
+     * 创建源类到目标类的复制器
+     *
+     * @param <D>                目标类泛型
+     * @param <S>                源类泛型
+     * @param destClass          目标类名
+     * @param srcClass           源类名
+     * @param srcColumnPredicate 需复制的字段名判断期
+     * @param names              源字段名与目标字段名的映射关系
+     *
+     * @return 复制器
+     */
     @SuppressWarnings("unchecked")
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> srcColumnPredicate, final Map<String, String> names) {
         return create(destClass, srcClass, (sc, m) -> srcColumnPredicate.test(m), names);
     }
 
+    /**
+     * 创建源类到目标类的复制器
+     *
+     * @param <D>                目标类泛型
+     * @param <S>                源类泛型
+     * @param destClass          目标类名
+     * @param srcClass           源类名
+     * @param srcColumnPredicate 需复制的字段名判断期
+     *
+     * @return 复制器
+     */
     @SuppressWarnings("unchecked")
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate) {
         return create(destClass, srcClass, srcColumnPredicate, (Map<String, String>) null);
     }
 
+    /**
+     * 创建源类到目标类的复制器
+     *
+     * @param <D>                目标类泛型
+     * @param <S>                源类泛型
+     * @param destClass          目标类名
+     * @param srcClass           源类名
+     * @param srcColumnPredicate 需复制的字段名判断期
+     * @param names              源字段名与目标字段名的映射关系
+     *
+     * @return 复制器
+     */
     @SuppressWarnings("unchecked")
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> names) {
+        if (Map.class.isAssignableFrom(destClass) && Map.class.isAssignableFrom(srcClass)) {
+            final Map names0 = names;
+            if (srcColumnPredicate != null) {
+                if (names != null) {
+                    return (D dest, S src) -> {
+                        Map d = (Map) dest;
+                        ((Map) src).forEach((k, v) -> {
+                            if (srcColumnPredicate.test(null, k.toString())) {
+                                d.put(names0.getOrDefault(k, k), v);
+                            }
+                        });
+                        return dest;
+                    };
+                } else {
+                    return (D dest, S src) -> {
+                        Map d = (Map) dest;
+                        ((Map) src).forEach((k, v) -> {
+                            if (srcColumnPredicate.test(null, k.toString())) {
+                                d.put(k, v);
+                            }
+                        });
+                        return dest;
+                    };
+                }
+            } else if (names != null) {
+                return (D dest, S src) -> {
+                    Map d = (Map) dest;
+                    ((Map) src).forEach((k, v) -> {
+                        d.put(names0.getOrDefault(k, k), v);
+                    });
+                    return dest;
+                };
+            }
+            return new Reproduce<D, S>() {
+                @Override
+                public D apply(D dest, S src) {
+                    ((Map) dest).putAll((Map) src);
+                    return dest;
+                }
+            };
+        }
         // ------------------------------------------------------------------------------
         final String supDynName = Reproduce.class.getName().replace('.', '/');
         final String destClassName = destClass.getName().replace('.', '/');
