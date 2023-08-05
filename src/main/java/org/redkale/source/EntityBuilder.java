@@ -23,6 +23,12 @@ public class EntityBuilder<T> {
 
     private static final ConcurrentHashMap<Class, EntityBuilder> cacheMap = new ConcurrentHashMap<>();
 
+    //实体类名
+    private final Class<T> type;
+
+    //是否Map类型的虚拟实体类
+    private final boolean entityIsMap;
+
     //Entity构建器
     private final Creator<T> creator;
 
@@ -52,12 +58,13 @@ public class EntityBuilder<T> {
     //数据库中所有字段, 顺序必须与querySqlColumns、querySqlColumnSequence一致
     private final Attribute<T, Serializable>[] attributes;
 
-    EntityBuilder(Creator<T> creator,
+    EntityBuilder(Class<T> type, Creator<T> creator,
         Map<String, String> aliasmap, String[] constructorParameters,
         Attribute<T, Serializable>[] constructorAttributes,
         Attribute<T, Serializable>[] unconstructorAttributes,
         Map<String, Attribute<T, Serializable>> attributeMap,
         Attribute<T, Serializable>[] queryAttributes) {
+        this.type = type;
         this.creator = creator;
         this.aliasmap = aliasmap;
         this.constructorParameters = constructorParameters;
@@ -66,6 +73,7 @@ public class EntityBuilder<T> {
         this.attributeMap = attributeMap;
         this.attributes = queryAttributes;
         this.sqlAttrMap = new HashMap<>();
+        this.entityIsMap = Map.class.isAssignableFrom(type);
         attributeMap.forEach((k, v) -> sqlAttrMap.put(getSQLColumn(null, k), v));
     }
 
@@ -76,66 +84,70 @@ public class EntityBuilder<T> {
     private static <T> EntityBuilder<T> create(Class<T> type) {
         Creator<T> creator = Creator.create(type);
         String[] constructorParameters = null;
-        try {
-            Method cm = creator.getClass().getMethod("create", Object[].class);
-            RedkaleClassLoader.putReflectionPublicMethods(creator.getClass().getName());
-            RedkaleClassLoader.putReflectionMethod(creator.getClass().getName(), cm);
-            org.redkale.annotation.ConstructorParameters cp = cm.getAnnotation(org.redkale.annotation.ConstructorParameters.class);
-            if (cp != null && cp.value().length > 0) {
-                constructorParameters = cp.value();
-            } else {
-                org.redkale.util.ConstructorParameters cp2 = cm.getAnnotation(org.redkale.util.ConstructorParameters.class);
-                if (cp2 != null && cp2.value().length > 0) {
-                    constructorParameters = cp2.value();
+        if (!Map.class.isAssignableFrom(type)) {
+            try {
+                Method cm = creator.getClass().getMethod("create", Object[].class);
+                RedkaleClassLoader.putReflectionPublicMethods(creator.getClass().getName());
+                RedkaleClassLoader.putReflectionMethod(creator.getClass().getName(), cm);
+                org.redkale.annotation.ConstructorParameters cp = cm.getAnnotation(org.redkale.annotation.ConstructorParameters.class);
+                if (cp != null && cp.value().length > 0) {
+                    constructorParameters = cp.value();
+                } else {
+                    org.redkale.util.ConstructorParameters cp2 = cm.getAnnotation(org.redkale.util.ConstructorParameters.class);
+                    if (cp2 != null && cp2.value().length > 0) {
+                        constructorParameters = cp2.value();
+                    }
                 }
+            } catch (Exception e) {
+                throw new SourceException(type + " cannot find ConstructorParameters Creator");
             }
-        } catch (Exception e) {
-            throw new SourceException(type + " cannot find ConstructorParameters Creator");
         }
         Class cltmp = type;
         Map<String, String> aliasmap = null;
         Set<String> fields = new HashSet<>();
         List<Attribute<T, Serializable>> queryAttrs = new ArrayList<>();
         HashMap<String, Attribute<T, Serializable>> attributeMap = new HashMap<>();
-        do {
-            RedkaleClassLoader.putReflectionDeclaredFields(cltmp.getName());
-            for (Field field : cltmp.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers())) {
-                    continue;
-                }
-                if (Modifier.isFinal(field.getModifiers())) {
-                    continue;
-                }
-                if (field.getAnnotation(Transient.class) != null) {
-                    continue;
-                }
-                if (field.getAnnotation(javax.persistence.Transient.class) != null) {
-                    continue;
-                }
-                if (fields.contains(field.getName())) {
-                    continue;
-                }
-                final String fieldName = field.getName();
-                final Column col = field.getAnnotation(Column.class);
-                final String sqlField = col == null || col.name().isEmpty() ? fieldName : col.name();
-                if (!fieldName.equals(sqlField)) {
-                    if (aliasmap == null) {
-                        aliasmap = new HashMap<>();
+        if (!Map.class.isAssignableFrom(type)) {
+            do {
+                RedkaleClassLoader.putReflectionDeclaredFields(cltmp.getName());
+                for (Field field : cltmp.getDeclaredFields()) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        continue;
                     }
-                    aliasmap.put(fieldName, sqlField);
+                    if (Modifier.isFinal(field.getModifiers())) {
+                        continue;
+                    }
+                    if (field.getAnnotation(Transient.class) != null) {
+                        continue;
+                    }
+                    if (field.getAnnotation(javax.persistence.Transient.class) != null) {
+                        continue;
+                    }
+                    if (fields.contains(field.getName())) {
+                        continue;
+                    }
+                    final String fieldName = field.getName();
+                    final Column col = field.getAnnotation(Column.class);
+                    final String sqlField = col == null || col.name().isEmpty() ? fieldName : col.name();
+                    if (!fieldName.equals(sqlField)) {
+                        if (aliasmap == null) {
+                            aliasmap = new HashMap<>();
+                        }
+                        aliasmap.put(fieldName, sqlField);
+                    }
+                    Attribute attr;
+                    try {
+                        attr = Attribute.create(type, cltmp, field);
+                    } catch (RuntimeException e) {
+                        continue;
+                    }
+                    RedkaleClassLoader.putReflectionField(cltmp.getName(), field);
+                    queryAttrs.add(attr);
+                    fields.add(fieldName);
+                    attributeMap.put(fieldName, attr);
                 }
-                Attribute attr;
-                try {
-                    attr = Attribute.create(type, cltmp, field);
-                } catch (RuntimeException e) {
-                    continue;
-                }
-                RedkaleClassLoader.putReflectionField(cltmp.getName(), field);
-                queryAttrs.add(attr);
-                fields.add(fieldName);
-                attributeMap.put(fieldName, attr);
-            }
-        } while ((cltmp = cltmp.getSuperclass()) != Object.class);
+            } while ((cltmp = cltmp.getSuperclass()) != Object.class);
+        }
         Attribute<T, Serializable>[] constructorAttributes;
         Attribute<T, Serializable>[] unconstructorAttributes;
         if (constructorParameters == null) {
@@ -144,8 +156,8 @@ public class EntityBuilder<T> {
         } else {
             constructorAttributes = new Attribute[constructorParameters.length];
             List<Attribute<T, Serializable>> unconstructorAttrs = new ArrayList<>();
-            List<String> newquerycols1 = new ArrayList<>();
-            List<String> newquerycols2 = new ArrayList<>();
+            List<String> newQueryCols1 = new ArrayList<>();
+            List<String> newQueryCols2 = new ArrayList<>();
             for (Attribute<T, Serializable> attr : new ArrayList<>(queryAttrs)) {
                 int pos = -1;
                 for (int i = 0; i < constructorParameters.length; i++) {
@@ -161,13 +173,13 @@ public class EntityBuilder<T> {
                 }
             }
             unconstructorAttributes = unconstructorAttrs.toArray(new Attribute[unconstructorAttrs.size()]);
-            newquerycols1.addAll(newquerycols2);
-            List<Attribute<T, Serializable>> newqueryattrs = new ArrayList<>();
-            newqueryattrs.addAll(List.of(constructorAttributes));
-            newqueryattrs.addAll(unconstructorAttrs);
-            queryAttrs = newqueryattrs;
+            newQueryCols1.addAll(newQueryCols2);
+            List<Attribute<T, Serializable>> newQueryAttrs = new ArrayList<>();
+            newQueryAttrs.addAll(List.of(constructorAttributes));
+            newQueryAttrs.addAll(unconstructorAttrs);
+            queryAttrs = newQueryAttrs;
         }
-        return new EntityBuilder<>(creator, aliasmap, constructorParameters, constructorAttributes,
+        return new EntityBuilder<>(type, creator, aliasmap, constructorParameters, constructorAttributes,
             unconstructorAttributes, attributeMap, queryAttrs.toArray(new Attribute[queryAttrs.size()]));
     }
 
@@ -191,6 +203,14 @@ public class EntityBuilder<T> {
         T obj;
         if (sqlColumns == null) {
             sqlColumns = row.getColumnLabels();
+        }
+        if (entityIsMap) {
+            final Map map = (Map) creator.create();
+            obj = (T) map;
+            for (String sqlCol : sqlColumns) {
+                map.put(sqlCol, getFieldValue(row, sqlCol));
+            }
+            return obj;
         }
         Map<String, Attribute<T, Serializable>> attrs = this.sqlAttrMap;
         if (this.constructorParameters == null) {
@@ -240,6 +260,13 @@ public class EntityBuilder<T> {
     public T getEntityValue(final SelectColumn sels, final DataResultSetRow row) {
         if (row.wasNull()) {
             return null;
+        }
+        if (entityIsMap) {
+            final Map map = (Map) creator.create();
+            for (String sqlCol : row.getColumnLabels()) {
+                map.put(sqlCol, getFieldValue(row, sqlCol));
+            }
+            return (T) map;
         }
         T obj;
         Attribute<T, Serializable>[] attrs = this.attributes;
@@ -292,6 +319,13 @@ public class EntityBuilder<T> {
     protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final DataResultSetRow row) {
         if (row.wasNull()) {
             return null;
+        }
+        if (entityIsMap) {
+            final Map map = (Map) creator.create();
+            for (String sqlCol : row.getColumnLabels()) {
+                map.put(sqlCol, getFieldValue(row, sqlCol));
+            }
+            return (T) map;
         }
         T obj;
         int index = 0;
@@ -358,6 +392,10 @@ public class EntityBuilder<T> {
         return obj;
     }
 
+    protected Serializable getFieldValue(final DataResultSetRow row, String sqlColumn) {
+        return (Serializable) row.getObject(sqlColumn);
+    }
+
     protected Serializable getFieldValue(Attribute<T, Serializable> attr, final DataResultSetRow row, int index) {
         return row.getObject(attr, index, index > 0 ? null : this.getSQLColumn(null, attr.field()));
     }
@@ -394,4 +432,8 @@ public class EntityBuilder<T> {
         return creator;
     }
 
+    @ConvertDisabled
+    public Class<T> getType() {
+        return type;
+    }
 }

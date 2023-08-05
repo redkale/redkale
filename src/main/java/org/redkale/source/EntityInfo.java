@@ -565,7 +565,7 @@ public final class EntityInfo<T> {
             String field = this.queryAttributes[i].field();
             this.queryColumns[i] = Utility.find(this.ddlColumns, c -> c.field.equals(field));
         }
-        this.builder = new EntityBuilder<>(creator, aliasmap, constructorParameters, constructorAttributes, unconstructorAttributes, attributeMap, queryAttributes);
+        this.builder = new EntityBuilder<>(type, creator, aliasmap, constructorParameters, constructorAttributes, unconstructorAttributes, attributeMap, queryAttributes);
 
         if (table != null) {
             StringBuilder querydb = new StringBuilder();

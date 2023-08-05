@@ -35,7 +35,7 @@ public interface DataSqlSource extends DataSource {
             if (!rset.next()) {
                 return null;
             }
-            if (type.isPrimitive() || type == byte[].class || type.getName().startsWith("java.")) {
+            if (type.isPrimitive() || type == byte[].class || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
                 return (V) formatColumnValue(type, rset.getObject(1));
             }
             return EntityBuilder.load(type).getObjectValue(rset);
@@ -44,7 +44,7 @@ public interface DataSqlSource extends DataSource {
 
     default <V> List<V> nativeQueryList(Class<V> type, String sql) {
         return nativeQuery(sql, rset -> {
-            if (type.isPrimitive() || type == byte[].class || type.getName().startsWith("java.")) {
+            if (type.isPrimitive() || type == byte[].class || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
                 List<V> list = new ArrayList<>();
                 while (rset.next()) {
                     list.add(rset.wasNull() ? null : (V) formatColumnValue(type, rset.getObject(1)));
