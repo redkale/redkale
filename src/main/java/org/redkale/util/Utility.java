@@ -2696,13 +2696,11 @@ public final class Utility {
             return (T) value;
         }
         final Class clazz = TypeToken.typeToClass(type);
-        final Class vclz = value.getClass();
-        if (clazz == vclz) {
+        final Class vclzz = value.getClass();
+        if (clazz == vclzz || clazz.isAssignableFrom(vclzz)) {
             return (T) value;
         } else if (clazz == String.class) {
             return (T) value.toString();
-        } else if (clazz.isAssignableFrom(vclz)) {
-            return (T) value;
         } else if (clazz == double.class || clazz == Double.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).doubleValue();
@@ -2723,13 +2721,26 @@ public final class Utility {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).shortValue();
             }
+        } else if (clazz == char.class || clazz == Character.class) {
+            if (value instanceof Number) {
+                char ch = (char) ((Number) value).intValue();
+                return (T) (Object) ch;
+            }
         } else if (clazz == byte.class || clazz == Byte.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).byteValue();
             }
+        } else if (clazz == boolean.class || clazz == Boolean.class) {
+            if (value instanceof Number) {
+                return (T) (Object) (((Number) value).intValue() > 0);
+            }
         }
         JsonConvert convert = JsonConvert.root();
-        return convert.convertFrom(type, convert.convertToBytes(value));
+        if (CharSequence.class.isAssignableFrom(vclzz)) {
+            return convert.convertFrom(type, value.toString());
+        } else {
+            return convert.convertFrom(type, convert.convertToBytes(value));
+        }
     }
 
     /**
