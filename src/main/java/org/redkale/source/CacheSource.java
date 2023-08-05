@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.annotation.Component;
 import org.redkale.convert.Convert;
-import org.redkale.util.Resourcable;
+import org.redkale.util.*;
 
 /**
  * Redkale中缓存数据源的核心类。 主要供业务开发者使用， 技术开发者提供CacheSource的实现。<br>
@@ -1438,7 +1438,7 @@ public interface CacheSource extends Resourcable {
     }
 
     default <T> CompletableFuture<T> srandmemberAsync(String key, Type componentType) {
-        return srandmemberAsync(key, componentType, 1).thenApply(list -> list != null && !list.isEmpty() ? (T) list.get(0) : null);
+        return srandmemberAsync(key, componentType, 1).thenApply(list -> Utility.isNotEmpty(list) ? (T) list.get(0) : null);
     }
 
     default CompletableFuture<String> srandmemberStringAsync(String key) {

@@ -19,37 +19,37 @@ import org.redkale.convert.ConvertColumn;
 public class FilterValue implements java.io.Serializable {
 
     @ConvertColumn(index = 1)
-    private Number first;
+    private Number left;
 
     @ConvertColumn(index = 2)
     private FilterExpress express;
 
     @ConvertColumn(index = 3)
-    private Number second;
+    private Number right;
 
     public FilterValue() {
     }
 
-    public FilterValue(Number first, Number second) {
-        this(first, FilterExpress.EQUAL, second);
+    public FilterValue(Number left, Number right) {
+        this(left, FilterExpress.EQUAL, right);
     }
 
-    public FilterValue(Number first, FilterExpress express) {
-        this(first, express, 0);
+    public FilterValue(Number left, FilterExpress express) {
+        this(left, express, 0);
     }
 
-    public FilterValue(Number first, FilterExpress express, Number second) {
-        this.first = first;
+    public FilterValue(Number left, FilterExpress express, Number right) {
+        this.left = left;
         this.express = express;
-        this.second = second;
+        this.right = right;
     }
 
-    public Number getFirst() {
-        return first == null ? 0 : first;
+    public Number getLeft() {
+        return left == null ? 0 : left;
     }
 
-    public void setFirst(Number first) {
-        this.first = first;
+    public void setLeft(Number left) {
+        this.left = left;
     }
 
     public FilterExpress getExpress() {
@@ -60,16 +60,16 @@ public class FilterValue implements java.io.Serializable {
         this.express = express;
     }
 
-    public Number getSecond() {
-        return second == null ? 0 : second;
+    public Number getRight() {
+        return right == null ? 0 : right;
     }
 
-    public void setSecond(Number second) {
-        this.second = second;
+    public void setRight(Number right) {
+        this.right = right;
     }
 
     @Override
     public String toString() {
-        return FilterValue.class.getSimpleName() + "[first=" + getFirst() + ", express=" + getExpress() + ", second=" + getSecond() + "]";
+        return FilterValue.class.getSimpleName() + "[left=" + getLeft() + ", express=" + getExpress() + ", right=" + getRight() + "]";
     }
 }

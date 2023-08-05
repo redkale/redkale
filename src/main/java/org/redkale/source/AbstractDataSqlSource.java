@@ -24,6 +24,7 @@ import org.redkale.persistence.Table;
 import org.redkale.service.Local;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * DataSource的SQL抽象实现类 <br>
@@ -2193,7 +2194,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 if (sb.length() > 0) {
                     sb.append(", ");
                 }
-                sb.append(ffc.func.getColumn((col == null || col.isEmpty() ? "*" : info.getSQLColumn("a", col))));
+                sb.append(ffc.func.getColumn((isEmpty(col) ? "*" : info.getSQLColumn("a", col))));
             }
         }
         final String sql = "SELECT " + sb + " FROM " + tables[0] + " a"
@@ -2271,7 +2272,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         final Set<String> haset = new HashSet<>();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
-        final String sql = "SELECT " + func.getColumn((column == null || column.isEmpty() ? "*" : info.getSQLColumn("a", column))) + " FROM " + tables[0] + " a"
+        final String sql = "SELECT " + func.getColumn((isEmpty(column) ? "*" : info.getSQLColumn("a", column))) + " FROM " + tables[0] + " a"
             + (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
         return sql;
     }
@@ -3260,7 +3261,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             this.prepare = prepare;
             this.sql = sql;
             this.tables = tables;
-            this.blobs = blobs == null || blobs.isEmpty() ? null : blobs;
+            this.blobs = isEmpty(blobs) ? null : blobs;
         }
 
     }

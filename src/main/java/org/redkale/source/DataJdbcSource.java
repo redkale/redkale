@@ -2491,7 +2491,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      */
     @Override
     public int nativeUpdate(String sql) {
-        return nativeUpdate(new String[]{sql})[0];
+        return nativeUpdates(new String[]{sql})[0];
     }
 
     /**
@@ -2503,7 +2503,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      * @return 结果数组
      */
     @Override
-    public int[] nativeUpdate(String... sqls) {
+    public int[] nativeUpdates(String... sqls) {
         if (sqls.length == 0) {
             return new int[0];
         }
@@ -2571,6 +2571,16 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
+    @Override
+    public int nativeUpdate(String sql, Map<String, Object> params) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     @Deprecated
     public int directExecute(String sql) {
         return nativeUpdate(sql);
@@ -2578,7 +2588,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     @Deprecated
     public int[] directExecute(String... sqls) {
-        return nativeUpdate(sqls);
+        return nativeUpdates(sqls);
     }
 
     @Deprecated
