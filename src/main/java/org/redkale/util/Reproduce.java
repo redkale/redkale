@@ -182,6 +182,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
      */
     @SuppressWarnings("unchecked")
     public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> names) {
+        final boolean allowMapNull = !ConcurrentHashMap.class.isAssignableFrom(destClass);
         if (Map.class.isAssignableFrom(destClass) && Map.class.isAssignableFrom(srcClass)) {
             final Map names0 = names;
             if (srcColumnPredicate != null) {
@@ -189,7 +190,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                     return (D dest, S src) -> {
                         Map d = (Map) dest;
                         ((Map) src).forEach((k, v) -> {
-                            if (srcColumnPredicate.test(null, k.toString())) {
+                            if (srcColumnPredicate.test(null, k.toString()) && (allowMapNull || v != null)) {
                                 d.put(names0.getOrDefault(k, k), v);
                             }
                         });
@@ -199,7 +200,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                     return (D dest, S src) -> {
                         Map d = (Map) dest;
                         ((Map) src).forEach((k, v) -> {
-                            if (srcColumnPredicate.test(null, k.toString())) {
+                            if (srcColumnPredicate.test(null, k.toString()) && (allowMapNull || v != null)) {
                                 d.put(k, v);
                             }
                         });
@@ -210,7 +211,9 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 return (D dest, S src) -> {
                     Map d = (Map) dest;
                     ((Map) src).forEach((k, v) -> {
-                        d.put(names0.getOrDefault(k, k), v);
+                        if (allowMapNull || v != null) {
+                            d.put(names0.getOrDefault(k, k), v);
+                        }
                     });
                     return dest;
                 };
@@ -218,7 +221,16 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             return new Reproduce<D, S>() {
                 @Override
                 public D apply(D dest, S src) {
-                    ((Map) dest).putAll((Map) src);
+                    if (allowMapNull) {
+                        ((Map) dest).putAll((Map) src);
+                    } else {
+                        Map d = (Map) dest;
+                        ((Map) src).forEach((k, v) -> {
+                            if (v != null) {
+                                d.put(names0.getOrDefault(k, k), v);
+                            }
+                        });
+                    }
                     return dest;
                 }
             };
@@ -320,7 +332,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 }
 
                 mv = cw.visitMethod(ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC, "lambda$0", "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V", null, null);
-                Label ifLabel = new Label();
+                Label goLabel = new Label();
                 int i = 0;
                 for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
                     final int index = ++i;
@@ -330,12 +342,17 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                     final Class fieldClass = en.getValue() instanceof Field
                         ? ((Field) en.getValue()).getType()
                         : ((Method) en.getValue()).getParameterTypes()[0];
+                    final boolean primitive = fieldClass.isPrimitive();
 
                     mv.visitLdcInsn(en.getKey());
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/Object;)Z", false);
-                    Label ifeq = index == elements.size() ? ifLabel : new Label();
+                    Label ifeq = index == elements.size() ? goLabel : new Label();
                     mv.visitJumpInsn(IFEQ, ifeq);
+                    if (primitive) {
+                        mv.visitVarInsn(ALOAD, 2);
+                        mv.visitJumpInsn(IFNULL, ifeq);
+                    }
                     mv.visitVarInsn(ALOAD, 0);
 
                     if (fieldClass == boolean.class) {
@@ -394,10 +411,12 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                         Method setter = (Method) en.getValue();
                         mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
                     }
-                    if (index != elements.size()) {
-                        mv.visitJumpInsn(GOTO, ifLabel);
+                    if (index == elements.size()) {
+                        mv.visitLabel(goLabel);
+                    } else {
+                        mv.visitJumpInsn(GOTO, goLabel);
+                        mv.visitLabel(ifeq);
                     }
-                    mv.visitLabel(ifeq);
                     mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                 }
 
@@ -426,31 +445,47 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
 
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
                 if (destIsMap) {
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitLdcInsn(dfname);
-                    mv.visitVarInsn(ALOAD, 2);
                     Class st = field.getType();
                     String td = Type.getDescriptor(st);
-                    mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
-                    if (st == boolean.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-                    } else if (st == byte.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-                    } else if (st == short.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-                    } else if (st == char.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-                    } else if (st == int.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                    } else if (st == float.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-                    } else if (st == long.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                    } else if (st == double.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
+                    if (allowMapNull || st.isPrimitive()) {
+                        mv.visitVarInsn(ALOAD, 1);
+                        mv.visitLdcInsn(dfname);
+                        mv.visitVarInsn(ALOAD, 2);
+                        mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
+                        if (st == boolean.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                        } else if (st == byte.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
+                        } else if (st == short.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
+                        } else if (st == char.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
+                        } else if (st == int.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                        } else if (st == float.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
+                        } else if (st == long.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
+                        } else if (st == double.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
+                        }
+                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                        mv.visitInsn(POP);
+                    } else {
+                        mv.visitVarInsn(ALOAD, 2);
+                        mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
+                        mv.visitVarInsn(ASTORE, 3);
+                        mv.visitVarInsn(ALOAD, 3);
+                        Label ifLabel = new Label();
+                        mv.visitJumpInsn(IFNULL, ifLabel);
+                        mv.visitVarInsn(ALOAD, 1);
+                        mv.visitLdcInsn(dfname);
+                        mv.visitVarInsn(ALOAD, 3);
+                        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", true);
+                        mv.visitInsn(POP);
+                        mv.visitLabel(ifLabel);
+                        mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                     }
-                    mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
-                    mv.visitInsn(POP);
                 } else {
                     java.lang.reflect.Method setter = null;
                     try {
@@ -506,29 +541,46 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
                 if (destIsMap) {
                     Class st = getter.getReturnType();
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitLdcInsn(dfname);
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
-                    if (st == boolean.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-                    } else if (st == byte.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-                    } else if (st == short.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-                    } else if (st == char.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-                    } else if (st == int.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                    } else if (st == float.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-                    } else if (st == long.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                    } else if (st == double.class) {
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
+                    if (allowMapNull || st.isPrimitive()) {
+                        mv.visitVarInsn(ALOAD, 1);
+                        mv.visitLdcInsn(dfname);
+                        mv.visitVarInsn(ALOAD, 2);
+                        mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                        if (st == boolean.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
+                        } else if (st == byte.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
+                        } else if (st == short.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
+                        } else if (st == char.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
+                        } else if (st == int.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                        } else if (st == float.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
+                        } else if (st == long.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
+                        } else if (st == double.class) {
+                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
+                        }
+                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                        mv.visitInsn(POP);
+                    } else {
+                        mv.visitVarInsn(ALOAD, 2);
+                         mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                        mv.visitVarInsn(ASTORE, 3);
+                        mv.visitVarInsn(ALOAD, 3);
+                        Label ifLabel = new Label();
+                        mv.visitJumpInsn(IFNULL, ifLabel);
+                        mv.visitVarInsn(ALOAD, 1);
+                        mv.visitLdcInsn(dfname);
+                        mv.visitVarInsn(ALOAD, 3);
+                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                        mv.visitInsn(POP);
+                        mv.visitLabel(ifLabel);
+                        mv.visitLineNumber(47, ifLabel);
+                        mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                     }
-                    mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
-                    mv.visitInsn(POP);
                 } else {
                     java.lang.reflect.Method setter = null;
                     java.lang.reflect.Field srcField = null;

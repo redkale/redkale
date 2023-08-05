@@ -2,10 +2,10 @@
  */
 package org.redkale.test.util;
 
-import org.redkale.annotation.Resource;
 import org.junit.jupiter.api.*;
+import org.redkale.annotation.Resource;
 import org.redkale.convert.json.JsonFactory;
-import org.redkale.util.*;
+import org.redkale.util.ResourceFactory;
 
 /**
  *
@@ -46,10 +46,10 @@ public class ResourceLoaderTest {
 
     public static class Bean {
 
-        @Resource(name = "$.id")
+        @Resource(name = "#.id")
         public int id;
 
-        @Resource(name = "$.name")
+        @Resource(name = "#.name")
         public String name;
 
         public Bean() {

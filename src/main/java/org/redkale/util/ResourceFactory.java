@@ -965,7 +965,7 @@ public final class ResourceFactory {
                                 }
                             }
                         }
-                        if (rs == null && re == null && autoRegNull && rcname.indexOf('$') < 0) {
+                        if (rs == null && re == null && autoRegNull && rcname.indexOf(Resource.PARENT_NAME) < 0) {
                             register(rcname, gencType, null); //自动注入null的值
                             re = findEntry(rcname, gencType);
                         }

@@ -4,6 +4,7 @@
 package org.redkale.test.util;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
@@ -21,6 +22,8 @@ public class ReproduceTest {
         test.run3();
         test.run4();
         test.run5();
+        test.run6();
+        test.run7();
     }
 
     @Test
@@ -86,5 +89,29 @@ public class ReproduceTest {
         Reproduce.load(Map.class, Map.class).apply(rs, map);
         System.out.println("Map: " + JsonConvert.root().convertTo(rs));
         Assertions.assertEquals(JsonConvert.root().convertTo(map), JsonConvert.root().convertTo(rs));
+    }
+
+    @Test
+    public void run6() throws Exception {
+        TestBean bean = new TestBean();
+        bean.setId(222);
+        bean.time = 55555L;
+        bean.setName(null);
+        bean.setMap(Utility.ofMap("aa", "bbb"));
+        ConcurrentHashMap rs = Reproduce.copy(ConcurrentHashMap.class, bean);
+        System.out.println(JsonConvert.root().convertTo(rs));
+        System.out.println("------------------------------------------");
+    }
+
+    @Test
+    public void run7() throws Exception {
+        TestBean bean = new TestBean();
+        Map map = new TreeMap();
+        map.put("name", "haha");
+        map.put("time", "55555");
+        map.put("id", null);
+        map.put("map", Utility.ofMap("aa", "bbb"));
+        Reproduce.load(TestBean.class, Map.class).apply(bean, map);
+        System.out.println(JsonConvert.root().convertTo(bean));
     }
 }
