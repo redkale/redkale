@@ -23,6 +23,7 @@ import org.redkale.net.WorkThread;
 import org.redkale.persistence.Entity;
 import org.redkale.service.*;
 import org.redkale.util.*;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * DataSource的S抽象实现类 <br>
@@ -121,6 +122,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     @Resource(name = RESNAME_APP_EXECUTOR, required = false)
     private ExecutorService sourceExecutor;
 
+    protected String name;
+
     @Override
     public void init(AnyValue conf) {
         super.init(conf);
@@ -129,6 +132,11 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         } else {
             this.sourceThreads = conf.getAnyValue("read").getIntValue(DATA_SOURCE_THREADS, Utility.cpus());
         }
+    }
+
+    @Override
+    public final String resourceName() {
+        return name;
     }
 
     @ResourceListener
@@ -148,7 +156,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             serverClassLoader = Thread.currentThread().getContextClassLoader();
         }
         String classVal = sourceConf.getValue("type");
-        if (classVal == null || classVal.isEmpty()) {
+        if (isEmpty(classVal)) {
             if (DataJdbcSource.acceptsConf(sourceConf)) {
                 source = new DataJdbcSource();
             } else {

@@ -18,7 +18,7 @@ import org.redkale.util.*;
 public class UntilTestMain {
 
     public static void main(String[] args) throws Throwable {
-        reproduce(args);
+        copy(args);
         attribute(args);
         aes(args);
     }
@@ -46,17 +46,17 @@ public class UntilTestMain {
         System.out.println(Utility.binToHexString(secret.getBytes()));
     }
 
-    public static void reproduce(String[] args) throws Throwable {
+    public static void copy(String[] args) throws Throwable {
         final TestBean bean = new TestBean();
         bean.setId(123456);
         bean.setName("zhangjx");
         bean.time = 2000;
         final TestXBean beanx = new TestXBean();
-        Reproduce<TestXBean, TestBean> action1 = Reproduce.create(TestXBean.class, TestBean.class);
-        Reproduce<TestXBean, TestBean> action2 = new Reproduce<TestXBean, TestBean>() {
+        Copier<TestBean, TestXBean> action1 = Copier.create(TestBean.class, TestXBean.class);
+        Copier<TestBean, TestXBean> action2 = new Copier<TestBean, TestXBean>() {
 
             @Override
-            public TestXBean apply(TestXBean dest, TestBean src) {
+            public TestXBean apply(TestBean src, TestXBean dest) {
                 dest.time = src.time;
                 dest.setId(src.getId());
                 dest.setName(src.getName());
@@ -67,13 +67,13 @@ public class UntilTestMain {
         final int count = 1_000_000;
         long s = System.nanoTime();
         for (int i = 0; i < count; i++) {
-            action2.apply(beanx, bean);
+            action2.apply(bean, beanx);
         }
         long e = System.nanoTime() - s;
         System.out.println("静态Reproduce耗时: " + e);
         s = System.nanoTime();
         for (int i = 0; i < count; i++) {
-            action1.apply(beanx, bean);
+            action1.apply(bean, beanx);
         }
         e = System.nanoTime() - s;
         System.out.println("动态Reproduce耗时: " + e);

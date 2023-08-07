@@ -9,10 +9,10 @@ import org.redkale.util.*;
 /**
  * @author zhangjx
  */
-public class ReproduceMapBean implements Reproduce<TestBean, HashMap> {
+public class CopierMapBean implements Copier<HashMap, TestBean> {
 
     @Override
-    public TestBean apply(TestBean dest, HashMap src) {
+    public TestBean apply(HashMap src, TestBean dest) {
         src.forEach((k, v) -> {
             if ("id".equals(k) && v != null) {
                 dest.setId(Utility.convertValue(int.class, v));

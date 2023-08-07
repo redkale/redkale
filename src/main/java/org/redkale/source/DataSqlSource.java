@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.function.*;
 import static org.redkale.source.DataResultSet.formatColumnValue;
-import org.redkale.util.Reproduce;
+import org.redkale.util.Copier;
 
 /**
  *
@@ -139,30 +139,30 @@ public interface DataSqlSource extends DataSource {
 
     //----------------------------- JavaBean -----------------------------
     default int nativeUpdate(String sql, Serializable bean) {
-        return nativeUpdate(sql, (Map<String, Object>) Reproduce.copy(HashMap.class, bean));
+        return nativeUpdate(sql, (Map<String, Object>) Copier.copyToMap(bean, false));
     }
 
     default <V> V nativeQuery(String sql, Function<DataResultSet, V> handler, Serializable bean) {
-        return nativeQuery(sql, null, handler, (Map<String, Object>) Reproduce.copy(HashMap.class, bean));
+        return nativeQuery(sql, null, handler, (Map<String, Object>) Copier.copyToMap(bean, false));
     }
 
     default <V> V nativeQueryOne(Class<V> type, String sql, Serializable bean) {
-        return nativeQueryOne(type, sql, (Map<String, Object>) Reproduce.copy(HashMap.class, bean));
+        return nativeQueryOne(type, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
     }
 
     default <V> List<V> nativeQueryList(Class<V> type, String sql, Serializable bean) {
-        return nativeQueryList(type, sql, (Map<String, Object>) Reproduce.copy(HashMap.class, bean));
+        return nativeQueryList(type, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
     }
 
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Serializable bean) {
-        return nativeQueryMap(keyType, valType, sql, (Map<String, Object>) Reproduce.copy(HashMap.class, bean));
+        return nativeQueryMap(keyType, valType, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
     }
 
     default Map<String, String> nativeQueryStrStrMap(String sql, Serializable bean) {
-        return nativeQueryMap(String.class, String.class, sql, (Map<String, Object>) Reproduce.copy(HashMap.class, bean));
+        return nativeQueryMap(String.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
     }
 
     default Map<Integer, String> nativeQueryIntStrMap(String sql, Serializable bean) {
-        return nativeQueryMap(Integer.class, String.class, sql, (Map<String, Object>) Reproduce.copy(HashMap.class, bean));
+        return nativeQueryMap(Integer.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
     }
 }

@@ -1257,7 +1257,7 @@ public final class Application {
             if (!sourceConf.getValue(AbstractDataSource.DATA_SOURCE_RESOURCE, "").isEmpty()) {
                 DataSource source = loadDataSource(sourceConf.getValue(AbstractDataSource.DATA_SOURCE_RESOURCE), autoMemory);
                 if (source != null) {
-                    if (source instanceof DataMemorySource && DataMemorySource.isSearchType(sourceConf)) {
+                    if (source instanceof DataMemorySource && source instanceof SearchSource) {
                         resourceFactory.register(sourceName, SearchSource.class, source);
                     } else {
                         resourceFactory.register(sourceName, DataSource.class, source);
@@ -1271,7 +1271,7 @@ public final class Application {
             try {
                 DataSource source = AbstractDataSource.createDataSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
                 dataSources.add(source);
-                if (source instanceof DataMemorySource && DataMemorySource.isSearchType(sourceConf)) {
+                if (source instanceof DataMemorySource && source instanceof SearchSource) {
                     resourceFactory.register(sourceName, SearchSource.class, source);
                 } else {
                     resourceFactory.register(sourceName, DataSource.class, source);

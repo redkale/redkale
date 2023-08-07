@@ -48,8 +48,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected String name;
-
     protected boolean cacheForbidden;
 
     protected String dbtype;
@@ -800,11 +798,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     @Override
     public String getType() {
         return "sql";
-    }
-
-    @Override
-    public final String resourceName() {
-        return name;
     }
 
     @Override

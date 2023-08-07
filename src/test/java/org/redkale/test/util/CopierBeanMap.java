@@ -4,16 +4,16 @@
 package org.redkale.test.util;
 
 import java.util.Map;
-import org.redkale.util.Reproduce;
+import org.redkale.util.Copier;
 
 /**
  *
  * @author zhangjx
  */
-public class ReproduceBeanMap implements Reproduce<Map<String, Object>, TestInterface> {
+public class CopierBeanMap implements Copier<TestInterface, Map<String, Object>> {
 
     @Override
-    public Map apply(Map<String, Object> dest, TestInterface src) {
+    public Map apply(TestInterface src, Map<String, Object> dest) {
         Object v;
         dest.put("id", src.getId());
 
@@ -24,7 +24,7 @@ public class ReproduceBeanMap implements Reproduce<Map<String, Object>, TestInte
         return dest;
     }
 
-    public Map run(Map<String, Object> dest, TestBean src) {
+    public Map run(TestBean src, Map<String, Object> dest) {
         Object v;
 
         v = src.getName();

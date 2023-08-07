@@ -966,7 +966,12 @@ public final class ResourceFactory {
                             }
                         }
                         if (rs == null && re == null && autoRegNull && rcname.indexOf(Resource.PARENT_NAME) < 0) {
-                            register(rcname, gencType, null); //自动注入null的值
+                            if (rcname.startsWith("${")) {
+                                String sub = rcname.substring(rcname.lastIndexOf("${") + 2, rcname.lastIndexOf('}'));
+                                register(sub, gencType, null); //自动注入null的值
+                            } else {
+                                register(rcname, gencType, null); //自动注入null的值
+                            }
                             re = findEntry(rcname, gencType);
                         }
                         if (re != null) {

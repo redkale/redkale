@@ -13,10 +13,10 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class ReproduceTest {
+public class CopierTest {
 
     public static void main(String[] args) throws Throwable {
-        ReproduceTest test = new ReproduceTest();
+        CopierTest test = new CopierTest();
         test.run1();
         test.run2();
         test.run3();
@@ -33,9 +33,9 @@ public class ReproduceTest {
         bean.time = 55555L;
         bean.setName("haha");
         bean.setMap(Utility.ofMap("aa", "bbb"));
-        Map map = new TreeMap(Reproduce.copy(Map.class, bean));
+        Map map = new TreeMap(Copier.copy(bean, Map.class));
         System.out.println(JsonConvert.root().convertTo(map));
-        TreeMap rs = Reproduce.copy(TreeMap.class, bean);
+        TreeMap rs = Copier.copy(bean, TreeMap.class);
         Assertions.assertEquals(bean.toString(), JsonConvert.root().convertTo(rs));
     }
 
@@ -47,7 +47,7 @@ public class ReproduceTest {
         bean.setName("haha");
         bean.setMap(Utility.ofMap("aa", "bbb"));
         TreeMap rs = new TreeMap();
-        Reproduce.load(Map.class, TestInterface.class).apply(rs, bean);
+        Copier.load(TestInterface.class, Map.class).apply(bean, rs);
         System.out.println(JsonConvert.root().convertTo(rs));
     }
 
@@ -59,8 +59,8 @@ public class ReproduceTest {
         map.put("id", "222");
         map.put("map", Utility.ofMap("aa", "bbb"));
         TestBean bean = new TestBean();
-        Reproduce.load(TestInterface.class, Map.class).apply(bean, map);
-        Assertions.assertEquals("{\"id\":222,\"map\":{\"aa\":\"bbb\"},\"time\":0}", JsonConvert.root().convertTo(bean));
+        TestInterface ti = Copier.load(Map.class, TestInterface.class).apply(map, new TestBean());;
+        Assertions.assertEquals("{\"id\":222,\"map\":{\"aa\":\"bbb\"},\"time\":0}", JsonConvert.root().convertTo(ti));
     }
 
     @Test
@@ -71,7 +71,7 @@ public class ReproduceTest {
         map.put("time", "55555");
         map.put("id", "222");
         map.put("map", Utility.ofMap("aa", "bbb"));
-        Reproduce.load(TestBean.class, Map.class).apply(bean, map);
+        Copier.load(Map.class, TestBean.class).apply(map, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
         map.put("time", 55555L);
         map.put("id", 222);
@@ -86,7 +86,7 @@ public class ReproduceTest {
         map.put("id", "222");
         map.put("map", Utility.ofMap("aa", "bbb"));
         Map rs = new TreeMap();
-        Reproduce.load(Map.class, Map.class).apply(rs, map);
+        Copier.load(Map.class, Map.class).apply(map, rs);
         System.out.println("Map: " + JsonConvert.root().convertTo(rs));
         Assertions.assertEquals(JsonConvert.root().convertTo(map), JsonConvert.root().convertTo(rs));
     }
@@ -98,7 +98,7 @@ public class ReproduceTest {
         bean.time = 55555L;
         bean.setName(null);
         bean.setMap(Utility.ofMap("aa", "bbb"));
-        ConcurrentHashMap rs = Reproduce.copy(ConcurrentHashMap.class, bean);
+        ConcurrentHashMap rs = Copier.copy(bean, ConcurrentHashMap.class);
         System.out.println(JsonConvert.root().convertTo(rs));
         System.out.println("------------------------------------------");
     }
@@ -111,7 +111,7 @@ public class ReproduceTest {
         map.put("time", "55555");
         map.put("id", null);
         map.put("map", Utility.ofMap("aa", "bbb"));
-        Reproduce.load(TestBean.class, Map.class).apply(bean, map);
+        Copier.load(Map.class, TestBean.class).apply(map, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
     }
 }

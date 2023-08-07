@@ -62,10 +62,10 @@ public final class EntityCache<T> {
     private final Attribute<T, Serializable> primary;
 
     //新增时的复制器， 排除了标记为&#064;Transient的字段
-    private final Reproduce<T, T> newReproduce;
+    private final Copier<T, T> newCopier;
 
     //修改时的复制器， 排除了标记为&#064;Transient或&#064;Column(updatable=false)的字段
-    private final Reproduce<T, T> chgReproduce;
+    private final Copier<T, T> chgCopier;
 
     //是否已经全量加载过
     private volatile boolean fullloaded;
@@ -110,7 +110,7 @@ public final class EntityCache<T> {
             }
         }
         this.needCopy = !direct;
-        this.newReproduce = Reproduce.create(type, type, (m) -> {
+        this.newCopier = Copier.create(type, type, (m) -> {
             try {
                 java.lang.reflect.Field field = type.getDeclaredField(m);
                 return field.getAnnotation(Transient.class) == null && field.getAnnotation(javax.persistence.Transient.class) == null;
@@ -118,7 +118,7 @@ public final class EntityCache<T> {
                 return true;
             }
         });
-        this.chgReproduce = Reproduce.create(type, type, (m) -> {
+        this.chgCopier = Copier.create(type, type, (m) -> {
             try {
                 java.lang.reflect.Field field = type.getDeclaredField(m);
                 if (field.getAnnotation(Transient.class) != null) {
@@ -259,7 +259,7 @@ public final class EntityCache<T> {
             return null;
         }
         T rs = map.get(pk);
-        return rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+        return rs == null ? null : (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
     }
 
     public T[] finds(Serializable... pks) {
@@ -273,7 +273,7 @@ public final class EntityCache<T> {
                 T[] result = arrayer.apply(ids.length);
                 for (int i = 0; i < result.length; i++) {
                     T rs = map.get(ids[i]);
-                    result[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+                    result[i] = rs == null ? null : (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
                 }
                 return result;
             } else if (t == long[].class) {
@@ -281,7 +281,7 @@ public final class EntityCache<T> {
                 T[] result = arrayer.apply(ids.length);
                 for (int i = 0; i < result.length; i++) {
                     T rs = map.get(ids[i]);
-                    result[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+                    result[i] = rs == null ? null : (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
                 }
                 return result;
             }
@@ -292,7 +292,7 @@ public final class EntityCache<T> {
             if (needCopy) {
                 for (int i = 0; i < result.length; i++) {
                     T rs = array0[(Integer) pks[i]];
-                    result[i] = rs == null ? null : newReproduce.apply(this.creator.create(), rs);
+                    result[i] = rs == null ? null : newCopier.apply(this.creator.create(), rs);
                 }
             } else {
                 for (int i = 0; i < result.length; i++) {
@@ -305,7 +305,7 @@ public final class EntityCache<T> {
         T[] result = arrayer.apply(pks.length);
         for (int i = 0; i < result.length; i++) {
             T rs = map.get(pks[i]);
-            result[i] = rs == null ? null : (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+            result[i] = rs == null ? null : (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
         }
         return result;
     }
@@ -319,7 +319,7 @@ public final class EntityCache<T> {
             return null;
         }
         if (selects == null) {
-            return (needCopy ? newReproduce.apply(this.creator.create(), rs) : rs);
+            return (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
         }
         T t = this.creator.create();
         for (Attribute attr : this.info.attributes) {
@@ -358,7 +358,7 @@ public final class EntityCache<T> {
             }
             if (selects == null) {
                 if (needCopy) {
-                    rs = newReproduce.apply(ctr.create(), rs);
+                    rs = newCopier.apply(ctr.create(), rs);
                 }
             } else {
                 T t = ctr.create();
@@ -385,7 +385,7 @@ public final class EntityCache<T> {
             return null;
         }
         if (selects == null) {
-            return (needCopy ? newReproduce.apply(this.creator.create(), opt.get()) : opt.get());
+            return (needCopy ? newCopier.apply(this.creator.create(), opt.get()) : opt.get());
         }
         T rs = opt.get();
         T t = this.creator.create();
@@ -765,7 +765,7 @@ public final class EntityCache<T> {
         }
         final List<T> rs = new ArrayList<>();
         if (selects == null) {
-            Consumer<? super T> action = x -> rs.add(needCopy ? newReproduce.apply(creator.create(), x) : x);
+            Consumer<? super T> action = x -> rs.add(needCopy ? newCopier.apply(creator.create(), x) : x);
             if (comparator != null) {
                 stream.forEachOrdered(action);
             } else {
@@ -801,7 +801,7 @@ public final class EntityCache<T> {
         if (entity == null) {
             return 0;
         }
-        final T rs = newReproduce.apply(this.creator.create(), entity);  //确保同一主键值的map与list中的对象必须共用。
+        final T rs = newCopier.apply(this.creator.create(), entity);  //确保同一主键值的map与list中的对象必须共用。
         T old = this.map.putIfAbsent(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
@@ -874,7 +874,7 @@ public final class EntityCache<T> {
         }
         tableLock.lock(); //表锁, 可优化成行锁
         try {
-            this.chgReproduce.apply(rs, entity);
+            this.chgCopier.apply(rs, entity);
         } finally {
             tableLock.unlock();
         }
