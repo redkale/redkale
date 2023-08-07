@@ -946,6 +946,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     @Override
     protected void error(Throwable t) {
+        refuseAlive();
         finish500();
     }
 

@@ -341,6 +341,7 @@ public class HttpRequest extends Request<HttpContext> {
             } else if (context.lazyHeaders && getmethod) { //非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs != 0) {
+                    buffer.clear();
                     return rs;
                 }
                 this.headerParsed = false;
@@ -349,6 +350,7 @@ public class HttpRequest extends Request<HttpContext> {
                 int rs = readHeaderLines(buffer, bytes);
                 if (rs != 0) {
                     this.headerHalfLen = bytes.length();
+                    buffer.clear();
                     return rs;
                 }
                 this.headerParsed = true;
@@ -356,13 +358,13 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerHalfLen = this.headerLength;
             }
             bytes.clear();
+            if (this.contentType != null && this.contentType.contains("boundary=")) {
+                this.boundary = true;
+            }
+            if (this.boundary) {
+                this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
+            }
             this.readState = READ_STATE_BODY;
-        }
-        if (this.contentType != null && this.contentType.contains("boundary=")) {
-            this.boundary = true;
-        }
-        if (this.boundary) {
-            this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
         }
         if (this.readState == READ_STATE_BODY) {
             if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
@@ -376,6 +378,8 @@ public class HttpRequest extends Request<HttpContext> {
                     if (bytes.isEmpty()) {
                         this.bodyParsed = true; //no body data
                     }
+                } else {
+                    buffer.clear();
                 }
                 return lr > 0 ? lr : 0;
             }
@@ -647,7 +651,7 @@ public class HttpRequest extends Request<HttpContext> {
                 }
                 break;
             }
-            bytes.putWithoutCheck(b);
+            bytes.put(b);
         }
         size = bytes.length();
         byte[] content = bytes.content();
