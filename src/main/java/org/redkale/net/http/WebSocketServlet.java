@@ -102,13 +102,13 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Resource(name = "jsonconvert", required = false)
     protected Convert jsonConvert;
 
-    @Resource(name = "$_textconvert", required = false)
+    @Resource(name = Resource.PARENT_NAME + "_textconvert", required = false)
     protected Convert textConvert;
 
-    @Resource(name = "$_binaryconvert", required = false)
+    @Resource(name = Resource.PARENT_NAME + "_binaryconvert", required = false)
     protected Convert binaryConvert;
 
-    @Resource(name = "$_sendconvert", required = false)
+    @Resource(name = Resource.PARENT_NAME + "_sendconvert", required = false)
     protected Convert sendConvert;
 
     @Resource(name = Resource.PARENT_NAME)

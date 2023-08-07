@@ -43,7 +43,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Resource
     private JsonConvert defaultConvert;
 
-    @Resource(name = "$_convert", required = false)
+    @Resource(name = Resource.PARENT_NAME + "_convert", required = false)
     private JsonConvert convert;
 
     private String name;

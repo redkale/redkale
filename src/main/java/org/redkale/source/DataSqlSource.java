@@ -23,12 +23,17 @@ public interface DataSqlSource extends DataSource {
 
     public int[] nativeUpdates(String... sqls);
 
-    //----------------------------- 无参数 -----------------------------
     public int nativeUpdate(String sql);
+
+    public int nativeUpdate(String sql, Map<String, Object> params);
 
     //BiConsumer 参数1: connection, 参数2: statement
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler);
 
+    //BiConsumer 参数1: connection, 参数2: statement
+    public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params);
+
+    //----------------------------- 无参数 -----------------------------
     default <V> V nativeQuery(String sql, Function<DataResultSet, V> handler) {
         return nativeQuery(sql, null, handler);
     }
@@ -81,11 +86,6 @@ public interface DataSqlSource extends DataSource {
     }
 
     //----------------------------- Map<String, Object> -----------------------------
-    public int nativeUpdate(String sql, Map<String, Object> params);
-
-    //BiConsumer 参数1: connection, 参数2: statement
-    public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params);
-
     default <V> V nativeQuery(String sql, Function<DataResultSet, V> handler, Map<String, Object> params) {
         return nativeQuery(sql, null, handler, params);
     }
