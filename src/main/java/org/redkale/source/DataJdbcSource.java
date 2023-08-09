@@ -2537,7 +2537,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     @Override
     public int nativeUpdate(String sql, Map<String, Object> params) {
-        NativeSqlInfo sinfo = super.nativeParse(sql, params);
+        NativeSqlInfo sinfo = super.nativeParse("?", sql, params);
         final long s = System.currentTimeMillis();
         SourceConnection conn = writePool.pollConnection();
         try {
@@ -2612,7 +2612,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     @Override
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params) {
-        NativeSqlInfo sinfo = super.nativeParse(sql, params);
+        NativeSqlInfo sinfo = super.nativeParse("?", sql, params);
         final long s = System.currentTimeMillis();
         final SourceConnection conn = readPool.pollConnection();
         try {

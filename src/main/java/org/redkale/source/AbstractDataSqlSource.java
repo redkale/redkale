@@ -642,11 +642,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return getSQLAttrValue(info, attr, val);
     }
 
-    protected DataNativeSqlParser.NativeSqlInfo nativeParse(String nativeSql, Map<String, Object> params) {
+    protected DataNativeSqlParser.NativeSqlInfo nativeParse(String prepareSign, String nativeSql, Map<String, Object> params) {
         if (nativeSqlParser == null) {
             throw new SourceException("not found DataNativeSqlParser instance");
         }
-        return nativeSqlParser.parse(nativeSql, params == null ? Collections.emptyMap() : params);
+        return nativeSqlParser.parse(prepareSign, nativeSql, params == null ? Collections.emptyMap() : params);
     }
 
     @Override

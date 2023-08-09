@@ -19,7 +19,7 @@ import org.redkale.convert.json.JsonConvert;
  */
 public interface DataNativeSqlParser {
 
-    NativeSqlInfo parse(String nativeSql, Map<String, Object> params);
+    NativeSqlInfo parse(String prepareSign, String nativeSql, Map<String, Object> params);
 
     public static class NativeSqlInfo {
 
