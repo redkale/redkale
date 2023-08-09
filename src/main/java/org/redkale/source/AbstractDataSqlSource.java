@@ -65,6 +65,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     @Resource(name = RESNAME_APP_EXECUTOR, required = false)
     protected ExecutorService workExecutor;
 
+    @Resource(required = false)
+    protected DataNativeSqlParser nativeSqlParser;
+
     protected BiFunction<EntityInfo, Object, CharSequence> sqlFormatter;
 
     protected BiConsumer errorCompleteConsumer = (r, t) -> {
@@ -637,6 +640,13 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             return val;
         }
         return getSQLAttrValue(info, attr, val);
+    }
+
+    protected DataNativeSqlParser.NativeSqlInfo nativeParse(String nativeSql, Map<String, Object> params) {
+        if (nativeSqlParser == null) {
+            throw new SourceException("not found DataNativeSqlParser instance");
+        }
+        return nativeSqlParser.parse(nativeSql, params == null ? Collections.emptyMap() : params);
     }
 
     @Override
@@ -3276,4 +3286,5 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             entitys.add(entity);
         }
     }
+
 }

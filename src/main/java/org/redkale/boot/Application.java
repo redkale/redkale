@@ -157,6 +157,9 @@ public final class Application {
 
     private final ReentrantLock dataSourceLock = new ReentrantLock();
 
+    //原生sql解析器
+    private DataNativeSqlParser nativeSqlParser;
+
     //NodeServer 资源, 顺序必须是sncps, others, watchs
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
@@ -580,6 +583,23 @@ public final class Application {
         this.excludelibs = excludelib0;
         this.clusterAgent = cluster;
         this.messageAgents = mqs;
+        { //加载原生sql解析器
+            Iterator<DataNativeSqlParserProvider> it = ServiceLoader.load(DataNativeSqlParserProvider.class, classLoader).iterator();
+            RedkaleClassLoader.putServiceLoader(DataNativeSqlParserProvider.class);
+            List<DataNativeSqlParserProvider> providers = new ArrayList<>();
+            while (it.hasNext()) {
+                DataNativeSqlParserProvider provider = it.next();
+                if (provider != null && provider.acceptsConf(null)) {
+                    RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                    providers.add(provider);
+                }
+            }
+            for (DataNativeSqlParserProvider provider : InstanceProvider.sort(providers)) {
+                this.nativeSqlParser = provider.createInstance();
+                this.resourceFactory.register(DataNativeSqlParser.class, this.nativeSqlParser);
+                break;
+            }
+        }
         if (compileMode || this.classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
             this.serverClassLoader = this.classLoader;
         } else {

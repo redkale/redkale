@@ -21,16 +21,57 @@ import org.redkale.util.Copier;
  */
 public interface DataSqlSource extends DataSource {
 
+    /**
+     * 执行多条原生无参数的sql
+     *
+     * @param sql 无参数的sql语句
+     *
+     * @return 执行条数
+     */
     public int[] nativeUpdates(String... sqls);
 
+    /**
+     * 执行原生无参数的sql
+     *
+     * @param sql 无参数的sql语句
+     *
+     * @return 执行条数
+     */
     public int nativeUpdate(String sql);
 
+    /**
+     * 执行原生带参数的sql
+     *
+     * @param sql    带参数的sql语句
+     * @param params 参数值集合
+     *
+     * @return 执行条数
+     */
     public int nativeUpdate(String sql, Map<String, Object> params);
 
-    //BiConsumer 参数1: connection, 参数2: statement
+    /**
+     * 通过原生的sql查询结果
+     *
+     * @param <V>      泛型
+     * @param sql      无参数的sql语句
+     * @param consumer BiConsumer 参数1: connection, 参数2: statement
+     * @param handler  DataResultSet的回调函数
+     *
+     * @return 结果对象
+     */
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler);
 
-    //BiConsumer 参数1: connection, 参数2: statement
+    /**
+     * 通过原生带参数的sql查询结果
+     *
+     * @param <V>      泛型
+     * @param sql      带参数的sql语句
+     * @param consumer BiConsumer 参数1: connection, 参数2: statement
+     * @param handler  DataResultSet的回调函数
+     * @param params   参数值集合
+     *
+     * @return 结果对象
+     */
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params);
 
     //----------------------------- 无参数 -----------------------------

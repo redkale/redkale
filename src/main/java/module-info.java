@@ -39,6 +39,7 @@ module org.redkale {
     uses org.redkale.mq.MessageAgentProvider;
     uses org.redkale.source.CacheSourceProvider;
     uses org.redkale.source.DataSourceProvider;
+    uses org.redkale.source.DataNativeSqlParserProvider;
     uses org.redkale.util.ResourceAnnotationProvider;
     
 }

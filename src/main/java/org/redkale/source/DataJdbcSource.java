@@ -18,6 +18,7 @@ import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.service.Local;
+import org.redkale.source.DataNativeSqlParser.NativeSqlInfo;
 import org.redkale.util.*;
 
 /**
@@ -2485,19 +2486,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
      * 通常用于复杂的更新操作   <br>
      *
-     * @param sql SQL语句
-     *
-     * @return 结果数组
-     */
-    @Override
-    public int nativeUpdate(String sql) {
-        return nativeUpdates(new String[]{sql})[0];
-    }
-
-    /**
-     * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
-     * 通常用于复杂的更新操作   <br>
-     *
      * @param sqls SQL语句
      *
      * @return 结果数组
@@ -2515,11 +2503,62 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             final int[] rs = new int[sqls.length];
             int i = -1;
             for (String sql : sqls) {
-                rs[++i] = stmt.execute(sql) ? 1 : 0;
+                rs[++i] = stmt.executeUpdate(sql);
             }
             conn.offerUpdateStatement(stmt);
             conn.commit();
             slowLog(s, sqls);
+            return rs;
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException se) {
+            }
+            throw new SourceException(e);
+        } finally {
+            if (conn != null) {
+                writePool.offerConnection(conn);
+            }
+        }
+    }
+
+    /**
+     * 直接本地执行SQL语句进行增删改操作，远程模式不可用   <br>
+     * 通常用于复杂的更新操作   <br>
+     *
+     * @param sql SQL语句
+     *
+     * @return 结果数组
+     */
+    @Override
+    public int nativeUpdate(String sql) {
+        return nativeUpdates(new String[]{sql})[0];
+    }
+
+    @Override
+    public int nativeUpdate(String sql, Map<String, Object> params) {
+        NativeSqlInfo sinfo = super.nativeParse(sql, params);
+        final long s = System.currentTimeMillis();
+        SourceConnection conn = writePool.pollConnection();
+        try {
+            conn.setAutoCommit(false);
+            int rs;
+            if (sinfo.isEmptyNamed()) {
+                final Statement stmt = conn.createUpdateStatement();
+                rs = stmt.executeUpdate(sinfo.nativeSql);
+                conn.offerUpdateStatement(stmt);
+            } else {
+                final PreparedStatement prestmt = conn.prepareQueryStatement(sinfo.nativeSql);
+                Map<String, Object> paramValues = sinfo.getParamValues();
+                int index = 0;
+                for (String n : sinfo.getParamNames()) {
+                    prestmt.setObject(++index, paramValues.get(n));
+                }
+                rs = prestmt.executeUpdate();
+                conn.offerUpdateStatement(prestmt);
+            }
+            conn.commit();
+            slowLog(s, sinfo.nativeSql);
             return rs;
         } catch (SQLException e) {
             try {
@@ -2572,13 +2611,48 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     @Override
-    public int nativeUpdate(String sql, Map<String, Object> params) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        NativeSqlInfo sinfo = super.nativeParse(sql, params);
+        final long s = System.currentTimeMillis();
+        final SourceConnection conn = readPool.pollConnection();
+        try {
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.finest("executeQuery sql=" + sinfo.nativeSql);
+            }
+            V rs;
+            if (sinfo.isEmptyNamed()) {
+                final Statement stmt = conn.createQueryStatement();
+                if (consumer != null) {
+                    consumer.accept(conn, stmt);
+                }
+                ResultSet set = stmt.executeQuery(sql);
+                rs = handler.apply(createDataResultSet(null, set));
+                set.close();
+                conn.offerQueryStatement(stmt);
+            } else {
+                final PreparedStatement prestmt = conn.prepareQueryStatement(sinfo.nativeSql);
+                Map<String, Object> paramValues = sinfo.getParamValues();
+                int index = 0;
+                for (String n : sinfo.getParamNames()) {
+                    prestmt.setObject(++index, paramValues.get(n));
+                }
+                if (consumer != null) {
+                    consumer.accept(conn, prestmt);
+                }
+                ResultSet set = prestmt.executeQuery(sql);
+                rs = handler.apply(createDataResultSet(null, set));
+                set.close();
+                conn.offerQueryStatement(prestmt);
+            }
+            slowLog(s, sql);
+            return rs;
+        } catch (Exception ex) {
+            throw new SourceException(ex);
+        } finally {
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
+        }
     }
 
     @Deprecated
