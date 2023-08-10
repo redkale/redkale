@@ -20,6 +20,8 @@ public class TestBean extends TestABean implements TestInterface {
 
     private Map<String, String> map;
 
+    public String remark;
+
     public String getName() {
         return name;
     }

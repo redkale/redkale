@@ -24,6 +24,11 @@ public class CopierTest {
         test.run5();
         test.run6();
         test.run7();
+        test.run8();
+        test.run9();
+        test.run10();
+        test.run11();
+        test.run12();
     }
 
     @Test
@@ -36,6 +41,7 @@ public class CopierTest {
         Map map = new TreeMap(Copier.copy(bean, Map.class));
         System.out.println(JsonConvert.root().convertTo(map));
         TreeMap rs = Copier.copy(bean, TreeMap.class);
+        rs.remove("remark");
         Assertions.assertEquals(bean.toString(), JsonConvert.root().convertTo(rs));
     }
 
@@ -113,5 +119,91 @@ public class CopierTest {
         map.put("map", Utility.ofMap("aa", "bbb"));
         Copier.load(Map.class, TestBean.class).apply(map, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
+        System.out.println("------------------------------------------");
+    }
+
+    @Test
+    public void run8() throws Exception {
+        TestBean bean = new TestBean();
+        Map map = new TreeMap();
+        map.put("name", "");
+        map.put("time", "55555");
+        map.put("id", null);
+        map.put("map", Utility.ofMap("aa", "bbb"));
+        Copier.load(Map.class, TestBean.class, Copier.OPTION_SKIP_RMPTY_STRING).apply(map, bean);
+        System.out.println(JsonConvert.root().convertTo(bean));
+        Assertions.assertTrue(bean.getName() == null);
+    }
+
+    @Test
+    public void run9() throws Exception {
+        TestBean bean = new TestBean();
+        bean.remark = "hehehoho";
+        Map map = new TreeMap();
+        map.put("name", "");
+        map.put("time", "55555");
+        map.put("id", null);
+        map.put("remark", null);
+        map.put("map", Utility.ofMap("aa", "bbb"));
+        Copier.load(Map.class, TestBean.class).apply(map, bean);
+        System.out.println(JsonConvert.root().convertTo(bean));
+        Assertions.assertTrue(bean.remark == null);
+
+        bean.remark = "hehehoho";
+        Copier.load(Map.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE).apply(map, bean);
+        System.out.println(JsonConvert.root().convertTo(bean));
+        Assertions.assertTrue(bean.remark != null);
+    }
+
+    @Test
+    public void run10() throws Exception {
+        TestBean bean = new TestBean();
+        bean.remark = "hehehoho";
+        TestXBean srcBean = new TestXBean();
+        srcBean.setName("");
+        srcBean.time = 55555;
+        srcBean.remark = null;
+        srcBean.setMap(Utility.ofMap("aa", "bbb"));
+        Copier.load(TestXBean.class, TestBean.class).apply(srcBean, bean);
+        System.out.println(JsonConvert.root().convertTo(bean));
+        Assertions.assertTrue(bean.remark == null);
+
+        bean.remark = "hehehoho";
+        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE).apply(srcBean, bean);
+        System.out.println(JsonConvert.root().convertTo(bean));
+        Assertions.assertTrue(bean.remark != null);
+    }
+
+    @Test
+    public void run11() throws Exception {
+        TestBean bean = new TestBean();
+        TestXBean srcBean = new TestXBean();
+        srcBean.setName("");
+        srcBean.time = 55555;
+        srcBean.remark = null;
+        srcBean.setMap(Utility.ofMap("aa", "bbb"));
+        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_RMPTY_STRING).apply(srcBean, bean);
+        System.out.println(JsonConvert.root().convertTo(bean));
+        Assertions.assertTrue(bean.getName() == null);
+    }
+
+    @Test
+    public void run12() throws Exception {
+        TestBean bean = new TestBean();
+        bean.remark = "hehehoho";
+        TestXBean srcBean = new TestXBean();
+        srcBean.setName("");
+        srcBean.time = 55555;
+        srcBean.remark = null;
+        srcBean.setMap(Utility.ofMap("aa", "bbb"));
+        Copier.load(TestXBean.class, TestBean.class).apply(srcBean, bean);
+        System.out.println(JsonConvert.root().convertTo(bean));
+        Assertions.assertTrue(bean.remark == null);
+
+        bean.setName(null);
+        bean.remark = "hehehoho";
+        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_SKIP_RMPTY_STRING).apply(srcBean, bean);
+        System.out.println(JsonConvert.root().convertTo(bean));
+        Assertions.assertTrue(bean.getName() == null);
     }
 }

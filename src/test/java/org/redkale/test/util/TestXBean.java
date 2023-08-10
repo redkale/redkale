@@ -3,13 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.redkale.test.util;
 
 /**
  *
  * @author zhangjx
  */
-public class TestXBean extends TestBean{
-    
+public class TestXBean extends TestBean {
+
 }

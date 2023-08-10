@@ -180,30 +180,30 @@ public interface DataSqlSource extends DataSource {
 
     //----------------------------- JavaBean -----------------------------
     default int nativeUpdate(String sql, Serializable bean) {
-        return nativeUpdate(sql, (Map<String, Object>) Copier.copyToMap(bean, false));
+        return nativeUpdate(sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
     default <V> V nativeQuery(String sql, Function<DataResultSet, V> handler, Serializable bean) {
-        return nativeQuery(sql, null, handler, (Map<String, Object>) Copier.copyToMap(bean, false));
+        return nativeQuery(sql, null, handler, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
     default <V> V nativeQueryOne(Class<V> type, String sql, Serializable bean) {
-        return nativeQueryOne(type, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
+        return nativeQueryOne(type, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
     default <V> List<V> nativeQueryList(Class<V> type, String sql, Serializable bean) {
-        return nativeQueryList(type, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
+        return nativeQueryList(type, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Serializable bean) {
-        return nativeQueryMap(keyType, valType, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
+        return nativeQueryMap(keyType, valType, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
     default Map<String, String> nativeQueryStrStrMap(String sql, Serializable bean) {
-        return nativeQueryMap(String.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
+        return nativeQueryMap(String.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
     default Map<Integer, String> nativeQueryIntStrMap(String sql, Serializable bean) {
-        return nativeQueryMap(Integer.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, false));
+        return nativeQueryMap(Integer.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 }
