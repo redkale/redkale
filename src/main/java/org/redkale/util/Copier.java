@@ -171,7 +171,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      *
      * @return 复制器
      */
-    public static <S, D> Function<S, D> function(final Class<S> srcClass, final Class<D> destClass) {
+    public static <S, D> Function<S, D> func(final Class<S> srcClass, final Class<D> destClass) {
         Copier<S, D> copier = load(srcClass, destClass);
         Creator<D> creator = Creator.load(destClass);
         return src -> copier.apply(src, creator.create());
@@ -202,7 +202,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      *
      * @return 复制器
      */
-    public static <S, D> Function<S, D> function(final Class<S> srcClass, final Class<D> destClass, final int options) {
+    public static <S, D> Function<S, D> func(final Class<S> srcClass, final Class<D> destClass, final int options) {
         Copier<S, D> copier = load(srcClass, destClass, options);
         Creator<D> creator = Creator.load(destClass);
         return src -> copier.apply(src, creator.create());
