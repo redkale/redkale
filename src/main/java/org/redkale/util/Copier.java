@@ -172,9 +172,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @return 复制器
      */
     public static <S, D> Function<S, D> func(final Class<S> srcClass, final Class<D> destClass) {
-        Copier<S, D> copier = load(srcClass, destClass);
-        Creator<D> creator = Creator.load(destClass);
-        return src -> copier.apply(src, creator.create());
+        return func(srcClass, destClass, 0);
     }
 
     /**
@@ -203,9 +201,26 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @return 复制器
      */
     public static <S, D> Function<S, D> func(final Class<S> srcClass, final Class<D> destClass, final int options) {
-        Copier<S, D> copier = load(srcClass, destClass, options);
-        Creator<D> creator = Creator.load(destClass);
-        return src -> copier.apply(src, creator.create());
+        if (destClass == srcClass) {
+            return CopierInner.funcOneCaches
+                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(srcClass, v -> {
+                    Copier<S, D> copier = load(srcClass, destClass, options);
+                    Creator<D> creator = Creator.load(destClass);
+                    Function<S, D> func = src -> copier.apply(src, creator.create());
+                    return func;
+                });
+        } else {
+            return CopierInner.funcTwoCaches
+                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(destClass, v -> {
+                    Copier<S, D> copier = load(srcClass, destClass, options);
+                    Creator<D> creator = Creator.load(destClass);
+                    Function<S, D> func = src -> copier.apply(src, creator.create());
+                    return func;
+                });
+        }
     }
 
     /**
@@ -612,7 +627,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 mv.visitLabel(ifLabel);
                 mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
             }
-            
+
             for (java.lang.reflect.Field field : srcClass.getFields()) {
                 if (Modifier.isStatic(field.getModifiers())) {
                     continue;
@@ -994,6 +1009,10 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Copier>> copierOneCaches = new ConcurrentHashMap();
 
         static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Copier>>> copierTwoCaches = new ConcurrentHashMap();
+
+        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Function>> funcOneCaches = new ConcurrentHashMap();
+
+        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>> funcTwoCaches = new ConcurrentHashMap();
 
     }
 
