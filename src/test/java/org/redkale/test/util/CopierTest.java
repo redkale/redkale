@@ -35,6 +35,7 @@ public class CopierTest {
         test.run16();
         test.run17();
         test.run18();
+        test.run19();
     }
 
     @Test
@@ -277,7 +278,80 @@ public class CopierTest {
         Copier.load(Bean4.class, Bean5.class, Copier.OPTION_SKIP_NULL_VALUE).apply(bean1, bean2);
         System.out.println(JsonConvert.root().convertTo(bean2));
         Assertions.assertEquals(0, bean2.getSeqno());
+    }
+
+    @Test
+    public void run19() throws Exception {
+        Bean0 bean1 = new Bean0();
+        bean1.setCartype(111); 
+        bean1.setUsername("aaa");
+        Bean0 bean2 = new Bean0();
+        Copier.load(Bean0.class, Bean0.class, Copier.OPTION_SKIP_NULL_VALUE).apply(bean1, bean2);
+        System.out.println(JsonConvert.root().convertTo(bean2));
+        Assertions.assertEquals("aaa", bean2.getUsername());
         System.out.println("------------------------------------------");
+    }
+
+    public class Bean0 {
+
+        private long carid;
+
+        private int cartype;
+
+        private int userid;
+
+        private String username;
+
+        private String cartitle;
+
+        public Bean0() {
+        }
+
+        public long getCarid() {
+            return carid;
+        }
+
+        public void setCarid(long carid) {
+            this.carid = carid;
+        }
+
+        public int getUserid() {
+            return userid;
+        }
+
+        public void setUserid(int userid) {
+            this.userid = userid;
+        }
+
+        public String getCartitle() {
+            return cartitle;
+        }
+
+        public void setCartitle(String cartitle) {
+            this.cartitle = cartitle;
+        }
+
+        public int getCartype() {
+            return cartype;
+        }
+
+        public void setCartype(int cartype) {
+            this.cartype = cartype;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+
     }
 
     public class Bean1 {

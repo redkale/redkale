@@ -16,6 +16,7 @@ import static org.redkale.asm.Opcodes.ACC_PUBLIC;
 import static org.redkale.asm.Opcodes.ACC_STATIC;
 import static org.redkale.asm.Opcodes.ACC_SUPER;
 import static org.redkale.asm.Opcodes.ACC_SYNTHETIC;
+import static org.redkale.asm.Opcodes.ACONST_NULL;
 import static org.redkale.asm.Opcodes.ALOAD;
 import static org.redkale.asm.Opcodes.ARETURN;
 import static org.redkale.asm.Opcodes.ASTORE;
@@ -24,6 +25,7 @@ import static org.redkale.asm.Opcodes.GETFIELD;
 import static org.redkale.asm.Opcodes.GOTO;
 import static org.redkale.asm.Opcodes.IFEQ;
 import static org.redkale.asm.Opcodes.IFLE;
+import static org.redkale.asm.Opcodes.IFNONNULL;
 import static org.redkale.asm.Opcodes.IFNULL;
 import static org.redkale.asm.Opcodes.INSTANCEOF;
 import static org.redkale.asm.Opcodes.INVOKEINTERFACE;
@@ -371,6 +373,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             if (srcColumnPredicate != null) {
                 if (nameAlias != null) {
                     return (S src, D dest) -> {
+                        if (src == null) {
+                            return null;
+                        }
                         Map d = (Map) dest;
                         ((Map) src).forEach((k, v) -> {
                             if (srcColumnPredicate.test(null, k.toString()) && valPredicate.test(v)) {
@@ -381,6 +386,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     };
                 } else {
                     return (S src, D dest) -> {
+                        if (src == null) {
+                            return null;
+                        }
                         Map d = (Map) dest;
                         ((Map) src).forEach((k, v) -> {
                             if (srcColumnPredicate.test(null, k.toString()) && valPredicate.test(v)) {
@@ -392,6 +400,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 }
             } else if (nameAlias != null) {
                 return (S src, D dest) -> {
+                    if (src == null) {
+                        return null;
+                    }
                     Map d = (Map) dest;
                     ((Map) src).forEach((k, v) -> {
                         if (valPredicate.test(v)) {
@@ -404,6 +415,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             return new Copier<S, D>() {
                 @Override
                 public D apply(S src, D dest) {
+                    if (src == null) {
+                        return null;
+                    }
                     if (options == 0) {
                         ((Map) dest).putAll((Map) src);
                     } else {
@@ -458,6 +472,17 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             {
                 mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
                 //mv.setDebug(true);
+                {
+                    //if(src == null) return null;            
+                    mv.visitVarInsn(ALOAD, 1);
+                    Label ifLabel = new Label();
+                    mv.visitJumpInsn(IFNONNULL, ifLabel);
+                    mv.visitInsn(ACONST_NULL);
+                    mv.visitInsn(ARETURN);
+                    mv.visitLabel(ifLabel);
+                    mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+                }
+
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitInvokeDynamicInsn("accept",
@@ -577,7 +602,17 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         } else { //JavaBean -> Map/JavaBean
             mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
             //mv.setDebug(true);
-
+            {
+                //if(src == null) return null;            
+                mv.visitVarInsn(ALOAD, 1);
+                Label ifLabel = new Label();
+                mv.visitJumpInsn(IFNONNULL, ifLabel);
+                mv.visitInsn(ACONST_NULL);
+                mv.visitInsn(ARETURN);
+                mv.visitLabel(ifLabel);
+                mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            }
+            
             for (java.lang.reflect.Field field : srcClass.getFields()) {
                 if (Modifier.isStatic(field.getModifiers())) {
                     continue;
