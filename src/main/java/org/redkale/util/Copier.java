@@ -21,7 +21,6 @@ import static org.redkale.asm.Opcodes.ARETURN;
 import static org.redkale.asm.Opcodes.ASTORE;
 import static org.redkale.asm.Opcodes.CHECKCAST;
 import static org.redkale.asm.Opcodes.GETFIELD;
-import static org.redkale.asm.Opcodes.GETSTATIC;
 import static org.redkale.asm.Opcodes.GOTO;
 import static org.redkale.asm.Opcodes.IFEQ;
 import static org.redkale.asm.Opcodes.IFLE;
@@ -166,11 +165,45 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>       源类泛型
      * @param destClass 目标类名
      * @param srcClass  源类名
+     * @param options   可配项
+     *
+     * @return 复制器
+     */
+    public static <S, D> Function<S, D> function(final Class<S> srcClass, final Class<D> destClass) {
+        Copier<S, D> copier = load(srcClass, destClass);
+        Creator<D> creator = Creator.load(destClass);
+        return src -> copier.apply(src, creator.create());
+    }
+
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
      *
      * @return 复制器
      */
     public static <S, D> Copier<S, D> load(final Class<S> srcClass, final Class<D> destClass) {
         return load(srcClass, destClass, 0);
+    }
+
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
+     * @param options   可配项
+     *
+     * @return 复制器
+     */
+    public static <S, D> Function<S, D> function(final Class<S> srcClass, final Class<D> destClass, final int options) {
+        Copier<S, D> copier = load(srcClass, destClass, options);
+        Creator<D> creator = Creator.load(destClass);
+        return src -> copier.apply(src, creator.create());
     }
 
     /**
@@ -859,25 +892,6 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/CharSequence", "length", "()I", true);
                             mv.visitJumpInsn(IFLE, ifLabel);
                         }
-                        if (false) {
-                            mv.visitVarInsn(ALOAD, 1);
-                            mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/test/util/TestBean", "getName", "()Ljava/lang/String;", false);
-                            mv.visitVarInsn(ASTORE, 3);
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitJumpInsn(IFNULL, ifLabel);
-                            
-                            
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitMethodInsn(INVOKESTATIC, "org/redkale/util/Utility", "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
-                            mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-                            mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/test/util/TestXBean", "setId", "(I)V", false);
-                            mv.visitLabel(ifLabel);
-                            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                        }
-
                         if (needTypeCast) {
                             mv.visitVarInsn(ALOAD, 2);
                             Asms.visitFieldInsn(mv, destFieldType);

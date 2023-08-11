@@ -23,13 +23,13 @@ public interface DataNativeSqlParser {
 
     public static class NativeSqlInfo {
 
-        //根据参数值集合重新生成的可执行的sql
+        //根据参数值集合重新生成的带?参数可执行的sql
         protected String nativeSql;
 
-        //需要预编译的参数名
+        //需要预编译的参数名, 数量与sql中的?数量一致
         protected List<String> paramNames;
 
-        //参数值集合
+        //参数值集合, paramNames中的key必然会存在
         protected Map<String, Object> paramValues;
 
         /**
