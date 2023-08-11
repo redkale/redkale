@@ -7,6 +7,7 @@ package org.redkale.util;
 import java.io.*;
 import java.lang.invoke.*;
 import java.lang.reflect.*;
+import java.math.*;
 import java.net.*;
 import java.net.http.HttpClient;
 import java.nio.*;
@@ -2704,22 +2705,32 @@ public final class Utility {
         } else if (clazz == double.class || clazz == Double.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).doubleValue();
+            } else if (vclzz == String.class) {
+                return (T) (Number) Double.parseDouble(value.toString());
             }
         } else if (clazz == float.class || clazz == Float.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).floatValue();
+            } else if (vclzz == String.class) {
+                return (T) (Number) Float.parseFloat(value.toString());
             }
         } else if (clazz == long.class || clazz == Long.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).longValue();
+            } else if (vclzz == String.class) {
+                return (T) (Number) Long.parseLong(value.toString());
             }
         } else if (clazz == int.class || clazz == Integer.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).intValue();
+            } else if (vclzz == String.class) {
+                return (T) (Number) Integer.parseInt(value.toString());
             }
         } else if (clazz == short.class || clazz == Short.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).shortValue();
+            } else if (vclzz == String.class) {
+                return (T) (Number) Short.parseShort(value.toString());
             }
         } else if (clazz == char.class || clazz == Character.class) {
             if (value instanceof Number) {
@@ -2734,6 +2745,10 @@ public final class Utility {
             if (value instanceof Number) {
                 return (T) (Object) (((Number) value).intValue() > 0);
             }
+        } else if (clazz == BigInteger.class && vclzz == String.class) {
+            return (T) new BigInteger(value.toString());
+        } else if (clazz == BigDecimal.class && vclzz == String.class) {
+            return (T) new BigDecimal(value.toString());
         }
         JsonConvert convert = JsonConvert.root();
         if (CharSequence.class.isAssignableFrom(vclzz)) {

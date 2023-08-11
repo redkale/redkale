@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ *
  */
 package org.redkale.test.util;
 
@@ -12,7 +10,7 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @author zhangjx
  */
-public class TestBean extends TestABean implements TestInterface {
+public class TestX2Bean implements TestInterface {
 
     private String name;
 
@@ -20,10 +18,18 @@ public class TestBean extends TestABean implements TestInterface {
 
     private Map<String, String> map;
 
-    public String remark;
-    
-    private Long seqno;
+    public int remark;
 
+    private String seqno;
+
+    public String getSeqno() {
+        return seqno;
+    }
+
+    public void setSeqno(String seqno) {
+        this.seqno = seqno;
+    }
+    
     public String getName() {
         return name;
     }
@@ -48,13 +54,6 @@ public class TestBean extends TestABean implements TestInterface {
         this.map = map;
     }
 
-    public Long getSeqno() {
-        return seqno;
-    }
-
-    public void setSeqno(Long seqno) {
-        this.seqno = seqno;
-    }
 
     @Override
     public String toString() {

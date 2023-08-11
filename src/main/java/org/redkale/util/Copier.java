@@ -9,7 +9,32 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.*;
+import static org.redkale.asm.Opcodes.ACC_BRIDGE;
+import static org.redkale.asm.Opcodes.ACC_FINAL;
+import static org.redkale.asm.Opcodes.ACC_PRIVATE;
+import static org.redkale.asm.Opcodes.ACC_PUBLIC;
+import static org.redkale.asm.Opcodes.ACC_STATIC;
+import static org.redkale.asm.Opcodes.ACC_SUPER;
+import static org.redkale.asm.Opcodes.ACC_SYNTHETIC;
+import static org.redkale.asm.Opcodes.ALOAD;
+import static org.redkale.asm.Opcodes.ARETURN;
+import static org.redkale.asm.Opcodes.ASTORE;
+import static org.redkale.asm.Opcodes.CHECKCAST;
+import static org.redkale.asm.Opcodes.GETFIELD;
+import static org.redkale.asm.Opcodes.GETSTATIC;
+import static org.redkale.asm.Opcodes.GOTO;
+import static org.redkale.asm.Opcodes.IFEQ;
+import static org.redkale.asm.Opcodes.IFLE;
+import static org.redkale.asm.Opcodes.IFNULL;
+import static org.redkale.asm.Opcodes.INSTANCEOF;
+import static org.redkale.asm.Opcodes.INVOKEINTERFACE;
+import static org.redkale.asm.Opcodes.INVOKESPECIAL;
+import static org.redkale.asm.Opcodes.INVOKESTATIC;
+import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
+import static org.redkale.asm.Opcodes.POP;
+import static org.redkale.asm.Opcodes.PUTFIELD;
+import static org.redkale.asm.Opcodes.RETURN;
+import static org.redkale.asm.Opcodes.V11;
 import org.redkale.asm.Type;
 
 /**
@@ -21,18 +46,25 @@ import org.redkale.asm.Type;
  * @author zhangjx
  * @param <D> 目标对象的数据类型
  * @param <S> 源对象的数据类型
+ *
+ * @since 2.8.0
  */
 public interface Copier<S, D> extends BiFunction<S, D, D> {
 
     /**
-     * bean复制到map时，是否跳过值为null的字段
+     * 是否跳过值为null的字段
      */
     public static final int OPTION_SKIP_NULL_VALUE = 1 << 1; //2
 
     /**
-     * bean复制到map时，是否跳过值为空字符串的字段
+     * 是否跳过值为空字符串的字段
      */
     public static final int OPTION_SKIP_RMPTY_STRING = 1 << 2; //4
+
+    /**
+     * 同名字段类型强制转换
+     */
+    public static final int OPTION_ALLOW_TYPE_CAST = 1 << 3; //8
 
     /**
      * 将源对象字段复制到目标对象
@@ -288,22 +320,23 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param srcClass           源类名
      * @param options            可配项
      * @param srcColumnPredicate 需复制的字段名判断期
-     * @param names              源字段名与目标字段名的映射关系
+     * @param nameAlias          源字段名与目标字段名的映射关系
      *
      * @return 复制器
      */
     @SuppressWarnings("unchecked")
     public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass, final int options,
-        final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> names) {
+        final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> nameAlias) {
         final boolean skipNullValue = (options & OPTION_SKIP_NULL_VALUE) > 0 || ConcurrentHashMap.class.isAssignableFrom(destClass);
         final boolean skipEmptyString = (options & OPTION_SKIP_RMPTY_STRING) > 0;
+        final boolean allowTypeCast = (options & OPTION_ALLOW_TYPE_CAST) > 0;
         final Predicate<Object> valPredicate = v -> !(skipNullValue && v == null)
             && !(skipEmptyString && v instanceof CharSequence && ((CharSequence) v).length() == 0);
 
         if (Map.class.isAssignableFrom(destClass) && Map.class.isAssignableFrom(srcClass)) {
-            final Map names0 = names;
+            final Map names0 = nameAlias;
             if (srcColumnPredicate != null) {
-                if (names != null) {
+                if (nameAlias != null) {
                     return (S src, D dest) -> {
                         Map d = (Map) dest;
                         ((Map) src).forEach((k, v) -> {
@@ -324,7 +357,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         return dest;
                     };
                 }
-            } else if (names != null) {
+            } else if (nameAlias != null) {
                 return (S src, D dest) -> {
                     Map d = (Map) dest;
                     ((Map) src).forEach((k, v) -> {
@@ -388,7 +421,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
-        if (srcIsMap) { //destClass不是Map
+        if (srcIsMap) { //Map -> JavaBean
             {
                 mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
                 //mv.setDebug(true);
@@ -420,7 +453,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) {
                         continue;
                     }
-                    final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
+                    final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
                     elements.put(dfname, field);
                 }
 
@@ -444,7 +477,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     if (srcColumnPredicate != null && !srcColumnPredicate.test(setter, sfname)) {
                         continue;
                     }
-                    final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
+                    final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
                     elements.put(dfname, setter);
                 }
 
@@ -483,55 +516,11 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     }
 
                     mv.visitVarInsn(ALOAD, 0);
-                    if (fieldClass == boolean.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TYPE", "Ljava/lang/Class;");
-                    } else if (fieldClass == byte.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Byte", "TYPE", "Ljava/lang/Class;");
-                    } else if (fieldClass == char.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Character", "TYPE", "Ljava/lang/Class;");
-                    } else if (fieldClass == short.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Short", "TYPE", "Ljava/lang/Class;");
-                    } else if (fieldClass == int.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
-                    } else if (fieldClass == float.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Float", "TYPE", "Ljava/lang/Class;");
-                    } else if (fieldClass == long.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
-                    } else if (fieldClass == double.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Double", "TYPE", "Ljava/lang/Class;");
-                    } else {
-                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(fieldClass)));
-                    }
+                    Asms.visitFieldInsn(mv, fieldClass);
 
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
-                    if (fieldClass == boolean.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-                    } else if (fieldClass == byte.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Byte");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "byteValue", "()B", false);
-                    } else if (fieldClass == short.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
-                    } else if (fieldClass == char.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Character");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
-                    } else if (fieldClass == int.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-                    } else if (fieldClass == float.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-                    } else if (fieldClass == long.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
-                    } else if (fieldClass == double.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-                    } else {
-                        mv.visitTypeInsn(CHECKCAST, fieldClass.getName().replace('.', '/'));
-                    }
+                    Asms.visitCheckCast(mv, fieldClass);
 
                     if (en.getValue() instanceof Field) {
                         mv.visitFieldInsn(PUTFIELD, destClassName, en.getKey(), Type.getDescriptor(fieldClass));
@@ -552,7 +541,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 mv.visitMaxs(3, 3);
                 mv.visitEnd();
             }
-        } else { //srcClass是JavaBean
+        } else { //JavaBean -> Map/JavaBean
             mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
             //mv.setDebug(true);
 
@@ -571,33 +560,17 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     continue;
                 }
 
-                final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
-                final Class st = field.getType();
-                final boolean charstr = CharSequence.class.isAssignableFrom(st);
-                if (destIsMap) { //srcClass是JavaBean
-                    String td = Type.getDescriptor(st);
-                    if ((!skipNullValue && !(skipEmptyString && charstr)) || st.isPrimitive()) {
+                final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
+                final Class srcFieldType = field.getType();
+                final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
+                if (destIsMap) { //JavaBean -> Map
+                    String td = Type.getDescriptor(srcFieldType);
+                    if ((!skipNullValue && !(skipEmptyString && charstr)) || srcFieldType.isPrimitive()) {
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitLdcInsn(dfname);
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
-                        if (st == boolean.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-                        } else if (st == byte.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-                        } else if (st == short.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-                        } else if (st == char.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-                        } else if (st == int.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                        } else if (st == float.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-                        } else if (st == long.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                        } else if (st == double.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
-                        }
+                        Asms.visitPrimitiveValueOf(mv, srcFieldType);
                         mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
                         mv.visitInsn(POP);
                     } else { // skipNullValue OR (skipEmptyString && charstr)
@@ -621,35 +594,88 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         mv.visitLabel(ifLabel);
                         mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                     }
-                } else {
+                } else { //JavaBean -> JavaBean
+                    boolean needTypeCast = false;
                     java.lang.reflect.Method setter = null;
+                    java.lang.reflect.Field setField = null;
                     try {
-                        if (!field.getType().equals(destClass.getField(dfname).getType())) {
-                            continue;
+                        setField = destClass.getField(dfname);
+                        if (!field.getType().equals(setField.getType())) {
+                            if (allowTypeCast) {
+                                needTypeCast = true;
+                            } else {
+                                continue;
+                            }
                         }
                     } catch (Exception e) {
+                        String setterMethodName = "set" + Utility.firstCharUpperCase(dfname);
                         try {
-                            char[] cs = dfname.toCharArray();
-                            cs[0] = Character.toUpperCase(cs[0]);
-                            String dfname2 = new String(cs);
-                            setter = destClass.getMethod("set" + dfname2, field.getType());
+                            setter = destClass.getMethod(setterMethodName, field.getType());
+                            if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
+                                continue;  //setter方法带有非RuntimeException异常
+                            }
                         } catch (Exception e2) {
-                            continue;
+                            if (allowTypeCast) {
+                                try {
+                                    for (java.lang.reflect.Method m : destClass.getMethods()) {
+                                        if (Modifier.isStatic(m.getModifiers())) {
+                                            continue;
+                                        }
+                                        if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
+                                            continue;  //setter方法带有非RuntimeException异常
+                                        }
+                                        if (m.getParameterTypes().length != 1) {
+                                            continue;
+                                        }
+                                        if (m.getName().equals(setterMethodName)) {
+                                            setter = m;
+                                            needTypeCast = true;
+                                            break;
+                                        }
+                                    }
+                                    if (setter == null) {
+                                        continue;
+                                    }
+                                } catch (Exception e3) {
+                                    continue;
+                                }
+                            } else {
+                                continue;
+                            }
                         }
                     }
-                    String td = Type.getDescriptor(st);
-                    if ((!skipNullValue && !(skipEmptyString && charstr)) || st.isPrimitive()) {
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
-                        if (setter == null) {
-                            mv.visitFieldInsn(PUTFIELD, destClassName, dfname, td);
+                    String srcFieldDesc = Type.getDescriptor(srcFieldType);
+                    final Class destFieldType = setter == null ? setField.getType() : setter.getParameterTypes()[0];
+                    boolean localSkipNull = skipNullValue || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
+                    if ((!localSkipNull && !(skipEmptyString && charstr))
+                        || (srcFieldType.isPrimitive() && !allowTypeCast)
+                        || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
+                        if (needTypeCast) {
+                            mv.visitVarInsn(ALOAD, 2);
+                            Asms.visitFieldInsn(mv, destFieldType);
+                            mv.visitVarInsn(ALOAD, 1);
+                            mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
+                            Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            Asms.visitCheckCast(mv, destFieldType);
+                            if (setter == null) { //src: field, dest:field
+                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
+                            } else { //src: field, dest:method
+                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            }
                         } else {
-                            mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            mv.visitVarInsn(ALOAD, 2);
+                            mv.visitVarInsn(ALOAD, 1);
+                            mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
+                            if (setter == null) {  //src: field, dest:field
+                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
+                            } else { //src: field, dest:method
+                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            }
                         }
                     } else { // skipNullValue OR (skipEmptyString && charstr)
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
+                        mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
                         mv.visitVarInsn(ASTORE, 3);
                         mv.visitVarInsn(ALOAD, 3);
                         Label ifLabel = new Label();
@@ -660,13 +686,27 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/CharSequence", "length", "()I", true);
                             mv.visitJumpInsn(IFLE, ifLabel);
                         }
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitVarInsn(ALOAD, 3);
-                        mv.visitTypeInsn(CHECKCAST, st.getName().replace('.', '/'));
-                        if (setter == null) {
-                            mv.visitFieldInsn(PUTFIELD, destClassName, dfname, td);
+                        if (needTypeCast) {
+                            mv.visitVarInsn(ALOAD, 2);
+                            Asms.visitFieldInsn(mv, destFieldType);
+                            mv.visitVarInsn(ALOAD, 3);
+                            Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            Asms.visitCheckCast(mv, destFieldType);
+                            if (setter == null) { //src: field, dest:field
+                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
+                            } else { //src: field, dest:method
+                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            }
                         } else {
-                            mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            mv.visitVarInsn(ALOAD, 2);
+                            mv.visitVarInsn(ALOAD, 3);
+                            mv.visitTypeInsn(CHECKCAST, srcFieldType.getName().replace('.', '/'));
+                            if (setter == null) {  //src: field, dest:field
+                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, srcFieldDesc);
+                            } else { //src: field, dest:method
+                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            }
                         }
                         mv.visitLabel(ifLabel);
                         mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
@@ -698,32 +738,16 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     continue;
                 }
 
-                final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
-                final Class st = getter.getReturnType();
-                final boolean charstr = CharSequence.class.isAssignableFrom(st);
+                final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
+                final Class srcFieldType = getter.getReturnType();
+                final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
                 if (destIsMap) {  //srcClass是JavaBean
-                    if ((!skipNullValue && !(skipEmptyString && charstr)) || st.isPrimitive()) {
+                    if ((!skipNullValue && !(skipEmptyString && charstr)) || srcFieldType.isPrimitive()) {
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitLdcInsn(dfname);
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
-                        if (st == boolean.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-                        } else if (st == byte.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-                        } else if (st == short.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-                        } else if (st == char.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-                        } else if (st == int.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                        } else if (st == float.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-                        } else if (st == long.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                        } else if (st == double.class) {
-                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
-                        }
+                        Asms.visitPrimitiveValueOf(mv, srcFieldType);
                         mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
                         mv.visitInsn(POP);
                     } else {  // skipNullValue OR (skipEmptyString && charstr)
@@ -747,35 +771,80 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         mv.visitLabel(ifLabel);
                         mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                     }
-                } else {
+                } else { //srcClass、destClass是JavaBean
+                    boolean needTypeCast = false;
                     java.lang.reflect.Method setter = null;
-                    java.lang.reflect.Field srcField = null;
-                    char[] cs = dfname.toCharArray();
-                    cs[0] = Character.toUpperCase(cs[0]);
-                    String dfname2 = new String(cs);
+                    java.lang.reflect.Field setField = null;
+                    String setterMethodName = "set" + Utility.firstCharUpperCase(dfname);
                     try {
-                        setter = destClass.getMethod("set" + dfname2, getter.getReturnType());
+                        setter = destClass.getMethod(setterMethodName, getter.getReturnType());
                         if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
                             continue;  //setter方法带有非RuntimeException异常
                         }
                     } catch (Exception e) {
-                        try {
-                            srcField = destClass.getField(dfname);
-                            if (!getter.getReturnType().equals(srcField.getType())) {
+                        if (allowTypeCast) {
+                            try {
+                                for (java.lang.reflect.Method m : destClass.getMethods()) {
+                                    if (Modifier.isStatic(m.getModifiers())) {
+                                        continue;
+                                    }
+                                    if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
+                                        continue;  //setter方法带有非RuntimeException异常
+                                    }
+                                    if (m.getParameterTypes().length != 1) {
+                                        continue;
+                                    }
+                                    if (m.getName().equals(setterMethodName)) {
+                                        setter = m;
+                                        needTypeCast = true;
+                                        break;
+                                    }
+                                }
+                            } catch (Exception e2) {
+                            }
+                        }
+                        if (setter == null) {
+                            try {
+                                setField = destClass.getField(dfname);
+                                if (!getter.getReturnType().equals(setField.getType())) {
+                                    if (allowTypeCast) {
+                                        needTypeCast = true;
+                                    } else {
+                                        continue;
+                                    }
+                                }
+                            } catch (Exception e3) {
                                 continue;
                             }
-                        } catch (Exception e2) {
-                            continue;
                         }
                     }
-                    if ((!skipNullValue && !(skipEmptyString && charstr)) || st.isPrimitive()) {
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
-                        if (srcField == null) {
-                            mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                    final Class destFieldType = setter == null ? setField.getType() : setter.getParameterTypes()[0];
+                    boolean localSkipNull = skipNullValue || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
+                    if ((!localSkipNull && !(skipEmptyString && charstr))
+                        || (srcFieldType.isPrimitive() && !allowTypeCast)
+                        || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
+                        if (needTypeCast) {
+                            mv.visitVarInsn(ALOAD, 2);
+                            Asms.visitFieldInsn(mv, destFieldType);
+                            mv.visitVarInsn(ALOAD, 1);
+                            mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                            Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            Asms.visitCheckCast(mv, destFieldType);
+                            if (setter == null) { //src: method, dest: field
+                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
+                            } else {  //src: method, dest: method
+                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            }
                         } else {
-                            mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
+                            mv.visitVarInsn(ALOAD, 2);
+                            mv.visitVarInsn(ALOAD, 1);
+                            mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                            if (setter == null) { //src: method, dest: field
+                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
+                            } else {  //src: method, dest: method
+                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            }
                         }
                     } else {  // skipNullValue OR (skipEmptyString && charstr)
                         mv.visitVarInsn(ALOAD, 1);
@@ -790,13 +859,46 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/CharSequence", "length", "()I", true);
                             mv.visitJumpInsn(IFLE, ifLabel);
                         }
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitVarInsn(ALOAD, 3);
-                        mv.visitTypeInsn(CHECKCAST, st.getName().replace('.', '/'));
-                        if (srcField == null) {
-                            mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                        if (false) {
+                            mv.visitVarInsn(ALOAD, 1);
+                            mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/test/util/TestBean", "getName", "()Ljava/lang/String;", false);
+                            mv.visitVarInsn(ASTORE, 3);
+                            mv.visitVarInsn(ALOAD, 3);
+                            mv.visitJumpInsn(IFNULL, ifLabel);
+                            
+                            
+                            mv.visitVarInsn(ALOAD, 2);
+                            mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
+                            mv.visitVarInsn(ALOAD, 3);
+                            mv.visitMethodInsn(INVOKESTATIC, "org/redkale/util/Utility", "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
+                            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
+                            mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/test/util/TestXBean", "setId", "(I)V", false);
+                            mv.visitLabel(ifLabel);
+                            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+                        }
+
+                        if (needTypeCast) {
+                            mv.visitVarInsn(ALOAD, 2);
+                            Asms.visitFieldInsn(mv, destFieldType);
+                            mv.visitVarInsn(ALOAD, 3);
+                            Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            Asms.visitCheckCast(mv, destFieldType);
+                            if (setter == null) { //src: method, dest: field
+                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
+                            } else { //src: method, dest: method
+                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            }
                         } else {
-                            mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
+                            mv.visitVarInsn(ALOAD, 2);
+                            mv.visitVarInsn(ALOAD, 3);
+                            mv.visitTypeInsn(CHECKCAST, srcFieldType.getName().replace('.', '/'));
+                            if (setter == null) { //src: method, dest: field
+                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
+                            } else { //src: method, dest: method
+                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            }
                         }
                         mv.visitLabel(ifLabel);
                         mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);

@@ -698,9 +698,7 @@ public interface Attribute<T, F> {
         int mod = field == null ? java.lang.reflect.Modifier.STATIC : field.getModifiers();
         if (field != null && !java.lang.reflect.Modifier.isStatic(mod) && !java.lang.reflect.Modifier.isPublic(mod)) {
             Class t = field.getType();
-            char[] fs = field.getName().toCharArray();
-            fs[0] = Character.toUpperCase(fs[0]);
-            String mn = new String(fs);
+            String mn = Utility.firstCharUpperCase(field.getName());
             if (getter == null) {
                 String prefix = t == boolean.class || t == Boolean.class ? "is" : "get";
                 try {
@@ -877,25 +875,7 @@ public interface Attribute<T, F> {
         }
         { //type 方法
             mv = cw.visitMethod(ACC_PUBLIC, "type", "()Ljava/lang/Class;", null, null);
-            if (pcolumn == boolean.class) {
-                mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TYPE", "Ljava/lang/Class;");
-            } else if (pcolumn == byte.class) {
-                mv.visitFieldInsn(GETSTATIC, "java/lang/Byte", "TYPE", "Ljava/lang/Class;");
-            } else if (pcolumn == char.class) {
-                mv.visitFieldInsn(GETSTATIC, "java/lang/Character", "TYPE", "Ljava/lang/Class;");
-            } else if (pcolumn == short.class) {
-                mv.visitFieldInsn(GETSTATIC, "java/lang/Short", "TYPE", "Ljava/lang/Class;");
-            } else if (pcolumn == int.class) {
-                mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
-            } else if (pcolumn == float.class) {
-                mv.visitFieldInsn(GETSTATIC, "java/lang/Float", "TYPE", "Ljava/lang/Class;");
-            } else if (pcolumn == long.class) {
-                mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
-            } else if (pcolumn == double.class) {
-                mv.visitFieldInsn(GETSTATIC, "java/lang/Double", "TYPE", "Ljava/lang/Class;");
-            } else {
-                mv.visitLdcInsn(Type.getType(pcolumn));
-            }
+            Asms.visitFieldInsn(mv, pcolumn);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();

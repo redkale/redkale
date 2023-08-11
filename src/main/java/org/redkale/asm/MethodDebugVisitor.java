@@ -5,10 +5,7 @@
  */
 package org.redkale.asm;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.*;
-import static org.redkale.asm.Opcodes.*;
 
 /**
  * MethodVisitor 的调试类
@@ -17,7 +14,7 @@ import static org.redkale.asm.Opcodes.*;
  *
  * @author zhangjx
  */
-public class MethodDebugVisitor {
+public class MethodDebugVisitor extends MethodVisitor {
 
     private final MethodVisitor visitor;
 
@@ -29,7 +26,9 @@ public class MethodDebugVisitor {
     }
 
     public void debugLine() {
-        if (!debug) return;
+        if (!debug) {
+            return;
+        }
         System.out.println();
         System.out.println();
         System.out.println();
@@ -43,13 +42,27 @@ public class MethodDebugVisitor {
         try {
             for (java.lang.reflect.Field field : Opcodes.class.getFields()) {
                 String name = field.getName();
-                if (name.startsWith("ASM")) continue;
-                if (name.startsWith("V1_")) continue;
-                if (name.startsWith("ACC_")) continue;
-                if (name.startsWith("T_")) continue;
-                if (name.startsWith("H_")) continue;
-                if (name.startsWith("F_")) continue;
-                if (field.getType() != int.class) continue;
+                if (name.startsWith("ASM")) {
+                    continue;
+                }
+                if (name.startsWith("V1_")) {
+                    continue;
+                }
+                if (name.startsWith("ACC_")) {
+                    continue;
+                }
+                if (name.startsWith("T_")) {
+                    continue;
+                }
+                if (name.startsWith("H_")) {
+                    continue;
+                }
+                if (name.startsWith("F_")) {
+                    continue;
+                }
+                if (field.getType() != int.class) {
+                    continue;
+                }
                 opcodes[(int) (Integer) field.get(null)] = name;
             }
         } catch (Exception ex) {
@@ -62,41 +75,53 @@ public class MethodDebugVisitor {
      * @param visitor MethodVisitor
      */
     public MethodDebugVisitor(MethodVisitor visitor) {
-        //super(Opcodes.ASM5, visitor);
+        super(Opcodes.ASM6, visitor);
         this.visitor = visitor;
     }
 
     public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
         visitor.visitTryCatchBlock(start, end, handler, type);
-        if (debug) System.out.println("mv.visitTryCatchBlock(label0, label1, label2, \"" + type + "\");");
+        if (debug) {
+            System.out.println("mv.visitTryCatchBlock(label0, label1, label2, \"" + type + "\");");
+        }
     }
 
     public AnnotationVisitor visitParameterAnnotation(int i, String string, boolean bln) {
         AnnotationVisitor av = visitor.visitParameterAnnotation(i, string, bln);
-        if (debug) System.out.println("mv.visitParameterAnnotation(" + i + ", \"" + string + "\", " + bln + ");");
+        if (debug) {
+            System.out.println("mv.visitParameterAnnotation(" + i + ", \"" + string + "\", " + bln + ");");
+        }
         return av;
     }
 
     public AnnotationVisitor visitAnnotation(String desc, boolean flag) {
         AnnotationVisitor av = visitor.visitAnnotation(desc, flag);
-        if (debug) System.out.println("mv.visitAnnotation(\"" + desc + "\", " + flag + ");");
+        if (debug) {
+            System.out.println("mv.visitAnnotation(\"" + desc + "\", " + flag + ");");
+        }
         return av;
     }
 
     public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
         AnnotationVisitor av = visitor.visitTypeAnnotation(typeRef, typePath, desc, visible);
-        if (debug) System.out.println("mv.visitTypeAnnotation(" + typeRef + ", " + typePath + ", \"" + desc + "\", " + visible + ");");
+        if (debug) {
+            System.out.println("mv.visitTypeAnnotation(" + typeRef + ", " + typePath + ", \"" + desc + "\", " + visible + ");");
+        }
         return av;
     }
 
     public void visitParameter(String name, int access) {
         visitor.visitParameter(name, access);
-        if (debug) System.out.println("mv.visitParameter(" + name + ", " + access + ");");
+        if (debug) {
+            System.out.println("mv.visitParameter(" + name + ", " + access + ");");
+        }
     }
 
     public void visitVarInsn(int opcode, int var) {
         visitor.visitVarInsn(opcode, var);
-        if (debug) System.out.println("mv.visitVarInsn(" + opcodes[opcode] + ", " + var + ");");
+        if (debug) {
+            System.out.println("mv.visitVarInsn(" + opcodes[opcode] + ", " + var + ");");
+        }
     }
 
     public void visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
@@ -133,7 +158,9 @@ public class MethodDebugVisitor {
 
     public void visitCode() {
         visitor.visitCode();
-        if (debug) System.out.println("mv.visitCode();");
+        if (debug) {
+            System.out.println("mv.visitCode();");
+        }
     }
 
     public void visitLabel(Label var) {
@@ -151,32 +178,44 @@ public class MethodDebugVisitor {
 
     public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
         visitor.visitMethodInsn(opcode, owner, name, desc, itf);
-        if (debug) System.out.println("mv.visitMethodInsn(" + opcodes[opcode] + ", \"" + owner + "\", \"" + name + "\", \"" + desc + "\", " + itf + ");");
+        if (debug) {
+            System.out.println("mv.visitMethodInsn(" + opcodes[opcode] + ", \"" + owner + "\", \"" + name + "\", \"" + desc + "\", " + itf + ");");
+        }
     }
 
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
         visitor.visitFieldInsn(opcode, owner, name, desc);
-        if (debug) System.out.println("mv.visitFieldInsn(" + opcodes[opcode] + ", \"" + owner + "\", \"" + name + "\", \"" + desc + "\");");
+        if (debug) {
+            System.out.println("mv.visitFieldInsn(" + opcodes[opcode] + ", \"" + owner + "\", \"" + name + "\", \"" + desc + "\");");
+        }
     }
 
     public void visitTypeInsn(int opcode, String type) {
         visitor.visitTypeInsn(opcode, type);
-        if (debug) System.out.println("mv.visitTypeInsn(" + opcodes[opcode] + ", \"" + type + "\");");
+        if (debug) {
+            System.out.println("mv.visitTypeInsn(" + opcodes[opcode] + ", \"" + type + "\");");
+        }
     }
 
     public void visitInsn(int opcode) {
         visitor.visitInsn(opcode);
-        if (debug) System.out.println("mv.visitInsn(" + opcodes[opcode] + ");");
+        if (debug) {
+            System.out.println("mv.visitInsn(" + opcodes[opcode] + ");");
+        }
     }
 
     public void visitIntInsn(int opcode, int value) {
         visitor.visitIntInsn(opcode, value);
-        if (debug) System.out.println("mv.visitIntInsn(" + opcodes[opcode] + ", " + value + ");");
+        if (debug) {
+            System.out.println("mv.visitIntInsn(" + opcodes[opcode] + ", " + value + ");");
+        }
     }
 
     public void visitIincInsn(int opcode, int value) {
         visitor.visitIincInsn(opcode, value);
-        if (debug) System.out.println("mv.visitIincInsn(" + opcode + ", " + value + ");");
+        if (debug) {
+            System.out.println("mv.visitIincInsn(" + opcode + ", " + value + ");");
+        }
     }
 
     public void visitLdcInsn(Object o) {
@@ -194,81 +233,16 @@ public class MethodDebugVisitor {
 
     public void visitMaxs(int maxStack, int maxLocals) {
         visitor.visitMaxs(maxStack, maxLocals);
-        if (debug) System.out.println("mv.visitMaxs(" + maxStack + ", " + maxLocals + ");");
+        if (debug) {
+            System.out.println("mv.visitMaxs(" + maxStack + ", " + maxLocals + ");");
+        }
     }
 
     public void visitEnd() {
         visitor.visitEnd();
-        if (debug) System.out.println("mv.visitEnd();\r\n\r\n\r\n");
-    }
-
-    public static void pushInt(MethodDebugVisitor mv, int num) {
-        if (num < 6) {
-            mv.visitInsn(ICONST_0 + num);
-        } else if (num <= Byte.MAX_VALUE) {
-            mv.visitIntInsn(BIPUSH, num);
-        } else if (num <= Short.MAX_VALUE) {
-            mv.visitIntInsn(SIPUSH, num);
-        } else {
-            mv.visitLdcInsn(num);
+        if (debug) {
+            System.out.println("mv.visitEnd();\r\n\r\n\r\n");
         }
     }
 
-    public static void pushInt(MethodVisitor mv, int num) {
-        if (num < 6) {
-            mv.visitInsn(ICONST_0 + num);
-        } else if (num <= Byte.MAX_VALUE) {
-            mv.visitIntInsn(BIPUSH, num);
-        } else if (num <= Short.MAX_VALUE) {
-            mv.visitIntInsn(SIPUSH, num);
-        } else {
-            mv.visitLdcInsn(num);
-        }
-    }
-
-    public static void visitAnnotation(final AnnotationVisitor av, final Annotation ann) {
-        try {
-            for (Method anm : ann.annotationType().getMethods()) {
-                final String mname = anm.getName();
-                if ("equals".equals(mname) || "hashCode".equals(mname) || "toString".equals(mname) || "annotationType".equals(mname)) continue;
-                final Object r = anm.invoke(ann);
-                if (r instanceof String[]) {
-                    AnnotationVisitor av1 = av.visitArray(mname);
-                    for (String item : (String[]) r) {
-                        av1.visit(null, item);
-                    }
-                    av1.visitEnd();
-                } else if (r instanceof Class[]) {
-                    AnnotationVisitor av1 = av.visitArray(mname);
-                    for (Class item : (Class[]) r) {
-                        av1.visit(null, Type.getType(item));
-                    }
-                    av1.visitEnd();
-                } else if (r instanceof Enum[]) {
-                    AnnotationVisitor av1 = av.visitArray(mname);
-                    for (Enum item : (Enum[]) r) {
-                        av1.visitEnum(null, Type.getDescriptor(item.getClass()), ((Enum) item).name());
-                    }
-                    av1.visitEnd();
-                } else if (r instanceof Annotation[]) {
-                    AnnotationVisitor av1 = av.visitArray(mname);
-                    for (Annotation item : (Annotation[]) r) {
-                        visitAnnotation(av1.visitAnnotation(null, Type.getDescriptor(((Annotation) item).annotationType())), item);
-                    }
-                    av1.visitEnd();
-                } else if (r instanceof Class) {
-                    av.visit(mname, Type.getType((Class) r));
-                } else if (r instanceof Enum) {
-                    av.visitEnum(mname, Type.getDescriptor(r.getClass()), ((Enum) r).name());
-                } else if (r instanceof Annotation) {
-                    visitAnnotation(av.visitAnnotation(null, Type.getDescriptor(((Annotation) r).annotationType())), (Annotation) r);
-                } else {
-                    av.visit(mname, r);
-                }
-            }
-            av.visitEnd();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

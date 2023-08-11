@@ -481,7 +481,7 @@ public abstract class Sncp {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
                     continue;
                 }
-                MethodDebugVisitor.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
+                Asms.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
             }
         }
         {
@@ -765,7 +765,7 @@ public abstract class Sncp {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
                     continue;
                 }
-                MethodDebugVisitor.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
+                Asms.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
             }
         }
         {
@@ -808,14 +808,14 @@ public abstract class Sncp {
 //            Label l1 = new Label();
 //            mv.visitJumpInsn(IFNONNULL, l1);
 //            mv.visitVarInsn(ALOAD, 0);
-//            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
-//            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;", false);
+//            mv.visitCheckCast(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
+//            mv.visitCheckCast(INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;", false);
 //            Label l2 = new Label();
 //            mv.visitJumpInsn(GOTO, l2);
 //            mv.visitLabel(l1);
 //            mv.visitVarInsn(ALOAD, 0);
 //            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncp", sncpInfoDesc);
-//            mv.visitMethodInsn(INVOKEVIRTUAL, sncpInfoName, "toSimpleString", "()Ljava/lang/String;", false);
+//            mv.visitCheckCast(INVOKEVIRTUAL, sncpInfoName, "toSimpleString", "()Ljava/lang/String;", false);
 //            mv.visitLabel(l2);
 //            mv.visitInsn(ARETURN);
 //            mv.visitMaxs(1, 1);
@@ -830,7 +830,7 @@ public abstract class Sncp {
                     final Annotation[][] anns = method.getParameterAnnotations();
                     for (int k = 0; k < anns.length; k++) {
                         for (Annotation ann : anns[k]) {
-                            MethodDebugVisitor.visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
+                            Asms.visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
                         }
                     }
                 }
@@ -841,7 +841,7 @@ public abstract class Sncp {
 
                 {  //传参数
                     int paramlen = entry.paramTypes.length;
-                    MethodDebugVisitor.pushInt(mv, paramlen);
+                    Asms.visitInsn(mv, paramlen);
                     mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
                     java.lang.reflect.Type[] paramtypes = entry.paramTypes;
                     int insn = 0;
@@ -849,7 +849,7 @@ public abstract class Sncp {
                         final java.lang.reflect.Type pt = paramtypes[j];
                         mv.visitInsn(DUP);
                         insn++;
-                        MethodDebugVisitor.pushInt(mv, j);
+                        Asms.visitInsn(mv, j);
                         if (pt instanceof Class && ((Class) pt).isPrimitive()) {
                             if (pt == long.class) {
                                 mv.visitVarInsn(LLOAD, insn++);
@@ -870,7 +870,7 @@ public abstract class Sncp {
                 }
 
                 mv.visitMethodInsn(INVOKEVIRTUAL, sncpInfoName, "remote", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;", false);
-                //mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
+                //mv.visitCheckCast(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
                 if (method.getGenericReturnType() == void.class) {
                     mv.visitInsn(POP);
                     mv.visitInsn(RETURN);

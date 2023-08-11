@@ -29,6 +29,12 @@ public class CopierTest {
         test.run10();
         test.run11();
         test.run12();
+        test.run13();
+        test.run14();
+        test.run15();
+        test.run16();
+        test.run17();
+        test.run18();
     }
 
     @Test
@@ -42,6 +48,7 @@ public class CopierTest {
         System.out.println(JsonConvert.root().convertTo(map));
         TreeMap rs = Copier.copy(bean, TreeMap.class);
         rs.remove("remark");
+        rs.remove("seqno");
         Assertions.assertEquals(bean.toString(), JsonConvert.root().convertTo(rs));
     }
 
@@ -205,5 +212,145 @@ public class CopierTest {
         Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_SKIP_RMPTY_STRING).apply(srcBean, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
         Assertions.assertTrue(bean.getName() == null);
+    }
+
+    @Test
+    public void run13() throws Exception {
+        TestBean bean = new TestBean();
+        bean.setSeqno(6666L);
+        //public String remark;    
+        //private Long seqno;
+        TestX2Bean destBean = new TestX2Bean();
+        //public int remark;
+        //private String seqno;
+
+        Copier.load(TestBean.class, TestX2Bean.class, Copier.OPTION_ALLOW_TYPE_CAST).apply(bean, destBean);
+        System.out.println(JsonConvert.root().convertTo(destBean));
+        Assertions.assertEquals("6666", destBean.getSeqno());
+    }
+
+    @Test
+    public void run14() throws Exception {
+        TestBean bean = new TestBean();
+        bean.remark = "444";
+        TestX2Bean destBean = new TestX2Bean();
+        Copier.load(TestBean.class, TestX2Bean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST).apply(bean, destBean);
+        System.out.println(JsonConvert.root().convertTo(destBean));
+        Assertions.assertTrue(destBean.remark == 444);
+    }
+
+    @Test
+    public void run15() throws Exception {
+        Bean1 bean1 = new Bean1();
+        bean1.intval = "444";
+        Bean2 bean2 = new Bean2();
+        Copier.load(Bean1.class, Bean2.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST).apply(bean1, bean2);
+        System.out.println(JsonConvert.root().convertTo(bean2));
+        Assertions.assertTrue(bean2.intval == 444);
+    }
+
+    @Test
+    public void run16() throws Exception {
+        Bean3 bean1 = new Bean3();
+        bean1.setSeqno(444L);
+        Bean4 bean2 = new Bean4();
+        Copier.load(Bean3.class, Bean4.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST).apply(bean1, bean2);
+        System.out.println(JsonConvert.root().convertTo(bean2));
+        Assertions.assertEquals("444", bean2.getSeqno());
+    }
+
+    @Test
+    public void run17() throws Exception {
+        Bean4 bean1 = new Bean4();
+        bean1.setSeqno("444");
+        Bean5 bean2 = new Bean5();
+        Copier.load(Bean4.class, Bean5.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST).apply(bean1, bean2);
+        System.out.println(JsonConvert.root().convertTo(bean2));
+        Assertions.assertEquals(444, bean2.getSeqno());
+    }
+
+    @Test
+    public void run18() throws Exception {
+        Bean4 bean1 = new Bean4();
+        bean1.setSeqno("444");
+        Bean5 bean2 = new Bean5();
+        Copier.load(Bean4.class, Bean5.class, Copier.OPTION_SKIP_NULL_VALUE).apply(bean1, bean2);
+        System.out.println(JsonConvert.root().convertTo(bean2));
+        Assertions.assertEquals(0, bean2.getSeqno());
+        System.out.println("------------------------------------------");
+    }
+
+    public class Bean1 {
+
+        public String intval;
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public class Bean2 {
+
+        public int intval;
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public class Bean3 {
+
+        private Long seqno;
+
+        public Long getSeqno() {
+            return seqno;
+        }
+
+        public void setSeqno(Long seqno) {
+            this.seqno = seqno;
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public class Bean4 {
+
+        private String seqno;
+
+        public String getSeqno() {
+            return seqno;
+        }
+
+        public void setSeqno(String seqno) {
+            this.seqno = seqno;
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public class Bean5 {
+
+        private int seqno;
+
+        public int getSeqno() {
+            return seqno;
+        }
+
+        public void setSeqno(int seqno) {
+            this.seqno = seqno;
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
     }
 }

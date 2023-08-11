@@ -135,7 +135,7 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
             for (Class paramType : method.getParameterTypes()) {
                 //参数
                 mv.visitVarInsn(ALOAD, 2);
-                MethodDebugVisitor.pushInt(mv, paramIndex);
+                Asms.visitInsn(mv, paramIndex);
                 mv.visitInsn(AALOAD);
                 if (paramType == boolean.class) {
                     paramDescs.append("Z");
@@ -179,23 +179,7 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
             }
 
             mv.visitMethodInsn(staticflag ? INVOKESTATIC : (clazz.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL), interName, method.getName(), "(" + paramDescs + ")" + returnPrimiveDesc, !staticflag && clazz.isInterface());
-            if (returnType == boolean.class) {
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-            } else if (returnType == byte.class) {
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-            } else if (returnType == short.class) {
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-            } else if (returnType == char.class) {
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-            } else if (returnType == int.class) {
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-            } else if (returnType == float.class) {
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-            } else if (returnType == long.class) {
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-            } else if (returnType == double.class) {
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
-            }
+            Asms.visitPrimitiveValueOf(mv, returnType);
             mv.visitLabel(label1);
             mv.visitInsn(ARETURN);
             if (throwflag) {

@@ -388,25 +388,7 @@ public interface Creator<T> {
                 } else {
                     mv.visitLdcInsn(i);
                 }
-                if (pt == boolean.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TYPE", "Ljava/lang/Class;");
-                } else if (pt == byte.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Byte", "TYPE", "Ljava/lang/Class;");
-                } else if (pt == char.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Character", "TYPE", "Ljava/lang/Class;");
-                } else if (pt == short.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Short", "TYPE", "Ljava/lang/Class;");
-                } else if (pt == int.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
-                } else if (pt == float.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Float", "TYPE", "Ljava/lang/Class;");
-                } else if (pt == long.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
-                } else if (pt == double.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Double", "TYPE", "Ljava/lang/Class;");
-                } else {
-                    mv.visitLdcInsn(Type.getType(Type.getDescriptor(pt)));
-                }
+                Asms.visitFieldInsn(mv, pt);
                 mv.visitInsn(AASTORE);
             }
             mv.visitInsn(ARETURN);
