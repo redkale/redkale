@@ -15,15 +15,15 @@ package org.redkale.util;
  *
  * @since 2.8.0
  */
-public final class ObjectReference<V> {
+public final class ObjectRef<V> {
 
     private V value;
 
-    public ObjectReference(V initialValue) {
+    public ObjectRef(V initialValue) {
         this.value = initialValue;
     }
 
-    public ObjectReference() {
+    public ObjectRef() {
     }
 
     public final V get() {

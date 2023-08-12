@@ -19,6 +19,7 @@ import static java.lang.annotation.ElementType.*;
  *
  * @author zhangjx
  * @deprecated replaced by org.redkale.annotation.ConstructorParameters
+ * @see org.redkale.annotation.ConstructorParameters
  */
 @Deprecated(since = "2.8.0")
 @Documented

@@ -373,9 +373,9 @@ public final class Utility {
 
     static class ObjectWriteStream extends ObjectOutputStream {
 
-        public final ObjectReference<String> methodNameReference = new ObjectReference<>();
+        public final ObjectRef<String> methodNameReference = new ObjectRef<>();
 
-        public final ObjectReference<String> classNameReference = new ObjectReference<>();
+        public final ObjectRef<String> classNameReference = new ObjectRef<>();
 
         public ObjectWriteStream(OutputStream out) throws IOException {
             super(out);

@@ -20,14 +20,16 @@ public class ByteBufferPool extends ObjectPool<ByteBuffer> {
 
     private final int bufferCapacity;
 
-    protected ByteBufferPool(ObjectPool<ByteBuffer> parent, LongAdder creatCounter, LongAdder cycleCounter, Thread unsafeThread, int max, int bufferCapacity, Queue<ByteBuffer> queue) {
-        super(parent, creatCounter, cycleCounter, unsafeThread, max, (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
-            if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) {
-                return false;
-            }
-            e.clear();
-            return true;
-        }, queue);
+    protected ByteBufferPool(ObjectPool<ByteBuffer> parent, LongAdder creatCounter,
+        LongAdder cycleCounter, Thread unsafeThread, int max, int bufferCapacity, Queue<ByteBuffer> queue) {
+        super(parent, creatCounter, cycleCounter, unsafeThread, max,
+            (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity), null, (e) -> {
+                if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) {
+                    return false;
+                }
+                e.clear();
+                return true;
+            }, queue);
         this.bufferCapacity = bufferCapacity;
     }
 
@@ -52,18 +54,23 @@ public class ByteBufferPool extends ObjectPool<ByteBuffer> {
     }
 
     //非线程安全版
-    public static ByteBufferPool createUnsafePool(ByteBufferPool parent, LongAdder creatCounter, LongAdder cycleCounter, int max, int bufferCapacity) {
-        return new ByteBufferPool(parent, creatCounter, cycleCounter, null, Math.max(Utility.cpus(), max), bufferCapacity, new ArrayDeque<>(Math.max(Utility.cpus(), max)));
+    public static ByteBufferPool createUnsafePool(ByteBufferPool parent, LongAdder creatCounter,
+        LongAdder cycleCounter, int max, int bufferCapacity) {
+        return new ByteBufferPool(parent, creatCounter, cycleCounter, null,
+            Math.max(Utility.cpus(), max), bufferCapacity, new ArrayDeque<>(Math.max(Utility.cpus(), max)));
     }
 
     //非线程安全版
     public static ByteBufferPool createUnsafePool(Thread unsafeThread, int max, ByteBufferPool safePool) {
-        return createUnsafePool(safePool, safePool.getCreatCounter(), safePool.getCycleCounter(), unsafeThread, max, safePool.getBufferCapacity());
+        return createUnsafePool(safePool, safePool.getCreatCounter(),
+            safePool.getCycleCounter(), unsafeThread, max, safePool.getBufferCapacity());
     }
 
     //非线程安全版
-    public static ByteBufferPool createUnsafePool(ByteBufferPool parent, LongAdder creatCounter, LongAdder cycleCounter, Thread unsafeThread, int max, int bufferCapacity) {
-        return new ByteBufferPool(parent, creatCounter, cycleCounter, unsafeThread, Math.max(Utility.cpus(), max), bufferCapacity, new ArrayDeque<>(Math.max(Utility.cpus(), max)));
+    public static ByteBufferPool createUnsafePool(ByteBufferPool parent, LongAdder creatCounter,
+        LongAdder cycleCounter, Thread unsafeThread, int max, int bufferCapacity) {
+        return new ByteBufferPool(parent, creatCounter, cycleCounter, unsafeThread,
+            Math.max(Utility.cpus(), max), bufferCapacity, new ArrayDeque<>(Math.max(Utility.cpus(), max)));
     }
 
     //线程安全版
@@ -78,7 +85,8 @@ public class ByteBufferPool extends ObjectPool<ByteBuffer> {
 
     //线程安全版
     public static ByteBufferPool createSafePool(LongAdder creatCounter, LongAdder cycleCounter, int max, int bufferCapacity) {
-        return new ByteBufferPool(null, creatCounter, cycleCounter, null, Math.max(Utility.cpus(), max), bufferCapacity, new LinkedBlockingQueue<>(Math.max(Utility.cpus(), max)));
+        return new ByteBufferPool(null, creatCounter, cycleCounter, null, 
+            Math.max(Utility.cpus(), max), bufferCapacity, new LinkedBlockingQueue<>(Math.max(Utility.cpus(), max)));
     }
 
     public int getBufferCapacity() {

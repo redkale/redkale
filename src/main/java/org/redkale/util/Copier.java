@@ -9,32 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.ACC_BRIDGE;
-import static org.redkale.asm.Opcodes.ACC_FINAL;
-import static org.redkale.asm.Opcodes.ACC_PRIVATE;
-import static org.redkale.asm.Opcodes.ACC_PUBLIC;
-import static org.redkale.asm.Opcodes.ACC_STATIC;
-import static org.redkale.asm.Opcodes.ACC_SUPER;
-import static org.redkale.asm.Opcodes.ACC_SYNTHETIC;
-import static org.redkale.asm.Opcodes.ALOAD;
-import static org.redkale.asm.Opcodes.ARETURN;
-import static org.redkale.asm.Opcodes.ASTORE;
-import static org.redkale.asm.Opcodes.CHECKCAST;
-import static org.redkale.asm.Opcodes.GETFIELD;
-import static org.redkale.asm.Opcodes.GOTO;
-import static org.redkale.asm.Opcodes.IFEQ;
-import static org.redkale.asm.Opcodes.IFLE;
-import static org.redkale.asm.Opcodes.IFNONNULL;
-import static org.redkale.asm.Opcodes.IFNULL;
-import static org.redkale.asm.Opcodes.INSTANCEOF;
-import static org.redkale.asm.Opcodes.INVOKEINTERFACE;
-import static org.redkale.asm.Opcodes.INVOKESPECIAL;
-import static org.redkale.asm.Opcodes.INVOKESTATIC;
-import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
-import static org.redkale.asm.Opcodes.POP;
-import static org.redkale.asm.Opcodes.PUTFIELD;
-import static org.redkale.asm.Opcodes.RETURN;
-import static org.redkale.asm.Opcodes.V11;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 
 /**
@@ -166,7 +141,6 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>       源类泛型
      * @param destClass 目标类名
      * @param srcClass  源类名
-     * @param options   可配项
      *
      * @return 复制器
      */
@@ -181,7 +155,6 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>       源类泛型
      * @param destClass 目标类名
      * @param srcClass  源类名
-     * @param options   可配项
      *
      * @return 复制器
      */
@@ -196,7 +169,6 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>       源类泛型
      * @param destClass 目标类名
      * @param srcClass  源类名
-     * @param options   可配项
      *
      * @return 复制器
      */
@@ -597,11 +569,14 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         final String newDynName = "org/redkaledyn/copier/_Dyn" + Copier.class.getSimpleName() + "_" + options
             + "__" + srcClass.getName().replace('.', '_').replace('$', '_')
             + "__" + destClass.getName().replace('.', '_').replace('$', '_');
-        try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Copier) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
-        } catch (Throwable ex) {
+        if (srcColumnPredicate == null && nameAlias == null) {
+            try {
+                Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
+                return (Copier) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
+            } catch (Throwable ex) {
+            }
         }
+
         final Predicate<Class<?>> throwPredicate = e -> !RuntimeException.class.isAssignableFrom(e);
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -1132,7 +1107,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 return defineClass(name, b, 0, b.length);
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        if (srcColumnPredicate == null && nameAlias == null) {
+            RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        }
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             return (Copier) newClazz.getDeclaredConstructor().newInstance();

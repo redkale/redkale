@@ -490,7 +490,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                     t.setDaemon(true);
                     return t;
                 });
-                final ObjectReference<byte[]> dateRef = new ObjectReference<>();
+                final ObjectRef<byte[]> dateRef = new ObjectRef<>();
                 final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, d MMM y HH:mm:ss z", Locale.ENGLISH);
                 gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
                 dateRef.set(("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes());
