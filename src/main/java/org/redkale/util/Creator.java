@@ -6,6 +6,7 @@ package org.redkale.util;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.math.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap.SimpleEntry;
@@ -100,8 +101,24 @@ public interface Creator<T> {
      *
      * @return IntFunction
      */
-    public static <T> IntFunction<T[]> arrayFunction(final Class<T> type) {
+    public static <T> IntFunction<T[]> funcArray(final Class<T> type) {
         return CreatorInner.arrayCacheMap.computeIfAbsent(type, CreatorInner::createArrayFunction);
+    }
+
+    public static <T> Creator<T> load(Class<T> clazz) {
+        return CreatorInner.creatorCacheMap.computeIfAbsent(clazz, v -> create(clazz));
+    }
+
+    public static <T> Creator<T> register(Class<T> clazz, final Supplier<T> supplier) {
+        Creator<T> creator = (Object... params) -> supplier.get();
+        CreatorInner.creatorCacheMap.put(clazz, creator);
+        return creator;
+    }
+
+    public static <T> Creator<T> register(final LambdaSupplier<T> supplier) {
+        Creator<T> creator = (Object... params) -> supplier.get();
+        CreatorInner.creatorCacheMap.put(LambdaSupplier.readClass(supplier), creator);
+        return creator;
     }
 
     /**
@@ -144,7 +161,7 @@ public interface Creator<T> {
         if (type == double.class) {
             return (T[]) (Object) new double[size];
         }
-        return arrayFunction(type).apply(size);
+        return funcArray(type).apply(size);
     }
 
     /**
@@ -173,10 +190,6 @@ public interface Creator<T> {
         return (Object... params) -> func.apply(params);
     }
 
-    public static <T> Creator<T> load(Class<T> clazz) {
-        return CreatorInner.creatorCacheMap.computeIfAbsent(clazz, v -> create(clazz));
-    }
-
     /**
      * 根据指定的class采用ASM技术生产Creator。
      *
@@ -187,19 +200,29 @@ public interface Creator<T> {
      */
     @SuppressWarnings("unchecked")
     public static <T> Creator<T> create(Class<T> clazz) {
-        if (List.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(ArrayList.class) || clazz.getName().startsWith("java.util.Collections") || clazz.getName().startsWith("java.util.ImmutableCollections") || clazz.getName().startsWith("java.util.Arrays"))) {
+        if (List.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(ArrayList.class)
+            || clazz.getName().startsWith("java.util.Collections")
+            || clazz.getName().startsWith("java.util.ImmutableCollections")
+            || clazz.getName().startsWith("java.util.Arrays"))) {
             clazz = (Class<T>) ArrayList.class;
-        } else if (Map.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(HashMap.class) || clazz.getName().startsWith("java.util.Collections") || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
+        } else if (Map.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(HashMap.class)
+            || clazz.getName().startsWith("java.util.Collections")
+            || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
             clazz = (Class<T>) HashMap.class;
-        } else if (Set.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(HashSet.class) || clazz.getName().startsWith("java.util.Collections") || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
+        } else if (Set.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(HashSet.class)
+            || clazz.getName().startsWith("java.util.Collections")
+            || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
             clazz = (Class<T>) HashSet.class;
         } else if (Map.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ConcurrentHashMap.class)) {
             clazz = (Class<T>) ConcurrentHashMap.class;
-        } else if (Deque.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(ArrayDeque.class) || clazz.getName().startsWith("java.util.Collections") || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
+        } else if (Deque.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(ArrayDeque.class)
+            || clazz.getName().startsWith("java.util.Collections")
+            || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
             clazz = (Class<T>) ArrayDeque.class;
         } else if (Collection.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ArrayList.class)) {
             clazz = (Class<T>) ArrayList.class;
-        } else if (Map.Entry.class.isAssignableFrom(clazz) && (Modifier.isInterface(clazz.getModifiers()) || Modifier.isAbstract(clazz.getModifiers()) || !Modifier.isPublic(clazz.getModifiers()))) {
+        } else if (Map.Entry.class.isAssignableFrom(clazz)
+            && (Modifier.isInterface(clazz.getModifiers()) || Modifier.isAbstract(clazz.getModifiers()) || !Modifier.isPublic(clazz.getModifiers()))) {
             clazz = (Class<T>) AbstractMap.SimpleEntry.class;
         } else if (Iterable.class == clazz) {
             clazz = (Class<T>) ArrayList.class;
@@ -572,11 +595,14 @@ public interface Creator<T> {
             creatorCacheMap.put(ArrayList.class, p -> new ArrayList<>());
             creatorCacheMap.put(HashMap.class, p -> new HashMap<>());
             creatorCacheMap.put(HashSet.class, p -> new HashSet<>());
+            creatorCacheMap.put(LinkedHashSet.class, p -> new LinkedHashSet<>());
             creatorCacheMap.put(Stream.class, p -> new ArrayList<>().stream());
             creatorCacheMap.put(ConcurrentHashMap.class, p -> new ConcurrentHashMap<>());
             creatorCacheMap.put(CompletableFuture.class, p -> new CompletableFuture<>());
             creatorCacheMap.put(CompletionStage.class, p -> new CompletableFuture<>());
             creatorCacheMap.put(Future.class, p -> new CompletableFuture<>());
+            creatorCacheMap.put(AnyValue.DefaultAnyValue.class, p -> new AnyValue.DefaultAnyValue());
+            creatorCacheMap.put(AnyValue.class, p -> new AnyValue.DefaultAnyValue());
             creatorCacheMap.put(Map.Entry.class, new Creator<Map.Entry>() {
                 @Override
                 @ConstructorParameters({"key", "value"})
@@ -601,8 +627,6 @@ public interface Creator<T> {
                     return new Class[]{Object.class, Object.class};
                 }
             });
-            creatorCacheMap.put(AnyValue.DefaultAnyValue.class, p -> new AnyValue.DefaultAnyValue());
-            creatorCacheMap.put(AnyValue.class, p -> new AnyValue.DefaultAnyValue());
 
             arrayCacheMap.put(int.class, t -> new int[t]);
             arrayCacheMap.put(byte.class, t -> new byte[t]);
@@ -614,6 +638,8 @@ public interface Creator<T> {
             arrayCacheMap.put(char.class, t -> new char[t]);
             arrayCacheMap.put(float.class, t -> new float[t]);
             arrayCacheMap.put(double.class, t -> new double[t]);
+            arrayCacheMap.put(BigInteger.class, t -> new BigInteger[t]);
+            arrayCacheMap.put(BigDecimal.class, t -> new BigDecimal[t]);
             arrayCacheMap.put(ByteBuffer.class, t -> new ByteBuffer[t]);
             arrayCacheMap.put(SocketAddress.class, t -> new SocketAddress[t]);
             arrayCacheMap.put(InetSocketAddress.class, t -> new InetSocketAddress[t]);

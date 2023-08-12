@@ -104,7 +104,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      */
     public static <S, D> D copy(final S src, final D dest, final int options) {
         if (src == null || dest == null) {
-            return null;
+            return dest;
         }
         return load((Class<S>) src.getClass(), (Class<D>) dest.getClass(), options).apply(src, dest);
     }
@@ -181,11 +181,149 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>       源类泛型
      * @param destClass 目标类名
      * @param srcClass  源类名
+     * @param options   可配项
+     *
+     * @return 复制器
+     */
+    public static <S, D> Function<Collection<S>, Set<D>> funcSet(final Class<S> srcClass, final Class<D> destClass) {
+        return funcSet(srcClass, destClass, 0);
+    }
+
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
+     * @param options   可配项
+     *
+     * @return 复制器
+     */
+    public static <S, D> Function<Collection<S>, List<D>> funcList(final Class<S> srcClass, final Class<D> destClass) {
+        return funcList(srcClass, destClass, 0);
+    }
+
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>             目标类泛型
+     * @param <S>             源类泛型
+     * @param destClass       目标类名
+     * @param srcClass        源类名
+     * @param collectionClass 集合类名
+     *
+     * @return 复制器
+     */
+    public static <S, D, C extends Collection> Function<Collection<S>, Collection<D>> funcCollection(final Class<S> srcClass,
+        final Class<D> destClass, final Class<C> collectionClass) {
+        return funcCollection(srcClass, destClass, 0, collectionClass);
+    }
+
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
      *
      * @return 复制器
      */
     public static <S, D> Copier<S, D> load(final Class<S> srcClass, final Class<D> destClass) {
         return load(srcClass, destClass, 0);
+    }
+
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
+     * @param options   可配项
+     *
+     * @return 复制器
+     */
+    public static <S, D> Function<Collection<S>, Set<D>> funcSet(final Class<S> srcClass, final Class<D> destClass, final int options) {
+        return (Function) funcCollection(srcClass, destClass, options, LinkedHashSet.class);
+    }
+
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>       目标类泛型
+     * @param <S>       源类泛型
+     * @param destClass 目标类名
+     * @param srcClass  源类名
+     * @param options   可配项
+     *
+     * @return 复制器
+     */
+    public static <S, D> Function<Collection<S>, List<D>> funcList(final Class<S> srcClass, final Class<D> destClass, final int options) {
+        return (Function) funcCollection(srcClass, destClass, options, ArrayList.class);
+    }
+
+    /**
+     * 创建源类到目标类的复制器并缓存
+     *
+     * @param <D>             目标类泛型
+     * @param <S>             源类泛型
+     * @param destClass       目标类名
+     * @param srcClass        源类名
+     * @param options         可配项
+     * @param collectionClass 集合类名
+     *
+     * @return 复制器
+     */
+    public static <S, D, C extends Collection> Function<Collection<S>, Collection<D>> funcCollection(final Class<S> srcClass, final Class<D> destClass,
+        final int options, final Class<C> collectionClass) {
+        if (destClass == srcClass) {
+            return CopierInner.funcListOneCaches
+                .computeIfAbsent(collectionClass, t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(srcClass, v -> {
+                    Creator<C> creator = Creator.create(collectionClass);
+                    Function<S, D> func = func(srcClass, destClass, options);
+                    Function<Collection<S>, Collection<D>> funcList = srcs -> {
+                        if (srcs == null) {
+                            return null;
+                        } else if (srcs.isEmpty()) {
+                            return creator.create();
+                        } else {
+                            C list = creator.create();
+                            for (S s : srcs) {
+                                list.add(func.apply(s));
+                            }
+                            return list;
+                        }
+                    };
+                    return funcList;
+                });
+        } else {
+            return CopierInner.funcListTwoCaches
+                .computeIfAbsent(collectionClass, t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(destClass, v -> {
+                    Creator<C> creator = Creator.create(collectionClass);
+                    Function<S, D> func = func(srcClass, destClass, options);
+                    Function<Collection<S>, Collection<D>> funcList = srcs -> {
+                        if (srcs == null) {
+                            return null;
+                        } else if (srcs.isEmpty()) {
+                            return (C) creator.create();
+                        } else {
+                            C list = creator.create();
+                            for (S s : srcs) {
+                                list.add(func.apply(s));
+                            }
+                            return list;
+                        }
+                    };
+                    return funcList;
+                });
+        }
     }
 
     /**
@@ -388,7 +526,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 if (nameAlias != null) {
                     return (S src, D dest) -> {
                         if (src == null) {
-                            return null;
+                            return dest;
                         }
                         Map d = (Map) dest;
                         ((Map) src).forEach((k, v) -> {
@@ -401,7 +539,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 } else {
                     return (S src, D dest) -> {
                         if (src == null) {
-                            return null;
+                            return dest;
                         }
                         Map d = (Map) dest;
                         ((Map) src).forEach((k, v) -> {
@@ -415,7 +553,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             } else if (nameAlias != null) {
                 return (S src, D dest) -> {
                     if (src == null) {
-                        return null;
+                        return dest;
                     }
                     Map d = (Map) dest;
                     ((Map) src).forEach((k, v) -> {
@@ -430,7 +568,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 @Override
                 public D apply(S src, D dest) {
                     if (src == null) {
-                        return null;
+                        return dest;
                     }
                     if (options == 0) {
                         ((Map) dest).putAll((Map) src);
@@ -1013,6 +1151,18 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
 
         static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>> funcTwoCaches = new ConcurrentHashMap();
 
+        static final ConcurrentHashMap<Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Function>>> funcListOneCaches = new ConcurrentHashMap();
+
+        static final ConcurrentHashMap<Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>>> funcListTwoCaches = new ConcurrentHashMap();
+
+        public static void clear() {
+            copierOneCaches.clear();
+            copierTwoCaches.clear();
+            funcOneCaches.clear();
+            funcTwoCaches.clear();
+            funcListOneCaches.clear();
+            funcListTwoCaches.clear();
+        }
     }
 
 }

@@ -51,6 +51,8 @@ public final class Utility {
 
     private static final ConcurrentHashMap<Class, String> lambdaFieldNameCache = new ConcurrentHashMap();
 
+    private static final ConcurrentHashMap<Class, Class> lambdaClassNameCache = new ConcurrentHashMap();
+
     private static final Class JAVA_RECORD_CLASS;
 
     private static final SecureRandom random = new SecureRandom();
@@ -277,6 +279,10 @@ public final class Utility {
         return readLambdaFieldName(func);
     }
 
+    public static Class readClassName(LambdaSupplier func) {
+        return readLambdaClassName(func);
+    }
+
     private static String readLambdaFieldName(Serializable func) {
         if (!func.getClass().isSynthetic()) { //必须是Lambda表达式的合成类
             throw new RedkaleException("Not a synthetic lambda class");
@@ -310,6 +316,43 @@ public final class Utility {
         }
     }
 
+    private static Class readLambdaClassName(Serializable func) {
+        if (!func.getClass().isSynthetic()) { //必须是Lambda表达式的合成类
+            throw new RedkaleException("Not a synthetic lambda class");
+        }
+        return lambdaClassNameCache.computeIfAbsent(func.getClass(), clazz -> {
+            try {
+                MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(func.getClass(), MethodHandles.lookup());
+                MethodHandle mh = lookup.findVirtual(func.getClass(), "writeReplace", MethodType.methodType(Object.class));
+                String methodName = ((java.lang.invoke.SerializedLambda) mh.invoke(func)).getImplMethodName();
+                String className = methodName.contains("lambda$") ? org.redkale.asm.Type.getReturnType(((java.lang.invoke.SerializedLambda) mh.invoke(func)).getInstantiatedMethodType()).getClassName()
+                    : ((java.lang.invoke.SerializedLambda) mh.invoke(func)).getImplClass().replace('/', '.');
+                return (Class) Thread.currentThread().getContextClassLoader().loadClass(className);
+            } catch (ClassNotFoundException ex) {
+                throw new RedkaleException(ex);
+            } catch (Throwable e) {
+                return readLambdaClassNameFromBytes(func);
+            }
+        });
+    }
+
+    private static Class readLambdaClassNameFromBytes(Serializable func) {
+        try {
+            ObjectWriteStream out = new ObjectWriteStream(new ByteArrayOutputStream());
+            out.writeObject(func);
+            out.close();
+            String className = out.classNameReference.get();
+            if (className != null) {
+                return (Class) Thread.currentThread().getContextClassLoader().loadClass(className);
+            } else {
+                //native-image环境下获取不到methodName
+                throw new RedkaleException("cannot found method-name from lambda " + func);
+            }
+        } catch (Exception e) {
+            throw new RedkaleException(e);
+        }
+    }
+
     static String readFieldName(String methodName) {
         String name;
         if (methodName.startsWith("is")) {
@@ -332,6 +375,8 @@ public final class Utility {
 
         public final ObjectReference<String> methodNameReference = new ObjectReference<>();
 
+        public final ObjectReference<String> classNameReference = new ObjectReference<>();
+
         public ObjectWriteStream(OutputStream out) throws IOException {
             super(out);
         }
@@ -339,7 +384,11 @@ public final class Utility {
         @Override
         protected Object replaceObject​(Object obj) throws IOException {
             if (obj instanceof java.lang.invoke.SerializedLambda) {
-                methodNameReference.set(((java.lang.invoke.SerializedLambda) obj).getImplMethodName());
+                String methodName = ((java.lang.invoke.SerializedLambda) obj).getImplMethodName();
+                methodNameReference.set(methodName);
+                String className = methodName.contains("lambda$") ? org.redkale.asm.Type.getReturnType(((java.lang.invoke.SerializedLambda) obj).getInstantiatedMethodType()).getClassName()
+                    : ((java.lang.invoke.SerializedLambda) obj).getImplClass().replace('/', '.');
+                classNameReference.set(className);
             }
             return super.replaceObject(obj);
         }

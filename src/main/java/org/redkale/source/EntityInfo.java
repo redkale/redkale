@@ -365,7 +365,7 @@ public final class EntityInfo<T> {
         }
         this.tableStrategy = dts;
 
-        this.arrayer = Creator.arrayFunction(type);
+        this.arrayer = Creator.funcArray(type);
         Creator creator = Creator.create(type);
         String[] cps = null;
         try {

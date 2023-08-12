@@ -59,7 +59,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
             }
             factory.register(type, this);
             this.componentDecoder = factory.loadDecoder(this.componentType);
-            this.componentArrayFunction = Creator.arrayFunction(this.componentClass);
+            this.componentArrayFunction = Creator.funcArray(this.componentClass);
         } finally {
             inited = true;
             lock.lock();

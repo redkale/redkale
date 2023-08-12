@@ -5,6 +5,7 @@ package org.redkale.test.util;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
@@ -36,6 +37,7 @@ public class CopierTest {
         test.run17();
         test.run18();
         test.run19();
+        test.run20();
     }
 
     @Test
@@ -283,12 +285,34 @@ public class CopierTest {
     @Test
     public void run19() throws Exception {
         Bean0 bean1 = new Bean0();
-        bean1.setCartype(111); 
+        bean1.setCarid(111);
         bean1.setUsername("aaa");
         Bean0 bean2 = new Bean0();
         Copier.load(Bean0.class, Bean0.class, Copier.OPTION_SKIP_NULL_VALUE).apply(bean1, bean2);
         System.out.println(JsonConvert.root().convertTo(bean2));
         Assertions.assertEquals("aaa", bean2.getUsername());
+    }
+
+    @Test
+    public void run20() throws Exception {
+        Bean0 bean1 = new Bean0();
+        bean1.setCarid(111L);
+        bean1.setUsername("aaa");
+        Bean0 bean2 = new Bean0();
+        bean2.setCarid(111L);
+        bean2.setUsername("bbb");
+        Creator.register(Bean0::new);
+
+        System.out.println(Copier.load(Bean0.class, Bean0.class).apply(bean1, new Bean0()));
+
+        Function<Collection<Bean0>, Set<Bean0>> funcSet = Copier.funcSet(Bean0.class, Bean0.class);
+        Set<Bean0> set = funcSet.apply(Arrays.asList(bean1, bean2));
+        Assertions.assertEquals(1, set.size());
+
+        Function<Collection<Bean0>, List<Bean0>> funcList = Copier.funcList(Bean0.class, Bean0.class);
+        List<Bean0> list = funcList.apply(Arrays.asList(bean1, bean2));
+        Assertions.assertEquals(2, list.size());
+
         System.out.println("------------------------------------------");
     }
 
@@ -348,13 +372,35 @@ public class CopierTest {
         }
 
         @Override
+        public int hashCode() {
+            int hash = 5;
+            hash = 59 * hash + (int) (this.carid ^ (this.carid >>> 32));
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Bean0 other = (Bean0) obj;
+            return this.carid == other.carid;
+        }
+
+        @Override
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
 
     }
 
-    public class Bean1 {
+    public static class Bean1 {
 
         public String intval;
 
@@ -364,7 +410,7 @@ public class CopierTest {
         }
     }
 
-    public class Bean2 {
+    public static class Bean2 {
 
         public int intval;
 
@@ -374,7 +420,7 @@ public class CopierTest {
         }
     }
 
-    public class Bean3 {
+    public static class Bean3 {
 
         private Long seqno;
 
@@ -392,7 +438,7 @@ public class CopierTest {
         }
     }
 
-    public class Bean4 {
+    public static class Bean4 {
 
         private String seqno;
 
@@ -410,7 +456,7 @@ public class CopierTest {
         }
     }
 
-    public class Bean5 {
+    public static class Bean5 {
 
         private int seqno;
 
