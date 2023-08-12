@@ -7,7 +7,6 @@ package org.redkale.convert.json;
 
 import java.lang.reflect.Type;
 import org.redkale.convert.*;
-import org.redkale.util.StringWrapper;
 
 /**
  *
@@ -170,11 +169,6 @@ public abstract class JsonWriter extends Writer {
     @Override
     public final void writeDouble(double value) {
         writeLatin1To(false, String.valueOf(value));
-    }
-
-    @Override
-    public final void writeWrapper(StringWrapper value) {
-        writeString(false, String.valueOf(value));
     }
 
     @Override

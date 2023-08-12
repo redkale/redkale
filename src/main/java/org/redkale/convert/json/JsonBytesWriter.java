@@ -491,6 +491,42 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
+    public void writeWrapper(StringWrapper wrapper) {
+        if (wrapper == null || wrapper.getValue() == null) {
+            writeNull();
+            return;
+        }
+        String value = wrapper.getValue();
+        if (Utility.isLatin1(value)) {
+            writeTo(Utility.latin1ByteArray(value));
+            return;
+        }
+        byte[] bytes = expand(value.length() * 4 + 2);
+        int curr = count;
+        int len = value.length();
+        for (int i = 0; i < len; i++) {
+            char ch = value.charAt(i);
+            if (ch < 0x80) {
+                bytes[curr++] = (byte) ch;
+            } else if (ch < 0x800) {
+                bytes[curr++] = (byte) (0xc0 | (ch >> 6));
+                bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
+            } else if (Character.isSurrogate(ch)) { //连取两个
+                int uc = Character.toCodePoint(ch, value.charAt(++i));
+                bytes[curr++] = (byte) (0xf0 | ((uc >> 18)));
+                bytes[curr++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
+                bytes[curr++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
+                bytes[curr++] = (byte) (0x80 | (uc & 0x3f));
+            } else {
+                bytes[curr++] = (byte) (0xe0 | ((ch >> 12)));
+                bytes[curr++] = (byte) (0x80 | ((ch >> 6) & 0x3f));
+                bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
+            }
+        }
+        count = curr;
+    }
+
+    @Override
     public String toString() {
         return new String(content, 0, count, StandardCharsets.UTF_8);
     }

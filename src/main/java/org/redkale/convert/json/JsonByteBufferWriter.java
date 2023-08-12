@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 import java.util.function.Supplier;
 import org.redkale.convert.ConvertException;
-import org.redkale.util.Utility;
+import org.redkale.util.*;
 
 /**
  * 以ByteBuffer为数据载体的JsonWriter
@@ -787,7 +787,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             }
         }
         if (len == chs.length) {
-            writeTo(-1, true, chs, 0, len);
+            writeTo(-1, quote, chs, 0, len);
             return;
         }
         int expandsize = -1;
@@ -858,6 +858,16 @@ public class JsonByteBufferWriter extends JsonWriter {
         }
         char[] cs = Utility.charArray(sb);
         writeTo(expandsize, quote, cs, 0, sb.length());
+    }
+
+    @Override
+    public void writeWrapper(StringWrapper wrapper) {
+        if (wrapper == null || wrapper.getValue() == null) {
+            writeNull();
+            return;
+        }
+        final char[] chs = Utility.charArray(wrapper.getValue());
+        writeTo(-1, false, chs, 0, chs.length);
     }
 
     @Override
