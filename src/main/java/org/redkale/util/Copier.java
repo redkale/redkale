@@ -16,7 +16,6 @@ import static org.redkale.asm.Opcodes.ACC_PUBLIC;
 import static org.redkale.asm.Opcodes.ACC_STATIC;
 import static org.redkale.asm.Opcodes.ACC_SUPER;
 import static org.redkale.asm.Opcodes.ACC_SYNTHETIC;
-import static org.redkale.asm.Opcodes.ACONST_NULL;
 import static org.redkale.asm.Opcodes.ALOAD;
 import static org.redkale.asm.Opcodes.ARETURN;
 import static org.redkale.asm.Opcodes.ASTORE;
@@ -207,7 +206,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 .computeIfAbsent(srcClass, v -> {
                     Copier<S, D> copier = load(srcClass, destClass, options);
                     Creator<D> creator = Creator.load(destClass);
-                    Function<S, D> func = src -> copier.apply(src, creator.create());
+                    Function<S, D> func = src -> src == null ? null : copier.apply(src, creator.create());
                     return func;
                 });
         } else {
@@ -217,7 +216,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 .computeIfAbsent(destClass, v -> {
                     Copier<S, D> copier = load(srcClass, destClass, options);
                     Creator<D> creator = Creator.load(destClass);
-                    Function<S, D> func = src -> copier.apply(src, creator.create());
+                    Function<S, D> func = src -> src == null ? null : copier.apply(src, creator.create());
                     return func;
                 });
         }
@@ -492,7 +491,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     mv.visitVarInsn(ALOAD, 1);
                     Label ifLabel = new Label();
                     mv.visitJumpInsn(IFNONNULL, ifLabel);
-                    mv.visitInsn(ACONST_NULL);
+                    mv.visitVarInsn(ALOAD, 2);
                     mv.visitInsn(ARETURN);
                     mv.visitLabel(ifLabel);
                     mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
@@ -622,7 +621,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 mv.visitVarInsn(ALOAD, 1);
                 Label ifLabel = new Label();
                 mv.visitJumpInsn(IFNONNULL, ifLabel);
-                mv.visitInsn(ACONST_NULL);
+                mv.visitVarInsn(ALOAD, 2);
                 mv.visitInsn(ARETURN);
                 mv.visitLabel(ifLabel);
                 mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
