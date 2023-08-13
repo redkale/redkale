@@ -6,6 +6,7 @@
 package org.redkale.convert.json;
 
 import java.lang.reflect.Type;
+import org.redkale.asm.AsmDepends;
 import org.redkale.convert.*;
 
 /**
@@ -34,6 +35,7 @@ public abstract class JsonWriter extends Writer {
         return this;
     }
 
+    @AsmDepends
     public boolean isExtFuncEmpty() {
         return this.objExtFunc == null && this.objFieldFunc == null;
     }
@@ -63,42 +65,57 @@ public abstract class JsonWriter extends Writer {
      * @param quote 是否加双引号
      * @param value 非null且不含需要转义的字符的String值
      */
+    @AsmDepends
     public abstract void writeLatin1To(final boolean quote, final String value);
 
+    @AsmDepends
     public abstract void writeFieldShortValue(final byte[] fieldBytes, final short value);
 
+    @AsmDepends
     public abstract void writeFieldIntValue(final byte[] fieldBytes, final int value);
 
+    @AsmDepends
     public abstract void writeFieldLongValue(final byte[] fieldBytes, final long value);
 
+    @AsmDepends
     public abstract void writeFieldLatin1Value(final byte[] fieldBytes, final String value);
 
+    @AsmDepends
     public abstract void writeLastFieldShortValue(final byte[] fieldBytes, final short value);
 
+    @AsmDepends
     public abstract void writeLastFieldIntValue(final byte[] fieldBytes, final int value);
 
+    @AsmDepends
     public abstract void writeLastFieldLongValue(final byte[] fieldBytes, final long value);
 
+    @AsmDepends
     public abstract void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value);
 
     //firstFieldBytes 必须带{开头
+    @AsmDepends
     public abstract void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value);
 
     //firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
+    @AsmDepends
     public abstract void writeObjectByOnlyTwoIntFieldValue(final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2);
 
     @Override
+    @AsmDepends
     public abstract void writeBoolean(boolean value);
 
     @Override
+    @AsmDepends
     public abstract void writeInt(int value);
 
     @Override
+    @AsmDepends
     public abstract void writeLong(long value);
 
     public abstract void writeString(final boolean quote, String value);
 
     @Override
+    @AsmDepends
     public abstract void writeString(String value);
 
     @Override //只容许JsonBytesWriter重写此方法

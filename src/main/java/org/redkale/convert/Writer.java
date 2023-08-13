@@ -7,6 +7,7 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.function.*;
+import org.redkale.asm.AsmDepends;
 import org.redkale.util.*;
 
 /**
@@ -118,6 +119,7 @@ public abstract class Writer {
      *
      * @param clazz 对象的类名
      */
+    @AsmDepends
     public final void writeObjectNull(final Class clazz) {
         writeClassName(null);
         writeNull();

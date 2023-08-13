@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
+import org.redkale.asm.AsmDepends;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -2741,6 +2742,7 @@ public final class Utility {
      *
      * @return 对象
      */
+    @AsmDepends
     public static <T> T convertValue(Type type, Object value) {
         if (type == null || value == null) {
             return (T) value;
