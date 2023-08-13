@@ -137,44 +137,8 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
                 mv.visitVarInsn(ALOAD, 2);
                 Asms.visitInsn(mv, paramIndex);
                 mv.visitInsn(AALOAD);
-                if (paramType == boolean.class) {
-                    paramDescs.append("Z");
-                    mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-                } else if (paramType == byte.class) {
-                    paramDescs.append("B");
-                    mv.visitTypeInsn(CHECKCAST, "java/lang/Byte");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "byteValue", "()B", false);
-                } else if (paramType == short.class) {
-                    paramDescs.append("S");
-                    mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
-                } else if (paramType == char.class) {
-                    paramDescs.append("C");
-                    mv.visitTypeInsn(CHECKCAST, "java/lang/Character");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
-                } else if (paramType == int.class) {
-                    paramDescs.append("I");
-                    mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-                } else if (paramType == float.class) {
-                    paramDescs.append("F");
-                    mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-                } else if (paramType == long.class) {
-                    paramDescs.append("J");
-                    mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
-                } else if (paramType == double.class) {
-                    paramDescs.append("D");
-                    mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-                } else {
-                    paramDescs.append(Type.getDescriptor(paramType));
-                    if (paramType != Object.class) {
-                        mv.visitTypeInsn(CHECKCAST, paramType.getName().replace('.', '/'));
-                    }
-                }
+                Asms.visitCheckCast(mv, paramType);
+                paramDescs.append(Type.getDescriptor(paramType));
                 paramIndex++;
             }
 
