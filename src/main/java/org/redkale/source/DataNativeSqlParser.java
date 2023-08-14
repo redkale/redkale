@@ -4,6 +4,7 @@
 package org.redkale.source;
 
 import java.util.*;
+import java.util.function.Function;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 
@@ -19,12 +20,15 @@ import org.redkale.convert.json.JsonConvert;
  */
 public interface DataNativeSqlParser {
 
-    NativeSqlInfo parse(String prepareSign, String nativeSql, Map<String, Object> params);
+    NativeSqlStatement parse(Function<Integer, String> signFunc, String nativeSql, Map<String, Object> params);
 
-    public static class NativeSqlInfo {
+    public static class NativeSqlStatement {
 
         //根据参数值集合重新生成的带?参数可执行的sql
         protected String nativeSql;
+
+        //是否包含InExpression参数名
+        protected boolean existInNamed;
 
         //需要预编译的参数名, 数量与sql中的?数量一致
         protected List<String> paramNames;
@@ -48,6 +52,14 @@ public interface DataNativeSqlParser {
 
         public void setNativeSql(String nativeSql) {
             this.nativeSql = nativeSql;
+        }
+
+        public boolean isExistInNamed() {
+            return existInNamed;
+        }
+
+        public void setExistInNamed(boolean existInNamed) {
+            this.existInNamed = existInNamed;
         }
 
         public List<String> getParamNames() {

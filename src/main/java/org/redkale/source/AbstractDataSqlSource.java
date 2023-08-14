@@ -77,6 +77,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     protected final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, i)
         -> ((CompletableFuture<Sheet>) querySheetDBAsync(i, false, false, false, null, null, (FilterNode) null)).thenApply(e -> e == null ? new ArrayList() : e.list(true));
 
+    protected final Function<Integer, String> signFunc = index -> prepareParamSign(index);
+
     //超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 2000
     protected long slowmsWarn;
 
@@ -642,11 +644,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return getSQLAttrValue(info, attr, val);
     }
 
-    protected DataNativeSqlParser.NativeSqlInfo nativeParse(String prepareSign, String nativeSql, Map<String, Object> params) {
+    protected DataNativeSqlParser.NativeSqlStatement nativeParse(String nativeSql, Map<String, Object> params) {
         if (nativeSqlParser == null) {
             throw new SourceException("not found DataNativeSqlParser instance");
         }
-        return nativeSqlParser.parse(prepareSign, nativeSql, params == null ? Collections.emptyMap() : params);
+        return nativeSqlParser.parse(signFunc, nativeSql, params == null ? Collections.emptyMap() : params);
     }
 
     @Override
