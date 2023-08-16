@@ -2328,16 +2328,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     private <T> Sheet<T> executeQuerySheet(EntityInfo<T> info, boolean needTotal, Flipper flipper, SelectColumn sels,
         long s, SourceConnection conn, boolean mysqlOrPgsql, String listSql, String countSql) throws SQLException {
         final List<T> list = new ArrayList();
-        if (mysqlOrPgsql) {  //sql可以带limit、offset
-            PreparedStatement prestmt = conn.prepareQueryStatement(listSql);
-            ResultSet set = prestmt.executeQuery();
-            final DataResultSet rr = createDataResultSet(info, set);
-            while (set.next()) {
-                list.add(getEntityValue(info, sels, rr));
-            }
-            set.close();
-            conn.offerQueryStatement(prestmt);
-            long total = list.size();
+        if (mysqlOrPgsql) {  //sql可以带limit、offset   
+            ResultSet set;
+            PreparedStatement prestmt;
+            long total = -1;
             if (needTotal) {
                 prestmt = conn.prepareQueryStatement(countSql);
                 set = prestmt.executeQuery();
@@ -2346,6 +2340,19 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
                 set.close();
                 conn.offerQueryStatement(prestmt);
+            }
+            if (total != 0) {
+                prestmt = conn.prepareQueryStatement(listSql);
+                set = prestmt.executeQuery();
+                final DataResultSet rr = createDataResultSet(info, set);
+                while (set.next()) {
+                    list.add(getEntityValue(info, sels, rr));
+                }
+                set.close();
+                conn.offerQueryStatement(prestmt);
+                if (!needTotal) {
+                    total = list.size();
+                }
             }
             slowLog(s, listSql);
             return new Sheet<>(total, list);
@@ -2548,10 +2555,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             int rs;
             if (sinfo.isEmptyNamed()) {
                 final Statement stmt = conn.createUpdateStatement();
-                rs = stmt.executeUpdate(sinfo.nativeSql);
+                rs = stmt.executeUpdate(sinfo.getNativeSql());
                 conn.offerUpdateStatement(stmt);
             } else {
-                final PreparedStatement prestmt = conn.prepareQueryStatement(sinfo.nativeSql);
+                final PreparedStatement prestmt = conn.prepareQueryStatement(sinfo.getNativeSql());
                 Map<String, Object> paramValues = sinfo.getParamValues();
                 int index = 0;
                 for (String n : sinfo.getParamNames()) {
@@ -2622,7 +2629,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final SourceConnection conn = readPool.pollConnection();
         try {
             if (logger.isLoggable(Level.FINEST)) {
-                logger.finest("executeQuery sql=" + sinfo.nativeSql);
+                logger.finest("executeQuery sql=" + sinfo.getNativeSql());
             }
             V rs;
             if (sinfo.isEmptyNamed()) {
@@ -2630,12 +2637,12 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 if (consumer != null) {
                     consumer.accept(conn, stmt);
                 }
-                ResultSet set = stmt.executeQuery(sql);
+                ResultSet set = stmt.executeQuery(sinfo.getNativeSql());
                 rs = handler.apply(createDataResultSet(null, set));
                 set.close();
                 conn.offerQueryStatement(stmt);
             } else {
-                final PreparedStatement prestmt = conn.prepareQueryStatement(sinfo.nativeSql);
+                final PreparedStatement prestmt = conn.prepareQueryStatement(sinfo.getNativeSql());
                 Map<String, Object> paramValues = sinfo.getParamValues();
                 int index = 0;
                 for (String n : sinfo.getParamNames()) {
@@ -2644,13 +2651,84 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 if (consumer != null) {
                     consumer.accept(conn, prestmt);
                 }
-                ResultSet set = prestmt.executeQuery(sql);
+                ResultSet set = prestmt.executeQuery();
                 rs = handler.apply(createDataResultSet(null, set));
                 set.close();
                 conn.offerQueryStatement(prestmt);
             }
-            slowLog(s, sql);
+            slowLog(s, sinfo.getNativeSql());
             return rs;
+        } catch (Exception ex) {
+            throw new SourceException(ex);
+        } finally {
+            if (conn != null) {
+                readPool.offerConnection(conn);
+            }
+        }
+    }
+
+    public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
+        final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
+        NativeSqlStatement sinfo = super.nativeParse(sql, params);
+        final long s = System.currentTimeMillis();
+        final SourceConnection conn = readPool.pollConnection();
+        try {
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.finest("executeQuery sql=" + sinfo.nativeSql);
+            }
+            long total = -1;
+            List<V> list;
+            if (sinfo.isEmptyNamed()) {
+                Statement stmt = conn.createQueryStatement();
+                ResultSet set = stmt.executeQuery(sinfo.getNativeCountSql());
+                if (set.next()) {
+                    total = set.getLong(1);
+                };
+                set.close();
+                conn.offerQueryStatement(stmt);
+            } else {
+                final PreparedStatement prestmt = conn.prepareQueryStatement(sinfo.getNativeCountSql());
+                Map<String, Object> paramValues = sinfo.getParamValues();
+                int index = 0;
+                for (String n : sinfo.getParamNames()) {
+                    prestmt.setObject(++index, paramValues.get(n));
+                }
+                ResultSet set = prestmt.executeQuery();
+                if (set.next()) {
+                    total = set.getLong(1);
+                };
+                set.close();
+                conn.offerQueryStatement(prestmt);
+            }
+            slowLog(s, sinfo.getNativeCountSql());
+            if (total > 0) {
+                String listSql = sinfo.getNativeSql();
+                if (mysqlOrPgsql) {
+                    listSql += (flipper == null || flipper.getLimit() < 1 ? "" : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset()));
+                }
+                if (sinfo.isEmptyNamed()) {
+                    Statement stmt = conn.createQueryStatement();
+                    ResultSet set = stmt.executeQuery(listSql);
+                    list = EntityBuilder.getListValue(type, createDataResultSet(null, set));
+                    set.close();
+                    conn.offerQueryStatement(stmt);
+                } else {
+                    final PreparedStatement prestmt = conn.prepareQueryStatement(listSql);
+                    Map<String, Object> paramValues = sinfo.getParamValues();
+                    int index = 0;
+                    for (String n : sinfo.getParamNames()) {
+                        prestmt.setObject(++index, paramValues.get(n));
+                    }
+                    ResultSet set = prestmt.executeQuery();
+                    list = EntityBuilder.getListValue(type, createDataResultSet(null, set));
+                    set.close();
+                    conn.offerQueryStatement(prestmt);
+                }
+                slowLog(s, listSql);
+            } else {
+                list = new ArrayList();
+            }
+            return new Sheet<>(total, list);
         } catch (Exception ex) {
             throw new SourceException(ex);
         } finally {
@@ -2683,6 +2761,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Override
     public CompletableFuture<int[]> nativeUpdatesAsync(String... sqls) {
         return supplyAsync(() -> nativeUpdates(sqls));
+    }
+
+    @Override
+    public <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
+        return supplyAsync(() -> nativeQuerySheet(type, sql, flipper, params));
     }
 
     @Deprecated

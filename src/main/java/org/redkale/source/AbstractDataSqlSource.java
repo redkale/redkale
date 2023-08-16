@@ -648,7 +648,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         if (nativeSqlParser == null) {
             throw new SourceException("not found DataNativeSqlParser instance");
         }
-        return nativeSqlParser.parse(signFunc, nativeSql, params == null ? Collections.emptyMap() : params);
+        return nativeSqlParser.parse(signFunc, dbtype(), nativeSql, params == null ? Collections.emptyMap() : params);
     }
 
     @Override
@@ -3241,6 +3241,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     @Override
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler) {
         return nativeQueryAsync(sql, consumer, handler).join();
+    }
+
+    @Override
+    public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
+        return nativeQuerySheetAsync(type, sql, flipper, params).join();
     }
 
     @Override

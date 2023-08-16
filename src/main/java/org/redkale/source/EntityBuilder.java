@@ -183,6 +183,29 @@ public class EntityBuilder<T> {
             unconstructorAttributes, attributeMap, queryAttrs.toArray(new Attribute[queryAttrs.size()]));
     }
 
+    public static <T> List<T> getListValue(Class<T> type, final DataResultSet rset) {
+        if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
+            || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
+            List<T> list = new ArrayList<>();
+            while (rset.next()) {
+                list.add(rset.wasNull() ? null : (T) DataResultSet.formatColumnValue(type, rset.getObject(1)));
+            }
+            return list;
+        }
+        return EntityBuilder.load(type).getObjectList(rset);
+    }
+
+    public static <T> T getOneValue(Class<T> type, final DataResultSet rset) {
+        if (!rset.next()) {
+            return null;
+        }
+        if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
+            || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
+            return (T) DataResultSet.formatColumnValue(type, rset.getObject(1));
+        }
+        return EntityBuilder.load(type).getObjectValue(rset);
+    }
+
     public List<T> getObjectList(final DataResultSet rset) {
         List<T> list = new ArrayList<>();
         List<String> sqlColumns = rset.getColumnLabels();

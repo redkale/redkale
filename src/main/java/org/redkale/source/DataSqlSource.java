@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import static org.redkale.source.DataResultSet.formatColumnValue;
-import org.redkale.util.Copier;
+import org.redkale.util.*;
 
 /**
  *
@@ -128,6 +128,10 @@ public interface DataSqlSource extends DataSource {
      */
     public <V> CompletableFuture<V> nativeQueryAsync(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params);
 
+    public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params);
+
+    public <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper, Map<String, Object> params);
+
     //----------------------------- 无参数 -----------------------------
     default <V> V nativeQuery(String sql, Function<DataResultSet, V> handler) {
         return nativeQuery(sql, null, handler);
@@ -138,57 +142,27 @@ public interface DataSqlSource extends DataSource {
     }
 
     default <V> V nativeQueryOne(Class<V> type, String sql) {
-        return nativeQuery(sql, rset -> {
-            if (!rset.next()) {
-                return null;
-            }
-            if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
-                return (V) formatColumnValue(type, rset.getObject(1));
-            }
-            return EntityBuilder.load(type).getObjectValue(rset);
-        });
+        return nativeQuery(sql, rset -> EntityBuilder.getOneValue(type, rset));
     }
 
     default <V> CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql) {
-        return nativeQueryAsync(sql, rset -> {
-            if (!rset.next()) {
-                return null;
-            }
-            if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
-                return (V) formatColumnValue(type, rset.getObject(1));
-            }
-            return EntityBuilder.load(type).getObjectValue(rset);
-        });
+        return nativeQueryAsync(sql, rset -> EntityBuilder.getOneValue(type, rset));
     }
 
     default <V> List<V> nativeQueryList(Class<V> type, String sql) {
-        return nativeQuery(sql, rset -> {
-            if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
-                List<V> list = new ArrayList<>();
-                while (rset.next()) {
-                    list.add(rset.wasNull() ? null : (V) formatColumnValue(type, rset.getObject(1)));
-                }
-                return list;
-            }
-            return EntityBuilder.load(type).getObjectList(rset);
-        });
+        return nativeQuery(sql, rset -> EntityBuilder.getListValue(type, rset));
     }
 
     default <V> CompletableFuture<List<V>> nativeQueryListAsync(Class<V> type, String sql) {
-        return nativeQueryAsync(sql, rset -> {
-            if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
-                List<V> list = new ArrayList<>();
-                while (rset.next()) {
-                    list.add(rset.wasNull() ? null : (V) formatColumnValue(type, rset.getObject(1)));
-                }
-                return list;
-            }
-            return EntityBuilder.load(type).getObjectList(rset);
-        });
+        return nativeQueryAsync(sql, rset -> EntityBuilder.getListValue(type, rset));
+    }
+
+    default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper) {
+        return nativeQuerySheet(type, sql, flipper, Collections.emptyMap());
+    }
+
+    default <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper) {
+        return nativeQuerySheetAsync(type, sql, flipper, Collections.emptyMap());
     }
 
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql) {
@@ -390,4 +364,13 @@ public interface DataSqlSource extends DataSource {
     default CompletableFuture<Map<Integer, String>> nativeQueryIntStrMapAsync(String sql, Serializable bean) {
         return nativeQueryMapAsync(Integer.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
+
+    default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Serializable bean) {
+        return nativeQuerySheet(type, sql, flipper, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
+    }
+
+    default <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper, Serializable bean) {
+        return nativeQuerySheetAsync(type, sql, flipper, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
+    }
+
 }

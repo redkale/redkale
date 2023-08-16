@@ -20,12 +20,15 @@ import org.redkale.convert.json.JsonConvert;
  */
 public interface DataNativeSqlParser {
 
-    NativeSqlStatement parse(Function<Integer, String> signFunc, String nativeSql, Map<String, Object> params);
+    NativeSqlStatement parse(Function<Integer, String> signFunc, String dbtype, String nativeSql, Map<String, Object> params);
 
     public static class NativeSqlStatement {
 
         //根据参数值集合重新生成的带?参数可执行的sql
         protected String nativeSql;
+
+        //根据参数值集合重新生成的带?参数可执行的计算总数sql,用于返回Sheet对象
+        protected String nativeCountSql;
 
         //是否包含InExpression参数名
         protected boolean existInNamed;
@@ -52,6 +55,14 @@ public interface DataNativeSqlParser {
 
         public void setNativeSql(String nativeSql) {
             this.nativeSql = nativeSql;
+        }
+
+        public String getNativeCountSql() {
+            return nativeCountSql;
+        }
+
+        public void setNativeCountSql(String nativeCountSql) {
+            this.nativeCountSql = nativeCountSql;
         }
 
         public boolean isExistInNamed() {
