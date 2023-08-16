@@ -3232,6 +3232,32 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return querySheetDBAsync(info, readCache, needTotal, distinct, selects, flipper, node);
     }
 
+    //-------------------------------------------- native SQL --------------------------------------------
+    @Override
+    public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params) {
+        return nativeQueryAsync(sql, consumer, handler, params).join();
+    }
+
+    @Override
+    public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler) {
+        return nativeQueryAsync(sql, consumer, handler).join();
+    }
+
+    @Override
+    public int nativeUpdate(String sql, Map<String, Object> params) {
+        return nativeUpdateAsync(sql, params).join();
+    }
+
+    @Override
+    public int nativeUpdate(String sql) {
+        return nativeUpdateAsync(sql).join();
+    }
+
+    @Override
+    public int[] nativeUpdates(String... sqls) {
+        return nativeUpdatesAsync(sqls).join();
+    }
+
     protected static class UpdateSqlInfo {
 
         public String sql; //prepare-sql时表名参数只能是最后一个

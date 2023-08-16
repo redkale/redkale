@@ -2490,6 +2490,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      *
      * @return 结果数组
      */
+    @Local
     @Override
     public int[] nativeUpdates(String... sqls) {
         if (sqls.length == 0) {
@@ -2530,11 +2531,13 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      *
      * @return 结果数组
      */
+    @Local
     @Override
     public int nativeUpdate(String sql) {
         return nativeUpdates(new String[]{sql})[0];
     }
 
+    @Local
     @Override
     public int nativeUpdate(String sql, Map<String, Object> params) {
         NativeSqlStatement sinfo = super.nativeParse(sql, params);
@@ -2583,6 +2586,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      *
      * @return 结果
      */
+    @Local
     @Override
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler) {
         final long s = System.currentTimeMillis();
@@ -2610,6 +2614,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
+    @Local
     @Override
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params) {
         NativeSqlStatement sinfo = super.nativeParse(sql, params);
@@ -2653,6 +2658,31 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 readPool.offerConnection(conn);
             }
         }
+    }
+
+    @Override
+    public <V> CompletableFuture<V> nativeQueryAsync(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params) {
+        return supplyAsync(() -> nativeQuery(sql, consumer, handler, params));
+    }
+
+    @Override
+    public <V> CompletableFuture<V> nativeQueryAsync(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler) {
+        return supplyAsync(() -> nativeQuery(sql, consumer, handler));
+    }
+
+    @Override
+    public CompletableFuture<Integer> nativeUpdateAsync(String sql, Map<String, Object> params) {
+        return supplyAsync(() -> nativeUpdate(sql, params));
+    }
+
+    @Override
+    public CompletableFuture<Integer> nativeUpdateAsync(String sql) {
+        return supplyAsync(() -> nativeUpdate(sql));
+    }
+
+    @Override
+    public CompletableFuture<int[]> nativeUpdatesAsync(String... sqls) {
+        return supplyAsync(() -> nativeUpdates(sqls));
     }
 
     @Deprecated
