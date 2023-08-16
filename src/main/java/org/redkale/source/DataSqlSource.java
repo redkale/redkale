@@ -25,7 +25,7 @@ public interface DataSqlSource extends DataSource {
     /**
      * 执行多条原生无参数的sql
      *
-     * @param sql 无参数的sql语句
+     * @param sqls 无参数的sql语句
      *
      * @return 执行条数
      */
@@ -34,7 +34,7 @@ public interface DataSqlSource extends DataSource {
     /**
      * 执行多条原生无参数的sql
      *
-     * @param sql 无参数的sql语句
+     * @param sqls 无参数的sql语句
      *
      * @return 执行条数
      */
