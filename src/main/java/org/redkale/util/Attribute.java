@@ -228,6 +228,9 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldName) {
+        if (Map.class.isAssignableFrom(clazz)) {
+            return (Attribute) map(fieldName);
+        }
         try {
             return create(clazz, fieldName, (Class) null, clazz.getDeclaredField(fieldName), (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
         } catch (NoSuchFieldException | SecurityException ex) {
@@ -1158,6 +1161,42 @@ public interface Attribute<T, F> {
             @Override
             public String toString() {
                 return tostr;
+            }
+        };
+    }
+
+    /**
+     * 根据Map类生成 Attribute 对象。 fieldName都不能为null
+     *
+     * @param fieldName 字段名
+     *
+     * @return Attribute对象
+     */
+    public static <T extends Map, F> Attribute<T, F> map(final String fieldName) {
+        return new Attribute<T, F>() {
+            @Override
+            public Class<? extends F> type() {
+                return (Class) Object.class;
+            }
+
+            @Override
+            public Class<T> declaringClass() {
+                return (Class) Map.class;
+            }
+
+            @Override
+            public String field() {
+                return fieldName;
+            }
+
+            @Override
+            public F get(T obj) {
+                return (F) ((Map) obj).get(fieldName);
+            }
+
+            @Override
+            public void set(T obj, F value) {
+                ((Map) obj).put(fieldName, value);
             }
         };
     }
