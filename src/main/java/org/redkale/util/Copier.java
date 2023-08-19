@@ -740,6 +740,8 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
             }
 
+            Predicate<Class> simpler = t -> t.isPrimitive() || t == String.class || Number.class.isAssignableFrom(t);
+
             for (java.lang.reflect.Field field : srcClass.getFields()) {
                 if (Modifier.isStatic(field.getModifiers())) {
                     continue;
@@ -795,7 +797,11 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     java.lang.reflect.Field setField = null;
                     try {
                         setField = destClass.getField(dfname);
-                        if (!field.getType().equals(setField.getType())) {
+                        if (field.getType() == setField.getType()) {
+                            needTypeCast = false;
+                        } else if (simpler.test(field.getType()) && simpler.test(setField.getType())) {
+                            needTypeCast = true;
+                        } else if (!field.getType().equals(setField.getType())) {
                             if (allowTypeCast) {
                                 needTypeCast = true;
                             } else {
@@ -810,31 +816,31 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                 continue;  //setter方法带有非RuntimeException异常
                             }
                         } catch (Exception e2) {
-                            if (allowTypeCast) {
-                                try {
-                                    for (java.lang.reflect.Method m : destClass.getMethods()) {
-                                        if (Modifier.isStatic(m.getModifiers())) {
-                                            continue;
-                                        }
-                                        if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
-                                            continue;  //setter方法带有非RuntimeException异常
-                                        }
-                                        if (m.getParameterTypes().length != 1) {
-                                            continue;
-                                        }
-                                        if (m.getName().equals(setterMethodName)) {
-                                            setter = m;
-                                            needTypeCast = true;
-                                            break;
-                                        }
-                                    }
-                                    if (setter == null) {
+                            try {
+                                for (java.lang.reflect.Method m : destClass.getMethods()) {
+                                    if (Modifier.isStatic(m.getModifiers())) {
                                         continue;
                                     }
-                                } catch (Exception e3) {
+                                    if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
+                                        continue;  //setter方法带有非RuntimeException异常
+                                    }
+                                    if (m.getParameterTypes().length != 1) {
+                                        continue;
+                                    }
+                                    if (m.getName().equals(setterMethodName)) {
+                                        if (simpler.test(field.getType()) && simpler.test(setField.getType())) {
+                                            setter = m;
+                                            needTypeCast = true;
+                                        } else if (!allowTypeCast) {
+                                            setter = null;
+                                        }
+                                        break;
+                                    }
+                                }
+                                if (setter == null) {
                                     continue;
                                 }
-                            } else {
+                            } catch (Exception e3) {
                                 continue;
                             }
                         }

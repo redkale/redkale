@@ -125,6 +125,7 @@ public abstract class LoggingBaseHandler extends Handler {
             ps.println("sun.level = INFO");
             ps.println("com.sun.level = INFO");
             ps.println("javax.level = INFO");
+            ps.println("org.junit.level = INFO");
             ps.println(handlerName + ".level = FINEST");
             ps.println(handlerName + ".formatter = " + LoggingFormater.class.getName());
             LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(out.toByteArray()));
