@@ -5,13 +5,14 @@
  */
 package org.redkale.util;
 
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
+import org.redkale.asm.Type;
 import org.redkale.util.Attribute;
 
 /**
@@ -168,7 +169,8 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Field field) {
-        return create((Class<T>) field.getDeclaringClass(), field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+        return create((Class<T>) field.getDeclaringClass(), field.getName(), (Class) null,
+            field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
     }
 
     /**
@@ -183,7 +185,8 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Field field, Object attach) {
-        return create((Class<T>) field.getDeclaringClass(), field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
+        return create((Class<T>) field.getDeclaringClass(), field.getName(), (Class) null,
+            field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -198,7 +201,8 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(String fieldAlias, final java.lang.reflect.Field field) {
-        return create((Class<T>) field.getDeclaringClass(), fieldAlias, (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+        return create((Class<T>) field.getDeclaringClass(), fieldAlias, (Class) null,
+            field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
     }
 
     /**
@@ -214,7 +218,8 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(String fieldAlias, final java.lang.reflect.Field field, Object attach) {
-        return create((Class<T>) field.getDeclaringClass(), fieldAlias, (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
+        return create((Class<T>) field.getDeclaringClass(), fieldAlias, (Class) null,
+            field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -232,7 +237,8 @@ public interface Attribute<T, F> {
             return (Attribute) map(fieldName);
         }
         try {
-            return create(clazz, fieldName, (Class) null, clazz.getDeclaredField(fieldName), (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+            return create(clazz, fieldName, (Class) null, clazz.getDeclaredField(fieldName),
+                (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
         } catch (NoSuchFieldException | SecurityException ex) {
             throw new RedkaleException(ex);
         }
@@ -251,7 +257,8 @@ public interface Attribute<T, F> {
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldName, Object attach) {
         try {
-            return create(clazz, fieldName, (Class) null, clazz.getDeclaredField(fieldName), (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
+            return create(clazz, fieldName, (Class) null, clazz.getDeclaredField(fieldName),
+                (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
         } catch (NoSuchFieldException | SecurityException ex) {
             throw new RedkaleException(ex);
         }
@@ -268,7 +275,8 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Field field) {
-        return create(clazz, field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+        return create(clazz, field.getName(), (Class) null, field,
+            (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
     }
 
     /**
@@ -283,7 +291,8 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> subclass, Class<T> clazz, final java.lang.reflect.Field field) {
-        return create(subclass, clazz, field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+        return create(subclass, clazz, field.getName(), (Class) null, field,
+            (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
     }
 
     /**
@@ -298,7 +307,8 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Field field, Object attach) {
-        return create(clazz, field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
+        return create(clazz, field.getName(), (Class) null, field,
+            (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -314,7 +324,8 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> subclass, Class<T> clazz, final java.lang.reflect.Field field, Object attach) {
-        return create(subclass, clazz, field.getName(), (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
+        return create(subclass, clazz, field.getName(), (Class) null,
+            field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -329,7 +340,8 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldAlias, final java.lang.reflect.Field field) {
-        return create(clazz, fieldAlias, (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
+        return create(clazz, fieldAlias, (Class) null,
+            field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, null);
     }
 
     /**
@@ -344,8 +356,9 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldAlias, final java.lang.reflect.Field field, Object attach) {
-        return create(clazz, fieldAlias, (Class) null, field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, String fieldAlias, java.lang.reflect.Field field, Object attach) {
+        return create(clazz, fieldAlias, (Class) null,
+            field, (java.lang.reflect.Method) null, (java.lang.reflect.Method) null, attach);
     }
 
     /**
@@ -360,7 +373,8 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
-        return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, null);
+        return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()),
+            (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, null);
     }
 
     /**
@@ -376,7 +390,8 @@ public interface Attribute<T, F> {
      */
     @SuppressWarnings("unchecked")
     public static <T, F> Attribute<T, F> create(final java.lang.reflect.Method getter, final java.lang.reflect.Method setter, Object attach) {
-        return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()), (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, attach);
+        return create((Class) (getter == null ? setter.getDeclaringClass() : getter.getDeclaringClass()),
+            (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, attach);
     }
 
     /**
@@ -390,7 +405,7 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
+    public static <T, F> Attribute<T, F> create(Class<T> clazz,  java.lang.reflect.Method getter,  java.lang.reflect.Method setter) {
         return create(clazz, (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, null);
     }
 
@@ -406,7 +421,7 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter, Object attach) {
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
         return create(clazz, (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, attach);
     }
 
@@ -548,7 +563,8 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldAlias, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldAlias,
+        final java.lang.reflect.Method getter, final java.lang.reflect.Method setter) {
         return create(clazz, fieldAlias, (Class) null, (java.lang.reflect.Field) null, getter, setter, null);
     }
 
@@ -565,7 +581,8 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldAlias, final java.lang.reflect.Method getter, final java.lang.reflect.Method setter, Object attach) {
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, final String fieldAlias,
+        final java.lang.reflect.Method getter, final java.lang.reflect.Method setter, Object attach) {
         return create(clazz, fieldAlias, (Class) null, (java.lang.reflect.Field) null, getter, setter, attach);
     }
 
@@ -582,7 +599,8 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldAlias, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter) {
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldAlias,
+        final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter) {
         return create(clazz, fieldAlias, (Class) null, field, getter, setter, null);
     }
 
@@ -600,7 +618,8 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldAlias, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldAlias,
+        final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
         return create(clazz, fieldAlias, (Class) null, field, getter, setter, attach);
     }
 
@@ -650,7 +669,8 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     @SuppressWarnings("unchecked")
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldAlias, final Class<F> fieldType, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter) {
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldAlias, final Class<F> fieldType,
+        final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter) {
         return create(clazz, fieldAlias, fieldType, field, getter, setter, null);
     }
 
@@ -670,7 +690,8 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     @SuppressWarnings("unchecked")
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldAlias, final Class<F> fieldType, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
+    public static <T, F> Attribute<T, F> create(final Class<T> clazz, String fieldAlias, final Class<F> fieldType,
+        final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
         return create(null, clazz, fieldAlias, fieldType, field, getter, setter, attach);
     }
 
@@ -691,7 +712,8 @@ public interface Attribute<T, F> {
      * @return Attribute对象
      */
     @SuppressWarnings("unchecked")
-    public static <T, F> Attribute<T, F> create(java.lang.reflect.Type subclass, final Class<T> clazz, String fieldAlias, final Class<F> fieldType, final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
+    public static <T, F> Attribute<T, F> create(java.lang.reflect.Type subclass, final Class<T> clazz, String fieldAlias, final Class<F> fieldType,
+        final java.lang.reflect.Field field, java.lang.reflect.Method getter, java.lang.reflect.Method setter, Object attach) {
         if (subclass == null) {
             subclass = clazz;
         }
@@ -723,7 +745,7 @@ public interface Attribute<T, F> {
                 }
             }
         }
-        final java.lang.reflect.Field tfield = field == null ? null : (!java.lang.reflect.Modifier.isPublic(mod) || java.lang.reflect.Modifier.isStatic(mod) ? null : field);
+        final java.lang.reflect.Field tfield = field == null ? null : (!Modifier.isPublic(mod) || Modifier.isStatic(mod) ? null : field);
         final java.lang.reflect.Method tgetter = getter;
         final java.lang.reflect.Method tsetter = setter;
         String fieldkey = fieldAlias;
@@ -1051,7 +1073,8 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldName, final Class<F> fieldType, final Function<T, F> getter, final BiConsumer<T, F> setter) {
+    public static <T, F> Attribute<T, F> create(@Nonnull Class<T> clazz, @Nonnull String fieldName, @Nonnull Class<F> fieldType,
+        final Function<T, F> getter, final BiConsumer<T, F> setter) {
         return create(clazz, fieldName, fieldType, fieldType, getter, setter);
     }
 
@@ -1069,7 +1092,8 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldName, final Class<F> fieldType, final Function<T, F> getter, final BiConsumer<T, F> setter, Object attach) {
+    public static <T, F> Attribute<T, F> create(@Nonnull Class<T> clazz, @Nonnull String fieldName, @Nonnull Class<F> fieldType,
+        final Function<T, F> getter, final BiConsumer<T, F> setter, Object attach) {
         return create(clazz, fieldName, fieldType, fieldType, getter, setter, attach);
     }
 
@@ -1087,7 +1111,7 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldName, final Class<F> fieldType,
+    public static <T, F> Attribute<T, F> create(@Nonnull Class<T> clazz, @Nonnull String fieldName, @Nonnull Class<F> fieldType,
         final java.lang.reflect.Type fieldGenericType, final Function<T, F> getter, final BiConsumer<T, F> setter) {
         return create(clazz, fieldName, fieldType, fieldGenericType, getter, setter, null);
     }
@@ -1107,7 +1131,7 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(final Class<T> clazz, final String fieldName, final Class<F> fieldType,
+    public static <T, F> Attribute<T, F> create(@Nonnull final Class<T> clazz, @Nonnull final String fieldName, @Nonnull final Class<F> fieldType,
         final java.lang.reflect.Type fieldGenericType, final Function<T, F> getter, final BiConsumer<T, F> setter, final Object attach) {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(fieldName);
