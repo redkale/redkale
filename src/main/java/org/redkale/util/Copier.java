@@ -251,7 +251,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     public static <S, D, C extends Collection> Function<Collection<S>, Collection<D>> funcCollection(final Class<S> srcClass, final Class<D> destClass,
         final int options, final Class<C> collectionClass) {
         if (destClass == srcClass) {
-            return CopierInner.funcListOneCaches
+            return Inners.CopierInner.copierFuncListOneCaches
                 .computeIfAbsent(collectionClass, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(srcClass, v -> {
@@ -273,7 +273,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     return funcList;
                 });
         } else {
-            return CopierInner.funcListTwoCaches
+            return Inners.CopierInner.copierFuncListTwoCaches
                 .computeIfAbsent(collectionClass, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
@@ -311,7 +311,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      */
     public static <S, D> Function<S, D> func(final Class<S> srcClass, final Class<D> destClass, final int options) {
         if (destClass == srcClass) {
-            return CopierInner.funcOneCaches
+            return Inners.CopierInner.copierFuncOneCaches
                 .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(srcClass, v -> {
                     Copier<S, D> copier = load(srcClass, destClass, options);
@@ -320,7 +320,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     return func;
                 });
         } else {
-            return CopierInner.funcTwoCaches
+            return Inners.CopierInner.copierFuncTwoCaches
                 .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(destClass, v -> {
@@ -345,11 +345,11 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      */
     public static <S, D> Copier<S, D> load(final Class<S> srcClass, final Class<D> destClass, final int options) {
         if (destClass == srcClass) {
-            return CopierInner.copierOneCaches
+            return Inners.CopierInner.copierOneCaches
                 .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(srcClass, v -> create(srcClass, destClass, options));
         } else {
-            return CopierInner.copierTwoCaches
+            return Inners.CopierInner.copierTwoCaches
                 .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
                 .computeIfAbsent(destClass, v -> create(srcClass, destClass, options));
@@ -1121,30 +1121,6 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             return (Copier) newClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
             throw new RedkaleException(ex);
-        }
-    }
-
-    static class CopierInner {
-
-        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Copier>> copierOneCaches = new ConcurrentHashMap();
-
-        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Copier>>> copierTwoCaches = new ConcurrentHashMap();
-
-        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Function>> funcOneCaches = new ConcurrentHashMap();
-
-        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>> funcTwoCaches = new ConcurrentHashMap();
-
-        static final ConcurrentHashMap<Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Function>>> funcListOneCaches = new ConcurrentHashMap();
-
-        static final ConcurrentHashMap<Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>>> funcListTwoCaches = new ConcurrentHashMap();
-
-        public static void clear() {
-            copierOneCaches.clear();
-            copierTwoCaches.clear();
-            funcOneCaches.clear();
-            funcTwoCaches.clear();
-            funcListOneCaches.clear();
-            funcListTwoCaches.clear();
         }
     }
 

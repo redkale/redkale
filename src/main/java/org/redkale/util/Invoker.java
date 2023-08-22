@@ -56,7 +56,7 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
     }
 
     public static <C, T> Invoker<C, T> load(final Class<C> clazz, final Method method) {
-        return InvokerInner.caches
+        return Inners.InvokerInner.invokerCaches
             .computeIfAbsent(clazz, t -> new ConcurrentHashMap<>())
             .computeIfAbsent(method, v -> create(clazz, method));
     }
@@ -190,9 +190,4 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
         }
     }
 
-    static class InvokerInner {
-
-        static final ConcurrentHashMap<Class, ConcurrentHashMap<Method, Invoker>> caches = new ConcurrentHashMap();
-
-    }
 }

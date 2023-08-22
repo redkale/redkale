@@ -25,7 +25,7 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
-    public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.HashMap<String, String>>() {
+    public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.Map<String, String>>() {
     }.getType();
 
     public static final Type TYPE_LIST_STRING = new TypeToken<java.util.List<String>>() {
