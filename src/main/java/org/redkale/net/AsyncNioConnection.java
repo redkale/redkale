@@ -384,7 +384,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             int totalCount = 0;
             boolean hasRemain = true;
             boolean writeCompleted = true;
-
+            boolean fastMode = false;
             if (writeByteBuffer == null && writeByteBuffers == null && writeByteTuple1Array == null && fastWriteCount.get() > 0) {
                 final ByteBuffer buffer = pollWriteBuffer();
                 ByteBufferWriter writer = null;
@@ -400,6 +400,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                         writer.put(item);
                     }
                 }
+                fastMode = true;
                 this.writeBuffersOffset = 0;
                 if (writer == null) {
                     this.writeByteBuffer = buffer.flip();
@@ -500,6 +501,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
             if (writeCompleted && (totalCount != 0 || !hasRemain)) {
                 handleWrite(this.writeTotal + totalCount, null);
+                if (fastMode && fastWriteCount.get() > 0) {
+                    doWrite();
+                }
             } else if (writeKey == null) {
                 ioWriteThread.register(selector -> {
                     try {
