@@ -500,7 +500,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
             if (writeCompleted && (totalCount != 0 || !hasRemain)) {
                 handleWrite(this.writeTotal + totalCount, null);
                 if (fastWriteCount.get() > 0) {
-                    this.writePending = true;
                     doWrite();
                 }
             } else if (writeKey == null) {
