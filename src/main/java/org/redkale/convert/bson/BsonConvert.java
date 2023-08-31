@@ -46,14 +46,8 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     private final ThreadLocal<BsonReader> readerPool = ThreadLocal.withInitial(BsonReader::new);
 
-    private final boolean tiny;
-
-    private final boolean nullable;
-
-    protected BsonConvert(ConvertFactory<BsonReader, BsonWriter> factory, boolean tiny, boolean nullable) {
-        super(factory);
-        this.tiny = tiny;
-        this.nullable = nullable;
+    protected BsonConvert(ConvertFactory<BsonReader, BsonWriter> factory, int features) {
+        super(factory, features);
     }
 
     @Override
@@ -82,7 +76,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> fieldFunc, BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
-        return new BsonConvert(getFactory(), tiny, nullable) {
+        return new BsonConvert(getFactory(), features) {
             @Override
             protected <S extends BsonWriter> S configWrite(S writer) {
                 return fieldFunc(writer, fieldFunc, mapFieldFunc, objExtFunc);
@@ -120,11 +114,11 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     //------------------------------ writer -----------------------------------------------------------
     public BsonByteBufferWriter pollWriter(final Supplier<ByteBuffer> supplier) {
-        return configWrite(new BsonByteBufferWriter(tiny, nullable, supplier));
+        return configWrite(new BsonByteBufferWriter(features, supplier));
     }
 
     protected BsonWriter pollWriter(final OutputStream out) {
-        return configWrite(new BsonStreamWriter(tiny, nullable, out));
+        return configWrite(new BsonStreamWriter(features, out));
     }
 
     @Override
@@ -135,7 +129,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         } else {
             writerPool.set(null);
         }
-        return configWrite(writer.tiny(tiny).nullable(nullable));
+        return configWrite(writer.features(features));
     }
 
     @Override
@@ -240,7 +234,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @Override
     public void convertToBytes(final ByteArray array, final Type type, final Object value) {
         Objects.requireNonNull(array);
-        final BsonWriter writer = configWrite(new BsonWriter(array).tiny(tiny).nullable(nullable));
+        final BsonWriter writer = configWrite(new BsonWriter(array).features(features));
         if (value == null) {
             writer.writeNull();
         } else {
@@ -286,7 +280,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         if (value == null) {
             return null;
         }
-        final BsonWriter writer = writerPool.get().tiny(tiny).nullable(nullable);
+        final BsonWriter writer = writerPool.get().features(features);
         factory.loadEncoder(type == null ? value.getClass() : type).convertTo(writer, value);
         return writer;
     }

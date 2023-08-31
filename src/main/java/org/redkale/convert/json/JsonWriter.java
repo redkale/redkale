@@ -21,33 +21,18 @@ public abstract class JsonWriter extends Writer {
 
     protected static final int defaultSize = Integer.getInteger("redkale.convert.json.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
-    protected boolean tiny = JsonFactory.root().tiny();
-
-    protected boolean nullable = JsonFactory.root().nullable();
-
-    @Override
-    public boolean tiny() {
-        return tiny;
+    protected JsonWriter() {
+        this.features = JsonFactory.root().features();
     }
 
-    public JsonWriter tiny(boolean tiny) {
-        this.tiny = tiny;
+    public JsonWriter features(int features) {
+        super.features(features);
         return this;
     }
 
     @AsmDepends
     public boolean isExtFuncEmpty() {
         return this.objExtFunc == null && this.objFieldFunc == null;
-    }
-
-    @Override
-    public boolean nullable() {
-        return nullable;
-    }
-
-    public JsonWriter nullable(boolean nullable) {
-        this.nullable = nullable;
-        return this;
     }
 
     //-----------------------------------------------------------------------

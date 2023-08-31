@@ -10,8 +10,9 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import org.redkale.annotation.Component;
+import org.redkale.annotation.*;
 import org.redkale.convert.Convert;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
 /**
@@ -35,6 +36,79 @@ public interface CacheSource extends Resourcable {
     default boolean isOpen() {
         return isOpenAsync().join();
     }
+
+    //------------------------ 订阅发布 SUB/PUB ------------------------ 
+    default List<String> pubsubChannels(@Nullable String pattern) {
+        return pubsubChannelsAsync(pattern).join();
+    }
+
+    public CompletableFuture<List<String>> pubsubChannelsAsync(@Nullable String pattern);
+
+    //------------------------ 订阅 SUB ------------------------ 
+    default <T> void subscribe(Type messageType, CacheEventListener<T> listener, String... topics) {
+        subscribe(JsonConvert.root(), messageType, listener, topics);
+    }
+
+    default <T> void subscribe(Convert convert, Type messageType, CacheEventListener<T> listener, String... topics) {
+        final Convert c = convert == null ? JsonConvert.root() : convert;
+        subscribe((t, bs) -> listener.onMessage(t, bs == null ? null : (T) c.convertFrom(messageType, bs)), topics);
+    }
+
+    default void subscribe(CacheEventListener<byte[]> listener, String... topics) {
+        subscribeAsync(listener, topics).join();
+    }
+
+    default <T> CompletableFuture<Void> subscribeAsync(Type messageType, CacheEventListener<T> listener, String... topics) {
+        return subscribeAsync(JsonConvert.root(), messageType, listener, topics);
+    }
+
+    default <T> CompletableFuture<Void> subscribeAsync(Convert convert, Type messageType, CacheEventListener<T> listener, String... topics) {
+        final Convert c = convert == null ? JsonConvert.root() : convert;
+        return subscribeAsync((t, bs) -> listener.onMessage(t, bs == null ? null : (T) c.convertFrom(messageType, bs)), topics);
+    }
+
+    public CompletableFuture<Void> subscribeAsync(CacheEventListener<byte[]> listener, String... topics);
+
+    //------------------------ 发布 PUB ------------------------ 
+    default <T> int publish(String topic, T message) {
+        return publish(topic, JsonConvert.root(), message.getClass(), message);
+    }
+
+    default <T> int publish(String topic, Convert convert, T message) {
+        return publish(topic, convert, message.getClass(), message);
+    }
+
+    default <T> int publish(String topic, Type messageType, T message) {
+        return publish(topic, JsonConvert.root(), messageType, message);
+    }
+
+    default <T> int publish(String topic, Convert convert, Type messageType, T message) {
+        final Convert c = convert == null ? JsonConvert.root() : convert;
+        return publish(topic, c.convertToBytes(messageType, message));
+    }
+
+    default int publish(String topic, byte[] message) {
+        return publishAsync(topic, message).join();
+    }
+
+    default <T> CompletableFuture<Integer> publishAsync(String topic, T message) {
+        return publishAsync(topic, JsonConvert.root(), message.getClass(), message);
+    }
+
+    default <T> CompletableFuture<Integer> publishAsync(String topic, Convert convert, T message) {
+        return publishAsync(topic, convert, message.getClass(), message);
+    }
+
+    default <T> CompletableFuture<Integer> publishAsync(String topic, Type messageType, T message) {
+        return publishAsync(topic, JsonConvert.root(), messageType, message);
+    }
+
+    default <T> CompletableFuture<Integer> publishAsync(String topic, Convert convert, Type messageType, T message) {
+        final Convert c = convert == null ? JsonConvert.root() : convert;
+        return publishAsync(topic, c.convertToBytes(messageType, message));
+    }
+
+    public CompletableFuture<Integer> publishAsync(String topic, byte[] message);
 
     //------------------------ 字符串 String ------------------------  
     default long incr(String key) {

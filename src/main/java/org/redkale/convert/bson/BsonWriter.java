@@ -27,10 +27,6 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     protected int count;
 
-    protected boolean tiny = BsonFactory.root().tiny();
-
-    protected boolean nullable = BsonFactory.root().nullable();
-
     public static ObjectPool<BsonWriter> createPool(int max) {
         return ObjectPool.createSafePool(max, (Object... params) -> new BsonWriter(), null, (t) -> t.recycle());
     }
@@ -86,6 +82,7 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     public BsonWriter() {
         this(defaultSize);
+        this.features = BsonFactory.root().features();
     }
 
     public BsonWriter(int size) {
@@ -97,23 +94,8 @@ public class BsonWriter extends Writer implements ByteTuple {
         this.count = array.length();
     }
 
-    @Override
-    public final boolean tiny() {
-        return tiny;
-    }
-
-    public BsonWriter tiny(boolean tiny) {
-        this.tiny = tiny;
-        return this;
-    }
-
-    @Override
-    public final boolean nullable() {
-        return nullable;
-    }
-
-    public BsonWriter nullable(boolean nullable) {
-        this.nullable = nullable;
+    public BsonWriter features(int features) {
+        super.features(features); 
         return this;
     }
 

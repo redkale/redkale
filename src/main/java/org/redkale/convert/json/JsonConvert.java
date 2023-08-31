@@ -40,18 +40,13 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     private final ThreadLocal<JsonReader> readerPool = ThreadLocal.withInitial(JsonReader::new);
 
-    private final boolean tiny;
-
-    private final boolean nullable;
 
     private Encodeable lastConvertEncodeable;
 
     private Decodeable lastConvertDecodeable;
 
-    protected JsonConvert(JsonFactory factory, boolean tiny, boolean nullable) {
-        super(factory);
-        this.tiny = tiny;
-        this.nullable = nullable;
+    protected JsonConvert(JsonFactory factory, int features) {
+        super(factory, features);
     }
 
     @Override
@@ -80,7 +75,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     @Override
     public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
-        return new JsonConvert(getFactory(), tiny, nullable) {
+        return new JsonConvert(getFactory(), features) {
             @Override
             protected <S extends JsonWriter> S configWrite(S writer) {
                 return fieldFunc(writer, objFieldFunc, mapFieldFunc, objExtFunc);
@@ -115,7 +110,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         } else {
             bytesWriterPool.set(null);
         }
-        return configWrite((JsonBytesWriter) writer.tiny(tiny).nullable(nullable));
+        return configWrite((JsonBytesWriter) writer.features(features));
     }
 
     @Override
@@ -135,7 +130,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         } else {
             bytesWriterPool.set(null);
         }
-        return configWrite((JsonBytesWriter) writer.tiny(tiny).nullable(nullable));
+        return configWrite((JsonBytesWriter) writer.features(features));
     }
 
     private void offerJsonBytesWriter(final JsonBytesWriter writer) {
@@ -395,7 +390,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     @Override
     public void convertToBytes(final ByteArray array, final Type type, final Object value) {
         Objects.requireNonNull(array);
-        JsonBytesWriter writer = configWrite(new JsonBytesWriter(tiny, nullable, array));
+        JsonBytesWriter writer = configWrite(new JsonBytesWriter(features, array));
         if (value == null) {
             writer.writeNull();
         } else {
@@ -415,10 +410,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     public void convertTo(final OutputStream out, final Type type, final Object value) {
         if (value == null) {
-            configWrite(new JsonStreamWriter(tiny, nullable, out)).writeNull();
+            configWrite(new JsonStreamWriter(features, out)).writeNull();
         } else {
             final Type t = type == null ? value.getClass() : type;
-            JsonStreamWriter writer = configWrite(new JsonStreamWriter(tiny, nullable, out));
+            JsonStreamWriter writer = configWrite(new JsonStreamWriter(features, out));
             Encodeable encoder = this.lastConvertEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
@@ -434,7 +429,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
         Objects.requireNonNull(supplier);
-        JsonByteBufferWriter out = configWrite(new JsonByteBufferWriter(tiny, nullable, supplier));
+        JsonByteBufferWriter out = configWrite(new JsonByteBufferWriter(features, supplier));
         if (value == null) {
             out.writeNull();
         } else {

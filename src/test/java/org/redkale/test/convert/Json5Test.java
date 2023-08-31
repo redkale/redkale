@@ -4,6 +4,7 @@ package org.redkale.test.convert;
 
 import java.util.*;
 import org.junit.jupiter.api.*;
+import org.redkale.convert.ConvertFactory;
 import org.redkale.convert.json.*;
 
 /**
@@ -23,7 +24,7 @@ public class Json5Test {
 
     @Test
     public void run1() throws Exception {
-        JsonFactory factory = JsonFactory.root().tiny(true).nullable(true);
+        JsonFactory factory = JsonFactory.root().features(ConvertFactory.FEATURE_TINY | ConvertFactory.FEATURE_NULLABLE);
         final JsonConvert convert = factory.getConvert();
         Json5Bean bean = new Json5Bean();
         bean.id = 60;

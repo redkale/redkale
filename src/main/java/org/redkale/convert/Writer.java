@@ -35,6 +35,9 @@ public abstract class Writer {
     //对某个对象进行动态扩展字段值处理
     protected Function<Object, ConvertField[]> objExtFunc;
 
+    //配置项
+    protected int features;
+
     /**
      * 设置specificObjectType
      *
@@ -69,18 +72,27 @@ public abstract class Writer {
     }
 
     /**
-     * 当tiny=true时， 字符串为空、boolean为false的字段值都会被跳过， 不会输出。
+     * 获取配置属性
      *
-     * @return 是否简化
      */
-    public abstract boolean tiny();
+    public final int features() {
+        return features;
+    }
 
-    /**
-     * 当nullable=true时， 字段值为null时会输出该字段
-     *
-     * @return 是否简化
-     */
-    public abstract boolean nullable();
+    public Writer features(int features) {
+        if (features > -1) {
+            this.features = features;
+        }
+        return this;
+    }
+
+    protected final boolean tiny() {
+        return ConvertFactory.tinyFeature(features);
+    }
+
+    protected final boolean nullable() {
+        return ConvertFactory.nullableFeature(features);
+    }
 
     /**
      * 输出null值

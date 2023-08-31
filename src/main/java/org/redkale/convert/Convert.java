@@ -24,8 +24,11 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     protected final ConvertFactory<R, W> factory;
 
-    protected Convert(ConvertFactory<R, W> factory) {
+    protected final int features;
+
+    protected Convert(ConvertFactory<R, W> factory, int features) {
         this.factory = factory;
+        this.features = features;
     }
 
     public ConvertFactory<R, W> getFactory() {

@@ -338,7 +338,7 @@ public final class ApiDocCommand {
                             swaggerOperatMap.put("deprecated", true);
                         }
                         Map<String, Object> respSchemaMap = new LinkedHashMap<>();
-                        JsonFactory returnFactory = Rest.createJsonFactory(false, method.getAnnotationsByType(RestConvert.class), method.getAnnotationsByType(RestConvertCoder.class));
+                        JsonFactory returnFactory = Rest.createJsonFactory(0, method.getAnnotationsByType(RestConvert.class), method.getAnnotationsByType(RestConvertCoder.class));
                         simpleSchemaType(returnFactory, node.getLogger(), swaggerComponentsMap, action.result(), resultType, respSchemaMap, true);
 
                         Map<String, Object> respMap = new LinkedHashMap<>();
@@ -762,6 +762,6 @@ public final class ApiDocCommand {
         return example;
     }
 
-    private static final JsonFactory exampleFactory = JsonFactory.create().tiny(false).nullable(false);
+    private static final JsonFactory exampleFactory = JsonFactory.create().features(0);
 
 }

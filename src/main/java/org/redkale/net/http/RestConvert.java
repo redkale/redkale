@@ -5,9 +5,9 @@
  */
 package org.redkale.net.http;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 只能依附在Service实现类的public方法上, 当方法的返回值以JSON输出时对指定类型的转换设定。  <br>
@@ -26,11 +26,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface RestConvert {
 
     /**
-     * 是否输出空字符串，0数值
+     * 配置项
      *
-     * @return boolean
+     * @return int
      */
-    boolean tiny() default true;
+    int features() default -1;
 
     /**
      * 是否忽略ConvertColumn.ignore=true的设置， 优先级最高

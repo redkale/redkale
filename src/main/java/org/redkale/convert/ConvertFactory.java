@@ -36,6 +36,12 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
+    //值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
+    public static final int FEATURE_TINY = 1 << 1;
+
+    //值为true时 字段值为null时会输出，默认为false
+    public static final int FEATURE_NULLABLE = 1 << 2;
+
     private static final AtomicBoolean loaderInited = new AtomicBoolean();
 
     private static Convert defProtobufConvert;
@@ -44,9 +50,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     protected Convert<R, W> convert;
 
-    protected boolean tiny; //值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
-
-    protected boolean nullable; ///值为true时 字段值为null时会输出，默认为false
+    //配置属性集合， 1<<1至1<<10为系统内置
+    protected int features;
 
     private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
 
@@ -74,9 +79,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private boolean skipAllIgnore = false;
 
-    protected ConvertFactory(ConvertFactory<R, W> parent, boolean tiny, boolean nullable) {
-        this.tiny = tiny;
-        this.nullable = nullable;
+    protected ConvertFactory(ConvertFactory<R, W> parent, int features) {
+        this.features = features;
         this.parent = parent;
         if (parent == null) {
             //---------------------------------------------------------
@@ -209,6 +213,17 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
     }
 
+    public final int features() {
+        return this.features;
+    }
+
+    public ConvertFactory features(int features) {
+        if (features > -1) {
+            this.features = features;
+        }
+        return this;
+    }
+
     public ConvertFactory parent() {
         return this.parent;
     }
@@ -242,8 +257,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return type == ConvertType.PROTOBUF ? defProtobufConvert : null;
     }
 
-    protected static boolean getSystemPropertyBoolean(String key, String parentkey, boolean defvalue) {
-        return Boolean.parseBoolean(System.getProperty(key, System.getProperty(parentkey, String.valueOf(defvalue))));
+    protected static int getSystemPropertyInt(String key, String parentkey, boolean defvalue, int feature) {
+        return Boolean.parseBoolean(System.getProperty(key, System.getProperty(parentkey, String.valueOf(defvalue)))) ? feature : 0;
     }
 
     public abstract ConvertType getConvertType();
@@ -254,7 +269,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public abstract ConvertFactory createChild();
 
-    public abstract ConvertFactory createChild(boolean tiny, boolean nullable);
+    public abstract ConvertFactory createChild(int features);
 
     protected SimpledCoder createEnumSimpledCoder(Class enumClass) {
         return new EnumSimpledCoder(this, enumClass);
@@ -333,13 +348,29 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return convert;
     }
 
+    public static boolean tinyFeature(int features) {
+        return (features & FEATURE_TINY) > 0;
+    }
+
+    public static boolean nullableFeature(int features) {
+        return (features & FEATURE_NULLABLE) > 0;
+    }
+
     public ConvertFactory tiny(boolean tiny) {
-        this.tiny = tiny;
+        if (tiny) {
+            this.features |= FEATURE_TINY;
+        } else {
+            this.features = this.features & ~FEATURE_TINY;
+        }
         return this;
     }
 
     public ConvertFactory nullable(boolean nullable) {
-        this.nullable = nullable;
+        if (nullable) {
+            this.features |= FEATURE_NULLABLE;
+        } else {
+            this.features = this.features & ~FEATURE_NULLABLE;
+        }
         return this;
     }
 

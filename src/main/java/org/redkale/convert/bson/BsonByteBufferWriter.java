@@ -26,13 +26,12 @@ public class BsonByteBufferWriter extends BsonWriter {
     private int index;
 
     public BsonByteBufferWriter(Supplier<ByteBuffer> supplier) {
-        this(false, false, supplier);
+        this(0, supplier);
     }
 
-    protected BsonByteBufferWriter(boolean tiny, boolean nullable, Supplier<ByteBuffer> supplier) {
+    protected BsonByteBufferWriter(int features, Supplier<ByteBuffer> supplier) {
         super((byte[]) null);
-        this.tiny = tiny;
-        this.nullable = nullable;
+        this.features = features;
         this.supplier = supplier;
     }
 
@@ -72,14 +71,8 @@ public class BsonByteBufferWriter extends BsonWriter {
     }
 
     @Override
-    public BsonByteBufferWriter tiny(boolean tiny) {
-        this.tiny = tiny;
-        return this;
-    }
-
-    @Override
-    public BsonByteBufferWriter nullable(boolean nullable) {
-        this.nullable = nullable;
+    public BsonByteBufferWriter features(int features) {
+        this.features = features;
         return this;
     }
 

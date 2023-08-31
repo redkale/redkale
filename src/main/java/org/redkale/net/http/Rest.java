@@ -172,14 +172,17 @@ public final class Rest {
     }
 
     public static JsonFactory createJsonFactory(RestConvert[] converts, RestConvertCoder[] coders) {
-        return createJsonFactory(true, converts, coders);
+        return createJsonFactory(-1, converts, coders);
     }
 
-    public static JsonFactory createJsonFactory(boolean tiny, RestConvert[] converts, RestConvertCoder[] coders) {
+    public static JsonFactory createJsonFactory(int features, RestConvert[] converts, RestConvertCoder[] coders) {
         if ((converts == null || converts.length < 1) && (coders == null || coders.length < 1)) {
             return JsonFactory.root();
         }
-        final JsonFactory childFactory = JsonFactory.create().tiny(tiny);
+        final JsonFactory childFactory = JsonFactory.create();
+        if (features > -1) {
+            childFactory.features(features);
+        }
         List<Class> types = new ArrayList<>();
         Set<Class> reloadTypes = new HashSet<>();
         if (coders != null) {
@@ -208,8 +211,8 @@ public final class Rest {
                     childFactory.reloadCoder(rc.type());
                 }
                 types.add(rc.type());
-                if (tiny) {
-                    childFactory.tiny(rc.tiny());
+                if (rc.features() > -1) {
+                    childFactory.features(rc.features());
                 }
             }
         }
@@ -2287,7 +2290,7 @@ public final class Rest {
                 //设置 RestConvert
                 for (RestConvert rc : rcs) {
                     AnnotationVisitor av2 = av1.visitAnnotation(null, restConvertDesc);
-                    av2.visit("tiny", rc.tiny());
+                    av2.visit("features", rc.features());
                     av2.visit("skipIgnore", rc.skipIgnore());
                     av2.visit("type", Type.getType(Type.getDescriptor(rc.type())));
                     AnnotationVisitor av3 = av2.visitArray("onlyColumns");

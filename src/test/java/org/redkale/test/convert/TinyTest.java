@@ -3,6 +3,7 @@
 package org.redkale.test.convert;
 
 import org.junit.jupiter.api.*;
+import org.redkale.convert.ConvertFactory;
 import org.redkale.convert.json.*;
 
 /**
@@ -24,17 +25,21 @@ public class TinyTest {
         TinyRecord record = new TinyRecord();
         record.id = 5;
         {
-            JsonFactory factory = JsonFactory.create().tiny(true);
+            JsonFactory factory = JsonFactory.create().features(ConvertFactory.FEATURE_TINY);
             JsonConvert convert = factory.getConvert();
             String json = "{\"id\":5}";
-            if (!main) Assertions.assertEquals(json, convert.convertTo(record));
+            if (!main) {
+                Assertions.assertEquals(json, convert.convertTo(record));
+            }
             System.out.println(convert.convertTo(record));
         }
         {
-            JsonFactory factory = JsonFactory.create().tiny(false);
+            JsonFactory factory = JsonFactory.create().features(0);
             JsonConvert convert = factory.getConvert();
             String json = "{\"id\":5,\"name\":\"\"}";
-            if (!main) Assertions.assertEquals(json, convert.convertTo(record));
+            if (!main) {
+                Assertions.assertEquals(json, convert.convertTo(record));
+            }
             System.out.println(convert.convertTo(record));
         }
     }

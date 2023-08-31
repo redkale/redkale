@@ -21,12 +21,12 @@ class JsonStreamWriter extends JsonByteBufferWriter {
 
     private OutputStream out;
 
-    protected JsonStreamWriter(boolean tiny, boolean nullable, OutputStream out) {
-        this(tiny, nullable, null, out);
+    protected JsonStreamWriter(int features, OutputStream out) {
+        this(features, null, out);
     }
 
-    protected JsonStreamWriter(boolean tiny, boolean nullable, Charset charset, OutputStream out) {
-        super(tiny, nullable, charset, null);
+    protected JsonStreamWriter(int features, Charset charset, OutputStream out) {
+        super(features, charset, null);
         this.out = out;
     }
 

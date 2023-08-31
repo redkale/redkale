@@ -9,6 +9,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import org.junit.jupiter.api.*;
+import org.redkale.convert.ConvertFactory;
 import org.redkale.convert.json.*;
 
 /**
@@ -32,7 +33,7 @@ public class JsonMainTest {
 
     @Test
     public void run1() throws Throwable {
-        JsonFactory factory = JsonFactory.root().tiny(true);
+        JsonFactory factory = JsonFactory.root().features(ConvertFactory.FEATURE_TINY);
         final JsonConvert convert = JsonConvert.root();
         String json = "{\"access_token\":\"null\",\"priv\":null, vvv:nulla,\"priv2\":\"nulla\",\"expires_in\":7200, \"aa\":\"\"}";
         Map<String, String> map = convert.convertFrom(JsonConvert.TYPE_MAP_STRING_STRING, json);
@@ -53,7 +54,7 @@ public class JsonMainTest {
         SimpleChildEntity entry = SimpleChildEntity.create();
         String json = convert.convertTo(SimpleEntity.class, entry);
         System.out.println("长度: " + json.length());
-        JsonByteBufferWriter writer = new JsonByteBufferWriter(false, false, () -> ByteBuffer.allocate(1)) {
+        JsonByteBufferWriter writer = new JsonByteBufferWriter(0, () -> ByteBuffer.allocate(1)) {
         };
         convert.convertTo(writer, SimpleEntity.class, entry);
         ByteBuffer[] buffers = writer.toBuffers();

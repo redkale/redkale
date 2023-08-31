@@ -34,21 +34,14 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     private int index;
 
-    public JsonByteBufferWriter(boolean tiny, boolean nullable, Supplier<ByteBuffer> supplier) {
-        this(tiny, nullable, null, supplier);
+    public JsonByteBufferWriter(int features, Supplier<ByteBuffer> supplier) {
+        this(features, null, supplier);
     }
 
-    public JsonByteBufferWriter(boolean tiny, boolean nullable, Charset charset, Supplier<ByteBuffer> supplier) {
-        this.tiny = tiny;
-        this.nullable = nullable;
+    public JsonByteBufferWriter(int features, Charset charset, Supplier<ByteBuffer> supplier) {
+        this.features = features;
         this.charset = charset;
         this.supplier = supplier;
-    }
-
-    @Override
-    public JsonByteBufferWriter tiny(boolean tiny) {
-        this.tiny = tiny;
-        return this;
     }
 
     @Override
@@ -575,7 +568,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             writeTo('}');
             return;
         }
-        if (value == null || (tiny && value.isEmpty())) {
+        if (value == null || (tiny() && value.isEmpty())) {
             expand(1);
             this.buffers[index].put((byte) '}');
         } else {
@@ -634,7 +627,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             writeTo('}');
             return;
         }
-        if (value == null || (tiny && value.isEmpty())) {
+        if (value == null || (tiny() && value.isEmpty())) {
             int expandsize = expand(2);
             if (expandsize == 0) { // 只需要一个buffer 
                 ByteBuffer bb = this.buffers[index];

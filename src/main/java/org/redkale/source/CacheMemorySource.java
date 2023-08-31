@@ -161,6 +161,26 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return CompletableFuture.completedFuture(true);
     }
 
+    //------------------------ 订阅发布 SUB/PUB ------------------------ 
+    @Override
+    public CompletableFuture<List<String>> pubsubChannelsAsync(@Nullable String pattern){
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public CompletableFuture<Void> subscribeAsync(CacheEventListener<byte[]> consumer, String... topics) {
+        Objects.requireNonNull(consumer);
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public CompletableFuture<Integer> publishAsync(String topic, byte[] message) {
+        Objects.requireNonNull(topic);
+        Objects.requireNonNull(message);
+        throw new UnsupportedOperationException("Not supported yet."); 
+    }
+
+    //------------------------ 字符串 String ------------------------  
     @Override
     public CompletableFuture<Void> msetAsync(Serializable... keyVals) {
         return runFuture(() -> {

@@ -19,8 +19,8 @@ import java.lang.reflect.Type;
  */
 public abstract class TextConvert<R extends Reader, W extends Writer> extends Convert<R, W> {
 
-    protected TextConvert(ConvertFactory<R, W> factory) {
-        super(factory);
+    protected TextConvert(ConvertFactory<R, W> factory, int features) {
+        super(factory, features);
     }
 
     @Override

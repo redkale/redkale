@@ -55,9 +55,8 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         this.count = array.length();
     }
 
-    public JsonBytesWriter(boolean tiny, boolean nullable, ByteArray array) {
-        this.tiny = tiny;
-        this.nullable = nullable;
+    public JsonBytesWriter(int features, ByteArray array) {
+        this.features = features;
         this.content = array.content();
         this.count = array.length();
     }
@@ -282,7 +281,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             writeTo('}');
             return;
         }
-        if (value == null || (tiny && value.isEmpty())) {
+        if (value == null || (tiny() && value.isEmpty())) {
             expand(1);
             content[count++] = '}';
         } else {
@@ -312,7 +311,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             writeTo('}');
             return;
         }
-        if (value == null || (tiny && value.isEmpty())) {
+        if (value == null || (tiny() && value.isEmpty())) {
             expand(2);
             content[count++] = '{';
             content[count++] = '}';

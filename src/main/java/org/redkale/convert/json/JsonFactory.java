@@ -25,8 +25,9 @@ import org.redkale.util.Uint128;
 public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     private static final JsonFactory instance = new JsonFactory(null,
-        getSystemPropertyBoolean("redkale.convert.json.tiny", "redkale.convert.tiny", false),
-        getSystemPropertyBoolean("redkale.convert.json.nullable", "redkale.convert.nullable", false));
+        getSystemPropertyInt("redkale.convert.json.tiny", "redkale.convert.tiny", false, FEATURE_TINY)
+        | getSystemPropertyInt("redkale.convert.json.nullable", "redkale.convert.nullable", false, FEATURE_NULLABLE)
+    );
 
     static {
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
@@ -35,8 +36,8 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         //instance.register(AnyValue.class, instance.loadEncoder(AnyValue.DefaultAnyValue.class));
     }
 
-    private JsonFactory(JsonFactory parent, boolean tiny, boolean nullable) {
-        super(parent, tiny, nullable);
+    private JsonFactory(JsonFactory parent, int features) {
+        super(parent, features);
         if (parent == null) {
             this.register(InetAddress.class, InetAddressSimpledCoder.InetAddressJsonSimpledCoder.instance);
             this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
@@ -55,15 +56,8 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         }
     }
 
-    @Override
-    public JsonFactory tiny(boolean tiny) {
-        this.tiny = tiny;
-        return this;
-    }
-
-    @Override
-    public JsonFactory nullable(boolean nullable) {
-        this.nullable = nullable;
+    public JsonFactory features(int features) {
+        this.features = features;
         return this;
     }
 
@@ -78,9 +72,8 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     }
 
     public static JsonFactory create() {
-        return new JsonFactory(null, getSystemPropertyBoolean("redkale.convert.json.tiny", "redkale.convert.tiny", false),
-            getSystemPropertyBoolean("redkale.convert.json.nullable", "redkale.convert.nullable", false));
-    }
+        return new JsonFactory(null, instance.features());
+    } 
 
     @Override
     protected <E> Encodeable<JsonWriter, E> createDyncEncoder(Type type) {
@@ -97,30 +90,22 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         return new JsonMultiImplDecoder(this, types);
     }
 
-    protected boolean tiny() {
-        return this.tiny;
-    }
-
-    protected boolean nullable() {
-        return this.nullable;
-    }
-
     @Override
     public final JsonConvert getConvert() {
         if (convert == null) {
-            convert = new JsonConvert(this, tiny, nullable);
+            convert = new JsonConvert(this, features);
         }
         return (JsonConvert) convert;
     }
 
     @Override
     public JsonFactory createChild() {
-        return new JsonFactory(this, this.tiny, this.nullable);
+        return new JsonFactory(this, this.features);
     }
 
     @Override
-    public JsonFactory createChild(boolean tiny, boolean nullable) {
-        return new JsonFactory(this, tiny, nullable);
+    public JsonFactory createChild(int features) {
+        return new JsonFactory(this, features);
     }
 
     @Override
