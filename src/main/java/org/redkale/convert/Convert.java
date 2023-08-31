@@ -22,9 +22,16 @@ import org.redkale.util.*;
  */
 public abstract class Convert<R extends Reader, W extends Writer> {
 
-    protected final ConvertFactory<R, W> factory;
+    //值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
+    public static final int FEATURE_TINY = 1 << 1;
 
+    //值为true时 字段值为null时会输出，默认为false
+    public static final int FEATURE_NULLABLE = 1 << 2;
+
+    //配置属性集合， 1<<1至1<<10为系统内置
     protected final int features;
+
+    protected final ConvertFactory<R, W> factory;
 
     protected Convert(ConvertFactory<R, W> factory, int features) {
         this.factory = factory;
@@ -39,7 +46,8 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return writer;
     }
 
-    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> objFieldFunc, 
+        BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
         writer.mapFieldFunc = mapFieldFunc;
         writer.objFieldFunc = objFieldFunc;
         writer.objExtFunc = objExtFunc;
@@ -58,7 +66,8 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return newConvert(objFieldFunc, null, objExtFunc);
     }
 
-    public abstract Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc);
+    public abstract Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, 
+        BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc);
 
     public abstract boolean isBinary();
 

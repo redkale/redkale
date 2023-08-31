@@ -36,12 +36,6 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
-    //值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
-    public static final int FEATURE_TINY = 1 << 1;
-
-    //值为true时 字段值为null时会输出，默认为false
-    public static final int FEATURE_NULLABLE = 1 << 2;
-
     private static final AtomicBoolean loaderInited = new AtomicBoolean();
 
     private static Convert defProtobufConvert;
@@ -50,7 +44,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     protected Convert<R, W> convert;
 
-    //配置属性集合， 1<<1至1<<10为系统内置
+    //配置属性集合
     protected int features;
 
     private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
@@ -213,17 +207,6 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
     }
 
-    public final int features() {
-        return this.features;
-    }
-
-    public ConvertFactory features(int features) {
-        if (features > -1) {
-            this.features = features;
-        }
-        return this;
-    }
-
     public ConvertFactory parent() {
         return this.parent;
     }
@@ -348,30 +331,51 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return convert;
     }
 
-    public static boolean tinyFeature(int features) {
-        return (features & FEATURE_TINY) > 0;
+    public final int getFeatures() {
+        return this.features;
     }
 
-    public static boolean nullableFeature(int features) {
-        return (features & FEATURE_NULLABLE) > 0;
-    }
-
-    public ConvertFactory tiny(boolean tiny) {
-        if (tiny) {
-            this.features |= FEATURE_TINY;
-        } else {
-            this.features = this.features & ~FEATURE_TINY;
+    protected <F extends ConvertFactory<R, W>> F withFeatures(int features) {
+        if (features > -1) {
+            this.features = features;
         }
-        return this;
+        return (F) this;
     }
 
-    public ConvertFactory nullable(boolean nullable) {
-        if (nullable) {
-            this.features |= FEATURE_NULLABLE;
-        } else {
-            this.features = this.features & ~FEATURE_NULLABLE;
+    protected <F extends ConvertFactory<R, W>> F addFeature(int feature) {
+        if (feature > 0) {
+            if (features > -1) {
+                this.features |= feature;
+            } else {
+                this.features = feature;
+            }
         }
-        return this;
+        return (F) this;
+    }
+
+    protected <F extends ConvertFactory<R, W>> F removeFeature(int feature) {
+        if (feature > 0) {
+            if (features > -1) {
+                this.features = this.features & ~feature;
+            }
+        }
+        return (F) this;
+    }
+
+    protected <F extends ConvertFactory<R, W>> F withTinyFeature(boolean tiny) {
+        return tiny ? addFeature(Convert.FEATURE_TINY) : removeFeature(Convert.FEATURE_NULLABLE);
+    }
+
+    protected <F extends ConvertFactory<R, W>> F withNullableFeature(boolean nullable) {
+        return nullable ? addFeature(Convert.FEATURE_NULLABLE) : removeFeature(Convert.FEATURE_NULLABLE);
+    }
+
+    public static boolean checkTinyFeature(int features) {
+        return (features & Convert.FEATURE_TINY) > 0;
+    }
+
+    public static boolean checkNullableFeature(int features) {
+        return (features & Convert.FEATURE_NULLABLE) > 0;
     }
 
     public boolean isConvertDisabled(AccessibleObject element) {

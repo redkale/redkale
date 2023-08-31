@@ -22,7 +22,7 @@ public abstract class JsonWriter extends Writer {
     protected static final int defaultSize = Integer.getInteger("redkale.convert.json.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
     protected JsonWriter() {
-        this.features = JsonFactory.root().features();
+        this.features = JsonFactory.root().getFeatures();
     }
 
     public JsonWriter features(int features) {

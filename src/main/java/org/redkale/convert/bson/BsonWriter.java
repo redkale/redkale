@@ -82,7 +82,7 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     public BsonWriter() {
         this(defaultSize);
-        this.features = BsonFactory.root().features();
+        this.features = BsonFactory.root().getFeatures();
     }
 
     public BsonWriter(int size) {

@@ -80,18 +80,16 @@ public abstract class Writer {
     }
 
     public Writer features(int features) {
-        if (features > -1) {
-            this.features = features;
-        }
+        this.features = features;
         return this;
     }
 
     protected final boolean tiny() {
-        return ConvertFactory.tinyFeature(features);
+        return ConvertFactory.checkTinyFeature(features);
     }
 
     protected final boolean nullable() {
-        return ConvertFactory.nullableFeature(features);
+        return ConvertFactory.checkNullableFeature(features);
     }
 
     /**

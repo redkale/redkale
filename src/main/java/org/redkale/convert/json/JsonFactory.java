@@ -25,8 +25,8 @@ import org.redkale.util.Uint128;
 public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     private static final JsonFactory instance = new JsonFactory(null,
-        getSystemPropertyInt("redkale.convert.json.tiny", "redkale.convert.tiny", false, FEATURE_TINY)
-        | getSystemPropertyInt("redkale.convert.json.nullable", "redkale.convert.nullable", false, FEATURE_NULLABLE)
+        getSystemPropertyInt("redkale.convert.json.tiny", "redkale.convert.tiny", false, Convert.FEATURE_TINY)
+        | getSystemPropertyInt("redkale.convert.json.nullable", "redkale.convert.nullable", false, Convert.FEATURE_NULLABLE)
     );
 
     static {
@@ -56,9 +56,24 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         }
     }
 
-    public JsonFactory features(int features) {
-        this.features = features;
-        return this;
+    public JsonFactory withFeatures(int features) {
+        return super.withFeatures(features);
+    }
+
+    public JsonFactory addFeature(int feature) {
+        return super.addFeature(feature);
+    }
+
+    public JsonFactory removeFeature(int feature) {
+        return super.removeFeature(feature);
+    }
+
+    public JsonFactory withTinyFeature(boolean tiny) {
+        return super.withTinyFeature(tiny);
+    }
+
+    public JsonFactory withNullableFeature(boolean nullable) {
+        return super.withNullableFeature(nullable);
     }
 
     @Override
@@ -72,8 +87,8 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     }
 
     public static JsonFactory create() {
-        return new JsonFactory(null, instance.features());
-    } 
+        return new JsonFactory(null, instance.getFeatures());
+    }
 
     @Override
     protected <E> Encodeable<JsonWriter, E> createDyncEncoder(Type type) {

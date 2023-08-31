@@ -3,7 +3,7 @@
 package org.redkale.test.convert;
 
 import org.junit.jupiter.api.*;
-import org.redkale.convert.ConvertFactory;
+import org.redkale.convert.Convert;
 import org.redkale.convert.json.*;
 
 /**
@@ -25,7 +25,7 @@ public class TinyTest {
         TinyRecord record = new TinyRecord();
         record.id = 5;
         {
-            JsonFactory factory = JsonFactory.create().features(ConvertFactory.FEATURE_TINY);
+            JsonFactory factory = JsonFactory.create().withFeatures(Convert.FEATURE_TINY);
             JsonConvert convert = factory.getConvert();
             String json = "{\"id\":5}";
             if (!main) {
@@ -34,7 +34,7 @@ public class TinyTest {
             System.out.println(convert.convertTo(record));
         }
         {
-            JsonFactory factory = JsonFactory.create().features(0);
+            JsonFactory factory = JsonFactory.create().withFeatures(0);
             JsonConvert convert = factory.getConvert();
             String json = "{\"id\":5,\"name\":\"\"}";
             if (!main) {

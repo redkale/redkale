@@ -762,6 +762,6 @@ public final class ApiDocCommand {
         return example;
     }
 
-    private static final JsonFactory exampleFactory = JsonFactory.create().features(0);
+    private static final JsonFactory exampleFactory = JsonFactory.create().withFeatures(0);
 
 }

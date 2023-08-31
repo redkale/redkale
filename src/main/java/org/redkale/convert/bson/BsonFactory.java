@@ -25,8 +25,8 @@ import org.redkale.util.TypeToken;
 public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     private static final BsonFactory instance = new BsonFactory(null,
-        getSystemPropertyInt("redkale.convert.bson.tiny", "redkale.convert.tiny", true, FEATURE_TINY)
-        | getSystemPropertyInt("redkale.convert.bson.nullable", "redkale.convert.nullable", false, FEATURE_NULLABLE)
+        getSystemPropertyInt("redkale.convert.bson.tiny", "redkale.convert.tiny", true, Convert.FEATURE_TINY)
+        | getSystemPropertyInt("redkale.convert.bson.nullable", "redkale.convert.nullable", false, Convert.FEATURE_NULLABLE)
     );
 
     static final Decodeable objectDecoder = instance.loadDecoder(Object.class);
@@ -56,23 +56,28 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     }
 
     @Override
-    public BsonFactory tiny(boolean tiny) {
-        super.tiny(tiny);
-        return this;
-    }
-
-    protected boolean tiny() {
-        return (this.features & FEATURE_TINY) > 0;
+    public BsonFactory withFeatures(int features) {
+        return super.withFeatures(features);
     }
 
     @Override
-    public BsonFactory nullable(boolean nullable) {
-        super.nullable(nullable);
-        return this;
+    public BsonFactory addFeature(int feature) {
+        return super.addFeature(feature);
     }
 
-    protected boolean nullable() {
-        return (this.features & FEATURE_NULLABLE) > 0;
+    @Override
+    public BsonFactory removeFeature(int feature) {
+        return super.removeFeature(feature);
+    }
+
+    @Override
+    public BsonFactory withTinyFeature(boolean tiny) {
+        return super.withTinyFeature(tiny);
+    }
+
+    @Override
+    public BsonFactory withNullableFeature(boolean nullable) {
+        return super.withNullableFeature(nullable);
     }
 
     @Override

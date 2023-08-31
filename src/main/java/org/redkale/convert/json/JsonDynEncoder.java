@@ -386,7 +386,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         final Map<String, AccessibleObject> mixedNames = mixedNames0;
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
         final String newDynName = "org/redkaledyn/json/_Dyn" + JsonDynEncoder.class.getSimpleName()
-            + "__" + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.features() + "_" + Utility.md5Hex(memberb.toString()); //tiny必须要加上, 同一个类会有多个字段定制Convert
+            + "__" + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.getFeatures() + "_" + Utility.md5Hex(memberb.toString()); //tiny必须要加上, 同一个类会有多个字段定制Convert
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
@@ -511,8 +511,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
 
             int maxLocals = 4;
             int elementIndex = -1;
-            final boolean tiny = ConvertFactory.tinyFeature(factory.features());
-            final boolean nullable = ConvertFactory.nullableFeature(factory.features());
+            final boolean tiny = ConvertFactory.checkTinyFeature(factory.getFeatures());
+            final boolean nullable = ConvertFactory.checkNullableFeature(factory.getFeatures());
             final Class firstType = readGetSetFieldType(members.get(0));
             final boolean mustHadComma = firstType.isPrimitive() && (firstType != boolean.class || !tiny || nullable); //byte/short/char/int/float/long/double
 

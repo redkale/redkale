@@ -181,7 +181,7 @@ public final class Rest {
         }
         final JsonFactory childFactory = JsonFactory.create();
         if (features > -1) {
-            childFactory.features(features);
+            childFactory.withFeatures(features);
         }
         List<Class> types = new ArrayList<>();
         Set<Class> reloadTypes = new HashSet<>();
@@ -212,7 +212,7 @@ public final class Rest {
                 }
                 types.add(rc.type());
                 if (rc.features() > -1) {
-                    childFactory.features(rc.features());
+                    childFactory.withFeatures(rc.features());
                 }
             }
         }

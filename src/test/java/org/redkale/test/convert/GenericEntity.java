@@ -5,11 +5,10 @@
  */
 package org.redkale.test.convert;
 
-import org.redkale.util.TypeToken;
-import org.redkale.convert.json.JsonFactory;
-import java.lang.reflect.*;
+import java.lang.reflect.Type;
 import java.util.*;
 import org.redkale.convert.json.*;
+import org.redkale.util.TypeToken;
 
 /**
  * 支持泛型的
@@ -36,7 +35,7 @@ public class GenericEntity<T, K, V> {
         bean.setEntry(new Entry<>("aaaa", SimpleEntity.create()));
         final Type type = new TypeToken<GenericEntity<Long, String, SimpleEntity>>() {
         }.getType();
-        JsonFactory.root().tiny(true);
+        JsonFactory.root().withTinyFeature(true);
         String json = JsonConvert.root().convertTo(bean);
         System.out.println(json);
         System.out.println(JsonConvert.root().convertFrom(type, json).toString());
