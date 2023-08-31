@@ -71,12 +71,6 @@ public class BsonByteBufferWriter extends BsonWriter {
     }
 
     @Override
-    public BsonByteBufferWriter features(int features) {
-        this.features = features;
-        return this;
-    }
-
-    @Override
     protected int expand(final int byteLength) {
         if (this.buffers == null) {
             this.index = 0;

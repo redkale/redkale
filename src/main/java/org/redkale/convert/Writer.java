@@ -75,11 +75,11 @@ public abstract class Writer {
      * 获取配置属性
      *
      */
-    public final int features() {
+    public final int getFeatures() {
         return features;
     }
 
-    public Writer features(int features) {
+    public Writer withFeatures(int features) {
         this.features = features;
         return this;
     }

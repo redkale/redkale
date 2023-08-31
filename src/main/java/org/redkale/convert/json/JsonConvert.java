@@ -110,7 +110,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         } else {
             bytesWriterPool.set(null);
         }
-        return configWrite((JsonBytesWriter) writer.features(features));
+        return configWrite((JsonBytesWriter) writer.withFeatures(features));
     }
 
     @Override
@@ -130,7 +130,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         } else {
             bytesWriterPool.set(null);
         }
-        return configWrite((JsonBytesWriter) writer.features(features));
+        return configWrite((JsonBytesWriter) writer.withFeatures(features));
     }
 
     private void offerJsonBytesWriter(final JsonBytesWriter writer) {

@@ -129,7 +129,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         } else {
             writerPool.set(null);
         }
-        return configWrite(writer.features(features));
+        return configWrite(writer.withFeatures(features));
     }
 
     @Override
@@ -234,7 +234,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @Override
     public void convertToBytes(final ByteArray array, final Type type, final Object value) {
         Objects.requireNonNull(array);
-        final BsonWriter writer = configWrite(new BsonWriter(array).features(features));
+        final BsonWriter writer = configWrite(new BsonWriter(array).withFeatures(features));
         if (value == null) {
             writer.writeNull();
         } else {
@@ -280,7 +280,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         if (value == null) {
             return null;
         }
-        final BsonWriter writer = writerPool.get().features(features);
+        final BsonWriter writer = writerPool.get().withFeatures(features);
         factory.loadEncoder(type == null ? value.getClass() : type).convertTo(writer, value);
         return writer;
     }

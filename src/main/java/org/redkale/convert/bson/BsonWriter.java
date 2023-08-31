@@ -94,9 +94,8 @@ public class BsonWriter extends Writer implements ByteTuple {
         this.count = array.length();
     }
 
-    public BsonWriter features(int features) {
-        super.features(features); 
-        return this;
+    public BsonWriter withFeatures(int features) {
+        return (BsonWriter) super.withFeatures(features);
     }
 
     //-----------------------------------------------------------------------
