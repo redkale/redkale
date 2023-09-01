@@ -9,7 +9,7 @@ import static java.lang.annotation.ElementType.*;
 /**
  * 只能注解于Service类的方法的String参数或参数内的String字段
  * <p>
- * 用于获取HTTP请求端的IP地址 HttpRequest.getLocale
+ * 用于获取HTTP请求端的Locale国际化 HttpRequest.getLocale
  *
  * <p>
  * 详情见: https://redkale.org

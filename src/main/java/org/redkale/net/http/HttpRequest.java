@@ -112,6 +112,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected Supplier<Serializable> currentUserSupplier;
 
+    //参数是否从body中取
     protected boolean frombody;
 
     protected ConvertType reqConvertType;
@@ -242,13 +243,12 @@ public class HttpRequest extends Request<HttpContext> {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setBody(array.length() == 0 ? null : array.getBytes());
         if (!getHeaders().isEmpty()) {
-            if (headers.containsKey(Rest.REST_HEADER_RPC)
-                || headers.containsKey(Rest.REST_HEADER_CURRUSERID)) { //外部request不能包含RPC的header信息
-                req.setHeaders(new HashMap<>(headers));
+            req.setHeaders(new HashMap<>(headers));
+            if (headers.containsKey(Rest.REST_HEADER_RPC)) { //外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_RPC);
+            }
+            if (headers.containsKey(Rest.REST_HEADER_CURRUSERID)) { //外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_CURRUSERID);
-            } else {
-                req.setHeaders(headers);
             }
         }
         parseBody();
