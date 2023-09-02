@@ -15,8 +15,8 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.convert.*;
@@ -54,15 +54,17 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected final ConcurrentHashMap<String, CacheEntry> container = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CacheEntry> container = new ConcurrentHashMap<>();
 
-    protected final ReentrantLock containerLock = new ReentrantLock();
+    private final ReentrantLock containerLock = new ReentrantLock();
 
-    protected final BiConsumer futureCompleteConsumer = (r, t) -> {
+    private final BiConsumer futureCompleteConsumer = (r, t) -> {
         if (t != null) {
             logger.log(Level.SEVERE, "CompletableFuture complete error", (Throwable) t);
         }
     };
+
+    private final Map<String, List<CacheEventListener<byte[]>>> pubsubListeners = new ConcurrentHashMap<>();
 
     public CacheMemorySource(String resourceName) {
         this.name = resourceName;
@@ -163,21 +165,63 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     //------------------------ 订阅发布 SUB/PUB ------------------------ 
     @Override
-    public CompletableFuture<List<String>> pubsubChannelsAsync(@Nullable String pattern){
-        throw new UnsupportedOperationException("Not supported yet.");
+    public CompletableFuture<List<String>> pubsubChannelsAsync(@Nullable String pattern) {
+        Predicate<String> predicate = Pattern.compile(pattern).asPredicate();
+        return CompletableFuture.completedFuture(pubsubListeners.keySet().stream().filter(predicate).collect(Collectors.toList()));
     }
-    
+
     @Override
-    public CompletableFuture<Void> subscribeAsync(CacheEventListener<byte[]> consumer, String... topics) {
-        Objects.requireNonNull(consumer);
-        throw new UnsupportedOperationException("Not supported yet.");
+    public CompletableFuture<Void> subscribeAsync(CacheEventListener<byte[]> listener, String... topics) {
+        Objects.requireNonNull(listener);
+        if (topics == null || topics.length < 1) {
+            throw new RedkaleException("topics is empty");
+        }
+        for (String topic : topics) {
+            pubsubListeners.computeIfAbsent(topic, t -> new CopyOnWriteArrayList<>()).add(listener);
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Integer> unsubscribeAsync(CacheEventListener listener, String... topics) {
+        int c = 0;
+        if (listener == null) {
+            if (topics == null || topics.length < 1) {  //清空所有订阅者
+                for (List<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
+                    c += listeners != null ? listeners.size() : 0;
+                }
+                pubsubListeners.clear();
+            } else {
+                for (String topic : topics) {  //清空指定topic的订阅者
+                    List<CacheEventListener<byte[]>> listeners = pubsubListeners.remove(topic);
+                    c += listeners != null ? listeners.size() : 0;
+                }
+            }
+        } else {
+            if (topics == null || topics.length < 1) {
+                for (List<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
+                    c += listeners != null && listeners.remove(listener) ? 1 : 0;
+                }
+            } else {
+                for (String topic : topics) {
+                    List<CacheEventListener<byte[]>> listeners = pubsubListeners.get(topic);
+                    c += listeners != null && listeners.remove(listener) ? 1 : 0;
+                }
+            }
+        }
+        return CompletableFuture.completedFuture(c);
     }
 
     @Override
     public CompletableFuture<Integer> publishAsync(String topic, byte[] message) {
         Objects.requireNonNull(topic);
         Objects.requireNonNull(message);
-        throw new UnsupportedOperationException("Not supported yet."); 
+        List<CacheEventListener<byte[]>> listeners = pubsubListeners.get(topic);
+        if (listeners == null || listeners.isEmpty()) {
+            return CompletableFuture.completedFuture(0);
+        }
+        listeners.parallelStream().forEach(listener -> listener.onMessage(topic, message));
+        return CompletableFuture.completedFuture(1);
     }
 
     //------------------------ 字符串 String ------------------------  

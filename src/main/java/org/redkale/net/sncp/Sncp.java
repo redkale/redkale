@@ -5,17 +5,16 @@
  */
 package org.redkale.net.sncp;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import org.redkale.annotation.*;
-import org.redkale.annotation.ResourceType;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.Convert;
@@ -23,7 +22,13 @@ import org.redkale.convert.bson.BsonConvert;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.sncp.SncpRemoteInfo.SncpRemoteAction;
 import org.redkale.service.*;
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
+import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.Resourcable;
+import org.redkale.util.ResourceFactory;
+import org.redkale.util.TypeToken;
+import org.redkale.util.Uint128;
+import org.redkale.util.Utility;
 
 /**
  * Service Node Communicate Protocol
@@ -81,6 +86,12 @@ public abstract class Sncp {
                 continue;
             }
             if (method.getAnnotation(Local.class) != null) {
+                continue;
+            }
+            if (method.getAnnotation(ResourceListener.class) != null) {
+                continue;
+            }
+            if (method.getAnnotation(Scheduled.class) != null) {
                 continue;
             }
             if (method.getName().equals("getClass") || method.getName().equals("toString")) {

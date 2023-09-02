@@ -58,6 +58,10 @@ public interface CacheSource extends Resourcable {
         subscribeAsync(listener, topics).join();
     }
 
+    default void unsubscribe(CacheEventListener listener, String... topics) {
+        unsubscribeAsync(listener, topics).join();
+    }
+
     default <T> CompletableFuture<Void> subscribeAsync(Type messageType, CacheEventListener<T> listener, String... topics) {
         return subscribeAsync(JsonConvert.root(), messageType, listener, topics);
     }
@@ -68,6 +72,8 @@ public interface CacheSource extends Resourcable {
     }
 
     public CompletableFuture<Void> subscribeAsync(CacheEventListener<byte[]> listener, String... topics);
+
+    public CompletableFuture<Integer> unsubscribeAsync(CacheEventListener listener, String... topics);
 
     //------------------------ 发布 PUB ------------------------ 
     default <T> int publish(String topic, T message) {
