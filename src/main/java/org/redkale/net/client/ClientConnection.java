@@ -170,7 +170,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     private void sendRequestInLocking(R request, ClientFuture respFuture) {
-        if (true) { //新方式
+        if (false) { //新方式
             ByteArray array = arrayThreadLocal.get();
             array.clear();
             request.writeTo(this, array);
