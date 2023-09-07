@@ -299,15 +299,23 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final CompletableFuture<C> connect() {
+        return connect(true);
+    }
+
+    public final CompletableFuture<C> newConnection() {
+        return connect(true);
+    }
+
+    private CompletableFuture<C> connect(final boolean pool) {
         final int size = this.connArray.length;
         WorkThread workThread = WorkThread.currentWorkThread();
         final int connIndex = (workThread != null && workThread.threads() == size) ? workThread.index() : (int) Math.abs(connIndexSeq.getAndIncrement()) % size;
         C cc = (C) this.connArray[connIndex];
-        if (cc != null && cc.isOpen()) {
+        if (pool && cc != null && cc.isOpen()) {
             return CompletableFuture.completedFuture(cc);
         }
         final Queue<CompletableFuture<C>> waitQueue = this.connAcquireWaitings[connIndex];
-        if (this.connOpenStates[connIndex].compareAndSet(false, true)) {
+        if (!pool || this.connOpenStates[connIndex].compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
                 .thenApply(c -> (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
@@ -325,17 +333,19 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             return future.thenCompose(c -> {
                 return CompletableFuture.supplyAsync(() -> {
                     c.setAuthenticated(true);
-                    this.connArray[connIndex] = c;
-                    CompletableFuture<C> f;
-                    while ((f = waitQueue.poll()) != null) {
-                        if (!f.isDone()) {
-                            f.complete(c);
+                    if (pool) {
+                        this.connArray[connIndex] = c;
+                        CompletableFuture<C> f;
+                        while ((f = waitQueue.poll()) != null) {
+                            if (!f.isDone()) {
+                                f.complete(c);
+                            }
                         }
                     }
                     return c;
                 }, c.channel.getWriteIOThread());
             }).whenComplete((r, t) -> {
-                if (t != null) {
+                if (pool && t != null) {
                     this.connOpenStates[connIndex].set(false);
                 }
             });
@@ -348,16 +358,26 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     //指定地址获取连接
     public final CompletableFuture<C> connect(final SocketAddress addr) {
+        return connect(true, addr);
+    }
+
+    //指定地址获取连接
+    public final CompletableFuture<C> newConnection(final SocketAddress addr) {
+        return connect(false, addr);
+    }
+
+    //指定地址获取连接
+    private CompletableFuture<C> connect(final boolean pool, final SocketAddress addr) {
         if (addr == null) {
             return connect();
         }
         final AddressConnEntry<C> entry = connAddrEntrys.computeIfAbsent(addr, a -> new AddressConnEntry());
         C ec = entry.connection;
-        if (ec != null && ec.isOpen()) {
+        if (pool && ec != null && ec.isOpen()) {
             return CompletableFuture.completedFuture(ec);
         }
         final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
-        if (entry.connOpenState.compareAndSet(false, true)) {
+        if (!pool || entry.connOpenState.compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds)
                 .thenApply(c -> (C) createClientConnection(-1, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
@@ -375,17 +395,19 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             return future.thenCompose(c -> {
                 return CompletableFuture.supplyAsync(() -> {
                     c.setAuthenticated(true);
-                    entry.connection = c;
-                    CompletableFuture<C> f;
-                    while ((f = waitQueue.poll()) != null) {
-                        if (!f.isDone()) {
-                            f.complete(c);
+                    if (pool) {
+                        entry.connection = c;
+                        CompletableFuture<C> f;
+                        while ((f = waitQueue.poll()) != null) {
+                            if (!f.isDone()) {
+                                f.complete(c);
+                            }
                         }
                     }
                     return c;
                 }, c.channel.getWriteIOThread());
             }).whenComplete((r, t) -> {
-                if (t != null) {
+                if (pool && t != null) {
                     entry.connOpenState.set(false);
                 }
             });
