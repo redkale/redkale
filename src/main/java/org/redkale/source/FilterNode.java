@@ -153,19 +153,19 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return and(new FilterNode(column, express, value));
     }
 
-    public final <T extends Serializable> FilterNode and(LambdaSupplier<T> func) {
+    public final <F extends Serializable> FilterNode and(LambdaSupplier<F> func) {
         return and(func, null);
     }
 
-    public final <T extends Serializable> FilterNode and(LambdaSupplier<T> func, FilterExpress express) {
+    public final <F extends Serializable> FilterNode and(LambdaSupplier<F> func, FilterExpress express) {
         return and(new FilterNode(LambdaSupplier.readColumn(func), express, func.get()));
     }
 
-    public final <T> FilterNode and(LambdaFunction<T, ?> func, Serializable value) {
+    public final <T, F extends Serializable> FilterNode and(LambdaFunction<T, F> func, F value) {
         return and(func, null, value);
     }
 
-    public final <T> FilterNode and(LambdaFunction<T, ?> func, FilterExpress express, Serializable value) {
+    public final <T, F extends Serializable> FilterNode and(LambdaFunction<T, F> func, FilterExpress express, F value) {
         return and(new FilterNode(LambdaFunction.readColumn(func), express, value));
     }
 
@@ -181,19 +181,19 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return or(new FilterNode(column, express, value));
     }
 
-    public final <T extends Serializable> FilterNode or(LambdaSupplier<T> func) {
+    public final <F extends Serializable> FilterNode or(LambdaSupplier<F> func) {
         return or(func, null);
     }
 
-    public final <T extends Serializable> FilterNode or(LambdaSupplier<T> func, FilterExpress express) {
+    public final <F extends Serializable> FilterNode or(LambdaSupplier<F> func, FilterExpress express) {
         return or(new FilterNode(LambdaSupplier.readColumn(func), express, func.get()));
     }
 
-    public final <T> FilterNode or(LambdaFunction<T, ?> func, Serializable value) {
+    public final <T, F extends Serializable> FilterNode or(LambdaFunction<T, F> func, F value) {
         return or(func, null, value);
     }
 
-    public final <T> FilterNode or(LambdaFunction<T, ?> func, FilterExpress express, Serializable value) {
+    public final <T, F extends Serializable> FilterNode or(LambdaFunction<T, F> func, FilterExpress express, F value) {
         return or(new FilterNode(LambdaFunction.readColumn(func), express, value));
     }
 
@@ -361,19 +361,19 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return new FilterNode(column, express, value);
     }
 
-    public static <T extends Serializable> FilterNode create(LambdaSupplier<T> func) {
+    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func) {
         return create(func, null);
     }
 
-    public static <T extends Serializable> FilterNode create(LambdaSupplier<T> func, FilterExpress express) {
+    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func, FilterExpress express) {
         return new FilterNode(LambdaSupplier.readColumn(func), express, func.get());
     }
 
-    public static <T> FilterNode create(LambdaFunction<T, ?> func, Serializable value) {
+    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, F value) {
         return create(func, null, value);
     }
 
-    public static <T> FilterNode create(LambdaFunction<T, ?> func, FilterExpress express, Serializable value) {
+    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, FilterExpress express, F value) {
         return new FilterNode(LambdaFunction.readColumn(func), express, value);
     }
 

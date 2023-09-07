@@ -7,11 +7,13 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.annotation.*;
 import org.redkale.convert.Convert;
+import org.redkale.convert.TextConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
@@ -77,7 +79,7 @@ public interface CacheSource extends Resourcable {
 
     //------------------------ 发布 PUB ------------------------ 
     default <T> int publish(String topic, T message) {
-        return publish(topic, JsonConvert.root(), message.getClass(), message);
+        return publish(topic, null, message.getClass(), message);
     }
 
     default <T> int publish(String topic, Convert convert, T message) {
@@ -85,12 +87,11 @@ public interface CacheSource extends Resourcable {
     }
 
     default <T> int publish(String topic, Type messageType, T message) {
-        return publish(topic, JsonConvert.root(), messageType, message);
+        return publish(topic, null, messageType, message);
     }
 
     default <T> int publish(String topic, Convert convert, Type messageType, T message) {
-        final Convert c = convert == null ? JsonConvert.root() : convert;
-        return publish(topic, c.convertToBytes(messageType, message));
+        return publishAsync(topic, convert, messageType, message).join();
     }
 
     default int publish(String topic, byte[] message) {
@@ -98,7 +99,7 @@ public interface CacheSource extends Resourcable {
     }
 
     default <T> CompletableFuture<Integer> publishAsync(String topic, T message) {
-        return publishAsync(topic, JsonConvert.root(), message.getClass(), message);
+        return publishAsync(topic, null, message.getClass(), message);
     }
 
     default <T> CompletableFuture<Integer> publishAsync(String topic, Convert convert, T message) {
@@ -106,10 +107,16 @@ public interface CacheSource extends Resourcable {
     }
 
     default <T> CompletableFuture<Integer> publishAsync(String topic, Type messageType, T message) {
-        return publishAsync(topic, JsonConvert.root(), messageType, message);
+        return publishAsync(topic, null, messageType, message);
     }
 
     default <T> CompletableFuture<Integer> publishAsync(String topic, Convert convert, Type messageType, T message) {
+        if (message instanceof byte[]) {
+            return publishAsync(topic, (byte[]) message);
+        }
+        if (messageType == String.class && (convert == null || convert instanceof TextConvert)) {
+            return publishAsync(topic, message.toString().getBytes(StandardCharsets.UTF_8));
+        }
         final Convert c = convert == null ? JsonConvert.root() : convert;
         return publishAsync(topic, c.convertToBytes(messageType, message));
     }

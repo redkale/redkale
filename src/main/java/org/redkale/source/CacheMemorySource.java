@@ -64,7 +64,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     };
 
-    private final Map<String, List<CacheEventListener<byte[]>>> pubsubListeners = new ConcurrentHashMap<>();
+    //key: topic
+    private final Map<String, Set<CacheEventListener<byte[]>>> pubsubListeners = new ConcurrentHashMap<>();
 
     private ExecutorService pubsubExecutor;
 
@@ -210,7 +211,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             throw new RedkaleException("topics is empty");
         }
         for (String topic : topics) {
-            pubsubListeners.computeIfAbsent(topic, t -> new CopyOnWriteArrayList<>()).add(listener);
+            pubsubListeners.computeIfAbsent(topic, t -> new CopyOnWriteArraySet<>()).add(listener);
         }
         return CompletableFuture.completedFuture(null);
     }
@@ -220,24 +221,24 @@ public final class CacheMemorySource extends AbstractCacheSource {
         int c = 0;
         if (listener == null) {
             if (topics == null || topics.length < 1) {  //清空所有订阅者
-                for (List<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
+                for (Set<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
                     c += listeners != null ? listeners.size() : 0;
                 }
                 pubsubListeners.clear();
             } else {
                 for (String topic : topics) {  //清空指定topic的订阅者
-                    List<CacheEventListener<byte[]>> listeners = pubsubListeners.remove(topic);
+                    Set<CacheEventListener<byte[]>> listeners = pubsubListeners.remove(topic);
                     c += listeners != null ? listeners.size() : 0;
                 }
             }
         } else {
             if (topics == null || topics.length < 1) {
-                for (List<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
+                for (Set<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
                     c += listeners != null && listeners.remove(listener) ? 1 : 0;
                 }
             } else {
                 for (String topic : topics) {
-                    List<CacheEventListener<byte[]>> listeners = pubsubListeners.get(topic);
+                    Set<CacheEventListener<byte[]>> listeners = pubsubListeners.get(topic);
                     c += listeners != null && listeners.remove(listener) ? 1 : 0;
                 }
             }
@@ -249,7 +250,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public CompletableFuture<Integer> publishAsync(final String topic, final byte[] message) {
         Objects.requireNonNull(topic);
         Objects.requireNonNull(message);
-        List<CacheEventListener<byte[]>> listeners = pubsubListeners.get(topic);
+        Set<CacheEventListener<byte[]>> listeners = pubsubListeners.get(topic);
         if (listeners == null || listeners.isEmpty()) {
             return CompletableFuture.completedFuture(0);
         }
@@ -1856,7 +1857,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public CompletableFuture<List<String>> scanAsync(AtomicLong cursor, int limit, String pattern) {
-        return keysAsync(pattern);
+        return keysAsync(pattern).thenApply(v -> {
+            cursor.set(0);
+            return v;
+        });
     }
 
     @Override
