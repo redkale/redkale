@@ -200,7 +200,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     //------------------------ 订阅发布 SUB/PUB ------------------------ 
     @Override
     public CompletableFuture<List<String>> pubsubChannelsAsync(@Nullable String pattern) {
-        Predicate<String> predicate = Pattern.compile(pattern).asPredicate();
+        Predicate<String> predicate = isEmpty(pattern) ? t -> true : Pattern.compile(pattern).asPredicate();
         return CompletableFuture.completedFuture(pubsubListeners.keySet().stream().filter(predicate).collect(Collectors.toList()));
     }
 
