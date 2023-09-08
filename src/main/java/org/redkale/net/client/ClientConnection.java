@@ -278,6 +278,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         } else if (connEntry != null) { //index=-1
             connEntry.connOpenState.set(false);
         }
+        ClientMessageListener listener = getCodec().getMessageListener();
+        if (listener != null) {
+            listener.onClose(this);
+        }
     }
 
     public void dispose(Throwable exc) {
@@ -331,15 +335,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     }
 
     //只会被ClientCodec在ReadIOThread中调用
-    ClientFuture<R, P> pollRespFuture(Serializable requestid) {
-        if (requestid == null) {
-            return respFutureQueue.poll();
-        } else {
-            return respFutureMap.remove(requestid);
-        }
-    }
-
-    //只会被ClientCodec在ReadIOThread中调用
     R findRequest(Serializable requestid) {
         if (requestid == null) {
             if (currRespIterator == null) {
@@ -350,6 +345,15 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
         } else {
             ClientFuture<R, P> future = respFutureMap.get(requestid);
             return future == null ? null : future.request;
+        }
+    }
+
+    //只会被ClientCodec在ReadIOThread中调用
+    protected ClientFuture<R, P> pollRespFuture(Serializable requestid) {
+        if (requestid == null) {
+            return respFutureQueue.poll();
+        } else {
+            return respFutureMap.remove(requestid);
         }
     }
 

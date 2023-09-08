@@ -25,7 +25,7 @@ public class ClientResponse<R extends ClientRequest, P> {
 
     protected P message;
 
-    protected Throwable exc;
+    protected Throwable cause;
 
     public ClientResponse() {
     }
@@ -37,7 +37,7 @@ public class ClientResponse<R extends ClientRequest, P> {
 
     public ClientResponse(R request, Throwable exc) {
         this.request = request;
-        this.exc = exc;
+        this.cause = exc;
     }
 
     public Serializable getRequestid() {
@@ -52,20 +52,20 @@ public class ClientResponse<R extends ClientRequest, P> {
 
     public ClientResponse<R, P> set(R request, Throwable exc) {
         this.request = request;
-        this.exc = exc;
+        this.cause = exc;
         return this;
     }
 
     protected void prepare() {
         this.request = null;
         this.message = null;
-        this.exc = null;
+        this.cause = null;
     }
 
     protected boolean recycle() {
         this.request = null;
         this.message = null;
-        this.exc = null;
+        this.cause = null;
         return true;
     }
 
@@ -85,18 +85,18 @@ public class ClientResponse<R extends ClientRequest, P> {
         this.message = message;
     }
 
-    public Throwable getExc() {
-        return exc;
+    public Throwable getCause() {
+        return cause;
     }
 
-    public void setExc(Throwable exc) {
-        this.exc = exc;
+    public void setCause(Throwable cause) {
+        this.cause = cause;
     }
 
     @Override
     public String toString() {
-        if (exc != null) {
-            return "{\"exc\":" + exc + "}";
+        if (cause != null) {
+            return "{\"exc\":" + cause + "}";
         }
         return "{\"message\":" + message + "}";
     }

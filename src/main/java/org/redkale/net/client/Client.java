@@ -303,7 +303,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final CompletableFuture<C> newConnection() {
-        return connect(true);
+        return connect(false);
     }
 
     private CompletableFuture<C> connect(final boolean pool) {

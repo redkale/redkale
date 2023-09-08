@@ -27,13 +27,15 @@ import org.redkale.util.*;
  */
 public abstract class ClientCodec<R extends ClientRequest, P> implements CompletionHandler<Integer, ByteBuffer> {
 
-    protected final ClientConnection<R, P> connection;
-
     private final List<ClientResponse<R, P>> respResults = new ArrayList<>();
 
     private final ByteArray readArray = new ByteArray();
 
     private final ObjectPool<ClientResponse<R, P>> respPool = ObjectPool.createUnsafePool(256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
+
+    protected final ClientConnection<R, P> connection;
+
+    protected ClientMessageListener messageListener;
 
     public ClientCodec(ClientConnection<R, P> connection) {
         Objects.requireNonNull(connection);
@@ -41,6 +43,11 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
     }
 
     public abstract void decodeMessages(ByteBuffer buffer, ByteArray array);
+
+    public ClientCodec<R, P> withMessageListener(ClientMessageListener listener) {
+        this.messageListener = listener;
+        return this;
+    }
 
     @Override
     public final void completed(Integer count, ByteBuffer attachment) {
@@ -69,8 +76,11 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
             for (ClientResponse<R, P> cr : respResults) {
                 connection.doneResponseCounter.increment();
                 if (cr.isError()) {
-                    connection.dispose(cr.exc);
+                    connection.dispose(cr.cause);
                     return;
+                } else if (messageListener != null) {
+                    messageListener.onMessage(connection, cr);
+                    respPool.accept(cr);
                 } else {
                     ClientFuture<R, P> respFuture = connection.pollRespFuture(cr.getRequestid());
                     if (respFuture != null) {
@@ -78,7 +88,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                             connection.dispose(new RedkaleException("request pipeline error"));
                             return;
                         }
-                        responseComplete(false, respFuture, cr.message, cr.exc);
+                        responseComplete(false, respFuture, cr.message, cr.cause);
                     }
                     respPool.accept(cr);
                 }
@@ -101,107 +111,109 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
     }
 
     void responseComplete(boolean halfCompleted, ClientFuture<R, P> respFuture, P message, Throwable exc) {
-        if (respFuture != null) {
-            R request = respFuture.request;
-            AsyncIOThread readThread = connection.channel.getReadIOThread();
-            final WorkThread workThread = request.workThread;
-            try {
-                if (!halfCompleted && !request.isCompleted()) {
-                    if (exc == null) {
-                        connection.sendHalfWriteInReadThread(request, exc);
-                        //request没有发送完，respFuture需要再次接收
-                        return;
-                    } else {
-                        connection.sendHalfWriteInReadThread(request, exc);
-                        //异常了需要清掉半包
-                    }
-                }
-                connection.respWaitingCounter.decrement();
-                if (connection.isAuthenticated()) {
-                    connection.client.incrRespDoneCounter();
-                }
-                respFuture.cancelTimeout();
-//                if (connection.client.debug) {
-//                    connection.client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + connection + ", 回调处理, req=" + request + ", message=" + message, exc);
-//                }
-                connection.preComplete(message, (R) request, exc);
-
+        R request = respFuture.request;
+        AsyncIOThread readThread = connection.channel.getReadIOThread();
+        final WorkThread workThread = request.workThread;
+        try {
+            if (!halfCompleted && !request.isCompleted()) {
                 if (exc == null) {
-                    final P rs = request.respTransfer == null ? message : (P) request.respTransfer.apply(message);
-                    if (workThread == null) {
-                        readThread.runWork(() -> {
-                            Traces.computeIfAbsent(request.traceid);
-                            respFuture.complete(rs);
-                        });
-                    } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
-                        if (workThread.inIO()) {
-                            Traces.computeIfAbsent(request.traceid);
-                            respFuture.complete(rs);
-                        } else {
-                            workThread.execute(() -> {
-                                Traces.computeIfAbsent(request.traceid);
-                                respFuture.complete(rs);
-                            });
-                        }
-                    } else {
-                        workThread.runWork(() -> {
-                            Traces.computeIfAbsent(request.traceid);
-                            respFuture.complete(rs);
-                        });
-                    }
-                } else { //异常
-                    if (workThread == null) {
-                        readThread.runWork(() -> {
-                            Traces.computeIfAbsent(request.traceid);
-                            respFuture.completeExceptionally(exc);
-                        });
-                    } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
-                        if (workThread.inIO()) {
-                            Traces.computeIfAbsent(request.traceid);
-                            respFuture.completeExceptionally(exc);
-                        } else {
-                            workThread.execute(() -> {
-                                Traces.computeIfAbsent(request.traceid);
-                                respFuture.completeExceptionally(exc);
-                            });
-                        }
-                    } else {
-                        workThread.runWork(() -> {
-                            Traces.computeIfAbsent(request.traceid);
-                            respFuture.completeExceptionally(exc);
-                        });
-                    }
+                    connection.sendHalfWriteInReadThread(request, exc);
+                    //request没有发送完，respFuture需要再次接收
+                    return;
+                } else {
+                    connection.sendHalfWriteInReadThread(request, exc);
+                    //异常了需要清掉半包
                 }
-            } catch (Throwable t) {
+            }
+            connection.respWaitingCounter.decrement();
+            if (connection.isAuthenticated()) {
+                connection.client.incrRespDoneCounter();
+            }
+            respFuture.cancelTimeout();
+//                if (connection.client.debug) {
+//                    connection.client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + connection + ", 回调处理, req=" + request + ", message=" + message, cause);
+//                }
+            connection.preComplete(message, (R) request, exc);
+
+            if (exc == null) {
+                final P rs = request.respTransfer == null ? message : (P) request.respTransfer.apply(message);
                 if (workThread == null) {
                     readThread.runWork(() -> {
                         Traces.computeIfAbsent(request.traceid);
-                        respFuture.completeExceptionally(t);
+                        respFuture.complete(rs);
                     });
                 } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
                     if (workThread.inIO()) {
                         Traces.computeIfAbsent(request.traceid);
-                        respFuture.completeExceptionally(t);
+                        respFuture.complete(rs);
                     } else {
                         workThread.execute(() -> {
                             Traces.computeIfAbsent(request.traceid);
-                            respFuture.completeExceptionally(t);
+                            respFuture.complete(rs);
                         });
                     }
                 } else {
                     workThread.runWork(() -> {
                         Traces.computeIfAbsent(request.traceid);
+                        respFuture.complete(rs);
+                    });
+                }
+            } else { //异常
+                if (workThread == null) {
+                    readThread.runWork(() -> {
+                        Traces.computeIfAbsent(request.traceid);
+                        respFuture.completeExceptionally(exc);
+                    });
+                } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
+                    if (workThread.inIO()) {
+                        Traces.computeIfAbsent(request.traceid);
+                        respFuture.completeExceptionally(exc);
+                    } else {
+                        workThread.execute(() -> {
+                            Traces.computeIfAbsent(request.traceid);
+                            respFuture.completeExceptionally(exc);
+                        });
+                    }
+                } else {
+                    workThread.runWork(() -> {
+                        Traces.computeIfAbsent(request.traceid);
+                        respFuture.completeExceptionally(exc);
+                    });
+                }
+            }
+        } catch (Throwable t) {
+            if (workThread == null) {
+                readThread.runWork(() -> {
+                    Traces.computeIfAbsent(request.traceid);
+                    respFuture.completeExceptionally(t);
+                });
+            } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
+                if (workThread.inIO()) {
+                    Traces.computeIfAbsent(request.traceid);
+                    respFuture.completeExceptionally(t);
+                } else {
+                    workThread.execute(() -> {
+                        Traces.computeIfAbsent(request.traceid);
                         respFuture.completeExceptionally(t);
                     });
                 }
-                connection.client.logger.log(Level.INFO, "Complete result error, request: " + respFuture.request, t);
+            } else {
+                workThread.runWork(() -> {
+                    Traces.computeIfAbsent(request.traceid);
+                    respFuture.completeExceptionally(t);
+                });
             }
+            connection.client.logger.log(Level.INFO, "Complete result error, request: " + respFuture.request, t);
         }
     }
 
     @Override
     public final void failed(Throwable t, ByteBuffer attachment) {
         connection.dispose(t);
+    }
+
+    public ClientMessageListener getMessageListener() {
+        return messageListener;
     }
 
     protected R nextRequest() {
