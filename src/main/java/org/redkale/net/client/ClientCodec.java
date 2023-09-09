@@ -231,11 +231,11 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
     }
 
     public void addMessage(R request, P result) {
-        this.respResults.add(respPool.get().set(request, result));
+        this.respResults.add(respPool.get().success(request, result));
     }
 
     public void addMessage(R request, Throwable exc) {
-        this.respResults.add(respPool.get().set(request, exc));
+        this.respResults.add(respPool.get().fail(request, exc));
     }
 
     public void occurError(R request, Throwable exc) {

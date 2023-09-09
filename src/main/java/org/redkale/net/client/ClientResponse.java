@@ -44,13 +44,13 @@ public class ClientResponse<R extends ClientRequest, P> {
         return request == null ? null : request.getRequestid();
     }
 
-    public ClientResponse<R, P> set(R request, P message) {
+    public ClientResponse<R, P> success(R request, P message) {
         this.request = request;
         this.message = message;
         return this;
     }
 
-    public ClientResponse<R, P> set(R request, Throwable exc) {
+    public ClientResponse<R, P> fail(R request, Throwable exc) {
         this.request = request;
         this.cause = exc;
         return this;
