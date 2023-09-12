@@ -1585,7 +1585,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return runFuture(() -> {
             List<Object> list = new ArrayList<>();
             for (CacheScoredValue v : values) {
-                list.add(new CacheScoredValue.NumberScoredValue(v));
+                list.add(new CacheScoredValue(v));
             }
             CacheEntry entry = find(key, CacheEntryType.ZSET);
             if (entry == null) {
@@ -1627,10 +1627,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
             entry.lock();
             try {
-                Set<CacheScoredValue.NumberScoredValue> sets = entry.setValue;
-                CacheScoredValue.NumberScoredValue old = sets.stream().filter(v -> Objects.equals(v.getValue(), value.getValue())).findAny().orElse(null);
+                Set<CacheScoredValue> sets = entry.setValue;
+                CacheScoredValue old = sets.stream().filter(v -> Objects.equals(v.getValue(), value.getValue())).findAny().orElse(null);
                 if (old == null) {
-                    sets.add(new CacheScoredValue.NumberScoredValue(value.getScore().doubleValue(), value.getValue()));
+                    sets.add(new CacheScoredValue(value.getScore().doubleValue(), value.getValue()));
                     return (T) value.getScore();
                 } else {
                     Number ic = value.getScore();
@@ -1673,10 +1673,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
             if (entry == null) {
                 return null;
             }
-            List<CacheScoredValue.NumberScoredValue> list = new ArrayList<>(entry.setValue);
+            List<CacheScoredValue> list = new ArrayList<>(entry.setValue);
             Collections.sort(list);
             long c = 0;
-            for (CacheScoredValue.NumberScoredValue v : list) {
+            for (CacheScoredValue v : list) {
                 if (Objects.equals(v.getValue(), member)) {
                     return c;
                 }
@@ -1693,10 +1693,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
             if (entry == null) {
                 return null;
             }
-            List<CacheScoredValue.NumberScoredValue> list = new ArrayList<>(entry.setValue);
+            List<CacheScoredValue> list = new ArrayList<>(entry.setValue);
             Collections.sort(list, Collections.reverseOrder());
             long c = 0;
-            for (CacheScoredValue.NumberScoredValue v : list) {
+            for (CacheScoredValue v : list) {
                 if (Objects.equals(v.getValue(), member)) {
                     return c;
                 }
@@ -1727,13 +1727,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<List<CacheScoredValue.NumberScoredValue>> zscanAsync(String key, Type scoreType, AtomicLong cursor, int limit, String pattern) {
+    public CompletableFuture<List<CacheScoredValue>> zscanAsync(String key, Type scoreType, AtomicLong cursor, int limit, String pattern) {
         return supplyFuture(() -> {
             CacheEntry entry = find(key, CacheEntryType.ZSET);
             if (entry == null) {
                 return new ArrayList();
             }
-            Set<CacheScoredValue.NumberScoredValue> sets = entry.setValue;
+            Set<CacheScoredValue> sets = entry.setValue;
             if (Utility.isEmpty(pattern)) {
                 return sets.stream().collect(Collectors.toList());
             } else {
