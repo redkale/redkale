@@ -7,8 +7,8 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 
@@ -34,7 +34,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 是否跳过值为空字符串的字段
      */
-    public static final int OPTION_SKIP_RMPTY_STRING = 1 << 2; //4
+    public static final int OPTION_SKIP_EMPTY_STRING = 1 << 2; //4
 
     /**
      * 同名字段类型强制转换
@@ -487,7 +487,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass, final int options,
         final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> nameAlias) {
         final boolean skipNullValue = (options & OPTION_SKIP_NULL_VALUE) > 0 || ConcurrentHashMap.class.isAssignableFrom(destClass);
-        final boolean skipEmptyString = (options & OPTION_SKIP_RMPTY_STRING) > 0;
+        final boolean skipEmptyString = (options & OPTION_SKIP_EMPTY_STRING) > 0;
         final boolean allowTypeCast = (options & OPTION_ALLOW_TYPE_CAST) > 0;
         final Predicate<Object> valPredicate = v -> !(skipNullValue && v == null)
             && !(skipEmptyString && v instanceof CharSequence && ((CharSequence) v).length() == 0);

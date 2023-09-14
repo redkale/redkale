@@ -140,7 +140,7 @@ public class CopierTest {
         map.put("time", "55555");
         map.put("id", null);
         map.put("map", Utility.ofMap("aa", "bbb"));
-        Copier.load(Map.class, TestBean.class, Copier.OPTION_SKIP_RMPTY_STRING).apply(map, bean);
+        Copier.load(Map.class, TestBean.class, Copier.OPTION_SKIP_EMPTY_STRING).apply(map, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
         Assertions.assertTrue(bean.getName() == null);
     }
@@ -192,7 +192,7 @@ public class CopierTest {
         srcBean.time = 55555;
         srcBean.remark = null;
         srcBean.setMap(Utility.ofMap("aa", "bbb"));
-        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_RMPTY_STRING).apply(srcBean, bean);
+        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_EMPTY_STRING).apply(srcBean, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
         Assertions.assertTrue(bean.getName() == null);
     }
@@ -212,7 +212,7 @@ public class CopierTest {
 
         bean.setName(null);
         bean.remark = "hehehoho";
-        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_SKIP_RMPTY_STRING).apply(srcBean, bean);
+        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_SKIP_EMPTY_STRING).apply(srcBean, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
         Assertions.assertTrue(bean.getName() == null);
     }
