@@ -49,10 +49,10 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
             this.register(java.time.LocalTime.class, LocalTimeSimpledCoder.LocalTimeJsonSimpledCoder.instance);
             this.register(java.time.LocalDateTime.class, LocalDateTimeSimpledCoder.LocalDateTimeJsonSimpledCoder.instance);
 
-            this.register(JsonEntity.class, (Decodeable) JsonEntityDecoder.instance);
-            this.register(JsonString.class, (Decodeable) JsonEntityDecoder.instance);
-            this.register(JsonObject.class, (Decodeable) JsonEntityDecoder.instance);
-            this.register(JsonArray.class, (Decodeable) JsonEntityDecoder.instance);
+            this.register(JsonElement.class, (Decodeable) JsonElementDecoder.instance);
+            this.register(JsonString.class, (Decodeable) JsonElementDecoder.instance);
+            this.register(JsonObject.class, (Decodeable) JsonElementDecoder.instance);
+            this.register(JsonArray.class, (Decodeable) JsonElementDecoder.instance);
         }
     }
 

@@ -17,7 +17,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @since 2.8.0
  */
-public class JsonObject extends LinkedHashMap<String, Object> implements JsonEntity {
+public class JsonObject extends LinkedHashMap<String, Object> implements JsonElement {
 
     public JsonObject() {
     }

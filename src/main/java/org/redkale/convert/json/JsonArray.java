@@ -17,7 +17,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @since 2.8.0
  */
-public class JsonArray extends ArrayList<Object> implements JsonEntity {
+public class JsonArray extends ArrayList<Object> implements JsonElement {
 
     public JsonArray() {
     }

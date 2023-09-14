@@ -14,7 +14,7 @@ import org.redkale.util.Utility;
  * @author zhangjx
  * @since 2.8.0
  */
-public interface JsonEntity extends java.io.Serializable {
+public interface JsonElement extends java.io.Serializable {
 
     public boolean isObject();
 
@@ -22,20 +22,20 @@ public interface JsonEntity extends java.io.Serializable {
 
     public boolean isString();
 
-    public static JsonEntity convertFrom(String text) {
+    public static JsonElement convertFrom(String text) {
         return convertFrom(Utility.charArray(text));
     }
 
-    public static JsonEntity convertFrom(char[] text) {
+    public static JsonElement convertFrom(char[] text) {
         return convertFrom(text, 0, text.length);
     }
 
-    public static JsonEntity convertFrom(char[] text, final int offset, final int length) {
-        Object val = JsonConvert.root().convertFrom(JsonEntity.class, text, offset, length);
+    public static JsonElement convertFrom(char[] text, final int offset, final int length) {
+        Object val = JsonConvert.root().convertFrom(JsonElement.class, text, offset, length);
         if (val instanceof CharSequence) {
             return new JsonString(val.toString());
         }
-        return (JsonEntity) val;
+        return (JsonElement) val;
     }
 
 }

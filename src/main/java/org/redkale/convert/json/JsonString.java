@@ -14,7 +14,7 @@ import org.redkale.convert.ConvertDisabled;
  * @author zhangjx
  * @since 2.8.0
  */
-public class JsonString implements CharSequence, JsonEntity, Comparable<JsonString> {
+public class JsonString implements CharSequence, JsonElement, Comparable<JsonString> {
 
     private String value;
 
