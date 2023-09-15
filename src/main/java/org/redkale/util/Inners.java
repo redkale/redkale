@@ -33,6 +33,8 @@ class Inners {
 
         static final Map<Class, IntFunction> arrayCacheMap = new ConcurrentHashMap<>();
 
+        static final IntFunction<String[]> stringFuncArray = x -> new String[x];
+
         static {
             creatorCacheMap.put(Object.class, p -> new Object());
             creatorCacheMap.put(ArrayList.class, p -> new ArrayList<>());

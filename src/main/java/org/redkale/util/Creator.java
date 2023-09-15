@@ -7,8 +7,8 @@ package org.redkale.util;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
@@ -99,6 +99,10 @@ public interface Creator<T> {
      */
     public static <T> IntFunction<T[]> funcArray(final Class<T> type) {
         return Inners.CreatorInner.arrayCacheMap.computeIfAbsent(type, Inners.CreatorInner::createArrayFunction);
+    }
+
+    public static IntFunction<String[]> funcStringArray() {
+        return Inners.CreatorInner.stringFuncArray;
     }
 
     public static <T> Creator<T> load(Class<T> clazz) {
