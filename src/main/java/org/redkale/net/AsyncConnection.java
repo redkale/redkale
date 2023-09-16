@@ -13,8 +13,8 @@ import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
-import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.*;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.*;
 import org.redkale.util.*;
@@ -356,19 +356,23 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     }
 
     public final void write(byte[] bytes, CompletionHandler<Integer, Void> handler) {
-        write(bytes, 0, bytes.length, null, 0, 0, handler);
+        write(bytes, 0, bytes.length, (byte[]) null, 0, 0, handler);
     }
 
-    public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
-        write(array.content(), array.offset(), array.length(), null, 0, 0, handler);
-    }
-
-    public final <A> void write(ByteTuple array, A attachment, CompletionHandler<Integer, ? super A> handler) {
-        write(array.content(), array.offset(), array.length(), null, 0, 0, attachment, handler);
+    public final <A> void write(byte[] bytes, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        write(bytes, 0, bytes.length, (byte[]) null, 0, 0, attachment, handler);
     }
 
     public final void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
-        write(bytes, offset, length, null, 0, 0, handler);
+        write(bytes, offset, length, (byte[]) null, 0, 0, handler);
+    }
+
+    public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
+        write(array.content(), array.offset(), array.length(), (byte[]) null, 0, 0, handler);
+    }
+
+    public final <A> void write(ByteTuple array, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        write(array.content(), array.offset(), array.length(), (byte[]) null, 0, 0, attachment, handler);
     }
 
     public final void write(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
