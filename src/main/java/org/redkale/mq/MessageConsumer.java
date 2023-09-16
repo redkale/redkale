@@ -25,7 +25,7 @@ public interface MessageConsumer<T> {
     default void init(AnyValue config) {
     }
 
-    public void onMessage(String topic, T[] messages);
+    public void onMessage(String topic, Integer partition, T[] messages);
 
     default void destroy(AnyValue config) {
     }

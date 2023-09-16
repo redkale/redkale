@@ -21,6 +21,7 @@ import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.ext.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.protobuf.ProtobufConvert;
 import org.redkale.util.*;
 
 /**
@@ -35,10 +36,6 @@ import org.redkale.util.*;
  */
 @SuppressWarnings("unchecked")
 public abstract class ConvertFactory<R extends Reader, W extends Writer> {
-
-    private static final AtomicBoolean loaderInited = new AtomicBoolean();
-
-    private static Convert defProtobufConvert;
 
     private final ConvertFactory parent;
 
@@ -212,32 +209,27 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     }
 
     public static Convert findConvert(ConvertType type) {
-        if (type == null) {
-            return null;
-        }
+        Objects.requireNonNull(type);
         if (type == ConvertType.JSON) {
             return JsonConvert.root();
         }
         if (type == ConvertType.BSON) {
             return BsonConvert.root();
         }
-        if (loaderInited.get()) {
-            if (type == ConvertType.PROTOBUF) {
-                return defProtobufConvert;
+        if (type == ConvertType.PROTOBUF) {
+            return ProtobufConvert.root();
+        }
+
+        Iterator<ConvertProvider> it = ServiceLoader.load(ConvertProvider.class).iterator();
+        RedkaleClassLoader.putServiceLoader(ConvertProvider.class);
+        while (it.hasNext()) {
+            ConvertProvider cl = it.next();
+            RedkaleClassLoader.putReflectionPublicConstructors(cl.getClass(), cl.getClass().getName());
+            if (cl.type() == ConvertType.PROTOBUF) {
+                return cl.convert();
             }
         }
-        if (loaderInited.compareAndSet(false, true)) {
-            Iterator<ConvertProvider> it = ServiceLoader.load(ConvertProvider.class).iterator();
-            RedkaleClassLoader.putServiceLoader(ConvertProvider.class);
-            while (it.hasNext()) {
-                ConvertProvider cl = it.next();
-                RedkaleClassLoader.putReflectionPublicConstructors(cl.getClass(), cl.getClass().getName());
-                if (cl.type() == ConvertType.PROTOBUF) {
-                    defProtobufConvert = cl.convert();
-                }
-            }
-        }
-        return type == ConvertType.PROTOBUF ? defProtobufConvert : null;
+        return null;
     }
 
     protected static int getSystemPropertyInt(String key, String parentkey, boolean defvalue, int feature) {

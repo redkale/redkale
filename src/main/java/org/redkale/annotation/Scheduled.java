@@ -23,17 +23,12 @@ public @interface Scheduled {
 
     String zone() default "";
 
-    long fixedDelay() default -1;
+    String fixedDelay() default "-1";
 
-    String fixedDelayString() default "";
+    String fixedRate() default "-1";
 
-    long fixedRate() default -1;
-
-    String fixedRateString() default "";
-
-    long initialDelay() default -1;
-
-    String initialDelayString() default "";
+    String initialDelay() default "-1";
 
     TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
+    
 }

@@ -7,6 +7,7 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.util.Objects;
+import org.redkale.convert.ConvertColumn;
 import static org.redkale.source.ColumnExpress.*;
 import org.redkale.util.*;
 
@@ -22,10 +23,13 @@ import org.redkale.util.*;
  */
 public class ColumnValue {
 
+    @ConvertColumn(index = 1)
     private String column;
 
+    @ConvertColumn(index = 2)
     private ColumnExpress express;
 
+    @ConvertColumn(index = 3)
     private Serializable value;
 
     public ColumnValue() {
