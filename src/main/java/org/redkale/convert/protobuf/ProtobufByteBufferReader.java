@@ -6,7 +6,6 @@
 package org.redkale.convert.protobuf;
 
 import java.nio.ByteBuffer;
-import org.redkale.convert.*;
 
 /**
  *
@@ -20,10 +19,7 @@ public class ProtobufByteBufferReader extends ProtobufReader {
 
     private ByteBuffer currentBuffer;
 
-    protected ConvertMask mask;
-
-    protected ProtobufByteBufferReader(ConvertMask mask, ByteBuffer... buffers) {
-        this.mask = mask;
+    protected ProtobufByteBufferReader(ByteBuffer... buffers) {
         this.buffers = buffers;
         if (buffers != null && buffers.length > 0) this.currentBuffer = buffers[currentIndex];
     }
@@ -34,25 +30,24 @@ public class ProtobufByteBufferReader extends ProtobufReader {
         this.currentIndex = 0;
         this.currentBuffer = null;
         this.buffers = null;
-        this.mask = null;
         return false;
     }
 
     @Override
     protected byte currentByte() {
-        return mask == null ? currentBuffer.get(currentBuffer.position()) : mask.unmask(currentBuffer.get(currentBuffer.position()));
+        return currentBuffer.get(currentBuffer.position());
     }
 
     protected byte nextByte() {
         if (this.currentBuffer.hasRemaining()) {
             this.position++;
-            return mask == null ? this.currentBuffer.get() : mask.unmask(this.currentBuffer.get());
+            return this.currentBuffer.get();
         }
         for (;;) {
             this.currentBuffer = this.buffers[++this.currentIndex];
             if (this.currentBuffer.hasRemaining()) {
                 this.position++;
-                return mask == null ? this.currentBuffer.get() : mask.unmask(this.currentBuffer.get());
+                return this.currentBuffer.get();
             }
         }
     }

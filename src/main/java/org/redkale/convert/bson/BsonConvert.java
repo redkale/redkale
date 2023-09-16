@@ -86,7 +86,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     //------------------------------ reader -----------------------------------------------------------
     public BsonReader pollReader(final ByteBuffer... buffers) {
-        return new BsonByteBufferReader((ConvertMask) null, buffers);
+        return new BsonByteBufferReader(buffers);
     }
 
     public BsonReader pollReader(final InputStream in) {
@@ -175,16 +175,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         if (type == null || buffers.length < 1) {
             return null;
         }
-        return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader((ConvertMask) null, buffers));
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers) {
-        if (type == null || buffers.length < 1) {
-            return null;
-        }
-        return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(mask, buffers));
+        return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(buffers));
     }
 
     @Override

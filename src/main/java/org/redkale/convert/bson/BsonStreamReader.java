@@ -21,7 +21,7 @@ class BsonStreamReader extends BsonByteBufferReader {
     private byte currByte;
 
     protected BsonStreamReader(InputStream in) {
-        super((ConvertMask) null);
+        super();
         this.in = in;
     }
 

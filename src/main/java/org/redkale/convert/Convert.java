@@ -46,7 +46,7 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return writer;
     }
 
-    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> objFieldFunc, 
+    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> objFieldFunc,
         BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
         writer.mapFieldFunc = mapFieldFunc;
         writer.objFieldFunc = objFieldFunc;
@@ -66,7 +66,7 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return newConvert(objFieldFunc, null, objExtFunc);
     }
 
-    public abstract Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, 
+    public abstract Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc,
         BiFunction<Object, Object, Object> mapFieldFunc, Function<Object, ConvertField[]> objExtFunc);
 
     public abstract boolean isBinary();
@@ -88,8 +88,6 @@ public abstract class Convert<R extends Reader, W extends Writer> {
     public abstract <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int length);
 
     public abstract <T> T convertFrom(final Type type, final ByteBuffer... buffers);
-
-    public abstract <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers);
 
     public final void convertTo(final W writer, final Object value) {
         convertTo(writer, (Type) null, value);

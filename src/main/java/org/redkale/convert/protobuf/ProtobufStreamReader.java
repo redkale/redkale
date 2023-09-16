@@ -21,7 +21,7 @@ class ProtobufStreamReader extends ProtobufByteBufferReader {
     private byte currByte;
 
     protected ProtobufStreamReader(InputStream in) {
-        super((ConvertMask) null);
+        super();
         this.in = in;
     }
 

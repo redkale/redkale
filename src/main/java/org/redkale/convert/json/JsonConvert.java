@@ -207,20 +207,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
             decoder = factory.loadDecoder(type);
             this.lastConvertDecodeable = decoder;
         }
-        return (T) decoder.convertFrom(new JsonByteBufferReader((ConvertMask) null, buffers));
-    }
-
-    @Override
-    public <T> T convertFrom(final Type type, final ConvertMask mask, final ByteBuffer... buffers) {
-        if (type == null || buffers == null || buffers.length == 0) {
-            return null;
-        }
-        Decodeable decoder = this.lastConvertDecodeable;
-        if (decoder == null || decoder.getType() != type) {
-            decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
-        }
-        return (T) decoder.convertFrom(new JsonByteBufferReader(mask, buffers));
+        return (T) decoder.convertFrom(new JsonByteBufferReader(buffers));
     }
 
     @Override
@@ -279,15 +266,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (buffers == null || buffers.length == 0) {
             return null;
         }
-        return (V) new AnyDecoder(factory).convertFrom(new JsonByteBufferReader((ConvertMask) null, buffers));
-    }
-
-    //返回非null的值是由String、ArrayList、HashMap任意组合的对象
-    public <V> V convertFrom(final ConvertMask mask, final ByteBuffer... buffers) {
-        if (buffers == null || buffers.length == 0) {
-            return null;
-        }
-        return (V) new AnyDecoder(factory).convertFrom(new JsonByteBufferReader(mask, buffers));
+        return (V) new AnyDecoder(factory).convertFrom(new JsonByteBufferReader(buffers));
     }
 
     //返回非null的值是由String、ArrayList、HashMap任意组合的对象

@@ -19,7 +19,7 @@ class JsonStreamReader extends JsonByteBufferReader {
     private InputStream in;
 
     protected JsonStreamReader(InputStream in) {
-        super((ConvertMask) null);
+        super();
         this.in = in;
     }
 

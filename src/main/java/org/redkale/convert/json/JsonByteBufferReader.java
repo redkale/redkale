@@ -29,10 +29,7 @@ public class JsonByteBufferReader extends JsonReader {
 
     private ByteBuffer currentBuffer;
 
-    protected ConvertMask mask;
-
-    protected JsonByteBufferReader(ConvertMask mask, ByteBuffer... buffers) {
-        this.mask = mask;
+    protected JsonByteBufferReader(ByteBuffer... buffers) {
         this.buffers = buffers;
         if (buffers != null && buffers.length > 0) {
             this.currentBuffer = buffers[currentIndex];
@@ -46,20 +43,19 @@ public class JsonByteBufferReader extends JsonReader {
         this.buffers = null;
         this.currentIndex = 0;
         this.currentBuffer = null;
-        this.mask = null;
         return false;
     }
 
     protected byte nextByte() {
         if (this.currentBuffer.hasRemaining()) {
             this.position++;
-            return mask == null ? this.currentBuffer.get() : mask.unmask(this.currentBuffer.get());
+            return this.currentBuffer.get();
         }
         for (;;) {
             this.currentBuffer = this.buffers[++this.currentIndex];
             if (this.currentBuffer.hasRemaining()) {
                 this.position++;
-                return mask == null ? this.currentBuffer.get() : mask.unmask(this.currentBuffer.get());
+                return this.currentBuffer.get();
             }
         }
     }
