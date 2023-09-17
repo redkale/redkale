@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
+import org.redkale.convert.ConvertColumn;
 import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.*;
 
@@ -25,17 +26,23 @@ import org.redkale.util.*;
  */
 public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则DataSource很多重载接口会出现冲突
 
+    @ConvertColumn(index = 1)
     protected boolean readOnly;
 
+    @ConvertColumn(index = 2)
     protected String column;
 
+    @ConvertColumn(index = 3)
     protected FilterExpress express;
 
+    @ConvertColumn(index = 4)
     protected Serializable value;
 
     //----------------------------------------------
+    @ConvertColumn(index = 5)
     protected boolean or;
 
+    @ConvertColumn(index = 6)
     protected FilterNode[] nodes;
 
     public FilterNode() {

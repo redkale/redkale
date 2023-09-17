@@ -5,18 +5,22 @@
  */
 package org.redkale.mq;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.*;
 import java.util.stream.Collectors;
-import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
+import org.redkale.boot.*;
 import static org.redkale.boot.Application.RESNAME_APP_NAME;
 import static org.redkale.boot.Application.RESNAME_APP_NODEID;
-import org.redkale.boot.*;
+import org.redkale.convert.Convert;
+import org.redkale.convert.ConvertFactory;
+import org.redkale.convert.ConvertType;
 import org.redkale.net.Servlet;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -50,7 +54,11 @@ public abstract class MessageAgent implements Resourcable {
 
     protected AnyValue config;
 
-    protected MessageProducer messageProducer;
+    protected final ReentrantLock messageProducerLock = new ReentrantLock();
+
+    protected MessageProducer baseMessageProducer;
+
+    protected Map<ConvertType, ConvertMessageProducer> messageProducers = new ConcurrentHashMap<>();
 
     //key: group, sub-key: topic
     protected final ConcurrentHashMap<String, ConcurrentHashMap<String, MessageConsumer>> consumerMap = new ConcurrentHashMap<>();
@@ -151,6 +159,7 @@ public abstract class MessageAgent implements Resourcable {
         }
     }
 
+    @Deprecated
     protected List<MessageClientConsumer> getMessageClientConsumers() {
         List<MessageClientConsumer> consumers = new ArrayList<>();
         MessageClientConsumer one = this.httpMessageClient == null ? null : this.httpMessageClient.respConsumer;
@@ -165,6 +174,7 @@ public abstract class MessageAgent implements Resourcable {
         return consumers;
     }
 
+    @Deprecated
     protected List<MessageClientProducer> getMessageClientProducers() {
         List<MessageClientProducer> producers = new ArrayList<>();
         if (this.httpProducer != null) {
@@ -189,6 +199,7 @@ public abstract class MessageAgent implements Resourcable {
         return name;
     }
 
+    @Deprecated
     public MessageCoder<MessageRecord> getMessageCoder() {
         return this.messageCoder;
     }
@@ -207,6 +218,24 @@ public abstract class MessageAgent implements Resourcable {
 
     public void setConfig(AnyValue config) {
         this.config = config;
+    }
+
+    public MessageProducer loadMessageProducer(ResourceProducer ann) {
+        MessageProducer baseProducer = this.baseMessageProducer;
+        if (this.baseMessageProducer == null) {
+            messageProducerLock.lock();
+            try {
+                if (this.baseMessageProducer == null) {
+                    this.baseMessageProducer = createMessageProducer();
+                }
+            } finally {
+                messageProducerLock.unlock();
+            }
+            baseProducer = this.baseMessageProducer;
+        }
+        MessageProducer producer = baseProducer;
+        Objects.requireNonNull(producer);
+        return messageProducers.computeIfAbsent(ann.convertType(), t -> new ConvertMessageProducer(producer, ConvertFactory.findConvert(t)));
     }
 
     public HttpMessageClient getHttpMessageClient() {
@@ -232,6 +261,7 @@ public abstract class MessageAgent implements Resourcable {
         return name;
     }
 
+    @Deprecated
     //获取指定topic的生产处理器
     public MessageClientProducer getSncpMessageClientProducer() {
         if (this.sncpProducer == null) {
@@ -252,6 +282,7 @@ public abstract class MessageAgent implements Resourcable {
         return this.sncpProducer;
     }
 
+    @Deprecated
     public MessageClientProducer getHttpMessageClientProducer() {
         if (this.httpProducer == null) {
             producerLock.lock();
@@ -271,10 +302,16 @@ public abstract class MessageAgent implements Resourcable {
         return this.httpProducer;
     }
 
+    @Deprecated
     //创建指定topic的生产处理器
     protected abstract MessageClientProducer createMessageClientProducer(String producerName);
 
-    //创建topic，如果已存在则跳过
+    //
+    protected abstract MessageProducer createMessageProducer();
+
+    protected abstract void closeMessageProducer(MessageProducer messageProducer) throws Exception;
+
+    //
     public abstract boolean createTopic(String... topics);
 
     //删除topic，如果不存在则跳过
@@ -421,6 +458,24 @@ public abstract class MessageAgent implements Resourcable {
 
     }
 
+    protected static class ConvertMessageProducer implements MessageProducer {
+
+        private final MessageProducer producer;
+
+        private final Convert convert;
+
+        public ConvertMessageProducer(MessageProducer producer, Convert convert) {
+            this.producer = producer;
+            this.convert = convert;
+        }
+
+        @Override
+        public CompletableFuture<Void> sendMessage(String topic, Integer partition, Convert convert0, Type type, Object value) {
+            return producer.sendMessage(topic, partition, convert0 == null ? this.convert : convert0, type, value);
+        }
+
+    }
+
     protected static class MessageClientConsumerNode {
 
         public final NodeServer server;
@@ -442,4 +497,5 @@ public abstract class MessageAgent implements Resourcable {
         }
 
     }
+
 }

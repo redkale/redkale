@@ -31,8 +31,8 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.source.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.watch.WatchServlet;
 
 /**
@@ -1156,6 +1156,32 @@ public final class Application {
             }
             logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
         }
+        //------------------------------------ 注册 ResourceProducer MessageProducer ------------------------------------       
+        resourceFactory.register(new ResourceAnnotationProvider<ResourceProducer>() {
+            @Override
+            public void load(ResourceFactory rf, String srcResourceName, Object srcObj, ResourceProducer annotation, Field field, Object attachment) {
+                if (field.getType() != MessageProducer.class) {
+                    throw new RestException("@" + ResourceProducer.class.getSimpleName() + " must on " + MessageProducer.class.getName() + " type field, but on " + field);
+                }
+                MessageAgent agent = findMessageAgent(annotation.mq());
+                if (agent == null) {
+                    throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = " + annotation.mq() + ") on " + field);
+                }
+                try {
+                    MessageProducer producer = agent.loadMessageProducer(annotation);
+                    field.set(srcObj, producer);
+                } catch (RuntimeException ex) {
+                    throw ex;
+                } catch (Exception e) {
+                    throw new RedkaleException(field + "inject error", e);
+                }
+            }
+
+            @Override
+            public Class<ResourceProducer> annotationType() {
+                return ResourceProducer.class;
+            }
+        });
         //------------------------------------ 注册 HttpMessageClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
@@ -1202,6 +1228,18 @@ public final class Application {
                 ((DefaultAnyValue) confNode).setValue("name", mqName);
             }
             return confNode;
+        }
+        return null;
+    }
+
+    private MessageAgent findMessageAgent(String mqName) {
+        if (this.messageAgents == null) {
+            return null;
+        }
+        for (MessageAgent agent : this.messageAgents) {
+            if (Objects.equals(mqName, agent.getName())) {
+                return agent;
+            }
         }
         return null;
     }
