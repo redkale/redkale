@@ -15,7 +15,6 @@ import org.redkale.convert.ConvertColumn;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * @param <S> 分数
  *
  * @since 2.8.0
  */
