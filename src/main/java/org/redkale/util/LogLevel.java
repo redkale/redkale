@@ -5,9 +5,9 @@
  */
 package org.redkale.util;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 
 /**
  * 被标记的日志级别以上的才会被记录
@@ -15,6 +15,7 @@ import java.lang.annotation.*;
  * <p>
  * 详情见: https://redkale.org
  * @see org.redkale.annotation.LogLevel
+ * @deprecated 
  *
  * @author zhangjx
  */

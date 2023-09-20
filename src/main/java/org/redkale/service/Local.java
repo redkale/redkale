@@ -25,15 +25,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Local {
 
-    /**
-     * 标记全局唯一性
-     * <p>
-     * 有些Service可能只能启动一个实例， 比如凌晨定时清除一些数据的Service, 在整个系统部署中应该只被部署一次
-     *
-     * @since 2.1.0
-     * @return boolean
-     */
-    //boolean unique() default false;
-
-    String comment() default ""; //备注描述
 }

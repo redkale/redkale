@@ -159,6 +159,76 @@ public abstract class MessageAgent implements Resourcable {
         }
     }
 
+    public MessageConext createMessageConext(String topic, Integer partition) {
+        return new MessageConext(topic, partition);
+    }
+
+    public MessageProducer loadMessageProducer(ResourceProducer ann) {
+        MessageProducer baseProducer = this.baseMessageProducer;
+        if (this.baseMessageProducer == null) {
+            messageProducerLock.lock();
+            try {
+                if (this.baseMessageProducer == null) {
+                    this.baseMessageProducer = createMessageProducer();
+                }
+            } finally {
+                messageProducerLock.unlock();
+            }
+            baseProducer = this.baseMessageProducer;
+        }
+        MessageProducer producer = baseProducer;
+        Objects.requireNonNull(producer);
+        return messageProducers.computeIfAbsent(ann.convertType(), t -> new ConvertMessageProducer(producer, ConvertFactory.findConvert(t)));
+    }
+
+    public void loadMessageConsumer(MessageConsumer consumer) {
+
+    }
+
+    @Override
+    public String resourceName() {
+        return name;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public AnyValue getConfig() {
+        return config;
+    }
+
+    public void setConfig(AnyValue config) {
+        this.config = config;
+    }
+
+    public HttpMessageClient getHttpMessageClient() {
+        return httpMessageClient;
+    }
+
+    public SncpMessageClient getSncpMessageClient() {
+        return sncpMessageClient;
+    }
+
+    protected String checkName(String name) {  //不能含特殊字符
+        if (name.isEmpty()) {
+            return name;
+        }
+        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') {
+            throw new RedkaleException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+        }
+        for (char ch : name.toCharArray()) {
+            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+                throw new RedkaleException("name only 0-9 a-z A-Z _ cannot begin 0-9");
+            }
+        }
+        return name;
+    }
+
     @Deprecated
     protected List<MessageClientConsumer> getMessageClientConsumers() {
         List<MessageClientConsumer> consumers = new ArrayList<>();
@@ -194,71 +264,9 @@ public abstract class MessageAgent implements Resourcable {
         return producers;
     }
 
-    @Override
-    public String resourceName() {
-        return name;
-    }
-
     @Deprecated
     public MessageCoder<MessageRecord> getMessageCoder() {
         return this.messageCoder;
-    }
-
-    public Logger getLogger() {
-        return logger;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public AnyValue getConfig() {
-        return config;
-    }
-
-    public void setConfig(AnyValue config) {
-        this.config = config;
-    }
-
-    public MessageProducer loadMessageProducer(ResourceProducer ann) {
-        MessageProducer baseProducer = this.baseMessageProducer;
-        if (this.baseMessageProducer == null) {
-            messageProducerLock.lock();
-            try {
-                if (this.baseMessageProducer == null) {
-                    this.baseMessageProducer = createMessageProducer();
-                }
-            } finally {
-                messageProducerLock.unlock();
-            }
-            baseProducer = this.baseMessageProducer;
-        }
-        MessageProducer producer = baseProducer;
-        Objects.requireNonNull(producer);
-        return messageProducers.computeIfAbsent(ann.convertType(), t -> new ConvertMessageProducer(producer, ConvertFactory.findConvert(t)));
-    }
-
-    public HttpMessageClient getHttpMessageClient() {
-        return httpMessageClient;
-    }
-
-    public SncpMessageClient getSncpMessageClient() {
-        return sncpMessageClient;
-    }
-
-    protected String checkName(String name) {  //不能含特殊字符
-        if (name.isEmpty()) {
-            return name;
-        }
-        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') {
-            throw new RedkaleException("name only 0-9 a-z A-Z _ cannot begin 0-9");
-        }
-        for (char ch : name.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
-                throw new RedkaleException("name only 0-9 a-z A-Z _ cannot begin 0-9");
-            }
-        }
-        return name;
     }
 
     @Deprecated
@@ -302,14 +310,13 @@ public abstract class MessageAgent implements Resourcable {
         return this.httpProducer;
     }
 
-    @Deprecated
-    //创建指定topic的生产处理器
-    protected abstract MessageClientProducer createMessageClientProducer(String producerName);
-
     //
     protected abstract MessageProducer createMessageProducer();
 
     protected abstract void closeMessageProducer(MessageProducer messageProducer) throws Exception;
+
+    @ResourceListener
+    public abstract void onResourceChange(ResourceEvent[] events);
 
     //
     public abstract boolean createTopic(String... topics);
@@ -323,11 +330,12 @@ public abstract class MessageAgent implements Resourcable {
     //ServiceLoader时判断配置是否符合当前实现类
     public abstract boolean acceptsConf(AnyValue config);
 
+    @Deprecated
+    //创建指定topic的生产处理器
+    protected abstract MessageClientProducer createMessageClientProducer(String producerName);
+
     //创建指定topic的消费处理器
     public abstract MessageClientConsumer createMessageClientConsumer(String[] topics, String group, MessageClientProcessor processor);
-
-    @ResourceListener
-    public abstract void onResourceChange(ResourceEvent[] events);
 
     public void addMessageConsumer(ResourceConsumer res, MessageConsumer consumer) {
         consumerLock.lock();

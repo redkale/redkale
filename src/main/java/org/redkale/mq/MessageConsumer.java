@@ -8,7 +8,7 @@ import org.redkale.service.Local;
 import org.redkale.util.AnyValue;
 
 /**
- * MQ资源注解
+ * MQ消费器， 实现类必须标记{@link org.redkale.mq.ResourceConsumer}
  *
  * <p>
  * 详情见: https://redkale.org
@@ -25,8 +25,9 @@ public interface MessageConsumer<T> {
     default void init(AnyValue config) {
     }
 
-    public void onMessage(String topic, Integer partition, T[] messages);
+    public void onMessage(MessageConext context, T[] messages);
 
     default void destroy(AnyValue config) {
     }
+
 }

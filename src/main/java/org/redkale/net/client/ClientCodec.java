@@ -143,7 +143,7 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                         respFuture.complete(rs);
                     });
                 } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
-                    if (workThread.inIO() && false) {
+                    if (workThread.inIO()) {
                         Traces.computeIfAbsent(request.traceid);
                         respFuture.complete(rs);
                     } else {

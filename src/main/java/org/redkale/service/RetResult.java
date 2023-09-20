@@ -39,7 +39,9 @@ public class RetResult<T> implements Serializable {
     public static final Type TYPE_RET_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
 
-    //success index = 1
+    //@ConvertColumn(index = 1)
+    //success
+    //
     @ConvertColumn(index = 2)
     @Column(nullable = false)
     protected int retcode;
