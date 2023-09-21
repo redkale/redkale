@@ -38,7 +38,7 @@ public final class EntityCache<T> {
     // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
     private Collection<T> list = new ConcurrentLinkedQueue();
 
-    //continuousid=true此字段值才有效
+    //sequent=true此字段值才有效
     private T[] array;
 
     //Flipper.sort转换成Comparator的缓存
@@ -79,7 +79,7 @@ public final class EntityCache<T> {
     final int interval;
 
     //&#064;Cacheable的主键字段是否同时满足: 1、类型为int；2、主键值可为数组下标；3、记录总数有限；
-    final boolean continuousid;
+    final boolean sequent;
 
     //&#064;Cacheable的定时器
     private ScheduledThreadPoolExecutor scheduler;
@@ -87,13 +87,13 @@ public final class EntityCache<T> {
     private CompletableFuture<List<T>> loadFuture;
 
     public EntityCache(final EntityInfo<T> info, final Cacheable c) {
-        this(info, c != null ? c.interval() : 0, c != null && c.direct(), c != null && c.continuousid());
+        this(info, c != null ? c.interval() : 0, c != null && c.direct(), c != null && c.sequent());
     }
 
     EntityCache(final EntityInfo<T> info, final int cacheInterval, final boolean cacheDirect, final boolean cacheContinuousid) {
         this.info = info;
         this.interval = cacheInterval < 0 ? 0 : cacheInterval;
-        this.continuousid = cacheContinuousid && info.getPrimary().type() == int.class;
+        this.sequent = cacheContinuousid && info.getPrimary().type() == int.class;
         this.type = info.getType();
         this.arrayer = info.getArrayer();
         this.creator = info.getCreator();
@@ -213,7 +213,7 @@ public final class EntityCache<T> {
     }
 
     private T[] transferArray(List<T> all) {
-        if (continuousid && all != null && !all.isEmpty()) {
+        if (sequent && all != null && !all.isEmpty()) {
             try {
                 int maxid = all.stream().mapToInt(v -> v == null ? 0 : (Integer) primary.get(v)).max().orElse(0);
                 T[] result = arrayer.apply(maxid + 1);
@@ -286,7 +286,7 @@ public final class EntityCache<T> {
                 return result;
             }
         }
-        if (continuousid && array != null) {
+        if (sequent && array != null) {
             T[] array0 = array;
             T[] result = arrayer.apply(pks.length);
             if (needCopy) {
@@ -805,7 +805,7 @@ public final class EntityCache<T> {
         T old = this.map.putIfAbsent(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
-            if (continuousid) {
+            if (sequent) {
                 this.array = transferArray(new ArrayList<>(this.list));
             }
             return 1;
@@ -824,7 +824,7 @@ public final class EntityCache<T> {
             return 0;
         }
         this.list.remove(rs);
-        if (continuousid) {
+        if (sequent) {
             this.array[(Integer) primary.get(rs)] = null;
         }
         return 1;
@@ -853,7 +853,7 @@ public final class EntityCache<T> {
             ids[++i] = this.primary.get(t);
             this.map.remove(ids[i]);
             this.list.remove(t);
-            if (continuousid) {
+            if (sequent) {
                 this.array[(Integer) primary.get(t)] = null;
             }
         }

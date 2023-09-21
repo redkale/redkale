@@ -15,6 +15,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
@@ -818,7 +819,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
             if (entry == null) {
                 return new ArrayList();
             } else {
-                return new ArrayList(entry.mapValue.values().stream().map(v -> Utility.convertValue(type, v)).toList());
+                Stream<T> stream = entry.mapValue.values().stream().map(v -> Utility.convertValue(type, v));
+                return new ArrayList(stream.collect(Collectors.toList()));
             }
         });
     }

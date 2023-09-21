@@ -690,7 +690,7 @@ public final class EntityInfo<T> {
             this.cache = new EntityCache<>(this,
                 c1 == null ? (c2 == null ? 0 : c2.interval()) : c1.interval(),
                 c1 == null ? (c2 == null ? false : c2.direct()) : c1.direct(),
-                c1 == null ? false : c1.continuousid());
+                c1 == null ? false : c1.sequent());
         } else {
             this.cache = null;
         }
