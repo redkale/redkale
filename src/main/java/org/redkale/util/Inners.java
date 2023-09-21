@@ -41,6 +41,7 @@ class Inners {
             creatorCacheMap.put(HashMap.class, p -> new HashMap<>());
             creatorCacheMap.put(HashSet.class, p -> new HashSet<>());
             creatorCacheMap.put(LinkedHashSet.class, p -> new LinkedHashSet<>());
+            creatorCacheMap.put(LinkedHashMap.class, p -> new LinkedHashMap<>());
             creatorCacheMap.put(Stream.class, p -> new ArrayList<>().stream());
             creatorCacheMap.put(ConcurrentHashMap.class, p -> new ConcurrentHashMap<>());
             creatorCacheMap.put(CompletableFuture.class, p -> new CompletableFuture<>());

@@ -42,12 +42,14 @@ public class RedkaleClassLoader extends URLClassLoader {
 
     private static final String[] buildPackages = {
         "org.redkaledyn", //所有动态生成类的根package
+        "org.redkale.annotation", "org.redkale.asm",
         "org.redkale.boot", "org.redkale.boot.watch",
         "org.redkale.cluster", "org.redkale.convert",
         "org.redkale.convert.bson", "org.redkale.convert.ext",
-        "org.redkale.convert.json", "org.redkale.mq",
-        "org.redkale.net", "org.redkale.net.client",
-        "org.redkale.net.http", "org.redkale.net.sncp",
+        "org.redkale.convert.json", "org.redkale.convert.protobuf",
+        "org.redkale.mq", "org.redkale.net",
+        "org.redkale.net.client", "org.redkale.net.http",
+        "org.redkale.net.sncp", "org.redkale.persistence",
         "org.redkale.service", "org.redkale.source",
         "org.redkale.util", "org.redkale.watch"
     };
