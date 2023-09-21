@@ -85,7 +85,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SelectionKey writeKey;
 
-    protected CompletionHandler<Integer, Object> writeFastHandler;
+//    protected CompletionHandler<Integer, Object> writeFastHandler;
 
     public AsyncNioConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
         AsyncIOThread ioWriteThread, final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext) {
@@ -117,12 +117,12 @@ abstract class AsyncNioConnection extends AsyncConnection {
         return this.writeTimeoutSeconds;
     }
 
-    @Override
-    public <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler) {
-        Objects.requireNonNull(handler);
-        this.writeFastHandler = (CompletionHandler) handler;
-        return this;
-    }
+//    @Override
+//    public <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler) {
+//        Objects.requireNonNull(handler);
+//        this.writeFastHandler = (CompletionHandler) handler;
+//        return this;
+//    }
 
     @Override
     protected void startHandshake(final Consumer<Throwable> callback) {
@@ -299,44 +299,44 @@ abstract class AsyncNioConnection extends AsyncConnection {
         doWrite();
     }
 
-    @Override
-    public <A> void fastWrite(byte[] data) {
-        CompletionHandler<Integer, ? super A> handler = this.writeFastHandler;
-        Objects.requireNonNull(data);
-        Objects.requireNonNull(handler, "fastHandler is null");
-        if (!this.isConnected()) {
-            handler.failed(new NotYetConnectedException(), null);
-            return;
-        }
-        this.writePending = true;
-        this.fastWriteQueue.offer(data);
-        this.fastWriteCount.incrementAndGet();
-        this.writeCompletionHandler = (CompletionHandler) handler;
-        this.writeAttachment = null;
-        try {
-            if (writeKey == null) {
-                ioWriteThread.register(selector -> {
-                    try {
-                        if (writeKey == null) {
-                            writeKey = keyFor(selector);
-                        }
-                        if (writeKey == null) {
-                            writeKey = implRegister(selector, SelectionKey.OP_WRITE);
-                            writeKey.attach(this);
-                        } else {
-                            writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
-                        }
-                    } catch (ClosedChannelException e) {
-                        handleWrite(0, e);
-                    }
-                });
-            } else {
-                ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
-            }
-        } catch (Exception e) {
-            handleWrite(0, e);
-        }
-    }
+//    @Override
+//    public <A> void fastWrite(byte[] data) {
+//        CompletionHandler<Integer, ? super A> handler = this.writeFastHandler;
+//        Objects.requireNonNull(data);
+//        Objects.requireNonNull(handler, "fastHandler is null");
+//        if (!this.isConnected()) {
+//            handler.failed(new NotYetConnectedException(), null);
+//            return;
+//        }
+//        this.writePending = true;
+//        this.fastWriteQueue.offer(data);
+//        this.fastWriteCount.incrementAndGet();
+//        this.writeCompletionHandler = (CompletionHandler) handler;
+//        this.writeAttachment = null;
+//        try {
+//            if (writeKey == null) {
+//                ioWriteThread.register(selector -> {
+//                    try {
+//                        if (writeKey == null) {
+//                            writeKey = keyFor(selector);
+//                        }
+//                        if (writeKey == null) {
+//                            writeKey = implRegister(selector, SelectionKey.OP_WRITE);
+//                            writeKey.attach(this);
+//                        } else {
+//                            writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
+//                        }
+//                    } catch (ClosedChannelException e) {
+//                        handleWrite(0, e);
+//                    }
+//                });
+//            } else {
+//                ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
+//            }
+//        } catch (Exception e) {
+//            handleWrite(0, e);
+//        }
+//    }
 
     public void doRead(boolean direct) {
         try {

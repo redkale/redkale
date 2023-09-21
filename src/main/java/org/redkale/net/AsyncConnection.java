@@ -224,9 +224,9 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     public abstract void setWriteTimeoutSeconds(int writeTimeoutSeconds);
 
-    public abstract <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler);
-
-    public abstract <A> void fastWrite(byte[] data);
+//    public abstract <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler);
+//
+//    public abstract <A> void fastWrite(byte[] data);
 
     protected abstract void readRegisterImpl(CompletionHandler<Integer, ByteBuffer> handler);
 
