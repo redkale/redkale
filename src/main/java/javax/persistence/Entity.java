@@ -15,9 +15,9 @@
  ******************************************************************************/ 
 package javax.persistence;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 
 /**
  * Specifies that the class is an entity. This annotation is applied to the
@@ -25,7 +25,7 @@ import java.lang.annotation.*;
  * 
  * @since Java Persistence 1.0
  * 
- * @deprecated replace by org.redkale.persistence.Entity
+ * @deprecated replace by {@link org.redkale.persistence.Entity}
  * 
  * @see org.redkale.persistence.Entity
  */

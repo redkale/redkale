@@ -65,7 +65,7 @@ public final class EntityCache<T> {
     private final Copier<T, T> newCopier;
 
     //修改时的复制器， 排除了标记为&#064;Transient或&#064;Column(updatable=false)的字段
-    private final Copier<T, T> chgCopier;
+    private final Copier<T, T> uptCopier;
 
     //是否已经全量加载过
     private volatile boolean fullloaded;
@@ -110,26 +110,24 @@ public final class EntityCache<T> {
             }
         }
         this.needCopy = !direct;
-        this.newCopier = Copier.create(type, type, (m) -> {
+        this.newCopier = Copier.create(type, type, (e, c) -> {
             try {
-                java.lang.reflect.Field field = type.getDeclaredField(m);
-                return field.getAnnotation(Transient.class) == null && field.getAnnotation(javax.persistence.Transient.class) == null;
-            } catch (Exception e) {
+                return e.getAnnotation(Transient.class) == null && e.getAnnotation(javax.persistence.Transient.class) == null;
+            } catch (Exception ex) {
                 return true;
             }
         });
-        this.chgCopier = Copier.create(type, type, (m) -> {
+        this.uptCopier = Copier.create(type, type, (e, c) -> {
             try {
-                java.lang.reflect.Field field = type.getDeclaredField(m);
-                if (field.getAnnotation(Transient.class) != null) {
+                if (e.getAnnotation(Transient.class) != null) {
                     return false;
                 }
-                if (field.getAnnotation(javax.persistence.Transient.class) != null) {
+                if (e.getAnnotation(javax.persistence.Transient.class) != null) {
                     return false;
                 }
-                Column column = field.getAnnotation(Column.class);
+                Column column = e.getAnnotation(Column.class);
                 return (column == null || column.updatable());
-            } catch (Exception e) {
+            } catch (Exception ex) {
                 return true;
             }
         });
@@ -874,7 +872,7 @@ public final class EntityCache<T> {
         }
         tableLock.lock(); //表锁, 可优化成行锁
         try {
-            this.chgCopier.apply(rs, entity);
+            this.uptCopier.apply(rs, entity);
         } finally {
             tableLock.unlock();
         }

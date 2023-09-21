@@ -15,9 +15,9 @@
  ***************************************************************************** */
 package javax.persistence;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies the mapped column for a persistent property or field.
@@ -47,7 +47,7 @@ import static java.lang.annotation.ElementType.*;
  *
  * @since Java Persistence 1.0
  * 
- * @deprecated replace by org.redkale.persistence.Column
+ * @deprecated replace by {@link org.redkale.persistence.Column}
  * 
  * @see org.redkale.persistence.Column
  */

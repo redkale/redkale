@@ -15,8 +15,8 @@
  ***************************************************************************** */
 package javax.persistence;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies that a unique constraint is to be included in
@@ -35,7 +35,7 @@ import java.lang.annotation.*;
  *
  * @since Java Persistence 1.0
  * 
- * @deprecated replace by org.redkale.persistence.UniqueConstraint
+ * @deprecated replace by {@link org.redkale.persistence.UniqueConstraint}
  * 
  * @see org.redkale.persistence.UniqueConstraint
  * 

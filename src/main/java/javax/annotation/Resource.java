@@ -12,7 +12,7 @@ import java.lang.annotation.*;
  * 
  * @see org.redkale.annotation.Resource
  *
- * @deprecated replace by org.redkale.annotation.Resource
+ * @deprecated replace by {@link org.redkale.annotation.Resource}
  */
 @Deprecated(since = "2.8.0")
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})

@@ -7,6 +7,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
+import java.util.stream.Collectors;
 import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
@@ -392,7 +393,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>                源类泛型
      * @param destClass          目标类名
      * @param srcClass           源类名
-     * @param srcColumnPredicate 需复制的字段名判断期
+     * @param srcColumnPredicate 需复制源类的字段名判断器
      *
      * @return 复制器
      */
@@ -408,7 +409,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>                源类泛型
      * @param destClass          目标类名
      * @param srcClass           源类名
-     * @param srcColumnPredicate 需复制的字段名判断期
+     * @param srcColumnPredicate 需复制源类的字段名判断器
      * @param names              源字段名与目标字段名的映射关系
      *
      * @return 复制器
@@ -426,7 +427,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>                源类泛型
      * @param destClass          目标类名
      * @param srcClass           源类名
-     * @param srcColumnPredicate 需复制的字段名判断期
+     * @param srcColumnPredicate 需复制源类的字段名判断器
      *
      * @return 复制器
      */
@@ -443,7 +444,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param <S>                源类泛型
      * @param destClass          目标类名
      * @param srcClass           源类名
-     * @param srcColumnPredicate 需复制的字段名判断期
+     * @param srcColumnPredicate 需复制源类的字段名判断器
      * @param names              源字段名与目标字段名的映射关系
      *
      * @return 复制器
@@ -478,7 +479,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      * @param destClass          目标类名
      * @param srcClass           源类名
      * @param options            可配项
-     * @param srcColumnPredicate 需复制的字段名判断期
+     * @param srcColumnPredicate 需复制源类的字段名判断器
      * @param nameAlias          源字段名与目标字段名的映射关系
      *
      * @return 复制器
@@ -559,6 +560,126 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         // ------------------------------------------------------------------------------
         final boolean destIsMap = Map.class.isAssignableFrom(destClass);
         final boolean srcIsMap = Map.class.isAssignableFrom(srcClass);
+        final Predicate<Class<?>> throwPredicate = e -> !RuntimeException.class.isAssignableFrom(e);
+        final Map<String, AccessibleObject> elements = new TreeMap<>();
+        final Map<String, String> destNewNames = new TreeMap<>();
+        int ingoreCount = 0;
+        if (srcIsMap) { //Map -> JavaBean
+            for (java.lang.reflect.Field field : destClass.getFields()) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                if (Modifier.isFinal(field.getModifiers())) {
+                    continue;
+                }
+                if (!Modifier.isPublic(field.getModifiers())) {
+                    continue;
+                }
+                final String sfname = field.getName();
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) {
+                    ingoreCount++;
+                    continue;
+                }
+                final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
+                if (!Objects.equals(sfname, dfname)) {
+                    destNewNames.put(sfname, dfname);
+                }
+                elements.put(dfname, field);
+            }
+
+            for (java.lang.reflect.Method setter : destClass.getMethods()) {
+                if (Modifier.isStatic(setter.getModifiers())) {
+                    continue;
+                }
+                if (setter.getParameterTypes().length != 1) {
+                    continue;
+                }
+                if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
+                    continue;  //setter方法带有非RuntimeException异常
+                }
+                if (!setter.getName().startsWith("set")) {
+                    continue;
+                }
+                String sfname = Utility.readFieldName(setter.getName());
+                if (sfname.isEmpty()) {
+                    continue;
+                }
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(setter, sfname)) {
+                    ingoreCount++;
+                    continue;
+                }
+                final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
+                if (!Objects.equals(sfname, dfname)) {
+                    destNewNames.put(sfname, dfname);
+                }
+                elements.put(dfname, setter);
+            }
+        } else { //JavaBean -> Map/JavaBean
+            for (java.lang.reflect.Field field : srcClass.getFields()) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                if (Modifier.isFinal(field.getModifiers())) {
+                    continue;
+                }
+                if (!Modifier.isPublic(field.getModifiers())) {
+                    continue;
+                }
+                final String sfname = field.getName();
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) {
+                    ingoreCount++;
+                    continue;
+                }
+                final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
+                if (!Objects.equals(sfname, dfname)) {
+                    destNewNames.put(sfname, dfname);
+                }
+                elements.put(sfname, field);
+            }
+            for (java.lang.reflect.Method getter : srcClass.getMethods()) {
+                if (Modifier.isStatic(getter.getModifiers())) {
+                    continue;
+                }
+                if (getter.getParameterTypes().length > 0) {
+                    continue;
+                }
+                if ("getClass".equals(getter.getName())) {
+                    continue;
+                }
+                if (Utility.contains(getter.getExceptionTypes(), throwPredicate)) {
+                    continue;  //setter方法带有非RuntimeException异常
+                }
+                if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) {
+                    continue;
+                }
+                final String sfname = Utility.readFieldName(getter.getName());
+                if (sfname.isEmpty()) {
+                    continue;
+                }
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(getter, sfname)) {
+                    ingoreCount++;
+                    continue;
+                }
+                final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
+                if (!Objects.equals(sfname, dfname)) {
+                    destNewNames.put(sfname, dfname);
+                }
+                elements.put(sfname, getter);
+            }
+        }
+        StringBuilder extendInfo = new StringBuilder();
+        if (ingoreCount > 0 || nameAlias != null) {
+            if (ingoreCount > 0) {
+                extendInfo.append(elements.keySet().stream().collect(Collectors.joining(",")));
+            }
+            if (nameAlias != null) {
+                if (extendInfo.length() > 0) {
+                    extendInfo.append(";");
+                }
+                destNewNames.forEach((k, v) -> extendInfo.append(k).append(':').append(v));
+            }
+        }
+        // ------------------------------------------------------------------------------
         final String supDynName = Copier.class.getName().replace('.', '/');
         final String destClassName = destClass.getName().replace('.', '/');
         final String srcClassName = srcClass.getName().replace('.', '/');
@@ -568,16 +689,14 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         final String utilClassName = Utility.class.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/copier/_Dyn" + Copier.class.getSimpleName() + "_" + options
             + "__" + srcClass.getName().replace('.', '_').replace('$', '_')
-            + "__" + destClass.getName().replace('.', '_').replace('$', '_');
-        if (srcColumnPredicate == null && nameAlias == null) {
-            try {
-                Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-                return (Copier) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
-            } catch (Throwable ex) {
-            }
+            + "__" + destClass.getName().replace('.', '_').replace('$', '_')
+            + (extendInfo.length() == 0 ? "" : Utility.md5Hex(extendInfo.toString()));
+        try {
+            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
+            return (Copier) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
+        } catch (Throwable ex) {
         }
 
-        final Predicate<Class<?>> throwPredicate = e -> !RuntimeException.class.isAssignableFrom(e);
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -623,49 +742,6 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 mv.visitEnd();
             }
             {
-                final Map<String, AccessibleObject> elements = new LinkedHashMap<>();
-                for (java.lang.reflect.Field field : destClass.getFields()) {
-                    if (Modifier.isStatic(field.getModifiers())) {
-                        continue;
-                    }
-                    if (Modifier.isFinal(field.getModifiers())) {
-                        continue;
-                    }
-                    if (!Modifier.isPublic(field.getModifiers())) {
-                        continue;
-                    }
-                    final String sfname = field.getName();
-                    if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) {
-                        continue;
-                    }
-                    final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
-                    elements.put(dfname, field);
-                }
-
-                for (java.lang.reflect.Method setter : destClass.getMethods()) {
-                    if (Modifier.isStatic(setter.getModifiers())) {
-                        continue;
-                    }
-                    if (setter.getParameterTypes().length != 1) {
-                        continue;
-                    }
-                    if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
-                        continue;  //setter方法带有非RuntimeException异常
-                    }
-                    if (!setter.getName().startsWith("set")) {
-                        continue;
-                    }
-                    String sfname = Utility.readFieldName(setter.getName());
-                    if (sfname.isEmpty()) {
-                        continue;
-                    }
-                    if (srcColumnPredicate != null && !srcColumnPredicate.test(setter, sfname)) {
-                        continue;
-                    }
-                    final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
-                    elements.put(dfname, setter);
-                }
-
                 mv = cw.visitMethod(ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC, "lambda$0", "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V", null, null);
                 Label goLabel = new Label();
                 int i = 0;
@@ -741,23 +817,14 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             }
 
             Predicate<Class> simpler = t -> t.isPrimitive() || t == String.class || Number.class.isAssignableFrom(t);
+            for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
+                if (!(en.getValue() instanceof java.lang.reflect.Field)) {
+                    continue;
+                }
+                java.lang.reflect.Field field = (java.lang.reflect.Field) en.getValue();
+                final String sfname = en.getKey();
 
-            for (java.lang.reflect.Field field : srcClass.getFields()) {
-                if (Modifier.isStatic(field.getModifiers())) {
-                    continue;
-                }
-                if (Modifier.isFinal(field.getModifiers())) {
-                    continue;
-                }
-                if (!Modifier.isPublic(field.getModifiers())) {
-                    continue;
-                }
-                final String sfname = field.getName();
-                if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) {
-                    continue;
-                }
-
-                final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
+                final String dfname = destNewNames.getOrDefault(sfname, sfname);
                 final Class srcFieldType = field.getType();
                 final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
                 if (destIsMap) { //JavaBean -> Map
@@ -914,32 +981,14 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     }
                 }
             }
+            for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
+                if (!(en.getValue() instanceof java.lang.reflect.Method)) {
+                    continue;
+                }
+                java.lang.reflect.Method getter = (java.lang.reflect.Method) en.getValue();
+                final String sfname = en.getKey();
 
-            for (java.lang.reflect.Method getter : srcClass.getMethods()) {
-                if (Modifier.isStatic(getter.getModifiers())) {
-                    continue;
-                }
-                if (getter.getParameterTypes().length > 0) {
-                    continue;
-                }
-                if ("getClass".equals(getter.getName())) {
-                    continue;
-                }
-                if (Utility.contains(getter.getExceptionTypes(), throwPredicate)) {
-                    continue;  //setter方法带有非RuntimeException异常
-                }
-                if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) {
-                    continue;
-                }
-                final String sfname = Utility.readFieldName(getter.getName());
-                if (sfname.isEmpty()) {
-                    continue;
-                }
-                if (srcColumnPredicate != null && !srcColumnPredicate.test(getter, sfname)) {
-                    continue;
-                }
-
-                final String dfname = nameAlias == null ? sfname : nameAlias.getOrDefault(sfname, sfname);
+                final String dfname = destNewNames.getOrDefault(sfname, sfname);
                 final Class srcFieldType = getter.getReturnType();
                 final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
                 if (destIsMap) {  //srcClass是JavaBean
@@ -1113,9 +1162,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 return defineClass(name, b, 0, b.length);
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
-        if (srcColumnPredicate == null && nameAlias == null) {
-            RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
-        }
+        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             return (Copier) newClazz.getDeclaredConstructor().newInstance();

@@ -15,9 +15,9 @@
  ***************************************************************************** */
 package javax.persistence;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 
 /**
  * Specifies the primary table for the annotated entity. Additional
@@ -37,7 +37,7 @@ import java.lang.annotation.*;
  *
  * @since Java Persistence 1.0
  * 
- * @deprecated replace by org.redkale.persistence.Table
+ * @deprecated replace by {@link org.redkale.persistence.Table}
  * 
  * @see org.redkale.persistence.Table
  */

@@ -25,7 +25,8 @@ import java.lang.annotation.*;
  *
  * @since Common Annotations 1.2
  *
- * @deprecated replace by org.redkale.annotation.Priority
+ * @deprecated replace by {@link org.redkale.annotation.Priority}
+ *
  */
 @Deprecated(since = "2.8.0")
 @Target({ElementType.TYPE})

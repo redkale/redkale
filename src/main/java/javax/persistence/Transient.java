@@ -15,9 +15,9 @@
  ******************************************************************************/ 
 package javax.persistence;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies that the property or field is not persistent. It is used
@@ -37,7 +37,7 @@ import static java.lang.annotation.ElementType.*;
  *
  * @since Java Persistence 1.0
  * 
- * @deprecated replace by org.redkale.persistence.Transient
+ * @deprecated replace by {@link org.redkale.persistence.Transient}
  * 
  * @see org.redkale.persistence.Transient
  */

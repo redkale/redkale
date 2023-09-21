@@ -14,8 +14,8 @@
  ***************************************************************************** */
 package javax.persistence;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Used in schema generation to specify creation of an index.
@@ -38,7 +38,7 @@ import java.lang.annotation.*;
  *
  * @since Java Persistence 2.1
  * 
- * @deprecated replace by org.redkale.persistence.Index
+ * @deprecated replace by {@link org.redkale.persistence.Index}
  * 
  * @see org.redkale.persistence.Index
  *

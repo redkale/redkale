@@ -15,9 +15,9 @@
  ***************************************************************************** */
 package javax.persistence;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 
 /**
  * Specifies whether an entity should be cached if caching is enabled
@@ -33,7 +33,7 @@ import java.lang.annotation.*;
  *
  * @since Java Persistence 2.0
  * 
- * @deprecated replace by org.redkale.persistence.Cacheable
+ * @deprecated replace by {@link org.redkale.persistence.Cacheable}
  * @see org.redkale.persistence.Cacheable
  */
 @Deprecated(since = "2.8.0")
