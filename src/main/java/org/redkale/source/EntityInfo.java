@@ -203,7 +203,7 @@ public final class EntityInfo<T> {
     final DataSource source;
 
     //全量数据的加载器
-    final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader;
+    final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullLoader;
     //------------------------------------------------------------
 
     /**
@@ -344,9 +344,9 @@ public final class EntityInfo<T> {
             } catch (Exception e) {
                 logger.log(Level.SEVERE, type + " init @VirtualEntity.loader error", e);
             }
-            this.fullloader = loader;
+            this.fullLoader = loader;
         } else {
-            this.fullloader = fullloader;
+            this.fullLoader = fullloader;
             if (tableName0 != null && !tableName0.isEmpty() && tableName0.indexOf('.') >= 0) {
                 throw new SourceException(type + " have illegal table.name on @Table");
             }
@@ -687,10 +687,7 @@ public final class EntityInfo<T> {
         Cacheable c1 = type.getAnnotation(Cacheable.class);
         javax.persistence.Cacheable c2 = type.getAnnotation(javax.persistence.Cacheable.class);
         if (this.table == null || (!cacheForbidden && c1 != null && c1.value()) || (!cacheForbidden && c2 != null && c2.value())) {
-            this.cache = new EntityCache<>(this,
-                c1 == null ? (c2 == null ? 0 : c2.interval()) : c1.interval(),
-                c1 == null ? (c2 == null ? false : c2.direct()) : c1.direct(),
-                c1 == null ? false : c1.sequent());
+            this.cache = new EntityCache<>(this, c1 == null ? (c2 == null ? 0 : c2.interval()) : c1.interval());
         } else {
             this.cache = null;
         }

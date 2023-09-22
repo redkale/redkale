@@ -51,22 +51,11 @@ public @interface Cacheable {
      */
     int interval() default 0;
 
-    /**
-     * (Optional) DataSource是否直接返回对象的真实引用， 而不是copy一份
-     *
-     * @return boolean
-     */
     @Deprecated
     boolean direct() default false;
 
-    /**
-     * (Optional) 主键字段是否同时满足: 1、类型为int；2、主键值可为数组下标；3、记录总数有限；<br>
-     * 用于EntityCache的全量数据是否用Array存储，主键值作为数组下标
-     *
-     * @return boolean
-     */
     @Deprecated
-    boolean sequent() default true;
+    boolean sequent() default false;
 
     @Deprecated
     boolean continuousid() default false;

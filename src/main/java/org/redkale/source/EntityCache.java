@@ -38,9 +38,6 @@ public final class EntityCache<T> {
     // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
     private Collection<T> list = new ConcurrentLinkedQueue();
 
-    //sequent=true此字段值才有效
-    private T[] array;
-
     //Flipper.sort转换成Comparator的缓存
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
@@ -78,38 +75,23 @@ public final class EntityCache<T> {
     //&#064;Cacheable的定时更新秒数，为0表示不定时更新
     final int interval;
 
-    //&#064;Cacheable的主键字段是否同时满足: 1、类型为int；2、主键值可为数组下标；3、记录总数有限；
-    final boolean sequent;
-
     //&#064;Cacheable的定时器
     private ScheduledThreadPoolExecutor scheduler;
 
     private CompletableFuture<List<T>> loadFuture;
 
     public EntityCache(final EntityInfo<T> info, final Cacheable c) {
-        this(info, c != null ? c.interval() : 0, c != null && c.direct(), c != null && c.sequent());
+        this(info, c != null ? c.interval() : 0);
     }
 
-    EntityCache(final EntityInfo<T> info, final int cacheInterval, final boolean cacheDirect, final boolean cacheContinuousid) {
+    EntityCache(final EntityInfo<T> info, final int cacheInterval) {
         this.info = info;
         this.interval = cacheInterval < 0 ? 0 : cacheInterval;
-        this.sequent = cacheContinuousid && info.getPrimary().type() == int.class;
         this.type = info.getType();
         this.arrayer = info.getArrayer();
         this.creator = info.getCreator();
         this.primary = info.primary;
-        org.redkale.persistence.VirtualEntity ve = info.getType().getAnnotation(org.redkale.persistence.VirtualEntity.class);
-        boolean direct = cacheDirect;
-        if (!direct) {
-            direct = ve != null && ve.direct();
-        }
-        { //兼容废弃类
-            org.redkale.source.VirtualEntity ve2 = info.getType().getAnnotation(org.redkale.source.VirtualEntity.class);
-            if (!direct && ve2 != null) {
-                direct = ve2.direct();
-            }
-        }
-        this.needCopy = !direct;
+        this.needCopy = true;
         this.newCopier = Copier.create(type, type, (e, c) -> {
             try {
                 return e.getAnnotation(Transient.class) == null && e.getAnnotation(javax.persistence.Transient.class) == null;
@@ -147,26 +129,24 @@ public final class EntityCache<T> {
         if (loading.getAndSet(true)) {
             return this.loadFuture;
         }
-        if (info.fullloader == null) {
+        if (info.fullLoader == null) {
             this.list = new ConcurrentLinkedQueue();
-            this.array = null;
             this.map = new ConcurrentHashMap();
             this.fullloaded = true;
             loading.set(false);
             return this.loadFuture;
         }
         this.fullloaded = false;
-        CompletableFuture<List> allFuture = info.fullloader.apply(info.source, info);
+        CompletableFuture<List> allFuture = info.fullLoader.apply(info.source, info);
         this.loadFuture = (CompletableFuture) allFuture;
         if (allFuture == null) {
             this.list = new ConcurrentLinkedQueue();
-            this.array = null;
             this.map = new ConcurrentHashMap();
             this.fullloaded = true;
             loading.set(false);
             return this.loadFuture;
         }
-        if (this.interval > 0 && this.scheduler == null && info.fullloader != null) {
+        if (this.interval > 0 && this.scheduler == null && info.fullLoader != null) {
             this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
                 final Thread t = new Thread(r, "Redkale-EntityCache-" + type.getSimpleName() + "-Thread");
                 t.setDaemon(true);
@@ -175,14 +155,13 @@ public final class EntityCache<T> {
             this.scheduler.scheduleAtFixedRate(() -> {
                 try {
                     ConcurrentHashMap newmap2 = new ConcurrentHashMap();
-                    List<T> all2 = info.fullloader.apply(info.source, info).join();
+                    List<T> all2 = info.fullLoader.apply(info.source, info).join();
                     if (all2 != null) {
                         all2.stream().filter(x -> x != null).forEach(x -> {
                             newmap2.put(this.primary.get(x), x);
                         });
                     }
                     this.list = all2 == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all2);
-                    this.array = transferArray(all2);
                     this.map = newmap2;
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, type + " schedule(interval=" + interval + "s) Cacheable error", t);
@@ -202,30 +181,11 @@ public final class EntityCache<T> {
                 });
             }
             this.list = new ConcurrentLinkedQueue(all);
-            this.array = transferArray(all);
             this.map = newmap;
             this.fullloaded = true;
             loading.set(false);
         });
         return this.loadFuture;
-    }
-
-    private T[] transferArray(List<T> all) {
-        if (sequent && all != null && !all.isEmpty()) {
-            try {
-                int maxid = all.stream().mapToInt(v -> v == null ? 0 : (Integer) primary.get(v)).max().orElse(0);
-                T[] result = arrayer.apply(maxid + 1);
-                for (T v : all) {
-                    int index = v == null ? 0 : (Integer) primary.get(v);
-                    result[index] = v;
-                }
-                return result;
-            } catch (Exception e) { //主键值可能是负数，导致数组下标异常
-                return null;
-            }
-        } else {
-            return null;
-        }
     }
 
     public Class<T> getType() {
@@ -235,7 +195,6 @@ public final class EntityCache<T> {
     public int clear() {
         this.fullloaded = false;
         this.list = new ConcurrentLinkedQueue();
-        this.array = null;
         this.map = new ConcurrentHashMap();
         if (this.scheduler != null) {
             this.scheduler.shutdownNow();
@@ -283,22 +242,6 @@ public final class EntityCache<T> {
                 }
                 return result;
             }
-        }
-        if (sequent && array != null) {
-            T[] array0 = array;
-            T[] result = arrayer.apply(pks.length);
-            if (needCopy) {
-                for (int i = 0; i < result.length; i++) {
-                    T rs = array0[(Integer) pks[i]];
-                    result[i] = rs == null ? null : newCopier.apply(this.creator.create(), rs);
-                }
-            } else {
-                for (int i = 0; i < result.length; i++) {
-                    T rs = array0[(Integer) pks[i]];
-                    result[i] = rs == null ? null : rs;
-                }
-            }
-            return result;
         }
         T[] result = arrayer.apply(pks.length);
         for (int i = 0; i < result.length; i++) {
@@ -803,9 +746,6 @@ public final class EntityCache<T> {
         T old = this.map.putIfAbsent(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
-            if (sequent) {
-                this.array = transferArray(new ArrayList<>(this.list));
-            }
             return 1;
         } else {
             logger.log(Level.WARNING, this.type + " cache repeat insert data: " + entity);
@@ -822,9 +762,6 @@ public final class EntityCache<T> {
             return 0;
         }
         this.list.remove(rs);
-        if (sequent) {
-            this.array[(Integer) primary.get(rs)] = null;
-        }
         return 1;
     }
 
@@ -851,9 +788,6 @@ public final class EntityCache<T> {
             ids[++i] = this.primary.get(t);
             this.map.remove(ids[i]);
             this.list.remove(t);
-            if (sequent) {
-                this.array[(Integer) primary.get(t)] = null;
-            }
         }
         return ids;
     }

@@ -1906,10 +1906,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return entry;
     }
 
-    protected CacheEntryType findEntryType(Type type) {
-        return CacheEntryType.OBJECT;
-    }
-
     public static enum CacheEntryType {
         OBJECT, ATOMIC, DOUBLE, SSET, ZSET, LIST, MAP;
     }
@@ -1958,20 +1954,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return JsonFactory.root().getConvert().convertTo(this);
         }
 
-//        @ConvertColumn(ignore = true)
-//        public boolean isListCacheType() {
-//            return cacheType == CacheEntryType.LIST;
-//        }
-//
-//        @ConvertColumn(ignore = true)
-//        public boolean isSetCacheType() {
-//            return cacheType == CacheEntryType.SSET || cacheType == CacheEntryType.ZSET;
-//        }
-//
-//        @ConvertColumn(ignore = true)
-//        public boolean isMapCacheType() {
-//            return cacheType == CacheEntryType.MAP;
-//        }
         @ConvertColumn(ignore = true)
         public boolean isExpired() {
             return expireMills > 0 && (lastAccessed + expireMills) < System.currentTimeMillis();
