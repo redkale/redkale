@@ -51,7 +51,11 @@ public @interface Cacheable {
      */
     int interval() default 0;
 
-    @Deprecated
+    /**
+     * (Optional) DataSource是否直接返回对象的真实引用， 而不是copy一份
+     *
+     * @return boolean
+     */
     boolean direct() default false;
 
     @Deprecated

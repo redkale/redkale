@@ -81,17 +81,28 @@ public final class EntityCache<T> {
     private CompletableFuture<List<T>> loadFuture;
 
     public EntityCache(final EntityInfo<T> info, final Cacheable c) {
-        this(info, c != null ? c.interval() : 0);
+        this(info, c != null ? c.interval() : 0, c != null && c.direct());
     }
 
-    EntityCache(final EntityInfo<T> info, final int cacheInterval) {
+    EntityCache(final EntityInfo<T> info, final int cacheInterval, final boolean cacheDirect) {
         this.info = info;
         this.interval = cacheInterval < 0 ? 0 : cacheInterval;
         this.type = info.getType();
         this.arrayer = info.getArrayer();
         this.creator = info.getCreator();
         this.primary = info.primary;
-        this.needCopy = true;
+        org.redkale.persistence.VirtualEntity ve = info.getType().getAnnotation(org.redkale.persistence.VirtualEntity.class);
+        boolean direct = cacheDirect;
+        if (!direct) {
+            direct = ve != null && ve.direct();
+        }
+        { //兼容废弃类
+            org.redkale.source.VirtualEntity ve2 = info.getType().getAnnotation(org.redkale.source.VirtualEntity.class);
+            if (!direct && ve2 != null) {
+                direct = ve2.direct();
+            }
+        }
+        this.needCopy = !direct;
         this.newCopier = Copier.create(type, type, (e, c) -> {
             try {
                 return e.getAnnotation(Transient.class) == null && e.getAnnotation(javax.persistence.Transient.class) == null;

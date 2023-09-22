@@ -687,7 +687,7 @@ public final class EntityInfo<T> {
         Cacheable c1 = type.getAnnotation(Cacheable.class);
         javax.persistence.Cacheable c2 = type.getAnnotation(javax.persistence.Cacheable.class);
         if (this.table == null || (!cacheForbidden && c1 != null && c1.value()) || (!cacheForbidden && c2 != null && c2.value())) {
-            this.cache = new EntityCache<>(this, c1 == null ? (c2 == null ? 0 : c2.interval()) : c1.interval());
+            this.cache = new EntityCache<>(this, c1 == null ? (c2 == null ? 0 : c2.interval()) : c1.interval(), c1 == null ? (c2 == null ? false : c2.direct()) : c1.direct());
         } else {
             this.cache = null;
         }
