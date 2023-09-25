@@ -20,7 +20,7 @@ import org.redkale.util.*;
  */
 public class ProtobufWriter extends Writer implements ByteTuple {
 
-    private static final int defaultSize = Integer.getInteger("convert.protobuf.writer.buffer.defsize", Integer.getInteger("convert.writer.buffer.defsize", 1024));
+    private static final int defaultSize = Integer.getInteger("redkale.convert.protobuf.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
     private byte[] content;
 

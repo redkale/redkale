@@ -255,9 +255,15 @@ public final class EntityCache<T> {
             }
         }
         T[] result = arrayer.apply(pks.length);
-        for (int i = 0; i < result.length; i++) {
-            T rs = map.get(pks[i]);
-            result[i] = rs == null ? null : (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
+        if (needCopy) {
+            for (int i = 0; i < result.length; i++) {
+                T rs = map.get(pks[i]);
+                result[i] = rs == null ? null : newCopier.apply(this.creator.create(), rs);
+            }
+        } else {
+            for (int i = 0; i < result.length; i++) {
+                result[i] = map.get(pks[i]);
+            }
         }
         return result;
     }
@@ -271,7 +277,7 @@ public final class EntityCache<T> {
             return null;
         }
         if (selects == null) {
-            return (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
+            return needCopy ? newCopier.apply(this.creator.create(), rs) : rs;
         }
         T t = this.creator.create();
         for (Attribute attr : this.info.attributes) {
