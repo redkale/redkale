@@ -14,15 +14,15 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
+import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Command;
-import org.redkale.annotation.*;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
 import org.redkale.mq.*;
-import org.redkale.net.Filter;
 import org.redkale.net.*;
+import org.redkale.net.Filter;
 import org.redkale.net.client.ClientAddress;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -212,7 +212,7 @@ public abstract class NodeServer {
             filters.addAll(otherFilters);
         }
         long s = System.currentTimeMillis();
-        ClassFilter.Loader.load(application.getHome(), serverClassLoader, ((application.excludelibs != null ? (application.excludelibs + ";") : "") + serverConf.getValue("excludelibs", "")).split(";"), filters.toArray(new ClassFilter[filters.size()]));
+        application.loadClassesByFilters(serverConf.getValue("excludelibs", ""), filters.toArray(new ClassFilter[filters.size()]));
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前

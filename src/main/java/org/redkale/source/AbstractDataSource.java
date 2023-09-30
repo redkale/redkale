@@ -12,9 +12,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.stream.Stream;
+import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Comment;
-import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.RESNAME_APP_EXECUTOR;
@@ -307,6 +307,21 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             executor = this.sourceExecutor;
         }
         return executor;
+    }
+
+    protected String executorToString() {
+        ExecutorService executor = this.sourceExecutor;
+        if (executor == null) {
+            return "";
+        }
+        if (executor.getClass().getSimpleName().contains("ThreadPerTaskExecutor")) {
+            return ", thread-pool=[virtual]";
+        }
+        if (executor instanceof ThreadPoolExecutor) {
+            ThreadPoolExecutor re = (ThreadPoolExecutor) executor;
+            return ", pool-size=" + re.getMaximumPoolSize();
+        }
+        return "";
     }
 
     /**

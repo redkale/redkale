@@ -77,7 +77,7 @@ public abstract class MessageAgent implements Resourcable {
 
     protected final ReentrantLock producerLock = new ReentrantLock();
 
-    protected final ReentrantLock nodesLock = new ReentrantLock();
+    protected final ReentrantLock serviceLock = new ReentrantLock();
 
     protected final List<MessageConsumer> consumerListeners = new CopyOnWriteArrayList<>();
 
@@ -122,29 +122,34 @@ public abstract class MessageAgent implements Resourcable {
         this.timeoutExecutor.setRemoveOnCancelPolicy(true);
     }
 
-    public CompletableFuture<Map<String, Long>> start() {
+    public Map<String, Long> start(List<MessageConsumer> consumers) {
+        this.consumerListeners.addAll(consumers);
         final LinkedHashMap<String, Long> map = new LinkedHashMap<>();
         final List<CompletableFuture> futures = new ArrayList<>();
         this.clientConsumerNodes.values().forEach(node -> {
             long s = System.currentTimeMillis();
-            futures.add(node.consumer.startup().whenComplete((r, t) -> map.put(node.consumer.consumerid, System.currentTimeMillis() - s)));
+            node.consumer.startup();
+            long e = System.currentTimeMillis() - s;
+            map.put(node.consumer.consumerid, e);
         });
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).thenApply(r -> map);
+        return map;
     }
 
     //Application.shutdown  在执行server.shutdown之前执行
-    public CompletableFuture<Void> stop() {
-        List<CompletableFuture> futures = new ArrayList<>();
+    public void stop() {
         this.clientConsumerNodes.values().forEach(node -> {
-            futures.add(node.consumer.shutdown());
+            node.consumer.shutdown();
         });
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
     }
 
     //Application.shutdown 在所有server.shutdown执行后执行
     public void destroy(AnyValue config) {
-        this.httpMessageClient.close().join();
-        this.sncpMessageClient.close().join();
+        this.httpMessageClient.close();
+        this.sncpMessageClient.close();
+        for (MessageConsumer consumer : consumerListeners) {
+            consumer.destroy(config);
+        }
+        this.consumerListeners.clear();
         if (this.timeoutExecutor != null) {
             this.timeoutExecutor.shutdown();
         }
@@ -374,7 +379,7 @@ public abstract class MessageAgent implements Resourcable {
         }
         String[] topics = generateHttpReqTopics(service);
         String consumerid = generateHttpConsumerid(topics, service);
-        nodesLock.lock();
+        serviceLock.lock();
         try {
             if (clientConsumerNodes.containsKey(consumerid)) {
                 throw new RedkaleException("consumerid(" + consumerid + ") is repeat");
@@ -382,7 +387,7 @@ public abstract class MessageAgent implements Resourcable {
             HttpMessageClientProcessor processor = new HttpMessageClientProcessor(this.logger, httpMessageClient, getHttpMessageClientProducer(), ns, service, servlet);
             this.clientConsumerNodes.put(consumerid, new MessageClientConsumerNode(ns, service, servlet, processor, createMessageClientConsumer(topics, consumerid, processor)));
         } finally {
-            nodesLock.unlock();
+            serviceLock.unlock();
         }
     }
 
@@ -397,7 +402,7 @@ public abstract class MessageAgent implements Resourcable {
         }
         String topic = generateSncpReqTopic(service);
         String consumerid = generateSncpConsumerid(topic, service);
-        nodesLock.lock();
+        serviceLock.lock();
         try {
             if (clientConsumerNodes.containsKey(consumerid)) {
                 throw new RedkaleException("consumerid(" + consumerid + ") is repeat");
@@ -405,7 +410,7 @@ public abstract class MessageAgent implements Resourcable {
             SncpMessageClientProcessor processor = new SncpMessageClientProcessor(this.logger, sncpMessageClient, getSncpMessageClientProducer(), ns, service, servlet);
             this.clientConsumerNodes.put(consumerid, new MessageClientConsumerNode(ns, service, servlet, processor, createMessageClientConsumer(new String[]{topic}, consumerid, processor)));
         } finally {
-            nodesLock.unlock();
+            serviceLock.unlock();
         }
     }
 
@@ -463,6 +468,46 @@ public abstract class MessageAgent implements Resourcable {
         String resname = Sncp.getResourceName(service);
         String key = Rest.getRestModule(service).toLowerCase();
         return "consumer-http.req.module." + key + (resname.isEmpty() ? "" : ("-" + resname));
+
+    }
+
+    protected static class MessageConsumerWrapper {
+
+        private final MessageConsumer consumer;
+
+        public MessageConsumerWrapper(MessageConsumer consumer) {
+            Objects.requireNonNull(consumer);
+            this.consumer = consumer;
+        }
+
+        public void init(AnyValue config) {
+            consumer.init(config);
+        }
+
+        public void onMessage(MessageConext context, Object[] messages) {
+            consumer.onMessage(context, messages);
+        }
+
+        public void destroy(AnyValue config) {
+            consumer.destroy(config);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(this.consumer);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            final MessageConsumerWrapper other = (MessageConsumerWrapper) obj;
+            return Objects.equals(this.consumer.getClass(), other.consumer.getClass());
+        }
 
     }
 

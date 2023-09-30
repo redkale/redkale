@@ -183,6 +183,15 @@ public class EntityBuilder<T> {
             unconstructorAttributes, attributeMap, queryAttrs.toArray(new Attribute[queryAttrs.size()]));
     }
 
+    /**
+     * 将数据ResultSet转成对象集合
+     *
+     * @param <T>  泛型
+     * @param type 实体类或JavaBean
+     * @param rset 数据ResultSet
+     *
+     * @return 对象集合
+     */
     public static <T> List<T> getListValue(Class<T> type, final DataResultSet rset) {
         if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
             || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
@@ -195,6 +204,15 @@ public class EntityBuilder<T> {
         return EntityBuilder.load(type).getObjectList(rset);
     }
 
+    /**
+     * 将数据ResultSet转成单个对象
+     *
+     * @param <T>  泛型
+     * @param type 实体类或JavaBean
+     * @param rset 数据ResultSet
+     *
+     * @return 单个对象
+     */
     public static <T> T getOneValue(Class<T> type, final DataResultSet rset) {
         if (!rset.next()) {
             return null;
@@ -397,19 +415,17 @@ public class EntityBuilder<T> {
             Object[] cps = new Object[this.constructorParameters.length];
             for (int i = 0; i < constructorAttrs.length; i++) {
                 Attribute<T, Serializable> attr = constructorAttrs[i];
-                if (attr == null) {
-                    continue;
+                if (attr != null) {
+                    cps[i] = values[++index];
                 }
-                cps[i] = values[++index];
             }
             obj = creator.create(cps);
         }
         if (unconstructorAttrs != null) {
             for (Attribute<T, Serializable> attr : unconstructorAttrs) {
-                if (attr == null) {
-                    continue;
+                if (attr != null) {
+                    attr.set(obj, values[++index]);
                 }
-                attr.set(obj, values[++index]);
             }
         }
         return obj;

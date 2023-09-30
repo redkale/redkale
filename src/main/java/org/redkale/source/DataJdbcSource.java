@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.service.Local;
@@ -2789,7 +2789,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     protected static class DataJdbcResultSet implements DataResultSet {
 
-        EntityInfo info;
+        final EntityInfo info;
 
         ResultSet rr;
 
@@ -2913,7 +2913,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
         protected int maxConns;
 
-        protected Semaphore maxSemaphore;
+        protected Semaphore newSemaphore;
 
         protected String url;
 
@@ -2928,7 +2928,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 defMaxConns = Math.min(1000, Utility.cpus() * 100);
             }
             this.maxConns = Math.max(1, Integer.decode(prop.getProperty(DATA_SOURCE_MAXCONNS, "" + defMaxConns)));
-            this.maxSemaphore = new Semaphore(this.maxConns);
+            this.newSemaphore = new Semaphore(this.maxConns);
             this.queue = new ArrayBlockingQueue<>(maxConns);
             this.url = prop.getProperty(DATA_SOURCE_URL);
             String username = prop.getProperty(DATA_SOURCE_USER, "");
@@ -3011,10 +3011,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         private void changeMaxConns(int newMaxconns) {
             ArrayBlockingQueue<SourceConnection> newQueue = new ArrayBlockingQueue<>(newMaxconns);
             ArrayBlockingQueue<SourceConnection> oldQueue = this.queue;
-            Semaphore oldSemaphore = this.maxSemaphore;
+            Semaphore oldSemaphore = this.newSemaphore;
             this.queue = newQueue;
             this.maxConns = newMaxconns;
-            this.maxSemaphore = new Semaphore(this.maxConns);
+            this.newSemaphore = new Semaphore(this.maxConns);
             SourceConnection c;
             while ((c = oldQueue.poll()) != null) {
                 c.version = -1;
@@ -3056,12 +3056,13 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
 
         private SourceConnection newConnection(ArrayBlockingQueue<SourceConnection> queue) {
-            Semaphore semaphore = this.maxSemaphore;
+            Semaphore semaphore = this.newSemaphore;
             SourceConnection conn = null;
             if (semaphore.tryAcquire()) {
                 try {
                     conn = new SourceConnection(driver.connect(url, connectAttrs), this.urlVersion.get());
                 } catch (SQLException ex) {
+                    semaphore.release();
                     throw new SourceException(ex);
                 }
                 usingCounter.increment();
@@ -3071,21 +3072,21 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 try {
                     conn = queue.poll(connectTimeoutSeconds, TimeUnit.SECONDS);
                 } catch (InterruptedException t) {
-                    logger.log(Level.WARNING, "take pooled connection error", t);
+                    logger.log(Level.WARNING, "take pooled jdbc connection error", t);
                 }
                 if (conn == null) {
-                    throw new SourceException("create pooled connection timeout");
+                    throw new SourceException("create pooled jdbc connection timeout");
                 }
                 return conn;
             }
         }
 
         public <C> void offerConnection(final C connection) {
-            offerConnection(connection, this.maxSemaphore, this.queue);
+            offerConnection(connection, this.newSemaphore, this.queue);
         }
 
         public <C> void offerTransConnection(final C connection) {
-            offerConnection(connection, this.maxSemaphore, this.queue);
+            offerConnection(connection, this.newSemaphore, this.queue);
         }
 
         private <C> void offerConnection(final C connection, Semaphore semaphore, Queue<SourceConnection> queue) {

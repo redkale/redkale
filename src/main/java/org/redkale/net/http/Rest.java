@@ -354,7 +354,7 @@ public final class Rest {
         if (!valid) {
             throw new RestException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
         }
-        final String rwsname = ResourceFactory.formatResourceName(rws.name());
+        final String rwsname = ResourceFactory.getResourceName(rws.name());
         if (!checkName(rws.catalog())) {
             throw new RestException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         }

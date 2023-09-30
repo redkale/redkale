@@ -776,11 +776,11 @@ public final class ResourceFactory {
         return inject(srcResourceName, srcObj, attachment, consumer, new ArrayList());
     }
 
-    public static String formatResourceName(String name) {
-        return formatResourceName(null, name);
+    public static String getResourceName(String name) {
+        return getResourceName(null, name);
     }
 
-    public static String formatResourceName(String parent, String name) {
+    public static String getResourceName(String parent, String name) {
         if (name == null) {
             return null;
         }
@@ -796,7 +796,7 @@ public final class ResourceFactory {
         }
         String postfix = subName.substring(pos + 1);
         String property = subName.substring(0, pos);
-        return formatResourceName(parent, prefix + System.getProperty(property, "") + postfix);
+        return getResourceName(parent, prefix + System.getProperty(property, "") + postfix);
     }
 
     private <T> boolean inject(String srcResourceName, final Object srcObj, final T attachment, final BiConsumer<Object, Field> consumer, final List<Object> list) {
@@ -899,7 +899,7 @@ public final class ResourceFactory {
 
                     }
                     boolean autoRegNull = true;
-                    final String rcname = formatResourceName(srcResourceName, tname);
+                    final String rcname = getResourceName(srcResourceName, tname);
                     Object rs = null;
                     if (rcname.startsWith("system.property.")) {
                         rs = System.getProperty(rcname.substring("system.property.".length()));
@@ -1027,9 +1027,7 @@ public final class ResourceFactory {
     }
 
     public <T extends Annotation> void register(final ResourceAnnotationProvider<T> loader) {
-        if (loader == null) {
-            return;
-        }
+        Objects.requireNonNull(loader);
         parentRoot().resAnnotationProviderMap.put(loader.annotationType(), loader);
     }
 

@@ -5,9 +5,9 @@
  */
 package org.redkale.source;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 
 /**
  * 过滤字段标记
@@ -56,12 +56,6 @@ public @interface FilterColumn {
      */
     FilterExpress express() default FilterExpress.EQUAL;
 
-    /**
-     * 当标记的字段类型是数组/Collection类型且express不是IN/NOTIN时，则构建过滤条件时会遍历字段值的元素来循环构建表达式，元素之间的关系是AND或OR由该值来确定
-     *
-     * @return 数组元素间的表达式是否AND关系
-     */
-    boolean itemand() default true;
 
     /**
      * 判断字段是否必需，for OpenAPI Specification 3.1.0

@@ -250,6 +250,20 @@ public final class Application {
     //Server根ClassLoader
     private final RedkaleClassLoader serverClassLoader;
 
+    /**
+     * 初始化步骤:  <br>
+     * 1、基本环境变量设置 <br>
+     * 2、ClassLoader初始化 <br>
+     * 3、日志配置初始化 <br>
+     * 4、本地和远程配置文件读取 <br>
+     * 5、ClusterAgent和MessageAgent实例化 <br>
+     * 6、Work线程池初始化
+     * 7、原生sql解析器初始化 <br>
+     *
+     * @param singletonMode 是否测试模式
+     * @param compileMode   是否编译模式
+     * @param config        启动配置
+     */
     @SuppressWarnings("UseSpecificCatch") //config: 不带redkale的配置项
     Application(final boolean singletonMode, boolean compileMode, final AnyValue config) {
         this.singletonMode = singletonMode;
@@ -322,11 +336,11 @@ public final class Application {
                 System.setProperty("redkale.convert.writer.buffer.defsize", "4096");
             }
             sysProperties.forEach((key, value) -> {
-                System.setProperty(key.toString(), replaceValue(value.toString(), sysProperties));
+                System.setProperty(key.toString(), getPropertyValue(value.toString(), sysProperties));
             });
         }
 
-        String localaddr = replaceValue(config.getValue("address", "").trim());
+        String localaddr = getPropertyValue(config.getValue("address", "").trim());
         InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
         this.localAddress = new InetSocketAddress(addr, config.getIntValue("port"));
         this.resourceFactory.register(RESNAME_APP_ADDR, addr.getHostAddress());
@@ -392,7 +406,7 @@ public final class Application {
                     properties0.load(fin);
                     fin.close();
                     Properties logProps = new Properties();
-                    properties0.forEach((k, v) -> logProps.put(k.toString(), replaceValue(v.toString(), properties0)));
+                    properties0.forEach((k, v) -> logProps.put(k.toString(), getPropertyValue(v.toString(), properties0)));
                     reconfigLogging(logProps);
                 } catch (IOException e) {
                     Logger.getLogger(this.getClass().getSimpleName()).log(Level.WARNING, "init logger configuration error", e);
@@ -428,7 +442,7 @@ public final class Application {
                 + RESNAME_APP_CONF_DIR + " = " + confDir.substring(confDir.indexOf('!') + 1));
 
             if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
-                String lib = replaceValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
+                String lib = getPropertyValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
                 lib = lib.isEmpty() ? confDir : (lib + ";" + confDir);
                 Server.loadLib(classLoader, logger, lib);
             }
@@ -462,7 +476,7 @@ public final class Application {
         AnyValue clusterConf = config.getAnyValue("cluster");
         if (clusterConf != null) {
             try {
-                String classVal = replaceValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
+                String classVal = getPropertyValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
                 if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: consul, nacos
                     Iterator<ClusterAgentProvider> it = ServiceLoader.load(ClusterAgentProvider.class, classLoader).iterator();
                     RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
@@ -509,7 +523,7 @@ public final class Application {
             Set<String> mqnames = new HashSet<>();
             for (int i = 0; i < mqConfs.length; i++) {
                 AnyValue mqConf = mqConfs[i];
-                String names = replaceValue(mqConf.getValue("name")); //含,或者;表示多个别名使用同一mq对象
+                String names = getPropertyValue(mqConf.getValue("name")); //含,或者;表示多个别名使用同一mq对象
                 if (names != null && !names.isEmpty()) {
                     for (String n : names.replace(',', ';').split(";")) {
                         if (n.trim().isEmpty()) {
@@ -522,7 +536,7 @@ public final class Application {
                     }
                 }
                 try {
-                    String classVal = replaceValue(mqConf.getValue("type", mqConf.getValue("value"))); //兼容value字段
+                    String classVal = getPropertyValue(mqConf.getValue("type", mqConf.getValue("value"))); //兼容value字段
                     if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: kafka, pulsar
                         Iterator<MessageAgentProvider> it = ServiceLoader.load(MessageAgentProvider.class, classLoader).iterator();
                         RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
@@ -800,7 +814,7 @@ public final class Application {
 
         if (!dyncProps.isEmpty()) {
             Properties newDyncProps = new Properties();
-            dyncProps.forEach((k, v) -> newDyncProps.put(k.toString(), replaceValue(v.toString(), dyncProps)));
+            dyncProps.forEach((k, v) -> newDyncProps.put(k.toString(), getPropertyValue(v.toString(), dyncProps)));
             //合并配置
             this.config.merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), NodeServer.appConfigmergeFunction);
             newDyncProps.forEach((key, val) -> {
@@ -834,7 +848,7 @@ public final class Application {
                 if (key == null) {
                     continue;
                 }
-                value = value == null ? value : replaceValue(value, dyncProps);
+                value = value == null ? value : getPropertyValue(value, dyncProps);
                 if (key.startsWith("system.property.")) {
                     String propName = key.substring("system.property.".length());
                     if (System.getProperty(propName) == null) { //命令行传参数优先级高
@@ -1328,6 +1342,10 @@ public final class Application {
             }
             try {
                 DataSource source = AbstractDataSource.createDataSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
+                if (!compileMode && source instanceof Service) {
+                    resourceFactory.inject(sourceName, source);
+                    ((Service) source).init(sourceConf);
+                }
                 dataSources.add(source);
                 if (source instanceof DataMemorySource && source instanceof SearchSource) {
                     resourceFactory.register(sourceName, SearchSource.class, source);
@@ -1606,32 +1624,11 @@ public final class Application {
         runServers(timecd, others);
         runServers(timecd, watchs); //必须在所有服务都启动后再启动WATCH服务
         timecd.await();
+        if (this.messageAgents != null) {
+            this.startMessageAgent();
+        }
         if (this.clusterAgent != null) {
             this.clusterAgent.start();
-        }
-        if (this.messageAgents != null) {
-            if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, "MessageAgent starting");
-            }
-            long s = System.currentTimeMillis();
-            final StringBuffer sb = new StringBuffer();
-            Set<String> names = new HashSet<>();
-            for (MessageAgent agent : this.messageAgents) {
-                names.add(agent.getName());
-                Map<String, Long> map = agent.start().join();
-                AtomicInteger maxlen = new AtomicInteger();
-                map.keySet().forEach(str -> {
-                    if (str.length() > maxlen.get()) {
-                        maxlen.set(str.length());
-                    }
-                });
-                new TreeMap<>(map).forEach((topic, ms) -> sb.append("MessageConsumer(topic=").append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
-                );
-            }
-            if (sb.length() > 0) {
-                logger.info(sb.toString().trim());
-            }
-            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") start in " + (System.currentTimeMillis() - s) + " ms");
         }
 
         for (ApplicationListener listener : this.listeners) {
@@ -1647,6 +1644,90 @@ public final class Application {
         if (!singletonMode && !compileMode) {
             this.shutdownLatch.await();
         }
+    }
+
+    private void startMessageAgent() throws Exception {
+        if (this.messageAgents == null) {
+            return;
+        }
+        if (logger.isLoggable(Level.FINE)) {
+            logger.log(Level.FINE, MessageAgent.class.getSimpleName() + " starting");
+        }
+        long s = System.currentTimeMillis();
+        final StringBuffer sb = new StringBuffer();
+        Set<String> names = new HashSet<>();
+        ResourceFactory resourceFactory = ResourceFactory.create();
+        List<ResourceFactory> factorys = new ArrayList<>();
+        for (NodeServer ns : this.servers) {
+            factorys.add(ns.getResourceFactory());
+        }
+        resourceFactory.register(new ResourceTypeLoader() {
+            @Override
+            public Object load(ResourceFactory factory, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+                for (ResourceFactory f : factorys) {
+                    Object val = f.find(resourceName, field.getGenericType());
+                    if (val != null) {
+                        return val;
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+        }, Object.class);
+        for (MessageAgent agent : this.messageAgents) {
+            names.add(agent.getName());
+            List<MessageConsumer> consumers = new ArrayList<>();
+            AnyValue consumerConf = agent.getConfig().getAnyValue("consumer");
+            if (consumerConf != null) {  //加载 MessageConsumer
+                ClassFilter filter = new ClassFilter(this.serverClassLoader, ResourceConsumer.class, MessageConsumer.class, null, null);
+                if (consumerConf.getBoolValue("autoload", true)) {
+                    String includes = consumerConf.getValue("includes", "");
+                    String excludes = consumerConf.getValue("excludes", "");
+                    filter.setIncludePatterns(includes.split(";"));
+                    filter.setExcludePatterns(excludes.split(";"));
+                } else {
+                    filter.setRefused(true);
+                }
+                loadClassesByFilters(null, filter);
+                List<FilterEntry<? extends MessageConsumer>> entrys = new ArrayList(filter.getFilterEntrys());
+                for (FilterEntry<? extends MessageConsumer> en : entrys) {
+                    Class<? extends MessageConsumer> clazz = en.getType();
+                    ResourceConsumer res = clazz.getAnnotation(ResourceConsumer.class);
+                    if (!Objects.equals(agent.getName(), getPropertyValue(res.mq()))) {
+                        continue;
+                    }
+                    RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
+                    final MessageConsumer consumer = clazz.getDeclaredConstructor().newInstance();
+                    resourceFactory.inject(consumer);
+                    consumers.add(consumer);
+                }
+                for (MessageConsumer consumer : consumers) {
+                    consumer.init(consumerConf);
+                }
+            }
+            Map<String, Long> map = agent.start(consumers);
+            AtomicInteger maxlen = new AtomicInteger();
+            map.keySet().forEach(str -> {
+                if (str.length() > maxlen.get()) {
+                    maxlen.set(str.length());
+                }
+            });
+            new TreeMap<>(map).forEach((topic, ms) -> sb.append(MessageClientConsumer.class.getSimpleName()).append("(topic=")
+                .append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
+            );
+        }
+        if (sb.length() > 0) {
+            logger.info(sb.toString().trim());
+        }
+        logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") start in " + (System.currentTimeMillis() - s) + " ms");
+    }
+
+    void loadClassesByFilters(String excludelibs, final ClassFilter... filters) throws IOException {
+        ClassFilter.Loader.load(getHome(), this.serverClassLoader, ((this.excludelibs != null ? (this.excludelibs + ";") : "") + (excludelibs == null ? "" : excludelibs)).split(";"), filters);
     }
 
     private static String alignString(String value, int maxlen) {
@@ -1988,7 +2069,7 @@ public final class Application {
         System.exit(0); //必须要有
     }
 
-    private String replaceValue(String value, Properties... envs) {
+    public String getPropertyValue(String value, Properties... envs) {
         if (value == null || value.isBlank()) {
             return value;
         }
@@ -2015,9 +2096,9 @@ public final class Application {
                 list.add(this.clusterProperties);
                 list.add(this.loggingProperties);
                 list.add(this.messageProperties);
-                for (Properties prop : envs) {
+                for (Properties prop : list) {
                     if (prop.containsKey(key)) {
-                        newVal = replaceValue(prop.getProperty(key), envs);
+                        newVal = getPropertyValue(prop.getProperty(key), envs);
                         break;
                     }
                 }
@@ -2028,7 +2109,7 @@ public final class Application {
             if (newVal == null) {
                 throw new RedkaleException("Not found '" + key + "' value");
             }
-            return replaceValue(val.substring(0, pos2) + newVal + val.substring(pos2 + 1), envs);
+            return getPropertyValue(val.substring(0, pos2) + newVal + val.substring(pos2 + 1), envs);
         } else if ((pos1 >= 0 && pos2 < 0) || (pos1 < 0 && pos2 >= 0)) {
             throw new RedkaleException(value + " is illegal naming");
         }
@@ -2499,7 +2580,7 @@ public final class Application {
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 names.add(agent.getName());
-                agent.stop().join();
+                agent.stop();
             }
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in " + (System.currentTimeMillis() - s) + " ms");
         }

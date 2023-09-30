@@ -16,10 +16,10 @@ import java.util.function.Predicate;
 import java.util.jar.*;
 import java.util.logging.*;
 import java.util.regex.Pattern;
-import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
@@ -76,10 +76,10 @@ public final class ClassFilter<T> {
         this.classLoader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
     }
 
-    public static ClassFilter create(RedkaleClassLoader classLoader, Class[] excludeSuperClasses, String includeregs, String excluderegs, Set<String> includeValues, Set<String> excludeValues) {
+    public static ClassFilter create(RedkaleClassLoader classLoader, Class[] excludeSuperClasses, String includeRegxs, String excludeRegxs, Set<String> includeValues, Set<String> excludeValues) {
         ClassFilter filter = new ClassFilter(classLoader, null, null, excludeSuperClasses);
-        filter.setIncludePatterns(includeregs == null ? null : includeregs.split(";"));
-        filter.setExcludePatterns(excluderegs == null ? null : excluderegs.split(";"));
+        filter.setIncludePatterns(includeRegxs == null ? null : includeRegxs.split(";"));
+        filter.setExcludePatterns(excludeRegxs == null ? null : excludeRegxs.split(";"));
         filter.setPrivilegeIncludes(includeValues);
         filter.setPrivilegeExcludes(excludeValues);
         return filter;
@@ -165,45 +165,45 @@ public final class ClassFilter<T> {
      * 过滤指定的class
      *
      * @param property  application.xml中对应class节点下的property属性项
-     * @param clazzname class名称
+     * @param clazzName class名称
      * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      */
-    public final void filter(AnyValue property, String clazzname, boolean autoscan) {
-        filter(property, clazzname, autoscan, null);
+    public final void filter(AnyValue property, String clazzName, boolean autoscan) {
+        filter(property, clazzName, autoscan, null);
     }
 
     /**
      * 过滤指定的class
      *
      * @param property  application.xml中对应class节点下的property属性项
-     * @param clazzname class名称
+     * @param clazzName class名称
      * @param autoScan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      * @param url       URL
      */
-    public final void filter(AnyValue property, String clazzname, boolean autoScan, URL url) {
-        boolean r = accept0(property, clazzname);
+    public final void filter(AnyValue property, String clazzName, boolean autoScan, URL url) {
+        boolean r = accept0(property, clazzName);
         ClassFilter cf = r ? this : null;
         if (r && ands != null) {
             for (ClassFilter filter : ands) {
-                if (!filter.accept(property, clazzname)) {
+                if (!filter.accept(property, clazzName)) {
                     return;
                 }
             }
         }
         if (!r && ors != null) {
             for (ClassFilter filter : ors) {
-                if (filter.accept(filter.conf, clazzname)) {
+                if (filter.accept(filter.conf, clazzName)) {
                     cf = filter;
                     property = cf.conf;
                     break;
                 }
             }
         }
-        if (cf == null || clazzname.startsWith("sun.") || clazzname.contains("module-info")) {
+        if (cf == null || clazzName.startsWith("sun.") || clazzName.contains("module-info")) {
             return;
         }
         try {
-            Class clazz = classLoader.loadClass(clazzname);
+            Class clazz = classLoader.loadClass(clazzName);
             if (!cf.accept(property, clazz, autoScan)) {
                 return;
             }
@@ -222,17 +222,17 @@ public final class ClassFilter<T> {
 
             AutoLoad auto = (AutoLoad) clazz.getAnnotation(AutoLoad.class);
             org.redkale.util.AutoLoad auto2 = (org.redkale.util.AutoLoad) clazz.getAnnotation(org.redkale.util.AutoLoad.class);
-            if ((expectPredicate != null && expectPredicate.test(clazzname)) || (autoScan && auto != null && !auto.value())
+            if ((expectPredicate != null && expectPredicate.test(clazzName)) || (autoScan && auto != null && !auto.value())
                 || (autoScan && auto2 != null && !auto2.value())) { //自动扫描且被标记为@AutoLoad(false)的
                 expectEntrys.add(new FilterEntry(clazz, autoScan, true, property));
             } else {
                 entrys.add(new FilterEntry(clazz, autoScan, false, property));
             }
         } catch (Throwable cfe) {
-            if (logger.isLoggable(Level.FINEST) && !clazzname.startsWith("sun.") && !clazzname.startsWith("javax.")
-                && !clazzname.startsWith("com.sun.") && !clazzname.startsWith("jdk.") && !clazzname.startsWith("META-INF")
-                && !clazzname.startsWith("com.mysql.") && !clazzname.startsWith("com.microsoft.") && !clazzname.startsWith("freemarker.")
-                && !clazzname.startsWith("org.redkale") && (clazzname.contains("Service") || clazzname.contains("Servlet"))) {
+            if (logger.isLoggable(Level.FINEST) && !clazzName.startsWith("sun.") && !clazzName.startsWith("javax.")
+                && !clazzName.startsWith("com.sun.") && !clazzName.startsWith("jdk.") && !clazzName.startsWith("META-INF")
+                && !clazzName.startsWith("com.mysql.") && !clazzName.startsWith("com.microsoft.") && !clazzName.startsWith("freemarker.")
+                && !clazzName.startsWith("org.redkale") && (clazzName.contains("Service") || clazzName.contains("Servlet"))) {
                 if (cfe instanceof NoClassDefFoundError) {
                     String msg = ((NoClassDefFoundError) cfe).getMessage();
                     if (msg.startsWith("java.lang.NoClassDefFoundError: java") || msg.startsWith("javax/")) {
@@ -240,7 +240,7 @@ public final class ClassFilter<T> {
                     }
                 }
                 //&& (!(cfe instanceof NoClassDefFoundError) || (cfe instanceof UnsupportedClassVersionError) || ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
-                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzname + (url == null ? "" : (" in " + url)), cfe);
+                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzName + (url == null ? "" : (" in " + url)), cfe);
             }
         }
     }
@@ -601,7 +601,7 @@ public final class ClassFilter<T> {
                                     continue;
                                 }
                                 //常见的jar跳过
-                                if (classname.startsWith("com.redkaledyn.")) {
+                                if (classname.startsWith("org.redkaledyn.")) {
                                     break; //redkale动态生成的类
                                 }
                                 if (classname.startsWith("com.mysql.")) {

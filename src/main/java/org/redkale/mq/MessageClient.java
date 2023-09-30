@@ -49,11 +49,10 @@ public abstract class MessageClient {
         this.clazzName = getClass().getSimpleName();
     }
 
-    protected CompletableFuture<Void> close() {
-        if (this.respConsumer == null) {
-            return CompletableFuture.completedFuture(null);
+    protected void close() {
+        if (this.respConsumer != null) {
+            this.respConsumer.shutdown();
         }
-        return this.respConsumer.shutdown();
     }
 
     protected CompletableFuture<MessageRecord> sendMessage(final MessageRecord message, boolean needresp) {
@@ -101,7 +100,7 @@ public abstract class MessageClient {
                         };
                         long ones = System.currentTimeMillis();
                         MessageClientConsumer one = messageAgent.createMessageClientConsumer(new String[]{appRespTopic}, appRespConsumerid, processor);
-                        one.startup().join();
+                        one.startup();
                         long onee = System.currentTimeMillis() - ones;
                         if (finest) {
                             messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.startup " + onee + "ms ");

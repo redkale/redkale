@@ -1677,7 +1677,7 @@ public final class EntityInfo<T> {
             && !value.getClass().getName().startsWith("java.sql.") && !value.getClass().getName().startsWith("java.time.")) {
             return new StringBuilder().append('\'').append(jsonConvert.convertTo(value).replace("'", "\\'")).append('\'').toString();
         }
-        return String.valueOf(value);
+        return value.toString();
     }
 
     @Override

@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
-import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.*;
@@ -304,7 +304,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             if (pos > 0) {
                 url = url.substring(0, pos) + "...";
             }
-            return getClass().getSimpleName() + "{url=" + url + ", maxconns=" + readMaxConns() + "}";
+            return getClass().getSimpleName() + "{url=" + url + ", maxconns=" + readMaxConns() + executorToString() + "}";
         } else {
             String readUrl = readConfProps.getProperty(DATA_SOURCE_URL);
             int pos = readUrl.indexOf('?');
@@ -316,7 +316,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             if (pos > 0) {
                 writeUrl = writeUrl.substring(0, pos) + "...";
             }
-            return getClass().getSimpleName() + "{read-url=" + readUrl + ", read-maxconns=" + readMaxConns() + ",write-url=" + writeUrl + ", write-maxconns=" + writeMaxConns() + "}";
+            return getClass().getSimpleName() + "{read-url=" + readUrl + ", read-maxconns=" + readMaxConns() + executorToString() + ",write-url=" + writeUrl + ", write-maxconns=" + writeMaxConns() + "}";
         }
     }
 

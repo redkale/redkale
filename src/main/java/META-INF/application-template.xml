@@ -75,12 +75,24 @@
     -->
     <mq name="" type="org.redkalex.mq.kafka.KafkaMessageAgent">
         <servers value="127.0.0.1:9101"/>
-        <consumer>
+        <!--        
+           加载所有的MessageConsumer实例;
+           autoload="true"  默认值. 自动加载classpath下所有的MessageConsumer类  
+           autoload="false" 需要显著的指定MessageConsumer类
+           includes： 当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+           excludes： 当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开           
+        -->
+        <consumer autoload="true" includes="" excludes=""/>
+        <!--
+            MQ实现方的配置项
+          type:  配置项类型，值只能是consumer或producer
+        -->
+        <config type="consumer">
             <property name="xxxxxx" value="XXXXXXXX"/>
-        </consumer>
-        <producer>
+        </config>
+        <config type="producer">
             <property name="xxxxxx" value="XXXXXXXX"/>
-        </producer>
+        </config>
     </mq>
         
     <!--
