@@ -128,9 +128,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     public void init(AnyValue conf) {
         super.init(conf);
         if (conf.getAnyValue("read") == null) {
-            this.sourceThreads = conf.getIntValue(DATA_SOURCE_THREADS, Utility.cpus());
+            this.sourceThreads = conf.getIntValue(DATA_SOURCE_THREADS, conf.getIntValue(DATA_SOURCE_MAXCONNS, Utility.cpus()));
         } else {
-            this.sourceThreads = conf.getAnyValue("read").getIntValue(DATA_SOURCE_THREADS, Utility.cpus());
+            this.sourceThreads = conf.getAnyValue("read").getIntValue(DATA_SOURCE_THREADS, conf.getIntValue(DATA_SOURCE_MAXCONNS, Utility.cpus()));
         }
     }
 
