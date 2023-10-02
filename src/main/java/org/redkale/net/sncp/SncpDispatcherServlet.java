@@ -22,7 +22,7 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
 
     private final ReentrantLock updateLock = new ReentrantLock();
 
-    private final ThreadLocal<ByteArray> localArray = ThreadLocal.withInitial(ByteArray::new);
+    private final ThreadLocal<ByteArray> localArray = Utility.withInitialThreadLocal(ByteArray::new);
 
     protected SncpDispatcherServlet() {
         super();

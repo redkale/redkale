@@ -40,11 +40,11 @@ import org.redkale.util.*;
  */
 public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
-    private final ThreadLocal<BsonWriter> writerPool = ThreadLocal.withInitial(BsonWriter::new);
+    private final ThreadLocal<BsonWriter> writerPool = Utility.withInitialThreadLocal(BsonWriter::new);
 
     private final Consumer<BsonWriter> writerConsumer = w -> offerWriter(w);
 
-    private final ThreadLocal<BsonReader> readerPool = ThreadLocal.withInitial(BsonReader::new);
+    private final ThreadLocal<BsonReader> readerPool = Utility.withInitialThreadLocal(BsonReader::new);
 
     protected BsonConvert(ConvertFactory<BsonReader, BsonWriter> factory, int features) {
         super(factory, features);

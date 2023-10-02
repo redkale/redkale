@@ -95,7 +95,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
 
         ByteBufferPool safeBufferPool = server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
         ObjectPool<Response> safeResponsePool = server.createSafeResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
-        ThreadLocal<ObjectPool<Response>> localResponsePool = ThreadLocal.withInitial(() -> {
+        ThreadLocal<ObjectPool<Response>> localResponsePool = Utility.withInitialThreadLocal(() -> {
             if (!(Thread.currentThread() instanceof WorkThread)) {
                 return null;
             }

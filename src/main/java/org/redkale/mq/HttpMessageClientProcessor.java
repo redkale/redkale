@@ -72,7 +72,7 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
         this.multiModule = mmc != null ? ("/" + mmc.module() + "/") : null;
         this.respSupplier = () -> respPoolThreadLocal.get().get();
         this.respConsumer = resp -> respPoolThreadLocal.get().accept(resp);
-        this.respPoolThreadLocal = ThreadLocal.withInitial(() -> ObjectPool.createUnsafePool(Utility.cpus(),
+        this.respPoolThreadLocal = Utility.withInitialThreadLocal(() -> ObjectPool.createUnsafePool(Utility.cpus(),
             ps -> new HttpMessageResponse(server.getHttpServer().getContext(), messageClient, respSupplier, respConsumer), HttpMessageResponse::prepare, HttpMessageResponse::recycle));
     }
 

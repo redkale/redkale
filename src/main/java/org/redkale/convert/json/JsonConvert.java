@@ -34,11 +34,11 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     public static final Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
 
-    private final ThreadLocal<JsonBytesWriter> bytesWriterPool = ThreadLocal.withInitial(JsonBytesWriter::new);
+    private final ThreadLocal<JsonBytesWriter> bytesWriterPool = Utility.withInitialThreadLocal(JsonBytesWriter::new);
 
     private final Consumer<JsonBytesWriter> offerBytesConsumer = w -> offerJsonBytesWriter(w);
 
-    private final ThreadLocal<JsonReader> readerPool = ThreadLocal.withInitial(JsonReader::new);
+    private final ThreadLocal<JsonReader> readerPool = Utility.withInitialThreadLocal(JsonReader::new);
 
 
     private Encodeable lastConvertEncodeable;

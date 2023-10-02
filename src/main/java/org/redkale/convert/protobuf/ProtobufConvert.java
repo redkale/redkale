@@ -26,11 +26,11 @@ import org.redkale.util.*;
  */
 public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWriter> {
 
-    private final ThreadLocal<ProtobufWriter> writerPool = ThreadLocal.withInitial(ProtobufWriter::new);
+    private final ThreadLocal<ProtobufWriter> writerPool = Utility.withInitialThreadLocal(ProtobufWriter::new);
 
     private final Consumer<ProtobufWriter> writerConsumer = w -> offerWriter(w);
 
-    private final ThreadLocal<ProtobufReader> readerPool = ThreadLocal.withInitial(ProtobufReader::new);
+    private final ThreadLocal<ProtobufReader> readerPool = Utility.withInitialThreadLocal(ProtobufReader::new);
 
     private Encodeable lastConvertEncodeable;
 

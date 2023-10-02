@@ -51,7 +51,7 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     protected final ByteArray writeArray = new ByteArray();
 
-    protected final ThreadLocal<ByteArray> arrayThreadLocal = ThreadLocal.withInitial(ByteArray::new);
+    protected final ThreadLocal<ByteArray> arrayThreadLocal = Utility.withInitialThreadLocal(ByteArray::new);
 
     protected final ByteBuffer writeBuffer;
 
