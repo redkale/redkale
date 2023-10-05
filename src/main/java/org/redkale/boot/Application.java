@@ -1178,6 +1178,9 @@ public final class Application {
                     throw new RestException("@" + ResourceProducer.class.getSimpleName() + " must on " + MessageProducer.class.getName() + " type field, but on " + field);
                 }
                 MessageAgent agent = findMessageAgent(annotation.mq());
+                if (!annotation.required() && agent == null) {
+                    return;
+                }
                 if (agent == null) {
                     throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = " + annotation.mq() + ") on " + field);
                 }

@@ -3,9 +3,9 @@
  */
 package org.redkale.mq;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 import org.redkale.convert.ConvertType;
 
 /**
@@ -25,6 +25,8 @@ public @interface ResourceProducer {
 
     String mq();
 
+    boolean required() default true;
+
     ConvertType convertType() default ConvertType.JSON;
-    
+
 }
