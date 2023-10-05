@@ -38,6 +38,10 @@ public class JsonObject extends LinkedHashMap<String, Object> implements JsonEle
         return JsonConvert.root().convertFrom(JsonObject.class, text, offset, length);
     }
 
+    public static JsonObject create() {
+        return new JsonObject();
+    }
+
     public static JsonObject of(Object bean) {
         if (bean instanceof CharSequence) {
             return convertFrom(bean.toString());

@@ -42,6 +42,10 @@ public class JsonArray extends ArrayList<Object> implements JsonElement {
         return JsonConvert.root().convertFrom(JsonArray.class, text, offset, length);
     }
 
+    public static JsonArray create() {
+        return new JsonArray();
+    }
+
     public JsonArray append(Object value) {
         super.add(value);
         return this;
