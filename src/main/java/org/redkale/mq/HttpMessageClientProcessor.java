@@ -37,11 +37,7 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
 
     protected final HttpServlet servlet;
 
-    protected final boolean multiConsumer;
-
     protected final String restModule; //  前后有/, 例如: /user/
-
-    protected final String multiModule; //  前后有/, 例如: /userstat/
 
     protected ThreadLocal<ObjectPool<HttpMessageResponse>> respPoolThreadLocal;
 
@@ -66,10 +62,7 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
         this.server = server;
         this.service = service;
         this.servlet = servlet;
-        MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
-        this.multiConsumer = mmc != null;
         this.restModule = "/" + Rest.getRestModule(service) + "/";
-        this.multiModule = mmc != null ? ("/" + mmc.module() + "/") : null;
         this.respSupplier = () -> respPoolThreadLocal.get().get();
         this.respConsumer = resp -> respPoolThreadLocal.get().accept(resp);
         this.respPoolThreadLocal = Utility.withInitialThreadLocal(() -> ObjectPool.createUnsafePool(Utility.cpus(),
@@ -94,15 +87,9 @@ public class HttpMessageClientProcessor implements MessageClientProcessor {
             long now = System.currentTimeMillis();
             long cha = now - message.createTime;
             long e = now - startTime;
-            if (multiConsumer) {
-                message.setRespTopic(null); //不容许有响应
-            }
             HttpMessageResponse response = respSupplier.get();
             request = response.request();
             response.prepare(message, callback, producer);
-            if (multiConsumer) {
-                request.setRequestURI(request.getRequestURI().replaceFirst(this.multiModule, this.restModule));
-            }
 
             server.getHttpServer().getContext().execute(servlet, request, response);
             long o = System.currentTimeMillis() - now;

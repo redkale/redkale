@@ -322,10 +322,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 servlet = Rest.createRestServlet(classLoader, userType, baseServletType, serviceType);
                 if (servlet != null) {
                     servlet._reqtopic = MessageAgent.generateHttpReqTopic(Rest.getRestModule(service));
-                    if (serviceType.getAnnotation(MessageMultiConsumer.class) != null) {
-                        MessageMultiConsumer mmc = serviceType.getAnnotation(MessageMultiConsumer.class);
-                        servlet._mmctopic = MessageAgent.generateHttpReqTopic(mmc.module(), resname);
-                    }
                 }
             }
             if (servlet == null) {

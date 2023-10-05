@@ -488,10 +488,6 @@ public abstract class MessageAgent implements Resourcable {
     protected String[] generateHttpReqTopics(Service service) {
         String resname = Sncp.getResourceName(service);
         String module = Rest.getRestModule(service).toLowerCase();
-        MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
-        if (mmc != null) {
-            return new String[]{generateHttpReqTopic(mmc.module()) + (resname.isEmpty() ? "" : ("-" + resname))};
-        }
         return new String[]{"http.req.module." + module + (resname.isEmpty() ? "" : ("-" + resname))};
     }
 

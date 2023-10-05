@@ -13,8 +13,8 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.boot.*;
 import org.redkale.net.*;
@@ -41,8 +41,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     String _prefix = ""; //当前HttpServlet的path前缀
 
     String _reqtopic; //根据RestService+MQ生成的值 @since 2.5.0
-
-    String _mmctopic; //根据RestService+@MessageMultiConsumer生成的值 @since 2.5.0
 
     HashMap<String, ActionEntry> _actionmap;  //Rest生成时赋值, 字段名Rest有用到
 

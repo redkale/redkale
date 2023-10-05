@@ -11,14 +11,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.*;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.boot.*;
 import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.mq.MessageMultiConsumer;
 import org.redkale.net.Server;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -148,14 +147,6 @@ public abstract class ClusterAgent {
             }
             ClusterEntry htentry = register(ns, protocol, service);
             localEntrys.put(htentry.serviceid, htentry);
-            if (protocol.toLowerCase().startsWith("http")) {
-                MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
-                if (mmc != null) {
-                    ClusterEntry mqentry = register(ns, "mqtp", service);
-                    localEntrys.put(mqentry.serviceid, mqentry);
-                    htentry.submqtp = true;
-                }
-            }
         }
         //远程模式加载IP列表, 只支持SNCP协议    
         if (ns.isSNCP()) {
@@ -223,9 +214,6 @@ public abstract class ClusterAgent {
     public int intervalCheckSeconds() {
         return 10;
     }
-
-    //获取MQTP的HTTP远程服务的可用ip列表, key = serviceName的后半段
-    public abstract CompletableFuture<Map<String, Set<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname);
 
     //获取HTTP远程服务的可用ip列表
     public abstract CompletableFuture<Set<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname);
@@ -312,11 +300,6 @@ public abstract class ClusterAgent {
             String module = Rest.getRestModule(service).toLowerCase();
             return protocol.toLowerCase() + serviceSeparator() + module + (resname.isEmpty() ? "" : ("-" + resname));
         }
-        if ("mqtp".equalsIgnoreCase(protocol)) {
-            MessageMultiConsumer mmc = service.getClass().getAnnotation(MessageMultiConsumer.class);
-            String selfmodule = Rest.getRestModule(service).toLowerCase();
-            return protocol.toLowerCase() + serviceSeparator() + mmc.module() + serviceSeparator() + selfmodule;
-        }
         if (!Sncp.isSncpDyn(service)) {
             return protocol.toLowerCase() + serviceSeparator() + service.getClass().getName();
         }
@@ -395,7 +378,7 @@ public abstract class ClusterAgent {
 
         public String checkName;
 
-        //http or sncp or mqtp
+        //http or sncp
         public String protocol;
 
         //TCP or UDP
@@ -407,8 +390,6 @@ public abstract class ClusterAgent {
         public InetSocketAddress address;
 
         public boolean canceled;
-
-        public boolean submqtp;
 
         public ClusterEntry(NodeServer ns, String protocol, Service service) {
             this.serviceid = generateServiceId(ns, protocol, service);

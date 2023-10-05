@@ -47,9 +47,6 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     //可能被sncp用到的服务 key: serviceName
     protected final ConcurrentHashMap<String, Set<InetSocketAddress>> sncpAddressMap = new ConcurrentHashMap<>();
 
-    //可能被mqtp用到的服务 key: serviceName
-    protected final ConcurrentHashMap<String, Set<InetSocketAddress>> mqtpAddressMap = new ConcurrentHashMap<>();
-
     @Override
     public void init(AnyValue config) {
         super.init(config);
@@ -138,7 +135,6 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
                 checkApplicationHealth();
                 checkHttpAddressHealth();
                 loadSncpAddressHealth();
-                loadMqtpAddressHealth();
                 localEntrys.values().stream().filter(e -> !e.canceled).forEach(entry -> {
                     checkLocalHealth(entry);
                 });
@@ -158,17 +154,6 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
                 this.sncpAddressMap.put(serviceName, queryAddress(serviceName).get(3, TimeUnit.SECONDS));
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "loadSncpAddressHealth check " + serviceName + " error", e);
-            }
-        });
-    }
-
-    protected void loadMqtpAddressHealth() {
-        List<String> keys = source.keysStartsWith("cluster.mqtp:");
-        keys.forEach(serviceName -> {
-            try {
-                this.mqtpAddressMap.put(serviceName, queryAddress(serviceName).get(3, TimeUnit.SECONDS));
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "loadMqtpAddressHealth check " + serviceName + " error", e);
             }
         });
     }
@@ -207,15 +192,6 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
             sncpAddressMap.put(serviceName, t);
             return t;
         });
-    }
-
-    @Override //获取MQTP的HTTP远程服务的可用ip列表, key = serviceName的后半段
-    public CompletableFuture<Map<String, Set<InetSocketAddress>>> queryMqtpAddress(String protocol, String module, String resname) {
-        final Map<String, Set<InetSocketAddress>> rsmap = new ConcurrentHashMap<>();
-        final String servicenamprefix = generateHttpServiceName(protocol, module, null) + ":";
-        mqtpAddressMap.keySet().stream().filter(k -> k.startsWith(servicenamprefix))
-            .forEach(sn -> rsmap.put(sn.substring(servicenamprefix.length()), mqtpAddressMap.get(sn)));
-        return CompletableFuture.completedFuture(rsmap);
     }
 
     @Override //获取HTTP远程服务的可用ip列表
@@ -328,9 +304,6 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         source.hdel(serviceName, serviceid);
         if (realcanceled && currEntry != null) {
             currEntry.canceled = true;
-        }
-        if (!"mqtp".equals(protocol) && currEntry != null && currEntry.submqtp) {
-            deregister(ns, "mqtp", service, realcanceled);
         }
     }
 

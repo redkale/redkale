@@ -6,18 +6,18 @@
 package org.redkale.net.http;
 
 import java.io.*;
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletionStage;
-import org.redkale.annotation.Comment;
 import org.redkale.annotation.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import org.redkale.annotation.Comment;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
@@ -1627,16 +1627,6 @@ public final class Rest {
         boolean dynsimple = baseServletType == HttpServlet.class; //有自定义的BaseServlet会存在读取header的操作
         //获取所有可以转换成HttpMapping的方法
         int methodidex = 0;
-        final MessageMultiConsumer mmc = serviceType.getAnnotation(MessageMultiConsumer.class);
-        if (mmc != null && (mmc.module() == null || mmc.module().isEmpty())) {
-            throw new RestException("@" + MessageMultiConsumer.class.getSimpleName() + ".module can not empty in " + serviceType.getName());
-        }
-        if (mmc != null && !checkName2(mmc.module())) {
-            throw new RestException(serviceType.getName() + " have illegal " + MessageMultiConsumer.class.getSimpleName() + ".module, only 0-9 a-z A-Z _ - . cannot begin 0-9");
-        }
-        if (mmc != null) {
-            Asms.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(mmc.annotationType()), true), mmc);
-        }
         final Method[] allMethods = serviceType.getMethods();
         Arrays.sort(allMethods, (m1, m2) -> {  //必须排序，否则paramTypes顺序容易乱
             int s = m1.getName().compareTo(m2.getName());
@@ -1690,9 +1680,6 @@ public final class Rest {
                         throw new RestException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with throws IOException");
                     }
                 }
-            }
-            if (mmc != null && method.getReturnType() != void.class) {
-                throw new RestException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with return void by @" + MessageMultiConsumer.class.getSimpleName() + " Service");
             }
             paramTypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
             retvalTypes.add(formatRestReturnType(method, serviceType));

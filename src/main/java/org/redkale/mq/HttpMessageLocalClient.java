@@ -164,20 +164,6 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         }
     }
 
-    @Override
-    protected void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
-        HttpDispatcherServlet ps = dispatcherServlet();
-        HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
-        HttpResponse resp = new HttpMessageLocalResponse(req, null);
-        ps.filterServletsByMmcTopic(topic).forEach(s -> {
-            try {
-                s.execute(req, resp);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, request + " execute " + s + " error", e);
-            }
-        });
-    }
-
     public static class HttpMessageLocalRequest extends HttpRequest {
 
         public HttpMessageLocalRequest(HttpContext context, HttpSimpleRequest req, Serializable userid) {

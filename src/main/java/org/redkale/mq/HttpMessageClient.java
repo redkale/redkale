@@ -78,26 +78,6 @@ public class HttpMessageClient extends MessageClient {
         produceMessage(topic, userid, groupid, request, null);
     }
 
-    public final void broadcastMessage(HttpSimpleRequest request) {
-        broadcastMessage(generateHttpReqTopic(request, null), 0, null, request, null);
-    }
-
-    public final void broadcastMessage(Serializable userid, HttpSimpleRequest request) {
-        broadcastMessage(generateHttpReqTopic(request, null), userid, null, request, null);
-    }
-
-    public final void broadcastMessage(Serializable userid, String groupid, HttpSimpleRequest request) {
-        broadcastMessage(generateHttpReqTopic(request, null), userid, groupid, request, null);
-    }
-
-    public final void broadcastMessage(String topic, HttpSimpleRequest request) {
-        broadcastMessage(topic, 0, null, request, null);
-    }
-
-    public final void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
-        broadcastMessage(topic, userid, groupid, request, null);
-    }
-
     public <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), 0, null, request, null).thenApply((HttpResult<byte[]> httbs) -> {
             if (httbs == null || httbs.getResult() == null) {
@@ -150,12 +130,6 @@ public class HttpMessageClient extends MessageClient {
         message.userid(userid).groupid(groupid);
         //if (finest) logger.log(Level.FINEST, "HttpMessageClient.sendMessage: " + message);
         return sendMessage(message, true, counter).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
-    }
-
-    protected void broadcastMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
-        MessageRecord message = createMessageRecord(CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), HttpSimpleRequestCoder.getInstance().encode(request));
-        message.userid(userid).groupid(groupid);
-        sendMessage(message, false, counter);
     }
 
     protected void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {

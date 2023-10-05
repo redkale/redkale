@@ -16,7 +16,6 @@ import java.util.logging.*;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
-import org.redkale.mq.MessageMultiConsumer;
 import org.redkale.net.http.*;
 import org.redkale.persistence.*;
 import org.redkale.service.RetResult;
@@ -105,10 +104,6 @@ public final class ApiDocCommand {
                     continue;
                 }
                 if (servlet instanceof WebSocketServlet) {
-                    continue;
-                }
-                if (servlet.getClass().getAnnotation(MessageMultiConsumer.class) != null) {
-                    node.logger.log(Level.INFO, servlet + " be skipped because has @MessageMultiConsumer");
                     continue;
                 }
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);

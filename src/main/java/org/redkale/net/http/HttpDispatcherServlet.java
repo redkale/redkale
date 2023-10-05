@@ -17,8 +17,8 @@ import org.redkale.net.*;
 import org.redkale.net.Filter;
 import org.redkale.net.http.Rest.RestDynSourceType;
 import org.redkale.service.Service;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * HTTP Servlet的总入口，请求在HttpDispatcherServlet中进行分流。  <br>
@@ -521,10 +521,6 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     public HttpServlet findServletByTopic(String topic) {
         return filterServlets(x -> x._reqtopic != null && x._reqtopic.equals(topic)).findFirst().orElse(null);
-    }
-
-    public Stream<HttpServlet> filterServletsByMmcTopic(String mmctopic) {
-        return filterServlets(x -> x._mmctopic != null && x._mmctopic.equals(mmctopic));
     }
 
     public Stream<HttpServlet> filterServlets(Predicate<HttpServlet> predicate) {
