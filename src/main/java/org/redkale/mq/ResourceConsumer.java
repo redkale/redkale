@@ -23,7 +23,7 @@ import org.redkale.convert.ConvertType;
 @Retention(RUNTIME)
 public @interface ResourceConsumer {
 
-    String mq();
+    String mq() default "";
 
     String group() default "";
 
