@@ -564,7 +564,9 @@ public abstract class MessageAgent implements Resourcable {
                     for (byte[] bs : messages) {
                         msgs[++index] = (T) convert.convertFrom(messageType, bs);
                     }
-                    consumer.onMessage(context, msgs);
+                    for (T msg : msgs) {
+                        consumer.onMessage(context, msg);
+                    }
                 } catch (Throwable t) {
                     messageAgent.getLogger().log(Level.SEVERE, MessageConsumer.class.getSimpleName() + " execute error, topic: " + context.getTopic()
                         + ", messages: " + messages.stream().map(v -> new String(v, StandardCharsets.UTF_8)).collect(Collectors.toList()));
