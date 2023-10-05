@@ -33,9 +33,9 @@ public abstract class MessageClientProducer {
 
     public abstract CompletableFuture<Void> apply(MessageRecord message);
 
-    public abstract CompletableFuture<Void> startup();
+    public abstract void startup();
 
-    public abstract CompletableFuture<Void> shutdown();
+    public abstract void shutdown();
 
     public boolean isClosed() {
         return closed.get();

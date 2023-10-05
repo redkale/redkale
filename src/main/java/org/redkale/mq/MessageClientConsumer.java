@@ -52,9 +52,9 @@ public abstract class MessageClientConsumer {
         return topics;
     }
 
-    public abstract void startup();
+    public abstract void start();
 
-    public abstract void shutdown();
+    public abstract void stop();
 
     public boolean isClosed() {
         return closed;

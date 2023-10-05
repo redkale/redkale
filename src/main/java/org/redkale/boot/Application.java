@@ -1656,7 +1656,7 @@ public final class Application {
         long s = System.currentTimeMillis();
         final StringBuffer sb = new StringBuffer();
         Set<String> names = new HashSet<>();
-        ResourceFactory resourceFactory = ResourceFactory.create();
+        ResourceFactory resourceFactory = this.resourceFactory.createChild();
         List<ResourceFactory> factorys = new ArrayList<>();
         for (NodeServer ns : this.servers) {
             factorys.add(ns.getResourceFactory());
@@ -2658,13 +2658,14 @@ public final class Application {
             this.clientAsyncGroup.dispose();
             logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
-
+        if (this.workExecutor != null) {
+            this.workExecutor.shutdownNow();
+        }
         long intms = System.currentTimeMillis() - f;
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
         logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale shutdown in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n" + "\r\n");
         LoggingBaseHandler.traceFlag = true;
-
     }
 
     public ExecutorService getWorkExecutor() {

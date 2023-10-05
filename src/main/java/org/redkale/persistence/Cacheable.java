@@ -58,9 +58,4 @@ public @interface Cacheable {
      */
     boolean direct() default false;
 
-    @Deprecated
-    boolean sequent() default false;
-
-    @Deprecated
-    boolean continuousid() default false;
 }

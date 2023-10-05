@@ -650,27 +650,10 @@ public abstract class NodeServer {
         if (Modifier.isAbstract(serviceImplClass.getModifiers()) || Modifier.isInterface(serviceImplClass.getModifiers())) {
             return false;
         }
-        if (MessageConsumer.class.isAssignableFrom(serviceImplClass)) {
-            ResourceConsumer mqConsumer = serviceImplClass.getAnnotation(ResourceConsumer.class);
-            if (mqConsumer == null) {
-                return false;
-            }
-            MessageAgent mqAgent = application.getMessageAgent(mqConsumer.mq());
-            if (mqAgent == null) {
-                logger.info("not found MessageAgent(mq = " + mqConsumer.mq() + ")");
-                return false;
-            }
-        }
         return true;
     }
 
     protected boolean interceptComponent(Service service) {
-        if (service instanceof MessageConsumer) {
-            ResourceConsumer mqConsumer = service.getClass().getAnnotation(ResourceConsumer.class);
-            MessageAgent mqAgent = application.getMessageAgent(mqConsumer.mq());
-            mqAgent.addMessageConsumer(mqConsumer, (MessageConsumer) service);
-            return true;
-        }
         return false;
     }
 

@@ -51,7 +51,7 @@ public abstract class MessageClient {
 
     protected void close() {
         if (this.respConsumer != null) {
-            this.respConsumer.shutdown();
+            this.respConsumer.stop();
         }
     }
 
@@ -100,7 +100,7 @@ public abstract class MessageClient {
                         };
                         long ones = System.currentTimeMillis();
                         MessageClientConsumer one = messageAgent.createMessageClientConsumer(new String[]{appRespTopic}, appRespConsumerid, processor);
-                        one.startup();
+                        one.start();
                         long onee = System.currentTimeMillis() - ones;
                         if (finest) {
                             messageAgent.logger.log(Level.FINEST, clazzName + ".MessageRespFutureNode.startup " + onee + "ms ");
