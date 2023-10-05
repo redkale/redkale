@@ -216,7 +216,9 @@ public abstract class MessageAgent implements Resourcable {
             for (MessageConsumer consumer : consumers) {
                 ResourceConsumer res = consumer.getClass().getAnnotation(ResourceConsumer.class);
                 String group = application.getPropertyValue(res.group());
-                group = consumer.getClass().getName() + (group.isEmpty() ? "" : ("-" + group));
+                if (Utility.isBlank(group)) {
+                    group = consumer.getClass().getName();
+                }
                 Map<String, MessageConsumerWrapper> map = maps.computeIfAbsent(group, g -> new HashMap<>());
                 for (String t : res.topics()) {
                     String topic = application.getPropertyValue(t);
