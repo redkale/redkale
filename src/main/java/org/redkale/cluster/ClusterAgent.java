@@ -171,6 +171,9 @@ public abstract class ClusterAgent {
     }
 
     protected boolean canRegister(NodeServer ns, String protocol, Service service) {
+        if (service.getClass().getAnnotation(Component.class) != null) {
+            return false;
+        }
         if ("SNCP".equalsIgnoreCase(protocol) && service.getClass().getAnnotation(Local.class) != null) {
             return false;
         }
