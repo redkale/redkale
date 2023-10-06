@@ -28,7 +28,7 @@ public abstract class MessageClientConsumer {
 
     protected final MessageClientProcessor processor;
 
-    protected final Logger logger;
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected volatile boolean closed;
 
@@ -38,7 +38,6 @@ public abstract class MessageClientConsumer {
         Objects.requireNonNull(consumerid);
         Objects.requireNonNull(processor);
         this.messageAgent = messageAgent;
-        this.logger = messageAgent.logger;
         this.topics = topics;
         this.consumerid = consumerid;
         this.processor = processor;

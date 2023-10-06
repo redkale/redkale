@@ -20,15 +20,14 @@ import java.util.logging.Logger;
  */
 public abstract class MessageClientProducer {
 
-    protected final Logger logger;
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected final String name;
 
     protected final AtomicBoolean closed = new AtomicBoolean();
 
-    protected MessageClientProducer(String name, Logger logger) {
+    protected MessageClientProducer(String name) {
         this.name = name;
-        this.logger = logger;
     }
 
     public abstract CompletableFuture<Void> apply(MessageRecord message);

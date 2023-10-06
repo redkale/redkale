@@ -9,6 +9,7 @@ import java.util.concurrent.*;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.WorkThread;
+import org.redkale.net.sncp.Sncp;
 
 /**
  *
@@ -31,7 +32,7 @@ public abstract class AbstractService implements Service {
     }
 
     protected Class serviceType() {
-        return serviceType;
+        return serviceType == null ? Sncp.getServiceType(getClass()) : serviceType;
     }
 
     /**
