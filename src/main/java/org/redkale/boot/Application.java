@@ -2112,7 +2112,7 @@ public final class Application {
             if (newVal == null) {
                 throw new RedkaleException("Not found '" + key + "' value");
             }
-            return getPropertyValue(val.substring(0, pos2) + newVal + val.substring(pos2 + 1), envs);
+            return getPropertyValue(val.substring(0, pos1) + newVal + val.substring(pos2 + 1), envs);
         } else if ((pos1 >= 0 && pos2 < 0) || (pos1 < 0 && pos2 >= 0)) {
             throw new RedkaleException(value + " is illegal naming");
         }
