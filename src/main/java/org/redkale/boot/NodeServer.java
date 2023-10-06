@@ -593,7 +593,7 @@ public abstract class NodeServer {
         localServices.addAll(swlist);
         //this.loadPersistData();
         long preinits = System.currentTimeMillis();
-        preInitServices(localServices, remoteServices);
+        preInitServices(localServices, remoteServices, servletServices);
         long preinite = System.currentTimeMillis() - preinits;
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
         if (application.isCompileMode()) {
@@ -669,7 +669,7 @@ public abstract class NodeServer {
     }
 
     //Service.init执行之前调用
-    protected void preInitServices(Set<Service> localServices, Set<Service> remoteServices) {
+    protected void preInitServices(Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
         final ClusterAgent cluster = application.getClusterAgent();
         if (!application.isCompileMode() && cluster != null) {
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
@@ -680,7 +680,7 @@ public abstract class NodeServer {
             if (!cluster.containsPort(server.getSocketAddress().getPort())) {
                 return;
             }
-            cluster.register(this, protocol, localServices, remoteServices);
+            cluster.register(this, protocol, localServices, remoteServices, servletServices);
         }
     }
 
@@ -690,13 +690,13 @@ public abstract class NodeServer {
     }
 
     //Service.destroy执行之前调用
-    protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices) {
+    protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
         if (!application.isCompileMode() && application.getClusterAgent() != null) { //服务注销
             final ClusterAgent cluster = application.getClusterAgent();
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();
             if (cluster.containsProtocol(protocol) && cluster.containsPort(server.getSocketAddress().getPort())) {
-                cluster.deregister(this, protocol, localServices, remoteServices);
+                cluster.deregister(this, protocol, localServices, remoteServices, servletServices);
                 afterClusterDeregisterOnPreDestroyServices(cluster, protocol);
             }
         }
@@ -708,7 +708,7 @@ public abstract class NodeServer {
     }
 
     //Server.start执行之后调用
-    protected void postStartServer(Set<Service> localServices, Set<Service> remoteServices) {
+    protected void postStartServer(Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
     }
 
     protected abstract ClassFilter<Filter> createFilterClassFilter();
@@ -853,7 +853,7 @@ public abstract class NodeServer {
             interceptor.preStart(this);
         }
         server.start();
-        postStartServer(localServices, remoteServices);
+        postStartServer(localServices, remoteServices, servletServices);
     }
 
     public void shutdown() throws IOException {
@@ -862,7 +862,7 @@ public abstract class NodeServer {
         }
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         final boolean finest = logger.isLoggable(Level.FINEST);
-        preDestroyServices(localServices, remoteServices);
+        preDestroyServices(localServices, remoteServices, servletServices);
         localServices.forEach(y -> {
             long s = System.currentTimeMillis();
             if (finest) {

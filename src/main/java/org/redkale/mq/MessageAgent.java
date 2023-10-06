@@ -25,6 +25,7 @@ import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.convert.Convert;
 import org.redkale.convert.ConvertFactory;
 import org.redkale.convert.ConvertType;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Servlet;
 import org.redkale.net.WorkThread;
 import org.redkale.net.http.*;
@@ -248,7 +249,7 @@ public abstract class MessageAgent implements Resourcable {
                     }
                 }
                 String typestr = consumer.getClass().getName();
-                String topicstr = topics.size() == 1 ? topics.get(0) : topics.toString();
+                String topicstr = JsonConvert.root().convertTo(topics.size() == 1 ? topics.get(0) : topics);
                 if (typestr.length() > typeMax.get()) {
                     typeMax.set(typestr.length());
                 }

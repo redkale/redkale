@@ -22,8 +22,8 @@ import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.watch.*;
 
 /**
@@ -558,12 +558,12 @@ public class NodeHttpServer extends NodeServer {
             if (!cluster.containsPort(server.getSocketAddress().getPort())) {
                 return;
             }
-            cluster.register(this, protocol, dynServletMap.keySet(), new HashSet<>());
+            cluster.register(this, protocol, dynServletMap.keySet(), new HashSet<>(), dynServletMap.keySet());
         }
     }
 
     @Override
     protected void afterClusterDeregisterOnPreDestroyServices(ClusterAgent cluster, String protocol) {
-        cluster.deregister(this, protocol, dynServletMap.keySet(), new HashSet<>());
+        cluster.deregister(this, protocol, dynServletMap.keySet(), new HashSet<>(), dynServletMap.keySet());
     }
 }

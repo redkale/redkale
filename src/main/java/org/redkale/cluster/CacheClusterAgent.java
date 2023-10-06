@@ -309,22 +309,22 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     @Override
     protected String generateApplicationServiceName() {
-        return "cluster." + super.generateApplicationServiceName();
+        return "cluster.application." + super.generateApplicationServiceName();
     }
 
     @Override
     protected String generateServiceName(NodeServer ns, String protocol, Service service) {
-        return "cluster." + super.generateServiceName(ns, protocol, service);
+        return "cluster.service." + super.generateServiceName(ns, protocol, service);
     }
 
     @Override
     public String generateHttpServiceName(String protocol, String module, String resname) {
-        return "cluster." + super.generateHttpServiceName(protocol, module, resname);
+        return "cluster.service." + super.generateHttpServiceName(protocol, module, resname);
     }
 
     @Override
     public String generateSncpServiceName(String protocol, String restype, String resname) {
-        return "cluster." + super.generateSncpServiceName(protocol, restype, resname);
+        return "cluster.service." + super.generateSncpServiceName(protocol, restype, resname);
     }
 
     @Override

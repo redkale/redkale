@@ -136,12 +136,12 @@ public abstract class ClusterAgent {
     public abstract void deregister(Application application);
 
     //注册服务, 在NodeService调用Service.init方法之前调用
-    public void register(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
-        if (localServices.isEmpty()) {
+    public void register(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
+        if (servletServices.isEmpty()) {
             return;
         }
         //注册本地模式
-        for (Service service : localServices) {
+        for (Service service : servletServices) {
             if (!canRegister(ns, protocol, service)) {
                 continue;
             }
@@ -159,9 +159,9 @@ public abstract class ClusterAgent {
     }
 
     //注销服务, 在NodeService调用Service.destroy 方法之前调用
-    public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices) {
+    public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
         //注销本地模式  远程模式不注册
-        for (Service service : localServices) {
+        for (Service service : servletServices) {
             if (!canRegister(ns, protocol, service)) {
                 continue;
             }
@@ -253,11 +253,11 @@ public abstract class ClusterAgent {
     }
 
     protected String generateApplicationServiceName() {
-        return "application.node" + (appName == null || appName.isEmpty() ? "" : ("." + appName));
+        return "node" + (appName == null || appName.isEmpty() ? "" : ("." + appName));
     }
 
     protected String generateApplicationServiceType() {
-        return "application.nodes";
+        return "nodes";
     }
 
     protected String generateApplicationServiceId() {
@@ -281,7 +281,7 @@ public abstract class ClusterAgent {
     }
 
     protected String serviceSeparator() {
-        return "-";
+        return ".";
     }
 
     public String generateSncpServiceName(String protocol, String restype, String resname) {
