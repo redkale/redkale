@@ -577,19 +577,19 @@ public final class ResourceFactory {
                     try {
                         if (rc.name().equals(Resource.SELF_NAME)) {
                             if (classType != String.class) {
-                                throw new ResourceInjectException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be String ");
+                                throw new RedkaleException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be String ");
                             }
                             field.setAccessible(true);
                             field.set(val, name);
                         } else if (rc.name().equals(Resource.SELF_TYPE)) {
                             if (classType != Type.class && classType != Class.class) {
-                                throw new ResourceInjectException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be Type or Class ");
+                                throw new RedkaleException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be Type or Class ");
                             }
                             field.setAccessible(true);
                             field.set(val, classType == Class.class ? TypeToken.typeToClass(clazz) : clazz);
                         }
                     } catch (IllegalArgumentException | IllegalAccessException e) {
-                        throw new ResourceInjectException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') register error ", e);
+                        throw new RedkaleException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') register error ", e);
                     }
                 }
             } while ((c = c.getSuperclass()) != Object.class);
@@ -914,7 +914,7 @@ public final class ResourceFactory {
                                 re = findEntry(rcname, String.class);
                                 if (re == null && rcname.startsWith("${")) {
                                     if (rcname.charAt(rcname.length() - 1) != '}') {
-                                        throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
+                                        throw new RedkaleException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
                                     }
                                     re = findEntry(rcname.substring(2, rcname.length() - 1), String.class);
                                 } else if (re == null && rcname.startsWith("property.")) { //兼容2.8.0之前版本自动追加property.开头的配置项
@@ -922,7 +922,7 @@ public final class ResourceFactory {
                                 }
                             } else if (re == null && rcname.startsWith("${")) {
                                 if (rcname.charAt(rcname.length() - 1) != '}') {
-                                    throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
+                                    throw new RedkaleException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
                                 }
                                 re = findEntry(rcname.substring(2, rcname.length() - 1), String.class);
                             } else if (classType == String.class && rcname.startsWith("property.")) {//兼容2.8.0之前版本自动追加property.开头的配置项
@@ -1013,12 +1013,12 @@ public final class ResourceFactory {
                         if (srcObj.getClass().getSimpleName().startsWith("_Dyn")) {
                             t = srcObj.getClass().getSuperclass().getName();
                         }
-                        throw new ResourceInjectException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + t);
+                        throw new RedkaleException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + t);
                     }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             return true;
-        } catch (ResourceInjectException e) {
+        } catch (RedkaleException e) {
             throw e;
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "inject " + srcObj + " error", ex);
@@ -1086,25 +1086,6 @@ public final class ResourceFactory {
     public ResourceTypeLoader findTypeLoader(Type ft, Field field) {
         ResourceTypeLoader it = this.findMatchTypeLoader(ft, field);
         return it == null ? findRegxTypeLoader(ft, field) : it;
-    }
-
-    private static class ResourceInjectException extends RedkaleException {
-
-        public ResourceInjectException() {
-            super();
-        }
-
-        public ResourceInjectException(String s) {
-            super(s);
-        }
-
-        public ResourceInjectException(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-        public ResourceInjectException(Throwable cause) {
-            super(cause);
-        }
     }
 
     private static class ResourceEntry<T> {
