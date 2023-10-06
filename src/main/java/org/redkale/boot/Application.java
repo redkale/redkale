@@ -534,6 +534,12 @@ public final class Application {
                         }
                         mqnames.add(n.trim());
                     }
+                } else if (names != null && names.isEmpty()) {
+                    String n = "";
+                    if (mqnames.contains(n.trim())) {
+                        throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
+                    }
+                    mqnames.add(n);
                 }
                 try {
                     String classVal = getPropertyValue(mqConf.getValue("type", mqConf.getValue("value"))); //兼容value字段
