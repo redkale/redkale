@@ -1739,7 +1739,7 @@ public final class Application {
         ClassFilter.Loader.load(getHome(), this.serverClassLoader, ((this.excludelibs != null ? (this.excludelibs + ";") : "") + (excludelibs == null ? "" : excludelibs)).split(";"), filters);
     }
 
-    private static String alignString(String value, int maxlen) {
+    private String alignString(String value, int maxlen) {
         StringBuilder sb = new StringBuilder(maxlen);
         sb.append(value);
         for (int i = 0; i < maxlen - value.length(); i++) {
