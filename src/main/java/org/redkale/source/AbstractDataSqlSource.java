@@ -304,7 +304,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             if (pos > 0) {
                 url = url.substring(0, pos) + "...";
             }
-            return getClass().getSimpleName() + "{url=" + url + ", maxconns=" + readMaxConns() + executorToString() + "}";
+            return getClass().getSimpleName() + "{url=" + url + ", maxconns=" + readMaxConns() + ", dbtype=" + dbtype() + ", " + DATA_SOURCE_TABLE_AUTODDL + "=" + autoDDL + executorToString() + "}";
         } else {
             String readUrl = readConfProps.getProperty(DATA_SOURCE_URL);
             int pos = readUrl.indexOf('?');
@@ -316,7 +316,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             if (pos > 0) {
                 writeUrl = writeUrl.substring(0, pos) + "...";
             }
-            return getClass().getSimpleName() + "{read-url=" + readUrl + ", read-maxconns=" + readMaxConns() + executorToString() + ",write-url=" + writeUrl + ", write-maxconns=" + writeMaxConns() + "}";
+            return getClass().getSimpleName() + "{read-url=" + readUrl + ", read-maxconns=" + readMaxConns()
+                + ",write-url=" + writeUrl + ", write-maxconns=" + writeMaxConns()
+                + ", dbtype=" + dbtype() + ", " + DATA_SOURCE_TABLE_AUTODDL + "=" + autoDDL + executorToString() + "}";
         }
     }
 

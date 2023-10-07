@@ -1734,7 +1734,7 @@ public final class Application {
         if (sb.length() > 0) {
             logger.info(sb.toString().trim());
         }
-        logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") start in " + (System.currentTimeMillis() - s) + " ms");
+        logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") started in " + (System.currentTimeMillis() - s) + " ms");
     }
 
     void loadClassesByFilters(String excludelibs, final ClassFilter... filters) throws IOException {

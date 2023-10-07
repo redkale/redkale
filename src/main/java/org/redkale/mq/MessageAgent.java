@@ -156,7 +156,7 @@ public abstract class MessageAgent implements Resourcable {
         return map;
     }
 
-    //Application.shutdown  在执行server.shutdown之前执行
+    //Application.stop  在执行server.shutdown之前执行
     public void stop() {
         this.stopMessageConsumer();
         this.stopMessageProducer();
@@ -165,7 +165,7 @@ public abstract class MessageAgent implements Resourcable {
         });
     }
 
-    //Application.shutdown 在所有server.shutdown执行后执行
+    //Application.stop 在所有server.shutdown执行后执行
     public void destroy(AnyValue config) {
         for (MessageConsumer consumer : messageConsumerList) {
             consumer.destroy(config);
@@ -176,10 +176,10 @@ public abstract class MessageAgent implements Resourcable {
         this.httpMessageClient.close();
         this.sncpMessageClient.close();
         if (this.sncpClientProducer != null) {
-            this.sncpClientProducer.shutdown();
+            this.sncpClientProducer.stop();
         }
         if (this.httpClientProducer != null) {
-            this.httpClientProducer.shutdown();
+            this.httpClientProducer.stop();
         }
         if (this.clientMessageCoder instanceof Service) {
             ((Service) this.clientMessageCoder).destroy(config);
