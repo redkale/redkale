@@ -363,8 +363,12 @@ public abstract class NodeServer {
                     final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
                     CacheSource source = application.loadCacheSource(resourceName, ws);
                     field.set(srcObj, source);
-
-                    logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
+                    Resource res = field.getAnnotation(Resource.class);
+                    if (res != null && res.required() && source == null) {
+                        throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
+                    } else {
+                        logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
+                    }
                     return source;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "DataSource inject error", e);

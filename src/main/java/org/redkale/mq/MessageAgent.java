@@ -175,17 +175,17 @@ public abstract class MessageAgent implements Resourcable {
 
         this.httpMessageClient.close();
         this.sncpMessageClient.close();
-        if (this.sncpClientProducer != null) {
-            this.sncpClientProducer.stop();
-        }
         if (this.httpClientProducer != null) {
             this.httpClientProducer.stop();
+        }
+        if (this.sncpClientProducer != null) {
+            this.sncpClientProducer.stop();
         }
         if (this.clientMessageCoder instanceof Service) {
             ((Service) this.clientMessageCoder).destroy(config);
         }
         if (this.timeoutExecutor != null) {
-            this.timeoutExecutor.shutdownNow();
+            this.timeoutExecutor.shutdown();
         }
         if (this.workExecutor != null && this.workExecutor != application.getWorkExecutor()) {
             this.workExecutor.shutdownNow();

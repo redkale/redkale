@@ -11,8 +11,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import java.util.stream.*;
-import org.redkale.annotation.Comment;
 import org.redkale.annotation.*;
+import org.redkale.annotation.Comment;
 import org.redkale.boot.Application;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
@@ -38,7 +38,7 @@ public abstract class WebSocketNode implements Service {
     @Comment("存储当前SNCP节点列表的key")
     public static final String WS_SOURCE_KEY_NODES = "sncpws_nodes";
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+    protected final Logger logger = Logger.getLogger(WebSocketNode.class.getSimpleName());
 
     //"SNCP_ADDR" 如果不是分布式(没有SNCP) 值为null
     @Resource(name = Application.RESNAME_SNCP_ADDRESS, required = false)
