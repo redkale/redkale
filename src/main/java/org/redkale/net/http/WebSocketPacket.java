@@ -7,7 +7,6 @@ package org.redkale.net.http;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import org.redkale.convert.ConvertDisabled;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import org.redkale.util.ByteArray;
 
@@ -106,7 +105,6 @@ public final class WebSocketPacket {
         array.put(content);
     }
 
-    @ConvertDisabled
     public byte[] getPayload() {
         return payload;
     }
@@ -131,7 +129,7 @@ public final class WebSocketPacket {
         this.last = last;
     }
 
-    public String getTextPayload() {
+    public String toSimpleString() {
         if (payload == null) {
             return null;
         }
@@ -140,7 +138,7 @@ public final class WebSocketPacket {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + ", payload=" + getTextPayload() + "]";
+        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + ", payload=" + toSimpleString() + "]";
     }
 
 }
