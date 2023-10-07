@@ -131,6 +131,13 @@ public abstract class ClusterAgent {
         return Utility.contains(ports, port);
     }
 
+    public void start() {
+    }
+
+    public int intervalCheckSeconds() {
+        return 10;
+    }
+
     public abstract void register(Application application);
 
     public abstract void deregister(Application application);
@@ -191,13 +198,10 @@ public abstract class ClusterAgent {
             }
         }
         ClusterEntry entry = new ClusterEntry(ns, protocol, service);
-        if (entry.serviceName.trim().endsWith(serviceSeparator())) {
+        if (entry.serviceName.trim().endsWith(".")) {
             return false;
         }
         return true;
-    }
-
-    public void start() {
     }
 
     protected void afterDeregister(NodeServer ns, String protocol) {
@@ -212,10 +216,6 @@ public abstract class ClusterAgent {
             }
             logger.info(this.getClass().getSimpleName() + " wait for " + s * 1000 + "ms after deregister");
         }
-    }
-
-    public int intervalCheckSeconds() {
-        return 10;
     }
 
     //获取HTTP远程服务的可用ip列表
@@ -283,17 +283,13 @@ public abstract class ClusterAgent {
         return this.appAddress.getPort();
     }
 
-    protected String serviceSeparator() {
-        return ".";
-    }
-
     public String generateSncpServiceName(String protocol, String restype, String resname) {
-        return protocol.toLowerCase() + serviceSeparator() + restype + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + "." + restype + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //也会提供给HttpMessageClusterAgent适用
     public String generateHttpServiceName(String protocol, String module, String resname) {
-        return protocol.toLowerCase() + serviceSeparator() + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + "." + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: protocol:classtype-resourcename
@@ -301,18 +297,18 @@ public abstract class ClusterAgent {
         if (protocol.toLowerCase().startsWith("http")) {  //HTTP使用RestService.name方式是为了与MessageClient中的module保持一致, 因为HTTP依靠的url中的module，无法知道Service类名
             String resname = Sncp.getResourceName(service);
             String module = Rest.getRestModule(service).toLowerCase();
-            return protocol.toLowerCase() + serviceSeparator() + module + (resname.isEmpty() ? "" : ("-" + resname));
+            return protocol.toLowerCase() + "." + module + (resname.isEmpty() ? "" : ("-" + resname));
         }
         if (!Sncp.isSncpDyn(service)) {
-            return protocol.toLowerCase() + serviceSeparator() + service.getClass().getName();
+            return protocol.toLowerCase() + "." + service.getClass().getName();
         }
         String resname = Sncp.getResourceName(service);
-        return protocol.toLowerCase() + serviceSeparator() + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + "." + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: protocol:classtype-resourcename:nodeid
     protected String generateServiceId(NodeServer ns, String protocol, Service service) {
-        return generateServiceName(ns, protocol, service) + serviceSeparator() + this.nodeid;
+        return generateServiceName(ns, protocol, service) + "." + this.nodeid;
     }
 
     protected String generateCheckName(NodeServer ns, String protocol, Service service) {

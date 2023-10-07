@@ -41,10 +41,10 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     protected ScheduledFuture taskFuture;
 
-    //可能被HttpMessageClient用到的服务 key: serviceName
+    //可能被HttpMessageClient用到的服务 key: serviceName，例如: cluster.service.http.user
     protected final ConcurrentHashMap<String, Set<InetSocketAddress>> httpAddressMap = new ConcurrentHashMap<>();
 
-    //可能被sncp用到的服务 key: serviceName
+    //可能被sncp用到的服务 key: serviceName, 例如: cluster.service.sncp.user
     protected final ConcurrentHashMap<String, Set<InetSocketAddress>> sncpAddressMap = new ConcurrentHashMap<>();
 
     @Override
