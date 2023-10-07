@@ -251,6 +251,7 @@ public abstract class Sncp {
 
     public static <T extends Service> Class getServiceType(Class<T> serviceImplClass) {
         SncpDyn dyn = serviceImplClass.getAnnotation(SncpDyn.class);
+        System.out.println("dyn = " + dyn + ", serviceImplClass = " + serviceImplClass + ", type = " + (dyn == null ? "ddd" : dyn.type()));
         return dyn != null ? dyn.type() : serviceImplClass;
     }
 

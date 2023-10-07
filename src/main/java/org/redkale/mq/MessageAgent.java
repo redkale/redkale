@@ -167,28 +167,40 @@ public abstract class MessageAgent implements Resourcable {
 
     //Application.stop 在所有server.shutdown执行后执行
     public void destroy(AnyValue config) {
+        logger.log(Level.FINE, "MessageConsumer destroying");
         for (MessageConsumer consumer : messageConsumerList) {
             consumer.destroy(config);
         }
         this.messageConsumerList.clear();
         this.messageConsumerMap.clear();
+        logger.log(Level.FINE, "MessageConsumer destroyed");
 
         this.httpMessageClient.close();
         this.sncpMessageClient.close();
+        logger.log(Level.FINE, "httpMessageClient and sncpMessageClient destroyed");
+
         if (this.httpClientProducer != null) {
+            logger.log(Level.FINE, "httpClientProducer stoping");
             this.httpClientProducer.stop();
+            logger.log(Level.FINE, "httpClientProducer stoped");
         }
         if (this.sncpClientProducer != null) {
+            logger.log(Level.FINE, "sncpClientProducer stoping");
             this.sncpClientProducer.stop();
+            logger.log(Level.FINE, "sncpClientProducer stoped");
         }
         if (this.clientMessageCoder instanceof Service) {
+            logger.log(Level.FINE, "clientMessageCoder destroying");
             ((Service) this.clientMessageCoder).destroy(config);
+            logger.log(Level.FINE, "clientMessageCoder destroyed");
         }
         if (this.timeoutExecutor != null) {
-            this.timeoutExecutor.shutdown();
+            this.timeoutExecutor.shutdownNow();
+            logger.log(Level.FINE, "timeoutExecutor shutdownNow");
         }
         if (this.workExecutor != null && this.workExecutor != application.getWorkExecutor()) {
             this.workExecutor.shutdownNow();
+            logger.log(Level.FINE, "workExecutor shutdownNow");
         }
     }
 

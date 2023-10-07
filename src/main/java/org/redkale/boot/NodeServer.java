@@ -870,11 +870,11 @@ public abstract class NodeServer {
         localServices.forEach(y -> {
             long s = System.currentTimeMillis();
             if (finest) {
-                logger.finest(y + " is destroying");
+                logger.finest(Sncp.getResourceType(y) + " is destroying");
             }
             y.destroy(Sncp.getResourceConf(y));
             if (finest) {
-                logger.finest(y + " was destroyed");
+                logger.finest(Sncp.getResourceType(y) + " was destroyed");
             }
             long e = System.currentTimeMillis() - s;
             if (e > 2 && sb != null) {
