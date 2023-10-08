@@ -333,7 +333,7 @@ public class NodeHttpServer extends NodeServer {
                 for (AbstractMap.SimpleEntry<String, String[]> en : webss) {
                     StringBuilder sub = new StringBuilder();
                     int pos = en.getKey().indexOf(':');
-                    sub.append("RestWebSocket  (type=").append(en.getKey().substring(0, pos));
+                    sub.append("RestWebSocket (type=").append(en.getKey().substring(0, pos));
                     for (int i = 0; i < maxTypeLength - pos; i++) {
                         sub.append(' ');
                     }

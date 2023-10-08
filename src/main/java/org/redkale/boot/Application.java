@@ -1720,16 +1720,7 @@ public final class Application {
                     consumer.init(consumerConf);
                 }
             }
-            Map<String, Long> map = agent.start(consumers);
-            AtomicInteger maxlen = new AtomicInteger();
-            map.keySet().forEach(str -> {
-                if (str.length() > maxlen.get()) {
-                    maxlen.set(str.length());
-                }
-            });
-            new TreeMap<>(map).forEach((topic, ms) -> sb.append(MessageClientConsumer.class.getSimpleName()).append("(topic=")
-                .append(alignString(topic, maxlen.get())).append(") init and start in ").append(ms).append(" ms\r\n")
-            );
+            agent.start(consumers);
         }
         if (sb.length() > 0) {
             logger.info(sb.toString().trim());

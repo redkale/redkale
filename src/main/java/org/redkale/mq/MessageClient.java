@@ -99,7 +99,7 @@ public abstract class MessageClient {
                             }
                         };
                         long ones = System.currentTimeMillis();
-                        MessageClientConsumer one = messageAgent.createMessageClientConsumer(new String[]{appRespTopic}, appRespConsumerid, processor);
+                        MessageClientConsumer one = messageAgent.createMessageClientConsumer(appRespTopic, appRespConsumerid, processor);
                         one.start();
                         long onee = System.currentTimeMillis() - ones;
                         if (finest) {

@@ -5,6 +5,9 @@
  */
 package org.redkale.mq;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -20,7 +23,7 @@ import java.util.logging.Logger;
  */
 public abstract class MessageClientConsumer {
 
-    protected final String[] topics;
+    protected final List<String> topics;
 
     protected final String consumerid;
 
@@ -32,13 +35,13 @@ public abstract class MessageClientConsumer {
 
     protected volatile boolean closed;
 
-    protected MessageClientConsumer(MessageAgent messageAgent, String[] topics, final String consumerid, MessageClientProcessor processor) {
+    protected MessageClientConsumer(MessageAgent messageAgent, String topic, final String consumerid, MessageClientProcessor processor) {
         Objects.requireNonNull(messageAgent);
-        Objects.requireNonNull(topics);
+        Objects.requireNonNull(topic);
         Objects.requireNonNull(consumerid);
         Objects.requireNonNull(processor);
         this.messageAgent = messageAgent;
-        this.topics = topics;
+        this.topics = Collections.unmodifiableList(Arrays.asList(topic));
         this.consumerid = consumerid;
         this.processor = processor;
     }
@@ -47,7 +50,7 @@ public abstract class MessageClientConsumer {
         return processor;
     }
 
-    public String[] getTopics() {
+    public List<String> getTopics() {
         return topics;
     }
 
