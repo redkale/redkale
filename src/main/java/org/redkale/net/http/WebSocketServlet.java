@@ -16,8 +16,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.zip.*;
-import org.redkale.annotation.Comment;
 import org.redkale.annotation.*;
+import org.redkale.annotation.Comment;
 import org.redkale.boot.Application;
 import static org.redkale.boot.Application.RESNAME_SERVER_RESFACTORY;
 import org.redkale.convert.Convert;
@@ -66,7 +66,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Comment("WebScoket服务器给客户端进行ping操作的默认间隔时间, 单位: 秒")
     public static final int DEFAILT_LIVEINTERVAL = 15;
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+    protected final Logger logger = Logger.getLogger(this.getClass().getSuperclass().getSimpleName());
 
     private final BiConsumer<WebSocket, Object> restMessageConsumer = createRestOnMessageConsumer();
 
