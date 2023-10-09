@@ -994,7 +994,7 @@ public final class Rest {
     }
 
     public static <T extends HttpServlet> T createRestServlet(final ClassLoader classLoader, final Class userType0,
-        final Class<T> baseServletType, final Class<? extends Service> serviceType) {
+        final Class<T> baseServletType, final Class<? extends Service> serviceType, String serviceResourceName) {
 
         if (baseServletType == null || serviceType == null) {
             throw new RestException(" Servlet or Service is null Class on createRestServlet");
@@ -1112,8 +1112,19 @@ public final class Rest {
         } else {
             stname = stname.replaceAll("Service.*$", "");
         }
+        String namePostfix = Utility.isBlank(serviceResourceName) ? "" : serviceResourceName;
+        for (char ch : namePostfix.toCharArray()) {
+            if ((ch == '$' || ch == '_' || (ch >= '0' && ch <= '9')
+                || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
+                continue;
+            }
+            //带特殊字符的值不能作为类名的后缀
+            namePostfix = Utility.md5Hex(namePostfix);
+            break;
+        }
         //String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + stname + "RestServlet";
-        final String newDynName = "org/redkaledyn/http/rest/" + "_Dyn" + stname + "RestServlet__" + serviceType.getName().replace('.', '_').replace('$', '_') + "DynServlet";
+        final String newDynName = "org/redkaledyn/http/rest/" + "_Dyn" + stname + "RestServlet__" + serviceType.getName().replace('.', '_').replace('$', '_')
+            + (namePostfix.isEmpty() ? "" : ("_" + namePostfix) + "DynServlet");
 
         try {
             Class newClazz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
@@ -1779,7 +1790,7 @@ public final class Rest {
         {  //注入 @Resource  private XXXService _service;
             fv = cw.visitField(ACC_PRIVATE, REST_SERVICE_FIELD_NAME, serviceDesc, null, null);
             av0 = fv.visitAnnotation(resDesc, true);
-            av0.visit("name", "");
+            av0.visit("name", Utility.isBlank(serviceResourceName) ? "" : serviceResourceName);
             av0.visitEnd();
             fv.visitEnd();
         }

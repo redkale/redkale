@@ -1493,6 +1493,7 @@ public final class Application {
                     }
                 } catch (Exception e) {
                     logger.log(Level.INFO, "Control fail", e);
+                    Utility.sleep(100);
                     System.exit(1);
                 }
             }
@@ -1829,6 +1830,7 @@ public final class Application {
                         }
                         if (server == null) {
                             logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
+                            Utility.sleep(100);
                             System.exit(1);
                         }
                         server.init(serconf);
@@ -1843,6 +1845,7 @@ public final class Application {
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, serconf + " runServers error", ex);
                         Application.this.shutdownLatch.countDown();
+                        Utility.sleep(100);
                         System.exit(1);
                     }
                 }
@@ -2066,6 +2069,7 @@ public final class Application {
             application.start();
         } catch (Exception e) {
             application.logger.log(Level.SEVERE, "Application start error", e);
+            Utility.sleep(100);
             System.exit(1);
         }
         System.exit(0); //必须要有

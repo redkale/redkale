@@ -1010,7 +1010,7 @@ public final class ResourceFactory {
                     }
                     if (rs == null && rc1 != null && rc1.required()) {
                         String t = srcObj.getClass().getName();
-                        if (srcObj.getClass().getSimpleName().startsWith("_Dyn")) {
+                        if (srcObj.getClass().getSimpleName().startsWith("_Dyn") && !srcObj.getClass().getSimpleName().contains("__")) {
                             t = srcObj.getClass().getSuperclass().getName();
                         }
                         throw new RedkaleException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + t);
