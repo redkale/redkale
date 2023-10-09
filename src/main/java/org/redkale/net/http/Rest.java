@@ -2517,35 +2517,21 @@ public final class Rest {
                 } else if (userid != null) { //HttpRequest.currentUserid
                     mv.visitVarInsn(ALOAD, 1);
                     if (ptype == int.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
-                    } else if (ptype == long.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
-                    } else {
-                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
-                    }
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUserid", "(Ljava/lang/Class;)Ljava/io/Serializable;", false);
-                    if (ptype == int.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, restInternalName, "orElse", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false);
-
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentIntUserid", "()I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == long.class) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-                        mv.visitInsn(LCONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, restInternalName, "orElse", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false);
-
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentLongUserid", "()J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
                         varInsns.add(new int[]{LLOAD, maxLocals});
                         maxLocals++;
+                    } else if (ptype == String.class) {
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentStringUserid", "()Ljava/lang/String;", false);
+                        mv.visitVarInsn(ASTORE, maxLocals);
+                        varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
+                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUserid", "(Ljava/lang/Class;)Ljava/io/Serializable;", false);
                         mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ptype));
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});

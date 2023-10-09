@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.annotation.Comment;
+import org.redkale.asm.AsmDepends;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
@@ -1188,6 +1189,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @since 2.4.0
      */
+    @AsmDepends
     @SuppressWarnings("unchecked")
     public int currentIntUserid() {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
@@ -1207,6 +1209,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @since 2.7.0
      */
+    @AsmDepends
     @SuppressWarnings("unchecked")
     public long currentLongUserid() {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
@@ -1226,6 +1229,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @since 2.8.0
      */
+    @AsmDepends
     @SuppressWarnings("unchecked")
     public String currentStringUserid() {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
@@ -1233,7 +1237,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
         return this.currentUserid.toString();
     }
-    
+
     /**
      * 获取当前用户ID<br>
      *
@@ -1244,6 +1248,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @since 2.1.0
      */
+    @AsmDepends
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T currentUserid(Class<T> type) {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
