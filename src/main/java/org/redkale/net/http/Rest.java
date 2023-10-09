@@ -2521,7 +2521,7 @@ public final class Rest {
                     } else if (ptype == long.class) {
                         mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
                     } else {
-                        mv.visitLdcInsn(Type.getType(Type.getInternalName(ptype)));
+                        mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
                     }
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUserid", "(Ljava/lang/Class;)Ljava/io/Serializable;", false);
                     if (ptype == int.class) {

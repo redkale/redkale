@@ -1220,6 +1220,21 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
+     * 获取当前用户ID的String值<br>
+     *
+     * @return 用户ID
+     *
+     * @since 2.8.0
+     */
+    @SuppressWarnings("unchecked")
+    public String currentStringUserid() {
+        if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
+            return null;
+        }
+        return this.currentUserid.toString();
+    }
+    
+    /**
      * 获取当前用户ID<br>
      *
      * @param <T>  数据类型只能是int、long、String、JavaBean
