@@ -4,12 +4,10 @@
  */
 package org.redkale.util;
 
-import java.lang.reflect.Type;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 
 /**
@@ -270,7 +268,7 @@ public abstract class TypeToken<T> {
      * </pre>
      *
      *
-     * @param paramType           泛型
+     * @param paramType      泛型
      * @param declaringClass 泛型依附类
      *
      * @return Type
@@ -289,7 +287,7 @@ public abstract class TypeToken<T> {
                     Map<Type, Type> map = new HashMap<>();
                     parseType(map, declaringClass0);
                     Type rstype = getType(map, paramType);
-                    if (rstype instanceof Class) {
+                    if (isClassType(rstype)) {
                         return rstype;
                     }
                 }
@@ -409,6 +407,28 @@ public abstract class TypeToken<T> {
         Type one = map.get(type);
         if (one == null) {
             return type;
+        }
+        if (one instanceof ParameterizedType && !isClassType(one)) {
+            ParameterizedType pt = (ParameterizedType) one;
+            Type owner = getType(map, pt.getOwnerType());
+            if (owner == null || isClassType(owner)) {
+                Type raw = getType(map, pt.getRawType());
+                if (raw == null || isClassType(raw)) {
+                    Type[] os = pt.getActualTypeArguments();
+                    Type[] ns = new Type[os.length];
+                    boolean allClass = true;
+                    for (int i = 0; i < ns.length; i++) {
+                        ns[i] = getType(map, os[i]);
+                        if (!isClassType(ns[i])) {
+                            allClass = false;
+                            break;
+                        }
+                    }
+                    if (allClass) {
+                        return createParameterizedType(owner, raw, ns);
+                    }
+                }
+            }
         }
         return getType(map, one);
     }
@@ -614,9 +634,9 @@ public abstract class TypeToken<T> {
         } catch (Throwable ex) {
         }
         // ------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodVisitor mv;
+        org.redkale.asm.ClassWriter cw = new org.redkale.asm.ClassWriter(COMPUTE_FRAMES);
+        org.redkale.asm.FieldVisitor fv;
+        org.redkale.asm.MethodVisitor mv;
         cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
         String rawTypeDesc = org.redkale.asm.Type.getDescriptor(rawType);
         StringBuilder sb = new StringBuilder();
