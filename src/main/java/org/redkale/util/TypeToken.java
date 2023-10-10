@@ -406,10 +406,17 @@ public abstract class TypeToken<T> {
     private static Type getType(Map<Type, Type> map, Type type) {
         Type one = map.get(type);
         if (one == null) {
-            return type;
+            return getParameterizedType(map, type);
         }
         if (one instanceof ParameterizedType && !isClassType(one)) {
-            ParameterizedType pt = (ParameterizedType) one;
+            return getParameterizedType(map, one);
+        }
+        return getType(map, one);
+    }
+
+    private static Type getParameterizedType(Map<Type, Type> map, Type type) {
+        if (type instanceof ParameterizedType && !isClassType(type)) {
+            ParameterizedType pt = (ParameterizedType) type;
             Type owner = getType(map, pt.getOwnerType());
             if (owner == null || isClassType(owner)) {
                 Type raw = getType(map, pt.getRawType());
@@ -430,7 +437,7 @@ public abstract class TypeToken<T> {
                 }
             }
         }
-        return getType(map, one);
+        return type;
     }
 
     private static Map<Type, Type> parseType(Map<Type, Type> map, Class clzz) {
