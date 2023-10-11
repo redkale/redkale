@@ -122,7 +122,7 @@ public class HttpMessageResponse extends HttpResponse {
             }
             return;
         }
-        finishHttpResult(convert, type, new HttpResult(ret));
+        finishHttpResult(convert, type, new HttpResult(ret).convert(ret == null ? null : ret.convert()));
     }
 
     @Override
