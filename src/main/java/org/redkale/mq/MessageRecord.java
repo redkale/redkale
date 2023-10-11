@@ -9,11 +9,9 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
-import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.net.sncp.SncpHeader;
-import org.redkale.util.ByteArray;
 
 /**
  * 存在MQ里面的数据结构<p>
@@ -84,7 +82,10 @@ public class MessageRecord implements Serializable {
     protected byte ctype;
 
     @Comment("本地附加对象，不会被序列化")
-    protected Object localAttach;
+    protected String localActionName;
+
+    @Comment("本地附加对象，不会被序列化")
+    protected Object[] localParams;
 
     public MessageRecord() {
     }
@@ -115,8 +116,13 @@ public class MessageRecord implements Serializable {
         return content == null ? null : new String(content, StandardCharsets.UTF_8);
     }
 
-    public MessageRecord attach(Object attach) {
-        this.localAttach = attach;
+    public MessageRecord localActionName(String actionName) {
+        this.localActionName = actionName;
+        return this;
+    }
+
+    public MessageRecord localParams(Object[] params) {
+        this.localParams = params;
         return this;
     }
 
@@ -156,9 +162,9 @@ public class MessageRecord implements Serializable {
 
     public int hash() {
         if (groupid != null && !groupid.isEmpty()) {
-            return groupid.hashCode();
+            return Math.abs(groupid.hashCode());
         } else if (userid != null) {
-            return userid.hashCode();
+            return Math.abs(userid.hashCode());
         } else {
             return 0;
         }
@@ -300,6 +306,7 @@ public class MessageRecord implements Serializable {
         StringBuilder sb = new StringBuilder(128);
         sb.append("{\"seqid\":").append(this.seqid);
         sb.append(",\"version\":").append(this.version);
+        sb.append(",\"ctype\":").append(this.ctype);
         if (this.flag != 0) {
             sb.append(",\"flag\":").append(this.flag);
         }
@@ -320,9 +327,11 @@ public class MessageRecord implements Serializable {
         }
         if (this.content != null) {
             if (this.ctype == CTYPE_BSON_RESULT && this.content.length > SncpHeader.HEADER_SUBSIZE) {
-                int offset = new ByteArray(this.content).getChar(0) + 1; //循环占位符
-                Object rs = BsonConvert.root().convertFrom(Object.class, this.content, offset, this.content.length - offset);
-                sb.append(",\"content\":").append(rs);
+                //int offset = new ByteArray(this.content).getChar(0) + 1; //循环占位符
+                //Object rs = BsonConvert.root().convertFrom(Object.class, this.content, offset, this.content.length - offset);
+                //sb.append(",\"content\":").append(rs);
+                //SncpHeader包含不确定长度的信息，故不能再直接偏移读取
+                sb.append(",\"content\":").append("bytes[" + this.content.length + "]");
             } else if (this.ctype == CTYPE_HTTP_REQUEST) {
                 HttpSimpleRequest req = HttpSimpleRequestCoder.getInstance().decode(this.content);
                 if (req != null) {
@@ -336,8 +345,13 @@ public class MessageRecord implements Serializable {
                 sb.append(",\"content\":").append(req);
             } else if (this.ctype == CTYPE_HTTP_RESULT) {
                 sb.append(",\"content\":").append(HttpResultCoder.getInstance().decode(this.content));
-            } else if (localAttach != null) {
-                sb.append(",\"attach\":").append(JsonConvert.root().convertTo(localAttach));
+            } else if (localActionName != null || localParams != null) {
+                if (localActionName != null) {
+                    sb.append(",\"actionName\":").append(localActionName);
+                }
+                if (localParams != null) {
+                    sb.append(",\"params\":").append(JsonConvert.root().convertTo(localParams));
+                }
             } else {
                 sb.append(",\"content\":\"").append(new String(this.content, StandardCharsets.UTF_8)).append("\"");
             }

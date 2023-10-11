@@ -49,8 +49,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     protected ObjectDecoder(Type type) {
         this.type = ((type instanceof Class) && ((Class) type).isInterface()) ? Object.class : type;
         if (type instanceof ParameterizedType) {
-            final ParameterizedType pt = (ParameterizedType) type;
-            this.typeClass = (Class) pt.getRawType();
+            this.typeClass = TypeToken.typeToClass(type);
         } else if (type instanceof TypeVariable) {
             TypeVariable tv = (TypeVariable) type;
             Type[] ts = tv.getBounds();
@@ -72,11 +71,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 this.creatorConstructorMembers = null;
                 return;
             }
-
             Class clazz = null;
             if (type instanceof ParameterizedType) {
-                final ParameterizedType pts = (ParameterizedType) type;
-                clazz = (Class) (pts).getRawType();
+                clazz = TypeToken.typeToClass(type);
             } else if (type instanceof TypeVariable) {
                 TypeVariable tv = (TypeVariable) type;
                 Type[] ts = tv.getBounds();

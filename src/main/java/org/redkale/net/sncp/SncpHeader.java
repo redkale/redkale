@@ -212,8 +212,7 @@ public class SncpHeader {
 
     //供client端request和response的header判断
     public boolean checkValid(SncpHeader other) {
-        return Objects.equals(this.seqid, other.seqid)
-            && Objects.equals(this.serviceid, other.serviceid)
+        return Objects.equals(this.serviceid, other.serviceid)
             && Objects.equals(this.actionid, other.actionid);
     }
 

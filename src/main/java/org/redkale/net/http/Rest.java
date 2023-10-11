@@ -326,6 +326,7 @@ public final class Rest {
     }
 
     //仅供Rest动态构建里 currentUserid() 使用
+    @AsmDepends
     public static <T> T orElse(T t, T defValue) {
         return t == null ? defValue : t;
     }
@@ -1194,8 +1195,18 @@ public final class Rest {
                     if (ignore) {
                         continue;
                     }
-                    paramTypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
-                    retvalTypes.add(formatRestReturnType(method, serviceType));
+                    java.lang.reflect.Type[] ptypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType);
+                    for (java.lang.reflect.Type t : ptypes) {
+                        if (!TypeToken.isClassType(t)) {
+                            throw new RedkaleException("param type (" + t + ") is not a class in method " + method + ", serviceType is " + serviceType.getName());
+                        }
+                    }
+                    paramTypes.add(ptypes);
+                    java.lang.reflect.Type rtype = formatRestReturnType(method, serviceType);
+                    if (!TypeToken.isClassType(rtype)) {
+                        throw new RedkaleException("return type (" + rtype + ") is not a class in method " + method + ", serviceType is " + serviceType.getName());
+                    }
+                    retvalTypes.add(rtype);
                     if (mappings.length == 0) { //没有Mapping，设置一个默认值
                         MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, parentNonBlocking, null, bigModuleName, method);
                         entrys.add(entry);
@@ -1692,8 +1703,18 @@ public final class Rest {
                     }
                 }
             }
-            paramTypes.add(TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType));
-            retvalTypes.add(formatRestReturnType(method, serviceType));
+            java.lang.reflect.Type[] ptypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType);
+            for (java.lang.reflect.Type t : ptypes) {
+                if (!TypeToken.isClassType(t)) {
+                    throw new RedkaleException("param type (" + t + ") is not a class in method " + method + ", serviceType is " + serviceType.getName());
+                }
+            }
+            paramTypes.add(ptypes);
+            java.lang.reflect.Type rtype = formatRestReturnType(method, serviceType);
+            if (!TypeToken.isClassType(rtype)) {
+                throw new RedkaleException("return type (" + rtype + ") is not a class in method " + method + ", serviceType is " + serviceType.getName());
+            }
+            retvalTypes.add(rtype);
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
                 MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, null, bigmodulename, method);
                 if (entrys.contains(entry)) {

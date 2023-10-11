@@ -155,7 +155,7 @@ public class SncpRemoteInfo<T extends Service> {
     }
 
     //MQ模式RPC
-    protected CompletableFuture<byte[]> remoteMessage(final SncpRemoteAction action, final String traceid, final Object[] params) {
+    private CompletableFuture<byte[]> remoteMessage(final SncpRemoteAction action, final String traceid, final Object[] params) {
         final SncpClientRequest request = createSncpClientRequest(action, this.sncpClient.clientSncpAddress, traceid, params);
         String targetTopic = action.paramTopicTargetIndex >= 0 ? (String) params[action.paramTopicTargetIndex] : this.topic;
         if (targetTopic == null) {
@@ -165,14 +165,12 @@ public class SncpRemoteInfo<T extends Service> {
         request.writeTo(null, array);
         MessageRecord message = messageClient.createMessageRecord(targetTopic, null, array.getBytes());
         final String tt = targetTopic;
-        if (logger.isLoggable(Level.FINER)) {
-            message.attach(Utility.append(new Object[]{action.actionName()}, params));
-        } else {
-            message.attach(params);
-        }
+        message.localActionName(action.actionName());
+        message.localParams(params);
         return messageClient.sendMessage(message).thenApply(msg -> {
             if (msg == null || msg.getContent() == null) {
-                logger.log(Level.SEVERE, action.method + " sncp mq(params: " + JsonConvert.root().convertTo(params) + ", message: " + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt + ", result = " + msg);
+                logger.log(Level.SEVERE, action.method + " sncp mq(params: " + JsonConvert.root().convertTo(params)
+                    + ", message: " + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt + ", result = " + msg);
                 return null;
             }
             ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
@@ -186,7 +184,8 @@ public class SncpRemoteInfo<T extends Service> {
             }
             final int retcode = header.getRetcode();
             if (retcode != 0) {
-                logger.log(Level.SEVERE, action.method + " sncp (params: " + JsonConvert.root().convertTo(params) + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + "), params=" + JsonConvert.root().convertTo(params));
+                logger.log(Level.SEVERE, action.method + " sncp (params: " + JsonConvert.root().convertTo(params)
+                    + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + "), params=" + JsonConvert.root().convertTo(params));
                 throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
             }
             final int respBodyLength = header.getBodyLength();
