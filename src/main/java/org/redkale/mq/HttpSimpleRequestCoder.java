@@ -28,6 +28,12 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         return instance;
     }
 
+    //消息内容的类型
+    @Override
+    public byte ctype() {
+        return MessageRecord.CTYPE_HTTP_REQUEST;
+    }
+
     @Override
     public byte[] encode(HttpSimpleRequest data) {
         byte[] traceid = MessageCoder.getBytes(data.getTraceid());//short-string

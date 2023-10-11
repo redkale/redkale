@@ -115,17 +115,6 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finishJson(final Convert convert, final Type type, final Object obj) {
-        if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
-            return;
-        }
-        finishHttpResult(convert, type, new HttpResult(obj));
-    }
-
-    @Override
     public void finish(final Convert convert, Type type, RetResult ret) {
         if (message.isEmptyRespTopic()) {
             if (callback != null) {
@@ -137,14 +126,39 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     @Override
-    public void finish(final Convert convert, final Type type, Object obj) {
+    public void finish(final Convert convert, Type type, HttpResult result) {
         if (message.isEmptyRespTopic()) {
             if (callback != null) {
                 callback.run();
             }
             return;
         }
-        finishHttpResult(convert, type, new HttpResult(obj));
+        if (convert != null) {
+            result.convert(convert);
+        }
+        finishHttpResult(type, result);
+    }
+
+    @Override
+    public void finishJson(final Convert convert, final Type type, final Object obj) {
+        finish(convert, type, obj);
+    }
+
+    @Override
+    public void finish(final Convert convert, final Type type, Object obj) {
+        if (obj instanceof HttpResult) {
+            finish(convert, type, (HttpResult) obj);
+        } else if (obj instanceof RetResult) {
+            finish(convert, type, (RetResult) obj);
+        } else {
+            if (message.isEmptyRespTopic()) {
+                if (callback != null) {
+                    callback.run();
+                }
+                return;
+            }
+            finishHttpResult(convert, type, new HttpResult(obj));
+        }
     }
 
     @Override
@@ -192,20 +206,6 @@ public class HttpMessageResponse extends HttpResponse {
             return;
         }
         finishHttpResult(String.class, new HttpResult(msg == null ? "" : msg).status(status));
-    }
-
-    @Override
-    public void finish(final Convert convert, Type type, HttpResult result) {
-        if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
-            return;
-        }
-        if (convert != null) {
-            result.convert(convert);
-        }
-        finishHttpResult(type, result);
     }
 
     @Override

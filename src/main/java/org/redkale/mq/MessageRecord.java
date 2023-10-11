@@ -12,6 +12,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.net.sncp.SncpHeader;
+import org.redkale.util.RedkaleException;
 
 /**
  * 存在MQ里面的数据结构<p>
@@ -151,6 +152,9 @@ public class MessageRecord implements Serializable {
     public <T> T decodeContent(MessageCoder<T> coder) {
         if (this.content == null || this.content.length == 0) {
             return null;
+        }
+        if (this.ctype != coder.ctype()) {
+            throw new RedkaleException("record.ctype is " + this.ctype + ", but coder.ctype is " + coder.ctype());
         }
         return (T) coder.decode(this.content);
     }

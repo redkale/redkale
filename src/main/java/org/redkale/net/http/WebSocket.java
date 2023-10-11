@@ -11,9 +11,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import java.util.zip.*;
@@ -946,7 +945,7 @@ public abstract class WebSocket<G extends Serializable, T> {
             if (_channel == null) {
                 return null;
             }
-            Supplier<CompletableFuture> compose = () -> {
+            Function<String, CompletableFuture> compose = t -> {
                 _channel.dispose();
                 if (_readHandler != null) {
                     _readHandler.byteArrayPool.accept(_readHandler.halfFrameBytes);
@@ -957,8 +956,8 @@ public abstract class WebSocket<G extends Serializable, T> {
                 return onClose(code, reason);
             };
             CompletableFuture<Void> future = _engine.removeLocalThenDisconnect(this);
-            return future == null ? compose.get()
-                : future.exceptionally(t -> null).thenCompose(v -> (CompletionStage) compose);
+            return future == null ? compose.apply(null)
+                : future.exceptionally(t -> null).thenCompose((Function) compose);
         } else {
             return null;
         }

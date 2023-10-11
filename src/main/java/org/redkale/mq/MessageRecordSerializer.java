@@ -18,12 +18,18 @@ import java.nio.ByteBuffer;
  *
  * @since 2.1.0
  */
-public class MessageRecordCoder implements MessageCoder<MessageRecord> {
+public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
 
-    private static final MessageRecordCoder instance = new MessageRecordCoder();
+    private static final MessageRecordSerializer instance = new MessageRecordSerializer();
 
-    public static MessageRecordCoder getInstance() {
+    public static MessageRecordSerializer getInstance() {
         return instance;
+    }
+
+    //消息内容的类型
+    @Override
+    public byte ctype() {
+        return 0;
     }
 
     @Override

@@ -86,7 +86,7 @@ public abstract class MessageAgent implements Resourcable {
 
     protected final ReentrantLock serviceLock = new ReentrantLock();
 
-    protected MessageCoder<MessageRecord> clientMessageCoder = MessageRecordCoder.getInstance();
+    protected MessageCoder<MessageRecord> clientMessageCoder = MessageRecordSerializer.getInstance();
 
     //本地Service消息接收处理器， key:consumerid
     protected HashMap<String, MessageClientConsumerNode> clientConsumerNodes = new LinkedHashMap<>();

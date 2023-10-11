@@ -33,6 +33,12 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
         return instance;
     }
 
+    //消息内容的类型
+    @Override
+    public byte ctype() {
+        return MessageRecord.CTYPE_HTTP_RESULT;
+    }
+    
     @Override
     public byte[] encode(HttpResult data) {
         if (data == null) {

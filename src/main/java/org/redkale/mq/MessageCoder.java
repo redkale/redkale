@@ -33,6 +33,9 @@ public interface MessageCoder<T> {
     //解码
     public T decode(byte[] data);
 
+    //消息内容的类型
+    public byte ctype();
+
     //type: 1:string, 2:int, 3:long
     public static byte[] encodeUserid(Serializable value) {
         if (value == null) {
