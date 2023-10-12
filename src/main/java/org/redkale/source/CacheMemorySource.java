@@ -189,7 +189,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             scheduler.shutdownNow();
         }
         if (subExecutor != null) {
-            subExecutor.shutdownNow();
+            subExecutor.shutdown();
         }
     }
 
