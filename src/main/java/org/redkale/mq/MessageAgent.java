@@ -162,7 +162,7 @@ public abstract class MessageAgent implements Resourcable {
         }
         this.startMessageClientConsumers();
         List<String> topics = new ArrayList<>();
-        if (this.httpMessageClient.isEmpty()) {
+        if (!this.httpMessageClient.isEmpty()) {
             topics.addAll(this.httpMessageClient.getTopics());
         }
         if (!this.sncpMessageClient.isEmpty()) {
