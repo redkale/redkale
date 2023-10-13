@@ -32,11 +32,14 @@ public class MessageRecord implements Serializable {
 
     protected static final byte CTYPE_STRING = 1;
 
-    protected static final byte CTYPE_HTTP_REQUEST = 2;
+    //Bson bytes
+    protected static final byte CTYPE_BSON = 2;
 
-    protected static final byte CTYPE_HTTP_RESULT = 3;
+    //HttpSimpleRequest
+    protected static final byte CTYPE_HTTP_REQUEST = 3;
 
-    protected static final byte CTYPE_BSON_RESULT = 4;
+    //HttpResult<byte[]>
+    protected static final byte CTYPE_HTTP_RESULT = 4;
 
     @ConvertColumn(index = 1)
     @Comment("消息序列号")
@@ -54,8 +57,9 @@ public class MessageRecord implements Serializable {
     @Comment("创建时间")
     protected long createTime;
 
+    //@since 2.5.0 由int改成Serializable
     @ConvertColumn(index = 5)
-    @Comment("用户ID，无用户信息视为null或0, 具体数据类型只能是int、long、String")  //@since 2.5.0 由int改成Serializable
+    @Comment("用户ID，无用户信息视为null或0, 具体数据类型只能是int、long、String")
     protected Serializable userid;
 
     @ConvertColumn(index = 6)
@@ -330,7 +334,7 @@ public class MessageRecord implements Serializable {
             sb.append(",\"respTopic\":\"").append(this.respTopic).append("\"");
         }
         if (this.content != null) {
-            if (this.ctype == CTYPE_BSON_RESULT && this.content.length > SncpHeader.HEADER_SUBSIZE) {
+            if (this.ctype == CTYPE_BSON && this.content.length > SncpHeader.HEADER_SUBSIZE) {
                 //int offset = new ByteArray(this.content).getChar(0) + 1; //循环占位符
                 //Object rs = BsonConvert.root().convertFrom(Object.class, this.content, offset, this.content.length - offset);
                 //sb.append(",\"content\":").append(rs);

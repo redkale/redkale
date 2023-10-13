@@ -6,7 +6,6 @@
 package org.redkale.mq;
 
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
 
 /**
@@ -19,39 +18,33 @@ import java.util.logging.*;
  *
  * @since 2.1.0
  */
-public class MessageRespFutureNode implements Runnable {
+public class MessageRespFuture implements Runnable {
 
     protected final long seqid;
 
     protected final long createTime;
 
-    protected final LongAdder counter;
-
     protected final CompletableFuture<MessageRecord> future;
-
-    protected final Logger logger;
 
     protected final MessageRecord message;
 
-    protected final ConcurrentHashMap<Long, MessageRespFutureNode> respNodes;
+    protected final MessageClient messageClient;
 
     protected ScheduledFuture<?> scheduledFuture;
 
-    public MessageRespFutureNode(Logger logger, MessageRecord message, ConcurrentHashMap<Long, MessageRespFutureNode> respNodes, LongAdder counter, CompletableFuture<MessageRecord> future) {
-        this.logger = logger;
+    public MessageRespFuture(MessageClient messageClient, CompletableFuture<MessageRecord> future, MessageRecord message) {
+        this.messageClient = messageClient;
         this.message = message;
         this.seqid = message.getSeqid();
-        this.respNodes = respNodes;
-        this.counter = counter;
         this.future = future;
         this.createTime = System.currentTimeMillis();
     }
 
     @Override  //超时后被timeoutExecutor调用
     public void run() { //timeout
-        respNodes.remove(this.seqid);
-        future.completeExceptionally(new TimeoutException("message-record: "+message));
-        logger.log(Level.WARNING, getClass().getSimpleName() + " wait msg: " + message + " timeout " + (System.currentTimeMillis() - createTime) + "ms"
+        messageClient.respQueue.remove(this.seqid);
+        future.completeExceptionally(new TimeoutException("message-record: " + message));
+        messageClient.logger.log(Level.WARNING, getClass().getSimpleName() + " wait msg: " + message + " timeout " + (System.currentTimeMillis() - createTime) + "ms"
             + (message.userid != null || (message.groupid != null && !message.groupid.isEmpty()) ? (message.userid != null ? (", userid:" + message.userid) : (", groupid:" + message.groupid)) : ""));
     }
 
@@ -61,10 +54,6 @@ public class MessageRespFutureNode implements Runnable {
 
     public long getCreateTime() {
         return createTime;
-    }
-
-    public LongAdder getCounter() {
-        return counter;
     }
 
     public CompletableFuture<MessageRecord> getFuture() {

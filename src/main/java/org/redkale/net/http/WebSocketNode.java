@@ -14,10 +14,12 @@ import java.util.stream.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.Comment;
 import org.redkale.boot.Application;
+import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.MessageAgent;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.source.CacheSource;
 import org.redkale.util.*;
@@ -39,6 +41,9 @@ public abstract class WebSocketNode implements Service {
     public static final String WS_SOURCE_KEY_NODES = "sncpws_nodes";
 
     protected final Logger logger = Logger.getLogger(WebSocketNode.class.getSimpleName());
+
+    @Resource(name = RESNAME_APP_NODEID)
+    protected int nodeid;
 
     //"SNCP_ADDR" 如果不是分布式(没有SNCP) 值为null
     @Resource(name = Application.RESNAME_SNCP_ADDRESS, required = false)
@@ -83,7 +88,7 @@ public abstract class WebSocketNode implements Service {
                 this.semaphore = new Semaphore(wsthreads);
             }
         }
-        String mqtopic = this.messageAgent == null ? null : this.messageAgent.generateSncpReqTopic((Service) this);
+        String mqtopic = this.messageAgent == null ? null : Sncp.generateSncpReqTopic((Service) this, nodeid);
         if (mqtopic != null || this.localSncpAddress != null) {
             this.wsNodeAddress = new WebSocketAddress(mqtopic, localSncpAddress);
         }
@@ -717,7 +722,7 @@ public abstract class WebSocketNode implements Service {
             return ((CompletableFuture) message).thenApply(msg -> sendOneUserMessage(msg, last, userid));
         }
         if (logger.isLoggable(Level.FINEST)) {
-            logger.finest("websocket want send message {userid:" + userid + ", content:" + (message instanceof WebSocketPacket ? ((WebSocketPacket) message).toSimpleString(): (message instanceof CharSequence ? message : JsonConvert.root().convertTo(message))) + "} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
+            logger.finest("websocket want send message {userid:" + userid + ", content:" + (message instanceof WebSocketPacket ? ((WebSocketPacket) message).toSimpleString() : (message instanceof CharSequence ? message : JsonConvert.root().convertTo(message))) + "} from locale node to " + ((this.localEngine != null) ? "locale" : "remote") + " engine");
         }
         CompletableFuture<Integer> localFuture = null;
         if (this.localEngine != null) {

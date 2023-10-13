@@ -32,7 +32,7 @@ public class SncpRequestParseTest {
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", 3389);
         InetSocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 3344);
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
-        SncpClient client = new SncpClient("test", asyncGroup, sncpAddress, new ClientAddress(remoteAddress), "TCP", Utility.cpus(), 16);
+        SncpClient client = new SncpClient("test", asyncGroup, 0, sncpAddress, new ClientAddress(remoteAddress), "TCP", Utility.cpus(), 16);
         SncpClientConnection conn = client.createClientConnection(1, asyncGroup.newTCPClientConnection());
 
         SncpContext.SncpContextConfig config = new SncpContext.SncpContextConfig();

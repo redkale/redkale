@@ -1,0 +1,116 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.redkale.cluster;
+
+import java.io.Serializable;
+import java.lang.reflect.Type;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import org.redkale.convert.json.JsonConvert;
+import org.redkale.net.http.*;
+
+/**
+ * 不依赖MessageRecord则可兼容RPC方式
+ *
+ * <p>
+ * 详情见: https://redkale.org
+ *
+ * @author zhangjx
+ *
+ * @since 2.1.0
+ */
+public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleRequest, HttpResult<byte[]>> {
+
+    @Override
+    public final void produceMessage(HttpSimpleRequest request) {
+        produceMessage(generateHttpReqTopic(request, null), 0, null, request);
+    }
+
+    public final void produceMessage(Serializable userid, HttpSimpleRequest request) {
+        produceMessage(generateHttpReqTopic(request, null), userid, null, request);
+    }
+
+    public final void produceMessage(Serializable userid, String groupid, HttpSimpleRequest request) {
+        produceMessage(generateHttpReqTopic(request, null), userid, groupid, request);
+    }
+
+    public final void produceMessage(String topic, HttpSimpleRequest request) {
+        produceMessage(topic, 0, null, request);
+    }
+
+    @Override
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request) {
+        return sendMessage(generateHttpReqTopic(request, null), 0, null, request);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, HttpSimpleRequest request) {
+        return sendMessage(generateHttpReqTopic(request, null), userid, null, request);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request) {
+        return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request);
+    }
+
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request) {
+        return sendMessage(topic, 0, null, request);
+    }
+
+    public <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
+        return sendMessage(generateHttpReqTopic(request, null), 0, null, request).thenApply((HttpResult<byte[]> httbs) -> {
+            if (httbs == null || httbs.getResult() == null) {
+                return null;
+            }
+            return JsonConvert.root().convertFrom(type, httbs.getResult());
+        });
+    }
+
+    public <T> CompletableFuture<T> sendMessage(Serializable userid, HttpSimpleRequest request, Type type) {
+        return sendMessage(generateHttpReqTopic(request, null), userid, null, request).thenApply((HttpResult<byte[]> httbs) -> {
+            if (httbs == null || httbs.getResult() == null) {
+                return null;
+            }
+            return JsonConvert.root().convertFrom(type, httbs.getResult());
+        });
+    }
+
+    public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, Type type) {
+        return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request).thenApply((HttpResult<byte[]> httbs) -> {
+            if (httbs == null || httbs.getResult() == null) {
+                return null;
+            }
+            return JsonConvert.root().convertFrom(type, httbs.getResult());
+        });
+    }
+
+    //格式: http.req.user
+    public String generateHttpReqTopic(String module) {
+        return Rest.generateHttpReqTopic(module, getNodeid());
+    }
+
+    //格式: http.req.user-n10
+    public String generateHttpReqTopic(String module, String resname) {
+        return Rest.generateHttpReqTopic(module, resname, getNodeid());
+    }
+
+    public String generateHttpReqTopic(HttpSimpleRequest request, String path) {
+        String module = request.getRequestURI();
+        if (path != null && !path.isEmpty() && module.startsWith(path)) {
+            module = module.substring(path.length());
+        }
+        module = module.substring(1); //去掉/
+        module = module.substring(0, module.indexOf('/'));
+        Map<String, String> headers = request.getHeaders();
+        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
+        return Rest.generateHttpReqTopic(module, resname, getNodeid());
+    }
+
+    public abstract CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request);
+
+    public abstract void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request);
+
+    protected abstract int getNodeid();
+
+}

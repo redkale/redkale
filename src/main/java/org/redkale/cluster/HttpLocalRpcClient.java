@@ -3,16 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.mq;
+package org.redkale.cluster;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.redkale.boot.*;
+import org.redkale.cluster.HttpRpcClient;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
@@ -28,22 +29,23 @@ import org.redkale.util.RedkaleException;
  *
  * @since 2.4.0
  */
-public class HttpMessageLocalClient extends HttpMessageClient {
+public class HttpLocalRpcClient extends HttpRpcClient {
+
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected final Application application;
 
     protected final String resourceName;
 
-    protected HttpServer server;
+    protected HttpServer currServer;
 
-    public HttpMessageLocalClient(Application application, String resourceName) {
-        super(null);
+    public HttpLocalRpcClient(Application application, String resourceName) {
         this.application = application;
         this.resourceName = resourceName;
     }
 
     private HttpServer httpServer() {
-        if (this.server == null) {
+        if (this.currServer == null) {
             NodeHttpServer nodeHttpServer = null;
             List<NodeServer> nodeServers = application.getNodeServers();
             for (NodeServer n : nodeServers) {
@@ -60,9 +62,14 @@ public class HttpMessageLocalClient extends HttpMessageClient {
                     }
                 }
             }
-            this.server = nodeHttpServer.getServer();
+            this.currServer = nodeHttpServer.getServer();
         }
-        return this.server;
+        return this.currServer;
+    }
+
+    @Override
+    protected int getNodeid() {
+        return application.getNodeid();
     }
 
     protected HttpContext context() {
@@ -73,11 +80,11 @@ public class HttpMessageLocalClient extends HttpMessageClient {
         return (HttpDispatcherServlet) httpServer().getDispatcherServlet();
     }
 
-    protected HttpServlet findHttpServlet(String topic) {
+    public HttpServlet findHttpServlet(String topic) {
         return dispatcherServlet().findServletByTopic(topic);
     }
 
-    protected HttpServlet findHttpServlet(HttpSimpleRequest request) {
+    public HttpServlet findHttpServlet(HttpSimpleRequest request) {
         return dispatcherServlet().findServletByTopic(generateHttpReqTopic(request, request.getPath()));
     }
 
@@ -114,7 +121,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     }
 
     @Override
-    protected CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
         HttpServlet servlet = findHttpServlet(topic);
         if (servlet == null) {
             if (logger.isLoggable(Level.FINE)) {
@@ -146,7 +153,7 @@ public class HttpMessageLocalClient extends HttpMessageClient {
     }
 
     @Override
-    protected void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request, LongAdder counter) {
+    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);
         if (servlet == null) {

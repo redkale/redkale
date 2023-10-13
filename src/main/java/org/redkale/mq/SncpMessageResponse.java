@@ -24,32 +24,23 @@ public class SncpMessageResponse extends SncpResponse {
 
     protected MessageRecord message;
 
-    protected MessageClientProducer producer;
-
-    protected Runnable callback;
-
-    public SncpMessageResponse(SncpContext context, SncpMessageRequest request, Runnable callback, MessageClient messageClient, MessageClientProducer producer) {
+    public SncpMessageResponse(MessageClient messageClient, SncpContext context, SncpMessageRequest request) {
         super(context, request);
-        this.message = request.message;
-        this.callback = callback;
         this.messageClient = messageClient;
-        this.producer = producer;
+        this.message = request.message;
     }
 
     @Override
     public void finish(final int retcode, final BsonWriter out) {
-        if (callback != null) {
-            callback.run();
-        }
         int headerSize = SncpHeader.calcHeaderSize(request);
         if (out == null) {
             final ByteArray result = new ByteArray(headerSize).putPlaceholder(headerSize);
             writeHeader(result, 0, retcode);
-            producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getRespTopic(), null, (byte[]) null));
+            messageClient.getProducer().apply(messageClient.createMessageRecord(message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, (byte[]) null));
             return;
         }
         final ByteArray result = out.toByteArray();
         writeHeader(result, result.length() - headerSize, retcode);
-        producer.apply(messageClient.createMessageRecord(message.getSeqid(), message.getRespTopic(), null, result.getBytes()));
+        messageClient.getProducer().apply(messageClient.createMessageRecord(message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, result.getBytes()));
     }
 }

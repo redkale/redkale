@@ -20,6 +20,7 @@ import org.redkale.asm.Type;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.mq.MessageAgent;
+import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.SncpRemoteInfo.SncpRemoteAction;
 import org.redkale.service.*;
 import org.redkale.util.AnyValue;
@@ -252,6 +253,27 @@ public abstract class Sncp {
     public static <T extends Service> Class getServiceType(Class<T> serviceImplClass) {
         SncpDyn dyn = serviceImplClass.getAnnotation(SncpDyn.class);
         return dyn != null ? dyn.type() : serviceImplClass;
+    }
+
+    //格式: sncp.req.module.user
+    public static String generateSncpReqTopic(Service service, int nodeid) {
+        return generateSncpReqTopic(Sncp.getResourceName(service), Sncp.getResourceType(service), nodeid);
+    }
+
+    //格式: sncp.req.module.user
+    public static String generateSncpReqTopic(String resourceName, Class resourceType, int nodeid) {
+        if (WebSocketNode.class.isAssignableFrom(resourceType)) {
+            return getSncpReqTopicPrefix() + "module.wsnode" + nodeid + (resourceName.isEmpty() ? "" : ("-" + resourceName));
+        }
+        return getSncpReqTopicPrefix() + "module." + resourceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resourceName.isEmpty() ? "" : ("-" + resourceName));
+    }
+
+    public static String getSncpReqTopicPrefix() {
+        return "sncp.req.";
+    }
+
+    public static String getSncpRespTopicPrefix() {
+        return "sncp.resp.";
     }
 
     public static AnyValue getResourceConf(Service service) {

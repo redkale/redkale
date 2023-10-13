@@ -22,7 +22,14 @@ public class HttpMessageRequest extends HttpRequest {
     protected MessageRecord message;
 
     public HttpMessageRequest(HttpContext context) {
+        this(context, (MessageRecord) null);
+    }
+
+    public HttpMessageRequest(HttpContext context, MessageRecord message) {
         super(context, (HttpSimpleRequest) null);
+        if (message != null) {
+            prepare(message);
+        }
     }
 
     protected HttpMessageRequest prepare(MessageRecord message) {

@@ -427,6 +427,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
 
     protected void initContextConfig(Context.ContextConfig contextConfig) {
         if (application != null) {
+            contextConfig.nodeid = application.getNodeid();
             contextConfig.workExecutor = application.getWorkExecutor();
         }
         contextConfig.serverStartTime = this.serverStartTime;

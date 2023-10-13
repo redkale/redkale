@@ -22,8 +22,8 @@ import org.redkale.net.client.ClientAddress;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  *
@@ -43,7 +43,7 @@ public class ABMainService implements Service {
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
         asyncGroup.start();
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", abport);
-        final SncpClient client = new SncpClient("", asyncGroup, sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
+        final SncpClient client = new SncpClient("", asyncGroup, 0, sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
         final ResourceFactory resFactory = ResourceFactory.create();
         resFactory.register(JsonConvert.root());
         resFactory.register(BsonConvert.root());

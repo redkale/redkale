@@ -69,7 +69,7 @@ public class SncpRemoteInfo<T extends Service> {
     protected final MessageAgent messageAgent;
 
     //MQ模式下此字段才有值
-    protected final SncpMessageClient messageClient;
+    protected final MessageClient messageClient;
 
     SncpRemoteInfo(String resourceName, Class<T> resourceType, Class<T> serviceImplClass, Convert convert,
         SncpRpcGroups sncpRpcGroups, SncpClient sncpClient, MessageAgent messageAgent, String remoteGroup) {
@@ -85,7 +85,7 @@ public class SncpRemoteInfo<T extends Service> {
         this.messageAgent = messageAgent;
         this.remoteGroup = remoteGroup;
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
-        this.topic = messageAgent == null ? null : messageAgent.generateSncpReqTopic(resourceName, resourceType);
+        this.topic = messageAgent == null ? null : Sncp.generateSncpReqTopic(resourceName, resourceType, messageAgent.getNodeid());
 
         for (Map.Entry<Uint128, Method> en : loadMethodActions(Sncp.getServiceType(serviceImplClass)).entrySet()) {
             this.actions.put(en.getKey().toString(), new SncpRemoteAction(serviceImplClass, resourceType, en.getValue(), serviceid, en.getKey(), sncpClient));
@@ -163,7 +163,7 @@ public class SncpRemoteInfo<T extends Service> {
         }
         ByteArray array = new ByteArray();
         request.writeTo(null, array);
-        MessageRecord message = messageClient.createMessageRecord(targetTopic, null, array.getBytes());
+        MessageRecord message = messageAgent.getSncpMessageClient().createMessageRecord(targetTopic, null, array.getBytes());
         final String tt = targetTopic;
         message.localActionName(action.actionName());
         message.localParams(params);

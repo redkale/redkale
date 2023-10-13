@@ -325,6 +325,30 @@ public final class Rest {
         return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
+    //格式: http.req.module.user
+    public static String generateHttpReqTopic(String module, int nodeid) {
+        return getHttpReqTopicPrefix() + "module." + module.toLowerCase();
+    }
+
+    //格式: http.req.module.user
+    public static String generateHttpReqTopic(String module, String resname, int nodeid) {
+        return getHttpReqTopicPrefix() + "module." + module.toLowerCase() + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+    }
+
+    public static String generateHttpReqTopic(Service service, int nodeid) {
+        String resname = Sncp.getResourceName(service);
+        String module = getRestModule(service).toLowerCase();
+        return getHttpReqTopicPrefix() + "module." + module + (resname.isEmpty() ? "" : ("-" + resname));
+    }
+
+    public static String getHttpReqTopicPrefix() {
+        return "http.req.";
+    }
+
+    public static String getHttpRespTopicPrefix() {
+        return "http.resp.";
+    }
+    
     //仅供Rest动态构建里 currentUserid() 使用
     @AsmDepends
     public static <T> T orElse(T t, T defValue) {

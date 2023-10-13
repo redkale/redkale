@@ -29,26 +29,19 @@ import org.redkale.service.RetResult;
  */
 public class HttpMessageResponse extends HttpResponse {
 
-    protected final HttpMessageClient messageClient;
+    protected MessageClient messageClient;
 
     protected MessageRecord message;
 
-    protected MessageClientProducer producer;
-
-    protected Runnable callback;
-
-    public HttpMessageResponse(HttpContext context, HttpMessageClient messageClient, Supplier<HttpMessageResponse> respSupplier, Consumer<HttpMessageResponse> respConsumer) {
-        super(context, new HttpMessageRequest(context), null);
-        this.responseSupplier = (Supplier) respSupplier;
-        this.responseConsumer = (Consumer) respConsumer;
+    public HttpMessageResponse(MessageClient messageClient, HttpContext context, HttpMessageRequest request) {
+        super(context, request, null);
         this.messageClient = messageClient;
+        this.message = request.message;
     }
 
-    public void prepare(MessageRecord message, Runnable callback, MessageClientProducer producer) {
+    public void prepare(MessageRecord message) {
         ((HttpMessageRequest) request).prepare(message);
         this.message = message;
-        this.callback = callback;
-        this.producer = producer;
     }
 
     public HttpMessageRequest request() {
@@ -56,22 +49,19 @@ public class HttpMessageResponse extends HttpResponse {
     }
 
     public void finishHttpResult(Type type, HttpResult result) {
-        finishHttpResult(producer.logger.isLoggable(Level.FINEST), ((HttpMessageRequest) this.request).getRespConvert(),
-            type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
+        finishHttpResult(messageClient.logger.isLoggable(Level.FINEST), ((HttpMessageRequest) this.request).getRespConvert(),
+            type, this.message, this.messageClient, message.getRespTopic(), result);
     }
 
     public void finishHttpResult(Convert respConvert, Type type, HttpResult result) {
-        finishHttpResult(producer.logger.isLoggable(Level.FINEST),
+        finishHttpResult(messageClient.logger.isLoggable(Level.FINEST),
             respConvert == null ? ((HttpMessageRequest) this.request).getRespConvert() : respConvert,
-            type, this.message, this.callback, this.messageClient, this.producer, message.getRespTopic(), result);
+            type, this.message, this.messageClient, message.getRespTopic(), result);
     }
 
     public static void finishHttpResult(boolean finest, Convert respConvert, Type type, MessageRecord msg,
-        Runnable callback, MessageClient messageClient, MessageClientProducer producer, String resptopic, HttpResult result) {
-        if (callback != null) {
-            callback.run();
-        }
-        if (resptopic == null || resptopic.isEmpty()) {
+        MessageClient messageClient, String respTopic, HttpResult result) {
+        if (respTopic == null || respTopic.isEmpty()) {
             return;
         }
         if (result.getResult() instanceof RetResult) {
@@ -89,11 +79,11 @@ public class HttpMessageResponse extends HttpResponse {
             if (innerrs instanceof byte[]) {
                 innerrs = new String((byte[]) innerrs, StandardCharsets.UTF_8);
             }
-            producer.logger.log(Level.FINEST, "HttpMessageResponse.finishHttpResult seqid=" + msg.getSeqid()
+            messageClient.logger.log(Level.FINEST, "HttpMessageResponse.finishHttpResult seqid=" + msg.getSeqid()
                 + ", content: " + innerrs + ", status: " + result.getStatus() + ", headers: " + result.getHeaders());
         }
         byte[] content = HttpResultCoder.getInstance().encode(result);
-        producer.apply(messageClient.createMessageRecord(msg.getSeqid(), CTYPE_HTTP_RESULT, resptopic, null, content));
+        messageClient.getProducer().apply(messageClient.createMessageRecord(msg.getSeqid(), CTYPE_HTTP_RESULT, respTopic, null, content));
     }
 
     @Override
@@ -109,17 +99,12 @@ public class HttpMessageResponse extends HttpResponse {
         this.responseSupplier = respSupplier;
         this.responseConsumer = respConsumer;
         this.message = null;
-        this.producer = null;
-        this.callback = null;
         return rs;
     }
 
     @Override
     public void finish(final Convert convert, Type type, RetResult ret) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         finishHttpResult(convert, type, new HttpResult(ret).convert(ret == null ? null : ret.convert()));
@@ -128,9 +113,6 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(final Convert convert, Type type, HttpResult result) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         if (convert != null) {
@@ -152,9 +134,6 @@ public class HttpMessageResponse extends HttpResponse {
             finish(convert, type, (RetResult) obj);
         } else {
             if (message.isEmptyRespTopic()) {
-                if (callback != null) {
-                    callback.run();
-                }
                 return;
             }
             finishHttpResult(convert, type, new HttpResult(obj));
@@ -164,9 +143,6 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(String obj) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         finishHttpResult(String.class, new HttpResult(obj == null ? "" : obj));
@@ -195,14 +171,11 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(int status, String msg) {
         if (status > 400) {
-            producer.logger.log(Level.WARNING, "HttpMessageResponse.finish status: " + status + ", uri: " + this.request.getRequestURI() + ", message: " + this.message);
-        } else if (producer.logger.isLoggable(Level.FINEST)) {
-            producer.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
+            messageClient.logger.log(Level.WARNING, "HttpMessageResponse.finish status: " + status + ", uri: " + this.request.getRequestURI() + ", message: " + this.message);
+        } else if (messageClient.logger.isLoggable(Level.FINEST)) {
+            messageClient.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
         }
         if (this.message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         finishHttpResult(String.class, new HttpResult(msg == null ? "" : msg).status(status));
@@ -211,9 +184,6 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(boolean kill, final byte[] bs, int offset, int length) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         if (offset == 0 && bs.length == length) {
@@ -226,9 +196,6 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
@@ -238,9 +205,6 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     protected <A> void finish(boolean kill, final String contentType, final byte[] bs, int offset, int length, Consumer<A> consumer, A attachment) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
@@ -250,9 +214,6 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finishBuffer(boolean kill, ByteBuffer buffer) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         byte[] bs = new byte[buffer.remaining()];
@@ -263,9 +224,6 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finishBuffers(boolean kill, ByteBuffer... buffers) {
         if (message.isEmptyRespTopic()) {
-            if (callback != null) {
-                callback.run();
-            }
             return;
         }
         int size = 0;

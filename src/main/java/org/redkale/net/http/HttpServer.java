@@ -321,7 +321,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             if (servlet == null) {
                 servlet = Rest.createRestServlet(classLoader, userType, baseServletType, serviceType, resname);
                 if (servlet != null) {
-                    servlet._reqtopic = MessageAgent.generateHttpReqTopic(Rest.getRestModule(service));
+                    servlet._reqtopic = Rest.generateHttpReqTopic(Rest.getRestModule(service), application.getNodeid());
                 }
             }
             if (servlet == null) {

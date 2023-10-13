@@ -1171,10 +1171,6 @@ public final class Application {
                 this.resourceFactory.inject(agent);
                 agent.init(agent.getConfig());
                 this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
-                if (this.clusterAgent == null) {
-                    this.resourceFactory.register(agent.getName(), HttpMessageClient.class, agent.getHttpMessageClient());
-                    //this.resourceFactory.register(agent.getName(), SncpMessageClient.class, agent.getSncpMessageClient()); //不需要给开发者使用
-                }
             }
             logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
         }
@@ -1207,29 +1203,39 @@ public final class Application {
                 return ResourceProducer.class;
             }
         });
-        //------------------------------------ 注册 HttpMessageClient ------------------------------------        
+        //------------------------------------ 注册 HttpRpcClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
                 if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
                     return null;
                 }
-                if (clusterAgent == null) {
-                    HttpMessageClient messageClient = new HttpMessageLocalClient(application, resourceName);
-                    field.set(srcObj, messageClient);
-                    rf.inject(resourceName, messageClient, null); // 给其可能包含@Resource的字段赋值;
-                    rf.register(resourceName, HttpMessageClient.class, messageClient);
-                    return messageClient;
+                if (this.messageAgents != null) {
+                    MessageAgent messageAgent = this.resourceFactory.find(resourceName, MessageAgent.class);
+                    if (messageAgent != null) {
+                        HttpRpcClient rpcClient = messageAgent.getHttpRpcClient();
+                        field.set(srcObj, rpcClient);
+                        rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
+                        rf.register(resourceName, HttpRpcClient.class, rpcClient);
+                        return rpcClient;
+                    }
                 }
-                HttpMessageClient messageClient = new HttpMessageClusterClient(application, resourceName, clusterAgent);
-                field.set(srcObj, messageClient);
-                rf.inject(resourceName, messageClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, HttpMessageClient.class, messageClient);
-                return messageClient;
+                if (clusterAgent == null) {
+                    HttpRpcClient rpcClient = new HttpLocalRpcClient(application, resourceName);
+                    field.set(srcObj, rpcClient);
+                    rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
+                    rf.register(resourceName, HttpRpcClient.class, rpcClient);
+                    return rpcClient;
+                }
+                HttpRpcClient rpcClient = new HttpClusterRpcClient(application, resourceName, clusterAgent);
+                field.set(srcObj, rpcClient);
+                rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
+                rf.register(resourceName, HttpRpcClient.class, rpcClient);
+                return rpcClient;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "HttpMessageClient inject error", e);
+                logger.log(Level.SEVERE, HttpRpcClient.class.getSimpleName() + " inject error", e);
                 return null;
             }
-        }, HttpMessageClient.class);
+        }, HttpRpcClient.class);
         initResources();
     }
 

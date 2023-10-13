@@ -27,6 +27,9 @@ public class Context {
     //服务启动时间
     protected final long serverStartTime;
 
+    //Application节点id
+    protected final int nodeid;
+
     //Server的线程池
     protected final ExecutorService workExecutor;
 
@@ -76,15 +79,16 @@ public class Context {
     protected Charset charset;
 
     public Context(ContextConfig config) {
-        this(config.serverStartTime, config.logger, config.workExecutor, config.sslBuilder, config.sslContext,
+        this(config.serverStartTime, config.nodeid, config.logger, config.workExecutor, config.sslBuilder, config.sslContext,
             config.bufferCapacity, config.maxConns, config.maxBody, config.charset, config.serverAddress, config.resourceFactory,
             config.dispatcher, config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
     }
 
-    public Context(long serverStartTime, Logger logger, ExecutorService workExecutor, SSLBuilder sslBuilder, SSLContext sslContext,
+    public Context(long serverStartTime, int nodeid, Logger logger, ExecutorService workExecutor, SSLBuilder sslBuilder, SSLContext sslContext,
         int bufferCapacity, final int maxConns, final int maxBody, Charset charset, InetSocketAddress address,
         ResourceFactory resourceFactory, DispatcherServlet dispatcher, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
+        this.nodeid = nodeid;
         this.logger = logger;
         this.workExecutor = workExecutor;
         this.sslBuilder = sslBuilder;
@@ -172,6 +176,10 @@ public class Context {
         return serverStartTime;
     }
 
+    public int getNodeid() {
+        return nodeid;
+    }
+
     public Charset getCharset() {
         return charset;
     }
@@ -208,6 +216,9 @@ public class Context {
 
         //服务启动时间
         public long serverStartTime;
+
+        //Application节点id
+        public int nodeid;
 
         //Server的线程池
         public ExecutorService workExecutor;

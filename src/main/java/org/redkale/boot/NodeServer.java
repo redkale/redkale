@@ -167,7 +167,8 @@ public abstract class NodeServer {
         server.init(this.serverConf);
         if (this.sncpAddress != null) { //初始化SncpClient  
             this.sncpAsyncGroup = new AsyncIOGroup("Redkale-SncpClient-IOThread-%s", application.getWorkExecutor(), server.getBufferCapacity(), server.getBufferPoolSize()).skipClose(true);
-            this.sncpClient = new SncpClient(server.getName(), this.sncpAsyncGroup, this.sncpAddress, new ClientAddress(this.sncpAddress), server.getNetprotocol(), Utility.cpus(), 1000);
+            this.sncpClient = new SncpClient(server.getName(), this.sncpAsyncGroup, application.getNodeid(),
+                this.sncpAddress, new ClientAddress(this.sncpAddress), server.getNetprotocol(), Utility.cpus(), 1000);
         }
 
         initResource(); //给DataSource、CacheSource注册依赖注入时的监听回调事件。

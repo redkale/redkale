@@ -46,7 +46,7 @@ public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
             + 1 //ctype
             + 4 //version
             + 4 //flag
-            + 8 //createtime
+            + 8 //createTime
             + 2 + userid.length
             + 2 + groupid.length
             + 2 + topic.length
@@ -105,12 +105,12 @@ public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
         byte ctype = buffer.get();
         int version = buffer.getInt();
         int flag = buffer.getInt();
-        long createtime = buffer.getLong();
+        long createTime = buffer.getLong();
 
         Serializable userid = MessageCoder.decodeUserid(buffer);
         String groupid = MessageCoder.getShortString(buffer);
         String topic = MessageCoder.getShortString(buffer);
-        String resptopic = MessageCoder.getShortString(buffer);
+        String respTopic = MessageCoder.getShortString(buffer);
         String traceid = MessageCoder.getShortString(buffer);
 
         byte[] content = null;
@@ -119,7 +119,7 @@ public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
             content = new byte[contentlen];
             buffer.get(content);
         }
-        return new MessageRecord(seqid, ctype, version, flag, createtime, userid, groupid, topic, resptopic, traceid, content);
+        return new MessageRecord(seqid, ctype, version, flag, createTime, userid, groupid, topic, respTopic, traceid, content);
     }
 
 }

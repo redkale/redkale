@@ -5,9 +5,7 @@
  */
 package org.redkale.mq;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -21,45 +19,28 @@ import java.util.logging.Logger;
  *
  * @since 2.1.0
  */
-public abstract class MessageClientConsumer {
-
-    protected final List<String> topics;
-
-    protected final String consumerid;
-
-    protected MessageAgent messageAgent;
-
-    protected final MessageClientProcessor processor;
+public abstract class MessageClientConsumer implements MessageProcessor {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected volatile boolean closed;
+    protected MessageClient messageClient;
 
-    protected MessageClientConsumer(MessageAgent messageAgent, String topic, final String consumerid, MessageClientProcessor processor) {
-        Objects.requireNonNull(messageAgent);
-        Objects.requireNonNull(topic);
-        Objects.requireNonNull(consumerid);
-        Objects.requireNonNull(processor);
-        this.messageAgent = messageAgent;
-        this.topics = Collections.unmodifiableList(Arrays.asList(topic));
-        this.consumerid = consumerid;
-        this.processor = processor;
+    protected MessageClientConsumer(MessageClient messageClient) {
+        Objects.requireNonNull(messageClient);
+        this.messageClient = messageClient;
     }
 
-    public MessageClientProcessor getProcessor() {
-        return processor;
+    public Collection<String> getTopics() {
+        return messageClient.getTopics();
     }
 
-    public List<String> getTopics() {
-        return topics;
+    @Override
+    public void process(MessageRecord message, long time) {
+        messageClient.process(message, time);
     }
 
     public abstract void start();
 
     public abstract void stop();
-
-    public boolean isClosed() {
-        return closed;
-    }
 
 }

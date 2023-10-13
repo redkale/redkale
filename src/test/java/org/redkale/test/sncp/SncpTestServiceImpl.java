@@ -93,7 +93,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
         final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", 7070);
         rpcGroups.computeIfAbsent("g70", "TCP").putAddress(sncpAddress);
-        final SncpClient client = new SncpClient("", asyncGroup, sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
+        final SncpClient client = new SncpClient("", asyncGroup, 0, sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
 
         Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, factory);
         for (Method method : service.getClass().getDeclaredMethods()) {
