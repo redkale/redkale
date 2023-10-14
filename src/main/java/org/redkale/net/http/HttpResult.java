@@ -168,6 +168,10 @@ public class HttpResult<T> {
         this.status = status;
     }
 
+    public boolean isSuccess() {
+        return status == 0 || status == 200;
+    }
+
     @Override
     public String toString() {
         return JsonConvert.root().convertTo(this);

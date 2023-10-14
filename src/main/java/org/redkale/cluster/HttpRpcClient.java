@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
+import org.redkale.util.RedkaleException;
 
 /**
  * 不依赖MessageRecord则可兼容RPC方式
@@ -60,7 +61,10 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
 
     public <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), 0, null, request).thenApply((HttpResult<byte[]> httbs) -> {
-            if (httbs == null || httbs.getResult() == null) {
+            if (!httbs.isSuccess()) {
+                throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
+            }
+            if (httbs.getResult() == null) {
                 return null;
             }
             return JsonConvert.root().convertFrom(type, httbs.getResult());
@@ -69,7 +73,10 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
 
     public <T> CompletableFuture<T> sendMessage(Serializable userid, HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), userid, null, request).thenApply((HttpResult<byte[]> httbs) -> {
-            if (httbs == null || httbs.getResult() == null) {
+            if (!httbs.isSuccess()) {
+                throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
+            }
+            if (httbs.getResult() == null) {
                 return null;
             }
             return JsonConvert.root().convertFrom(type, httbs.getResult());
@@ -78,7 +85,10 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
 
     public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request).thenApply((HttpResult<byte[]> httbs) -> {
-            if (httbs == null || httbs.getResult() == null) {
+            if (!httbs.isSuccess()) {
+                throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
+            }
+            if (httbs.getResult() == null) {
                 return null;
             }
             return JsonConvert.root().convertFrom(type, httbs.getResult());
