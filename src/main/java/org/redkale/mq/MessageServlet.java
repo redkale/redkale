@@ -53,19 +53,19 @@ public abstract class MessageServlet implements MessageProcessor {
         try {
             Traces.computeIfAbsent(message.getTraceid());
             long now = System.currentTimeMillis();
-            long cha = now - message.createTime;
-            long e = now - time;
+            long delay = now - message.createTime;
+            long block = now - time;
             Request request = createRequest(context, message);
             response = createResponse(context, request);
             //执行逻辑
             context.execute(servlet, request, response);
-            long o = System.currentTimeMillis() - now;
-            if ((cha > 1000 || e > 100 || o > 1000) && logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, getClass().getSimpleName() + ".process (mqs.delays = " + cha + " ms, mqs.blocks = " + e + " ms, mqs.executes = " + o + " ms) message: " + message);
-            } else if ((cha > 50 || e > 10 || o > 50) && logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, getClass().getSimpleName() + ".process (mq.delays = " + cha + " ms, mq.blocks = " + e + " ms, mq.executes = " + o + " ms) message: " + message);
+            long exems = System.currentTimeMillis() - now;
+            if ((delay > 1000 || block > 100 || exems > 1000) && logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, getClass().getSimpleName() + ".process (mqs.delay-slower = " + delay + " ms, mqs.block = " + block + " ms, mqs.executes = " + exems + " ms) message: " + message);
+            } else if ((delay > 50 || block > 10 || exems > 50) && logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, getClass().getSimpleName() + ".process (mq.delay-slowly = " + delay + " ms, mq.block = " + block + " ms, mq.executes = " + exems + " ms) message: " + message);
             } else if (logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST, getClass().getSimpleName() + ".process (mq.delay = " + cha + " ms, mq.block = " + e + " ms, mq.execute = " + o + " ms) message: " + message);
+                logger.log(Level.FINEST, getClass().getSimpleName() + ".process (mq.delay-normal = " + delay + " ms, mq.block = " + block + " ms, mq.execute = " + exems + " ms) message: " + message);
             }
         } catch (Throwable ex) {
             if (response != null) {
