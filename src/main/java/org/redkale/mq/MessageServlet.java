@@ -61,7 +61,7 @@ public abstract class MessageServlet implements MessageProcessor {
             context.execute(servlet, request, response);
             long exems = System.currentTimeMillis() - now;
             if ((delay > 1000 || block > 100 || exems > 1000) && logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, getClass().getSimpleName() + ".process (mqs.delay-slower = " + delay + " ms, mqs.block = " + block + " ms, mqs.executes = " + exems + " ms) message: " + message);
+                logger.log(Level.FINE, getClass().getSimpleName() + ".process (mq.delay-slower = " + delay + " ms, mq.block = " + block + " ms, mq.executes = " + exems + " ms) message: " + message);
             } else if ((delay > 50 || block > 10 || exems > 50) && logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, getClass().getSimpleName() + ".process (mq.delay-slowly = " + delay + " ms, mq.block = " + block + " ms, mq.executes = " + exems + " ms) message: " + message);
             } else if (logger.isLoggable(Level.FINEST)) {
