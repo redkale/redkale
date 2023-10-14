@@ -222,6 +222,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             conn = writePool.pollTransConnection();
             conn.setAutoCommit(false);
+            BoolRef commitRef = new BoolRef();
             for (BatchAction action : dataBatch.actions) {
                 if (action instanceof RunnableBatchAction) {
                     RunnableBatchAction act = (RunnableBatchAction) action;
@@ -230,7 +231,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 } else if (action instanceof InsertBatchAction1) {
                     InsertBatchAction1 act = (InsertBatchAction1) action;
                     EntityInfo info = apply(act.entity.getClass());
-                    c += insertDBStatement(true, conn, info, act.entity);
+                    c += insertDBStatement(true, commitRef, conn, info, act.entity);
 
                 } else if (action instanceof DeleteBatchAction1) {
                     DeleteBatchAction1 act = (DeleteBatchAction1) action;
@@ -239,7 +240,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     Map<String, List<Serializable>> pkmap = info.getTableMap(pk);
                     String[] tables = pkmap.keySet().toArray(new String[pkmap.size()]);
                     String[] sqls = deleteSql(info, pkmap);
-                    c += deleteDBStatement(true, conn, info, tables, null, null, pkmap, sqls);
+                    c += deleteDBStatement(true, commitRef, conn, info, tables, null, null, pkmap, sqls);
 
                 } else if (action instanceof DeleteBatchAction2) {
                     DeleteBatchAction2 act = (DeleteBatchAction2) action;
@@ -247,37 +248,37 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     Map<String, List<Serializable>> pkmap = info.getTableMap(act.pk);
                     String[] tables = pkmap.keySet().toArray(new String[pkmap.size()]);
                     String[] sqls = deleteSql(info, pkmap);
-                    c += deleteDBStatement(true, conn, info, tables, null, null, pkmap, sqls);
+                    c += deleteDBStatement(true, commitRef, conn, info, tables, null, null, pkmap, sqls);
 
                 } else if (action instanceof DeleteBatchAction3) {
                     DeleteBatchAction3 act = (DeleteBatchAction3) action;
                     EntityInfo info = apply(act.clazz);
                     String[] tables = info.getTables(act.node);
                     String[] sqls = deleteSql(info, tables, act.flipper, act.node);
-                    c += deleteDBStatement(true, conn, info, tables, act.flipper, act.node, null, sqls);
+                    c += deleteDBStatement(true, commitRef, conn, info, tables, act.flipper, act.node, null, sqls);
 
                 } else if (action instanceof UpdateBatchAction1) {
                     UpdateBatchAction1 act = (UpdateBatchAction1) action;
                     EntityInfo info = apply(act.entity.getClass());
-                    c += updateEntityDBStatement(true, conn, info, act.entity);
+                    c += updateEntityDBStatement(true, commitRef, conn, info, act.entity);
 
                 } else if (action instanceof UpdateBatchAction2) {
                     UpdateBatchAction2 act = (UpdateBatchAction2) action;
                     EntityInfo info = apply(act.clazz);
                     UpdateSqlInfo sql = updateColumnSql(info, act.pk, act.values);
-                    c += updateColumnDBStatement(true, conn, info, null, sql);
+                    c += updateColumnDBStatement(true, commitRef, conn, info, null, sql);
 
                 } else if (action instanceof UpdateBatchAction3) {
                     UpdateBatchAction3 act = (UpdateBatchAction3) action;
                     EntityInfo info = apply(act.clazz);
                     UpdateSqlInfo sql = updateColumnSql(info, act.node, act.flipper, act.values);
-                    c += updateColumnDBStatement(true, conn, info, act.flipper, sql);
+                    c += updateColumnDBStatement(true, commitRef, conn, info, act.flipper, sql);
 
                 } else if (action instanceof UpdateBatchAction4) {
                     UpdateBatchAction4 act = (UpdateBatchAction4) action;
                     EntityInfo info = apply(act.entity.getClass());
                     UpdateSqlInfo sql = updateColumnSql(info, false, act.entity, act.node, act.selects);
-                    c += updateColumnDBStatement(true, conn, info, null, sql);
+                    c += updateColumnDBStatement(true, commitRef, conn, info, null, sql);
                 }
             }
             conn.commit();
@@ -321,8 +322,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             conn = writePool.pollConnection();
             conn.setAutoCommit(false);
-            int c = insertDBStatement(false, conn, info, entitys);
-            conn.commit();
+            BoolRef commitRef = new BoolRef();
+            int c = insertDBStatement(false, commitRef, conn, info, entitys);
+            if (!commitRef.get()) {
+                conn.commit();
+            }
             return c;
         } catch (SQLException e) {
             if (conn != null) {
@@ -339,7 +343,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    private <T> int insertDBStatement(final boolean batch, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
+    private <T> int insertDBStatement(final boolean batch, BoolRef commitRef, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
         final long s = System.currentTimeMillis();
         int c = 0;
         String presql = null;
@@ -376,7 +380,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     }
                     set.close();
                 }
-                conn.offerUpdateStatement(prestmt);
             } else {  //分库分表
                 int c1 = 0;
                 for (PreparedStatement stmt : prestmts) {
@@ -405,12 +408,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         set.close();
                     }
                 }
-                for (PreparedStatement stmt : prestmts) {
-                    conn.offerUpdateStatement(stmt);
-                }
             }
             if (!batch) {
                 conn.commit();
+                commitRef.asTrue();
             }
         } catch (SQLException se) {
             if (!batch) {
@@ -666,8 +667,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             conn = writePool.pollConnection();
             conn.setAutoCommit(false);
-            int c = deleteDBStatement(false, conn, info, tables, flipper, node, pkmap, sqls);
-            conn.commit();
+            BoolRef commitRef = new BoolRef();
+            int c = deleteDBStatement(false, commitRef, conn, info, tables, flipper, node, pkmap, sqls);
+            if (!commitRef.get()) {
+                conn.commit();
+            }
             return c;
         } catch (SQLException e) {
             if (conn != null) {
@@ -684,7 +688,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    private <T> int deleteDBStatement(final boolean batch, final SourceConnection conn, final EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) throws SQLException {
+    private <T> int deleteDBStatement(final boolean batch, BoolRef commitRef, final SourceConnection conn, final EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) throws SQLException {
         final long s = System.currentTimeMillis();
         try {
             int c;
@@ -702,6 +706,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             if (!batch) {
                 conn.commit();
+                commitRef.asTrue();
             }
             slowLog(s, sqls);
             return c;
@@ -1099,8 +1104,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             conn = writePool.pollConnection();
             conn.setAutoCommit(false);
-            int c = updateEntityDBStatement(false, conn, info, entitys);
-            conn.commit();
+            BoolRef commitRef = new BoolRef();
+            int c = updateEntityDBStatement(false, commitRef, conn, info, entitys);
+            if (!commitRef.get()) {
+                conn.commit();
+            }
             return c;
         } catch (SQLException e) {
             if (conn != null) {
@@ -1117,7 +1125,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    private <T> int updateEntityDBStatement(final boolean batch, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
+    private <T> int updateEntityDBStatement(final boolean batch, BoolRef commitRef, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
         final long s = System.currentTimeMillis();
         String presql = null;
         String caseSql = null;
@@ -1173,6 +1181,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             if (!batch) {
                 conn.commit();
+                commitRef.asTrue();
             }
         } catch (SQLException se) {
             if (!batch) {
@@ -1312,8 +1321,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             conn = writePool.pollConnection();
             conn.setAutoCommit(false);
-            int c = updateColumnDBStatement(false, conn, info, flipper, sql);
-            conn.commit();
+            BoolRef commitRef = new BoolRef();
+            int c = updateColumnDBStatement(false, commitRef, conn, info, flipper, sql);
+            if (!commitRef.get()) {
+                conn.commit();
+            }
             return c;
         } catch (SQLException e) {
             if (conn != null) {
@@ -1330,7 +1342,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    private <T> int updateColumnDBStatement(final boolean batch, final SourceConnection conn, final EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) throws SQLException { //String sql, boolean prepared, Object... blobs) {
+    private <T> int updateColumnDBStatement(final boolean batch, BoolRef commitRef, final SourceConnection conn, final EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) throws SQLException { //String sql, boolean prepared, Object... blobs) {
         final long s = System.currentTimeMillis();
         int c = -1;
         String firstTable = null;
@@ -1351,6 +1363,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     conn.offerUpdateStatement(prestmt);
                     if (!batch) {
                         conn.commit();
+                        commitRef.asTrue();
                     }
                     slowLog(s, sql.sql);
                     return c;
@@ -1383,6 +1396,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     c = c1;
                     if (!batch) {
                         conn.commit();
+                        commitRef.asTrue();
                     }
                     slowLog(s, sqls);
                 }
@@ -1396,6 +1410,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 conn.offerUpdateStatement(stmt);
                 if (!batch) {
                     conn.commit();
+                    commitRef.asTrue();
                 }
                 slowLog(s, sql.sql);
                 return c;
@@ -1473,6 +1488,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     c = c1;
                     if (!batch) {
                         conn.commit();
+                        commitRef.asTrue();
                     }
                     slowLog(s, sqls);
                     return c;
