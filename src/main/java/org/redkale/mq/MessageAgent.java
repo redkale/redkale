@@ -110,8 +110,8 @@ public abstract class MessageAgent implements Resourcable {
             this.workExecutor = threads > 0 ? WorkThread.createExecutor(threads, "Redkale-MessageConsumerThread-[" + name + "]-%s")
                 : WorkThread.createWorkExecutor(Utility.cpus(), "Redkale-MessageConsumerThread-[" + name + "]-%s");
         }
-        this.httpMessageClient = new MessageClient(this, this.httpAppRespTopic);
-        this.sncpMessageClient = new MessageClient(this, this.sncpAppRespTopic);
+        this.httpMessageClient = new MessageClient("http", this, this.httpAppRespTopic);
+        this.sncpMessageClient = new MessageClient("sncp", this, this.sncpAppRespTopic);
 
         String coderType = config.getValue("coder", "");
         if (!coderType.trim().isEmpty()) {
@@ -198,8 +198,6 @@ public abstract class MessageAgent implements Resourcable {
         this.messageConsumerList.clear();
         this.messageConsumerMap.clear();
         //-------------- MessageClient --------------
-        this.httpMessageClient.stop();
-        this.sncpMessageClient.stop();
         if (this.messageClientProducer != null) {
             this.messageClientProducer.stop();
         }

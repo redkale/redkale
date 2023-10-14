@@ -48,12 +48,15 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
 
     protected final AtomicLong msgSeqno;
 
+    protected final String protocol;
+
     //key: reqTopic
     private final HashMap<String, MessageProcessor> messageProcessors = new HashMap<>();
 
     final ConcurrentHashMap<Long, MessageRespFuture> respQueue = new ConcurrentHashMap<>();
 
-    protected MessageClient(MessageAgent messageAgent, String appRespTopic) {
+    protected MessageClient(String protocol, MessageAgent messageAgent, String appRespTopic) {
+        this.protocol = protocol;
         this.messageAgent = messageAgent;
         this.appRespTopic = appRespTopic;
         this.msgSeqno = messageAgent.msgSeqno;
@@ -206,10 +209,8 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
         return ctype;
     }
 
-    public void start() {
-    }
-
-    public void stop() {
+    public String getProtocol() {
+        return protocol;
     }
 
     public MessageAgent getMessageAgent() {
