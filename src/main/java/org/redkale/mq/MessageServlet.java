@@ -8,7 +8,6 @@ package org.redkale.mq;
 import java.util.concurrent.CompletionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.redkale.boot.NodeServer;
 import org.redkale.net.Context;
 import org.redkale.net.Request;
 import org.redkale.net.Response;
@@ -32,7 +31,7 @@ public abstract class MessageServlet implements MessageProcessor {
 
     protected final MessageClient messageClient;
 
-    protected final NodeServer server;
+    protected final Context context;
 
     protected final Service service;
 
@@ -40,9 +39,9 @@ public abstract class MessageServlet implements MessageProcessor {
 
     protected final String topic;
 
-    public MessageServlet(MessageClient messageClient, NodeServer server, Service service, Servlet servlet, String topic) {
+    public MessageServlet(MessageClient messageClient, Context context, Service service, Servlet servlet, String topic) {
         this.messageClient = messageClient;
-        this.server = server;
+        this.context = context;
         this.service = service;
         this.servlet = servlet;
         this.topic = topic;
@@ -56,7 +55,6 @@ public abstract class MessageServlet implements MessageProcessor {
             long now = System.currentTimeMillis();
             long cha = now - message.createTime;
             long e = now - time;
-            Context context = server.getServer().getContext();
             Request request = createRequest(context, message);
             response = createResponse(context, request);
             //执行逻辑
@@ -83,8 +81,8 @@ public abstract class MessageServlet implements MessageProcessor {
 
     protected abstract void onError(Response response, MessageRecord message, Throwable t);
 
-    public NodeServer getServer() {
-        return server;
+    public Context getContext() {
+        return context;
     }
 
     public Service getService() {

@@ -5,7 +5,6 @@
  */
 package org.redkale.mq;
 
-import org.redkale.boot.NodeSncpServer;
 import org.redkale.net.Context;
 import org.redkale.net.Request;
 import org.redkale.net.Response;
@@ -24,9 +23,9 @@ import org.redkale.service.Service;
  */
 public class SncpMessageServlet extends MessageServlet {
 
-    public SncpMessageServlet(MessageClient messageClient, NodeSncpServer server,
+    public SncpMessageServlet(MessageClient messageClient, Context context,
         Service service, SncpServlet servlet, String topic) {
-        super(messageClient, server, service, servlet, topic); 
+        super(messageClient, context, service, servlet, topic); 
     }
 
     @Override

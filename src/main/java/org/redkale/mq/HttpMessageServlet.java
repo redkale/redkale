@@ -6,7 +6,6 @@
 package org.redkale.mq;
 
 import java.util.logging.*;
-import org.redkale.boot.NodeHttpServer;
 import org.redkale.net.Context;
 import org.redkale.net.Request;
 import org.redkale.net.Response;
@@ -25,9 +24,9 @@ import org.redkale.service.Service;
  */
 public class HttpMessageServlet extends MessageServlet {
 
-    public HttpMessageServlet(MessageClient messageClient, NodeHttpServer server,
+    public HttpMessageServlet(MessageClient messageClient, Context context,
         Service service, HttpServlet servlet, String topic) {
-        super(messageClient, server, service, servlet, topic);
+        super(messageClient, context, service, servlet, topic);
     }
 
     @Override

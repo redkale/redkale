@@ -44,8 +44,6 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
 
     private final String appRespTopic;
 
-    private final String reqTopicPrefix;
-
     protected final ReentrantLock processorLock = new ReentrantLock();
 
     protected final AtomicLong msgSeqno;
@@ -55,10 +53,9 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
 
     final ConcurrentHashMap<Long, MessageRespFuture> respQueue = new ConcurrentHashMap<>();
 
-    protected MessageClient(MessageAgent messageAgent, String appRespTopic, String reqTopicPrefix) {
+    protected MessageClient(MessageAgent messageAgent, String appRespTopic) {
         this.messageAgent = messageAgent;
         this.appRespTopic = appRespTopic;
-        this.reqTopicPrefix = reqTopicPrefix;
         this.msgSeqno = messageAgent.msgSeqno;
     }
 
@@ -220,7 +217,7 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
     }
 
     public MessageCoder<MessageRecord> getClientMessageCoder() {
-        return this.messageAgent.getClientMessageCoder();
+        return this.messageAgent.getMessageRecordCoder();
     }
 
     public MessageClientProducer getProducer() {
@@ -229,10 +226,6 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
 
     public String getAppRespTopic() {
         return appRespTopic;
-    }
-
-    public String getReqTopicPrefix() {
-        return reqTopicPrefix;
     }
 
 }

@@ -25,7 +25,6 @@ import org.redkale.convert.Convert;
 import org.redkale.convert.ConvertFactory;
 import org.redkale.convert.ConvertType;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.Servlet;
 import org.redkale.net.WorkThread;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -59,6 +58,7 @@ public abstract class MessageAgent implements Resourcable {
 
     protected AnyValue config;
 
+    @Nonnull
     private ExecutorService workExecutor;
 
     private int timeoutSeconds;
@@ -88,13 +88,13 @@ public abstract class MessageAgent implements Resourcable {
 
     protected MessageClient sncpMessageClient;
 
-    protected MessageClientProducer clientMessageProducer;
+    protected MessageClientProducer messageClientProducer;
 
     protected final ReentrantLock clientConsumerLock = new ReentrantLock();
 
     protected final ReentrantLock clientProducerLock = new ReentrantLock();
 
-    protected MessageCoder<MessageRecord> clientMessageCoder = MessageRecordSerializer.getInstance();
+    protected MessageCoder<MessageRecord> messageRecordCoder = MessageRecordSerializer.getInstance();
 
     protected ScheduledThreadPoolExecutor timeoutExecutor;
 
@@ -110,8 +110,8 @@ public abstract class MessageAgent implements Resourcable {
             this.workExecutor = threads > 0 ? WorkThread.createExecutor(threads, "Redkale-MessageConsumerThread-[" + name + "]-%s")
                 : WorkThread.createWorkExecutor(Utility.cpus(), "Redkale-MessageConsumerThread-[" + name + "]-%s");
         }
-        this.httpMessageClient = new MessageClient(this, this.httpAppRespTopic, Rest.getHttpReqTopicPrefix());
-        this.sncpMessageClient = new MessageClient(this, this.sncpAppRespTopic, Sncp.getSncpReqTopicPrefix());
+        this.httpMessageClient = new MessageClient(this, this.httpAppRespTopic);
+        this.sncpMessageClient = new MessageClient(this, this.sncpAppRespTopic);
 
         String coderType = config.getValue("coder", "");
         if (!coderType.trim().isEmpty()) {
@@ -125,7 +125,7 @@ public abstract class MessageAgent implements Resourcable {
                 if (coder instanceof Service) {
                     ((Service) coder).init(config);
                 }
-                this.clientMessageCoder = coder;
+                this.messageRecordCoder = coder;
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception e) {
@@ -146,21 +146,23 @@ public abstract class MessageAgent implements Resourcable {
         return workExecutor.submit(event);
     }
 
+    public void execute(Runnable event) {
+        workExecutor.execute(event);
+    }
+
     public void start(List<MessageConsumer> consumers) {
         StringBuilder loginfo = initMessageConsumer(consumers);
         startMessageConsumer();
         if (loginfo.length() > 0) {
             logger.log(Level.INFO, loginfo.toString());
         }
-
-        this.clientMessageProducer = createMessageClientProducer("redkale-message-producer");
+        //----------------- MessageClient -----------------
         if (this.httpRpcClient != null || !this.httpMessageClient.isEmpty()) {
             this.httpMessageClient.putMessageRespProcessor();
         }
         if (!this.sncpMessageClient.isEmpty()) {
             this.sncpMessageClient.putMessageRespProcessor();
         }
-        this.startMessageClientConsumers();
         List<String> topics = new ArrayList<>();
         if (!this.httpMessageClient.isEmpty()) {
             topics.addAll(this.httpMessageClient.getTopics());
@@ -168,7 +170,9 @@ public abstract class MessageAgent implements Resourcable {
         if (!this.sncpMessageClient.isEmpty()) {
             topics.addAll(this.sncpMessageClient.getTopics());
         }
-        if (!topics.isEmpty()) {
+        if (!topics.isEmpty()) { //存在需要订阅的主题
+            this.messageClientProducer = startMessageClientProducer();
+            this.startMessageClientConsumer();
             Collections.sort(topics);
             loginfo = new StringBuilder();
             loginfo.append(MessageClientConsumer.class.getSimpleName() + " subscribe topics:\r\n");
@@ -183,7 +187,7 @@ public abstract class MessageAgent implements Resourcable {
     public void stop() {
         this.stopMessageConsumer();
         this.stopMessageProducer();
-        this.stopMessageClientConsumers();
+        this.stopMessageClientConsumer();
     }
 
     //Application.stop 在所有server.shutdown执行后执行
@@ -196,11 +200,11 @@ public abstract class MessageAgent implements Resourcable {
         //-------------- MessageClient --------------
         this.httpMessageClient.stop();
         this.sncpMessageClient.stop();
-        if (this.clientMessageProducer != null) {
-            this.clientMessageProducer.stop();
+        if (this.messageClientProducer != null) {
+            this.messageClientProducer.stop();
         }
-        if (this.clientMessageCoder instanceof Service) {
-            ((Service) this.clientMessageCoder).destroy(config);
+        if (this.messageRecordCoder instanceof Service) {
+            ((Service) this.messageRecordCoder).destroy(config);
         }
         if (this.timeoutExecutor != null) {
             this.timeoutExecutor.shutdownNow();
@@ -290,15 +294,6 @@ public abstract class MessageAgent implements Resourcable {
         return sb;
     }
 
-    static String alignString(String value, int maxlen) {
-        StringBuilder sb = new StringBuilder(maxlen);
-        sb.append(value);
-        for (int i = 0; i < maxlen - value.length(); i++) {
-            sb.append(' ');
-        }
-        return sb.toString();
-    }
-
     @Override
     public String resourceName() {
         return name;
@@ -365,19 +360,15 @@ public abstract class MessageAgent implements Resourcable {
         return name;
     }
 
-    public MessageCoder<MessageRecord> getClientMessageCoder() {
-        return this.clientMessageCoder;
+    public MessageCoder<MessageRecord> getMessageRecordCoder() {
+        return this.messageRecordCoder;
     }
 
     public MessageClientProducer getMessageClientProducer() {
-        return this.clientMessageProducer;
+        return this.messageClientProducer;
     }
 
     //    
-    protected abstract void startMessageClientConsumers();
-
-    protected abstract void stopMessageClientConsumers();
-
     protected abstract void startMessageConsumer();
 
     protected abstract void stopMessageConsumer();
@@ -386,6 +377,14 @@ public abstract class MessageAgent implements Resourcable {
 
     protected abstract void stopMessageProducer();
 
+    //----------------- MessageClient -----------------
+    protected abstract void startMessageClientConsumer();
+
+    protected abstract void stopMessageClientConsumer();
+
+    protected abstract MessageClientProducer startMessageClientProducer();
+
+    //---------------------------------------------------
     @ResourceListener
     public abstract void onResourceChange(ResourceEvent[] events);
 
@@ -400,9 +399,6 @@ public abstract class MessageAgent implements Resourcable {
 
     //ServiceLoader时判断配置是否符合当前实现类
     public abstract boolean acceptsConf(AnyValue config);
-
-    //创建指定topic的生产处理器
-    protected abstract MessageClientProducer createMessageClientProducer(String producerName);
 
     public final void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
@@ -423,7 +419,7 @@ public abstract class MessageAgent implements Resourcable {
             throw new RedkaleException("Application.node not config in WebSocket Cluster");
         }
         String topic = Rest.generateHttpReqTopic(service, this.nodeid);
-        MessageServlet processor = new HttpMessageServlet(this.httpMessageClient, ns, service, servlet, topic);
+        MessageServlet processor = new HttpMessageServlet(this.httpMessageClient, ns.getHttpServer().getContext(), service, servlet, topic);
         this.httpMessageClient.putMessageServlet(processor);
     }
 
@@ -440,7 +436,7 @@ public abstract class MessageAgent implements Resourcable {
             throw new RedkaleException("Application.node not config in WebSocket Cluster");
         }
         String topic = Sncp.generateSncpReqTopic(service, this.nodeid);
-        MessageServlet processor = new SncpMessageServlet(this.sncpMessageClient, ns, service, servlet, topic);
+        MessageServlet processor = new SncpMessageServlet(this.sncpMessageClient, ns.getSncpServer().getContext(), service, servlet, topic);
         this.sncpMessageClient.putMessageServlet(processor);
     }
 
@@ -454,6 +450,15 @@ public abstract class MessageAgent implements Resourcable {
     //格式参考Rest.generateHttpReqTopic
     private String generateHttpAppRespTopic() {
         return Rest.getHttpRespTopicPrefix() + "app." + (Utility.isEmpty(nodeName) ? "node" : nodeName) + "-" + nodeid;
+    }
+
+    static String alignString(String value, int maxlen) {
+        StringBuilder sb = new StringBuilder(maxlen);
+        sb.append(value);
+        for (int i = 0; i < maxlen - value.length(); i++) {
+            sb.append(' ');
+        }
+        return sb.toString();
     }
 
     public final String getHttpAppRespTopic() {
@@ -566,28 +571,6 @@ public abstract class MessageAgent implements Resourcable {
         @Override
         public CompletableFuture<Void> sendMessage(String topic, Integer partition, Convert convert0, Type type, Object value) {
             return producer.sendMessage(topic, partition, convert0 == null ? this.convert : convert0, type, value);
-        }
-
-    }
-
-    protected static class MessageClientConsumerWrapper {
-
-        public final NodeServer server;
-
-        public final Service service;
-
-        public final Servlet servlet;
-
-        public final MessageServlet processor;
-
-        public final MessageClientConsumer consumer;
-
-        public MessageClientConsumerWrapper(NodeServer server, Service service, Servlet servlet, MessageServlet processor, MessageClientConsumer consumer) {
-            this.server = server;
-            this.service = service;
-            this.servlet = servlet;
-            this.processor = processor;
-            this.consumer = consumer;
         }
 
     }
