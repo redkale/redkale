@@ -76,6 +76,10 @@ public final class ClassFilter<T> {
         this.classLoader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
     }
 
+    public static ClassFilter create(String includeRegxs, String excludeRegxs) {
+        return create(null, null, includeRegxs, excludeRegxs, null, null);
+    }
+
     public static ClassFilter create(RedkaleClassLoader classLoader, Class[] excludeSuperClasses, String includeRegxs, String excludeRegxs, Set<String> includeValues, Set<String> excludeValues) {
         ClassFilter filter = new ClassFilter(classLoader, null, null, excludeSuperClasses);
         filter.setIncludePatterns(includeRegxs == null ? null : includeRegxs.split(";"));
@@ -309,6 +313,7 @@ public final class ClassFilter<T> {
                     return true;
                 }
             }
+            return false;
         }
         return includePatterns == null;
     }
@@ -341,17 +346,17 @@ public final class ClassFilter<T> {
         return rs;
     }
 
-    public static Pattern[] toPattern(String[] regs) {
-        if (regs == null || regs.length == 0) {
+    public static Pattern[] toPattern(String[] regxs) {
+        if (regxs == null || regxs.length == 0) {
             return null;
         }
         int i = 0;
-        Pattern[] rs = new Pattern[regs.length];
-        for (String reg : regs) {
-            if (reg == null || reg.trim().isEmpty()) {
+        Pattern[] rs = new Pattern[regxs.length];
+        for (String regx : regxs) {
+            if (regx == null || regx.trim().isEmpty()) {
                 continue;
             }
-            rs[i++] = Pattern.compile(reg.trim());
+            rs[i++] = Pattern.compile(format(regx.trim()));
         }
         if (i == 0) {
             return null;
@@ -362,6 +367,20 @@ public final class ClassFilter<T> {
         Pattern[] ps = new Pattern[i];
         System.arraycopy(rs, 0, ps, 0, i);
         return ps;
+    }
+
+    //将简化版正则转成标准的正则表达式
+    // *.platf.* 转成  ^.*\.platf\..*$
+    // .platf. 转成  ^.*\.platf\..*$
+    private static String format(String regx) {
+        String str = regx.replace('.', (char) 8);
+        if (regx.endsWith("*") || regx.endsWith(".")) {
+            str = str.substring(0, str.length() - 1) + ".*$";
+        }
+        if (regx.startsWith("*") || regx.startsWith(".")) {
+            str = "^.*" + str.substring(1);
+        }
+        return str.replace(new String(new char[]{8}), "\\.");
     }
 
     public void setSuperClass(Class superClass) {
