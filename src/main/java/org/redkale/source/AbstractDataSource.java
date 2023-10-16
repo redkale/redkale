@@ -309,6 +309,14 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return executor;
     }
 
+    protected <T> void complete(CompletableFuture<T> future, T value) {
+        getExecutor().execute(() -> future.complete(value));
+    }
+
+    protected <T> void completeExceptionally(CompletableFuture<T> future, Throwable exp) {
+        getExecutor().execute(() -> future.completeExceptionally(exp));
+    }
+
     protected String executorToString() {
         ExecutorService executor = this.sourceExecutor;
         if (executor == null) {
