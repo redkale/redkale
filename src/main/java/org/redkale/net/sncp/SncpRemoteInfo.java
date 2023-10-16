@@ -163,7 +163,7 @@ public class SncpRemoteInfo<T extends Service> {
         }
         ByteArray array = new ByteArray();
         request.writeTo(null, array);
-        MessageRecord message = messageAgent.getSncpMessageClient().createMessageRecord(targetTopic, null, array.getBytes());
+        MessageRecord message = messageAgent.getSncpMessageClient().createMessageRecord(MessageRecord.CTYPE_BSON, targetTopic, null, array.getBytes());
         final String tt = targetTopic;
         message.localActionName(action.actionName());
         message.localParams(params);

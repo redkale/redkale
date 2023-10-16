@@ -7,12 +7,15 @@ package org.redkale.mq;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.HttpSimpleRequest;
+import org.redkale.net.http.WebSocketPacket;
 import org.redkale.net.sncp.SncpHeader;
 import org.redkale.util.RedkaleException;
+import org.redkale.util.StringWrapper;
 
 /**
  * 存在MQ里面的数据结构<p>
@@ -30,16 +33,16 @@ public class MessageRecord implements Serializable {
 
     static final byte[] EMPTY_BYTES = new byte[0];
 
-    protected static final byte CTYPE_STRING = 1;
+    public static final byte CTYPE_STRING = 1;
 
     //Bson bytes
-    protected static final byte CTYPE_BSON = 2;
+    public static final byte CTYPE_BSON = 2;
 
     //HttpSimpleRequest
-    protected static final byte CTYPE_HTTP_REQUEST = 3;
+    public static final byte CTYPE_HTTP_REQUEST = 3;
 
     //HttpResult<byte[]>
-    protected static final byte CTYPE_HTTP_RESULT = 4;
+    public static final byte CTYPE_HTTP_RESULT = 4;
 
     @ConvertColumn(index = 1)
     @Comment("消息序列号")
@@ -358,7 +361,13 @@ public class MessageRecord implements Serializable {
                     sb.append(",\"actionName\":").append(localActionName);
                 }
                 if (localParams != null) {
-                    sb.append(",\"params\":").append(JsonConvert.root().convertTo(localParams));
+                    Object[] ps = Arrays.copyOf(localParams, localParams.length);
+                    for (int i = 0; i < ps.length; i++) {
+                        if (ps[i] instanceof WebSocketPacket || ps[i] instanceof MessageRecord) {
+                            ps[i] = new StringWrapper(ps[i].toString());
+                        }
+                    }
+                    sb.append(",\"params\":").append(JsonConvert.root().convertTo(ps));
                 }
             } else {
                 sb.append(",\"content\":\"").append(new String(this.content, StandardCharsets.UTF_8)).append("\"");
