@@ -192,7 +192,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     //------------------------------ convertTo -----------------------------------------------------------
     @Override
     public byte[] convertTo(final Type type, final Object value) {
-        if (value == null) {
+        if (type == null && value == null) {
             final BsonWriter out = pollWriter();
             out.writeNull();
             byte[] result = out.toArray();
@@ -214,7 +214,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @Override
     public void convertToBytes(final Type type, final Object value, final ConvertBytesHandler handler) {
         final BsonWriter writer = pollWriter();
-        if (type == null) {
+        if (type == null && type == null) {
             writer.writeNull();
         } else {
             factory.loadEncoder(type).convertTo(writer, value);
@@ -226,7 +226,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     public void convertToBytes(final ByteArray array, final Type type, final Object value) {
         Objects.requireNonNull(array);
         final BsonWriter writer = configWrite(new BsonWriter(array).withFeatures(features));
-        if (value == null) {
+        if (type == null && value == null) {
             writer.writeNull();
         } else {
             factory.loadEncoder(type == null ? value.getClass() : type).convertTo(writer, value);
@@ -239,7 +239,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     }
 
     public void convertTo(final OutputStream out, final Type type, final Object value) {
-        if (value == null) {
+        if (type == null && value == null) {
             pollWriter(out).writeNull();
         } else {
             factory.loadEncoder(type == null ? value.getClass() : type).convertTo(pollWriter(out), value);
@@ -250,7 +250,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
         Objects.requireNonNull(supplier);
         BsonByteBufferWriter writer = pollWriter(supplier);
-        if (value == null) {
+        if (type == null && value == null) {
             writer.writeNull();
         } else {
             factory.loadEncoder(type == null ? value.getClass() : type).convertTo(writer, value);
@@ -260,7 +260,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public void convertTo(final BsonWriter writer, final Type type, final Object value) {
-        if (value == null) {
+        if (type == null && value == null) { //必须判断type==null
             writer.writeNull();
         } else {
             factory.loadEncoder(type == null ? value.getClass() : type).convertTo(writer, value);
