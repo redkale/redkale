@@ -2684,6 +2684,11 @@ public final class Application {
         return workExecutor;
     }
 
+    public boolean isVirtualWorkExecutor() {
+        //JDK21+
+        return workExecutor != null && workExecutor.getClass().getSimpleName().contains("ThreadPerTaskExecutor");
+    }
+
     public AsyncGroup getClientAsyncGroup() {
         return clientAsyncGroup;
     }

@@ -102,13 +102,14 @@ public abstract class MessageAgent implements Resourcable {
         this.name = checkName(config.getValue("name", ""));
         this.httpAppRespTopic = generateHttpAppRespTopic();
         this.sncpAppRespTopic = generateSncpAppRespTopic();
-        int threads = config.getIntValue("threads", -1);
+        int threads = config.getIntValue("threads", application.isVirtualWorkExecutor() ? 0 : -1);
         if (threads == 0) {
             this.workExecutor = application.getWorkExecutor();
         }
         if (this.workExecutor == null) {
-            this.workExecutor = threads > 0 ? WorkThread.createExecutor(threads, "Redkale-MessageConsumerThread-[" + name + "]-%s")
-                : WorkThread.createWorkExecutor(Utility.cpus(), "Redkale-MessageConsumerThread-[" + name + "]-%s");
+            String namePrefix = Utility.isEmpty(name) ? "" : ("-" + name);
+            this.workExecutor = threads > 0 ? WorkThread.createExecutor(threads, "Redkale-MessageConsumerThread" + namePrefix + "-%s")
+                : WorkThread.createWorkExecutor(Utility.cpus(), "Redkale-MessageConsumerThread" + namePrefix + "-%s");
         }
         this.httpMessageClient = new MessageClient("http", this, this.httpAppRespTopic);
         this.sncpMessageClient = new MessageClient("sncp", this, this.sncpAppRespTopic);
