@@ -182,6 +182,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      *
      * @param <D>             目标类泛型
      * @param <S>             源类泛型
+     * @param <C>             集合泛型
      * @param destClass       目标类名
      * @param srcClass        源类名
      * @param collectionClass 集合类名
@@ -242,6 +243,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
      *
      * @param <D>             目标类泛型
      * @param <S>             源类泛型
+     * @param <C>             集合泛型
      * @param destClass       目标类名
      * @param srcClass        源类名
      * @param options         可配项

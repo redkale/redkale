@@ -74,6 +74,8 @@ public abstract class Writer {
     /**
      * 获取配置属性
      *
+     * @return int
+     *
      */
     public final int getFeatures() {
         return features;

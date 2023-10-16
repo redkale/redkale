@@ -200,6 +200,7 @@ public class ColumnValue {
      * 同 mov 操作
      *
      * @param func 字段名Lambda
+     * @param <T>  值的泛型
      *
      *
      * @return ColumnValue
@@ -313,6 +314,7 @@ public class ColumnValue {
      *
      * @param func  字段名Lambda
      * @param value 字段值
+     * @param <T>   值的泛型
      *
      * @return ColumnValue
      *
@@ -327,6 +329,7 @@ public class ColumnValue {
      *
      * @param func  字段名Lambda
      * @param value 字段值
+     * @param <T>   值的泛型
      *
      * @return ColumnValue
      *
@@ -341,6 +344,7 @@ public class ColumnValue {
      *
      * @param func  字段名Lambda
      * @param value 字段值
+     * @param <T>   值的泛型
      *
      * @return ColumnValue
      *
@@ -354,6 +358,7 @@ public class ColumnValue {
      * 返回 {column} = {column} + 1 操作
      *
      * @param func 字段名Lambda
+     * @param <T>  值的泛型
      *
      * @return ColumnValue
      *
@@ -368,6 +373,7 @@ public class ColumnValue {
      *
      * @param func  字段名Lambda
      * @param value 字段值
+     * @param <T>   值的泛型
      *
      * @return ColumnValue
      *
@@ -381,6 +387,7 @@ public class ColumnValue {
      * 返回 {column} = {column} - 1 操作
      *
      * @param func 字段名Lambda
+     * @param <T>  值的泛型
      *
      * @return ColumnValue
      *
@@ -395,6 +402,7 @@ public class ColumnValue {
      *
      * @param func  字段名Lambda
      * @param value 字段值
+     * @param <T>   值的泛型
      *
      * @return ColumnValue
      *
@@ -409,6 +417,7 @@ public class ColumnValue {
      *
      * @param func  字段名Lambda
      * @param value 字段值
+     * @param <T>   值的泛型
      *
      * @return ColumnValue
      *
@@ -423,6 +432,7 @@ public class ColumnValue {
      *
      * @param func  字段名Lambda
      * @param value 字段值
+     * @param <T>   值的泛型
      *
      * @return ColumnValue
      *
@@ -437,6 +447,7 @@ public class ColumnValue {
      *
      * @param func  字段名Lambda
      * @param value 字段值
+     * @param <T>   值的泛型
      *
      * @return ColumnValue
      *

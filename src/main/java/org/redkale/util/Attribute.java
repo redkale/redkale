@@ -9,8 +9,8 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.util.Attribute;
@@ -405,7 +405,7 @@ public interface Attribute<T, F> {
      *
      * @return Attribute对象
      */
-    public static <T, F> Attribute<T, F> create(Class<T> clazz,  java.lang.reflect.Method getter,  java.lang.reflect.Method setter) {
+    public static <T, F> Attribute<T, F> create(Class<T> clazz, java.lang.reflect.Method getter, java.lang.reflect.Method setter) {
         return create(clazz, (String) null, (Class) null, (java.lang.reflect.Field) null, getter, setter, null);
     }
 
@@ -1193,6 +1193,8 @@ public interface Attribute<T, F> {
      * 根据Map类生成 Attribute 对象。 fieldName都不能为null
      *
      * @param fieldName 字段名
+     * @param <T>       泛型
+     * @param <F>       泛型
      *
      * @return Attribute对象
      */

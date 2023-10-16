@@ -92,6 +92,7 @@ public class SelectColumn implements Predicate<String> {
      * class中的字段名
      *
      * @param funcs 包含的字段名Lambda集合
+     * @param <T>   泛型
      *
      * @return SelectColumn
      */
@@ -154,13 +155,14 @@ public class SelectColumn implements Predicate<String> {
      * class中的字段名
      *
      * @param funcs 包含的字段名Lambda集合
+     * @param <T>   泛型
      *
      * @return SelectColumn
      */
     public static <T> SelectColumn excludes(LambdaFunction<T, ?>... funcs) {
         return excludes(LambdaFunction.readColumns(funcs));
-    }    
-    
+    }
+
     /**
      * class中的字段名
      *
