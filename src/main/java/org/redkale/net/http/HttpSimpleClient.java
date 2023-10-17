@@ -202,8 +202,9 @@ public class HttpSimpleClient {
 
     public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, Map<String, String> headers, byte[] body, Convert convert, Type valueType) {
         final URI uri = URI.create(url);
-        final SocketAddress address = new InetSocketAddress(uri.getHost(), uri.getPort() > 0 ? uri.getPort() : (url.startsWith("https:") ? 443 : 80));
-        return asyncGroup.createTCPClient(address, readTimeoutSeconds, writeTimeoutSeconds).thenCompose(conn -> {
+        final String host = uri.getHost();
+        final int port = uri.getPort() > 0 ? uri.getPort() : (url.startsWith("https:") ? 443 : 80);
+        return createConnection(host, port).thenCompose(conn -> {
             final ByteArray array = new ByteArray();
             int urlpos = url.indexOf("/", url.indexOf("//") + 3);
             array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n"
@@ -240,6 +241,11 @@ public class HttpSimpleClient {
             return future;
         });
     }
+
+    protected CompletableFuture<HttpConnection> createConnection(String host, int port) {
+        return asyncGroup.createTCPClient(new InetSocketAddress(host, port), readTimeoutSeconds, writeTimeoutSeconds).thenApply(conn -> new HttpConnection(conn));
+    }
+
 //
 //    public static void main(String[] args) throws Throwable {
 //        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
@@ -248,6 +254,36 @@ public class HttpSimpleClient {
 //        HttpSimpleClient client = HttpSimpleClient.create(asyncGroup);
 //        System.out.println(client.getAsync(url).join());
 //    }
+//    
+    protected static class HttpConnection {
+
+        protected final AsyncConnection channel;
+
+        public HttpConnection(AsyncConnection channel) {
+            this.channel = channel;
+        }
+
+        public void dispose() {
+            this.channel.dispose();
+        }
+
+        public void setReadBuffer(ByteBuffer buffer) {
+            this.channel.setReadBuffer(buffer);
+        }
+
+        public void offerReadBuffer(ByteBuffer buffer) {
+            this.channel.offerReadBuffer(buffer);
+        }
+
+        public void read(CompletionHandler<Integer, ByteBuffer> handler) {
+            this.channel.read(handler);
+        }
+
+        public void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
+            this.channel.write(array, handler);
+        }
+
+    }
 
     protected static class ClientReadCompletionHandler<T> implements CompletionHandler<Integer, ByteBuffer> {
 
@@ -259,7 +295,7 @@ public class HttpSimpleClient {
 
         protected static final int READ_STATE_END = 4;
 
-        protected final AsyncConnection conn;
+        protected final HttpConnection conn;
 
         protected final ByteArray array;
 
@@ -275,7 +311,7 @@ public class HttpSimpleClient {
 
         protected int contentLength = -1;
 
-        public ClientReadCompletionHandler(AsyncConnection conn, ByteArray array, Convert convert, Type valueType, CompletableFuture<HttpResult<T>> future) {
+        public ClientReadCompletionHandler(HttpConnection conn, ByteArray array, Convert convert, Type valueType, CompletableFuture<HttpResult<T>> future) {
             this.conn = conn;
             this.array = array;
             this.convert = convert;
