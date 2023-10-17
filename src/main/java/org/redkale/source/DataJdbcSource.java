@@ -3085,6 +3085,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         private <C> void offerConnection(final C connection, Semaphore semaphore, Queue<SourceConnection> queue) {
             SourceConnection conn = (SourceConnection) connection;
             if (conn != null) {
+                conn.commiting = false;
                 try {
                     if (checkValid(conn) && queue.offer(conn)) {
                         usingCounter.decrement();
@@ -3127,6 +3128,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         public int version;
 
         public final Connection conn;
+
+        boolean commiting;
 
         public SourceConnection(Connection conn, int version) {
             Objects.requireNonNull(conn);
@@ -3214,12 +3217,16 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
 
         public void commit() throws SQLException {
+            commiting = true;
             conn.commit();
         }
 
         public void rollback(Statement stmt) {
             try {
-                conn.rollback();
+                if (commiting) {
+                    conn.rollback();
+                    commiting = false;
+                }
                 if (stmt != null) {
                     stmt.close();
                 }
@@ -3230,7 +3237,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
         public void rollback(List<? extends Statement> stmts) {
             try {
-                conn.rollback();
+                if (commiting) {
+                    conn.rollback();
+                    commiting = false;
+                }
                 if (stmts != null) {
                     for (Statement s : stmts) {
                         s.close();
@@ -3243,7 +3253,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
         public void rollback(final Statement stmt, List<? extends Statement> stmts) {
             try {
-                conn.rollback();
+                if (commiting) {
+                    conn.rollback();
+                    commiting = false;
+                }
                 if (stmt != null) {
                     stmt.close();
                 }

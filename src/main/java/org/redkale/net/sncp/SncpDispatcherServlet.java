@@ -7,6 +7,7 @@ package org.redkale.net.sncp;
 
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import org.redkale.net.DispatcherServlet;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -82,19 +83,24 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
 
     @Override
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
-        if (request.isPing()) {
-            ByteArray array = localArray.get().clear();
-            int headerSize = SncpHeader.calcHeaderSize(request);
-            array.putPlaceholder(headerSize);
-            response.writeHeader(array, 0, 0);
-            response.finish(array.getBytes());
-            return;
-        }
-        SncpServlet servlet = mappingServlet(request.getHeader().getServiceid());
-        if (servlet == null) {
-            response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
-        } else {
-            servlet.execute(request, response);
+        try {
+            if (request.isPing()) {
+                ByteArray array = localArray.get().clear();
+                int headerSize = SncpHeader.calcHeaderSize(request);
+                array.putPlaceholder(headerSize);
+                response.writeHeader(array, 0, 0);
+                response.finish(array.getBytes());
+                return;
+            }
+            SncpServlet servlet = mappingServlet(request.getHeader().getServiceid());
+            if (servlet == null) {
+                response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
+            } else {
+                servlet.execute(request, response);
+            }
+        } catch (Throwable e) {
+            request.getContext().getLogger().log(Level.WARNING, "Dispatch servlet occur exception. request = " + request, e);
+            response.finishError(e);
         }
     }
 

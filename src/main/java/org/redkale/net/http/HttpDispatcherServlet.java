@@ -364,7 +364,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 return;
             }
             servlet.execute(request, response);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             request.getContext().getLogger().log(Level.WARNING, "Dispatch servlet occur exception. request = " + request, e);
             response.finishError(e);
         }
