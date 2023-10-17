@@ -1212,11 +1212,14 @@ public final class Application {
                 if (this.messageAgents != null) {
                     MessageAgent messageAgent = this.resourceFactory.find(resourceName, MessageAgent.class);
                     if (messageAgent != null) {
-                        HttpRpcClient rpcClient = messageAgent.getHttpRpcClient();
-                        field.set(srcObj, rpcClient);
-                        rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
-                        rf.register(resourceName, HttpRpcClient.class, rpcClient);
-                        return rpcClient;
+                        if (clusterAgent == null || !Objects.equals(clusterAgent.getName(), resourceName)
+                            || messageAgent.isRpcFirst()) {
+                            HttpRpcClient rpcClient = messageAgent.getHttpRpcClient();
+                            field.set(srcObj, rpcClient);
+                            rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
+                            rf.register(resourceName, HttpRpcClient.class, rpcClient);
+                            return rpcClient;
+                        }
                     }
                 }
                 if (clusterAgent == null) {

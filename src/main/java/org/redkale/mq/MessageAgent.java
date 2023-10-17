@@ -78,6 +78,8 @@ public abstract class MessageAgent implements Resourcable {
     protected final Map<String, Map<String, MessageConsumerWrapper>> messageConsumerMap = new HashMap<>();
 
     //-------------------------- HttpRpcClient、SncpMessageClient --------------------------
+    private boolean rpcFirst;
+
     private HttpRpcMessageClient httpRpcClient;
 
     private String httpAppRespTopic;
@@ -100,6 +102,7 @@ public abstract class MessageAgent implements Resourcable {
 
     public void init(AnyValue config) {
         this.name = checkName(config.getValue("name", ""));
+        this.rpcFirst = config.getBoolValue("rpcfirst", false);
         this.httpAppRespTopic = generateHttpAppRespTopic();
         this.sncpAppRespTopic = generateSncpAppRespTopic();
         int threads = config.getIntValue("threads", application.isVirtualWorkExecutor() ? 0 : -1);
@@ -342,6 +345,10 @@ public abstract class MessageAgent implements Resourcable {
 
     public MessageClient getSncpMessageClient() {
         return sncpMessageClient;
+    }
+
+    public boolean isRpcFirst() {
+        return rpcFirst;
     }
 
     protected String checkName(String name) {  //不能含特殊字符
