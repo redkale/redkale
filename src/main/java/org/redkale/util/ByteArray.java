@@ -1148,6 +1148,10 @@ public final class ByteArray implements ByteTuple {
         return new String(content, 0, count);
     }
 
+    public String toUTF8String() {
+        return new String(content, 0, count, StandardCharsets.UTF_8);
+    }
+
     /**
      * 按指定字符集转成字符串
      *

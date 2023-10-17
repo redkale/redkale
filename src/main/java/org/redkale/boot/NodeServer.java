@@ -857,6 +857,9 @@ public abstract class NodeServer {
         if (interceptor != null) {
             interceptor.preStart(this);
         }
+        if (this.sncpAsyncGroup != null) {
+            this.sncpAsyncGroup.start();
+        }
         server.start();
         postStartServer(localServices, remoteServices, servletServices);
     }
