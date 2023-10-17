@@ -193,6 +193,35 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     }
 
+    protected <U> CompletableFuture<U> supplyFuture(Supplier<U> supplier) {
+        try {
+            return CompletableFuture.completedFuture(supplier.get());
+        } catch (Throwable t) {
+            return CompletableFuture.failedFuture(t);
+        }
+    }
+
+    protected CompletableFuture<Void> runFuture(Runnable runner) {
+        try {
+            runner.run();
+            return CompletableFuture.completedFuture(null);
+        } catch (Throwable t) {
+            return CompletableFuture.failedFuture(t);
+        }
+    }
+
+    protected <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
+        return CompletableFuture.supplyAsync(supplier);
+    }
+
+    protected <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier, Executor executor) {
+        return CompletableFuture.supplyAsync(supplier, executor);
+    }
+
+    protected CompletableFuture<Void> runAsync(Runnable runner, Executor executor) {
+        return CompletableFuture.runAsync(runner, executor);
+    }
+
     @Override
     public CompletableFuture<Boolean> isOpenAsync() {
         return CompletableFuture.completedFuture(true);
