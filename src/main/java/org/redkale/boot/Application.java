@@ -2599,15 +2599,6 @@ public final class Application {
             }
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in " + (System.currentTimeMillis() - s) + " ms");
         }
-        if (!isCompileMode() && clusterAgent != null) {
-            if (logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, "ClusterAgent destroying");
-            }
-            long s = System.currentTimeMillis();
-            clusterAgent.deregister(this);
-            clusterAgent.destroy(clusterAgent.getConfig());
-            logger.info("ClusterAgent destroy in " + (System.currentTimeMillis() - s) + " ms");
-        }
         localServers.stream().forEach((server) -> {
             try {
                 server.shutdown();
@@ -2628,6 +2619,15 @@ public final class Application {
                 agent.destroy(agent.getConfig());
             }
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (!isCompileMode() && clusterAgent != null) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "ClusterAgent destroying");
+            }
+            long s = System.currentTimeMillis();
+            clusterAgent.deregister(this);
+            clusterAgent.destroy(clusterAgent.getConfig());
+            logger.info("ClusterAgent destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
         for (DataSource source : dataSources) {
             if (source == null) {

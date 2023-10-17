@@ -256,7 +256,7 @@ public abstract class ClusterAgent {
     }
 
     protected String generateApplicationServiceName() {
-        return "node" + (appName == null || appName.isEmpty() ? "" : ("." + appName));
+        return Utility.isEmpty(appName) ? "node" : appName;
     }
 
     protected String generateApplicationServiceType() {
@@ -264,7 +264,7 @@ public abstract class ClusterAgent {
     }
 
     protected String generateApplicationServiceId() {
-        return generateApplicationServiceName() + "." + this.nodeid;
+        return generateApplicationServiceName() + "@" + this.nodeid;
     }
 
     protected String generateApplicationCheckName() {
@@ -284,12 +284,12 @@ public abstract class ClusterAgent {
     }
 
     public String generateSncpServiceName(String protocol, String restype, String resname) {
-        return protocol.toLowerCase() + "." + restype + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + ":" + restype + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //也会提供给HttpMessageClusterAgent适用
     public String generateHttpServiceName(String protocol, String module, String resname) {
-        return protocol.toLowerCase() + "." + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + ":" + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: protocol:classtype-resourcename
@@ -297,18 +297,18 @@ public abstract class ClusterAgent {
         if (protocol.toLowerCase().startsWith("http")) {  //HTTP使用RestService.name方式是为了与MessageClient中的module保持一致, 因为HTTP依靠的url中的module，无法知道Service类名
             String resname = Sncp.getResourceName(service);
             String module = Rest.getRestModule(service).toLowerCase();
-            return protocol.toLowerCase() + "." + module + (resname.isEmpty() ? "" : ("-" + resname));
+            return protocol.toLowerCase() + ":" + module + (resname.isEmpty() ? "" : ("-" + resname));
         }
         if (!Sncp.isSncpDyn(service)) {
-            return protocol.toLowerCase() + "." + service.getClass().getName();
+            return protocol.toLowerCase() + ":" + service.getClass().getName();
         }
         String resname = Sncp.getResourceName(service);
-        return protocol.toLowerCase() + "." + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
     //格式: protocol:classtype-resourcename:nodeid
     protected String generateServiceId(NodeServer ns, String protocol, Service service) {
-        return generateServiceName(ns, protocol, service) + "." + this.nodeid;
+        return generateServiceName(ns, protocol, service) + "@" + this.nodeid;
     }
 
     protected String generateCheckName(NodeServer ns, String protocol, Service service) {

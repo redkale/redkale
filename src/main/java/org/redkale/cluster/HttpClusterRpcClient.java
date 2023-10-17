@@ -84,8 +84,8 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         }
         return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
             if (addrs == null || addrs.isEmpty()) {
-                if (logger.isLoggable(Level.FINE)) {
-                    logger.log(Level.FINE, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + ": module=" + localModule + ", resname=" + resname + ", addrmap is empty");
+                if (logger.isLoggable(Level.WARNING)) {
+                    logger.log(Level.WARNING, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + ": module=" + localModule + ", resname=" + resname + ", addrmap is empty");
                 }
                 return new HttpResult<byte[]>().status(404).toFuture();
             }
