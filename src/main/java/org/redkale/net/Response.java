@@ -49,6 +49,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected BiConsumer<R, Response<C, R>> recycleListener;
 
+    protected BiConsumer<R, Throwable> errorHandler;
+
     protected List<Runnable> afterFinishListeners;
 
     protected Filter<C, R, ? extends Response<C, R>> filter;
@@ -61,7 +63,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
         @Override
         public void completed(Integer result, Void attachment) {
-            completeInIOThread();
+            completeInIOThread(false);
         }
 
         @Override
@@ -80,7 +82,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             } else {
                 attachment.clear();
             }
-            completeInIOThread();
+            completeInIOThread(false);
         }
 
         @Override
@@ -104,7 +106,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     channel.offerWriteBuffer(attachment);
                 }
             }
-            completeInIOThread();
+            completeInIOThread(false);
         }
 
         @Override
@@ -242,6 +244,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.recycleListener = recycleListener;
     }
 
+    public void errorHandler(BiConsumer<R, Throwable> errorHandler) {
+        this.errorHandler = errorHandler;
+    }
+
     public void addAfterFinishListener(Runnable listener) {
         if (this.afterFinishListeners == null) {
             this.afterFinishListeners = new ArrayList<>();
@@ -262,22 +268,43 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         return !this.inited;
     }
 
-    private void completeInIOThread() {
-        this.completeInIOThread(false);
+    /**
+     * Servlet.execute执行时报错
+     *
+     * 被重载后kill不一定为true
+     *
+     * @param t Throwable
+     */
+    public final void finishError(Throwable t) {
+        BiConsumer<R, Throwable> handler = this.errorHandler;
+        if (handler != null) {
+            this.errorHandler = null;
+            try {
+                handler.accept(request, t);
+            } catch (Throwable e) {
+                context.logger.log(Level.WARNING, "Response.errorHandler error, request = " + request, e);
+                defaultError(t);
+            }
+        } else {
+            defaultError(t);
+        }
     }
 
-    //被重载后kill不一定为true
-    protected void finishError(Throwable t) {
-        error(t);
+    protected void defaultError(Throwable t) {
+        errorInIOCodec(t);
     }
 
-    //kill=true
-    protected void error(Throwable t) {
+    /**
+     * 对请求包进行编解码时报错, 非Servlet.execute执行报错
+     *
+     * @param t Throwable
+     */
+    protected void errorInIOCodec(Throwable t) {
         completeInIOThread(true);
     }
 
     protected void completeFinishBytes(Integer result, Void attachment) {
-        completeInIOThread();
+        completeInIOThread(false);
     }
 
     private void completeInIOThread(boolean kill) {

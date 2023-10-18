@@ -129,7 +129,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     @Override
-    protected void finishError(Throwable t) {
+    protected void defaultError(Throwable t) {
         finish(RETCODE_THROWEXCEPTION, null);
     }
 

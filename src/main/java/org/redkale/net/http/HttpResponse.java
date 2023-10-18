@@ -21,9 +21,9 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.*;
 import org.redkale.service.RetResult;
+import org.redkale.util.*;
 import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.AnyValue.Entry;
-import org.redkale.util.*;
 import static org.redkale.util.Utility.append;
 
 /**
@@ -329,7 +329,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     @Override
-    protected void finishError(Throwable t) {
+    protected void defaultError(Throwable t) {
         finish(500, null);
     }
 
@@ -942,12 +942,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         //不能用finish(boolean kill, final ByteTuple array) 否则会调this.finishFuture
         super.finish(false, data.content(), 0, data.length());
-    }
-
-    @Override
-    protected void error(Throwable t) {
-        refuseAlive();
-        finish500();
     }
 
     /**
