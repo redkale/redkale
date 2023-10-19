@@ -291,7 +291,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     }
 
     protected void defaultError(Throwable t) {
-        errorInIOCodec(t);
+        codecError(t);
     }
 
     /**
@@ -299,7 +299,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
      *
      * @param t Throwable
      */
-    protected void errorInIOCodec(Throwable t) {
+    protected void codecError(Throwable t) {
         completeInIOThread(true);
     }
 

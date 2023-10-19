@@ -12,8 +12,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import org.redkale.annotation.NonBlocking;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
@@ -42,6 +42,10 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
     private final HashMap<Uint128, SncpActionServlet> actions = new HashMap<>();
 
     private SncpServlet(String resourceName, Class resourceType, Service service, Uint128 serviceid) {
+        Objects.requireNonNull(resourceName);
+        Objects.requireNonNull(resourceType);
+        Objects.requireNonNull(service);
+        Objects.requireNonNull(serviceid);
         this.resourceName = resourceName;
         this.resourceType = resourceType;
         this.service = service;
@@ -70,12 +74,15 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
     @Override
     @SuppressWarnings("unchecked")
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
-        final SncpActionServlet action = actions.get(request.getHeader().getActionid());
+        SncpHeader reqHeader = request.getHeader();
+        final SncpActionServlet action = actions.get(reqHeader.getActionid());
         //logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
         if (action == null) {
             response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
         } else {
             try {
+                reqHeader.serviceName = action.resourceType.getName();
+                reqHeader.methodName = action.method.getName();
                 if (response.inNonBlocking()) {
                     if (action.nonBlocking) {
                         action.execute(request, response);
@@ -198,6 +205,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
 
         protected SncpActionServlet(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
             super(resourceName, resourceType, service, serviceid);
+            Objects.requireNonNull(method);
             this.actionid = actionid;
             this.method = method;
 

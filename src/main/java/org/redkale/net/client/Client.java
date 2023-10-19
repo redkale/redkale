@@ -337,7 +337,12 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                     CompletableFuture<C> f;
                     while ((f = waitQueue.poll()) != null) {
                         if (!f.isDone()) {
-                            f.complete(c);
+                            if (workThread != null) {
+                                CompletableFuture<C> fs = f;
+                                workThread.execute(() -> fs.complete(c));
+                            } else {
+                                f.complete(c);
+                            }
                         }
                     }
                 }
@@ -374,6 +379,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         if (pool && ec != null && ec.isOpen()) {
             return CompletableFuture.completedFuture(ec);
         }
+        WorkThread workThread = WorkThread.currentWorkThread();
         final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
         if (!pool || entry.connOpenState.compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds)
@@ -397,7 +403,12 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                     CompletableFuture<C> f;
                     while ((f = waitQueue.poll()) != null) {
                         if (!f.isDone()) {
-                            f.complete(c);
+                            if (workThread != null) {
+                                CompletableFuture<C> fs = f;
+                                workThread.execute(() -> fs.complete(c));
+                            } else {
+                                f.complete(c);
+                            }
                         }
                     }
                 }

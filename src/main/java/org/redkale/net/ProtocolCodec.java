@@ -83,7 +83,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             decode(buffer, response, 0, null);
         } catch (Throwable t) {  //此处不可  context.offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
             context.logger.log(Level.WARNING, "dispatch servlet abort, force to close channel ", t);
-            response.errorInIOCodec(t);
+            response.codecError(t);
         }
     }
 
@@ -104,7 +104,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 decode(data, response, 0, null);
             } catch (Throwable t) {
                 context.logger.log(Level.WARNING, "dispatch servlet abort, force to close channel ", t);
-                response.errorInIOCodec(t);
+                response.codecError(t);
             }
             return;
         }
@@ -125,7 +125,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 decode(data, response, 0, null);
             } catch (Throwable t) {
                 context.logger.log(Level.WARNING, "dispatch servlet abort, force to close channel ", t);
-                response.errorInIOCodec(t);
+                response.codecError(t);
             }
             return;
         }
@@ -150,7 +150,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             if (rs != Integer.MIN_VALUE) {
                 dispatcher.incrIllegalRequestCounter();
             }
-            response.errorInIOCodec(null);
+            response.codecError(null);
             if (context.logger.isLoggable(Level.FINEST)) {
                 context.logger.log(Level.FINEST, "request.readHeader erroneous (" + rs + "), force to close channel ");
             }
@@ -183,7 +183,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                     decode(buffer, pipelineResponse, pindex + 1, hreq);
                 } catch (Throwable t) {  //此处不可  offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
                     context.logger.log(Level.WARNING, "dispatch pipeline servlet abort, force to close channel ", t);
-                    pipelineResponse.errorInIOCodec(t);
+                    pipelineResponse.codecError(t);
                 }
             }
         } else {
@@ -225,7 +225,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         public void failed(Throwable exc, ByteBuffer attachment) {
             context.dispatcher.incrIllegalRequestCounter();
             channel.offerReadBuffer(attachment);
-            response.errorInIOCodec(exc);
+            response.codecError(exc);
             if (exc != null) {
                 request.context.logger.log(Level.FINER, "Servlet continue read channel erroneous, force to close channel ", exc);
             }

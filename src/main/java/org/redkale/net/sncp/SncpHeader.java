@@ -23,14 +23,14 @@ public class SncpHeader {
 
     private Uint128 serviceid;
 
-    private String serviceName;
+    String serviceName;
 
     //sncp协议版本
     private int sncpVersion;
 
     private Uint128 actionid;
 
-    private String methodName;
+    String methodName;
 
     //SncpRequest的值是clientSncpAddress，SncpResponse的值是serverSncpAddress
     private byte[] addrBytes;
