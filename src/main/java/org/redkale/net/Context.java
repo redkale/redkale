@@ -123,6 +123,7 @@ public class Context {
                     response.context.logger.log(Level.WARNING, "Execute servlet occur exception. request = " + request, t);
                     response.finishError(t);
                 }
+                Traces.removeTraceid();
             });
         } else {
             try {

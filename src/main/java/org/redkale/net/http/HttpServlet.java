@@ -89,6 +89,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                             response.getContext().getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request, t);
                             response.finishError(t);
                         }
+                        Traces.removeTraceid();
                     });
                 }
             } else {

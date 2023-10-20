@@ -72,6 +72,8 @@ public abstract class MessageServlet implements MessageProcessor {
                 onError(response, message, ex);
             }
             logger.log(Level.SEVERE, getClass().getSimpleName() + " process error, message=" + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
+        } finally {
+            Traces.removeTraceid();
         }
     }
 
