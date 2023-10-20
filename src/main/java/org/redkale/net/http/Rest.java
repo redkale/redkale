@@ -44,6 +44,9 @@ public final class Rest {
     //请求是否为rpc协议，值类型: 布尔，取值为true、false
     public static final String REST_HEADER_RPC = "rest-rpc";
 
+    //traceid，值类型: 字符串
+    public static final String REST_HEADER_TRACEID = "rest-traceid";
+
     //当前用户ID值，值类型: 字符串
     public static final String REST_HEADER_CURRUSERID = "rest-curruserid";
 
@@ -348,7 +351,7 @@ public final class Rest {
     public static String getHttpRespTopicPrefix() {
         return "http.resp.";
     }
-    
+
     //仅供Rest动态构建里 currentUserid() 使用
     @AsmDepends
     public static <T> T orElse(T t, T defValue) {

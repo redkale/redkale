@@ -13,11 +13,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.boot.*;
-import org.redkale.cluster.HttpRpcClient;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.util.RedkaleException;
+import org.redkale.util.Traces;
+import org.redkale.util.Utility;
 
 /**
  * 没有配置MQ且也没有ClusterAgent的情况下实现的默认HttpMessageClient实例
@@ -100,6 +101,9 @@ public class HttpLocalRpcClient extends HttpRpcClient {
 
     @Override
     public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, Type type) {
+        if (Utility.isEmpty(request.getTraceid())) {
+            request.setTraceid(Traces.currentTraceid());
+        }
         String topic = generateHttpReqTopic(request, request.getPath());
         HttpServlet servlet = findHttpServlet(topic);
         CompletableFuture future = new CompletableFuture();
@@ -122,6 +126,9 @@ public class HttpLocalRpcClient extends HttpRpcClient {
 
     @Override
     public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+        if (Utility.isEmpty(request.getTraceid())) {
+            request.setTraceid(Traces.currentTraceid());
+        }
         HttpServlet servlet = findHttpServlet(topic);
         if (servlet == null) {
             if (logger.isLoggable(Level.FINE)) {

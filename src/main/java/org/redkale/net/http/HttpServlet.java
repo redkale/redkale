@@ -83,6 +83,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     response.updateNonBlocking(false);
                     response.getWorkExecutor().execute(() -> {
                         try {
+                            Traces.computeIfAbsent(request.getTraceid());
                             entry.servlet.execute(request, response);
                         } catch (Throwable t) {
                             response.getContext().getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request, t);

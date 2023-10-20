@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.net.http.*;
+import org.redkale.util.Traces;
 import org.redkale.util.Utility;
 
 /**
@@ -73,6 +74,9 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, HttpSimpleRequest req) {
+        if (Utility.isEmpty(req.getTraceid())) {
+            req.setTraceid(Traces.currentTraceid());
+        }
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
@@ -93,6 +97,9 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             byte[] clientBody = null;
             if (req.isRpc()) {
                 clientHeaders.put(Rest.REST_HEADER_RPC, "true");
+            }
+            if (Utility.isNotEmpty(req.getTraceid())) {
+                clientHeaders.put(Rest.REST_HEADER_TRACEID, req.getTraceid());
             }
             if (req.isFrombody()) {
                 clientHeaders.put(Rest.REST_HEADER_PARAM_FROM_BODY, "true");

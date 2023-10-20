@@ -819,6 +819,11 @@ public class HttpRequest extends Request<HttpContext> {
                         : (vlen == 5 && content[0] == 'f' && content[1] == 'a' && content[2] == 'l' && content[3] == 's' && content[4] == 'e'
                             ? "false" : bytes.toString(true, charset)));
                     break;
+                case Rest.REST_HEADER_TRACEID: //rest-traceid
+                    value = bytes.toString(true, charset);
+                    this.traceid = value;
+                    headers.put(name, value);
+                    break;
                 case Rest.REST_HEADER_CURRUSERID: //rest-curruserid
                     value = bytes.toString(true, charset);
                     this.hashid = value.hashCode();
