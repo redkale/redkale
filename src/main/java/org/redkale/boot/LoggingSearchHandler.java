@@ -6,14 +6,14 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Formatter;
 import java.util.logging.*;
+import java.util.logging.Formatter;
 import java.util.regex.Pattern;
 import static org.redkale.boot.Application.RESNAME_APP_NAME;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.persistence.SearchColumn;
 import org.redkale.persistence.*;
+import org.redkale.persistence.SearchColumn;
 import org.redkale.source.*;
 import org.redkale.util.*;
 
@@ -298,7 +298,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             this.rawLog = log;
             this.rawTag = tag;
             this.threadName = Thread.currentThread().getName();
-            this.traceid = LoggingBaseHandler.traceFlag ? Traces.currentTraceid() : null;
+            this.traceid = LoggingBaseHandler.traceEnable && Traces.enable() ? Traces.currentTraceid() : null;
             String msg = log.getMessage();
             if (log.getThrown() != null) {
                 StringWriter sw = new StringWriter();

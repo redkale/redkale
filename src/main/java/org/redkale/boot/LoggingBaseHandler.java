@@ -26,6 +26,8 @@ public abstract class LoggingBaseHandler extends Handler {
     //有threadName、TID
     public static final String FORMATTER_FORMAT3 = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] [%7$s] %8$s %4$s %2$s\r\n%5$s%6$s\r\n";
 
+    static boolean traceEnable = false; //防止设置system.property前调用Traces类导致enable提前初始化
+
     /**
      * 默认的日志时间格式化类
      * 与SimpleFormatter的区别在于level不使用本地化
@@ -95,11 +97,9 @@ public abstract class LoggingBaseHandler extends Handler {
         }
     }
 
-    static boolean traceFlag = false; //防止设置system.property前调用Traces类导致enable提前初始化
-
     protected static void fillLogRecord(LogRecord log) {
         String traceid = null;
-        if (traceFlag && Traces.enable()) {
+        if (traceEnable && Traces.enable()) {
             traceid = Traces.currentTraceid();
             if (traceid == null || traceid.isEmpty()) {
                 traceid = "[TID:N/A] ";
@@ -123,8 +123,9 @@ public abstract class LoggingBaseHandler extends Handler {
             ps.println(".level = FINEST");
             ps.println("jdk.level = INFO");
             ps.println("sun.level = INFO");
-            ps.println("com.sun.level = INFO");
             ps.println("javax.level = INFO");
+            ps.println("com.sun.level = INFO");
+            ps.println("io.level = INFO");
             ps.println("org.junit.level = INFO");
             ps.println(handlerName + ".level = FINEST");
             ps.println(handlerName + ".formatter = " + LoggingFormater.class.getName());

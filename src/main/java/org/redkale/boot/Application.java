@@ -955,6 +955,7 @@ public final class Application {
                 }
             });
         }
+        
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         final PrintStream ps = new PrintStream(out);
         properties.forEach((x, y) -> ps.println(x + "=" + y));
@@ -1660,7 +1661,7 @@ public final class Application {
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
         logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale started in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n");
-        LoggingBaseHandler.traceFlag = true;
+        LoggingBaseHandler.traceEnable = true;
 
         if (!singletonMode && !compileMode) {
             this.shutdownLatch.await();
@@ -2680,7 +2681,7 @@ public final class Application {
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
         logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale shutdown in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n" + "\r\n");
-        LoggingBaseHandler.traceFlag = true;
+        LoggingBaseHandler.traceEnable = true;
     }
 
     public ExecutorService getWorkExecutor() {
