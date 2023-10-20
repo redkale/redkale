@@ -586,7 +586,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
             if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", (Throwable) e);
+                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", e instanceof TimeoutException ? e.getClass() : e);
                 if (e instanceof TimeoutException) {
                     finish504();
                 } else {
@@ -618,7 +618,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     public void finishJsonFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
             if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", (Throwable) e);
+                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", e instanceof TimeoutException ? e.getClass() : e);
                 if (e instanceof TimeoutException) {
                     finish504();
                 } else {
