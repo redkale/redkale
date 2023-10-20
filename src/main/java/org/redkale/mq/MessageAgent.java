@@ -524,19 +524,19 @@ public abstract class MessageAgent implements Resourcable {
             consumer.init(config);
         }
 
-        public Future onMessage(MessageConext context, List<byte[]> messages) {
+        public Future onMessage(MessageConext context, String traceid, byte[] message) {
             return messageAgent.submit(() -> {
+                Traces.computeIfAbsent(traceid);
                 Convert c = this.convert;
                 MessageConsumer m = this.consumer;
-                for (byte[] bs : messages) {
-                    try {
-                        m.onMessage(context, (T) c.convertFrom(messageType, bs));
-                    } catch (Throwable t) {
-                        messageAgent.getLogger().log(Level.SEVERE, m.getClass().getSimpleName()
-                            + " onMessage error, topic: " + context.getTopic()
-                            + ", messages: " + new String(bs, StandardCharsets.UTF_8));
-                    }
+                try {
+                    m.onMessage(context, (T) c.convertFrom(messageType, message));
+                } catch (Throwable t) {
+                    messageAgent.getLogger().log(Level.SEVERE, m.getClass().getSimpleName()
+                        + " onMessage error, topic: " + context.getTopic()
+                        + ", messages: " + new String(message, StandardCharsets.UTF_8));
                 }
+                Traces.removeTraceid();
             });
         }
 

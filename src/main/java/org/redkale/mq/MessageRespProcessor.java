@@ -5,6 +5,7 @@ package org.redkale.mq;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.util.Traces;
 
 /**
  * 响应结果
@@ -26,6 +27,7 @@ public class MessageRespProcessor implements MessageProcessor {
 
     @Override
     public void process(final MessageRecord msg, long time) {
+        String traceid = msg.getTraceid();
         long now = System.currentTimeMillis();
         Logger logger = messageClient.logger;
         final boolean finest = logger.isLoggable(Level.FINEST);
@@ -42,6 +44,7 @@ public class MessageRespProcessor implements MessageProcessor {
             logger.log(Level.FINEST, getClass().getSimpleName() + ".MessageRespFuture.receive (mq.delay = " + deplay + "ms, mq.seqid = " + msg.getSeqid() + ")");
         }
         messageClient.getMessageAgent().execute(() -> {
+            Traces.computeIfAbsent(traceid);
             resp.future.complete(msg);
             long comems = System.currentTimeMillis() - now;
             if ((deplay > 1000 || comems > 1000) && logger.isLoggable(Level.FINE)) {
@@ -51,6 +54,7 @@ public class MessageRespProcessor implements MessageProcessor {
             } else if (finest) {
                 logger.log(Level.FINEST, getClass().getSimpleName() + ".MessageRespFuture.complete (mq.delay-normal = " + deplay + "ms, mq.complete-normal = " + comems + "ms) mqresp.msg: " + msg);
             }
+            Traces.removeTraceid();
         });
     }
 }

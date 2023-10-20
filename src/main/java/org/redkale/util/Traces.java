@@ -23,7 +23,7 @@ public class Traces {
 
     private static final AtomicLong sequence = new AtomicLong(System.currentTimeMillis());
 
-    private static final Supplier<String> tidSupplier = () -> PROCESS_ID + sequence.incrementAndGet();
+    private static final Supplier<String> tidSupplier = () -> PROCESS_ID + Long.toHexString(sequence.incrementAndGet());
 
     private static final ThreadLocal<String> localTrace = new ThreadLocal<>();
 
