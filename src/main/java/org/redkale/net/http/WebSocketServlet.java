@@ -286,6 +286,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
 
                 @Override
                 public void completed(Integer result, Void attachment) {
+                    Traces.computeIfAbsent(request.getTraceid());
                     webSocket._readHandler = new WebSocketReadHandler(response.getContext(), webSocket, byteArrayPool, restMessageConsumer);
                     webSocket._writeHandler = new WebSocketWriteHandler(response.getContext(), webSocket, byteArrayPool);
 
@@ -299,6 +300,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                             return;
                         }
                         userFuture.whenComplete((userid, ex2) -> {
+                            Traces.computeIfAbsent(request.getTraceid());
                             if ((userid == null && webSocket.delayPackets == null) || ex2 != null) {
                                 if (debug || ex2 != null) {
                                     logger.log(ex2 == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create userid abort. request = " + request, ex2);
@@ -310,6 +312,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 webSocket._userid = userid;
                                 if (single && !anyuser) {
                                     webSocketNode.existsWebSocket(userid).whenComplete((rs, nex) -> {
+                                        Traces.computeIfAbsent(request.getTraceid());
                                         if (rs) {
                                             CompletableFuture<Boolean> rcFuture = webSocket.onSingleRepeatConnect();
                                             Consumer<Boolean> task = (oldkilled) -> {
@@ -353,6 +356,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 //CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                                 CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                                 cf.whenComplete((Integer v, Throwable t) -> {
+                                    Traces.computeIfAbsent(request.getTraceid());
                                     if (userid == null || t != null) {
                                         if (t != null) {
                                             logger.log(Level.FINEST, "WebSocket connect abort, Response send delayPackets abort. request = " + request, t);
@@ -373,6 +377,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         //CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                         CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                         cf.whenComplete((Integer v, Throwable t) -> {
+                            Traces.computeIfAbsent(request.getTraceid());
                             if (sessionid == null || t != null) {
                                 if (t != null) {
                                     logger.log(Level.FINEST, "WebSocket connect abort, Response send delayPackets abort. request = " + request, t);
@@ -396,10 +401,14 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         };
         WorkThread workThread = WorkThread.currentWorkThread();
         sessionFuture.whenComplete((sessionid, ex) -> {
+            Traces.computeIfAbsent(request.getTraceid());
             if (workThread == null || workThread == Thread.currentThread()) {
                 sessionConsumer.accept(sessionid, ex);
             } else {
-                workThread.runWork(() -> sessionConsumer.accept(sessionid, ex));
+                workThread.runWork(() -> {
+                    Traces.computeIfAbsent(request.getTraceid());
+                    sessionConsumer.accept(sessionid, ex);
+                });
             }
         });
     }

@@ -585,8 +585,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
+            Traces.computeIfAbsent(request.getTraceid());
             if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", e instanceof TimeoutException ? e.getClass() : e);
+                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", (Throwable) e);
                 if (e instanceof TimeoutException) {
                     finish504();
                 } else {
@@ -595,6 +596,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 return;
             }
             finish(convert, valueType, v);
+            Traces.removeTraceid();
         });
     }
 
@@ -617,8 +619,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJsonFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
+            Traces.computeIfAbsent(request.getTraceid());
             if (e != null) {
-                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", e instanceof TimeoutException ? e.getClass() : e);
+                context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", (Throwable) e);
                 if (e instanceof TimeoutException) {
                     finish504();
                 } else {
@@ -627,6 +630,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 return;
             }
             finishJson(convert, valueType, v);
+            Traces.removeTraceid();
         });
     }
 

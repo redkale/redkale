@@ -12,6 +12,7 @@ import org.redkale.asm.AsmDepends;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
 import org.redkale.util.ByteArray;
+import org.redkale.util.Traces;
 
 /**
  *
@@ -145,11 +146,13 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
             finishVoid();
         } else if (future instanceof CompletionStage) {
             ((CompletionStage) future).whenComplete((v, t) -> {
+                Traces.computeIfAbsent(request.getTraceid());
                 if (t != null) {
                     finishError((Throwable) t);
                 } else {
                     finish(futureResultType, v);
                 }
+                Traces.removeTraceid();
             });
         } else {
             try {

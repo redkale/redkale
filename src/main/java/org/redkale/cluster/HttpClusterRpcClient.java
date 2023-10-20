@@ -13,6 +13,8 @@ import org.redkale.boot.Application;
 import org.redkale.net.http.*;
 import org.redkale.util.Traces;
 import org.redkale.util.Utility;
+import static org.redkale.util.Utility.isEmpty;
+import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * 没有配置MQ的情况下依赖ClusterAgent实现的默认HttpMessageClient实例
@@ -74,8 +76,10 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, HttpSimpleRequest req) {
-        if (Utility.isEmpty(req.getTraceid())) {
+        if (isEmpty(req.getTraceid())) {
             req.setTraceid(Traces.currentTraceid());
+        } else {
+            Traces.computeIfAbsent(req.getTraceid());
         }
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
@@ -87,7 +91,10 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);
         }
         return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
-            if (addrs == null || addrs.isEmpty()) {
+            if (isNotEmpty(req.getTraceid())) {
+                Traces.computeIfAbsent(req.getTraceid());
+            }
+            if (isEmpty(addrs)) {
                 if (logger.isLoggable(Level.WARNING)) {
                     logger.log(Level.WARNING, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + " failed, module=" + localModule + ", resname=" + resname + ", address is empty");
                 }
@@ -98,7 +105,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             if (req.isRpc()) {
                 clientHeaders.put(Rest.REST_HEADER_RPC, "true");
             }
-            if (Utility.isNotEmpty(req.getTraceid())) {
+            if (isNotEmpty(req.getTraceid())) {
                 clientHeaders.put(Rest.REST_HEADER_TRACEID, req.getTraceid());
             }
             if (req.isFrombody()) {
@@ -171,6 +178,9 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         }
         return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
             .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {
+                if (isNotEmpty(req.getTraceid())) {
+                    Traces.computeIfAbsent(req.getTraceid());
+                }
                 final int rs = resp.statusCode();
                 if (rs != 200) {
                     return new HttpResult<byte[]>().status(rs);

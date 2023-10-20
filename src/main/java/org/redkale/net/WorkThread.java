@@ -80,7 +80,7 @@ public class WorkThread extends Thread implements Executor {
     @Override
     public void execute(Runnable command) {
         if (workExecutor == null) {
-            command.run();
+            Utility.execute(command);
         } else {
             workExecutor.execute(command);
         }
@@ -89,7 +89,7 @@ public class WorkThread extends Thread implements Executor {
     public void execute(Runnable... commands) {
         if (workExecutor == null) {
             for (Runnable command : commands) {
-                command.run();
+                Utility.execute(command);
             }
         } else {
             for (Runnable command : commands) {
@@ -104,7 +104,7 @@ public class WorkThread extends Thread implements Executor {
         }
         if (workExecutor == null) {
             for (Runnable command : commands) {
-                command.run();
+                Utility.execute(command);
             }
         } else {
             for (Runnable command : commands) {
@@ -116,7 +116,7 @@ public class WorkThread extends Thread implements Executor {
     //与execute的区别在于子类AsyncIOThread中execute会被重载，确保在IO线程中执行
     public final void runWork(Runnable command) {
         if (workExecutor == null) {
-            command.run();
+            Utility.execute(command);
         } else {
             workExecutor.execute(command);
         }

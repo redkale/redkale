@@ -68,7 +68,11 @@ public class ClientAddress implements java.io.Serializable {
                 this.addresses = createAddressArray(this.weights);
                 addrs = this.addresses;
             }
-            addr = addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
+            if (addrs.length == 1) {
+                addr = addrs[0];
+            } else {
+                addr = addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
+            }
         }
         return addr;
     }

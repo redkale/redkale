@@ -90,11 +90,13 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                         response.updateNonBlocking(false);
                         response.getWorkExecutor().execute(() -> {
                             try {
+                                Traces.computeIfAbsent(request.getTraceid());
                                 action.execute(request, response);
                             } catch (Throwable t) {
                                 response.getContext().getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request, t);
                                 response.finishError(t);
                             }
+                            Traces.removeTraceid();
                         });
                     }
                 } else {

@@ -7,8 +7,10 @@
 //import java.util.function.Function;
 //
 ///**
-// *
+// * 虚拟线程池
+// * 
 // * @author zhangjx
+// * @since 2.8.0
 // */
 //public class AnonymousVirtualExecutor implements Function<String, ExecutorService> {
 //

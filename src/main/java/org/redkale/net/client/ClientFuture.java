@@ -9,6 +9,8 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import org.redkale.annotation.Nonnull;
 import org.redkale.net.*;
+import org.redkale.util.Traces;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -72,6 +74,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
     }
 
     private void runTimeout() {
+        String traceid = request != null ? request.getTraceid() : null;
         conn.removeRespFuture(request.getRequestid(), this);
         TimeoutException ex = new TimeoutException("client-request: " + request);
         WorkThread workThread = null;
@@ -82,7 +85,13 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
         if (workThread == null || workThread.getWorkExecutor() == null) {
             workThread = conn.getChannel().getReadIOThread();
         }
-        workThread.runWork(() -> completeExceptionally(ex));
+        workThread.runWork(() -> {
+            if (Utility.isNotEmpty(traceid)) {
+                Traces.computeIfAbsent(traceid);
+            }
+            completeExceptionally(ex);
+            Traces.removeTraceid();
+        });
     }
 
     @Override
